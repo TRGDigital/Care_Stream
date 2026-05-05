@@ -1,0 +1,106 @@
+// §9 — PostgreSQL data model via Prisma
+// Hosted on Supabase; RLS enforced at DB level via tenant_id on every table
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id                  String             @id @default(uuid())
+  name                String
+  slug                String             @unique
+  email_domain        String             @unique
+  stripe_customer_id  String?
+  subscription_status String             @default("trialling")
+  plan_id             String?
+  branding_signoff    String             @default("The CareStreamAI Team")
+  created_at          DateTime           @default(now())
+  users               User[]
+  policies            Policy[]
+  queries             QueryRecord[]
+  email_sessions      EmailSession[]
+}
+
+model User {
+  id            String        @id @default(uuid())
+  tenant_id     String
+  email         String        @unique
+  name          String
+  role          String        @default("staff")
+  password_hash String
+  last_login_at DateTime?
+  tenant        Tenant        @relation(fields: [tenant_id], references: [id])
+  queries       QueryRecord[]
+  email_sessions EmailSession[]
+  policies_uploaded Policy[]
+}
+
+model Policy {
+  id                 String   @id @default(uuid())
+  tenant_id          String
+  name               String
+  filename           String
+  s3_key             String
+  document_category  String   @default("internal_policy")
+  version            Int      @default(1)
+  status             String   @default("processing")
+  tags               Json     @default("[]")
+  uploaded_by        String
+  handbook_metadata  Json?
+  review_interval_days Int?
+  last_reviewed_at   DateTime?
+  superseded_by      String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenant_id], references: [id])
+  uploader           User     @relation(fields: [uploaded_by], references: [id])
+}
+
+model QueryRecord {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  user_id          String?
+  channel          String
+  query_text       String
+  response_text    String
+  policy_ids_cited String[]
+  language_detected String  @default("eng")
+  response_time_ms Int
+  created_at       DateTime @default(now())
+  tenant           Tenant   @relation(fields: [tenant_id], references: [id])
+  user             User?    @relation(fields: [user_id], references: [id])
+}
+
+model EmailSession {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  thread_id       String   @unique
+  subject         String
+  messages        Json     @default("[]")
+  last_message_at DateTime @default(now())
+  expires_at      DateTime
+  created_at      DateTime @default(now())
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id])
+  user            User     @relation(fields: [user_id], references: [id])
+}
+
+model ExternalRegulation {
+  id                    String   @id @default(uuid())
+  reference_key         String   @unique
+  official_name         String
+  also_known_as         String[]
+  summary               String
+  care_home_context     String
+  care_company_interaction String
+  practical_meaning     String
+  source_urls           String[]
+  pinecone_vector_id    String?
+  last_synced_at        DateTime?
+  is_active             Boolean  @default(true)
+}

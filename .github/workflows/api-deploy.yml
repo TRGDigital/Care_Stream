@@ -1,0 +1,21 @@
+name: API — Lint & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/api/**']
+  pull_request:
+    paths: ['apps/api/**']
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --workspace=apps/api
+      - run: npm run lint --workspace=apps/api
+      - run: npm run build --workspace=apps/api

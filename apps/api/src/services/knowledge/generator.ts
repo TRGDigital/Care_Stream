@@ -4,6 +4,8 @@
 // Called automatically after a policy is ingested (source_type='policy')
 // or manually via the admin API for individual entries (source_type='manual').
 
+import fs from 'fs'
+import path from 'path'
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { embedTexts } from '../rag/embedder'
@@ -16,21 +18,8 @@ import {
 
 // ─── Claude prompt ────────────────────────────────────────────────────────────
 
-const EXTRACTION_SYSTEM = `You are a knowledge extraction assistant for a UK care home policy system.
-Given the full text of a care home policy document, extract between 5 and 15 specific, factual Q&A pairs
-that staff would genuinely want to know.
-
-Rules:
-- Questions must be specific and concrete (not "What is this policy about?").
-- Answers must come directly from the document — do not invent or generalise.
-- Focus on practical information: procedures, thresholds, responsibilities, timescales, colour codes, contact details, etc.
-- Include home-specific details whenever they appear (named roles, named people, specific numbers, specific locations).
-- Do not include questions that simply summarise the policy's existence or purpose.
-- Output ONLY a JSON array of objects with "question" and "answer" keys.
-- No markdown, no preamble, no explanation — raw JSON array only.
-
-Example format:
-[{"question":"What colour mop should be used in the kitchen?","answer":"Yellow mops are designated for kitchen use only."},{"question":"How often must medication records be audited?","answer":"Medication records must be audited monthly by the registered manager."}]`
+const PROMPTS_DIR      = path.resolve(__dirname, '../../../../../prompts')
+const EXTRACTION_SYSTEM = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-c-knowledge-extraction.txt'), 'utf8')
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

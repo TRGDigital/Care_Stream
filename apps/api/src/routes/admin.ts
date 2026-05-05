@@ -364,12 +364,14 @@ const PROMPTS_DIR = path.resolve(__dirname, '../../../../prompts')
 
 adminRouter.get('/prompts', (_req: Request, res: Response) => {
   try {
-    const promptA = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-a-summary.txt'),    'utf8')
-    const promptB = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-b-full-policy.txt'), 'utf8')
+    const promptA = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-a-summary.txt'),              'utf8')
+    const promptB = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-b-full-policy.txt'),           'utf8')
+    const promptC = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-c-knowledge-extraction.txt'), 'utf8')
     ok(res, {
       prompts: [
-        { id: 'prompt-a', label: 'Prompt A — Summary & Questions', content: promptA },
-        { id: 'prompt-b', label: 'Prompt B — Full Policy Formatter', content: promptB },
+        { id: 'prompt-a', label: 'Prompt A — Summary & Questions',      content: promptA },
+        { id: 'prompt-b', label: 'Prompt B — Full Policy Formatter',     content: promptB },
+        { id: 'prompt-c', label: 'Prompt C — Knowledge Base Extraction', content: promptC },
       ],
     })
   } catch (e) {

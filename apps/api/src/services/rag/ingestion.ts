@@ -18,6 +18,7 @@ import {
 } from '../vector/pinecone'
 import type { PolicyVector, ChapterVector } from '../vector/pinecone'
 import { writeAuditLog } from '../../lib/audit'
+import { generateKnowledgeForPolicy } from '../knowledge/generator'
 import type { IngestionJobData } from '../../workers/queue'
 import type { HandbookMetadata } from '../../types'
 
@@ -264,6 +265,20 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
     }
 
     console.log(`[ingestion] Complete: policy=${policy_id} chunks=${chunks.length} status=active`)
+
+    // Generate knowledge base entries in the background (non-fatal).
+    // Fetch the stored policy name (set by the upload route, not the filename).
+    ;(async () => {
+      try {
+        const policyRow = await (prisma as any).policy.findUnique({
+          where:  { id: policy_id },
+          select: { name: true },
+        })
+        await generateKnowledgeForPolicy(tenant_id, policy_id, policyRow?.name ?? filename)
+      } catch (e) {
+        console.warn(`[ingestion] Knowledge generation failed (non-fatal): ${String(e)}`)
+      }
+    })()
 
   } catch (e) {
     await markFailed(policy_id, `Activation failed: ${String(e)}`)

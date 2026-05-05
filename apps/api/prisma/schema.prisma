@@ -40,6 +40,7 @@ model Tenant {
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   plan_id             String?
   branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
+  email_allowlist     String[]           @default([])                       // approved inbound sender addresses
   created_at          DateTime           @default(now())
   plan                Plan?              @relation(fields: [plan_id], references: [id])
   users               User[]
@@ -47,6 +48,7 @@ model Tenant {
   queries             QueryRecord[]
   email_sessions      EmailSession[]
   audit_logs          AuditLog[]
+  knowledge_entries   KnowledgeEntry[]
 
   @@map("tenants")
 }
@@ -135,7 +137,7 @@ model QueryRecord {
 model EmailSession {
   id              String   @id @default(uuid())
   tenant_id       String
-  user_id         String
+  user_id         String?            // null when sender is allowlisted but not a registered user
   thread_id       String   @unique   // derived from original Message-ID header
   subject         String
   messages        Json     @default("[]") // [{role, content, timestamp, policy_ids_cited}]
@@ -143,7 +145,7 @@ model EmailSession {
   expires_at      DateTime             // 7 days from last_message_at (§8.4)
   created_at      DateTime @default(now())
   tenant          Tenant   @relation(fields: [tenant_id], references: [id])
-  user            User     @relation(fields: [user_id], references: [id])
+  user            User?    @relation(fields: [user_id], references: [id])
 
   @@index([tenant_id, expires_at])
   @@map("email_sessions")
@@ -168,6 +170,28 @@ model ExternalRegulation {
   is_active                Boolean   @default(true)
 
   @@map("external_regulations")
+}
+
+// ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+// Per-tenant Q&A pairs extracted from policies or added manually.
+// Embedded in Pinecone (knowledge namespace) and retrieved alongside policy chunks.
+model KnowledgeEntry {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  question    String
+  answer      String
+  source_type String   // 'policy' | 'manual'
+  source_id   String?  // policy_id when source_type = 'policy'
+  source_name String   // human-readable (policy name or 'Manual entry')
+  vector_id   String?  // Pinecone vector ID — used for deletion
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([tenant_id, source_id])
+  @@map("knowledge_entries")
 }
 
 // ─── Audit Log ────────────────────────────────────────────────────────────────

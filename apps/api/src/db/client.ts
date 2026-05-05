@@ -28,7 +28,7 @@ function buildClient() {
     const tenantId = getTenantIdOrNull()
 
     // Only scope operations on tenant-owned tables (not plans or external_regulations)
-    const TENANT_SCOPED_MODELS = ['User', 'Policy', 'QueryRecord', 'EmailSession', 'AuditLog']
+    const TENANT_SCOPED_MODELS = ['User', 'Policy', 'QueryRecord', 'EmailSession', 'AuditLog', 'KnowledgeEntry']
     const isTenantModel = params.model && TENANT_SCOPED_MODELS.includes(params.model)
 
     if (!tenantId || !isTenantModel) {

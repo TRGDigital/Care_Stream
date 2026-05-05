@@ -133,6 +133,13 @@ export async function detectLanguage(text: string): Promise<LanguageDetection> {
       return { code: 'eng', confidence, name: 'English', lowConfidence: true }
     }
 
+    // franc frequently misidentifies short English text as Scots (sco) or Afrikaans (afr)
+    // due to lexical overlap. In a UK care setting treat these as English.
+    const ENGLISH_ADJACENT = new Set(['sco', 'afr', 'ang'])
+    if (ENGLISH_ADJACENT.has(code)) {
+      return { code: 'eng', confidence, name: 'English', lowConfidence: false }
+    }
+
     return { code, confidence, name: languageName(code), lowConfidence: false }
 
   } catch (err) {

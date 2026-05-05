@@ -34,3 +34,26 @@ export async function callClaude(
 
   return block.text
 }
+
+// §8.2 — Multi-turn variant for email conversation threads.
+// Accepts a full messages array so prior turns are visible to Claude.
+export async function callClaudeWithHistory(
+  systemPrompt: string,
+  messages:     Anthropic.Messages.MessageParam[],
+  options?:     ClaudeOptions,
+): Promise<string> {
+  const response = await client.messages.create({
+    model:      MODEL,
+    max_tokens: options?.maxTokens  ?? 4096,
+    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+    system:     systemPrompt,
+    messages,
+  })
+
+  const block = response.content[0]
+  if (!block || block.type !== 'text') {
+    throw new Error('Claude returned no text content')
+  }
+
+  return block.text
+}

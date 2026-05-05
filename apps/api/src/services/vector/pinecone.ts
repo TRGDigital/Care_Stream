@@ -21,7 +21,7 @@ import type { DocumentCategory } from '../../types'
 //   The active namespace is never empty during the transition.
 
 const pc         = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
-const INDEX_NAME = process.env.PINECONE_INDEX_NAME!
+const INDEX_NAME = (process.env.PINECONE_INDEX ?? process.env.PINECONE_INDEX_NAME)!
 
 function getIndex() {
   return pc.index(INDEX_NAME)
@@ -39,6 +39,10 @@ export function getStagingNamespace(tenantId: string, policyId: string): string 
 
 export function getHandbookChapterNamespace(tenantId: string): string {
   return `tenant_${tenantId}_chapters`
+}
+
+export function getKnowledgeNamespace(tenantId: string): string {
+  return `tenant_${tenantId}_knowledge`
 }
 
 export const PLATFORM_REGULATIONS_NAMESPACE = 'platform_regulations'
@@ -219,7 +223,114 @@ export async function queryVectors(
   }))
 }
 
-// Retained stub — paid-tier Pinecone supports delete-by-filter; v1 uses prefix listing.
+// ─── Platform regulation KB vectors (§6.2) ────────────────────────────────────
+// Stored in the shared platform_regulations namespace — no tenant data.
+// Vector ID: reg_{reference_key}  (e.g. reg_gdpr)
+// Text embedded: summary + care_home_context + practical_meaning
+
+export interface RegulationVector {
+  id:       string    // reg_{reference_key}
+  values:   number[]
+  metadata: {
+    reference_key: string
+    official_name: string
+  } & Record<string, unknown>
+}
+
+export async function upsertRegulationVectors(vectors: RegulationVector[]): Promise<void> {
+  await upsertBatched(PLATFORM_REGULATIONS_NAMESPACE, vectors as any)
+  console.log(`[pinecone] Upserted ${vectors.length} regulation vectors → ${PLATFORM_REGULATIONS_NAMESPACE}`)
+}
+
+export async function deleteRegulationVector(referenceKey: string): Promise<void> {
+  await getIndex().namespace(PLATFORM_REGULATIONS_NAMESPACE).deleteMany([`reg_${referenceKey}`])
+}
+
+// ─── Knowledge base vector operations ────────────────────────────────────────
+
+export interface KnowledgeVectorMetadata extends Record<string, unknown> {
+  tenant_id:   string
+  entry_id:    string   // KnowledgeEntry.id — used to back-reference the DB row
+  question:    string
+  answer:      string
+  source_type: string   // 'policy' | 'manual'
+  source_id?:  string
+  source_name: string
+}
+
+export interface KnowledgeVector {
+  id:       string       // kb_{entryId}
+  values:   number[]
+  metadata: KnowledgeVectorMetadata
+}
+
+export async function upsertKnowledgeVectors(tenantId: string, vectors: KnowledgeVector[]): Promise<void> {
+  const ns = getKnowledgeNamespace(tenantId)
+  await upsertBatched(ns, vectors as any)
+  console.log(`[pinecone] Upserted ${vectors.length} knowledge vectors → ${ns}`)
+}
+
+export async function deleteKnowledgeVectors(tenantId: string, entryIds: string[]): Promise<void> {
+  if (entryIds.length === 0) return
+  const ns  = getIndex().namespace(getKnowledgeNamespace(tenantId))
+  const ids = entryIds.map(id => `kb_${id}`)
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    await ns.deleteMany(ids.slice(i, i + BATCH_SIZE))
+  }
+}
+
+// Delete all knowledge vectors for a given source policy (on archive / re-ingestion).
+export async function deleteKnowledgeVectorsBySource(tenantId: string, sourcePolicyId: string): Promise<void> {
+  const nsName = getKnowledgeNamespace(tenantId)
+  const ids    = await listIdsByPrefix(nsName, `kb_`)
+  // We need to fetch to filter by source_id — use fetch in batches then filter
+  const ns     = getIndex().namespace(nsName)
+  const toDelete: string[] = []
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch   = ids.slice(i, i + BATCH_SIZE)
+    const fetched = await ns.fetch(batch)
+    for (const [id, rec] of Object.entries(fetched.records ?? {})) {
+      if ((rec.metadata as any)?.source_id === sourcePolicyId) {
+        toDelete.push(id)
+      }
+    }
+  }
+
+  if (toDelete.length === 0) return
+  for (let i = 0; i < toDelete.length; i += BATCH_SIZE) {
+    await ns.deleteMany(toDelete.slice(i, i + BATCH_SIZE))
+  }
+  console.log(`[pinecone] Deleted ${toDelete.length} knowledge vectors for source=${sourcePolicyId}`)
+}
+
+export interface KnowledgeQueryResult {
+  id:       string
+  score:    number
+  metadata: KnowledgeVectorMetadata
+}
+
+export async function queryKnowledgeVectors(
+  tenantId:  string,
+  vector:    number[],
+  topK:      number,
+): Promise<KnowledgeQueryResult[]> {
+  const ns   = getKnowledgeNamespace(tenantId)
+  const resp = await getIndex().namespace(ns).query({
+    vector,
+    topK,
+    includeMetadata: true,
+  })
+  return (resp.matches ?? []).map(m => ({
+    id:       m.id,
+    score:    m.score ?? 0,
+    metadata: m.metadata as KnowledgeVectorMetadata,
+  }))
+}
+
+// ─── Retained stub ─────────────────────────────────────────────────────────────
+
+// Paid-tier Pinecone supports delete-by-filter; v1 uses prefix listing.
 export async function deleteVectorsByFilter(
   _namespace: string,
   _filter:    Record<string, unknown>,

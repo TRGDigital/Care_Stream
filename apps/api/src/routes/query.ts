@@ -11,9 +11,13 @@ export const queryRouter = Router()
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 const QuerySchema = z.object({
-  query_text:  z.string().min(1).max(2000),
-  policy_id:   z.string().uuid().optional(),
-  staff_name:  z.string().max(100).optional(),
+  query_text:           z.string().min(1).max(2000),
+  policy_id:            z.string().uuid().optional(),
+  staff_name:           z.string().max(100).optional(),
+  conversation_history: z.array(z.object({
+    role:    z.enum(['user', 'assistant']),
+    content: z.string().max(10_000),
+  })).max(20).optional(),
 })
 
 // ─── POST /query ──────────────────────────────────────────────────────────────
@@ -27,18 +31,19 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     return
   }
 
-  const { query_text, policy_id, staff_name } = parsed.data
+  const { query_text, policy_id, staff_name, conversation_history } = parsed.data
   const tenantId = getTenantId()
 
   let result
   try {
     result = await runQueryPipeline({
-      queryText:  query_text,
+      queryText:           query_text,
       tenantId,
-      userId:     req.user!.sub,
-      staffName:  staff_name,
-      channel:    'chat',
-      policyId:   policy_id,
+      userId:              req.user!.sub,
+      staffName:           staff_name,
+      channel:             'chat',
+      policyId:            policy_id,
+      conversationHistory: conversation_history,
     })
   } catch (e) {
     console.error('[route/query] Pipeline error:', e)
@@ -47,12 +52,13 @@ queryRouter.post('/', async (req: Request, res: Response) => {
   }
 
   ok(res, {
-    response_html:     result.responseHtml,
-    intent_type:       result.intentType,
-    citations:         result.citations,
-    no_match:          result.noMatch,
-    language_detected: result.languageDetected,
-    response_time_ms:  result.responseTimeMs,
+    responseHtml:       result.responseHtml,
+    intentType:         result.intentType,
+    citations:          result.citations,
+    noMatch:            result.noMatch,
+    languageDetected:   result.languageDetected,
+    responseTimeMs:     result.responseTimeMs,
+    suggestedQuestions: result.suggestedQuestions,
   })
 })
 

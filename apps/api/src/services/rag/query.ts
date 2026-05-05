@@ -19,14 +19,15 @@ import { downloadExtractedText } from '../storage/s3'
 import { embedText } from './embedder'
 import {
   queryVectors,
+  queryKnowledgeVectors,
   getTenantNamespace,
   getHandbookChapterNamespace,
-  PLATFORM_REGULATIONS_NAMESPACE,
 } from '../vector/pinecone'
 import type { PolicyVectorMetadata } from '../vector/pinecone'
 import { routeQuery } from './router'
+import { detectRegulations } from './regulation-detector'
 import { detectLanguage, resolveLanguagePattern } from '../language/detector'
-import { callClaude } from '../ai/claude'
+import { callClaude, callClaudeWithHistory } from '../ai/claude'
 import { buildPromptA, appendLanguageInstruction, PROMPT_B } from '../ai/prompts'
 import type { DocumentCategory, IntentType, QueryChannel } from '../../types'
 
@@ -34,8 +35,10 @@ import type { DocumentCategory, IntentType, QueryChannel } from '../../types'
 
 const TOP_K_CHUNKS         = 6    // chunks retrieved per namespace
 const TOP_K_CHAPTERS       = 3    // chapter-index matches for two-stage retrieval
+const TOP_K_KNOWLEDGE      = 3    // knowledge base entries retrieved
 const MIN_SIMILARITY       = 0.5  // below this score → no_match
 const CHAPTER_STAGE1_MIN   = 0.75 // below this → skip chapter filtering, flat search
+const KNOWLEDGE_MIN_SCORE  = 0.75 // knowledge entries below this are excluded
 
 // Keywords that indicate the staff member wants the full document, not a summary
 const FULL_POLICY_SIGNALS = [
@@ -48,13 +51,15 @@ const FULL_POLICY_SIGNALS = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface QueryInput {
-  queryText:      string
-  tenantId:       string
-  userId?:        string | null
-  staffName?:     string          // injected into greeting in Prompt A
-  channel:        QueryChannel
-  policyId?:      string          // caller may pre-specify a policy
-  priorCategory?: DocumentCategory // from prior email thread turn
+  queryText:           string
+  tenantId:            string
+  userId?:             string | null
+  staffName?:          string          // injected into greeting in Prompt A
+  channel:             QueryChannel
+  policyId?:           string          // caller may pre-specify a policy
+  priorCategory?:      DocumentCategory // from prior email thread turn
+  // §8.2 — prior email thread turns passed to Claude for multi-turn continuity
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
 export interface Citation {
@@ -65,12 +70,47 @@ export interface Citation {
 }
 
 export interface QueryOutput {
-  responseHtml:     string
-  intentType:       IntentType
-  citations:        Citation[]
-  noMatch:          boolean
-  languageDetected: string
-  responseTimeMs:   number
+  responseHtml:       string
+  intentType:         IntentType
+  citations:          Citation[]
+  noMatch:            boolean
+  languageDetected:   string
+  responseTimeMs:     number
+  suggestedQuestions: string[]
+}
+
+// ─── Full-policy text helpers ─────────────────────────────────────────────────
+
+// Strip the document letterhead (care home name, address, contact info) that
+// precedes the actual policy title in extracted PDFs.
+function stripDocumentHeader(text: string, policyName: string): string {
+  const idx = text.toLowerCase().indexOf(policyName.toLowerCase())
+  if (idx <= 0) return text
+  // Walk back up to 10 chars to capture any leading doc-reference number (e.g. "132 ")
+  const lookback = text.slice(Math.max(0, idx - 10), idx)
+  const numMatch  = lookback.match(/\d+\s*$/)
+  const startIdx  = numMatch ? idx - numMatch[0].length : idx
+  return text.slice(startIdx).trimStart()
+}
+
+// Claude sometimes wraps its response in ```html … ``` despite instructions.
+// Strip those fences so dangerouslySetInnerHTML receives clean HTML.
+function stripMarkdownFence(text: string): string {
+  const match = text.match(/^```(?:html)?\s*([\s\S]*?)\s*```\s*$/s)
+  return match ? match[1].trim() : text
+}
+
+// Extract the <!--FOLLOWUP:[...]-->  block Claude appends to Prompt A responses.
+// Returns the cleaned HTML and the parsed question strings (up to 3).
+function extractSuggestions(html: string): { html: string; suggestions: string[] } {
+  const match = html.match(/<!--FOLLOWUP:(\[[\s\S]*?\])-->/)
+  if (!match) return { html, suggestions: [] }
+  let suggestions: string[] = []
+  try {
+    const parsed = JSON.parse(match[1])
+    if (Array.isArray(parsed)) suggestions = parsed.slice(0, 3).map(String)
+  } catch { /* malformed JSON — skip */ }
+  return { html: html.replace(/<!--FOLLOWUP:[\s\S]*?-->/, '').trimEnd(), suggestions }
 }
 
 // ─── Intent classification ────────────────────────────────────────────────────
@@ -170,26 +210,25 @@ async function fetchRegulationContextByKeys(keys: string[]): Promise<RegulationC
   return rows as RegulationContext[]
 }
 
-async function fetchRegulationContextFromPlatformSearch(
-  embedding: number[],
-): Promise<RegulationContext[]> {
-  const matches = await queryVectors(
-    PLATFORM_REGULATIONS_NAMESPACE,
-    embedding,
-    3,
-  )
-  const keys = matches
-    .filter(m => (m.score ?? 0) >= MIN_SIMILARITY)
-    .map(m => (m.metadata as any).reference_key as string)
-    .filter(Boolean)
-  return fetchRegulationContextByKeys(keys)
+// Text-match the query against DB regulation terms (reference_key + official_name + also_known_as).
+// Returns up to 3 best-matching regulations so Claude has focused context.
+async function fetchRegulationContextByQueryText(queryText: string): Promise<RegulationContext[]> {
+  const keys = await detectRegulations(queryText)
+  return fetchRegulationContextByKeys(keys.slice(0, 3))
 }
 
 // ─── Context block assembly ───────────────────────────────────────────────────
 
+interface KnowledgeEntry {
+  question:    string
+  answer:      string
+  source_name: string
+}
+
 function buildContextBlock(
   chunks:      RetrievedChunk[],
   regulations: RegulationContext[],
+  knowledge:   KnowledgeEntry[],
   policyMap:   Map<string, { name: string; version: number; document_category: DocumentCategory }>,
   staffName?:  string,
   queryText?:  string,
@@ -212,6 +251,13 @@ function buildContextBlock(
         ? `Policy: ${info.name} (v${info.version})`
         : `Policy ID: ${m.policy_id}`
       parts.push(`--- ${label} ---\n${m.chunk_text}`)
+    }
+  }
+
+  if (knowledge.length > 0) {
+    parts.push('[KNOWLEDGE BASE]')
+    for (const k of knowledge) {
+      parts.push(`Q: ${k.question}\nA: ${k.answer}\nSource: ${k.source_name}`)
     }
   }
 
@@ -257,7 +303,7 @@ async function loadPolicyMeta(
 
 export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
-  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory } = input
+  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory, conversationHistory } = input
 
   // 1. Detect language (§5.1)
   const langDetection  = await detectLanguage(queryText)
@@ -289,6 +335,25 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
       targetPolicyId = match?.id
     }
 
+    // If still not resolved, scan prior user messages to find any policy name
+    // mentioned in them — handles "send me the full policy" after a summary.
+    if (!targetPolicyId && conversationHistory) {
+      const activePolicies = await (prisma as any).policy.findMany({
+        where:  { tenant_id: tenantId, status: 'active' },
+        select: { id: true, name: true },
+      })
+      const priorUserMessages = conversationHistory.filter(m => m.role === 'user').reverse()
+      outer: for (const msg of priorUserMessages) {
+        const msgLower = msg.content.toLowerCase()
+        for (const policy of activePolicies) {
+          if (msgLower.includes((policy.name as string).toLowerCase())) {
+            targetPolicyId = policy.id as string
+            break outer
+          }
+        }
+      }
+    }
+
     if (!targetPolicyId) {
       // No matching policy found — fall through to summary pipeline so Claude
       // can give a polite "not found" response
@@ -299,15 +364,17 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
       })
 
       if (policyRow) {
-        const fullText = await downloadExtractedText(tenantId, policyRow.id)
-        const userMsg  = fullText
-          ? `Please format the following policy document as clean HTML:\n\n${fullText}`
+        const rawText  = await downloadExtractedText(tenantId, policyRow.id)
+        const bodyText = rawText ? stripDocumentHeader(rawText, policyRow.name as string) : null
+        const userMsg  = bodyText
+          ? `Please format the following policy document as clean HTML:\n\n${bodyText}`
           : `The policy "${policyRow.name}" was requested but its text could not be retrieved.`
 
-        const responseHtml = await callClaude(PROMPT_B, userMsg, {
+        let responseHtml = await callClaude(PROMPT_B, userMsg, {
           maxTokens:   16_384,
           temperature: 0,
         })
+        responseHtml = stripMarkdownFence(responseHtml)
 
         await saveQueryRecord({
           tenantId, userId, channel, queryText,
@@ -322,11 +389,12 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
 
         return {
           responseHtml,
-          intentType:       'full_policy',
-          citations:        [{ policy_id: policyRow.id, policy_name: policyRow.name, version: policyRow.version, document_category: policyRow.document_category }],
-          noMatch:          false,
-          languageDetected: langDetection.code,
-          responseTimeMs:   Date.now() - start,
+          intentType:         'full_policy',
+          citations:          [{ policy_id: policyRow.id, policy_name: policyRow.name, version: policyRow.version, document_category: policyRow.document_category }],
+          noMatch:            false,
+          languageDetected:   langDetection.code,
+          responseTimeMs:     Date.now() - start,
+          suggestedQuestions: [],
         }
       }
     }
@@ -388,10 +456,10 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   if (citedRegKeys.size > 0) {
     regulationContext = await fetchRegulationContextByKeys([...citedRegKeys])
   }
-  // If explicit regulation query, also search platform KB namespace
+  // If the query explicitly mentions a regulation, look it up directly in the DB
   if (route.includeRegulations) {
-    const platformRegs = await fetchRegulationContextFromPlatformSearch(queryEmbedding)
-    for (const reg of platformRegs) {
+    const directRegs = await fetchRegulationContextByQueryText(queryText)
+    for (const reg of directRegs) {
       if (!regulationContext.some(r => r.official_name === reg.official_name)) {
         regulationContext.push(reg)
       }
@@ -402,10 +470,27 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   const uniquePolicyIds = [...new Set(ranked.map(c => c.metadata.policy_id))]
   const policyMeta      = await loadPolicyMeta(tenantId, uniquePolicyIds)
 
+  // 8b. Retrieve relevant knowledge base entries
+  let knowledgeEntries: KnowledgeEntry[] = []
+  try {
+    const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE)
+    knowledgeEntries = kbResults
+      .filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
+      .map(r => ({
+        question:    r.metadata.question,
+        answer:      r.metadata.answer,
+        source_name: r.metadata.source_name,
+      }))
+  } catch (e) {
+    // Non-fatal — knowledge namespace may not exist yet for this tenant
+    console.warn(`[query] Knowledge retrieval failed (non-fatal): ${String(e)}`)
+  }
+
   // 9. Assemble context block
   const context = buildContextBlock(
     ranked,
     regulationContext,
+    knowledgeEntries,
     policyMeta,
     staffName,
     queryText,
@@ -421,13 +506,27 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
     langResolution.requestedLanguage,
   )
 
-  // Call Claude
-  const responseHtml = await callClaude(systemPrompt, context, {
-    maxTokens:   4096,
-    temperature: 0.3,
-  })
+  // Call Claude — use multi-turn when the caller supplies conversation history (§8.2)
+  let responseHtml: string
+  if (conversationHistory && conversationHistory.length > 0) {
+    const messages = [
+      ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      { role: 'user' as const, content: context },
+    ]
+    responseHtml = await callClaudeWithHistory(systemPrompt, messages, {
+      maxTokens:   4096,
+      temperature: 0.3,
+    })
+  } else {
+    responseHtml = await callClaude(systemPrompt, context, {
+      maxTokens:   4096,
+      temperature: 0.3,
+    })
+  }
 
-  // 11. Build citations and save record
+  // 11. Extract suggested questions, build citations, and save record
+  const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
+
   const citations: Citation[] = uniquePolicyIds
     .map(id => {
       const meta = policyMeta.get(id)
@@ -440,7 +539,7 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
 
   await saveQueryRecord({
     tenantId, userId, channel, queryText,
-    responseHtml,
+    responseHtml: cleanedHtml,
     intentType: 'summary',
     documentCategoryQueried: primaryCategory,
     policyIdsCited: citations.map(c => c.policy_id),
@@ -450,12 +549,13 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   })
 
   return {
-    responseHtml,
-    intentType:       'summary',
+    responseHtml:       cleanedHtml,
+    intentType:         'summary',
     citations,
     noMatch,
-    languageDetected: langDetection.code,
-    responseTimeMs:   Date.now() - start,
+    languageDetected:   langDetection.code,
+    responseTimeMs:     Date.now() - start,
+    suggestedQuestions: suggestions,
   }
 }
 

@@ -259,9 +259,14 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   const start = Date.now()
   const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory } = input
 
-  // 1. Detect language
-  const langDetection   = await detectLanguage(queryText)
-  const langResolution  = resolveLanguagePattern(langDetection, queryText)
+  // 1. Detect language (§5.1)
+  const langDetection  = await detectLanguage(queryText)
+  const langResolution = resolveLanguagePattern(langDetection, queryText)
+
+  // §5.1 — flag low-confidence detections for review (defaulted to English)
+  if (langDetection.lowConfidence) {
+    console.warn(`[query] Low-confidence language detection for tenant=${tenantId} confidence=${langDetection.confidence.toFixed(2)} defaulting to English`)
+  }
 
   // 2. Classify intent
   const rawIntent = classifyIntent(queryText)

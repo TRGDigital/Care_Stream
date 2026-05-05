@@ -360,7 +360,7 @@ adminRouter.delete('/regulations/:id', async (req: Request, res: Response) => {
 // ─── GET /admin/prompts ───────────────────────────────────────────────────────
 // Return the live AI prompt file contents so the platform owner can inspect them.
 
-const PROMPTS_DIR = path.resolve(__dirname, '../../../../../prompts')
+const PROMPTS_DIR = path.resolve(__dirname, '../../../../prompts')
 
 adminRouter.get('/prompts', (_req: Request, res: Response) => {
   try {

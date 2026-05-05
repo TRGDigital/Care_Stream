@@ -113,9 +113,9 @@ export function createApiClient(token: string) {
     },
 
     settings: {
-      get: () => apiFetch<{ inbound_email: string; email_allowlist: string[] }>('/settings', token),
-      update: (data: { email_allowlist: string[] }) =>
-        apiFetch<{ email_allowlist: string[] }>('/settings', token, {
+      get: () => apiFetch<{ inbound_email: string; email_allowlist: string[]; facility_type: string }>('/settings', token),
+      update: (data: { email_allowlist?: string[]; facility_type?: string }) =>
+        apiFetch<{ email_allowlist: string[]; facility_type: string }>('/settings', token, {
           method: 'PATCH',
           body:   JSON.stringify(data),
         }),

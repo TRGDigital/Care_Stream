@@ -40,6 +40,7 @@ model Tenant {
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   plan_id             String?
   branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
+  facility_type       String             @default("care home")              // e.g. nursing home, residential home
   email_allowlist     String[]           @default([])                       // approved inbound sender addresses
   created_at          DateTime           @default(now())
   plan                Plan?              @relation(fields: [plan_id], references: [id])

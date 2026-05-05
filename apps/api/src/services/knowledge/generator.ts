@@ -18,8 +18,12 @@ import {
 
 // ─── Claude prompt ────────────────────────────────────────────────────────────
 
-const PROMPTS_DIR      = path.resolve(__dirname, '../../../../../prompts')
-const EXTRACTION_SYSTEM = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-c-knowledge-extraction.txt'), 'utf8')
+const PROMPTS_DIR            = path.resolve(__dirname, '../../../../../prompts')
+const EXTRACTION_SYSTEM_TMPL = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-c-knowledge-extraction.txt'), 'utf8')
+
+function buildExtractionPrompt(facilityType: string): string {
+  return EXTRACTION_SYSTEM_TMPL.replace(/\{\{facility_type\}\}/g, facilityType)
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,9 +34,10 @@ interface QAPair {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async function extractQAPairs(policyText: string): Promise<QAPair[]> {
-  const truncated = policyText.slice(0, 60_000) // ~45k tokens — well within context
-  const raw = await callClaude(EXTRACTION_SYSTEM, truncated, {
+async function extractQAPairs(policyText: string, facilityType: string): Promise<QAPair[]> {
+  const truncated    = policyText.slice(0, 60_000)
+  const systemPrompt = buildExtractionPrompt(facilityType)
+  const raw = await callClaude(systemPrompt, truncated, {
     maxTokens:   2048,
     temperature: 0.1,
   })
@@ -65,6 +70,10 @@ export async function generateKnowledgeForPolicy(
   // Remove stale entries for this policy
   await deleteKnowledgeForPolicy(tenantId, policyId)
 
+  // Look up tenant's facility type for prompt personalisation
+  const tenantRow    = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+  const facilityType = (tenantRow?.facility_type as string | undefined) ?? 'care home'
+
   // Fetch extracted policy text
   const rawText = await downloadExtractedText(tenantId, policyId)
   if (!rawText || rawText.trim().length < 200) {
@@ -73,7 +82,7 @@ export async function generateKnowledgeForPolicy(
   }
 
   // Ask Claude to extract Q&A pairs
-  const pairs = await extractQAPairs(rawText)
+  const pairs = await extractQAPairs(rawText, facilityType)
   if (pairs.length === 0) {
     console.warn(`[knowledge] No Q&A pairs extracted for policy=${policyId}`)
     return

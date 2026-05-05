@@ -1,29 +1,228 @@
 import { Pinecone } from '@pinecone-database/pinecone'
+import type { DocumentCategory } from '../../types'
 
-// §3.1 — Pinecone namespace isolation
-// Tenant content: namespace = tenant_{tenant_id}
-// Handbook chapter index: namespace = tenant_{tenant_id}_chapters
-// Platform knowledge base: namespace = platform_regulations (read-only from tenant pipelines)
-const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+// §3.1 / §4.1.1 / §10.5 — Pinecone namespace isolation and vector operations.
+//
+// Namespace scheme (all within a single Pinecone index):
+//   Active tenant policies    → tenant_{tenantId}
+//   Tenant handbook chapters  → tenant_{tenantId}_chapters   (§4.6.2)
+//   Version staging           → tenant_{tenantId}_staging_{policyId}  (§10.5)
+//   Platform regulations      → platform_regulations  (§6.2, read-only from tenant pipeline)
+//
+// Vector ID scheme:
+//   Policy chunk   → {policyId}_c{chunkIndex}
+//   Chapter index  → {policyId}_ch{chapterIndex}
+//
+// The staging approach for atomic version swap (§10.5):
+//   1. New version vectors are upserted to the staging namespace.
+//   2. activateStagedVectors() fetches them and re-upserts into the active namespace.
+//   3. Old version vectors are then deleted by ID prefix.
+//   4. Staging namespace is deleted.
+//   The active namespace is never empty during the transition.
 
-export function getTenantNamespace(tenantId: string) {
+const pc         = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+const INDEX_NAME = process.env.PINECONE_INDEX_NAME!
+
+function getIndex() {
+  return pc.index(INDEX_NAME)
+}
+
+// ─── Namespace helpers ─────────────────────────────────────────────────────────
+
+export function getTenantNamespace(tenantId: string): string {
   return `tenant_${tenantId}`
 }
 
-export function getHandbookChapterNamespace(tenantId: string) {
+export function getStagingNamespace(tenantId: string, policyId: string): string {
+  return `tenant_${tenantId}_staging_${policyId}`
+}
+
+export function getHandbookChapterNamespace(tenantId: string): string {
   return `tenant_${tenantId}_chapters`
 }
 
 export const PLATFORM_REGULATIONS_NAMESPACE = 'platform_regulations'
 
-export async function upsertVectors(_namespace: string, _vectors: unknown[]): Promise<void> {
-  throw new Error('Not implemented')
+// ─── Vector types ──────────────────────────────────────────────────────────────
+
+export interface PolicyVectorMetadata extends Record<string, unknown> {
+  policy_id:          string
+  tenant_id:          string
+  document_category:  DocumentCategory
+  chunk_index:        number
+  source_filename:    string
+  chunk_text:         string
+  version:            number
+  regulations_cited?: string[]
+  chapter_title?:     string
+  section_heading?:   string
 }
 
-export async function queryVectors(_namespace: string, _vector: number[], _topK: number): Promise<unknown[]> {
-  throw new Error('Not implemented')
+export interface PolicyVector {
+  id:       string
+  values:   number[]
+  metadata: PolicyVectorMetadata
 }
 
-export async function deleteVectorsByFilter(_namespace: string, _filter: Record<string, unknown>): Promise<void> {
-  throw new Error('Not implemented')
+export interface ChapterVectorMetadata extends Record<string, unknown> {
+  policy_id:      string
+  tenant_id:      string
+  chapter_index:  number
+  chapter_title:  string
+  chunk_ids:      string[]
+}
+
+export interface ChapterVector {
+  id:       string
+  values:   number[]
+  metadata: ChapterVectorMetadata
+}
+
+export interface QueryResult {
+  id:       string
+  score:    number
+  metadata: PolicyVectorMetadata
+}
+
+// ─── Internal helpers ─────────────────────────────────────────────────────────
+
+const BATCH_SIZE = 100
+
+async function upsertBatched<T extends { id: string; values: number[]; metadata: Record<string, unknown> }>(
+  namespace: string,
+  vectors:   T[],
+): Promise<void> {
+  const ns = getIndex().namespace(namespace)
+  for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
+    await ns.upsert(vectors.slice(i, i + BATCH_SIZE) as any)
+  }
+}
+
+// Collect all vector IDs from a namespace that share a given ID prefix.
+async function listIdsByPrefix(namespace: string, prefix: string): Promise<string[]> {
+  const ns  = getIndex().namespace(namespace)
+  const ids: string[] = []
+  let token: string | undefined
+
+  do {
+    const resp = await ns.listPaginated({ prefix, ...(token ? { paginationToken: token } : {}) })
+    for (const v of resp.vectors ?? []) {
+      if (v.id) ids.push(v.id)
+    }
+    token = resp.pagination?.next
+  } while (token)
+
+  return ids
+}
+
+// ─── Policy vector operations ─────────────────────────────────────────────────
+
+// Upsert new-version vectors into the staging namespace, keeping the active
+// namespace untouched until activateStagedVectors() is called.
+export async function upsertPolicyVectors(
+  tenantId: string,
+  policyId: string,
+  vectors:  PolicyVector[],
+): Promise<void> {
+  const ns = getStagingNamespace(tenantId, policyId)
+  await upsertBatched(ns, vectors)
+  console.log(`[pinecone] Staged ${vectors.length} vectors → ${ns}`)
+}
+
+// Move staged vectors to the active namespace.
+// Fetches vectors from staging (with values) and re-upserts to active,
+// then deletes the staging namespace.
+export async function activateStagedVectors(tenantId: string, policyId: string): Promise<void> {
+  const index    = getIndex()
+  const stagingNs = getStagingNamespace(tenantId, policyId)
+  const activeNs  = getTenantNamespace(tenantId)
+  const prefix    = `${policyId}_`
+
+  const allIds = await listIdsByPrefix(stagingNs, prefix)
+  if (allIds.length === 0) {
+    console.warn(`[pinecone] activateStagedVectors: no staged vectors for policy=${policyId}`)
+    return
+  }
+
+  // Fetch in batches, re-upsert to active namespace
+  for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+    const batchIds = allIds.slice(i, i + BATCH_SIZE)
+    const fetched  = await index.namespace(stagingNs).fetch(batchIds)
+    const records  = Object.values(fetched.records ?? {})
+    if (records.length > 0) {
+      await index.namespace(activeNs).upsert(records as any)
+    }
+  }
+
+  // Staging namespace no longer needed
+  await index.namespace(stagingNs).deleteAll()
+
+  console.log(`[pinecone] Activated ${allIds.length} vectors for policy=${policyId} → ${activeNs}`)
+}
+
+// Delete all vectors for a specific policy_id from the active namespace.
+// Uses ID prefix listing so no paid-tier filter capability is required.
+export async function deletePolicyVectors(tenantId: string, policyId: string): Promise<void> {
+  const ns  = getIndex().namespace(getTenantNamespace(tenantId))
+  const ids = await listIdsByPrefix(getTenantNamespace(tenantId), `${policyId}_`)
+
+  if (ids.length === 0) return
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    await ns.deleteMany(ids.slice(i, i + BATCH_SIZE))
+  }
+
+  console.log(`[pinecone] Deleted ${ids.length} vectors for policy=${policyId}`)
+}
+
+// ─── Handbook chapter index operations ────────────────────────────────────────
+
+// Upsert chapter-level summary vectors for two-stage handbook retrieval (§4.6.3).
+export async function upsertChapterVectors(tenantId: string, vectors: ChapterVector[]): Promise<void> {
+  const ns = getHandbookChapterNamespace(tenantId)
+  await upsertBatched(ns, vectors)
+  console.log(`[pinecone] Upserted ${vectors.length} chapter vectors → ${ns}`)
+}
+
+// Delete chapter index vectors for a specific policy (e.g. on version swap or archive).
+export async function deleteChapterVectors(tenantId: string, policyId: string): Promise<void> {
+  const nsName = getHandbookChapterNamespace(tenantId)
+  const ns     = getIndex().namespace(nsName)
+  const ids    = await listIdsByPrefix(nsName, `${policyId}_ch`)
+
+  if (ids.length === 0) return
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    await ns.deleteMany(ids.slice(i, i + BATCH_SIZE))
+  }
+}
+
+// ─── Query operations (§4.1.2) ────────────────────────────────────────────────
+
+export async function queryVectors(
+  namespace: string,
+  vector:    number[],
+  topK:      number,
+  filter?:   Record<string, unknown>,
+): Promise<QueryResult[]> {
+  const resp = await getIndex().namespace(namespace).query({
+    vector,
+    topK,
+    includeMetadata: true,
+    ...(filter ? { filter } : {}),
+  })
+
+  return (resp.matches ?? []).map(m => ({
+    id:       m.id,
+    score:    m.score ?? 0,
+    metadata: m.metadata as PolicyVectorMetadata,
+  }))
+}
+
+// Retained stub — paid-tier Pinecone supports delete-by-filter; v1 uses prefix listing.
+export async function deleteVectorsByFilter(
+  _namespace: string,
+  _filter:    Record<string, unknown>,
+): Promise<void> {
+  throw new Error('Use deletePolicyVectors() (ID prefix approach) for v1')
 }

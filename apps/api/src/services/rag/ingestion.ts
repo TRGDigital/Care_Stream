@@ -1,21 +1,46 @@
 import { prisma } from '../../db/client'
 import { downloadFile, uploadExtractedText, archiveVersionToS3 } from '../storage/s3'
-import { extractText, stripHeadersFooters, isSupportedMimeType } from './extractor'
+import { extractText, isSupportedMimeType } from './extractor'
+import { stripHeadersFooters } from './stripper'
+import { detectTOC } from './toc-detector'
+import { chunkText, chunkHandbook } from './chunker'
+import type { Chunk } from './chunker'
+import { embedTexts } from './embedder'
+import { detectRegulations } from './regulation-detector'
+import {
+  upsertPolicyVectors,
+  activateStagedVectors,
+  deletePolicyVectors,
+  upsertChapterVectors,
+  deleteChapterVectors,
+  getTenantNamespace,
+  getHandbookChapterNamespace,
+} from '../vector/pinecone'
+import type { PolicyVector, ChapterVector } from '../vector/pinecone'
+import { writeAuditLog } from '../../lib/audit'
 import type { IngestionJobData } from '../../workers/queue'
+import type { HandbookMetadata } from '../../types'
 
-// §4.1.1 — Document ingestion pipeline
-// Steps 1–3 implemented here.
-// Steps 4–9 (chunking, embedding, Pinecone) implemented in the RAG pipeline section.
+// §4.1.1 — Full document ingestion pipeline (Steps 1–9).
 
 export async function ingestDocument(job: IngestionJobData): Promise<void> {
-  const { policy_id, tenant_id, s3_key, document_category, filename, mime_type, version, previous_version_policy_id } = job
+  const {
+    policy_id,
+    tenant_id,
+    s3_key,
+    document_category,
+    filename,
+    mime_type,
+    version,
+    previous_version_policy_id,
+  } = job
 
   console.log(`[ingestion] Starting: policy=${policy_id} tenant=${tenant_id} category=${document_category}`)
 
   // ── Step 1: Fetch raw file from S3 ──────────────────────────────────────────
 
   const buffer = await downloadFile(s3_key)
-  console.log(`[ingestion] Downloaded from S3: ${s3_key} (${buffer.length} bytes)`)
+  console.log(`[ingestion] Downloaded ${buffer.length} bytes from S3: ${s3_key}`)
 
   // ── Step 2: Extract text ─────────────────────────────────────────────────────
 
@@ -35,48 +60,220 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
   // ── Step 3: Strip headers / footers ──────────────────────────────────────────
 
   const cleanText = stripHeadersFooters(rawText)
-  console.log(`[ingestion] Extracted ${cleanText.length} chars after stripping`)
+  console.log(`[ingestion] ${cleanText.length} chars after stripping`)
 
-  // Store the cleaned text in S3 — used by GET /policies/:id and full-policy RAG returns (§4.3)
   await uploadExtractedText(tenant_id, policy_id, cleanText)
 
-  // ── Steps 4–9: Pending RAG pipeline section ───────────────────────────────
-  // 4. For staff_handbook: detect TOC, build chapter map (§4.6.2)
-  // 5. Chunk text (~500 tokens, 10% overlap, chapter-boundary-aware for handbooks)
-  // 6. Embed each chunk via text-embedding-3-small
-  // 7. Scan chunks for regulation references → store as Pinecone metadata (§6.4)
-  // 8. Upsert vectors to tenant Pinecone namespace
-  // 9. Atomic version swap + mark policy active (§10.5)
+  // ── Step 4: TOC detection (staff_handbook only) ───────────────────────────────
+
+  const isHandbook = document_category === 'staff_handbook'
+  let chapters = []
+
+  if (isHandbook) {
+    const tocResult = detectTOC(cleanText)
+    chapters        = tocResult.chapters
+    console.log(`[ingestion] TOC detected=${tocResult.detected} chapters=${chapters.length}`)
+  }
+
+  // ── Step 5: Chunk text ────────────────────────────────────────────────────────
+
+  let chunks: Chunk[]
+  if (isHandbook && chapters.length > 0) {
+    chunks = chunkHandbook(cleanText, chapters)
+  } else {
+    chunks = chunkText(cleanText)
+  }
+  console.log(`[ingestion] ${chunks.length} chunks created`)
+
+  // ── Step 6: Embed chunks ──────────────────────────────────────────────────────
+
+  let embeddings: number[][]
+  try {
+    embeddings = await embedTexts(chunks.map(c => c.text))
+  } catch (e) {
+    await markFailed(policy_id, `Embedding failed: ${String(e)}`)
+    return
+  }
+  console.log(`[ingestion] Embedded ${embeddings.length} chunks`)
+
+  // ── Step 7: Detect regulation references in each chunk ───────────────────────
+
+  const regulationMatches = await Promise.all(
+    chunks.map(c => detectRegulations(c.text))
+  )
+
+  // ── Step 8: Build vectors and upsert to staging Pinecone namespace ────────────
+
+  const policyVectors: PolicyVector[] = chunks.map((chunk, i) => ({
+    id:     `${policy_id}_c${chunk.chunkIndex}`,
+    values: embeddings[i],
+    metadata: {
+      policy_id,
+      tenant_id,
+      document_category,
+      chunk_index:      chunk.chunkIndex,
+      source_filename:  filename,
+      chunk_text:       chunk.text,
+      version,
+      ...(regulationMatches[i].length > 0 ? { regulations_cited: regulationMatches[i] } : {}),
+      ...(chunk.chapterTitle   ? { chapter_title:   chunk.chapterTitle   } : {}),
+      ...(chunk.sectionHeading ? { section_heading: chunk.sectionHeading } : {}),
+    },
+  }))
+
+  try {
+    await upsertPolicyVectors(tenant_id, policy_id, policyVectors)
+  } catch (e) {
+    await markFailed(policy_id, `Pinecone upsert failed: ${String(e)}`)
+    return
+  }
+
+  // Handbook chapter index (§4.6.2) — create one chapter-level vector per chapter.
+  // Each chapter vector represents the heading + first 200 tokens of chapter content,
+  // enabling Stage 1 of two-stage retrieval (§4.6.3).
+  let handbookMeta: HandbookMetadata | undefined
+
+  if (isHandbook && chapters.length > 0) {
+    // Map chapter title → chunk IDs for metadata
+    const chapterChunkIds = new Map<string, string[]>()
+    for (const chunk of chunks) {
+      if (!chunk.chapterTitle) continue
+      const list = chapterChunkIds.get(chunk.chapterTitle) ?? []
+      list.push(`${policy_id}_c${chunk.chunkIndex}`)
+      chapterChunkIds.set(chunk.chapterTitle, list)
+    }
+
+    // Build chapter summary texts: heading + first ~800 chars of chapter content
+    const CHAPTER_SUMMARY_CHARS = 800
+    const chapterSummaryTexts: string[] = chapters.map(ch => {
+      const body  = cleanText.slice(ch.startOffset, ch.endOffset)
+      const intro = body.slice(0, CHAPTER_SUMMARY_CHARS).trim()
+      return `${ch.title}\n\n${intro}`
+    })
+
+    let chapterEmbeddings: number[][]
+    try {
+      chapterEmbeddings = await embedTexts(chapterSummaryTexts)
+    } catch (e) {
+      // Non-fatal — fallback is available at query time (flat search)
+      console.warn(`[ingestion] Chapter embedding failed (non-fatal): ${String(e)}`)
+      chapterEmbeddings = []
+    }
+
+    if (chapterEmbeddings.length > 0) {
+      const chapterVectors: ChapterVector[] = chapters.map((ch, i) => ({
+        id:     `${policy_id}_ch${i}`,
+        values: chapterEmbeddings[i],
+        metadata: {
+          policy_id,
+          tenant_id,
+          chapter_index: i,
+          chapter_title: ch.title,
+          chunk_ids:     chapterChunkIds.get(ch.title) ?? [],
+        },
+      }))
+
+      try {
+        await upsertChapterVectors(tenant_id, chapterVectors)
+      } catch (e) {
+        console.warn(`[ingestion] Chapter index upsert failed (non-fatal): ${String(e)}`)
+      }
+    }
+
+    handbookMeta = {
+      chapter_count:           chapters.length,
+      toc_detected:            chapters.some(c => c.pageStart !== undefined),
+      total_chunks:            chunks.length,
+      chapter_index_namespace: getHandbookChapterNamespace(tenant_id),
+      chapter_map:             chapters.map(ch => ({
+        chapter_title: ch.title,
+        page_start:    ch.pageStart ?? 0,
+        page_end:      ch.pageEnd   ?? 0,
+        chunk_ids:     chapterChunkIds.get(ch.title) ?? [],
+      })),
+    }
+  }
+
+  // ── Step 9: Atomic version swap + mark policy active (§10.5) ─────────────────
   //
-  // Until the RAG section is complete, policy status stays 'processing'.
-  // The extracted text is stored in S3 and available for admin preview.
+  // Sequence:
+  //   a. Move staged vectors → active namespace  (new version now queryable)
+  //   b. Delete old version vectors              (if replacing an existing version)
+  //   c. Mark old record superseded
+  //   d. Archive old S3 file
+  //   e. Mark new policy active in PostgreSQL
+  //   f. Write audit log
 
-  console.log(`[ingestion] Text extraction complete for policy=${policy_id}. Chunking/embedding pending.`)
+  try {
+    // a. Activate staged vectors
+    await activateStagedVectors(tenant_id, policy_id)
 
-  // ── Version swap stub (§10.5) ─────────────────────────────────────────────
-  // When the full RAG pipeline is in place, this swap happens AFTER Pinecone
-  // indexing completes — ensuring no gap between old and new version.
-  // Storing the previous_version_policy_id here so the next section can use it.
-  if (previous_version_policy_id) {
+    // b–d. Version swap: remove old vectors and mark old record superseded
+    if (previous_version_policy_id) {
+      try {
+        await deletePolicyVectors(tenant_id, previous_version_policy_id)
+        if (isHandbook) {
+          await deleteChapterVectors(tenant_id, previous_version_policy_id)
+        }
+      } catch (e) {
+        // Non-fatal — stale vectors don't break queries, just add noise
+        console.warn(`[ingestion] Could not delete old vectors for ${previous_version_policy_id}: ${String(e)}`)
+      }
+
+      await (prisma as any).policy.update({
+        where: { id: previous_version_policy_id },
+        data:  { status: 'superseded', superseded_by: policy_id },
+      })
+
+      await archiveVersionToS3({
+        sourceKey: s3_key,
+        tenantId:  tenant_id,
+        policyId:  previous_version_policy_id,
+        version:   version - 1,
+        filename,
+      })
+
+      console.log(`[ingestion] Superseded previous version: ${previous_version_policy_id}`)
+    }
+
+    // e. Mark new policy active
+    const activeNamespace = getTenantNamespace(tenant_id)
     await (prisma as any).policy.update({
-      where: { id: previous_version_policy_id, tenant_id },
-      data: { status: 'superseded', superseded_by: policy_id },
+      where: { id: policy_id },
+      data: {
+        status:              'active',
+        pinecone_namespace:  activeNamespace,
+        ...(handbookMeta ? { handbook_metadata: handbookMeta as any } : {}),
+      },
     })
-    await archiveVersionToS3({
-      sourceKey: job.s3_key,
-      tenantId: tenant_id,
-      policyId: previous_version_policy_id,
-      version: version - 1,
-      filename,
-    })
-    console.log(`[ingestion] Superseded previous version: ${previous_version_policy_id}`)
+
+    // f. Audit log
+    if (previous_version_policy_id) {
+      await writeAuditLog({
+        tenant_id,
+        user_id:     null,
+        event_type:  'policy_version_swap',
+        entity_type: 'policy',
+        entity_id:   policy_id,
+        metadata: {
+          previous_policy_id: previous_version_policy_id,
+          new_version:        version,
+          total_chunks:       chunks.length,
+        },
+      })
+    }
+
+    console.log(`[ingestion] Complete: policy=${policy_id} chunks=${chunks.length} status=active`)
+
+  } catch (e) {
+    await markFailed(policy_id, `Activation failed: ${String(e)}`)
   }
 }
 
 async function markFailed(policyId: string, reason: string): Promise<void> {
-  console.error(`[ingestion] Failed for policy=${policyId}: ${reason}`)
+  console.error(`[ingestion] Failed policy=${policyId}: ${reason}`)
   await (prisma as any).policy.update({
     where: { id: policyId },
-    data: { status: 'archived' },  // archived = failed, not user-facing
+    data:  { status: 'archived' },
   }).catch(() => {/* best-effort */})
 }

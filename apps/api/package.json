@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/app.ts",
+    "dev:worker": "tsx watch src/workers/ingestion.worker.ts",
     "build": "tsc",
     "start": "node dist/app.js",
+    "start:worker": "node dist/workers/ingestion.worker.js",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {

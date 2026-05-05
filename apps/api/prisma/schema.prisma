@@ -1,106 +1,193 @@
 // §9 — PostgreSQL data model via Prisma
-// Hosted on Supabase; RLS enforced at DB level via tenant_id on every table
+// Hosted on Supabase; RLS enforced at DB level (see supabase/rls.sql)
+// Tenant isolation: tenant_id on every table, enforced at app layer + RLS safety net
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
 }
+
+// ─── Plans ────────────────────────────────────────────────────────────────────
+
+model Plan {
+  id                    String   @id @default(uuid())
+  name                  String   @unique          // 'Starter' | 'Professional'
+  stripe_price_id_monthly String?
+  stripe_price_id_annual  String?
+  monthly_query_limit   Int
+  has_advanced_analytics Boolean @default(false)
+  has_cqc_report        Boolean @default(false)
+  price_monthly_pence   Int                       // stored in pence (UK)
+  is_active             Boolean @default(true)
+  tenants               Tenant[]
+
+  @@map("plans")
+}
+
+// ─── Tenants ──────────────────────────────────────────────────────────────────
 
 model Tenant {
   id                  String             @id @default(uuid())
   name                String
-  slug                String             @unique
-  email_domain        String             @unique
-  stripe_customer_id  String?
-  subscription_status String             @default("trialling")
+  slug                String             @unique   // e.g. sunrise-care
+  email_domain        String             @unique   // inbound: policies@{slug}.carestreamai.co.uk
+  stripe_customer_id  String?            @unique
+  subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   plan_id             String?
-  branding_signoff    String             @default("The CareStreamAI Team")
+  branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
   created_at          DateTime           @default(now())
+  plan                Plan?              @relation(fields: [plan_id], references: [id])
   users               User[]
   policies            Policy[]
   queries             QueryRecord[]
   email_sessions      EmailSession[]
+  audit_logs          AuditLog[]
+
+  @@map("tenants")
 }
+
+// ─── Users ────────────────────────────────────────────────────────────────────
 
 model User {
-  id            String        @id @default(uuid())
-  tenant_id     String
-  email         String        @unique
-  name          String
-  role          String        @default("staff")
-  password_hash String
-  last_login_at DateTime?
-  tenant        Tenant        @relation(fields: [tenant_id], references: [id])
-  queries       QueryRecord[]
-  email_sessions EmailSession[]
-  policies_uploaded Policy[]
+  id                     String         @id @default(uuid())
+  tenant_id              String
+  email                  String         @unique
+  name                   String
+  role                   String         @default("staff")   // admin|staff
+  password_hash          String
+  failed_login_attempts  Int            @default(0)         // §11.1 brute-force protection
+  locked_until           DateTime?                          // lockout after 5 failed attempts
+  last_login_at          DateTime?
+  created_at             DateTime       @default(now())
+  tenant                 Tenant         @relation(fields: [tenant_id], references: [id])
+  queries                QueryRecord[]
+  email_sessions         EmailSession[]
+  policies_uploaded      Policy[]       @relation("PolicyUploader")
+  audit_logs             AuditLog[]
+
+  @@index([tenant_id])
+  @@map("users")
 }
+
+// ─── Policies ─────────────────────────────────────────────────────────────────
 
 model Policy {
-  id                 String   @id @default(uuid())
-  tenant_id          String
-  name               String
-  filename           String
-  s3_key             String
-  document_category  String   @default("internal_policy")
-  version            Int      @default(1)
-  status             String   @default("processing")
-  tags               Json     @default("[]")
-  uploaded_by        String
-  handbook_metadata  Json?
-  review_interval_days Int?
-  last_reviewed_at   DateTime?
-  superseded_by      String?
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-  tenant             Tenant   @relation(fields: [tenant_id], references: [id])
-  uploader           User     @relation(fields: [uploaded_by], references: [id])
+  id                   String    @id @default(uuid())
+  tenant_id            String
+  name                 String
+  filename             String
+  s3_key               String                              // full S3 object key
+  document_category    String    @default("internal_policy") // §4.5: internal_policy|staff_handbook
+  version              Int       @default(1)
+  status               String    @default("processing")   // active|processing|archived|superseded
+  tags                 Json      @default("[]")
+  uploaded_by          String
+  pinecone_namespace   String?                             // active Pinecone namespace for this version
+  handbook_metadata    Json?                               // §4.6.6: chapter_count, chapter_map, etc.
+  review_interval_days Int?                                // §10.5 policy review reminders
+  last_reviewed_at     DateTime?
+  superseded_by        String?                             // FK to newer Policy version (§10.5)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  tenant               Tenant    @relation(fields: [tenant_id], references: [id])
+  uploader             User      @relation("PolicyUploader", fields: [uploaded_by], references: [id])
+  newer_version        Policy?   @relation("PolicyVersionChain", fields: [superseded_by], references: [id])
+  older_versions       Policy[]  @relation("PolicyVersionChain")
+
+  @@index([tenant_id, status])
+  @@index([tenant_id, document_category])
+  @@map("policies")
 }
+
+// ─── Queries ──────────────────────────────────────────────────────────────────
 
 model QueryRecord {
-  id               String   @id @default(uuid())
-  tenant_id        String
-  user_id          String?
-  channel          String
-  query_text       String
-  response_text    String
-  policy_ids_cited String[]
-  language_detected String  @default("eng")
-  response_time_ms Int
-  created_at       DateTime @default(now())
-  tenant           Tenant   @relation(fields: [tenant_id], references: [id])
-  user             User?    @relation(fields: [user_id], references: [id])
+  id                       String   @id @default(uuid())
+  tenant_id                String
+  user_id                  String?                            // null for email queries
+  channel                  String                             // chat|email
+  query_text               String
+  response_text            String
+  intent_type              String   @default("summary")       // summary|full_policy|follow_up
+  document_category_queried String?                           // which category was searched
+  policy_ids_cited         String[]
+  no_match                 Boolean  @default(false)           // true = no policy found (§10.2 not-found rate)
+  language_detected        String   @default("eng")           // ISO 639-3 code (§5.1)
+  response_time_ms         Int
+  created_at               DateTime @default(now())
+  tenant                   Tenant   @relation(fields: [tenant_id], references: [id])
+  user                     User?    @relation(fields: [user_id], references: [id])
+
+  @@index([tenant_id, created_at])
+  @@index([tenant_id, language_detected])
+  @@index([tenant_id, no_match])
+  @@map("queries")
 }
 
+// ─── Email Sessions ───────────────────────────────────────────────────────────
+
+// §8.2 — Threaded email conversation tracking
 model EmailSession {
   id              String   @id @default(uuid())
   tenant_id       String
   user_id         String
-  thread_id       String   @unique
+  thread_id       String   @unique   // derived from original Message-ID header
   subject         String
-  messages        Json     @default("[]")
+  messages        Json     @default("[]") // [{role, content, timestamp, policy_ids_cited}]
   last_message_at DateTime @default(now())
-  expires_at      DateTime
+  expires_at      DateTime             // 7 days from last_message_at (§8.4)
   created_at      DateTime @default(now())
   tenant          Tenant   @relation(fields: [tenant_id], references: [id])
   user            User     @relation(fields: [user_id], references: [id])
+
+  @@index([tenant_id, expires_at])
+  @@map("email_sessions")
 }
 
+// ─── External Regulations ────────────────────────────────────────────────────
+
+// §6.6 — Platform-level regulatory knowledge base (no tenant_id — shared read-only)
 model ExternalRegulation {
-  id                    String   @id @default(uuid())
-  reference_key         String   @unique
-  official_name         String
-  also_known_as         String[]
-  summary               String
-  care_home_context     String
+  id                       String    @id @default(uuid())
+  reference_key            String    @unique               // e.g. 'gdpr', 'riddor' — upsert key
+  official_name            String
+  also_known_as            String[]                        // synonyms for fuzzy matching
+  // also_known_as_tsv is managed via trigger in supabase/rls.sql — not in Prisma schema
+  summary                  String
+  care_home_context        String
   care_company_interaction String
-  practical_meaning     String
-  source_urls           String[]
-  pinecone_vector_id    String?
-  last_synced_at        DateTime?
-  is_active             Boolean  @default(true)
+  practical_meaning        String
+  source_urls              String[]
+  pinecone_vector_id       String?
+  last_synced_at           DateTime?
+  is_active                Boolean   @default(true)
+
+  @@map("external_regulations")
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+// §11.3 — Immutable append-only audit log
+// INSERT only — UPDATE and DELETE blocked by RLS policy in supabase/rls.sql
+model AuditLog {
+  id          String   @id @default(uuid())
+  tenant_id   String?                    // null for platform-level events
+  user_id     String?
+  event_type  String                     // policy_upload|policy_archive|policy_update|
+                                         // user_invite|role_change|billing_change|query
+  entity_type String                     // policy|user|tenant|query
+  entity_id   String
+  metadata    Json     @default("{}")    // event-specific detail
+  created_at  DateTime @default(now())
+  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
+  user        User?    @relation(fields: [user_id], references: [id])
+
+  @@index([tenant_id, created_at])
+  @@index([tenant_id, event_type])
+  @@map("audit_logs")
 }

@@ -12,6 +12,7 @@ import { embedTexts } from '../rag/embedder'
 import { downloadExtractedText } from '../storage/s3'
 import {
   upsertKnowledgeVectors,
+  deleteKnowledgeVectors,
   deleteKnowledgeVectorsBySource,
   type KnowledgeVector,
 } from '../vector/pinecone'
@@ -173,6 +174,39 @@ export async function deleteKnowledgeForPolicy(tenantId: string, policyId: strin
   await (prisma as any).knowledgeEntry.deleteMany({
     where: { tenant_id: tenantId, source_id: policyId, source_type: 'policy' },
   })
+}
+
+// Remove duplicate knowledge entries (same normalised question) for a tenant.
+// Keeps the approved entry, or the newest if none/both are approved.
+// Called automatically after each policy generation run.
+export async function dedupKnowledgeEntries(tenantId: string): Promise<{ removed: number }> {
+  const allEntries = await (prisma as any).knowledgeEntry.findMany({
+    where:   { tenant_id: tenantId },
+    orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
+  })
+
+  const normalise = (text: string) =>
+    text.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+
+  const seen   = new Map<string, string>()
+  const remove: string[] = []
+
+  for (const entry of allEntries) {
+    const key = normalise(entry.question)
+    if (seen.has(key)) {
+      remove.push(entry.id)
+    } else {
+      seen.set(key, entry.id)
+    }
+  }
+
+  if (remove.length > 0) {
+    await deleteKnowledgeVectors(tenantId, remove)
+    await (prisma as any).knowledgeEntry.deleteMany({ where: { id: { in: remove } } })
+    console.log(`[knowledge] Dedup removed ${remove.length} duplicate entries for tenant=${tenantId}`)
+  }
+
+  return { removed: remove.length }
 }
 
 // Embed a single manual entry and store its vector_id.

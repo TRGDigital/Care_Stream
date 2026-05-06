@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareStreamAI — mockup-03-admin-dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
+.frame{background:#f0f4f4;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #d8e4e4}
+.dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff6058}.d2{background:#ffbc2e}.d3{background:#28c840}
+.url-bar{flex:1;background:#f0f4f4;border-radius:6px;padding:5px 14px;font-size:12px;color:#5c7070;text-align:center}
+.dash{display:flex;height:560px;background:#fff;border-radius:8px;border:0.5px solid #d8e4e4;overflow:hidden}
+.nav{width:210px;background:#f4f8f8;border-right:0.5px solid #e0e8e8;display:flex;flex-direction:column;flex-shrink:0}
+.nav-head{padding:18px;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:#0D6E6E;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:700;color:#1c2b2b}
+.nav-org{font-size:10px;color:#5c7070}
+.ns{padding:13px 9px}
+.nl{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;font-size:12px;color:#5c7070;margin-bottom:2px;cursor:pointer}
+.ni.active{background:#e6f4f4;color:#0D6E6E;font-weight:600;border-left:3px solid #0D6E6E;padding-left:5px}
+.nidot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-foot{margin-top:auto;padding:13px;border-top:0.5px solid #e0e8e8;display:flex;align-items:center;gap:9px}
+.nfav{width:30px;height:30px;border-radius:50%;background:#0D6E6E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0}
+.main{flex:1;overflow-y:auto}
+.topbar{padding:13px 22px;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;justify-content:space-between}
+.page-title{font-size:16px;font-weight:700;color:#1c2b2b}
+.page-sub{font-size:11px;color:#5c7070;margin-top:1px}
+.actions{display:flex;gap:9px}
+.btn-p{background:#0D6E6E;color:white;border:none;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:600}
+.btn-o{background:transparent;color:#0D6E6E;border:0.5px solid #0D6E6E;border-radius:7px;padding:7px 16px;font-size:12px}
+.content{padding:18px 22px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
+.stat{background:#f4f8f8;border-radius:9px;padding:14px}
+.stat-n{font-size:24px;font-weight:700;color:#1c2b2b;margin-bottom:2px}
+.stat-n.teal{color:#0D6E6E}
+.stat-n.warn{color:#C96B00}
+.stat-l{font-size:11px;color:#5c7070}
+.stat-t{font-size:10px;margin-top:4px}
+.stat-t.up{color:#1A8754}
+.stat-t.warn{color:#C96B00}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.sh-title{font-size:14px;font-weight:700;color:#1c2b2b}
+.sh-link{font-size:11px;color:#0D6E6E}
+.chart{background:#f4f8f8;border-radius:9px;padding:14px;margin-bottom:18px;height:86px;display:flex;align-items:flex-end;gap:5px}
+.bar{background:#0D6E6E;border-radius:3px 3px 0 0;min-width:20px;opacity:0.85}
+.bar.dim{opacity:0.28}
+.table{border:0.5px solid #e0e8e8;border-radius:9px;overflow:hidden}
+.th{background:#f4f8f8;padding:9px 14px;display:grid;grid-template-columns:2fr 1fr 1fr 90px;font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;border-bottom:0.5px solid #e0e8e8}
+.tr{padding:10px 14px;display:grid;grid-template-columns:2fr 1fr 1fr 90px;border-bottom:0.5px solid #f0f4f4;align-items:center}
+.tr:last-child{border-bottom:none}
+.pname{font-size:12px;font-weight:600;color:#1c2b2b}
+.pmeta{font-size:10px;color:#5c7070;margin-top:1px}
+.badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;display:inline-block}
+.active{background:#e8f5ee;color:#1A6B45}
+.processing{background:#fff8e6;color:#854F0B}
+</style>
+<div class="frame">
+<div class="browser-bar">
+  <div class="dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
+  <div class="url-bar">app.carestreamai.co.uk/admin/dashboard — Crossways Care Home</div>
+</div>
+<div class="dash">
+  <div class="nav">
+    <div class="nav-head">
+      <div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="white" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div><div class="logo-text">CareStreamAI</div><div class="nav-org">Crossways Care Home</div></div>
+    </div>
+    <div class="ns"><div class="nl">OVERVIEW</div><div class="ni active"><div class="nidot"></div>Dashboard</div><div class="ni"><div class="nidot"></div>Query history</div></div>
+    <div class="ns"><div class="nl">DOCUMENTS</div><div class="ni"><div class="nidot"></div>Policy library</div><div class="ni"><div class="nidot"></div>Staff handbook</div></div>
+    <div class="ns"><div class="nl">TEAM</div><div class="ni"><div class="nidot"></div>Staff management</div><div class="ni"><div class="nidot"></div>Email settings</div></div>
+    <div class="ns"><div class="nl">REPORTS</div><div class="ni"><div class="nidot"></div>Analytics</div><div class="ni"><div class="nidot"></div>CQC report</div></div>
+    <div class="nav-foot"><div class="nfav">JO</div><div><div style="font-size:12px;font-weight:600;color:#1c2b2b">J. Okonkwo</div><div style="font-size:10px;color:#5c7070">Admin · Manager</div></div></div>
+  </div>
+  <div class="main">
+    <div class="topbar"><div><div class="page-title">Dashboard</div><div class="page-sub">Thursday 1 May 2026 · Professional plan</div></div><div class="actions"><button class="btn-o">CQC report</button><button class="btn-p">Upload policy</button></div></div>
+    <div class="content">
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-n teal">347</div><div class="stat-l">Queries this month</div><div class="stat-t up">+23% vs last month</div></div>
+        <div class="stat"><div class="stat-n">18</div><div class="stat-l">Active staff using</div><div class="stat-t up">3 new this week</div></div>
+        <div class="stat"><div class="stat-n">7</div><div class="stat-l">Languages used</div><div class="stat-t up">Tagalog, Polish, Hindi +4</div></div>
+        <div class="stat"><div class="stat-n warn">347/500</div><div class="stat-l">Monthly query limit</div><div class="stat-t warn">69% used · 30 days left</div></div>
+      </div>
+      <div class="sh"><div class="sh-title">Query volume — last 14 days</div><div class="sh-link">View full analytics →</div></div>
+      <div class="chart">
+        <div class="bar" style="height:35%"></div><div class="bar" style="height:48%"></div><div class="bar" style="height:30%"></div><div class="bar" style="height:62%"></div><div class="bar" style="height:52%"></div><div class="bar dim" style="height:20%"></div><div class="bar dim" style="height:15%"></div><div class="bar" style="height:72%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:68%"></div><div class="bar" style="height:82%"></div><div class="bar" style="height:74%"></div><div class="bar dim" style="height:25%"></div><div class="bar dim" style="height:18%"></div>
+      </div>
+      <div class="sh"><div class="sh-title">Policy library</div><div class="sh-link">View all 21 policies →</div></div>
+      <div class="table">
+        <div class="th"><span>Policy</span><span>Last updated</span><span>Queries</span><span>Status</span></div>
+        <div class="tr"><div><div class="pname">Falls Policy</div><div class="pmeta">v3.2 · J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">12 Jan 2026</div><div style="font-size:13px;font-weight:700;color:#0D6E6E">84</div><div><span class="badge active">Active</span></div></div>
+        <div class="tr"><div><div class="pname">Medication Administration</div><div class="pmeta">v4.1 · J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">3 Feb 2026</div><div style="font-size:13px;font-weight:700;color:#0D6E6E">71</div><div><span class="badge active">Active</span></div></div>
+        <div class="tr"><div><div class="pname">Safeguarding Adults</div><div class="pmeta">v2.0 · J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">8 Mar 2026</div><div style="font-size:13px;font-weight:700;color:#0D6E6E">58</div><div><span class="badge active">Active</span></div></div>
+        <div class="tr"><div><div class="pname">Infection Control</div><div class="pmeta">v5.0 · S. Ambridge</div></div><div style="font-size:11px;color:#5c7070">15 Apr 2026</div><div style="font-size:13px;font-weight:700;color:#0D6E6E">12</div><div><span class="badge processing">Processing</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

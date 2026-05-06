@@ -20,6 +20,9 @@ export interface KnowledgeEntry {
   source_id:   string | null
   source_name: string
   vector_id:   string | null
+  approved:    boolean
+  approved_at: string | null
+  approved_by: string | null
   created_at:  string
   updated_at:  string
 }
@@ -144,6 +147,10 @@ export function createApiClient(token: string) {
         apiFetch<{ generated: number; policies: number }>('/knowledge/generate-all', token, { method: 'POST' }),
       deleteForPolicy: (policyId: string) =>
         apiFetch<{ deleted: boolean }>(`/knowledge/policy/${policyId}`, token, { method: 'DELETE' }),
+      approve: (id: string) =>
+        apiFetch<KnowledgeEntry>(`/knowledge/${id}/approve`, token, { method: 'PATCH' }),
+      dedup: () =>
+        apiFetch<{ removed: number; remaining: number }>('/knowledge/dedup', token, { method: 'POST' }),
     },
 
     analytics: {

@@ -9,6 +9,7 @@ import {
   generateKnowledgeForAllPolicies,
   deleteKnowledgeForPolicy,
   embedManualEntry,
+  dedupKnowledgeEntries,
 } from '../services/knowledge/generator'
 import { deleteKnowledgeVectors } from '../services/vector/pinecone'
 
@@ -75,6 +76,11 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
     where: { id: entry.id },
     data:  { vector_id: vectorId },
   })
+
+  // Run dedup in the background — non-fatal if it fails
+  dedupKnowledgeEntries(tenantId).catch(e =>
+    console.warn('[knowledge] Dedup after manual create failed:', e)
+  )
 
   ok(res, updated, 201)
 })
@@ -194,4 +200,69 @@ knowledgeRouter.delete('/policy/:policyId', async (req: Request, res: Response) 
   const tenantId = getTenantId()
   await deleteKnowledgeForPolicy(tenantId, req.params.policyId as string)
   ok(res, { deleted: true })
+})
+
+// ─── PATCH /knowledge/:id/approve ────────────────────────────────────────────
+// Toggle approval status on a knowledge entry.
+
+knowledgeRouter.patch('/:id/approve', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const existing = await (prisma as any).knowledgeEntry.findFirst({
+    where: { id: req.params.id, tenant_id: tenantId },
+  })
+  if (!existing) {
+    err(res, 'NOT_FOUND', 'Knowledge entry not found', 404)
+    return
+  }
+
+  const nowApproved = !existing.approved
+  // @ts-ignore — req.user populated by requireAdmin middleware
+  const approverEmail = (req as any).user?.email ?? 'admin'
+
+  const updated = await (prisma as any).knowledgeEntry.update({
+    where: { id: req.params.id },
+    data: {
+      approved:    nowApproved,
+      approved_at: nowApproved ? new Date() : null,
+      approved_by: nowApproved ? approverEmail : null,
+    },
+  })
+  ok(res, updated)
+})
+
+// ─── POST /knowledge/dedup ────────────────────────────────────────────────────
+// Find and remove duplicate knowledge entries for this tenant.
+// Duplicates = entries with the same normalised question text.
+// Keeps the approved entry, or the newest one if neither/both are approved.
+
+knowledgeRouter.post('/dedup', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+
+  const allEntries = await (prisma as any).knowledgeEntry.findMany({
+    where:   { tenant_id: tenantId },
+    orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
+  })
+
+  function normalise(text: string): string {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+  }
+
+  const seen   = new Map<string, string>()   // normalised question → entry id to keep
+  const remove: string[] = []
+
+  for (const entry of allEntries) {
+    const key = normalise(entry.question)
+    if (seen.has(key)) {
+      remove.push(entry.id)
+    } else {
+      seen.set(key, entry.id)
+    }
+  }
+
+  if (remove.length > 0) {
+    await deleteKnowledgeVectors(tenantId, remove)
+    await (prisma as any).knowledgeEntry.deleteMany({ where: { id: { in: remove } } })
+  }
+
+  ok(res, { removed: remove.length, remaining: allEntries.length - remove.length })
 })

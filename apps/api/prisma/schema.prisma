@@ -178,20 +178,24 @@ model ExternalRegulation {
 // Per-tenant Q&A pairs extracted from policies or added manually.
 // Embedded in Pinecone (knowledge namespace) and retrieved alongside policy chunks.
 model KnowledgeEntry {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   tenant_id   String
   question    String
   answer      String
-  source_type String   // 'policy' | 'manual'
-  source_id   String?  // policy_id when source_type = 'policy'
-  source_name String   // human-readable (policy name or 'Manual entry')
-  vector_id   String?  // Pinecone vector ID — used for deletion
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  tenant      Tenant   @relation(fields: [tenant_id], references: [id])
+  source_type String    // 'policy' | 'manual'
+  source_id   String?   // policy_id when source_type = 'policy'
+  source_name String    // human-readable (policy name or 'Manual entry')
+  vector_id   String?   // Pinecone vector ID — used for deletion
+  approved    Boolean   @default(false)
+  approved_at DateTime?
+  approved_by String?   // email of the admin who approved
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  tenant      Tenant    @relation(fields: [tenant_id], references: [id])
 
   @@index([tenant_id])
   @@index([tenant_id, source_id])
+  @@index([tenant_id, approved])
   @@map("knowledge_entries")
 }
 

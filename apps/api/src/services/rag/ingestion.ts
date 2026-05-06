@@ -18,7 +18,7 @@ import {
 } from '../vector/pinecone'
 import type { PolicyVector, ChapterVector } from '../vector/pinecone'
 import { writeAuditLog } from '../../lib/audit'
-import { generateKnowledgeForPolicy } from '../knowledge/generator'
+import { generateKnowledgeForPolicy, dedupKnowledgeEntries } from '../knowledge/generator'
 import type { IngestionJobData } from '../../workers/queue'
 import type { HandbookMetadata } from '../../types'
 
@@ -275,6 +275,7 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
           select: { name: true },
         })
         await generateKnowledgeForPolicy(tenant_id, policy_id, policyRow?.name ?? filename)
+        await dedupKnowledgeEntries(tenant_id)
       } catch (e) {
         console.warn(`[ingestion] Knowledge generation failed (non-fatal): ${String(e)}`)
       }

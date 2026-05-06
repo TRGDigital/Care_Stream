@@ -470,17 +470,30 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   const uniquePolicyIds = [...new Set(ranked.map(c => c.metadata.policy_id))]
   const policyMeta      = await loadPolicyMeta(tenantId, uniquePolicyIds)
 
-  // 8b. Retrieve relevant knowledge base entries
+  // 8b. Retrieve relevant knowledge base entries (approved only)
   let knowledgeEntries: KnowledgeEntry[] = []
   try {
-    const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE)
-    knowledgeEntries = kbResults
-      .filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
-      .map(r => ({
-        question:    r.metadata.question,
-        answer:      r.metadata.answer,
-        source_name: r.metadata.source_name,
-      }))
+    const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE * 2)
+    const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
+
+    if (candidates.length > 0) {
+      // Cross-reference with Postgres to enforce approval gate
+      const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
+      const approvedRows = await (prisma as any).knowledgeEntry.findMany({
+        where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
+        select: { id: true },
+      })
+      const approvedSet = new Set(approvedRows.map((r: any) => r.id as string))
+
+      knowledgeEntries = candidates
+        .filter(r => approvedSet.has(r.metadata.entry_id))
+        .slice(0, TOP_K_KNOWLEDGE)
+        .map(r => ({
+          question:    r.metadata.question,
+          answer:      r.metadata.answer,
+          source_name: r.metadata.source_name,
+        }))
+    }
   } catch (e) {
     // Non-fatal — knowledge namespace may not exist yet for this tenant
     console.warn(`[query] Knowledge retrieval failed (non-fatal): ${String(e)}`)

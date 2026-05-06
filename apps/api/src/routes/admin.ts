@@ -8,6 +8,8 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
+import { PLATFORM_KNOWLEDGE_SEEDS } from '../data/platform-knowledge-seeds'
+import { seedTenantKnowledge, seedAllTenants } from '../services/knowledge/seeder'
 
 export const adminRouter = Router()
 
@@ -376,5 +378,65 @@ adminRouter.get('/prompts', (_req: Request, res: Response) => {
     })
   } catch (e) {
     err(res, 'READ_FAILED', `Could not read prompt files: ${String(e)}`, 500)
+  }
+})
+
+// ─── GET /admin/knowledge-seeds ───────────────────────────────────────────────
+// List the platform seed definitions with a per-seed seeded-tenant count.
+
+adminRouter.get('/knowledge-seeds', async (_req: Request, res: Response) => {
+  const counts = await Promise.all(
+    PLATFORM_KNOWLEDGE_SEEDS.map(seed =>
+      (prisma as any).knowledgeEntry.count({
+        where: { source_type: 'platform', source_id: `seed_${seed.slug}` },
+      }),
+    ),
+  )
+
+  const totalTenants = await (prisma as any).tenant.count()
+
+  const seeds = PLATFORM_KNOWLEDGE_SEEDS.map((seed, i) => ({
+    slug:         seed.slug,
+    category:     seed.category,
+    question:     seed.question,
+    answer:       seed.answer,
+    source_name:  seed.source_name,
+    seeded_count: counts[i],
+  }))
+
+  ok(res, { seeds, total: seeds.length, total_tenants: totalTenants })
+})
+
+// ─── POST /admin/knowledge-seeds/seed-tenant/:tenantId ───────────────────────
+// Seed one tenant with any missing platform entries. Idempotent.
+
+adminRouter.post('/knowledge-seeds/seed-tenant/:tenantId', async (req: Request, res: Response) => {
+  const tenant = await (prisma as any).tenant.findUnique({
+    where:  { id: req.params.tenantId },
+    select: { id: true, name: true },
+  })
+  if (!tenant) {
+    err(res, 'NOT_FOUND', 'Tenant not found', 404)
+    return
+  }
+  try {
+    const result = await seedTenantKnowledge(tenant.id as string)
+    ok(res, { tenant_id: tenant.id, tenant_name: tenant.name, ...result })
+  } catch (e) {
+    console.error('[admin/seeds] Seed failed:', e)
+    err(res, 'SEED_FAILED', String(e), 500)
+  }
+})
+
+// ─── POST /admin/knowledge-seeds/seed-all ────────────────────────────────────
+// Seed every tenant with any missing platform entries. Idempotent.
+
+adminRouter.post('/knowledge-seeds/seed-all', async (_req: Request, res: Response) => {
+  try {
+    const result = await seedAllTenants()
+    ok(res, result)
+  } catch (e) {
+    console.error('[admin/seeds] Seed-all failed:', e)
+    err(res, 'SEED_FAILED', String(e), 500)
   }
 })

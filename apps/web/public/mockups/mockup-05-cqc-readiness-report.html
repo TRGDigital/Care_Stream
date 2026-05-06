@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareStreamAI — mockup-05-cqc-readiness-report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
+.frame{background:#f0f4f4;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #d8e4e4}
+.dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff6058}.d2{background:#ffbc2e}.d3{background:#28c840}
+.url-bar{flex:1;background:#f0f4f4;border-radius:6px;padding:5px 14px;font-size:12px;color:#5c7070;text-align:center}
+.page{background:#fff;border-radius:8px;border:0.5px solid #d8e4e4;overflow:hidden;display:flex;height:580px}
+.nav{width:210px;background:#f4f8f8;border-right:0.5px solid #e0e8e8;flex-shrink:0}
+.nav-head{padding:18px;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:#0D6E6E;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:700;color:#1c2b2b}
+.ns{padding:13px 9px}
+.nl{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
+.ni{padding:7px 8px;border-radius:7px;font-size:12px;color:#5c7070;margin-bottom:2px}
+.ni.active{background:#e6f4f4;color:#0D6E6E;font-weight:600;border-left:3px solid #0D6E6E;padding-left:5px}
+.main{flex:1;overflow-y:auto}
+.rpt-head{background:#0D6E6E;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between}
+.rpt-title{color:white;font-size:16px;font-weight:700;margin-bottom:3px}
+.rpt-org{color:#9fd4c8;font-size:12px}
+.rpt-period{color:#9fd4c8;font-size:11px;margin-top:2px}
+.export-btn{background:white;color:#0D6E6E;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;white-space:nowrap}
+.content{padding:18px 22px}
+.ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+.ev{border:0.5px solid #e0e8e8;border-radius:9px;padding:13px}
+.ev-label{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;margin-bottom:6px}
+.ev-val{font-size:24px;font-weight:700;color:#0D6E6E;margin-bottom:2px}
+.ev-sub{font-size:11px;color:#5c7070}
+.ev-bar{margin-top:8px;background:#f4f8f8;border-radius:100px;height:4px}
+.ev-fill{height:4px;border-radius:100px;background:#0D6E6E}
+.sh{font-size:13px;font-weight:700;color:#1c2b2b;margin-bottom:11px}
+.ptbl{border:0.5px solid #e0e8e8;border-radius:9px;overflow:hidden;margin-bottom:18px}
+.pth{background:#f4f8f8;padding:8px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;border-bottom:0.5px solid #e0e8e8}
+.ptr{padding:9px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;border-bottom:0.5px solid #f0f4f4;align-items:center}
+.ptr:last-child{border-bottom:none}
+.pname{font-size:12px;font-weight:600;color:#1c2b2b}
+.pcat{font-size:10px;color:#5c7070}
+.tick{color:#1A8754;font-weight:700;font-size:13px}
+.lang-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:18px}
+.lang{background:#f4f8f8;border-radius:7px;padding:9px 11px;text-align:center}
+.lang-name{font-size:11px;font-weight:600;color:#1c2b2b;margin-bottom:2px}
+.lang-n{font-size:15px;font-weight:700;color:#0D6E6E}
+.lang-p{font-size:10px;color:#5c7070}
+.cqc-wrap{border:0.5px solid #e0e8e8;border-radius:9px;padding:13px}
+.cqc-row{display:flex;align-items:center;gap:11px;padding:6px 0;border-bottom:0.5px solid #f0f4f4}
+.cqc-row:last-child{border-bottom:none}
+.cqc-q{font-size:12px;font-weight:600;color:#1c2b2b;flex:0 0 100px}
+.cqc-bar{flex:1;background:#f4f8f8;border-radius:100px;height:7px}
+.cqc-fill{height:7px;border-radius:100px;background:#0D6E6E}
+.cqc-lbl{font-size:10px;color:#5c7070;flex:0 0 90px;text-align:right}
+</style>
+<div class="frame">
+<div class="browser-bar">
+  <div class="dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
+  <div class="url-bar">app.carestreamai.co.uk/admin/cqc-report — Crossways Care Home</div>
+</div>
+<div class="page">
+  <div class="nav">
+    <div class="nav-head"><div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="white" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="logo-text">CareStreamAI</span></div>
+    <div class="ns"><div class="nl">OVERVIEW</div><div class="ni">Dashboard</div><div class="ni">Query history</div></div>
+    <div class="ns"><div class="nl">DOCUMENTS</div><div class="ni">Policy library</div><div class="ni">Staff handbook</div></div>
+    <div class="ns"><div class="nl">TEAM</div><div class="ni">Staff management</div><div class="ni">Email settings</div></div>
+    <div class="ns"><div class="nl">REPORTS</div><div class="ni">Analytics</div><div class="ni active">CQC report</div></div>
+  </div>
+  <div class="main">
+    <div class="rpt-head"><div><div class="rpt-title">CQC Readiness Report</div><div class="rpt-org">Crossways Care Home</div><div class="rpt-period">Period: 1 May 2025 – 1 May 2026 · Generated 1 May 2026</div></div><button class="export-btn">Export PDF</button></div>
+    <div class="content">
+      <div class="ev-grid">
+        <div class="ev"><div class="ev-label">POLICIES ACCESSED</div><div class="ev-val">21 of 21</div><div class="ev-sub">All active policies queried by staff this year</div><div class="ev-bar"><div class="ev-fill" style="width:100%"></div></div></div>
+        <div class="ev"><div class="ev-label">STAFF ENGAGEMENT</div><div class="ev-val">24 staff</div><div class="ev-sub">Across care staff, senior carers, managers</div><div class="ev-bar"><div class="ev-fill" style="width:80%"></div></div></div>
+        <div class="ev"><div class="ev-label">TOTAL QUERIES LOGGED</div><div class="ev-val">2,847</div><div class="ev-sub">Timestamped, auditable policy interactions</div></div>
+        <div class="ev"><div class="ev-label">LANGUAGES USED</div><div class="ev-val">7 languages</div><div class="ev-sub">Equitable multilingual policy access evidenced</div></div>
+      </div>
+      <div class="sh">Policy access evidence — top policies</div>
+      <div class="ptbl">
+        <div class="pth"><span>Policy</span><span>Queries</span><span>Updated</span><span>Accessed after update</span></div>
+        <div class="ptr"><div><div class="pname">Falls Policy</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">312</div><div style="font-size:11px;color:#5c7070">Jan 2026</div><div class="tick">&#10003; Yes</div></div>
+        <div class="ptr"><div><div class="pname">Medication Administration</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">284</div><div style="font-size:11px;color:#5c7070">Feb 2026</div><div class="tick">&#10003; Yes</div></div>
+        <div class="ptr"><div><div class="pname">Safeguarding Adults</div><div class="pcat">Compliance</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">219</div><div style="font-size:11px;color:#5c7070">Mar 2026</div><div class="tick">&#10003; Yes</div></div>
+      </div>
+      <div class="sh">Multi-language access — CQC equality evidence</div>
+      <div class="lang-grid">
+        <div class="lang"><div class="lang-name">English</div><div class="lang-n">1,841</div><div class="lang-p">65%</div></div>
+        <div class="lang"><div class="lang-name">Tagalog</div><div class="lang-n">412</div><div class="lang-p">14%</div></div>
+        <div class="lang"><div class="lang-name">Polish</div><div class="lang-n">284</div><div class="lang-p">10%</div></div>
+        <div class="lang"><div class="lang-name">Hindi</div><div class="lang-n">167</div><div class="lang-p">6%</div></div>
+        <div class="lang"><div class="lang-name">Yoruba</div><div class="lang-n">84</div><div class="lang-p">3%</div></div>
+        <div class="lang"><div class="lang-name">Romanian</div><div class="lang-n">42</div><div class="lang-p">1%</div></div>
+        <div class="lang"><div class="lang-name">Urdu</div><div class="lang-n">17</div><div class="lang-p">&#60;1%</div></div>
+      </div>
+      <div class="sh">CQC key questions — evidence mapping</div>
+      <div class="cqc-wrap">
+        <div class="cqc-row"><div class="cqc-q">Well Led</div><div class="cqc-bar"><div class="cqc-fill" style="width:88%"></div></div><div class="cqc-lbl">Strong evidence</div></div>
+        <div class="cqc-row"><div class="cqc-q">Responsive</div><div class="cqc-bar"><div class="cqc-fill" style="width:95%"></div></div><div class="cqc-lbl">Strong evidence</div></div>
+        <div class="cqc-row"><div class="cqc-q">Safe</div><div class="cqc-bar"><div class="cqc-fill" style="width:72%"></div></div><div class="cqc-lbl">Good evidence</div></div>
+        <div class="cqc-row"><div class="cqc-q">Effective</div><div class="cqc-bar"><div class="cqc-fill" style="width:80%"></div></div><div class="cqc-lbl">Good evidence</div></div>
+        <div class="cqc-row"><div class="cqc-q">Caring</div><div class="cqc-bar"><div class="cqc-fill" style="width:90%"></div></div><div class="cqc-lbl">Strong evidence</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

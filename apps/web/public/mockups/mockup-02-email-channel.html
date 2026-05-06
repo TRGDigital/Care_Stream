@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareStreamAI — mockup-02-email-channel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
+.frame{background:#f0f4f4;border-radius:12px;padding:20px;width:900px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #d8e4e4}
+.dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff6058}.d2{background:#ffbc2e}.d3{background:#28c840}
+.url-bar{flex:1;background:#f0f4f4;border-radius:6px;padding:5px 14px;font-size:12px;color:#5c7070;text-align:center}
+.client{background:#fff;border-radius:8px;border:0.5px solid #d8e4e4;overflow:hidden}
+.toolbar{background:#f4f8f8;padding:10px 18px;border-bottom:0.5px solid #e0e8e8;display:flex;gap:8px;align-items:center}
+.compose{background:#0D6E6E;color:white;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.tbtn{background:#fff;border:0.5px solid #e0e8e8;color:#5c7070;padding:5px 12px;border-radius:5px;font-size:11px}
+.layout{display:flex;height:520px}
+.list{width:210px;border-right:0.5px solid #e0e8e8}
+.list-head{padding:10px 13px;font-size:10px;font-weight:700;color:#5c7070;border-bottom:0.5px solid #e0e8e8;letter-spacing:0.06em}
+.eitem{padding:11px 13px;border-bottom:0.5px solid #f0f4f4;cursor:pointer}
+.eitem.active{background:#e6f4f4;border-left:3px solid #0D6E6E}
+.eitem.active .efrom{color:#0D6E6E}
+.efrom{font-size:11px;font-weight:700;color:#1c2b2b;margin-bottom:2px}
+.esubj{font-size:11px;color:#5c7070;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.etime{font-size:10px;color:#8fa8a8}
+.detail{flex:1;display:flex;flex-direction:column}
+.subj-bar{padding:14px 22px;border-bottom:0.5px solid #e0e8e8}
+.subj-text{font-size:15px;font-weight:700;color:#1c2b2b;margin-bottom:3px}
+.subj-meta{font-size:11px;color:#5c7070}
+.thread{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.mcard{border:0.5px solid #e0e8e8;border-radius:9px;overflow:hidden}
+.mhead{padding:10px 15px;background:#f4f8f8;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;gap:9px}
+.mav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.mname{font-size:12px;font-weight:600;color:#1c2b2b}
+.memail{font-size:10px;color:#5c7070}
+.mtime{font-size:10px;color:#8fa8a8;margin-left:auto}
+.mbody{padding:15px;font-size:12px;color:#1c2b2b;line-height:1.65}
+.rhead{background:#0D6E6E;padding:11px 15px;display:flex;align-items:center;gap:9px}
+.rlogotext{color:white;font-size:12px;font-weight:700}
+.rorg{color:#9fd4c8;font-size:11px}
+.rbody{padding:15px;font-size:12px;color:#1c2b2b;line-height:1.65}
+.rsectitle{font-size:11px;font-weight:700;color:#1c2b2b;margin:10px 0 5px}
+.rkp{padding-left:13px;position:relative;font-size:11px;color:#3a5050;margin-bottom:3px}
+.rkp::before{content:"•";position:absolute;left:0;color:#0D6E6E;font-weight:700}
+.callout{background:#e6f4f4;border-left:3px solid #0D6E6E;padding:8px 11px;margin:10px 0;font-size:11px;color:#085041;font-weight:500}
+.rcite{margin-top:10px;padding:8px 11px;background:#f4f8f8;border-radius:6px;font-size:10px;color:#5c7070;border-top:0.5px solid #e0e8e8}
+.rfooter{background:#0D6E6E;padding:8px 15px;font-size:10px;color:#9fd4c8;display:flex;gap:18px}
+.reply-bar{padding:11px 18px;border-top:0.5px solid #e0e8e8;background:#f4f8f8;display:flex;gap:9px}
+.reply-input{flex:1;background:#fff;border:0.5px solid #e0e8e8;border-radius:7px;padding:8px 13px;font-size:12px;color:#8fa8a8}
+.reply-btn{background:#0D6E6E;color:white;border:none;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:600}
+</style>
+<div class="frame">
+<div class="browser-bar">
+  <div class="dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
+  <div class="url-bar">mail.google.com — sarah.ambridge@crosswayscarehome.co.uk</div>
+</div>
+<div class="client">
+  <div class="toolbar"><button class="compose">Compose</button><button class="tbtn">Inbox</button><button class="tbtn">Sent</button><button class="tbtn">Drafts</button></div>
+  <div class="layout">
+    <div class="list">
+      <div class="list-head">INBOX</div>
+      <div class="eitem active"><div class="efrom">CareStreamAI</div><div class="esubj">Re: Medication policy query</div><div class="etime">Just now</div></div>
+      <div class="eitem"><div class="efrom">CareStreamAI</div><div class="esubj">Re: Falls policy — Tagalog</div><div class="etime">Yesterday</div></div>
+      <div class="eitem"><div class="efrom">J. Okonkwo</div><div class="esubj">Rota update — this week</div><div class="etime">Monday</div></div>
+      <div class="eitem"><div class="efrom">CareStreamAI</div><div class="esubj">Re: Safeguarding procedure</div><div class="etime">Friday</div></div>
+    </div>
+    <div class="detail">
+      <div class="subj-bar"><div class="subj-text">Re: Medication policy query</div><div class="subj-meta">Thread · 2 messages · policies@crossways.carestreamai.co.uk</div></div>
+      <div class="thread">
+        <div class="mcard">
+          <div class="mhead"><div class="mav" style="background:#e6f4f4;color:#085041">SA</div><div><div class="mname">Sarah Ambridge</div><div class="memail">sarah.ambridge@crosswayscarehome.co.uk</div></div><div class="mtime">09:14</div></div>
+          <div class="mbody">Hi — please can you send me the medication administration policy? Particularly the section on controlled drugs. Thanks</div>
+        </div>
+        <div class="mcard">
+          <div class="rhead">
+            <div style="width:22px;height:22px;background:rgba(255,255,255,0.2);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="white" stroke-width="1.3"/><path d="M3.5 6.5h6M6.5 3.5v6" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+            <div><div class="rlogotext">CareStreamAI</div><div class="rorg">Crossways Care Home</div></div>
+          </div>
+          <div class="rbody">
+            <p style="margin-bottom:9px">Hi Sarah,</p>
+            <p style="margin-bottom:11px">Here is a summary of the Medication Administration Policy, with the controlled drugs section highlighted.</p>
+            <div class="rsectitle">Policy Summary</div>
+            <p style="font-size:11px;color:#5c7070;margin-bottom:9px">The Medication Administration Policy sets out the procedures all care staff must follow when handling, recording, and administering medications, with particular provisions for controlled drugs under the Misuse of Drugs Regulations 2001.</p>
+            <div class="rsectitle">Key Points — Controlled Drugs</div>
+            <div class="rkp">Two-person verification required for all controlled drug administration.</div>
+            <div class="rkp">CD register must be completed immediately before and after each administration.</div>
+            <div class="rkp">Stock counts must be reconciled at every shift handover.</div>
+            <div class="rkp">Any discrepancy must be reported to the manager and pharmacist immediately.</div>
+            <div class="callout">The CD register and medication record must both be signed by the administering carer and a witness — never completed retrospectively.</div>
+            <div class="rsectitle">What this means in practice</div>
+            <p style="font-size:11px;color:#5c7070">Always complete the CD register at the time of administration. If a discrepancy is found, stop all further administration and contact your manager immediately.</p>
+            <p style="margin-top:11px;font-size:11px;color:#5c7070;font-style:italic">Reply to this email if you would like the full policy document, further clarification, or a summary in a different language.</p>
+            <div class="rcite">Source: Medication Administration Policy v4.1 · Section 6.3 Controlled Drugs · Uploaded: 3 Feb 2026 · Crossways Care Home</div>
+          </div>
+          <div class="rfooter"><span>Unsubscribe</span><span>Privacy Policy</span><span>carestreamai.co.uk</span></div>
+        </div>
+      </div>
+      <div class="reply-bar"><div class="reply-input">Reply to continue this conversation...</div><button class="reply-btn">Send</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

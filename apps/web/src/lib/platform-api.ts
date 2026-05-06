@@ -147,5 +147,33 @@ export function createPlatformClient(token: string) {
 
     prompts: () =>
       adminFetch<{ prompts: Array<{ id: string; label: string; content: string }> }>('/prompts', token),
+
+    seeds: {
+      list: () =>
+        adminFetch<{
+          seeds: Array<{
+            slug:         string
+            category:     string
+            question:     string
+            answer:       string
+            source_name:  string
+            seeded_count: number
+          }>
+          total:         number
+          total_tenants: number
+        }>('/knowledge-seeds', token),
+      seedTenant: (tenantId: string) =>
+        adminFetch<{ tenant_id: string; tenant_name: string; seeded: number; skipped: number }>(
+          `/knowledge-seeds/seed-tenant/${tenantId}`,
+          token,
+          { method: 'POST' },
+        ),
+      seedAll: () =>
+        adminFetch<{ tenants: number; total_seeded: number }>(
+          '/knowledge-seeds/seed-all',
+          token,
+          { method: 'POST' },
+        ),
+    },
   }
 }

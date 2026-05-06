@@ -56,6 +56,12 @@ const PLATFORM_SOURCE_CATEGORY: Record<string, string> = {
   'Mental Capacity Act 2005 — Capacity Assessment':      'Mental Capacity & Rights',
   'Mental Capacity Act 2005 — Lasting Power of Attorney':'Mental Capacity & Rights',
   'Mental Capacity Act 2005 — IMCA Duty':                'Mental Capacity & Rights',
+  'FSA — Safer Food Better Business':                    'Food Safety & Nutrition',
+  'Food Hygiene Regulations 2006 — Temperature Control': 'Food Safety & Nutrition',
+  'FSA — Food Allergen Regulations':                     'Food Safety & Nutrition',
+  'IDDSI — Texture Modified Diets Framework':            'Food Safety & Nutrition',
+  'BAPEN — Malnutrition Universal Screening Tool':       'Food Safety & Nutrition',
+  'Food Hygiene Regulations 2006 — Food Handler Training': 'Food Safety & Nutrition',
 }
 
 function groupPlatformByCategory(entries: KnowledgeEntry[]): Map<string, KnowledgeEntry[]> {

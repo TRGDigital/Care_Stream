@@ -276,4 +276,49 @@ export const PLATFORM_KNOWLEDGE_SEEDS: SeedEntry[] = [
     source_name: 'Mental Capacity Act 2005 — IMCA Duty',
   },
 
+  // ── Food Safety & Nutrition ───────────────────────────────────────────────
+
+  {
+    slug:        'food_safety_management',
+    category:    'Food Safety & Nutrition',
+    question:    'What food safety management system is required in a care home?',
+    answer:      'Under Regulation (EC) 852/2004 on the hygiene of foodstuffs (retained in UK law), all food businesses including care homes must implement a food safety management system based on Hazard Analysis and Critical Control Points (HACCP) principles. In practice, most care homes use the Food Standards Agency\'s Safer Food Better Business (SFBB) pack, which provides a ready-made system covering: safe methods for cooking, chilling, cleaning, and cross-contamination prevention; a diary for recording daily and weekly checks; and guidance on management procedures. The system must be kept up to date and records retained for at least 3 months. CQC inspectors will ask to see evidence that a food safety management system is in place and being followed.',
+    source_name: 'FSA — Safer Food Better Business',
+  },
+  {
+    slug:        'food_temperature_control',
+    category:    'Food Safety & Nutrition',
+    question:    'What are the legal temperature requirements for food in a care setting?',
+    answer:      'UK food hygiene regulations set the following temperature requirements: hot food must be held at 63°C or above; cold food must be kept at 8°C or below (best practice is 5°C or below); when cooking, food must reach a core temperature of at least 75°C throughout; reheated food must reach 75°C and must only be reheated once; frozen food should be stored at -18°C or below. Temperatures must be checked using a calibrated probe thermometer and recorded in the food safety diary at each mealtime. The probe must be cleaned and disinfected between uses to prevent cross-contamination.',
+    source_name: 'Food Hygiene Regulations 2006 — Temperature Control',
+  },
+  {
+    slug:        'food_allergens',
+    category:    'Food Safety & Nutrition',
+    question:    'What are the 14 major allergens that must be declared for food served in a care home?',
+    answer:      'Under the Food Information for Consumers Regulation (retained in UK law), the 14 major allergens that must be declared are: celery; cereals containing gluten (wheat, rye, barley, oats); crustaceans; eggs; fish; lupin; milk; molluscs; mustard; tree nuts (almonds, hazelnuts, walnuts, cashews, pecans, Brazil nuts, pistachios, macadamias); peanuts; sesame seeds; soybeans; and sulphur dioxide or sulphites at concentrations above 10mg/kg. Care homes must know what allergens are in every dish and communicate this to residents, families, and staff. Known allergies or intolerances must be documented in the resident\'s care plan, and kitchen staff must be briefed before preparing meals for that resident.',
+    source_name: 'FSA — Food Allergen Regulations',
+  },
+  {
+    slug:        'texture_modified_diets',
+    category:    'Food Safety & Nutrition',
+    question:    'What is the IDDSI framework and when should texture-modified diets be used?',
+    answer:      'The International Dysphagia Diet Standardisation Initiative (IDDSI) framework provides eight levels (0–7) for food textures and drink consistencies for people with dysphagia (swallowing difficulties). Levels range from 0 (thin liquids) to 7 (regular easy chew). A Speech and Language Therapist (SaLT) must assess the resident and prescribe the appropriate IDDSI level — care staff must never decide this independently. The resident\'s care plan must specify their IDDSI level and any thickener requirements for drinks. All staff involved in food preparation and serving must be trained in IDDSI levels. Serving the wrong texture can cause aspiration pneumonia, which can be life-threatening.',
+    source_name: 'IDDSI — Texture Modified Diets Framework',
+  },
+  {
+    slug:        'malnutrition_screening',
+    category:    'Food Safety & Nutrition',
+    question:    'What is the MUST tool and how often should it be completed in a care home?',
+    answer:      'The Malnutrition Universal Screening Tool (MUST) is a validated five-step tool developed by BAPEN to identify adults at risk of malnutrition. It scores based on BMI, unplanned weight loss, and the effect of acute illness. In care homes, MUST should be completed: on admission; monthly for residents scored at medium or high risk; and at least every 3–6 months for low-risk residents. Any resident scoring medium or high risk must have a written nutrition support plan. Food and fluid intake charts should be maintained for at-risk residents. CQC inspectors routinely check for evidence of nutrition screening, care planning, and monitoring as part of the Effective KLOE.',
+    source_name: 'BAPEN — Malnutrition Universal Screening Tool',
+  },
+  {
+    slug:        'food_handler_training',
+    category:    'Food Safety & Nutrition',
+    question:    'What food hygiene training is required for care home staff who prepare or serve food?',
+    answer:      'Under the Food Hygiene Regulations 2006, all food handlers must be supervised and trained in food hygiene matters commensurate with their work. There is no legal requirement for a specific qualification, but the FSA recommends that food handlers complete a Level 2 Award in Food Safety before handling food, or within three months of starting. Training should be refreshed every three years. Records of all food hygiene training must be kept. All food-handling staff must understand: personal hygiene and illness exclusion rules; prevention of cross-contamination; temperature control; cleaning and disinfection procedures; allergen awareness; and how to use and complete the food safety diary.',
+    source_name: 'Food Hygiene Regulations 2006 — Food Handler Training',
+  },
+
 ]

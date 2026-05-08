@@ -280,7 +280,9 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
     return
   }
 
-  const dateTo   = req.query.date_to   ? new Date(req.query.date_to   as string) : new Date()
+  const dateTo   = req.query.date_to
+    ? (() => { const d = new Date(req.query.date_to as string); d.setUTCHours(23, 59, 59, 999); return d })()
+    : new Date()
   const dateFrom = req.query.date_from ? new Date(req.query.date_from as string) : new Date(dateTo.getTime() - 365 * 86_400_000)
 
   // Fetch all data in parallel

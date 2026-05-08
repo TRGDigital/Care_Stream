@@ -130,6 +130,18 @@ export default function QueriesPage() {
           </select>
         </div>
 
+        {/* Legend */}
+        <div className="mb-4 flex flex-wrap gap-4 text-xs text-neutral-mid">
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700">Matched</span>
+            The question was answered using one or more of your uploaded policies.
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full bg-orange-50 px-2 py-0.5 font-medium text-orange-600">No match</span>
+            No relevant policy was found — consider uploading a policy that covers this topic.
+          </span>
+        </div>
+
         <div className="rounded-card bg-white shadow-card">
           {loading ? (
             <p className="px-6 py-6 text-sm text-neutral-mid">Loading…</p>

@@ -12,6 +12,9 @@ const LANG_NAMES: Record<string, string> = {
   fra: 'French',  deu: 'German',  por: 'Portuguese', hin: 'Hindi',
   tgl: 'Tagalog', yor: 'Yoruba',  ben: 'Bengali',    urd: 'Urdu',
   zho: 'Chinese', ara: 'Arabic',  ita: 'Italian',    lit: 'Lithuanian',
+  bho: 'Bhojpuri', guj: 'Gujarati', pan: 'Punjabi', tam: 'Tamil',
+  tel: 'Telugu',  kan: 'Kannada', mal: 'Malayalam',  sin: 'Sinhala',
+  nep: 'Nepali',  som: 'Somali',  swa: 'Swahili',    cym: 'Welsh',
 }
 
 const CATEGORY_LABELS: Record<string, { label: string; short: string }> = {

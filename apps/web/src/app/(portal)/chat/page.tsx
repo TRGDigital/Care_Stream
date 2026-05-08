@@ -218,12 +218,15 @@ export default function ChatPage() {
 
   function confirmDelete(e: React.MouseEvent, id: string) {
     e.stopPropagation()
-    // Only removes from local history — database records are preserved for admin reporting
+    // Remove from local history only — flags records in DB for admin reporting, never deletes them
     const updated = sessions.filter(s => s.id !== id)
     saveSessions(userId, updated)
     setSessions(updated)
     setConfirmDeleteId(null)
     if (id === sessionId) startNewChat()
+    if (session?.accessToken) {
+      createApiClient(session.accessToken).query.deleteSession(id).catch(() => {})
+    }
   }
 
   function cancelDelete(e: React.MouseEvent) {

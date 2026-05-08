@@ -157,6 +157,7 @@ export default function QueriesPage() {
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid">First question</th>
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Area</th>
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Language</th>
+                      <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Status</th>
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Result</th>
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Last active</th>
                       <th className="px-6 py-3 text-xs font-medium text-neutral-mid"></th>
@@ -209,6 +210,15 @@ export default function QueriesPage() {
                           </td>
                           <td className="px-6 py-3">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              q.deleted_from_chat
+                                ? 'bg-gray-100 text-gray-500'
+                                : 'bg-green-50 text-green-700'
+                            }`}>
+                              {q.deleted_from_chat ? 'Removed' : 'Live'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                               q.any_no_match ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-700'
                             }`}>
                               {q.any_no_match ? 'No match' : 'Matched'}
@@ -225,7 +235,7 @@ export default function QueriesPage() {
                         {/* Expanded detail row */}
                         {expanded.has(q.session_key) && (
                           <tr className="border-b border-gray-100 bg-neutral-light/40">
-                            <td colSpan={7} className="px-6 py-5">
+                            <td colSpan={8} className="px-6 py-5">
                               <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
                                 <div>
                                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Reference</p>
@@ -287,6 +297,16 @@ export default function QueriesPage() {
                                   <p className="mt-0.5 text-sm text-neutral-dark">
                                     {q.last_message_at ? formatDateTime(q.last_message_at) : '—'}
                                   </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Chat status</p>
+                                  <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    q.deleted_from_chat
+                                      ? 'bg-gray-100 text-gray-500'
+                                      : 'bg-green-50 text-green-700'
+                                  }`}>
+                                    {q.deleted_from_chat ? 'Removed from chat' : 'Live in chat history'}
+                                  </span>
                                 </div>
                               </div>
                               <div className="mt-4 flex justify-end">

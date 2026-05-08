@@ -123,6 +123,7 @@ model QueryRecord {
   language_detected        String   @default("eng")           // ISO 639-3 code (§5.1)
   response_time_ms         Int
   chat_session_id          String?                            // groups multi-turn chat messages into one session
+  chat_deleted_at          DateTime?                          // set when staff removes session from chat UI (records preserved)
   created_at               DateTime @default(now())
   tenant                   Tenant   @relation(fields: [tenant_id], references: [id])
   user                     User?    @relation(fields: [user_id], references: [id])

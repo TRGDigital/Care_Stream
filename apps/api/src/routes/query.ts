@@ -64,6 +64,27 @@ queryRouter.post('/', async (req: Request, res: Response) => {
   })
 })
 
+// ─── PATCH /query/session/:sessionId/delete ──────────────────────────────────
+// Called by the chat UI when a staff member removes a session from their history.
+// Marks records as deleted (chat_deleted_at) but keeps them for admin reporting.
+
+queryRouter.patch('/session/:sessionId/delete', async (req: Request, res: Response) => {
+  const tenantId  = getTenantId()
+  const sessionId = req.params.sessionId
+
+  await prisma.$executeRaw`
+    UPDATE queries
+    SET chat_deleted_at = NOW()
+    WHERE tenant_id = ${tenantId}
+    AND (
+      chat_session_id = ${sessionId}
+      OR (chat_session_id IS NULL AND id::text = ${sessionId})
+    )
+  `
+
+  ok(res, { deleted: true })
+})
+
 // ─── GET /query — session detail ──────────────────────────────────────────────
 // ?session_id=<uuid>  → all messages for one chat session (admin only)
 
@@ -144,7 +165,10 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
         ) AS total_response_time_ms,
         MIN(q.created_at) OVER (
           PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)
-        ) AS started_at
+        ) AS started_at,
+        BOOL_OR(q.chat_deleted_at IS NOT NULL) OVER (
+          PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)
+        ) AS deleted_from_chat
       FROM queries q
       WHERE ${whereClause}
     )
@@ -163,6 +187,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
       sd.any_no_match,
       sd.total_response_time_ms::int,
       sd.started_at,
+      sd.deleted_from_chat,
       sd.created_at,
       u.name               AS user_name,
       u.email              AS user_email
@@ -196,6 +221,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
     started_at:                r.started_at,
     any_no_match:              r.any_no_match,
     total_response_time_ms:    Number(r.total_response_time_ms ?? 0),
+    deleted_from_chat:         r.deleted_from_chat ?? false,
     created_at:                r.created_at,
     user: r.user_name ? { name: r.user_name, email: r.user_email } : null,
   }))

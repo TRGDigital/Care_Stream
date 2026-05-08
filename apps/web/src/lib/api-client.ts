@@ -71,6 +71,8 @@ export function createApiClient(token: string) {
       },
       session: (sessionId: string) =>
         apiFetch<{ messages: any[] }>(`/query/session/${sessionId}`, token),
+      deleteSession: (sessionId: string) =>
+        apiFetch<{ deleted: boolean }>(`/query/session/${sessionId}/delete`, token, { method: 'PATCH' }),
     },
 
     policies: {

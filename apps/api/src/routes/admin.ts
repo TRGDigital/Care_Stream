@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
+import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { prisma } from '../db/client'
@@ -8,8 +9,8 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
-import { PLATFORM_KNOWLEDGE_SEEDS } from '../data/platform-knowledge-seeds'
-import { seedTenantKnowledge, seedAllTenants } from '../services/knowledge/seeder'
+import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
+import { seedTenantKnowledge, seedAllTenants, seedCustomSeedToAllTenants } from '../services/knowledge/seeder'
 
 export const adminRouter = Router()
 
@@ -382,29 +383,83 @@ adminRouter.get('/prompts', (_req: Request, res: Response) => {
 })
 
 // ─── GET /admin/knowledge-seeds ───────────────────────────────────────────────
-// List the platform seed definitions with a per-seed seeded-tenant count.
+// List all platform seed definitions (static + custom DB) with per-seed seeded-tenant count.
 
 adminRouter.get('/knowledge-seeds', async (_req: Request, res: Response) => {
-  const counts = await Promise.all(
-    PLATFORM_KNOWLEDGE_SEEDS.map(seed =>
-      (prisma as any).knowledgeEntry.count({
-        where: { source_type: 'platform', source_id: `seed_${seed.slug}` },
-      }),
+  const customSeeds = await (prisma as any).platformCustomSeed.findMany({
+    orderBy: { created_at: 'asc' },
+  })
+
+  const allSeeds = [
+    ...PLATFORM_KNOWLEDGE_SEEDS,
+    ...customSeeds.map((s: any) => ({
+      slug:        s.slug,
+      category:    s.category,
+      question:    s.question,
+      answer:      s.answer,
+      source_name: s.source_name,
+    })),
+  ]
+
+  const [counts, totalTenants] = await Promise.all([
+    Promise.all(
+      allSeeds.map(seed =>
+        (prisma as any).knowledgeEntry.count({
+          where: { source_type: 'platform', source_id: `seed_${seed.slug}` },
+        }),
+      ),
     ),
-  )
+    (prisma as any).tenant.count(),
+  ])
 
-  const totalTenants = await (prisma as any).tenant.count()
-
-  const seeds = PLATFORM_KNOWLEDGE_SEEDS.map((seed, i) => ({
+  const seeds = allSeeds.map((seed, i) => ({
     slug:         seed.slug,
     category:     seed.category,
     question:     seed.question,
     answer:       seed.answer,
     source_name:  seed.source_name,
     seeded_count: counts[i],
+    custom:       i >= PLATFORM_KNOWLEDGE_SEEDS.length,
   }))
 
   ok(res, { seeds, total: seeds.length, total_tenants: totalTenants })
+})
+
+// ─── POST /admin/knowledge-seeds ─────────────────────────────────────────────
+// Create a new custom platform seed and immediately seed it to all tenants.
+
+const CustomSeedSchema = z.object({
+  slug:        z.string().min(2).max(80).regex(/^[a-z0-9_]+$/, 'slug must be lowercase letters, numbers, or underscores'),
+  category:    z.string().min(2).max(100),
+  question:    z.string().min(10).max(500),
+  answer:      z.string().min(10).max(5000),
+  source_name: z.string().min(2).max(200),
+})
+
+adminRouter.post('/knowledge-seeds', async (req: Request, res: Response) => {
+  const parsed = CustomSeedSchema.safeParse(req.body)
+  if (!parsed.success) {
+    err(res, 'VALIDATION_ERROR', parsed.error.issues.map(i => i.message).join(', '))
+    return
+  }
+  const { slug, category, question, answer, source_name } = parsed.data
+
+  const existing = await (prisma as any).platformCustomSeed.findUnique({ where: { slug } })
+  if (existing) {
+    err(res, 'CONFLICT', `A seed with slug "${slug}" already exists`, 409)
+    return
+  }
+
+  const seed = await (prisma as any).platformCustomSeed.create({
+    data: { slug, category, question, answer, source_name },
+  })
+
+  // Seed the new entry into all existing tenants in the background
+  seedCustomSeedToAllTenants({ slug, category, question, answer, source_name }).catch(e =>
+    console.error('[admin/seeds] Custom seed propagation failed:', e),
+  )
+
+  ok(res, { ...seed, custom: true }, 201)
 })
 
 // ─── POST /admin/knowledge-seeds/seed-tenant/:tenantId ───────────────────────

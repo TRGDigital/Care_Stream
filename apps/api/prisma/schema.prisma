@@ -199,6 +199,22 @@ model KnowledgeEntry {
   @@map("knowledge_entries")
 }
 
+// ─── Platform Custom Seeds ────────────────────────────────────────────────────
+
+// Custom seeds added by the platform owner via the admin UI.
+// Merged with PLATFORM_KNOWLEDGE_SEEDS at runtime and seeded into every tenant.
+model PlatformCustomSeed {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  category    String
+  question    String
+  answer      String
+  source_name String
+  created_at  DateTime @default(now())
+
+  @@map("platform_custom_seeds")
+}
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 
 // §11.3 — Immutable append-only audit log

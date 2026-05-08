@@ -60,6 +60,26 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   next()
 }
 
+// §6.5 — Platform admin routes (Google Sheets sync, super-admin operations).
+// Uses a long-lived Bearer token stored as PLATFORM_ADMIN_TOKEN env var,
+// separate from tenant JWTs. Registered before requireAuth in app.ts.
+export function requirePlatformAdmin(req: Request, res: Response, next: NextFunction): void {
+  const token         = process.env.PLATFORM_ADMIN_TOKEN
+  const authorization = req.headers.authorization
+
+  if (!token) {
+    res.status(503).json({ success: false, error: { code: 'NOT_CONFIGURED', message: 'Platform admin token not configured.' } })
+    return
+  }
+
+  if (!authorization || authorization !== `Bearer ${token}`) {
+    res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid platform admin token.' } })
+    return
+  }
+
+  next()
+}
+
 // §11.1 — Rate-limit-aware brute-force protection helper (used in auth route)
 export function isAccountLocked(lockedUntil: Date | null): boolean {
   if (!lockedUntil) return false

@@ -14,6 +14,7 @@ const QuerySchema = z.object({
   query_text:           z.string().min(1).max(2000),
   policy_id:            z.string().uuid().optional(),
   staff_name:           z.string().max(100).optional(),
+  document_category:    z.enum(['internal_policy', 'staff_handbook']).optional(),
   conversation_history: z.array(z.object({
     role:    z.enum(['user', 'assistant']),
     content: z.string().max(10_000),
@@ -31,7 +32,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     return
   }
 
-  const { query_text, policy_id, staff_name, conversation_history } = parsed.data
+  const { query_text, policy_id, staff_name, document_category, conversation_history } = parsed.data
   const tenantId = getTenantId()
 
   let result
@@ -43,6 +44,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
       staffName:           staff_name,
       channel:             'chat',
       policyId:            policy_id,
+      selectedCategory:    document_category,
       conversationHistory: conversation_history,
     })
   } catch (e) {
@@ -72,12 +74,13 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   const page  = Math.max(1, parseInt((req.query.page  as string) || '1'))
   const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20')))
 
-  const { intent_type, no_match, language_detected } = req.query as Record<string, string>
+  const { intent_type, no_match, language_detected, document_category } = req.query as Record<string, string>
 
-  const where: Record<string, unknown> = {}
-  if (intent_type)       where.intent_type        = intent_type
-  if (language_detected) where.language_detected   = language_detected
-  if (no_match !== undefined) where.no_match       = no_match === 'true'
+  const where: Record<string, unknown> = { tenant_id: tenantId }
+  if (intent_type)         where.intent_type                = intent_type
+  if (language_detected)   where.language_detected          = language_detected
+  if (document_category)   where.document_category_queried  = document_category
+  if (no_match !== undefined && no_match !== '') where.no_match = no_match === 'true'
 
   const [queries, total] = await Promise.all([
     (prisma as any).queryRecord.findMany({
@@ -86,17 +89,18 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
       take:    limit,
       orderBy: { created_at: 'desc' },
       select: {
-        id:                       true,
-        user_id:                  true,
-        channel:                  true,
-        query_text:               true,
-        intent_type:              true,
+        id:                        true,
+        user_id:                   true,
+        channel:                   true,
+        query_text:                true,
+        intent_type:               true,
         document_category_queried: true,
-        policy_ids_cited:         true,
-        no_match:                 true,
-        language_detected:        true,
-        response_time_ms:         true,
-        created_at:               true,
+        policy_ids_cited:          true,
+        no_match:                  true,
+        language_detected:         true,
+        response_time_ms:          true,
+        created_at:                true,
+        user: { select: { name: true, email: true } },
         // response_text omitted — can be large; fetch individually if needed
       },
     }),

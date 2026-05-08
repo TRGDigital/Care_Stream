@@ -7,6 +7,7 @@ import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
+import { seedTenantKnowledge } from '../services/knowledge/seeder'
 
 export const authRouter = Router()
 
@@ -101,6 +102,15 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     entity_id: tenant.id,
     metadata: { org_name, slug, plan_id: plan_id ?? null },
   })
+
+  // Plant platform knowledge seeds in the background — non-fatal
+  ;(async () => {
+    try {
+      await seedTenantKnowledge(tenant.id)
+    } catch (e) {
+      console.warn(`[register] Knowledge seeding failed (non-fatal): ${String(e)}`)
+    }
+  })()
 
   const accessToken  = generateAccessToken({ sub: user.id, tenant_id: tenant.id, role: 'admin' })
   const refreshToken = generateRefreshToken(user.id)

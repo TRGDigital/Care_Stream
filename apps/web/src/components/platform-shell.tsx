@@ -5,15 +5,16 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles,
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/platform/dashboard',   label: 'Dashboard',    Icon: LayoutDashboard },
-  { href: '/platform/clients',     label: 'Clients',      Icon: Building2       },
-  { href: '/platform/usage',       label: 'Usage',        Icon: BarChart2       },
-  { href: '/platform/regulations', label: 'Regulations',  Icon: BookOpen        },
-  { href: '/platform/prompts',     label: 'AI Prompts',   Icon: FileText        },
+  { href: '/platform/dashboard',   label: 'Dashboard',        Icon: LayoutDashboard },
+  { href: '/platform/clients',     label: 'Clients',          Icon: Building2       },
+  { href: '/platform/usage',       label: 'Usage',            Icon: BarChart2       },
+  { href: '/platform/regulations', label: 'Regulations',      Icon: BookOpen        },
+  { href: '/platform/seeds',       label: 'Knowledge Seeds',  Icon: Sparkles        },
+  { href: '/platform/prompts',     label: 'AI Prompts',       Icon: FileText        },
 ]
 
 export function PlatformShell({ children }: { children: React.ReactNode }) {

@@ -2,9 +2,9 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { requireAdmin } from '../middleware/auth'
-import { uploadMiddleware } from '../middleware/upload'
+import { uploadMiddleware, bulkUploadMiddleware } from '../middleware/upload'
 import { prisma } from '../db/client'
-import { getTenantId } from '../db/tenant-context'
+import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { enqueueIngestion } from '../workers/queue'
@@ -77,50 +77,53 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
   }
 
   const { name, document_category, tags: rawTags, review_interval_days } = parsed.data
-  const tenantId = getTenantId()
+  const tenantId = req.user!.tenant_id
   const policyId = uuidv4()
 
-  const s3Key = await uploadPolicyFile({
-    tenantId,
-    policyId,
-    filename:  req.file.originalname,
-    buffer:    req.file.buffer,
-    mimeType:  req.file.mimetype,
-  })
+  let policy: any
+  await tenantContext.run({ tenantId }, async () => {
+    const s3Key = await uploadPolicyFile({
+      tenantId,
+      policyId,
+      filename:  req.file!.originalname,
+      buffer:    req.file!.buffer,
+      mimeType:  req.file!.mimetype,
+    })
 
-  const policy = await (prisma as any).policy.create({
-    data: {
-      id:                  policyId,
-      tenant_id:           tenantId,
-      name,
-      filename:            req.file.originalname,
-      s3_key:              s3Key,
+    policy = await (prisma as any).policy.create({
+      data: {
+        id:                  policyId,
+        tenant_id:           tenantId,
+        name,
+        filename:            req.file!.originalname,
+        s3_key:              s3Key,
+        document_category,
+        version:             1,
+        status:              'processing',
+        tags:                parseTags(rawTags),
+        uploaded_by:         req.user!.sub,
+        review_interval_days: review_interval_days ?? null,
+      },
+    })
+
+    await enqueueIngestion({
+      policy_id:         policyId,
+      tenant_id:         tenantId,
+      s3_key:            s3Key,
       document_category,
-      version:             1,
-      status:              'processing',
-      tags:                parseTags(rawTags),
-      uploaded_by:         req.user!.sub,
-      review_interval_days: review_interval_days ?? null,
-    },
-  })
+      filename:          req.file!.originalname,
+      mime_type:         req.file!.mimetype,
+      version:           1,
+    })
 
-  await enqueueIngestion({
-    policy_id:         policyId,
-    tenant_id:         tenantId,
-    s3_key:            s3Key,
-    document_category,
-    filename:          req.file.originalname,
-    mime_type:         req.file.mimetype,
-    version:           1,
-  })
-
-  await writeAuditLog({
-    tenant_id:    tenantId,
-    user_id:      req.user!.sub,
-    event_type:   'policy_upload',
-    entity_type:  'policy',
-    entity_id:    policyId,
-    metadata:     { name, document_category, filename: req.file.originalname, size: req.file.size },
+    await writeAuditLog({
+      tenant_id:   tenantId,
+      user_id:     req.user!.sub,
+      event_type:  'policy_upload',
+      entity_type: 'policy',
+      entity_id:   policyId,
+      metadata:    { name, document_category, filename: req.file!.originalname, size: req.file!.size },
+    })
   })
 
   ok(res, { policy }, 201)
@@ -136,7 +139,7 @@ policiesRouter.post('/:id/version', requireAdmin, uploadMiddleware, async (req: 
     return
   }
 
-  const tenantId = getTenantId()
+  const tenantId = req.user!.tenant_id
 
   const existing = await (prisma as any).policy.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
@@ -154,57 +157,158 @@ policiesRouter.post('/:id/version', requireAdmin, uploadMiddleware, async (req: 
 
   const policyId   = uuidv4()
   const newVersion = existing.version + 1
+  let newPolicy: any
 
-  const s3Key = await uploadPolicyFile({
-    tenantId,
-    policyId,
-    filename:  req.file.originalname,
-    buffer:    req.file.buffer,
-    mimeType:  req.file.mimetype,
-  })
+  await tenantContext.run({ tenantId }, async () => {
+    const s3Key = await uploadPolicyFile({
+      tenantId,
+      policyId,
+      filename:  req.file!.originalname,
+      buffer:    req.file!.buffer,
+      mimeType:  req.file!.mimetype,
+    })
 
-  const newPolicy = await (prisma as any).policy.create({
-    data: {
-      id:                  policyId,
-      tenant_id:           tenantId,
-      name:                existing.name,  // preserves policy name across versions
-      filename:            req.file.originalname,
-      s3_key:              s3Key,
-      document_category:   existing.document_category,
-      version:             newVersion,
-      status:              'processing',
-      tags:                existing.tags,
-      uploaded_by:         req.user!.sub,
-      review_interval_days: existing.review_interval_days,
-    },
-  })
+    newPolicy = await (prisma as any).policy.create({
+      data: {
+        id:                  policyId,
+        tenant_id:           tenantId,
+        name:                existing.name,
+        filename:            req.file!.originalname,
+        s3_key:              s3Key,
+        document_category:   existing.document_category,
+        version:             newVersion,
+        status:              'processing',
+        tags:                existing.tags,
+        uploaded_by:         req.user!.sub,
+        review_interval_days: existing.review_interval_days,
+      },
+    })
 
-  await enqueueIngestion({
-    policy_id:                    policyId,
-    tenant_id:                    tenantId,
-    s3_key:                       s3Key,
-    document_category:            existing.document_category,
-    filename:                     req.file.originalname,
-    mime_type:                    req.file.mimetype,
-    version:                      newVersion,
-    previous_version_policy_id:   existing.id,  // triggers atomic swap after ingestion
-  })
+    await enqueueIngestion({
+      policy_id:                    policyId,
+      tenant_id:                    tenantId,
+      s3_key:                       s3Key,
+      document_category:            existing.document_category,
+      filename:                     req.file!.originalname,
+      mime_type:                    req.file!.mimetype,
+      version:                      newVersion,
+      previous_version_policy_id:   existing.id,
+    })
 
-  await writeAuditLog({
-    tenant_id:   tenantId,
-    user_id:     req.user!.sub,
-    event_type:  'policy_update',
-    entity_type: 'policy',
-    entity_id:   policyId,
-    metadata:    {
-      previous_policy_id: existing.id,
-      previous_version:   existing.version,
-      new_version:        newVersion,
-      filename:           req.file.originalname,
-    },
+    await writeAuditLog({
+      tenant_id:   tenantId,
+      user_id:     req.user!.sub,
+      event_type:  'policy_update',
+      entity_type: 'policy',
+      entity_id:   policyId,
+      metadata:    {
+        previous_policy_id: existing.id,
+        previous_version:   existing.version,
+        new_version:        newVersion,
+        filename:           req.file!.originalname,
+      },
+    })
   })
 
   ok(res, { policy: newPolicy }, 201)
+})
+
+// ─── POST /policies/bulk ──────────────────────────────────────────────────────
+// Upload up to 50 policy files in one request.
+// Names are derived from filename by default; the client can send a JSON array
+// of overrides in the `names` field (indexed to match the files array).
+// Category applies to all files in the batch.
+
+function deriveNameFromFilename(filename: string): string {
+  return filename
+    .replace(/\.[^.]+$/, '')              // strip extension
+    .replace(/^[\d]+[\s.\-_]*/,  '')      // strip leading number (e.g. "538 ", "001_", "12. ")
+    .replace(/[-_]+/g, ' ')               // hyphens/underscores → spaces
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase())  // title case
+}
+
+policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[] | undefined
+  if (!files || files.length === 0) {
+    err(res, 'FILES_REQUIRED', 'At least one file is required.')
+    return
+  }
+
+  // multer's async callbacks can break AsyncLocalStorage propagation, so read
+  // tenant_id from the JWT payload directly and re-enter the context explicitly.
+  const tenantId = req.user!.tenant_id
+  const category = req.body.document_category === 'staff_handbook' ? 'staff_handbook' : 'internal_policy'
+
+  let nameOverrides: string[] = []
+  try {
+    if (req.body.names) nameOverrides = JSON.parse(req.body.names)
+  } catch { /* ignore malformed overrides */ }
+
+  const results: Array<{ filename: string; policy_id: string; name: string; status: string }> = []
+  const errors:  Array<{ filename: string; error: string }> = []
+
+  // Re-enter tenant context so all async service calls (Prisma, Pinecone, audit)
+  // can access getTenantId() without relying on the multer-broken chain.
+  await tenantContext.run({ tenantId }, async () => {
+    await Promise.all(files!.map(async (file, i) => {
+      const name = (nameOverrides[i] ?? '').trim() || deriveNameFromFilename(file.originalname)
+      const policyId = uuidv4()
+
+      try {
+        const s3Key = await uploadPolicyFile({
+          tenantId,
+          policyId,
+          filename: file.originalname,
+          buffer:   file.buffer,
+          mimeType: file.mimetype,
+        })
+
+        await (prisma as any).policy.create({
+          data: {
+            id:                policyId,
+            tenant_id:         tenantId,
+            name,
+            filename:          file.originalname,
+            s3_key:            s3Key,
+            document_category: category,
+            version:           1,
+            status:            'processing',
+            tags:              [],
+            uploaded_by:       req.user!.sub,
+          },
+        })
+
+        await enqueueIngestion({
+          policy_id:         policyId,
+          tenant_id:         tenantId,
+          s3_key:            s3Key,
+          document_category: category,
+          filename:          file.originalname,
+          mime_type:         file.mimetype,
+          version:           1,
+        })
+
+        results.push({ filename: file.originalname, policy_id: policyId, name, status: 'processing' })
+      } catch (e) {
+        errors.push({ filename: file.originalname, error: String(e) })
+      }
+    }))
+
+    if (results.length > 0) {
+      await writeAuditLog({
+        tenant_id:   tenantId,
+        user_id:     req.user!.sub,
+        event_type:  'policy_bulk_upload',
+        entity_type: 'policy',
+        entity_id:   tenantId,
+        metadata:    { count: results.length, errors: errors.length, category },
+      })
+    }
+  })
+
+  ok(res, { results, errors, total: files.length }, 201)
 })
 
 // ─── GET /policies/:id ────────────────────────────────────────────────────────
@@ -295,4 +399,102 @@ policiesRouter.delete('/:id', requireAdmin, async (req: Request, res: Response) 
   })
 
   ok(res, { policy: { ...policy, status: 'archived' } })
+})
+
+// ─── POST /policies/:id/delete ────────────────────────────────────────────────
+// Permanently delete a policy: removes the DB record, local/S3 file, and any
+// Pinecone vectors. Intended for accidental uploads. Active policies must be
+// archived first to prevent accidental deletion of live content.
+
+policiesRouter.post('/:id/delete', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+
+  const policy = await (prisma as any).policy.findFirst({
+    where: { id: req.params.id, tenant_id: tenantId },
+  })
+
+  if (!policy) {
+    err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404)
+    return
+  }
+
+  if (policy.status === 'active') {
+    err(res, 'POLICY_ACTIVE', 'Archive the policy before deleting it.', 409)
+    return
+  }
+
+  // Remove DB record
+  await (prisma as any).policy.delete({ where: { id: policy.id } })
+
+  // Remove local/S3 file (best-effort — don't fail if already gone)
+  try {
+    const { fileExists } = await import('../services/storage/s3')
+    if (await fileExists(policy.s3_key)) {
+      // Local dev: delete file from disk
+      const fs  = await import('fs')
+      const path = await import('path')
+      const LOCAL_DIR = process.env.LOCAL_STORAGE_DIR ?? '/tmp/carestreamai'
+      const full = path.join(LOCAL_DIR, policy.s3_key)
+      if (fs.existsSync(full)) fs.unlinkSync(full)
+    }
+  } catch { /* non-fatal */ }
+
+  await writeAuditLog({
+    tenant_id:   tenantId,
+    user_id:     req.user!.sub,
+    event_type:  'policy_delete',
+    entity_type: 'policy',
+    entity_id:   policy.id,
+    metadata:    { name: policy.name, filename: policy.filename, status: policy.status },
+  })
+
+  ok(res, { deleted: true })
+})
+
+// ─── POST /policies/:id/retry ─────────────────────────────────────────────────
+// Re-trigger ingestion for a failed policy without requiring re-upload.
+// Resets status to 'processing' and re-queues the ingestion job.
+
+policiesRouter.post('/:id/retry', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+
+  const policy = await (prisma as any).policy.findFirst({
+    where: { id: req.params.id, tenant_id: tenantId },
+  })
+
+  if (!policy) {
+    err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404)
+    return
+  }
+
+  if (policy.status !== 'failed') {
+    err(res, 'NOT_FAILED', 'Only failed policies can be retried.', 409)
+    return
+  }
+
+  const ext      = policy.filename.split('.').pop()?.toLowerCase()
+  const mimeMap: Record<string, string> = {
+    pdf:  'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    odt:  'application/vnd.oasis.opendocument.text',
+    txt:  'text/plain',
+  }
+  const mimeType = mimeMap[ext ?? ''] ?? 'application/octet-stream'
+
+  await (prisma as any).policy.update({
+    where: { id: policy.id },
+    data:  { status: 'processing' },
+  })
+
+  await enqueueIngestion({
+    policy_id:         policy.id,
+    tenant_id:         tenantId,
+    s3_key:            policy.s3_key,
+    document_category: policy.document_category,
+    filename:          policy.filename,
+    mime_type:         mimeType,
+    version:           policy.version,
+  })
+
+  ok(res, { policy: { ...policy, status: 'processing' } })
 })

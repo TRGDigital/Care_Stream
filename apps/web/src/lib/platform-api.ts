@@ -158,10 +158,17 @@ export function createPlatformClient(token: string) {
             answer:       string
             source_name:  string
             seeded_count: number
+            custom?:      boolean
           }>
           total:         number
           total_tenants: number
         }>('/knowledge-seeds', token),
+      create: (data: { slug: string; category: string; question: string; answer: string; source_name: string }) =>
+        adminFetch<{ id: string; slug: string; category: string; question: string; answer: string; source_name: string; custom: boolean }>(
+          '/knowledge-seeds',
+          token,
+          { method: 'POST', body: JSON.stringify(data) },
+        ),
       seedTenant: (tenantId: string) =>
         adminFetch<{ tenant_id: string; tenant_name: string; seeded: number; skipped: number }>(
           `/knowledge-seeds/seed-tenant/${tenantId}`,

@@ -60,14 +60,14 @@ async function apiFetch<T>(
 export function createApiClient(token: string) {
   return {
     query: {
-      send: (data: { query_text: string; policy_id?: string; staff_name?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
+      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook'; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
         apiFetch<QueryResponse>('/query', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
       list: (params?: Record<string, string>) => {
         const qs = params ? '?' + new URLSearchParams(params) : ''
-        return apiFetch<any>(`/queries${qs}`, token)
+        return apiFetch<any>(`/query${qs}`, token)
       },
     },
 

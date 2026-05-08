@@ -5,7 +5,7 @@ import { createPlatformClient } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PlatformShell } from '@/components/platform-shell'
 import { Button } from '@/components/ui/button'
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, BookOpen, Plus, X, Loader2 } from 'lucide-react'
 
 interface SeedRow {
   slug:         string
@@ -14,7 +14,20 @@ interface SeedRow {
   answer:       string
   source_name:  string
   seeded_count: number
+  custom?:      boolean
 }
+
+const KNOWN_CATEGORIES = [
+  'CQC & Inspection',
+  'Incidents & Reporting',
+  'Health & Safety',
+  'Medication',
+  'Infection Prevention',
+  'Employment & HR',
+  'Data & Privacy',
+  'Mental Capacity & Rights',
+  'Food Safety & Nutrition',
+]
 
 function groupByCategory(seeds: SeedRow[]): Map<string, SeedRow[]> {
   const map = new Map<string, SeedRow[]>()
@@ -27,9 +40,13 @@ function groupByCategory(seeds: SeedRow[]): Map<string, SeedRow[]> {
 }
 
 function coverageColor(seededCount: number, total: number): string {
-  if (seededCount === 0)     return 'bg-red-100 text-red-700'
-  if (seededCount < total)   return 'bg-amber-100 text-amber-700'
+  if (seededCount === 0)   return 'bg-red-100 text-red-700'
+  if (seededCount < total) return 'bg-amber-100 text-amber-700'
   return 'bg-green-100 text-green-700'
+}
+
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 60)
 }
 
 export default function SeedsPage() {
@@ -43,6 +60,7 @@ export default function SeedsPage() {
   const [seedAllMsg,   setSeedAllMsg]   = useState('')
   const [openGroups,   setOpenGroups]   = useState<Set<string>>(new Set())
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+  const [showAdd,      setShowAdd]      = useState(false)
 
   async function load(t: string) {
     setLoading(true)
@@ -90,6 +108,7 @@ export default function SeedsPage() {
   const partial     = seeds.filter(s => s.seeded_count > 0 && s.seeded_count < totalTenants).length
   const unseeded    = seeds.filter(s => s.seeded_count === 0).length
   const groups      = groupByCategory(seeds)
+  const allCategories = Array.from(new Set([...KNOWN_CATEGORIES, ...Array.from(groups.keys())]))
 
   return (
     <PlatformShell>
@@ -101,10 +120,19 @@ export default function SeedsPage() {
             {seeds.length} generic UK care sector Q&amp;A pairs pre-loaded into every tenant across {groups.size} categories.
           </p>
         </div>
-        <Button onClick={handleSeedAll} disabled={seedingAll} size="md">
-          <RefreshCw size={14} className={`mr-1.5 ${seedingAll ? 'animate-spin' : ''}`} />
-          {seedingAll ? 'Seeding…' : 'Seed all tenants'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light"
+          >
+            <Plus size={14} />
+            Manually add
+          </button>
+          <Button onClick={handleSeedAll} disabled={seedingAll} size="md">
+            <RefreshCw size={14} className={`mr-1.5 ${seedingAll ? 'animate-spin' : ''}`} />
+            {seedingAll ? 'Seeding…' : 'Seed all tenants'}
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -146,18 +174,18 @@ export default function SeedsPage() {
       ) : (
         <div className="space-y-3">
           {Array.from(groups.entries()).map(([category, categorySeeds]) => {
-            const isOpen        = openGroups.has(category)
-            const allSeeded     = categorySeeds.every(s => s.seeded_count >= totalTenants)
-            const someUnseeded  = categorySeeds.some(s => s.seeded_count === 0)
-            const groupColor    = someUnseeded
+            const isOpen       = openGroups.has(category)
+            const allSeeded    = categorySeeds.every(s => s.seeded_count >= totalTenants)
+            const someUnseeded = categorySeeds.some(s => s.seeded_count === 0)
+            const groupColor   = someUnseeded
               ? 'bg-red-100 text-red-700'
               : allSeeded
                 ? 'bg-green-100 text-green-700'
                 : 'bg-amber-100 text-amber-700'
+            const customCount  = categorySeeds.filter(s => s.custom).length
 
             return (
               <div key={category} className="rounded-card bg-white shadow-card overflow-hidden">
-                {/* Group header */}
                 <button
                   className="w-full px-6 py-4 flex items-center justify-between gap-4 hover:bg-neutral-light/40 transition-colors text-left"
                   onClick={() => toggleGroup(category)}
@@ -166,6 +194,11 @@ export default function SeedsPage() {
                     <BookOpen size={15} className="shrink-0 text-teal" />
                     <span className="font-semibold text-sm text-neutral-dark">{category}</span>
                     <span className="text-xs text-neutral-mid">{categorySeeds.length} entries</span>
+                    {customCount > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">
+                        {customCount} custom
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${groupColor}`}>
@@ -178,12 +211,11 @@ export default function SeedsPage() {
                   </div>
                 </button>
 
-                {/* Entries */}
                 {isOpen && (
                   <ul className="divide-y divide-gray-100 border-t border-gray-100">
                     {categorySeeds.map(seed => {
-                      const isExpanded = expandedSlug === seed.slug
-                      const coverage   = totalTenants > 0 ? Math.round((seed.seeded_count / totalTenants) * 100) : 0
+                      const isExpanded  = expandedSlug === seed.slug
+                      const coverage    = totalTenants > 0 ? Math.round((seed.seeded_count / totalTenants) * 100) : 0
                       const statusColor = coverageColor(seed.seeded_count, totalTenants)
 
                       return (
@@ -195,10 +227,13 @@ export default function SeedsPage() {
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <Sparkles size={12} className="shrink-0 text-teal/70" />
+                                  <Sparkles size={12} className={`shrink-0 ${seed.custom ? 'text-teal' : 'text-teal/70'}`} />
                                   <p className="text-sm text-neutral-dark truncate">{seed.question}</p>
+                                  {seed.custom && (
+                                    <span className="shrink-0 rounded-full bg-teal/10 px-1.5 py-0.5 text-[10px] font-medium text-teal">custom</span>
+                                  )}
                                 </div>
-                                <p className="mt-0.5 ml-4.5 text-xs text-neutral-mid">{seed.source_name}</p>
+                                <p className="mt-0.5 ml-5 text-xs text-neutral-mid">{seed.source_name}</p>
                               </div>
                               <div className="flex items-center gap-3 shrink-0">
                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>
@@ -236,6 +271,168 @@ export default function SeedsPage() {
         </div>
       )}
     </div>
+
+    {showAdd && token && (
+      <AddSeedModal
+        token={token}
+        categories={allCategories}
+        onClose={() => setShowAdd(false)}
+        onSaved={(newSeed) => {
+          setSeeds(prev => [...prev, { ...newSeed, seeded_count: 0 }])
+          setShowAdd(false)
+          // Open the category accordion so the new entry is visible
+          setOpenGroups(prev => new Set([...prev, newSeed.category]))
+        }}
+      />
+    )}
     </PlatformShell>
+  )
+}
+
+// ─── Add seed modal ───────────────────────────────────────────────────────────
+
+function AddSeedModal({
+  token,
+  categories,
+  onClose,
+  onSaved,
+}: {
+  token:      string
+  categories: string[]
+  onClose:    () => void
+  onSaved:    (seed: SeedRow) => void
+}) {
+  const [category,   setCategory]   = useState(categories[0] ?? '')
+  const [customCat,  setCustomCat]  = useState('')
+  const [question,   setQuestion]   = useState('')
+  const [answer,     setAnswer]     = useState('')
+  const [sourceName, setSourceName] = useState('')
+  const [saving,     setSaving]     = useState(false)
+  const [error,      setError]      = useState('')
+
+  const useCustomCat = category === '__custom__'
+  const finalCategory = useCustomCat ? customCat.trim() : category
+  const autoSlug = slugify(question)
+
+  async function handleSave() {
+    if (!question.trim() || !answer.trim() || !finalCategory) return
+    setSaving(true)
+    setError('')
+    try {
+      const result = await createPlatformClient(token).seeds.create({
+        slug:        autoSlug,
+        category:    finalCategory,
+        question:    question.trim(),
+        answer:      answer.trim(),
+        source_name: sourceName.trim() || finalCategory,
+      })
+      onSaved({ ...result, seeded_count: 0 })
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to save seed')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-neutral-dark">Add knowledge seed</h2>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {/* Category */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-neutral-mid">Category</label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+            >
+              {categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value="__custom__">+ New category…</option>
+            </select>
+            {useCustomCat && (
+              <input
+                type="text"
+                value={customCat}
+                onChange={e => setCustomCat(e.target.value)}
+                placeholder="e.g. End of Life Care"
+                className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+              />
+            )}
+          </div>
+
+          {/* Question */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-neutral-mid">Question</label>
+            <textarea
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              rows={2}
+              placeholder="e.g. What temperature should the main meal be served at?"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+            />
+            {question && (
+              <p className="mt-1 text-xs text-neutral-mid">
+                Slug: <span className="font-mono">{autoSlug}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Answer */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-neutral-mid">Answer</label>
+            <textarea
+              value={answer}
+              onChange={e => setAnswer(e.target.value)}
+              rows={5}
+              placeholder="Write the answer that will be seeded into every tenant's knowledge base…"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+            />
+          </div>
+
+          {/* Source name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-neutral-mid">Source name <span className="text-gray-400">(optional)</span></label>
+            <input
+              type="text"
+              value={sourceName}
+              onChange={e => setSourceName(e.target.value)}
+              placeholder={`e.g. FSA — Food Safety Guidance`}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+            />
+          </div>
+        </div>
+
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+        <p className="mt-4 text-xs text-neutral-mid">
+          This seed will be added to every existing tenant immediately and to all future tenants on sign-up.
+        </p>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !question.trim() || !answer.trim() || !finalCategory}
+            className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
+          >
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            {saving ? 'Saving & seeding…' : 'Save & seed to all tenants'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

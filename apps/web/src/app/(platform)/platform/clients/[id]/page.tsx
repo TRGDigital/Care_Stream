@@ -5,16 +5,19 @@ import { useParams } from 'next/navigation'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantDetail } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Loader2, ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 export default function ClientDetailPage() {
-  const token                   = usePlatformAuth()
-  const { id }                  = useParams<{ id: string }>()
-  const [detail,  setDetail]    = useState<TenantDetail | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [error,   setError]     = useState<string | null>(null)
-  const [tab,     setTab]       = useState<'policies' | 'queries'>('policies')
+  const token                       = usePlatformAuth()
+  const { id }                      = useParams<{ id: string }>()
+  const [detail,     setDetail]     = useState<TenantDetail | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState<string | null>(null)
+  const [tab,        setTab]        = useState<'policies' | 'queries'>('policies')
+  const [seeding,    setSeeding]    = useState(false)
+  const [seedMsg,    setSeedMsg]    = useState('')
 
   useEffect(() => {
     if (!token || !id) return
@@ -24,19 +27,44 @@ export default function ClientDetailPage() {
       .finally(() => setLoading(false))
   }, [token, id])
 
+  async function handleSeedTenant() {
+    if (!token || !id) return
+    setSeeding(true)
+    setSeedMsg('')
+    setError(null)
+    try {
+      const result = await createPlatformClient(token).seeds.seedTenant(id)
+      setSeedMsg(`${result.seeded} new entries added, ${result.skipped} already present.`)
+    } catch (e: any) {
+      setError(e.message ?? 'Seeding failed')
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   if (!token) return null
 
   return (
     <PlatformShell>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Link href="/platform/clients" className="text-neutral-mid hover:text-teal">
-            <ArrowLeft size={18} />
-          </Link>
-          <h1 className="text-2xl font-semibold text-neutral-dark">
-            {detail?.tenant.name ?? 'Loading…'}
-          </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/platform/clients" className="text-neutral-mid hover:text-teal">
+              <ArrowLeft size={18} />
+            </Link>
+            <h1 className="text-2xl font-semibold text-neutral-dark">
+              {detail?.tenant.name ?? 'Loading…'}
+            </h1>
+          </div>
+          <Button onClick={handleSeedTenant} disabled={seeding || loading} size="md" variant="secondary">
+            <Sparkles size={14} className="mr-1.5" />
+            {seeding ? 'Seeding…' : 'Seed knowledge'}
+          </Button>
         </div>
+
+        {seedMsg && (
+          <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">{seedMsg}</div>
+        )}
 
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>

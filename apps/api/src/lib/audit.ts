@@ -6,7 +6,9 @@ import { prisma } from '../db/client'
 
 type AuditEventType =
   | 'policy_upload'
+  | 'policy_bulk_upload'
   | 'policy_archive'
+  | 'policy_delete'
   | 'policy_update'
   | 'policy_version_swap'
   | 'user_invite'

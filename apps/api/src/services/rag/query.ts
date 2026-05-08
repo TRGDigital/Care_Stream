@@ -58,6 +58,7 @@ export interface QueryInput {
   channel:             QueryChannel
   policyId?:           string          // caller may pre-specify a policy
   priorCategory?:      DocumentCategory // from prior email thread turn
+  selectedCategory?:   DocumentCategory // explicitly chosen by user before chat starts
   // §8.2 — prior email thread turns passed to Claude for multi-turn continuity
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
@@ -303,7 +304,7 @@ async function loadPolicyMeta(
 
 export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
-  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory, conversationHistory } = input
+  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory, selectedCategory, conversationHistory } = input
 
   // 1. Detect language (§5.1)
   const langDetection  = await detectLanguage(queryText)
@@ -405,8 +406,10 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
   // 3. Route query
   const route = routeQuery(queryText, tenantId)
 
-  // If the query came from a thread with a prior category, prioritise it
-  if (priorCategory && !route.tenantCategories.includes(priorCategory)) {
+  // If the user explicitly selected a category before starting chat, restrict to it
+  if (selectedCategory) {
+    route.tenantCategories = [selectedCategory]
+  } else if (priorCategory && !route.tenantCategories.includes(priorCategory)) {
     route.tenantCategories.unshift(priorCategory)
   }
 

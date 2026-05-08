@@ -1,7 +1,6 @@
 import { Worker } from 'bullmq'
-import { redisConnection } from './queue'
+import { getRedisConnection, type IngestionJobData } from './queue'
 import { ingestDocument } from '../services/rag/ingestion'
-import type { IngestionJobData } from './queue'
 
 // §4.1.1 / §13.1 — Runs as a separate process on Railway alongside the API.
 // Start with: npx tsx src/workers/ingestion.worker.ts
@@ -12,8 +11,8 @@ const worker = new Worker<IngestionJobData>(
     await ingestDocument(job.data)
   },
   {
-    connection: redisConnection,
-    concurrency: 3,  // process up to 3 documents simultaneously
+    connection: getRedisConnection(),
+    concurrency: 3,
   }
 )
 

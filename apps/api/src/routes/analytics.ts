@@ -289,6 +289,7 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
       where:  { tenant_id: tenantId, created_at: { gte: dateFrom, lte: dateTo } },
       select: {
         id:                        true,
+        chat_session_id:           true,
         user_id:                   true,
         channel:                   true,
         query_text:                true,
@@ -415,9 +416,8 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
     .sort((a, b) => b.query_count - a.query_count)
 
   // ── 6. Multi-Language Access ──────────────────────────────────────────────────
-  const nonEnglish   = periodQueries.filter((q: any) => q.language_detected !== 'eng')
-  const langMap      = new Map<string, number>()
-  for (const q of nonEnglish) {
+  const langMap = new Map<string, number>()
+  for (const q of periodQueries.filter((q: any) => q.language_detected)) {
     const l = q.language_detected as string
     langMap.set(l, (langMap.get(l) ?? 0) + 1)
   }
@@ -428,6 +428,15 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
       pct:         periodQueries.length > 0 ? Math.round((count / periodQueries.length) * 100 * 10) / 10 : 0,
     }))
     .sort((a, b) => b.query_count - a.query_count)
+
+  // Sessions where the language changed mid-conversation
+  const sessionLangMap = new Map<string, Set<string>>()
+  for (const q of periodQueries.filter((q: any) => q.language_detected)) {
+    const key = (q as any).chat_session_id ?? q.id
+    if (!sessionLangMap.has(key)) sessionLangMap.set(key, new Set())
+    sessionLangMap.get(key)!.add(q.language_detected as string)
+  }
+  const multilingualSessionCount = [...sessionLangMap.values()].filter(s => s.size > 1).length
 
   // ── 7. Handbook Access Summary ────────────────────────────────────────────────
   const handbookPolicies = activePolicies.filter((p: any) => p.document_category === 'staff_handbook')
@@ -470,8 +479,9 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
     version_history:        versionHistory,
     staff_engagement:       staffEngagement,
     regulatory_activity:    regulatoryActivity,
-    multilingual_access:    multilingualAccess,
-    handbook_access:        handbookAccess,
+    multilingual_access:         multilingualAccess,
+    multilingual_session_count:  multilingualSessionCount,
+    handbook_access:             handbookAccess,
     knowledge_gaps:         knowledgeGaps,
   })
 })

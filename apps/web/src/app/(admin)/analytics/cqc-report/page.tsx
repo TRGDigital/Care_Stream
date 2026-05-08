@@ -12,8 +12,13 @@ import { clsx } from 'clsx'
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const LANG_NAMES: Record<string, string> = {
-  eng: 'English', spa: 'Spanish', pol: 'Polish', ron: 'Romanian',
-  fra: 'French',  deu: 'German',  por: 'Portuguese', hin: 'Hindi',
+  eng: 'English',   spa: 'Spanish',    pol: 'Polish',     ron: 'Romanian',
+  fra: 'French',    deu: 'German',     por: 'Portuguese', hin: 'Hindi',
+  tgl: 'Tagalog',   yor: 'Yoruba',     ben: 'Bengali',    urd: 'Urdu',
+  zho: 'Chinese',   ara: 'Arabic',     ita: 'Italian',    lit: 'Lithuanian',
+  bho: 'Bhojpuri',  guj: 'Gujarati',   pan: 'Punjabi',    tam: 'Tamil',
+  tel: 'Telugu',    kan: 'Kannada',    mal: 'Malayalam',  sin: 'Sinhala',
+  nep: 'Nepali',    som: 'Somali',     swa: 'Swahili',    cym: 'Welsh',
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -295,11 +300,16 @@ export default function CQCReportPage() {
           {/* 6. Multi-Language Access */}
           <ReportSection title="6. Multi-Language Access" className="cqc-print-break">
             <p className="mb-3 text-xs text-neutral-mid">
-              Queries submitted in non-English languages, demonstrating equitable policy access for a multilingual workforce.
+              Languages used by staff when querying policies, demonstrating equitable access for a multilingual workforce.
               Relevant to CQC Equality and Diversity requirements.
             </p>
+            {report.multilingual_session_count > 0 && (
+              <p className="mb-3 text-xs font-medium text-blue-600">
+                {report.multilingual_session_count} chat session{report.multilingual_session_count !== 1 ? 's' : ''} included queries in more than one language.
+              </p>
+            )}
             {report.multilingual_access.length === 0 ? (
-              <p className="text-sm text-neutral-mid">All queries in this period were submitted in English.</p>
+              <p className="text-sm text-neutral-mid">No language data recorded for this period.</p>
             ) : (
               <Table
                 headers={['Language', 'Queries', '% of total']}

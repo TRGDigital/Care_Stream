@@ -149,8 +149,9 @@ export default function ChatPage() {
   const [sending, setSending]                          = useState(false)
   const [expandedCitations, setExpandedCitations]      = useState<Set<string>>(new Set())
   const [fullPolicyRequestedIds, setFullPolicyRequestedIds] = useState<Set<string>>(new Set())
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const inputRef   = useRef<HTMLInputElement>(null)
+  const bottomRef          = useRef<HTMLDivElement>(null)
+  const inputRef           = useRef<HTMLInputElement>(null)
+  const suppressAutoSaveRef = useRef(false)
 
   // Load sessions from localStorage once userId is known
   useEffect(() => {
@@ -159,8 +160,12 @@ export default function ChatPage() {
     }
   }, [userId])
 
-  // Auto-save current session whenever messages settle (skip loading states)
+  // Auto-save current session whenever messages settle (skip loading states and restores)
   useEffect(() => {
+    if (suppressAutoSaveRef.current) {
+      suppressAutoSaveRef.current = false
+      return
+    }
     const completed = messages.filter(m => !m.loading)
     if (completed.length === 0 || category === null) return
 
@@ -193,6 +198,7 @@ export default function ChatPage() {
   }
 
   function loadSession(s: StoredSession) {
+    suppressAutoSaveRef.current = true
     // Backfill timestamp for messages saved before this field existed
     const msgs = s.messages.map(m => m.timestamp ? m : { ...m, timestamp: s.updatedAt })
     setMessages(msgs)

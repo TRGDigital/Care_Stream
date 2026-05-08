@@ -59,6 +59,7 @@ export interface QueryInput {
   policyId?:           string          // caller may pre-specify a policy
   priorCategory?:      DocumentCategory // from prior email thread turn
   selectedCategory?:   DocumentCategory // explicitly chosen by user before chat starts
+  chatSessionId?:      string           // groups all turns of one chat into one session
   // §8.2 — prior email thread turns passed to Claude for multi-turn continuity
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
@@ -304,7 +305,7 @@ async function loadPolicyMeta(
 
 export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
-  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory, selectedCategory, conversationHistory } = input
+  const { queryText, tenantId, userId, staffName, channel, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory } = input
 
   // 1. Detect language (§5.1)
   const langDetection  = await detectLanguage(queryText)
@@ -386,6 +387,7 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
           noMatch: false,
           languageDetected: langDetection.code,
           responseTimeMs: Date.now() - start,
+          chatSessionId,
         })
 
         return {
@@ -562,6 +564,7 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
     noMatch,
     languageDetected: langDetection.code,
     responseTimeMs: Date.now() - start,
+    chatSessionId,
   })
 
   return {
@@ -597,6 +600,7 @@ interface SaveQueryParams {
   noMatch:                 boolean
   languageDetected:        string
   responseTimeMs:          number
+  chatSessionId?:          string | null
 }
 
 async function saveQueryRecord(params: SaveQueryParams): Promise<void> {
@@ -614,6 +618,7 @@ async function saveQueryRecord(params: SaveQueryParams): Promise<void> {
         no_match:                 params.noMatch,
         language_detected:        params.languageDetected,
         response_time_ms:         params.responseTimeMs,
+        chat_session_id:          params.chatSessionId ?? null,
       },
     })
   } catch (e) {

@@ -143,6 +143,18 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap gap-4 px-1 text-xs text-neutral-mid">
+        <span className="flex items-center gap-1.5">
+          <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700">Matched</span>
+          The question was answered using one or more of your uploaded policies.
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="rounded-full bg-orange-50 px-2 py-0.5 font-medium text-orange-600">No match</span>
+          No relevant policy was found — consider uploading a policy that covers this topic.
+        </span>
+      </div>
     </div>
   )
 }

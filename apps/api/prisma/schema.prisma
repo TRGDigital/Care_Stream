@@ -122,6 +122,7 @@ model QueryRecord {
   no_match                 Boolean  @default(false)           // true = no policy found (§10.2 not-found rate)
   language_detected        String   @default("eng")           // ISO 639-3 code (§5.1)
   response_time_ms         Int
+  chat_session_id          String?                            // groups multi-turn chat messages into one session
   created_at               DateTime @default(now())
   tenant                   Tenant   @relation(fields: [tenant_id], references: [id])
   user                     User?    @relation(fields: [user_id], references: [id])
@@ -129,6 +130,7 @@ model QueryRecord {
   @@index([tenant_id, created_at])
   @@index([tenant_id, language_detected])
   @@index([tenant_id, no_match])
+  @@index([tenant_id, chat_session_id])
   @@map("queries")
 }
 

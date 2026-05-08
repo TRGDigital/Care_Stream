@@ -18,6 +18,7 @@ interface ChatMessage {
   id:                  string
   role:                'user' | 'assistant'
   content:             string
+  timestamp?:          string   // ISO — set on send for user, on response for assistant
   citations?:          Citation[]
   language?:           string
   loading?:            boolean
@@ -57,6 +58,16 @@ const SUGGESTED: Record<DocumentCategory, string[]> = {
     'What is the process for reporting absence?',
     'What are the disciplinary procedures?',
   ],
+}
+
+function formatMsgTime(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
+function sessionRef(id: string): string {
+  return 'REF-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
 const CATEGORY_LABELS: Record<DocumentCategory, { title: string; subtitle: string }> = {
@@ -182,7 +193,9 @@ export default function ChatPage() {
   }
 
   function loadSession(s: StoredSession) {
-    setMessages(s.messages)
+    // Backfill timestamp for messages saved before this field existed
+    const msgs = s.messages.map(m => m.timestamp ? m : { ...m, timestamp: s.updatedAt })
+    setMessages(msgs)
     setCategory(s.category)
     setSessionId(s.id)
     setExpandedCitations(new Set())
@@ -198,9 +211,10 @@ export default function ChatPage() {
     if (!trimmed || sending || !session?.accessToken) return
 
     const userMsg: ChatMessage = {
-      id:      crypto.randomUUID(),
-      role:    'user',
-      content: trimmed,
+      id:        crypto.randomUUID(),
+      role:      'user',
+      content:   trimmed,
+      timestamp: new Date().toISOString(),
     }
     const placeholderId = crypto.randomUUID()
     const placeholder: ChatMessage = {
@@ -232,6 +246,7 @@ export default function ChatPage() {
         query_text:           trimmed,
         staff_name:           session.user?.name ?? undefined,
         document_category:    category ?? undefined,
+        chat_session_id:      sessionId,
         conversation_history: history.length > 0 ? history : undefined,
       })
 
@@ -239,6 +254,7 @@ export default function ChatPage() {
         m.id === placeholderId ? {
           ...m,
           content:            result.responseHtml,
+          timestamp:          new Date().toISOString(),
           citations:          result.citations?.length ? result.citations : undefined,
           language:           result.languageDetected !== 'eng' ? result.languageDetected : undefined,
           loading:            false,
@@ -271,10 +287,11 @@ export default function ChatPage() {
     })
   }
 
-  const userName    = session?.user?.name ?? 'You'
-  const userInitial = userName.charAt(0).toUpperCase()
-  const isEmpty     = messages.length === 0
-  const grouped     = groupSessions(sessions)
+  const userName       = session?.user?.name ?? 'You'
+  const userInitial    = userName.charAt(0).toUpperCase()
+  const isEmpty        = messages.length === 0
+  const grouped        = groupSessions(sessions)
+  const firstUserMsgId = messages.find(m => m.role === 'user')?.id
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -367,6 +384,7 @@ export default function ChatPage() {
                   }}
                   fullPolicyRequested={fullPolicyRequestedIds.has(msg.id)}
                   langNames={LANG_NAMES}
+                  sessionRef={msg.id === firstUserMsgId ? sessionRef(sessionId) : undefined}
                 />
               ))}
               <div ref={bottomRef} />
@@ -490,6 +508,7 @@ function MessageBubble({
   onRequestFullPolicy,
   fullPolicyRequested,
   langNames,
+  sessionRef: ref,
 }: {
   msg:                 ChatMessage
   userInitial:         string
@@ -499,6 +518,7 @@ function MessageBubble({
   onRequestFullPolicy: () => void
   fullPolicyRequested: boolean
   langNames:           Record<string, string>
+  sessionRef?:         string
 }) {
   if (msg.role === 'user') {
     return (
@@ -507,6 +527,12 @@ function MessageBubble({
           <div className="rounded-2xl rounded-br-sm bg-teal px-4 py-3 text-sm leading-relaxed text-white">
             {msg.content}
           </div>
+          {msg.timestamp && (
+            <p className="mt-1 text-right text-xs text-neutral-mid">
+              {ref && <span className="mr-2 font-medium text-teal">{ref}</span>}
+              {formatMsgTime(msg.timestamp)}
+            </p>
+          )}
         </div>
         <div
           aria-hidden
@@ -538,6 +564,11 @@ function MessageBubble({
             />
           )}
         </div>
+        {msg.timestamp && !msg.loading && (
+          <p className="mt-1 text-xs text-neutral-mid">
+            {formatMsgTime(msg.timestamp)}
+          </p>
+        )}
 
         {msg.language && !msg.loading && (
           <span className="mt-1.5 inline-block rounded-full bg-teal-light px-2.5 py-0.5 text-xs text-teal">

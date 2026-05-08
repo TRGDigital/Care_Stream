@@ -60,7 +60,7 @@ async function apiFetch<T>(
 export function createApiClient(token: string) {
   return {
     query: {
-      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook'; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
+      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook'; chat_session_id?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
         apiFetch<QueryResponse>('/query', token, {
           method: 'POST',
           body:   JSON.stringify(data),
@@ -69,6 +69,8 @@ export function createApiClient(token: string) {
         const qs = params ? '?' + new URLSearchParams(params) : ''
         return apiFetch<any>(`/query${qs}`, token)
       },
+      session: (sessionId: string) =>
+        apiFetch<{ messages: any[] }>(`/query/session/${sessionId}`, token),
     },
 
     policies: {

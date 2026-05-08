@@ -5,7 +5,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { BookOpen, ChevronDown, ChevronUp, MessageSquare, Users, X } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Info, MessageSquare, Users, X } from 'lucide-react'
 
 const LANG_NAMES: Record<string, string> = {
   eng: 'English', spa: 'Spanish', pol: 'Polish', ron: 'Romanian',
@@ -299,7 +299,25 @@ export default function QueriesPage() {
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Chat status</p>
+                                  <div className="flex items-center gap-1">
+                                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Chat status</p>
+                                    <div className="group relative">
+                                      <Info size={11} className="cursor-default text-neutral-mid" />
+                                      <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-56 -translate-x-1/2 rounded-lg bg-neutral-dark px-3 py-2.5 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                                        <p className="mb-1.5 font-medium">Chat status explained</p>
+                                        <p className="mb-1 flex items-center gap-1.5">
+                                          <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-green-400" />
+                                          <span><strong>Live</strong> — visible in the staff member&apos;s chat history</span>
+                                        </p>
+                                        <p className="flex items-center gap-1.5">
+                                          <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-gray-400" />
+                                          <span><strong>Removed</strong> — deleted from their chat view, but all records are preserved here for reporting</span>
+                                        </p>
+                                        {/* Arrow */}
+                                        <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-neutral-dark" />
+                                      </div>
+                                    </div>
+                                  </div>
                                   <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                                     q.deleted_from_chat
                                       ? 'bg-gray-100 text-gray-500'

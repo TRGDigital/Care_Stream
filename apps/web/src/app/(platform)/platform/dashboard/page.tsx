@@ -10,7 +10,7 @@ import {
 import { PlatformShell } from '@/components/platform-shell'
 import {
   BookOpen, Building2, ChevronDown, ChevronUp,
-  FileText, Loader2, MessageSquare, TrendingUp, Users,
+  FileText, Loader2, MessageSquare, Search, TrendingUp, Users, X,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -116,6 +116,7 @@ export default function PlatformDashboard() {
   const [queriesPage,   setQPage]     = useState(1)
   const [queriesLoading, setQL]       = useState(false)
   const [expanded,      setExpanded]  = useState<Set<string>>(new Set())
+  const [refSearch,     setRefSearch] = useState('')
 
   // Analytics tab
   const [analytics,        setAnalytics] = useState<any | null>(null)
@@ -139,7 +140,7 @@ export default function PlatformDashboard() {
 
   // Reset per-client data whenever the selected client changes
   useEffect(() => {
-    setQueries([]); setQTotal(0); setQPage(1); setExpanded(new Set())
+    setQueries([]); setQTotal(0); setQPage(1); setExpanded(new Set()); setRefSearch('')
     setAnalytics(null)
     setCqc(null)
   }, [clientId])
@@ -315,7 +316,29 @@ export default function PlatformDashboard() {
             {/* ── Queries ──────────────────────────────────────────────── */}
             {tab === 'queries' && (
               <div className="space-y-4">
-                <ClientSelector tenants={tenants} selectedId={clientId} onChange={handleClientChange} />
+                <div className="flex flex-wrap items-center gap-3">
+                  <ClientSelector tenants={tenants} selectedId={clientId} onChange={handleClientChange} />
+                  {clientId && (
+                    <div className="relative">
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+                      <input
+                        type="text"
+                        placeholder="Search by REF…"
+                        value={refSearch}
+                        onChange={e => setRefSearch(e.target.value.toUpperCase())}
+                        className="h-9 rounded-lg border border-gray-200 bg-white pl-8 pr-8 text-sm text-neutral-dark placeholder:text-neutral-mid focus:outline-none focus:ring-2 focus:ring-teal/30 w-44"
+                      />
+                      {refSearch && (
+                        <button
+                          onClick={() => setRefSearch('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {!clientId ? (
                   <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-sm text-neutral-mid">
@@ -325,6 +348,11 @@ export default function PlatformDashboard() {
                   <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
                 ) : (
                   <>
+                    {(() => {
+                      const filtered = refSearch
+                        ? queries.filter(q => sessionRef(q.session_key).includes(refSearch))
+                        : queries
+                      return (
                     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                       <table className="w-full text-sm">
                         <thead className="border-b border-gray-100 bg-neutral-light text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
@@ -339,11 +367,13 @@ export default function PlatformDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {queries.length === 0 ? (
+                          {filtered.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-4 py-8 text-center text-sm text-neutral-mid">No queries yet</td>
+                              <td colSpan={7} className="px-4 py-8 text-center text-sm text-neutral-mid">
+                                {refSearch ? `No sessions matching "${refSearch}"` : 'No queries yet'}
+                              </td>
                             </tr>
-                          ) : queries.map((q: any) => (
+                          ) : filtered.map((q: any) => (
                             <Fragment key={q.session_key}>
                               <tr
                                 className="cursor-pointer border-b border-gray-50 hover:bg-neutral-light/50"
@@ -429,8 +459,10 @@ export default function PlatformDashboard() {
                         </tbody>
                       </table>
                     </div>
+                      )
+                    })()}
 
-                    {queriesTotal > LIMIT && (
+                    {!refSearch && queriesTotal > LIMIT && (
                       <div className="flex items-center justify-between text-xs text-neutral-mid">
                         <span>
                           Showing {Math.min((queriesPage - 1) * LIMIT + 1, queriesTotal)}–{Math.min(queriesPage * LIMIT, queriesTotal)} of {queriesTotal}

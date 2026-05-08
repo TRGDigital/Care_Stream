@@ -172,6 +172,24 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   ok(res, { tenant, policies, recentQueries, knowledgeCount, userCount })
 })
 
+// ─── GET /admin/tenants/:id/sessions/:sessionId ──────────────────────────────
+// All messages for one chat session — used by the platform owner modal.
+
+adminRouter.get('/tenants/:id/sessions/:sessionId', async (req: Request, res: Response) => {
+  const { id: tenantId, sessionId } = req.params
+
+  const messages = await (prisma as any).queryRecord.findMany({
+    where:   { tenant_id: tenantId, chat_session_id: sessionId },
+    orderBy: { created_at: 'asc' },
+    select:  {
+      id: true, query_text: true, response_text: true,
+      no_match: true, response_time_ms: true, language_detected: true, created_at: true,
+    },
+  })
+
+  ok(res, { messages })
+})
+
 // ─── GET /admin/tenants/:id/queries ──────────────────────────────────────────
 // Session-grouped query list for one tenant (same shape as GET /query).
 

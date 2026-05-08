@@ -125,6 +125,8 @@ export function createPlatformClient(token: string) {
         const qs = params ? '?' + new URLSearchParams(params) : ''
         return adminFetch<any>(`/tenants/${id}/queries${qs}`, token)
       },
+      sessionMessages: (id: string, sessionId: string) =>
+        adminFetch<{ messages: any[] }>(`/tenants/${id}/sessions/${sessionId}`, token),
       analytics: (id: string) =>
         adminFetch<any>(`/tenants/${id}/analytics`, token),
       cqcReport: (id: string, dateFrom?: string, dateTo?: string) => {

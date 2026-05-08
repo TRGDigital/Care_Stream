@@ -128,6 +128,7 @@ export default function PlatformDashboard() {
   const [queriesLoading, setQL]       = useState(false)
   const [expanded,      setExpanded]  = useState<Set<string>>(new Set())
   const [refSearch,     setRefSearch] = useState('')
+  const [modal,         setModal]     = useState<{ row: any; messages: any[]; loading: boolean } | null>(null)
 
   // Analytics tab
   const [analytics,        setAnalytics] = useState<any | null>(null)
@@ -210,6 +211,23 @@ export default function PlatformDashboard() {
   function handleClientChange(id: string) {
     setClientId(id)
   }
+
+  async function openModal(row: any) {
+    if (!token || !clientId) return
+    setModal({ row, messages: [], loading: true })
+    try {
+      const data = await createPlatformClient(token).tenants.sessionMessages(clientId, row.chat_session_id)
+      setModal({ row, messages: data.messages, loading: false })
+    } catch {
+      setModal({ row, messages: [{ query_text: row.first_query, response_text: row.response_text, created_at: row.created_at, no_match: row.any_no_match }], loading: false })
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModal(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   if (!token) return null
 
@@ -359,6 +377,22 @@ export default function PlatformDashboard() {
                   <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
                 ) : (
                   <>
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-4 text-xs text-neutral-mid">
+                      <span className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700">Matched</span>
+                        Every question was answered from the client&apos;s policies.
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-600">Partial</span>
+                        Some questions were answered, others were not.
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-orange-50 px-2 py-0.5 font-medium text-orange-600">No match</span>
+                        Nothing in the chat was answered.
+                      </span>
+                    </div>
+
                     {(() => {
                       const filtered = refSearch
                         ? queries.filter(q => sessionRef(q.session_key).includes(refSearch))
@@ -468,6 +502,15 @@ export default function PlatformDashboard() {
                                           ))}
                                         </div>
                                       </div>
+                                    </div>
+                                    <div className="mt-4 flex justify-end">
+                                      <button
+                                        onClick={e => { e.stopPropagation(); openModal(q) }}
+                                        className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
+                                      >
+                                        <MessageSquare size={14} />
+                                        View full interaction
+                                      </button>
                                     </div>
                                   </td>
                                 </tr>
@@ -802,6 +845,95 @@ export default function PlatformDashboard() {
           </>
         )}
       </div>
+
+      {/* ── Full interaction modal ──────────────────────────────────────────── */}
+      {modal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setModal(null)}
+        >
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+              <div>
+                <h2 className="font-semibold text-neutral-dark">
+                  Full interaction — {modal.row.message_count} {modal.row.message_count === 1 ? 'message' : 'messages'}
+                </h2>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  <span className="font-medium text-teal">{sessionRef(modal.row.session_key)}</span>
+                  {' · '}{modal.row.user?.name ?? 'Unknown'}
+                  {' · '}{fmt(modal.row.created_at)}
+                  {modal.row.document_category_queried && (
+                    <> · {CATEGORY_LABELS[modal.row.document_category_queried] ?? modal.row.document_category_queried}</>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => setModal(null)}
+                className="rounded-md p-1 text-neutral-mid hover:bg-neutral-light"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Conversation thread */}
+            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+              {modal.loading ? (
+                <p className="py-8 text-center text-sm text-neutral-mid">Loading conversation…</p>
+              ) : (
+                modal.messages.map((msg: any, i: number) => (
+                  <div key={i} className="space-y-3">
+                    <div className="flex justify-end">
+                      <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-3 text-sm leading-relaxed text-white">
+                        {msg.query_text}
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="max-w-[85%] rounded-2xl rounded-bl-sm border border-gray-200 bg-neutral-light px-4 py-3">
+                        {msg.response_text ? (
+                          <div
+                            className="message-content text-sm leading-relaxed text-neutral-dark"
+                            dangerouslySetInnerHTML={{ __html: msg.response_text }}
+                          />
+                        ) : (
+                          <p className="text-sm text-neutral-mid">Response not available.</p>
+                        )}
+                        <div className="mt-2 flex items-center gap-3 border-t border-gray-200 pt-2">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            msg.no_match ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-700'
+                          }`}>
+                            {msg.no_match ? 'No match' : 'Matched'}
+                          </span>
+                          {msg.response_time_ms && (
+                            <span className="text-xs text-neutral-mid">{fmtMs(msg.response_time_ms)}</span>
+                          )}
+                          {msg.created_at && (
+                            <span className="ml-auto text-xs text-neutral-mid">{fmt(msg.created_at)}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end border-t border-gray-100 px-6 py-3">
+              <button
+                onClick={() => setModal(null)}
+                className="rounded-md px-4 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PlatformShell>
   )
 }

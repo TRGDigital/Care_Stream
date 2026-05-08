@@ -10,7 +10,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { BookOpen, ChevronDown, ChevronUp, MessageSquare, Plus, Send, Users } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, MessageSquare, Plus, Send, Trash2, Users } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -204,6 +204,14 @@ export default function ChatPage() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
+  function deleteSession(e: React.MouseEvent, id: string) {
+    e.stopPropagation()
+    const updated = sessions.filter(s => s.id !== id)
+    saveSessions(userId, updated)
+    setSessions(updated)
+    if (id === sessionId) startNewChat()
+  }
+
   // ─── Send ─────────────────────────────────────────────────────────────────────
 
   async function sendMessage(text: string) {
@@ -320,23 +328,34 @@ export default function ChatPage() {
                 </p>
                 <div className="space-y-0.5">
                   {group.items.map(s => (
-                    <button
+                    <div
                       key={s.id}
-                      onClick={() => loadSession(s)}
-                      className={`flex w-full flex-col rounded-md px-3 py-2 text-left transition-colors hover:bg-neutral-light ${
+                      className={`group relative flex items-start rounded-md transition-colors hover:bg-neutral-light ${
                         s.id === sessionId ? 'bg-teal-light' : ''
                       }`}
                     >
-                      <span className={`truncate text-sm ${s.id === sessionId ? 'font-medium text-teal' : 'text-neutral-dark'}`}>
-                        {s.title}
-                      </span>
-                      <span className="mt-0.5 flex items-center gap-1 text-xs text-neutral-mid">
-                        {s.category === 'internal_policy'
-                          ? <BookOpen size={10} />
-                          : <Users    size={10} />}
-                        {CATEGORY_LABELS[s.category].title}
-                      </span>
-                    </button>
+                      <button
+                        onClick={() => loadSession(s)}
+                        className="flex min-w-0 flex-1 flex-col px-3 py-2 text-left"
+                      >
+                        <span className={`truncate text-sm ${s.id === sessionId ? 'font-medium text-teal' : 'text-neutral-dark'}`}>
+                          {s.title}
+                        </span>
+                        <span className="mt-0.5 flex items-center gap-1 text-xs text-neutral-mid">
+                          {s.category === 'internal_policy'
+                            ? <BookOpen size={10} />
+                            : <Users    size={10} />}
+                          {CATEGORY_LABELS[s.category].title}
+                        </span>
+                      </button>
+                      <button
+                        onClick={e => deleteSession(e, s.id)}
+                        aria-label="Delete chat"
+                        className="mr-1 mt-1.5 flex-shrink-0 rounded p-1 text-neutral-mid opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100 focus:opacity-100"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>

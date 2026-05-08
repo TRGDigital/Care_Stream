@@ -441,7 +441,6 @@ export default function PlatformDashboard() {
                                         { label: 'Messages',        value: q.message_count },
                                         { label: 'Response time',   value: q.total_response_time_ms ? fmtMs(q.total_response_time_ms) : '—' },
                                         { label: 'Area',            value: q.document_category_queried ? (CATEGORY_LABELS[q.document_category_queried] ?? q.document_category_queried) : '—' },
-                                        { label: 'Language',        value: LANG_NAMES[q.language_detected] ?? q.language_detected ?? '—' },
                                         { label: 'Session started', value: q.started_at ? fmt(q.started_at) : '—' },
                                         { label: 'Last active',     value: q.last_message_at ? fmt(q.last_message_at) : '—' },
                                       ].map(({ label, value }) => (
@@ -450,6 +449,18 @@ export default function PlatformDashboard() {
                                           <p className="mt-0.5 text-neutral-dark">{value}</p>
                                         </div>
                                       ))}
+                                      <div>
+                                        <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Language(s)</p>
+                                        <div className="mt-1 flex flex-wrap gap-1">
+                                          {(q.all_languages?.length > 0 ? q.all_languages : [q.language_detected]).filter(Boolean).map((l: string) => (
+                                            <span key={l} className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                              l === q.language_detected ? 'bg-teal-light text-teal' : 'bg-blue-50 text-blue-600'
+                                            }`}>
+                                              {LANG_NAMES[l] ?? l}{l === q.language_detected ? ' ✦' : ''}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
                                     </div>
                                   </td>
                                 </tr>
@@ -499,7 +510,7 @@ export default function PlatformDashboard() {
                   <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
                       <StatCard
                         label="Queries this month"
                         value={analytics.total_queries.this_month}
@@ -520,6 +531,11 @@ export default function PlatformDashboard() {
                         label="Avg response time"
                         value={fmtMs(analytics.avg_response_ms)}
                         sub="This month"
+                      />
+                      <StatCard
+                        label="Multilingual sessions"
+                        value={analytics.multilingual_sessions ?? 0}
+                        sub="Language switched mid-chat"
                       />
                     </div>
 
@@ -720,10 +736,19 @@ export default function PlatformDashboard() {
 
                     {cqc.multilingual_access.length > 0 && (
                       <div className="rounded-xl border border-gray-200 bg-white p-5">
-                        <h3 className="mb-3 text-sm font-semibold text-neutral-dark">Multi-language access</h3>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-neutral-dark">Language usage</h3>
+                          {cqc.multilingual_session_count > 0 && (
+                            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+                              {cqc.multilingual_session_count} session{cqc.multilingual_session_count !== 1 ? 's' : ''} switched language mid-chat
+                            </span>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {cqc.multilingual_access.map((l: any) => (
-                            <span key={l.language} className="rounded-full bg-teal-light px-3 py-1 text-xs text-teal">
+                            <span key={l.language} className={`rounded-full px-3 py-1 text-xs ${
+                              l.language === 'eng' ? 'bg-teal-light text-teal' : 'bg-blue-50 text-blue-600'
+                            }`}>
                               {LANG_NAMES[l.language] ?? l.language} — {l.query_count} queries ({l.pct}%)
                             </span>
                           ))}

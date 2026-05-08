@@ -206,7 +206,15 @@ export default function QueriesPage() {
                             ) : <span className="text-xs text-neutral-mid">—</span>}
                           </td>
                           <td className="px-6 py-3 text-xs text-neutral-mid">
-                            {LANG_NAMES[q.language_detected] ?? q.language_detected ?? '—'}
+                            <span>{LANG_NAMES[q.language_detected] ?? q.language_detected ?? '—'}</span>
+                            {q.all_languages?.length > 1 && (
+                              <p className="mt-0.5 text-blue-500">
+                                +{q.all_languages
+                                  .filter((l: string) => l !== q.language_detected)
+                                  .map((l: string) => LANG_NAMES[l] ?? l)
+                                  .join(', ')}
+                              </p>
+                            )}
                           </td>
                           <td className="px-6 py-3">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -267,10 +275,18 @@ export default function QueriesPage() {
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Language</p>
-                                  <p className="mt-0.5 text-sm text-neutral-dark">
-                                    {LANG_NAMES[q.language_detected] ?? q.language_detected ?? '—'}
-                                  </p>
+                                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Language(s)</p>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {(q.all_languages?.length > 0 ? q.all_languages : [q.language_detected]).filter(Boolean).map((l: string) => (
+                                      <span key={l} className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                        l === q.language_detected
+                                          ? 'bg-teal-light text-teal'
+                                          : 'bg-blue-50 text-blue-600'
+                                      }`}>
+                                        {LANG_NAMES[l] ?? l}{l === q.language_detected ? ' ✦' : ''}
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
                                 <div>
                                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Total response time</p>

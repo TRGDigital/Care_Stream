@@ -171,6 +171,15 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
         ) AS deleted_from_chat
       FROM queries q
       WHERE ${whereClause}
+    ),
+    lang_agg AS (
+      SELECT
+        COALESCE(chat_session_id::text, id::text) AS session_key,
+        ARRAY_AGG(DISTINCT language_detected ORDER BY language_detected)
+          FILTER (WHERE language_detected IS NOT NULL) AS all_languages
+      FROM queries
+      WHERE tenant_id = '${tenantId}'
+      GROUP BY COALESCE(chat_session_id::text, id::text)
     )
     SELECT
       sd.session_key,
@@ -190,9 +199,11 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
       sd.deleted_from_chat,
       sd.created_at,
       u.name               AS user_name,
-      u.email              AS user_email
+      u.email              AS user_email,
+      la.all_languages
     FROM session_data sd
-    LEFT JOIN users u ON sd.user_id = u.id
+    LEFT JOIN users u  ON sd.user_id      = u.id
+    LEFT JOIN lang_agg la ON sd.session_key = la.session_key
     WHERE sd.rn = 1
     ORDER BY sd.last_message_at DESC
     LIMIT ${limit} OFFSET ${offset}
@@ -215,6 +226,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
     response_text:             r.response_text,
     document_category_queried: r.document_category_queried,
     language_detected:         r.language_detected,
+    all_languages:             Array.isArray(r.all_languages) ? r.all_languages : [],
     channel:                   r.channel,
     message_count:             Number(r.message_count),
     last_message_at:           r.last_message_at,

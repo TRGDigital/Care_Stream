@@ -204,15 +204,26 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
         BOOL_OR(q.chat_deleted_at IS NOT NULL) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)) AS deleted_from_chat
       FROM queries q
       WHERE q.tenant_id = '${tenantId}'
+    ),
+    lang_agg AS (
+      SELECT
+        COALESCE(chat_session_id::text, id::text) AS session_key,
+        ARRAY_AGG(DISTINCT language_detected ORDER BY language_detected)
+          FILTER (WHERE language_detected IS NOT NULL) AS all_languages
+      FROM queries
+      WHERE tenant_id = '${tenantId}'
+      GROUP BY COALESCE(chat_session_id::text, id::text)
     )
     SELECT sd.session_key, sd.chat_session_id, sd.id,
            sd.query_text AS first_query, sd.response_text,
            sd.document_category_queried, sd.language_detected, sd.channel, sd.user_id,
            sd.message_count::int, sd.last_message_at, sd.any_no_match,
            sd.total_response_time_ms::int, sd.started_at, sd.deleted_from_chat, sd.created_at,
-           u.name AS user_name, u.email AS user_email
+           u.name AS user_name, u.email AS user_email,
+           la.all_languages
     FROM   session_data sd
-    LEFT   JOIN users u ON sd.user_id = u.id
+    LEFT   JOIN users u    ON sd.user_id      = u.id
+    LEFT   JOIN lang_agg la ON sd.session_key = la.session_key
     WHERE  sd.rn = 1
     ORDER  BY sd.last_message_at DESC
     LIMIT  ${limit} OFFSET ${offset}
@@ -231,6 +242,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
     response_text:             r.response_text,
     document_category_queried: r.document_category_queried,
     language_detected:         r.language_detected,
+    all_languages:             Array.isArray(r.all_languages) ? r.all_languages : [],
     channel:                   r.channel,
     message_count:             Number(r.message_count),
     last_message_at:           r.last_message_at,
@@ -256,7 +268,7 @@ adminRouter.get('/tenants/:id/analytics', async (req: Request, res: Response) =>
   const thirtyDaysAgo  = new Date(Date.now() - 30 * 86_400_000)
   const msPerDay       = 86_400_000
 
-  const [thisMonthQueries, lastMonthQueries, activePolicies, knowledgeGaps, monthlyRows] = await Promise.all([
+  const [thisMonthQueries, lastMonthQueries, activePolicies, knowledgeGaps, monthlyRows, multilingualRows] = await Promise.all([
     (prisma as any).queryRecord.findMany({
       where:  { tenant_id: tenantId, created_at: { gte: thisMonthStart } },
       select: { user_id: true, channel: true, policy_ids_cited: true, no_match: true,
@@ -280,6 +292,14 @@ adminRouter.get('/tenants/:id/analytics', async (req: Request, res: Response) =>
       SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS period, COUNT(*)::int AS count
       FROM queries WHERE tenant_id = ${tenantId} AND created_at >= NOW() - INTERVAL '6 months'
       GROUP BY period ORDER BY period ASC
+    `,
+    (prisma as any).$queryRaw`
+      SELECT COUNT(*)::int AS count FROM (
+        SELECT COALESCE(chat_session_id::text, id::text) AS session_key
+        FROM queries WHERE tenant_id = ${tenantId}
+        GROUP BY session_key
+        HAVING COUNT(DISTINCT language_detected) > 1
+      ) t
     `,
   ])
 
@@ -314,15 +334,16 @@ adminRouter.get('/tenants/:id/analytics', async (req: Request, res: Response) =>
   const lastActiveUsers = new Set(lastMonthQueries.filter((q: any) => q.user_id).map((q: any) => q.user_id)).size
 
   ok(res, {
-    total_queries:    { this_month: thisTotal, last_month: lastTotal, change_pct: pct(thisTotal, lastTotal) },
-    active_users:     { this_month: thisActiveUsers, last_month: lastActiveUsers, change_pct: pct(thisActiveUsers, lastActiveUsers) },
-    no_match_rate:    noMatchRate,
-    avg_response_ms:  avgRespMs,
-    channel_split:    { chat: chatCount, email: emailCount },
-    top_policies:     topPolicies,
-    knowledge_gaps:   knowledgeGaps,
-    monthly_trend:    monthlyRows,
-    policy_count:     activePolicies.length,
+    total_queries:         { this_month: thisTotal, last_month: lastTotal, change_pct: pct(thisTotal, lastTotal) },
+    active_users:          { this_month: thisActiveUsers, last_month: lastActiveUsers, change_pct: pct(thisActiveUsers, lastActiveUsers) },
+    no_match_rate:         noMatchRate,
+    avg_response_ms:       avgRespMs,
+    channel_split:         { chat: chatCount, email: emailCount },
+    top_policies:          topPolicies,
+    knowledge_gaps:        knowledgeGaps,
+    monthly_trend:         monthlyRows,
+    policy_count:          activePolicies.length,
+    multilingual_sessions: Number((multilingualRows as any[])[0]?.count ?? 0),
   })
 })
 
@@ -425,8 +446,9 @@ adminRouter.get('/tenants/:id/analytics/cqc-report', async (req: Request, res: R
     .filter(r => r.query_count > 0)
     .sort((a, b) => b.query_count - a.query_count)
 
+  // All languages used (including English) for session-level language reporting
   const langMap = new Map<string, number>()
-  for (const q of periodQueries.filter((q: any) => q.language_detected !== 'eng')) {
+  for (const q of periodQueries.filter((q: any) => q.language_detected)) {
     const l = q.language_detected as string
     langMap.set(l, (langMap.get(l) ?? 0) + 1)
   }
@@ -434,6 +456,18 @@ adminRouter.get('/tenants/:id/analytics/cqc-report', async (req: Request, res: R
     .map(([language, count]) => ({ language, query_count: count,
       pct: periodQueries.length > 0 ? Math.round((count / periodQueries.length) * 100 * 10) / 10 : 0 }))
     .sort((a, b) => b.query_count - a.query_count)
+
+  // Sessions that used more than one language during the period
+  const sessionLangMap = new Map<string, Set<string>>()
+  for (const q of periodQueries.filter((q: any) => q.language_detected)) {
+    const key = q.chat_session_id ?? q.id
+    if (!sessionLangMap.has(key)) sessionLangMap.set(key, new Set())
+    sessionLangMap.get(key)!.add(q.language_detected as string)
+  }
+  const switchedSessions = [...sessionLangMap.entries()]
+    .filter(([, langs]) => langs.size > 1)
+    .map(([, langs]) => Array.from(langs))
+  const multilingualSessionCount = switchedSessions.length
 
   const knowledgeGaps = periodQueries
     .filter((q: any) => q.no_match)
@@ -451,7 +485,8 @@ adminRouter.get('/tenants/:id/analytics/cqc-report', async (req: Request, res: R
     version_history:       versionHistory,
     staff_engagement:      staffEngagement,
     regulatory_activity:   regulatoryActivity,
-    multilingual_access:   multilingualAccess,
+    multilingual_access:        multilingualAccess,
+    multilingual_session_count: multilingualSessionCount,
     knowledge_gaps:        knowledgeGaps,
   })
 })

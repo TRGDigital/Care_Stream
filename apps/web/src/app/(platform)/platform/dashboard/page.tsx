@@ -44,6 +44,14 @@ function fmtMs(ms: number) { return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : 
 
 function sessionRef(key: string) { return 'REF-' + key.replace(/-/g, '').slice(0, 6).toUpperCase() }
 
+function ResultBadge({ anyNoMatch, allNoMatch }: { anyNoMatch: boolean; allNoMatch: boolean }) {
+  if (!anyNoMatch)
+    return <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Matched</span>
+  if (!allNoMatch)
+    return <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">Partial</span>
+  return <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600">No match</span>
+}
+
 function StatCard({
   label, value, sub, accent = false,
 }: { label: string; value: string | number; sub?: string; accent?: boolean }) {
@@ -414,11 +422,7 @@ export default function PlatformDashboard() {
                                   ) : <span className="text-xs text-neutral-mid">—</span>}
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    q.any_no_match ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-700'
-                                  }`}>
-                                    {q.any_no_match ? 'No match' : 'Matched'}
-                                  </span>
+                                  <ResultBadge anyNoMatch={q.any_no_match} allNoMatch={q.all_no_match} />
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${

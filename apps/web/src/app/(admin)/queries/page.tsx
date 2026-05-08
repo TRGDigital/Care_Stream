@@ -36,6 +36,14 @@ function sessionRef(sessionKey: string): string {
   return 'REF-' + sessionKey.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
+function ResultBadge({ anyNoMatch, allNoMatch, long = false }: { anyNoMatch: boolean; allNoMatch: boolean; long?: boolean }) {
+  if (!anyNoMatch)
+    return <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">{long ? 'Policy matched' : 'Matched'}</span>
+  if (!allNoMatch)
+    return <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">{long ? 'Partial match' : 'Partial'}</span>
+  return <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600">{long ? 'No match found' : 'No match'}</span>
+}
+
 interface ModalSession {
   row:      any
   messages: any[]
@@ -137,11 +145,15 @@ export default function QueriesPage() {
         <div className="mb-4 flex flex-wrap gap-4 text-xs text-neutral-mid">
           <span className="flex items-center gap-1.5">
             <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700">Matched</span>
-            The question was answered using one or more of your uploaded policies.
+            Every question in the chat was answered from your policies.
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-600">Partial</span>
+            Some questions were answered, others were not.
           </span>
           <span className="flex items-center gap-1.5">
             <span className="rounded-full bg-orange-50 px-2 py-0.5 font-medium text-orange-600">No match</span>
-            No relevant policy was found — consider uploading a policy that covers this topic.
+            No questions in the chat were answered — consider uploading a policy that covers this topic.
           </span>
         </div>
 
@@ -229,11 +241,7 @@ export default function QueriesPage() {
                             </span>
                           </td>
                           <td className="px-6 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                              q.any_no_match ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-700'
-                            }`}>
-                              {q.any_no_match ? 'No match' : 'Matched'}
-                            </span>
+                            <ResultBadge anyNoMatch={q.any_no_match} allNoMatch={q.all_no_match} />
                           </td>
                           <td className="whitespace-nowrap px-6 py-3 text-xs text-neutral-mid">
                             {q.last_message_at ? formatDateTime(q.last_message_at) : '—'}
@@ -299,11 +307,9 @@ export default function QueriesPage() {
                                 </div>
                                 <div>
                                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Result</p>
-                                  <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    q.any_no_match ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-700'
-                                  }`}>
-                                    {q.any_no_match ? 'No match found' : 'Policy matched'}
-                                  </span>
+                                  <div className="mt-0.5">
+                                    <ResultBadge anyNoMatch={q.any_no_match} allNoMatch={q.all_no_match} long />
+                                  </div>
                                 </div>
                                 <div>
                                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-mid">Session started</p>

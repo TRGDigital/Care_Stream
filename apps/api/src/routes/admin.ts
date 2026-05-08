@@ -199,6 +199,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
         COUNT(*)     OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                            AS message_count,
         MAX(q.created_at) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                      AS last_message_at,
         BOOL_OR(q.no_match) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                    AS any_no_match,
+        BOOL_AND(q.no_match) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                   AS all_no_match,
         SUM(q.response_time_ms) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                AS total_response_time_ms,
         MIN(q.created_at) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                      AS started_at,
         BOOL_OR(q.chat_deleted_at IS NOT NULL) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)) AS deleted_from_chat
@@ -217,7 +218,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
     SELECT sd.session_key, sd.chat_session_id, sd.id,
            sd.query_text AS first_query, sd.response_text,
            sd.document_category_queried, sd.language_detected, sd.channel, sd.user_id,
-           sd.message_count::int, sd.last_message_at, sd.any_no_match,
+           sd.message_count::int, sd.last_message_at, sd.any_no_match, sd.all_no_match,
            sd.total_response_time_ms::int, sd.started_at, sd.deleted_from_chat, sd.created_at,
            u.name AS user_name, u.email AS user_email,
            la.all_languages
@@ -248,6 +249,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
     last_message_at:           r.last_message_at,
     started_at:                r.started_at,
     any_no_match:              r.any_no_match,
+    all_no_match:              r.all_no_match,
     total_response_time_ms:    Number(r.total_response_time_ms ?? 0),
     deleted_from_chat:         r.deleted_from_chat ?? false,
     created_at:                r.created_at,

@@ -160,6 +160,9 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
         BOOL_OR(q.no_match) OVER (
           PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)
         ) AS any_no_match,
+        BOOL_AND(q.no_match) OVER (
+          PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)
+        ) AS all_no_match,
         SUM(q.response_time_ms) OVER (
           PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)
         ) AS total_response_time_ms,
@@ -194,6 +197,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
       sd.message_count::int,
       sd.last_message_at,
       sd.any_no_match,
+      sd.all_no_match,
       sd.total_response_time_ms::int,
       sd.started_at,
       sd.deleted_from_chat,
@@ -232,6 +236,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
     last_message_at:           r.last_message_at,
     started_at:                r.started_at,
     any_no_match:              r.any_no_match,
+    all_no_match:              r.all_no_match,
     total_response_time_ms:    Number(r.total_response_time_ms ?? 0),
     deleted_from_chat:         r.deleted_from_chat ?? false,
     created_at:                r.created_at,

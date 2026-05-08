@@ -121,6 +121,18 @@ export function createPlatformClient(token: string) {
         adminFetch<{ tenants: TenantSummary[]; total: number }>('/tenants', token),
       get: (id: string) =>
         adminFetch<TenantDetail>(`/tenants/${id}`, token),
+      queries: (id: string, params?: Record<string, string>) => {
+        const qs = params ? '?' + new URLSearchParams(params) : ''
+        return adminFetch<any>(`/tenants/${id}/queries${qs}`, token)
+      },
+      analytics: (id: string) =>
+        adminFetch<any>(`/tenants/${id}/analytics`, token),
+      cqcReport: (id: string, dateFrom?: string, dateTo?: string) => {
+        const qs = new URLSearchParams()
+        if (dateFrom) qs.set('date_from', dateFrom)
+        if (dateTo)   qs.set('date_to',   dateTo)
+        return adminFetch<any>(`/tenants/${id}/analytics/cqc-report${qs.toString() ? '?' + qs : ''}`, token)
+      },
     },
 
     usage: () =>

@@ -172,6 +172,290 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   ok(res, { tenant, policies, recentQueries, knowledgeCount, userCount })
 })
 
+// ─── GET /admin/tenants/:id/queries ──────────────────────────────────────────
+// Session-grouped query list for one tenant (same shape as GET /query).
+
+adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
+  const tenantId = req.params.id
+  const page     = Math.max(1, parseInt((req.query.page  as string) || '1'))
+  const limit    = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20')))
+  const offset   = (page - 1) * limit
+
+  const rawSessions: any[] = await prisma.$queryRawUnsafe(`
+    WITH session_data AS (
+      SELECT
+        q.id,
+        COALESCE(q.chat_session_id::text, q.id::text) AS session_key,
+        q.chat_session_id,
+        q.query_text,
+        q.response_text,
+        q.document_category_queried,
+        q.no_match,
+        q.language_detected,
+        q.channel,
+        q.user_id,
+        q.created_at,
+        ROW_NUMBER() OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text) ORDER BY q.created_at ASC)  AS rn,
+        COUNT(*)     OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                            AS message_count,
+        MAX(q.created_at) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                      AS last_message_at,
+        BOOL_OR(q.no_match) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                    AS any_no_match,
+        SUM(q.response_time_ms) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                AS total_response_time_ms,
+        MIN(q.created_at) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                      AS started_at,
+        BOOL_OR(q.chat_deleted_at IS NOT NULL) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)) AS deleted_from_chat
+      FROM queries q
+      WHERE q.tenant_id = '${tenantId}'
+    )
+    SELECT sd.session_key, sd.chat_session_id, sd.id,
+           sd.query_text AS first_query, sd.response_text,
+           sd.document_category_queried, sd.language_detected, sd.channel, sd.user_id,
+           sd.message_count::int, sd.last_message_at, sd.any_no_match,
+           sd.total_response_time_ms::int, sd.started_at, sd.deleted_from_chat, sd.created_at,
+           u.name AS user_name, u.email AS user_email
+    FROM   session_data sd
+    LEFT   JOIN users u ON sd.user_id = u.id
+    WHERE  sd.rn = 1
+    ORDER  BY sd.last_message_at DESC
+    LIMIT  ${limit} OFFSET ${offset}
+  `)
+
+  const totalRows: any[] = await prisma.$queryRawUnsafe(`
+    SELECT COUNT(DISTINCT COALESCE(chat_session_id::text, id::text))::int AS total
+    FROM queries WHERE tenant_id = '${tenantId}'
+  `)
+
+  const sessions = rawSessions.map((r: any) => ({
+    session_key:               r.session_key,
+    chat_session_id:           r.chat_session_id,
+    id:                        r.id,
+    first_query:               r.first_query,
+    response_text:             r.response_text,
+    document_category_queried: r.document_category_queried,
+    language_detected:         r.language_detected,
+    channel:                   r.channel,
+    message_count:             Number(r.message_count),
+    last_message_at:           r.last_message_at,
+    started_at:                r.started_at,
+    any_no_match:              r.any_no_match,
+    total_response_time_ms:    Number(r.total_response_time_ms ?? 0),
+    deleted_from_chat:         r.deleted_from_chat ?? false,
+    created_at:                r.created_at,
+    user: r.user_name ? { name: r.user_name, email: r.user_email } : null,
+  }))
+
+  ok(res, { queries: sessions, total: Number(totalRows[0]?.total ?? 0), page, limit })
+})
+
+// ─── GET /admin/tenants/:id/analytics ────────────────────────────────────────
+// Key analytics for one tenant — no plan restrictions.
+
+adminRouter.get('/tenants/:id/analytics', async (req: Request, res: Response) => {
+  const tenantId      = req.params.id
+  const now           = new Date()
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const thirtyDaysAgo  = new Date(Date.now() - 30 * 86_400_000)
+  const msPerDay       = 86_400_000
+
+  const [thisMonthQueries, lastMonthQueries, activePolicies, knowledgeGaps, monthlyRows] = await Promise.all([
+    (prisma as any).queryRecord.findMany({
+      where:  { tenant_id: tenantId, created_at: { gte: thisMonthStart } },
+      select: { user_id: true, channel: true, policy_ids_cited: true, no_match: true,
+                intent_type: true, document_category_queried: true, response_time_ms: true, created_at: true },
+    }),
+    (prisma as any).queryRecord.findMany({
+      where:  { tenant_id: tenantId, created_at: { gte: lastMonthStart, lt: thisMonthStart } },
+      select: { user_id: true, no_match: true },
+    }),
+    (prisma as any).policy.findMany({
+      where:   { tenant_id: tenantId, status: 'active' },
+      select:  { id: true, name: true, document_category: true, version: true },
+    }),
+    (prisma as any).queryRecord.findMany({
+      where:   { tenant_id: tenantId, no_match: true, created_at: { gte: thirtyDaysAgo } },
+      select:  { id: true, query_text: true, channel: true, language_detected: true, created_at: true },
+      orderBy: { created_at: 'desc' },
+      take:    20,
+    }),
+    (prisma as any).$queryRaw`
+      SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS period, COUNT(*)::int AS count
+      FROM queries WHERE tenant_id = ${tenantId} AND created_at >= NOW() - INTERVAL '6 months'
+      GROUP BY period ORDER BY period ASC
+    `,
+  ])
+
+  const thisTotal = thisMonthQueries.length
+  const lastTotal = lastMonthQueries.length
+  const pct = (a: number, b: number) => b > 0 ? Math.round(((a - b) / b) * 100) : null
+
+  const thisNoMatch = thisMonthQueries.filter((q: any) => q.no_match).length
+  const noMatchRate = thisTotal > 0 ? Math.round((thisNoMatch / thisTotal) * 1000) / 10 : 0
+
+  const rtValues  = thisMonthQueries.map((q: any) => q.response_time_ms as number)
+  const avgRespMs = rtValues.length > 0
+    ? Math.round(rtValues.reduce((s: number, v: number) => s + v, 0) / rtValues.length) : 0
+
+  let chatCount = 0, emailCount = 0
+  for (const q of thisMonthQueries) {
+    if (q.channel === 'chat') chatCount++; else if (q.channel === 'email') emailCount++
+  }
+
+  const citationMap = new Map<string, number>()
+  for (const q of thisMonthQueries) {
+    for (const pid of (q.policy_ids_cited as string[])) {
+      citationMap.set(pid, (citationMap.get(pid) ?? 0) + 1)
+    }
+  }
+  const pMeta = new Map(activePolicies.map((p: any) => [p.id, { name: p.name, document_category: p.document_category }]))
+  const topPolicies = [...citationMap.entries()]
+    .sort((a, b) => b[1] - a[1]).slice(0, 8)
+    .map(([id, count]) => ({ policy_id: id, policy_name: (pMeta.get(id) as any)?.name ?? 'Unknown', count }))
+
+  const thisActiveUsers = new Set(thisMonthQueries.filter((q: any) => q.user_id).map((q: any) => q.user_id)).size
+  const lastActiveUsers = new Set(lastMonthQueries.filter((q: any) => q.user_id).map((q: any) => q.user_id)).size
+
+  ok(res, {
+    total_queries:    { this_month: thisTotal, last_month: lastTotal, change_pct: pct(thisTotal, lastTotal) },
+    active_users:     { this_month: thisActiveUsers, last_month: lastActiveUsers, change_pct: pct(thisActiveUsers, lastActiveUsers) },
+    no_match_rate:    noMatchRate,
+    avg_response_ms:  avgRespMs,
+    channel_split:    { chat: chatCount, email: emailCount },
+    top_policies:     topPolicies,
+    knowledge_gaps:   knowledgeGaps,
+    monthly_trend:    monthlyRows,
+    policy_count:     activePolicies.length,
+  })
+})
+
+// ─── GET /admin/tenants/:id/analytics/cqc-report ─────────────────────────────
+// Full CQC report for one tenant — no plan restrictions for platform owner.
+
+const REGULATORY_FRAMEWORKS_ADMIN = [
+  { name: 'CQC Fundamental Standards',  terms: ['cqc', 'care quality commission', 'fundamental standard', 'regulation 12', 'regulation 17', 'regulation 20'] },
+  { name: 'RIDDOR',                      terms: ['riddor', 'reporting injury', 'dangerous occurrence', 'reportable accident'] },
+  { name: 'GDPR / Data Protection',      terms: ['gdpr', 'data protection', 'personal data', 'privacy'] },
+  { name: 'Safeguarding',                terms: ['safeguarding', 'adult protection', 'abuse', 'neglect', 'vulnerable adult'] },
+  { name: 'Mental Capacity Act',         terms: ['mental capacity', 'mca', 'deprivation of liberty', 'dols', 'best interest'] },
+  { name: 'Health & Safety at Work',     terms: ['health and safety', 'manual handling', 'risk assessment', 'coshh'] },
+  { name: 'Fire Safety',                 terms: ['fire safety', 'fire risk', 'evacuation', 'fire drill'] },
+  { name: 'Infection Prevention',        terms: ['infection', 'ppe', 'hand hygiene', 'isolation', 'decontamination'] },
+]
+
+adminRouter.get('/tenants/:id/analytics/cqc-report', async (req: Request, res: Response) => {
+  const tenantId = req.params.id
+  const dateTo   = req.query.date_to   ? new Date(req.query.date_to   as string) : new Date()
+  const dateFrom = req.query.date_from ? new Date(req.query.date_from as string) : new Date(dateTo.getTime() - 365 * 86_400_000)
+
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId }, select: { name: true },
+  })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  const [periodQueries, activePolicies, allVersions] = await Promise.all([
+    (prisma as any).queryRecord.findMany({
+      where:  { tenant_id: tenantId, created_at: { gte: dateFrom, lte: dateTo } },
+      select: { id: true, user_id: true, channel: true, query_text: true,
+                policy_ids_cited: true, no_match: true, language_detected: true,
+                document_category_queried: true, created_at: true },
+    }),
+    (prisma as any).policy.findMany({
+      where:   { tenant_id: tenantId, status: 'active' },
+      select:  { id: true, name: true, version: true, document_category: true, created_at: true },
+      orderBy: { name: 'asc' },
+    }),
+    (prisma as any).policy.findMany({
+      where:   { tenant_id: tenantId, status: { in: ['active', 'superseded'] } },
+      select:  { id: true, name: true, version: true, status: true,
+                 document_category: true, created_at: true,
+                 uploader: { select: { name: true } } },
+      orderBy: [{ name: 'asc' }, { version: 'asc' }],
+    }),
+  ])
+
+  const queryingUserIds = [...new Set(periodQueries.filter((q: any) => q.user_id).map((q: any) => q.user_id as string))]
+  const userRows: any[] = queryingUserIds.length > 0
+    ? await (prisma as any).user.findMany({
+        where:  { id: { in: queryingUserIds }, tenant_id: tenantId },
+        select: { id: true, role: true },
+      })
+    : []
+  const userRoles = new Map<string, string>(userRows.map((u: any) => [u.id as string, u.role as string]))
+
+  const msPerDay = 86_400_000
+
+  const policyAccess = activePolicies.map((p: any) => {
+    const citing = periodQueries.filter((q: any) => (q.policy_ids_cited as string[]).includes(p.id))
+    const lastQ  = citing.length > 0 ? citing.reduce((a: any, b: any) => a.created_at > b.created_at ? a : b) : null
+    return { id: p.id, name: p.name, version: p.version, document_category: p.document_category,
+             total_queries: citing.length,
+             unique_staff:  new Set(citing.filter((q: any) => q.user_id).map((q: any) => q.user_id)).size,
+             last_accessed: lastQ?.created_at ?? null }
+  }).sort((a: any, b: any) => b.total_queries - a.total_queries)
+
+  const policiesNotAccessed = policyAccess
+    .filter((p: any) => p.total_queries === 0)
+    .map((p: any) => ({
+      id: p.id, name: p.name, version: p.version, document_category: p.document_category,
+      days_active: Math.floor((Date.now() - new Date(activePolicies.find((a: any) => a.id === p.id)?.created_at ?? Date.now()).getTime()) / msPerDay),
+    }))
+
+  const versionHistory = allVersions.map((v: any) => ({
+    id: v.id, name: v.name, version: v.version, status: v.status,
+    document_category: v.document_category, uploaded_at: v.created_at,
+    uploaded_by_name: v.uploader?.name ?? 'Unknown',
+  }))
+
+  const roleMap = new Map<string, { count: number; staffIds: Set<string> }>()
+  for (const q of periodQueries) {
+    if (!q.user_id) continue
+    const role = userRoles.get(q.user_id) ?? 'staff'
+    const e = roleMap.get(role)
+    if (!e) roleMap.set(role, { count: 1, staffIds: new Set([q.user_id]) })
+    else { e.count++; e.staffIds.add(q.user_id) }
+  }
+  const staffEngagement = [...roleMap.entries()]
+    .map(([role, { count, staffIds }]) => ({ role, query_count: count, unique_staff: staffIds.size }))
+    .sort((a, b) => b.query_count - a.query_count)
+
+  const regulatoryActivity = REGULATORY_FRAMEWORKS_ADMIN
+    .map(fw => {
+      const matches = periodQueries.filter((q: any) => fw.terms.some(t => (q.query_text as string).toLowerCase().includes(t)))
+      const lastQ   = matches.length > 0 ? matches.reduce((a: any, b: any) => a.created_at > b.created_at ? a : b) : null
+      return { framework: fw.name, query_count: matches.length, last_queried: lastQ?.created_at ?? null }
+    })
+    .filter(r => r.query_count > 0)
+    .sort((a, b) => b.query_count - a.query_count)
+
+  const langMap = new Map<string, number>()
+  for (const q of periodQueries.filter((q: any) => q.language_detected !== 'eng')) {
+    const l = q.language_detected as string
+    langMap.set(l, (langMap.get(l) ?? 0) + 1)
+  }
+  const multilingualAccess = [...langMap.entries()]
+    .map(([language, count]) => ({ language, query_count: count,
+      pct: periodQueries.length > 0 ? Math.round((count / periodQueries.length) * 100 * 10) / 10 : 0 }))
+    .sort((a, b) => b.query_count - a.query_count)
+
+  const knowledgeGaps = periodQueries
+    .filter((q: any) => q.no_match)
+    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 50)
+    .map((q: any) => ({ query_text: q.query_text, channel: q.channel,
+                        language: q.language_detected, created_at: q.created_at }))
+
+  ok(res, {
+    meta: { org_name: tenant.name, date_from: dateFrom.toISOString(), date_to: dateTo.toISOString(),
+            generated_at: new Date().toISOString(), total_queries: periodQueries.length,
+            total_staff_with_queries: queryingUserIds.length },
+    policy_access:         policyAccess,
+    policies_not_accessed: policiesNotAccessed,
+    version_history:       versionHistory,
+    staff_engagement:      staffEngagement,
+    regulatory_activity:   regulatoryActivity,
+    multilingual_access:   multilingualAccess,
+    knowledge_gaps:        knowledgeGaps,
+  })
+})
+
 // ─── GET /admin/usage ─────────────────────────────────────────────────────────
 // Query volume by tenant for the last 30 days, grouped by day.
 

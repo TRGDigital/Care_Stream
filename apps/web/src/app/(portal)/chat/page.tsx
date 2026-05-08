@@ -149,6 +149,7 @@ export default function ChatPage() {
   const [sending, setSending]                          = useState(false)
   const [expandedCitations, setExpandedCitations]      = useState<Set<string>>(new Set())
   const [fullPolicyRequestedIds, setFullPolicyRequestedIds] = useState<Set<string>>(new Set())
+  const [confirmDeleteId, setConfirmDeleteId]          = useState<string | null>(null)
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
@@ -210,12 +211,24 @@ export default function ChatPage() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
-  function deleteSession(e: React.MouseEvent, id: string) {
+  function requestDeleteSession(e: React.MouseEvent, id: string) {
     e.stopPropagation()
+    setConfirmDeleteId(id)
+  }
+
+  function confirmDelete(e: React.MouseEvent, id: string) {
+    e.stopPropagation()
+    // Only removes from local history — database records are preserved for admin reporting
     const updated = sessions.filter(s => s.id !== id)
     saveSessions(userId, updated)
     setSessions(updated)
+    setConfirmDeleteId(null)
     if (id === sessionId) startNewChat()
+  }
+
+  function cancelDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    setConfirmDeleteId(null)
   }
 
   // ─── Send ─────────────────────────────────────────────────────────────────────
@@ -340,27 +353,50 @@ export default function ChatPage() {
                         s.id === sessionId ? 'bg-teal-light' : ''
                       }`}
                     >
-                      <button
-                        onClick={() => loadSession(s)}
-                        className="flex min-w-0 flex-1 flex-col px-3 py-2 text-left"
-                      >
-                        <span className={`truncate text-sm ${s.id === sessionId ? 'font-medium text-teal' : 'text-neutral-dark'}`}>
-                          {s.title}
-                        </span>
-                        <span className="mt-0.5 flex items-center gap-1 text-xs text-neutral-mid">
-                          {s.category === 'internal_policy'
-                            ? <BookOpen size={10} />
-                            : <Users    size={10} />}
-                          {CATEGORY_LABELS[s.category].title}
-                        </span>
-                      </button>
-                      <button
-                        onClick={e => deleteSession(e, s.id)}
-                        aria-label="Delete chat"
-                        className="mr-1 mt-1.5 flex-shrink-0 rounded p-1 text-neutral-mid opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100 focus:opacity-100"
-                      >
-                        <Trash2 size={12} />
-                      </button>
+                      {confirmDeleteId === s.id ? (
+                        /* ── Inline confirmation ── */
+                        <div className="flex w-full items-center justify-between px-3 py-2" onClick={e => e.stopPropagation()}>
+                          <span className="text-xs text-neutral-dark">Remove from history?</span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={e => cancelDelete(e)}
+                              className="rounded px-1.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={e => confirmDelete(e, s.id)}
+                              className="rounded bg-red-500 px-1.5 py-0.5 text-xs text-white hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => loadSession(s)}
+                            className="flex min-w-0 flex-1 flex-col px-3 py-2 text-left"
+                          >
+                            <span className={`truncate text-sm ${s.id === sessionId ? 'font-medium text-teal' : 'text-neutral-dark'}`}>
+                              {s.title}
+                            </span>
+                            <span className="mt-0.5 flex items-center gap-1 text-xs text-neutral-mid">
+                              {s.category === 'internal_policy'
+                                ? <BookOpen size={10} />
+                                : <Users    size={10} />}
+                              {CATEGORY_LABELS[s.category].title}
+                            </span>
+                          </button>
+                          <button
+                            onClick={e => requestDeleteSession(e, s.id)}
+                            aria-label="Delete chat"
+                            className="mr-1 mt-1.5 flex-shrink-0 rounded p-1 text-neutral-mid opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100 focus:opacity-100"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

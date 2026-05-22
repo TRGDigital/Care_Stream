@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import {
   createPlatformClient,
@@ -9,10 +9,18 @@ import {
 } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import {
-  BookOpen, Building2, ChevronDown, ChevronUp,
-  FileText, Loader2, MessageSquare, Search, TrendingUp, Users, X,
+  AlertTriangle, BookOpen, Building2, ChevronDown, ChevronUp,
+  FileText, Loader2, Mail, MessageSquare, Search, TrendingUp, Users, X,
+  Cpu, Globe, Database, Zap, GitBranch, Shield, GraduationCap, Bot,
+  CheckCircle2, XCircle, RefreshCw, ClipboardList, ChevronRight, ChevronLeft, Download,
+  Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings,
 } from 'lucide-react'
+import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend,
+} from 'recharts'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,7 +86,18 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-type TabId = 'overview' | 'queries' | 'analytics' | 'cqc'
+function atRisk(stats: TenantSummary['stats'], plan: PlanLimits | null): boolean {
+  if (!plan) return false
+  return [
+    { used: stats.queriesThisMonth     ?? 0, limit: plan.monthly_query_limit          },
+    { used: stats.policyCount          ?? 0, limit: plan.max_policies                 },
+    { used: stats.activeUserCount      ?? 0, limit: plan.max_staff_users              },
+    { used: stats.handbookCount        ?? 0, limit: plan.max_handbooks                },
+    { used: stats.manualKnowledgeCount ?? 0, limit: plan.max_manual_knowledge_entries },
+  ].some(({ used, limit }) => limit != null && limit > 0 && used / limit >= 0.9)
+}
+
+type TabId = 'overview' | 'queries' | 'analytics' | 'cqc' | 'channels' | 'reference' | 'qa'
 
 // ─── Client selector ──────────────────────────────────────────────────────────
 
@@ -118,6 +137,9 @@ export default function PlatformDashboard() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
 
+  const [chartData, setChartData] = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>([])
+  const [chartDays, setChartDays] = useState(30)
+
   const [tab,      setTab]      = useState<TabId>('overview')
   const [clientId, setClientId] = useState('')
 
@@ -149,6 +171,14 @@ export default function PlatformDashboard() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
+
+  // Load chart data when token or day range changes
+  useEffect(() => {
+    if (!token) return
+    createPlatformClient(token).dailyActivity(chartDays)
+      .then(d => setChartData(d.series.map((s: any) => ({ voice: 0, ...s }))))
+      .catch(() => {})
+  }, [token, chartDays])
 
   // Reset per-client data whenever the selected client changes
   useEffect(() => {
@@ -232,10 +262,13 @@ export default function PlatformDashboard() {
   if (!token) return null
 
   const TABS: { id: TabId; label: string }[] = [
-    { id: 'overview',  label: 'Overview'   },
-    { id: 'queries',   label: 'Queries'    },
-    { id: 'analytics', label: 'Analytics'  },
-    { id: 'cqc',       label: 'CQC Report' },
+    { id: 'overview',  label: 'Overview'        },
+    { id: 'queries',   label: 'Queries'         },
+    { id: 'analytics', label: 'Analytics'       },
+    { id: 'cqc',       label: 'CQC Report'      },
+    { id: 'channels',  label: 'Channel Routing'  },
+    { id: 'reference', label: 'System Reference' },
+    { id: 'qa',        label: 'QA Testing'      },
   ]
 
   const OVERVIEW_CARDS = stats ? [
@@ -300,6 +333,117 @@ export default function PlatformDashboard() {
                   ))}
                 </div>
 
+                {/* Daily activity chart */}
+                <div className="rounded-xl border border-gray-200 bg-white">
+                  <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                    <div>
+                      <h2 className="font-semibold text-neutral-dark">Daily interactions</h2>
+                      <p className="mt-0.5 text-xs text-neutral-mid">Platform-wide queries per day, split by channel</p>
+                    </div>
+                    <div className="flex gap-1 rounded-md border border-gray-200 p-0.5 text-xs font-medium">
+                      {[7, 30, 90].map(d => (
+                        <button
+                          key={d}
+                          onClick={() => setChartDays(d)}
+                          className={`rounded px-3 py-1.5 transition-colors ${
+                            chartDays === d
+                              ? 'bg-teal text-white'
+                              : 'text-neutral-mid hover:text-neutral-dark'
+                          }`}
+                        >
+                          {d}d
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="px-4 py-5">
+                    {loading ? (
+                      <div className="flex h-48 items-center justify-center">
+                        <p className="text-sm text-neutral-mid">Loading…</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={chartData} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 11, fill: '#9ca3af' }}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={d => {
+                              const dt = new Date(d)
+                              return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                            }}
+                            interval={chartDays <= 7 ? 0 : chartDays <= 30 ? 4 : 9}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: '#9ca3af' }}
+                            tickLine={false}
+                            axisLine={false}
+                            allowDecimals={false}
+                            width={32}
+                          />
+                          <Tooltip
+                            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                            labelFormatter={d => new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                            formatter={(value: any, name: any) => [value, name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp']}
+                          />
+                          <Legend
+                            iconType="circle"
+                            iconSize={8}
+                            formatter={name => name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp'}
+                            wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+                          />
+                          <Line type="monotone" dataKey="chat"     stroke="#0d9488" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                          <Line type="monotone" dataKey="voice"    stroke="#9333ea" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                          <Line type="monotone" dataKey="email"    stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                          <Line type="monotone" dataKey="whatsapp" stroke="#16a34a" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                {/* At-risk clients */}
+                {tenants.filter(t => atRisk(t.stats, t.plan)).length > 0 && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <AlertTriangle size={16} className="text-amber-500" />
+                      <h2 className="text-sm font-semibold text-amber-800">
+                        Clients approaching plan limits
+                      </h2>
+                    </div>
+                    <div className="space-y-2">
+                      {tenants.filter(t => atRisk(t.stats, t.plan)).map(t => {
+                        const plan = t.plan as PlanLimits
+                        const items = [
+                          { label: 'queries', used: t.stats.queriesThisMonth,     limit: plan.monthly_query_limit          },
+                          { label: 'policies', used: t.stats.policyCount,          limit: plan.max_policies                 },
+                          { label: 'staff',    used: t.stats.activeUserCount,      limit: plan.max_staff_users              },
+                          { label: 'KB',       used: t.stats.manualKnowledgeCount, limit: plan.max_manual_knowledge_entries },
+                        ].filter(i => i.limit !== null && i.used / i.limit! >= 0.9)
+                        return (
+                          <div key={t.id} className="flex items-center justify-between rounded-lg bg-white px-4 py-2.5">
+                            <Link href={`/platform/clients/${t.id}`} className="font-medium text-teal hover:underline">
+                              {t.name}
+                            </Link>
+                            <div className="flex items-center gap-3">
+                              {items.map(i => (
+                                <span key={i.label} className="text-xs font-medium text-red-600">
+                                  {i.used}/{i.limit} {i.label}
+                                </span>
+                              ))}
+                              <Link href={`/platform/clients/${t.id}`} className="text-xs text-teal hover:underline">
+                                View →
+                              </Link>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-base font-semibold text-neutral-dark">All clients</h2>
@@ -314,27 +458,45 @@ export default function PlatformDashboard() {
                           <th className="px-4 py-3">Client</th>
                           <th className="px-4 py-3">Plan</th>
                           <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3 text-right">Queries (this month)</th>
                           <th className="px-4 py-3 text-right">Policies</th>
-                          <th className="px-4 py-3 text-right">Knowledge</th>
-                          <th className="px-4 py-3 text-right">Queries (30d)</th>
+                          <th className="px-4 py-3 text-right">Staff</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {tenants.map(t => (
-                          <tr key={t.id} className="hover:bg-neutral-light/50">
-                            <td className="px-4 py-3">
-                              <Link href={`/platform/clients/${t.id}`} className="font-medium text-teal hover:underline">
-                                {t.name}
-                              </Link>
-                              <p className="text-xs text-neutral-mid">{t.slug}</p>
-                            </td>
-                            <td className="px-4 py-3 text-neutral-mid">{t.plan?.name ?? '—'}</td>
-                            <td className="px-4 py-3"><StatusBadge status={t.subscription_status} /></td>
-                            <td className="px-4 py-3 text-right text-neutral-dark">{t.stats.policyCount}</td>
-                            <td className="px-4 py-3 text-right text-neutral-dark">{t.stats.knowledgeCount}</td>
-                            <td className="px-4 py-3 text-right text-neutral-dark">{t.stats.queriesThisMonth}</td>
-                          </tr>
-                        ))}
+                        {tenants.map(t => {
+                          const risk = atRisk(t.stats, t.plan)
+                          return (
+                            <tr key={t.id} className={`hover:bg-neutral-light/50 ${risk ? 'bg-amber-50/40' : ''}`}>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Link href={`/platform/clients/${t.id}`} className="font-medium text-teal hover:underline">
+                                    {t.name}
+                                  </Link>
+                                  {risk && <AlertTriangle size={12} className="text-amber-500" />}
+                                </div>
+                                <p className="text-xs text-neutral-mid">{t.slug}</p>
+                              </td>
+                              <td className="px-4 py-3 text-neutral-mid">{t.plan?.name ?? '—'}</td>
+                              <td className="px-4 py-3"><StatusBadge status={t.subscription_status} /></td>
+                              <td className="px-4 py-3 text-right">
+                                <span className={`text-sm font-medium ${
+                                  t.plan?.monthly_query_limit != null && t.stats.queriesThisMonth / t.plan.monthly_query_limit >= 0.9
+                                    ? 'text-red-600' : 'text-neutral-dark'
+                                }`}>
+                                  {t.stats.queriesThisMonth.toLocaleString()}
+                                  {t.plan?.monthly_query_limit != null && (
+                                    <span className="ml-1 text-xs font-normal text-neutral-mid">
+                                      / {t.plan.monthly_query_limit.toLocaleString()}
+                                    </span>
+                                  )}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right text-neutral-dark">{t.stats.policyCount}</td>
+                              <td className="px-4 py-3 text-right text-neutral-dark">{t.stats.activeUserCount}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -402,6 +564,7 @@ export default function PlatformDashboard() {
                       <table className="w-full text-sm">
                         <thead className="border-b border-gray-100 bg-neutral-light text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
                           <tr>
+                            <th className="px-4 py-3">Channel</th>
                             <th className="px-4 py-3">Staff member</th>
                             <th className="px-4 py-3">First question</th>
                             <th className="px-4 py-3">Area</th>
@@ -414,7 +577,7 @@ export default function PlatformDashboard() {
                         <tbody>
                           {filtered.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-4 py-8 text-center text-sm text-neutral-mid">
+                              <td colSpan={8} className="px-4 py-8 text-center text-sm text-neutral-mid">
                                 {refSearch ? `No sessions matching "${refSearch}"` : 'No queries yet'}
                               </td>
                             </tr>
@@ -424,6 +587,21 @@ export default function PlatformDashboard() {
                                 className="cursor-pointer border-b border-gray-50 hover:bg-neutral-light/50"
                                 onClick={() => toggleExpand(q.session_key)}
                               >
+                                <td className="px-4 py-3">
+                                  {q.channel === 'email' ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">
+                                      <Mail size={9} /> Email
+                                    </span>
+                                  ) : q.channel === 'whatsapp' ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                                      <MessageSquare size={9} /> WhatsApp
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">
+                                      <MessageSquare size={9} /> Chat
+                                    </span>
+                                  )}
+                                </td>
                                 <td className="px-4 py-3">
                                   {q.user ? (
                                     <div>
@@ -474,7 +652,7 @@ export default function PlatformDashboard() {
                               </tr>
                               {expanded.has(q.session_key) && (
                                 <tr className="border-b border-gray-100 bg-neutral-light/40">
-                                  <td colSpan={7} className="px-6 py-4">
+                                  <td colSpan={8} className="px-6 py-4">
                                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-4">
                                       {[
                                         { label: 'Staff',           value: q.user ? `${q.user.name} (${q.user.email})` : '—' },
@@ -842,6 +1020,15 @@ export default function PlatformDashboard() {
               </div>
             )}
 
+            {/* ── Channel Routing ──────────────────────────────────────────── */}
+            {tab === 'channels' && <ChannelRoutingMap />}
+
+            {/* ── System Reference ─────────────────────────────────────────── */}
+            {tab === 'reference' && <SystemReference />}
+
+            {/* ── QA Testing ───────────────────────────────────────────────── */}
+            {tab === 'qa' && <QATestingPanel />}
+
           </>
         )}
       </div>
@@ -935,5 +1122,1740 @@ export default function PlatformDashboard() {
         </div>
       )}
     </PlatformShell>
+  )
+}
+
+// ─── System Reference ─────────────────────────────────────────────────────────
+
+function RefSection({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-neutral-light/50 transition-colors"
+      >
+        <Icon size={16} className="shrink-0 text-teal" />
+        <span className="flex-1 text-sm font-semibold text-neutral-dark">{title}</span>
+        {open ? <ChevronUp size={14} className="text-neutral-mid" /> : <ChevronDown size={14} className="text-neutral-mid" />}
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 px-5 py-4 text-sm text-neutral-dark space-y-3">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RefRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[minmax(11rem,max-content)_1fr] gap-x-4 gap-y-0.5">
+      <span className="font-medium text-neutral-mid whitespace-nowrap">{label}</span>
+      <span className="text-neutral-dark">{value}</span>
+    </div>
+  )
+}
+
+function RefTag({ children, color = 'teal' }: { children: React.ReactNode; color?: 'teal' | 'blue' | 'amber' | 'green' | 'purple' }) {
+  const cls = {
+    teal:   'bg-teal-light text-teal',
+    blue:   'bg-blue-50 text-blue-600',
+    amber:  'bg-amber-50 text-amber-600',
+    green:  'bg-green-50 text-green-600',
+    purple: 'bg-purple-50 text-purple-600',
+  }[color]
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>
+}
+
+// ─── Channel Routing Map ──────────────────────────────────────────────────────
+
+type Avail = 'yes' | 'no' | 'partial'
+
+const MATRIX_TOOLS: { label: string; sub: string; web: Avail; wa: Avail; email: Avail; voice: Avail; note?: string }[] = [
+  { label: 'Policies & Procedures', sub: 'internal_policy',  web: 'yes', wa: 'yes',     email: 'yes', voice: 'yes' },
+  { label: 'Staff Handbook',        sub: 'staff_handbook',   web: 'yes', wa: 'yes',     email: 'yes', voice: 'yes' },
+  { label: 'Training & Learning',   sub: 'training_module',  web: 'yes', wa: 'yes',     email: 'yes', voice: 'yes' },
+  { label: 'CQC Compliance',        sub: 'cqc_report',       web: 'yes', wa: 'yes',     email: 'yes', voice: 'yes' },
+  { label: 'Auditing (AI chat)',     sub: 'audit_report',     web: 'yes', wa: 'no',      email: 'no',  voice: 'no',  note: 'Web chat only — answers questions about AI recommendations from completed audits' },
+  { label: 'Business Continuity',   sub: 'business_continuity', web: 'yes', wa: 'no',   email: 'no',  voice: 'no',  note: 'Web chat only — reads approved KnowledgeEntry records tagged business_continuity from Postgres' },
+  { label: 'Audit Form (conv.)',     sub: 'WhatsApp only',    web: 'no',  wa: 'yes',     email: 'no',  voice: 'no',  note: 'Conversational state machine — "audit" keyword triggers guided form completion' },
+  { label: 'CQC Staff Prep',        sub: 'cqc_staff_prep',   web: 'no',  wa: 'partial', email: 'no',  voice: 'no',  note: 'WhatsApp: staff can practise CQC question & answer drills' },
+]
+
+function AvailCell({ val }: { val: Avail }) {
+  if (val === 'yes')     return <span className="flex items-center justify-center"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={13} /></span></span>
+  if (val === 'no')      return <span className="flex items-center justify-center"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-400"><XCircle size={13} /></span></span>
+  return                  <span className="flex items-center justify-center"><span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">partial</span></span>
+}
+
+interface RoutingStepProps {
+  num:     number
+  title:   string
+  detail:  string
+  color?:  'teal' | 'amber' | 'red' | 'blue' | 'purple' | 'gray'
+  lock?:   boolean
+}
+
+function RoutingStep({ num, title, detail, color = 'gray', lock = false }: RoutingStepProps) {
+  const numBg: Record<string, string> = {
+    teal:   'bg-teal text-white',
+    amber:  'bg-amber-400 text-white',
+    red:    'bg-red-500 text-white',
+    blue:   'bg-blue-500 text-white',
+    purple: 'bg-purple-500 text-white',
+    gray:   'bg-gray-200 text-neutral-mid',
+  }
+  const border: Record<string, string> = {
+    teal:   'border-teal/20 bg-teal-light/20',
+    amber:  'border-amber-200 bg-amber-50/60',
+    red:    'border-red-200 bg-red-50/60',
+    blue:   'border-blue-200 bg-blue-50/60',
+    purple: 'border-purple-200 bg-purple-50/60',
+    gray:   'border-gray-200 bg-white',
+  }
+  return (
+    <div className={`flex gap-3 rounded-lg border p-3 ${border[color]}`}>
+      <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${numBg[color]}`}>{num}</div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-neutral-dark flex items-center gap-1.5">
+          {title}
+          {lock && <span className="flex items-center gap-0.5 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600"><Lock size={10} /> session lock</span>}
+        </p>
+        <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
+function ChannelCard({ icon: Icon, title, color, children }: { icon: any; title: string; color: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-neutral-light/40 transition-colors"
+      >
+        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${color}`}>
+          <Icon size={17} className="text-white" />
+        </div>
+        <p className="flex-1 font-semibold text-neutral-dark">{title}</p>
+        {open ? <ChevronUp size={15} className="text-neutral-mid" /> : <ChevronDown size={15} className="text-neutral-mid" />}
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 px-5 py-4 space-y-2">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChannelRoutingMap() {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-teal/20 bg-teal-light/30 px-5 py-4">
+        <p className="text-sm font-semibold text-teal-dark">Channel Routing Map</p>
+        <p className="mt-1 text-xs text-neutral-mid">
+          Which tools are available on each channel and the exact routing rules that govern how each message is classified and handled.
+          Expand any channel card to see the step-by-step flow.
+        </p>
+      </div>
+
+      {/* ── Tool × Channel matrix ───────────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-5 py-3">
+          <p className="text-sm font-semibold text-neutral-dark">Tool availability by channel</p>
+          <p className="mt-0.5 text-xs text-neutral-mid">Green = fully available · Grey = not available · Amber = partial/specialist</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-xs font-medium text-neutral-mid">
+                <th className="px-5 py-3 text-left">Tool</th>
+                <th className="px-4 py-3 text-center w-24">
+                  <div className="flex flex-col items-center gap-1"><MessageSquare size={14} className="text-teal" /><span>Web Chat</span></div>
+                </th>
+                <th className="px-4 py-3 text-center w-24">
+                  <div className="flex flex-col items-center gap-1"><Phone size={14} className="text-green-600" /><span>WhatsApp</span></div>
+                </th>
+                <th className="px-4 py-3 text-center w-24">
+                  <div className="flex flex-col items-center gap-1"><Mail size={14} className="text-indigo-500" /><span>Email</span></div>
+                </th>
+                <th className="px-4 py-3 text-center w-24">
+                  <div className="flex flex-col items-center gap-1"><Mic size={14} className="text-purple-500" /><span>Voice</span></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {MATRIX_TOOLS.map((row, i) => (
+                <tr key={i} className={`border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-neutral-light/20' : ''}`}>
+                  <td className="px-5 py-3">
+                    <p className="font-medium text-neutral-dark">{row.label}</p>
+                    <p className="text-xs text-neutral-mid font-mono">{row.sub}</p>
+                    {row.note && <p className="mt-0.5 text-xs text-neutral-mid italic">{row.note}</p>}
+                  </td>
+                  <td className="px-4 py-3"><AvailCell val={row.web} /></td>
+                  <td className="px-4 py-3"><AvailCell val={row.wa} /></td>
+                  <td className="px-4 py-3"><AvailCell val={row.email} /></td>
+                  <td className="px-4 py-3"><AvailCell val={row.voice} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Per-channel routing flows ───────────────────────────────────────── */}
+      <p className="text-sm font-semibold text-neutral-dark">Routing flow — expand a channel</p>
+
+      <ChannelCard icon={MessageSquare} title="Web Chat (Staff Portal)" color="bg-teal">
+        <RoutingStep num={1} title="Category selected by staff" color="teal"
+          detail="Staff clicks a category card (Policies & Procedures, Staff Handbook, Training & Learning, CQC Compliance, or Auditing) before typing. The document_category is set in the UI — no classification needed." />
+        <RoutingStep num={2} title="Query sent with explicit category" color="teal"
+          detail="The API receives document_category in the request body. runQueryPipeline() branches immediately on selectedCategory — Pinecone RAG (policies/handbook/CQC) or Postgres-only (training seeds, audit recommendations)." />
+        <RoutingStep num={3} title="Conversation history passed for multi-turn" color="gray"
+          detail="The last 10 messages are trimmed and sent as conversationHistory. Claude maintains context across follow-up questions within the same session. Sessions persist in localStorage (up to 50 per user)." />
+        <RoutingStep num={4} title="Response + suggested follow-up questions" color="gray"
+          detail="Claude appends <!--FOLLOWUP:[...]-->  to its response. The API strips this before delivery and returns suggestedQuestions. Thumbs up/down feedback is recorded per query." />
+        <div className="mt-1 space-y-1.5">
+          <div className="rounded-lg border border-teal/20 bg-teal-light/20 px-3 py-2 text-xs text-teal">
+            <strong>Auditing category:</strong> Uses completed AuditRun.ai_recommendations from Postgres as context — no Pinecone search. Fetches up to 6 most recent completed audits for the tenant. Prompt slot: <code className="font-mono">audit_report_chat</code>.
+          </div>
+          <div className="rounded-lg border border-teal/20 bg-teal-light/20 px-3 py-2 text-xs text-teal">
+            <strong>Business Continuity category:</strong> Fetches all approved KnowledgeEntry records with <code className="font-mono">knowledge_category = 'business_continuity'</code> for the tenant from Postgres — no Pinecone search. Entries added/managed via Knowledge Base → Add entry → Category: Business Continuity. Prompt slot: <code className="font-mono">business_continuity_chat</code>.
+          </div>
+        </div>
+      </ChannelCard>
+
+      <ChannelCard icon={Phone} title="WhatsApp" color="bg-green-600">
+        <div className="mb-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <strong>Key rule:</strong> The Audit state machine runs BEFORE intent classification. While an audit is active, every message goes to the audit handler regardless of content — policies, training, and CQC queries are all blocked.
+        </div>
+        <RoutingStep num={1} title="Voice note? → transcribe first" color="purple"
+          detail="If the message is a voice note (MediaContentType = audio/*), Whisper transcribes it. The transcript is then treated as a text message through the rest of the pipeline." />
+        <RoutingStep num={2} title="Audit state machine check (SESSION LOCK)" color="red" lock
+          detail="If session.detected_category === 'audit' OR message === 'audit' → handleAuditConversation() runs. Returns { handled: true } which exits the pipeline immediately. Active audit sessions consume ALL inbound messages. States: confirm → shift (Fire Marshall) / room (Resident Bedrooms) / yn → outcome → actions → summary. 'stop' or 'pause' keyword saves progress and releases the session lock." />
+        <RoutingStep num={3} title="Intent classification" color="amber"
+          detail="(1) Keyword scoring on message body → score against policy / training / CQC keyword lists. (2) If score ≥ threshold → detected_category set. (3) If unclear → Claude Haiku micro-classification (≤200 tokens). (4) If still unclear → clarification reply with label buttons (Policies / Training / HR / CQC). Detected category is cached on the session so follow-up messages skip re-classification." />
+        <RoutingStep num={4} title="RAG pipeline" color="teal"
+          detail="Routes to the correct runQueryPipeline() path based on detected_category: internal_policy → Pinecone vector search, training_module → training seeds (Postgres), cqc_report → multi-source CQC path, staff_handbook → two-stage chapter retrieval. Response is always concise mode (≤200 words) for WhatsApp." />
+        <RoutingStep num={5} title="5-minute feedback timer" color="gray"
+          detail="A BullMQ job is scheduled 5 minutes after response delivery. If the staff member replies before the timer fires, the feedback message is cancelled. Otherwise, a thumbs up/down prompt is sent." />
+        <div className="mt-1 space-y-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-neutral-mid">
+          <p><strong className="text-neutral-dark">Audit tool interactions on WhatsApp:</strong></p>
+          <p>• While audit is active: Policies ✗ · Training ✗ · HR ✗ · CQC ✗ · Audit form ✓</p>
+          <p>• After pause/complete: session lock released → all tools available again immediately</p>
+          <p>• Fire Marshall: requires shift (day/night) — creates separate run per shift per day</p>
+          <p>• Resident Bedrooms: requires room number — creates separate run per room</p>
+          <p>• All other templates: single in_progress run per template per month</p>
+        </div>
+      </ChannelCard>
+
+      <ChannelCard icon={Mail} title="Email" color="bg-indigo-500">
+        <RoutingStep num={1} title="SendGrid Inbound Parse webhook" color="blue"
+          detail="Inbound email hits /email/inbound → services/email/inbound.ts. Subject line is extracted first as a strong intent signal. Thread continuity is maintained via Message-ID and In-Reply-To headers." />
+        <RoutingStep num={2} title="Intent classification" color="amber"
+          detail="(1) Subject line keyword scoring → high-confidence categories skipped straight to RAG. (2) Body scoring if subject unclear. (3) Combined score → if still unclear, sends a 1/2/3 clarification reply in-thread. (4) Category cached on 7-day session so subsequent replies in the same thread skip classification." />
+        <RoutingStep num={3} title="RAG pipeline — standard mode" color="teal"
+          detail="Routes to runQueryPipeline() with channel='email'. Verbosity defaults to standard (full policy references). Conversation history from the thread is passed for multi-turn continuity. Response is formatted as HTML for email delivery." />
+        <RoutingStep num={4} title="Email delivery via SendGrid" color="gray"
+          detail="Response sent as a reply to the original thread. Session TTL: 7 days from last message. Email sessions do not support audit forms or auditing chat — those categories are web/WhatsApp only." />
+      </ChannelCard>
+
+      <ChannelCard icon={Mic} title="Voice (WhatsApp voice notes)" color="bg-purple-600">
+        <RoutingStep num={1} title="Voice note detected" color="purple"
+          detail="Twilio sends MediaContentType = audio/*. The API downloads the audio file and passes it to OpenAI Whisper for transcription. The transcript is then treated identically to a text message." />
+        <RoutingStep num={2} title="Audit check (same as WhatsApp text)" color="red" lock
+          detail="The transcribed text passes through the same audit state machine check. If an audit session is active, the voice note is handled by the audit handler. Voice notes cannot be used to answer yes/no questions in an audit — they are treated as free-text input." />
+        <RoutingStep num={3} title="Intent classification — no clarification" color="amber"
+          detail="Keyword scoring → Claude Haiku classification. If still unclear after AI classification, falls through to the general policy path. No clarification reply is sent for voice — the user cannot reply with a number in a voice note." />
+        <RoutingStep num={4} title="RAG pipeline — always concise mode" color="teal"
+          detail="Same pipeline as WhatsApp text. Response is always concise (≤200 words), written as clear spoken sentences (short paragraphs, minimal lists) suitable for reading aloud. No citation blocks." />
+      </ChannelCard>
+
+    </div>
+  )
+}
+
+function SystemReference() {
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-teal/20 bg-teal-light/30 px-5 py-4">
+        <p className="text-sm font-semibold text-teal-dark">CareStream AI — Internal System Reference</p>
+        <p className="mt-1 text-xs text-neutral-mid">
+          Quick reference for the core systems, logic, and integrations. Click any section to expand.
+          Last reviewed: May 2026.
+        </p>
+      </div>
+
+      {/* Architecture Overview */}
+      <RefSection icon={Cpu} title="Architecture Overview">
+        <p className="leading-relaxed text-neutral-mid">
+          CareStream AI is a monorepo with two apps: <strong>API</strong> (Express + Prisma, port 4000) and
+          <strong> Web</strong> (Next.js 15 App Router, port 3000). The database is Supabase (PostgreSQL with RLS).
+          Vectors are stored in Pinecone. Files in AWS S3. Emails via SendGrid. WhatsApp via Twilio.
+          Background jobs via BullMQ + Redis.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="API framework"        value="Express 4 + TypeScript + tsx watch (dev)" />
+          <RefRow label="Web framework"        value="Next.js 15 App Router, Tailwind CSS" />
+          <RefRow label="Database"             value="Supabase PostgreSQL — carestreamai_api role (RLS enforced), service_role for migrations" />
+          <RefRow label="ORM"                  value="Prisma 5 — client at /Care_Stream/node_modules (monorepo root)" />
+          <RefRow label="Vector store"         value="Pinecone — index: carestreamai, region: eu-west-2" />
+          <RefRow label="Embeddings"           value="OpenAI text-embedding-3-small" />
+          <RefRow label="LLM"                  value="Claude Sonnet (main), Claude Haiku (intent classifier, button labels)" />
+          <RefRow label="File storage"         value="AWS S3 eu-west-2" />
+          <RefRow label="Background jobs"      value="BullMQ + Redis — ingestion worker at src/workers/ingestion.worker.ts" />
+          <RefRow label="Dev API restart"      value="tsx watch does NOT detect Claude edits — must manually restart after any file change" />
+          <RefRow label="Prisma regenerate"    value="cd /Care_Stream && npx prisma generate --schema=apps/api/prisma/schema.prisma" />
+        </div>
+      </RefSection>
+
+      {/* Channel Routing & Intent Classification */}
+      <RefSection icon={GitBranch} title="Channel Routing & Intent Classification">
+        <p className="leading-relaxed text-neutral-mid">
+          Inbound messages arrive on four channels. Web chat uses UI buttons to set the category explicitly.
+          Email, WhatsApp, and voice run through the intent classifier before hitting the main RAG pipeline.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Web chat</p>
+            <p className="text-neutral-mid">User clicks a category button (Policies, Training, CQC). <code className="text-xs bg-gray-100 px-1 rounded">document_category</code> is set before the query reaches the API. No classification needed.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Email</p>
+            <p className="text-neutral-mid">SendGrid Inbound Parse → <code className="text-xs bg-gray-100 px-1 rounded">/email/inbound</code> → <code className="text-xs bg-gray-100 px-1 rounded">services/email/inbound.ts</code>. Subject line is scored first (strong signal). If unclear, sends a 1/2/3 clarification reply in-thread. Thread continuity via Message-ID / In-Reply-To headers. 7-day session TTL.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">WhatsApp</p>
+            <p className="text-neutral-mid">Twilio webhook → <code className="text-xs bg-gray-100 px-1 rounded">/whatsapp/inbound</code> → <code className="text-xs bg-gray-100 px-1 rounded">services/whatsapp/inbound.ts</code>. Voice notes are transcribed automatically first. If intent unclear, sends a label-based clarification (Policies / Training / CQC). 24-hour session TTL. Feedback prompt sent 5 minutes after response — skipped if the user replies first.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Voice (via WhatsApp voice notes)</p>
+            <p className="text-neutral-mid">Voice notes are transcribed with Whisper then classified. If still unclear after AI classification, falls through to the general policy path (no clarification message — cannot reply with numbers in a voice note).</p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Intent classifier</p>
+            <p className="text-neutral-mid"><code className="text-xs bg-gray-100 px-1 rounded">services/intent/classifier.ts</code> — Resolution order: (1) keyword scoring on subject line, (2) keyword scoring on body, (3) combined score, (4) Claude Haiku micro-classification (≤200 tokens), (5) 'unclear' → clarification. Detected category is persisted on the session so subsequent messages in the same thread don't re-classify.</p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <RefTag color="teal">internal_policy</RefTag>
+          <RefTag color="blue">training_module</RefTag>
+          <RefTag color="purple">cqc_report</RefTag>
+          <RefTag color="amber">unclear → clarification</RefTag>
+        </div>
+      </RefSection>
+
+      {/* RAG Pipeline */}
+      <RefSection icon={Zap} title="RAG Query Pipeline">
+        <p className="leading-relaxed text-neutral-mid">
+          All queries run through <code className="text-xs bg-gray-100 px-1 rounded">services/rag/query.ts → runQueryPipeline()</code>.
+          The pipeline branches on <code className="text-xs bg-gray-100 px-1 rounded">selectedCategory</code>.
+        </p>
+        <div className="mt-2 space-y-2">
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1">
+            <p className="font-semibold text-neutral-dark text-xs uppercase tracking-wide">Policies & Procedures path (default)</p>
+            <p className="text-neutral-mid">Embeds query → Pinecone vector search (policy namespace) → load policy metadata → detect intent (summary / full / follow-up) → Prompt A or Prompt B → Claude Sonnet → extract suggestions → record query.</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1">
+            <p className="font-semibold text-neutral-dark text-xs uppercase tracking-wide">CQC Compliance path (cqc_report)</p>
+            <p className="text-neutral-mid">Embeds query → parallel search: CQC report chunks + internal policies + handbook + all active CQC seeds from DB + knowledge entries + regulation context → build labelled context block with [CHANNEL], [CQC INSPECTION REPORT], [CQC REGULATORY FRAMEWORK] etc. → cqc_query prompt → Claude → extract suggestions.</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1">
+            <p className="font-semibold text-neutral-dark text-xs uppercase tracking-wide">Training path (training_module)</p>
+            <p className="text-neutral-mid">Training seeds (RAG) → training_chat prompt → Claude → multi-choice question generation or conversational answer depending on context.</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1">
+            <p className="font-semibold text-neutral-dark text-xs uppercase tracking-wide">Audit report chat path (audit_report) — web only</p>
+            <p className="text-neutral-mid">Fetches up to 6 most recent completed AuditRun records with ai_recommendations from Postgres → audit_report_chat prompt → Claude → extract suggestions. No Pinecone search.</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1">
+            <p className="font-semibold text-neutral-dark text-xs uppercase tracking-wide">Business Continuity path (business_continuity) — web only</p>
+            <p className="text-neutral-mid">Fetches all approved KnowledgeEntry records with knowledge_category = 'business_continuity' for tenant from Postgres → business_continuity_chat prompt → Claude → extract suggestions. No Pinecone search. Entries managed at /knowledge → Add entry → Category: Business Continuity.</p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Embedding model"     value="text-embedding-3-small (OpenAI)" />
+          <RefRow label="Top-K chunks"        value="Configurable TOP_K_CHUNKS — typically 8 policy chunks + CQC seeds" />
+          <RefRow label="Response format"     value="HTML for web/email, plain text for WhatsApp, spoken sentences for voice — injected via [CHANNEL] in context" />
+          <RefRow label="Follow-up questions" value="Extracted from <!--FOLLOWUP:[...]-->  comment appended by the AI — stripped before delivery" />
+          <RefRow label="Feedback"            value="Thumbs up/down stored on query record; WhatsApp sends one-click feedback links with a 5-minute delay — cancelled if user replies before timer fires" />
+          <RefRow label="Language detection"  value="franc library — auto-detects and responds in staff member's language" />
+        </div>
+      </RefSection>
+
+      {/* CQC Report Chat */}
+      <RefSection icon={Shield} title="CQC Report Chat">
+        <p className="leading-relaxed text-neutral-mid">
+          The CQC compliance feature lets providers upload their CQC inspection report and ask questions against it.
+          Available on all four channels.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Trigger"             value="document_category = 'cqc_report'" />
+          <RefRow label="AI prompt slot"      value="cqc_query — managed at /platform/prompts → 'CQC Compliance Director'" />
+          <RefRow label="RAG sources"         value="Uploaded CQC report chunks + internal policies + staff handbook + CQC seeds (all active) + knowledge entries + regulations" />
+          <RefRow label="CQC seeds"           value="59 seeds across Safe, Effective, Caring, Responsive, Well-led, Custom — managed at /platform/cqc-seeds" />
+          <RefRow label="Seeds coverage"      value="Framework overview + inspector focus + evidence expected + Good/Outstanding indicators per area" />
+          <RefRow label="Key seeds to note"   value="effective-6 and effective-10 cover Oliver McGowan Mandatory Training; effective-2 covers DoLS; safe-3 covers safeguarding" />
+          <RefRow label="Google Sheets sync"  value="Bidirectional sync via GOOGLE_SHEETS_CQC_SEEDS_ID — Populate Sheet writes data file → Sheet, Sync Sheet pulls Sheet → DB" />
+          <RefRow label="Plan gate"           value="has_cqc_report flag on plan — Professional plan only" />
+        </div>
+      </RefSection>
+
+      {/* Policies & Procedures */}
+      <RefSection icon={FileText} title="Policies & Procedures">
+        <p className="leading-relaxed text-neutral-mid">
+          Per-tenant policy documents uploaded by the manager. Chunked, embedded, and indexed in Pinecone
+          for semantic search. Staff query against them via any channel.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Ingestion"           value="Upload → S3 → BullMQ ingestion queue → PDF/DOCX extraction → chunk (800 tokens, 100 overlap) → embed → Pinecone upsert" />
+          <RefRow label="Namespaces"          value="Pinecone: policy namespace (internal_policy + staff_handbook), knowledge namespace" />
+          <RefRow label="Versioning"          value="Each upload increments version number; old chunks removed from Pinecone on new upload" />
+          <RefRow label="Categories"          value="internal_policy, staff_handbook, external_regulation, training_module, cqc_report" />
+          <RefRow label="Prompt A"            value="Summary + follow-up questions — used for most staff queries" />
+          <RefRow label="Prompt B"            value="Full policy formatter — used when staff ask for the complete section" />
+          <RefRow label="Knowledge extraction" value="Prompt C — extracts Q&A pairs from uploaded documents for the per-tenant knowledge base" />
+        </div>
+      </RefSection>
+
+      {/* Staff Training */}
+      <RefSection icon={GraduationCap} title="Staff Training System">
+        <p className="leading-relaxed text-neutral-mid">
+          Multi-choice training questions delivered proactively via WhatsApp or email. Staff reply A/B/C/D and get instant feedback.
+          Training is always a separate flow — questions are never injected into policy or CQC conversations.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Training seeds"      value="Per-topic knowledge entries at /platform/training-seeds — framework area, description, key points, source URLs" />
+          <RefRow label="Question generation" value="training_question_generation prompt + seed content → Claude generates 4-option MCQ with explanation" />
+          <RefRow label="Delivery"            value="Proactive send on enrollment (if trigger=auto) via WhatsApp or email; A/B/C/D answers advance the sequence" />
+          <RefRow label="Session tracking"    value="handleTrainingConversation() in services/training/conversation.ts intercepts A/B/C/D answers before main pipeline" />
+          <RefRow label="Training modules"    value="Multi-step modules with multiple questions per topic — progress tracked per user in TrainingEnrollment" />
+          <RefRow label="Training chat"       value="training_chat prompt — conversational learning support for open-ended training questions" />
+          <RefRow label="Language translation" value="Questions translated at send time via Claude Haiku (lib/translate.ts) using user.first_language — falls back to English on error" />
+          <RefRow label="Supported languages" value="27 languages: eng, pol, ron, por, tgl, yor, ben, urd, hin, spa, fra, ara, som, swa, lit, guj, pan, tam, zho, sin, nep, cym, deu, ita, kan, mal, tel" />
+          <RefRow label="Translation scope"   value="Question text + answer options translated; A/B/C/D labels remain unchanged (reply mechanism is language-agnostic)" />
+        </div>
+      </RefSection>
+
+      {/* Staff Language Preferences */}
+      <RefSection icon={Users} title="Staff Language Preferences">
+        <p className="leading-relaxed text-neutral-mid">
+          Each staff member has a <code className="text-xs bg-gray-100 px-1 rounded">first_language</code> (ISO 639-3, default <strong>eng</strong>) and an optional <code className="text-xs bg-gray-100 px-1 rounded">second_language</code>.
+          These are set when adding or editing a staff member and drive all outbound communication language.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Schema fields"     value="users.first_language TEXT NOT NULL DEFAULT 'eng', users.second_language TEXT (nullable)" />
+          <RefRow label="Set/updated via"   value="POST /users/invite and PATCH /users/:id — first_language and second_language fields" />
+          <RefRow label="Used by"           value="Training proactive delivery (proactive.ts) and answer-advance (conversation.ts) — both translate before sending" />
+          <RefRow label="Translation call"  value="translateTrainingQuestion(q, lang) in src/lib/translate.ts — single Claude Haiku call per question" />
+          <RefRow label="Existing staff"    value="All existing users default to eng — no data migration needed" />
+        </div>
+      </RefSection>
+
+      {/* CQC Staff Prep */}
+      <RefSection icon={ClipboardList} title="CQC Staff Prep">
+        <p className="leading-relaxed text-neutral-mid">
+          Inspector-style practice questions sent to staff, evaluated by AI against a model answer. Free-text answers only — no multiple choice.
+          Questions are rephrased at delivery time to prevent rote memorisation.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="DB tables"          value="cqc_staff_questions (question bank + model answers), cqc_staff_deliveries (per-user deliveries, answers, scores)" />
+          <RefRow label="Seed questions"     value="21 pre-loaded questions across 5 domains — auto-seeded on first GET /cqc-questions per tenant" />
+          <RefRow label="API routes"         value="GET /cqc-questions, POST /generate, POST /:id/deliver, GET /deliveries, POST /deliveries/:id/answer" />
+          <RefRow label="Question generation prompt" value="cqc_question_generation — uses {{domain}} and {{topic}} placeholders" />
+          <RefRow label="Answer evaluation prompt"   value="cqc_answer_evaluation — uses {{question}}, {{model_answer}}, {{staff_answer}} placeholders" />
+          <RefRow label="Scoring"            value="Claude Haiku evaluates answer → score 0–100 + 2–3 sentence feedback, stored on CqcStaffDelivery" />
+          <RefRow label="Admin page"         value="/cqc-questions — Question Bank tab (send, add, remove) + Performance tab (staff × domain grid)" />
+          <RefRow label="Staff portal"       value="/cqc — pending questions to answer + results with score and feedback" />
+          <RefRow label="Both prompts"       value="Editable at /platform/prompts — changes take effect immediately with no restart" />
+        </div>
+      </RefSection>
+
+      {/* Knowledge Base */}
+      <RefSection icon={Database} title="Knowledge Base">
+        <p className="leading-relaxed text-neutral-mid">
+          Per-tenant Q&A pairs, either extracted from uploaded documents (Prompt C) or manually added.
+          Embedded in Pinecone (knowledge namespace) and injected into all query responses when relevant.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Model"               value="KnowledgeEntry — tenant_id, question, answer, source_name, approved" />
+          <RefRow label="Approval flow"       value="Extracted entries require manager approval before they appear in responses" />
+          <RefRow label="Retrieval"           value="Semantic search against knowledge namespace — min score threshold before injection" />
+          <RefRow label="Admin"               value="/platform (tenant admin panel) → Knowledge Base section" />
+        </div>
+      </RefSection>
+
+      {/* Regulations Database */}
+      <RefSection icon={BookOpen} title="Regulations Database">
+        <p className="leading-relaxed text-neutral-mid">
+          Platform-level regulatory knowledge base — shared read-only across all tenants.
+          The Health and Social Care Act 2008 Regulations and related legislation, structured for RAG injection.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Model"               value="ExternalRegulation — official_name, summary, care_home_context, source_url, is_active" />
+          <RefRow label="Admin"               value="/platform/regulations — add, edit, toggle active" />
+          <RefRow label="Google Sheets sync"  value="Bidirectional sync via GOOGLE_SHEETS_ID — same pattern as CQC seeds" />
+          <RefRow label="Injection"           value="fetchRegulationContextByQueryText() — keyword match on query text → injected as [RELATED REGULATIONS] in context" />
+          <RefRow label="Scope"               value="Cited in all pipeline paths when a regulation matches the query — not just CQC path" />
+        </div>
+      </RefSection>
+
+      {/* Prompt Management */}
+      <RefSection icon={Bot} title="AI Prompt Management">
+        <p className="leading-relaxed text-neutral-mid">
+          All AI system prompts are stored in the database and editable at <strong>/platform/prompts</strong> without a code deploy.
+          Changes take effect on the next query — no restart required.
+        </p>
+        <div className="mt-3 space-y-2">
+          {[
+            { slot: 'policy_summary',               label: 'Prompt A — Summary & Questions',      desc: 'Generates the concise answer + follow-up questions shown to staff for policy queries.' },
+            { slot: 'policy_full',                  label: 'Prompt B — Full Policy Formatter',     desc: 'Formats the full policy section response when staff request more detail.' },
+            { slot: 'knowledge_extraction',         label: 'Prompt C — Knowledge Base Extraction', desc: 'Extracts structured Q&A pairs from uploaded policy documents.' },
+            { slot: 'training_question_generation', label: 'Training Question Generation',          desc: 'Generates multi-choice training questions from training seed data and source URLs.' },
+            { slot: 'cqc_query',                   label: 'CQC Compliance Director',               desc: 'Drives the CQC compliance chat. Cross-references uploaded CQC reports with policies and the CQC seed knowledge base. Must include <!--FOLLOWUP:[...]-> at end.' },
+            { slot: 'training_chat',               label: 'Training Chat',                         desc: 'Conversational training support for open-ended staff training questions.' },
+            { slot: 'cqc_question_generation',     label: 'CQC Staff Prep — Question Generation',  desc: 'Generates a CQC inspector-style question + model answer from a domain and topic. Placeholders: {{domain}}, {{topic}}.' },
+            { slot: 'cqc_answer_evaluation',       label: 'CQC Staff Prep — Answer Evaluation',    desc: 'Evaluates a staff answer against the model answer → score 0–100 + feedback. Placeholders: {{question}}, {{model_answer}}, {{staff_answer}}.' },
+          ].map(p => (
+            <div key={p.slot} className="rounded-lg bg-gray-50 px-4 py-2.5">
+              <p className="font-semibold text-neutral-dark text-sm">{p.label}</p>
+              <p className="text-xs text-neutral-mid font-mono mt-0.5">{p.slot}</p>
+              <p className="text-xs text-neutral-mid mt-1">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-neutral-mid">
+          All prompts receive a [CHANNEL] context block so they can adapt output format for web chat (HTML),
+          email (HTML), WhatsApp (plain text), and voice (spoken sentences).
+        </p>
+      </RefSection>
+
+      {/* Integrations */}
+      <RefSection icon={Globe} title="Integrations & Environment Variables">
+        <div className="space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Supabase</p>
+            <RefRow label="DATABASE_URL"            value="carestreamai_api role — RLS enforced, used by running app" />
+            <RefRow label="DATABASE_DIRECT_URL"     value="service_role — bypasses RLS, used only for Prisma migrations" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">AI</p>
+            <RefRow label="ANTHROPIC_API_KEY"       value="Claude Sonnet (main LLM) + Claude Haiku (classifier, button labels)" />
+            <RefRow label="OPENAI_API_KEY"          value="text-embedding-3-small (embeddings) + Whisper (voice transcription)" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Pinecone</p>
+            <RefRow label="PINECONE_API_KEY"        value="Vector store — index: carestreamai" />
+            <RefRow label="PINECONE_INDEX"          value="carestreamai" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Email (SendGrid)</p>
+            <RefRow label="SENDGRID_API_KEY"        value="Outbound emails" />
+            <RefRow label="SENDGRID_INBOUND_PARSE_KEY" value="Webhook signature validation for inbound" />
+            <RefRow label="SENDGRID_FROM_ADDRESS"   value="noreply@carestreamai.co.uk" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">WhatsApp (Twilio)</p>
+            <RefRow label="TWILIO_ACCOUNT_SID"      value="Account identifier" />
+            <RefRow label="TWILIO_AUTH_TOKEN"       value="Webhook signature validation + REST API auth" />
+            <RefRow label="TWILIO_WHATSAPP_NUMBER"  value="Platform sandbox: +14155238886 (production: per-tenant)" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Google Sheets (regulations + CQC seeds sync)</p>
+            <RefRow label="GOOGLE_SERVICE_ACCOUNT_JSON" value="Full service account JSON as single-line string" />
+            <RefRow label="GOOGLE_SHEETS_ID"        value="Regulations sheet ID (from sheet URL)" />
+            <RefRow label="GOOGLE_SHEETS_CQC_SEEDS_ID" value="CQC Seeds sheet ID (from sheet URL)" />
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Other</p>
+            <RefRow label="JWT_SECRET"              value="Access token signing (15-min expiry)" />
+            <RefRow label="JWT_REFRESH_SECRET"      value="Refresh token signing (7-day expiry)" />
+            <RefRow label="STRIPE_SECRET_KEY"       value="Subscription billing" />
+            <RefRow label="REDIS_HOST / PORT"       value="BullMQ job queue" />
+            <RefRow label="AWS_ACCESS_KEY_ID"       value="S3 file storage (eu-west-2)" />
+          </div>
+        </div>
+      </RefSection>
+
+      {/* Monthly Audits */}
+      <RefSection icon={ClipboardList} title="Monthly Audits">
+        <p className="leading-relaxed text-neutral-mid">
+          12 platform-seeded audit templates covering daily, monthly, quarterly, and periodic governance checks. Tenants complete audits on the web or via WhatsApp. On completion, an AI recommendations report is generated and stored against the run.
+        </p>
+        <div className="mt-3 space-y-1">
+          <RefRow label="DB models"      value="AuditTemplate (seed + tenant), AuditSection, AuditQuestion, AuditRun (shift?, room_number?), AuditAnswer" />
+          <RefRow label="Seed templates" value="12 templates seeded at platform level (tenant_id: null, is_seed: true) — auto-seeded on first GET /audits/templates" />
+          <RefRow label="Admin"          value="/platform/audit-seeds — view all seeded templates, sections, and questions grouped by frequency" />
+        </div>
+        <div className="mt-3 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Seeded templates</p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs text-neutral-mid">
+            {[
+              ['Daily',     'Fire Marshall Checklist ⚑'],
+              ['Daily',     'Resident Bedrooms 🛏'],
+              ['Monthly',   'Health & Safety'],
+              ['Monthly',   'Resident Bedroom Audit'],
+              ['Monthly',   'Medicines Management'],
+              ['Monthly',   'Kitchen Audit'],
+              ['Monthly',   'Accident & Incident Book Audit'],
+              ['Monthly',   'Accident & Incident Book Analysis'],
+              ['Quarterly', 'Infection Control'],
+              ['Quarterly', 'Fire Drill Record Form'],
+              ['Periodic',  'Quality Assurance'],
+              ['Periodic',  'GDPR Audit Checklist'],
+            ].map(([freq, name]) => (
+              <div key={name} className="flex gap-2">
+                <span className="w-20 shrink-0 font-medium text-teal">{freq}</span>
+                <span>{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Question types</p>
+          <RefRow label="yes_no"    value="Yes / No toggle + optional outcome text + actions text" />
+          <RefRow label="yes_no_na" value="Yes / No / N/A toggle — N/A counts as answered, skips outcome fields" />
+          <RefRow label="findings"  value="Two free-text fields: Findings and Actions & Timescales. No toggle." />
+          <RefRow label="free_text" value="Single narrative field. No toggle. Always counted as answered for progress." />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">WhatsApp conversation flow</p>
+          <RefRow label="Trigger"      value="Send 'audit' → template list sent → reply with number" />
+          <RefRow label="Confirmation" value="After selecting template: 'Ready to start [Name]? Reply yes or no' — session is locked from step 3.6; policy RAG cannot interrupt" />
+          <RefRow label="Shift step"   value="Fire Marshall Checklist only — after yes: 'Day shift or night shift? Reply day or night'. Creates separate AuditRun per shift. Resuming the same shift reuses the existing in_progress run." />
+          <RefRow label="Room step"    value="Resident Bedrooms only — after yes: 'Enter room number'. Creates a separate AuditRun per room. Resuming the same room reuses the existing in_progress run." />
+          <RefRow label="Pause"        value="Send 'stop' or 'pause' at any time during an audit. Clears detected_category/audit_run_id/audit_step from session — progress saved on AuditRun. If no answers yet (confirm/shift/room step), the placeholder run is deleted." />
+          <RefRow label="Resume"       value="Send 'audit' → select same template → getOrCreateActiveRun finds existing in_progress run → confirmation shows 'Resuming — X of N already answered'" />
+          <RefRow label="Session lock" value="detected_category='audit' locks ALL messages to the audit handler before intent classification — no other category can fire mid-audit" />
+          <RefRow label="Safety net"   value="Unrecognised audit_step values also return handled:true — no message can escape to the RAG pipeline while an audit is active" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">AuditRun context fields</p>
+          <RefRow label="shift"       value="'day' | 'night' — stamped on Fire Marshall Checklist runs. Code constant: SHIFT_REQUIRED_TEMPLATES in conversation.ts" />
+          <RefRow label="room_number" value="Free text room identifier — stamped on Resident Bedrooms runs. Code constant: ROOM_REQUIRED_TEMPLATES in conversation.ts" />
+          <RefRow label="Adding more" value="To require shift/room for a different template, add its name to the relevant constant in apps/api/src/services/audit/conversation.ts" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="AI recommendations" value="Generated on completion via audit_recommendations prompt slot — maps findings to CQC KLOEs, produces six structured sections including a Quality Rating" />
+          <RefRow label="AI prompt slot"      value="audit_recommendations — editable at /platform/prompts" />
+          <RefRow label="Routes"              value="GET /audits/templates, POST /audits/runs, GET/PATCH /audits/runs/:id, POST /audits/runs/:id/complete" />
+        </div>
+      </RefSection>
+
+      {/* Tenant Isolation */}
+      <RefSection icon={Shield} title="Multi-tenancy & Security">
+        <p className="leading-relaxed text-neutral-mid">
+          Every data model (except platform-level shared tables) has a <code className="text-xs bg-gray-100 px-1 rounded">tenant_id</code>.
+          Isolation is enforced at two layers.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="App layer"           value="Prisma middleware in db/client.ts auto-injects tenant_id into all read/write operations on tenant-scoped models" />
+          <RefRow label="DB layer"            value="Supabase RLS policies reject cross-tenant access at the PostgreSQL level when connecting as carestreamai_api role" />
+          <RefRow label="Tenant-scoped models" value="User, Policy, QueryRecord, EmailSession, AuditLog, KnowledgeEntry, WhatsAppSession, TrainingDelivery" />
+          <RefRow label="Platform-only (shared)" value="ExternalRegulation, TrainingSeed, CqcSeed, AiPrompt, Plan — no tenant_id, read-only to tenants" />
+          <RefRow label="Pinecone isolation"  value="Each chunk metadata includes tenant_id — all vector queries filter by tenant_id" />
+          <RefRow label="RLS activation"      value="set_config('app.current_tenant_id', tenantId) called at transaction start via withTenantTx()" />
+        </div>
+      </RefSection>
+    </div>
+  )
+}
+
+// ─── QA Testing Panel ─────────────────────────────────────────────────────────
+
+type TestStatus = 'pending' | 'pass' | 'fail' | 'needs_dev'
+
+interface TestItem {
+  id:       string
+  category: string
+  name:     string
+  steps:    string
+  expected: string
+}
+
+interface TestResult {
+  status: TestStatus
+  notes:  string
+}
+
+const QA_CATEGORIES = [
+  'Authentication',
+  'Email Channel',
+  'WhatsApp Channel',
+  'Web Chat',
+  'Policy RAG Pipeline',
+  'CQC Reports',
+  'Training System',
+  'Language Preferences',
+  'CQC Staff Prep',
+  'Monthly Audits',
+  'Business Continuity',
+  'Response Verbosity',
+  'Settings',
+  'Staff Management',
+  'Analytics',
+  'Knowledge Base',
+  'Policies & Upload',
+] as const
+
+const QA_TESTS: TestItem[] = [
+  // ── Authentication ──────────────────────────────────────────────────────────
+  {
+    id: 'auth-platform-login',
+    category: 'Authentication',
+    name: 'Platform admin login',
+    steps: 'Navigate to /platform/login and enter the platform admin password.',
+    expected: 'Access is granted and you are redirected to the platform dashboard.',
+  },
+  {
+    id: 'auth-admin-login',
+    category: 'Authentication',
+    name: 'Tenant admin login',
+    steps: 'Navigate to /login and sign in with an admin email and password.',
+    expected: 'Redirected to /dashboard with admin-level navigation visible (Settings, Staff, Analytics etc.).',
+  },
+  {
+    id: 'auth-staff-login',
+    category: 'Authentication',
+    name: 'Staff member login',
+    steps: 'Navigate to /login and sign in with a staff member account (non-admin role).',
+    expected: 'Redirected to the chat interface. Admin-only pages (Settings, Staff management) are not accessible.',
+  },
+  {
+    id: 'auth-bad-password',
+    category: 'Authentication',
+    name: 'Incorrect password rejected',
+    steps: 'Attempt to log in with an incorrect password.',
+    expected: 'A clear error message is shown. No access is granted.',
+  },
+
+  // ── Email Channel ───────────────────────────────────────────────────────────
+  {
+    id: 'email-policy-query',
+    category: 'Email Channel',
+    name: 'Policy query via email',
+    steps: 'Send an email to the tenant inbound address (visible in Settings) with a clear policy question, e.g. "What is our falls management procedure?"',
+    expected: 'An email reply arrives containing the relevant policy content, citations with policy name, and suggested follow-up questions.',
+  },
+  {
+    id: 'email-intent-clarification',
+    category: 'Email Channel',
+    name: 'Intent clarification email',
+    steps: 'Send an ambiguous email with a vague subject and body, e.g. "Can you help me with the training?" (could be training or policy).',
+    expected: 'A clarification reply is sent asking you to reply with Policies, Training, or CQC (or 1, 2, or 3).',
+  },
+  {
+    id: 'email-clarification-reply',
+    category: 'Email Channel',
+    name: 'Replying to clarification',
+    steps: 'Reply to the clarification email with just "1" or "Policies".',
+    expected: 'CareStream processes the original query as a policy question and sends a substantive response in the same thread.',
+  },
+  {
+    id: 'email-thread-continuity',
+    category: 'Email Channel',
+    name: 'Thread continuity',
+    steps: 'Reply to a previous CareStream response email with a follow-up question that builds on the first answer.',
+    expected: 'CareStream picks up the conversation thread and gives a contextually aware response referencing the prior exchange.',
+  },
+  {
+    id: 'email-allowlist-blocked',
+    category: 'Email Channel',
+    name: 'Blocked sender (allowlist)',
+    steps: 'Add an email allowlist in Settings. Then send an email from an address NOT on the list.',
+    expected: 'The email is rejected. A rejection/guidance email is sent back to the sender. No policy response is given.',
+  },
+
+  // ── WhatsApp Channel ────────────────────────────────────────────────────────
+  {
+    id: 'wa-policy-query',
+    category: 'WhatsApp Channel',
+    name: 'Policy query via WhatsApp',
+    steps: 'Send a policy question to the CareStream WhatsApp number from an allowed phone number, e.g. "What should I do if a resident falls?"',
+    expected: 'A clear, WhatsApp-formatted response arrives with the relevant policy answer and source name.',
+  },
+  {
+    id: 'wa-intent-clarification',
+    category: 'WhatsApp Channel',
+    name: 'Intent clarification (labels)',
+    steps: 'Send an ambiguous message, e.g. "I need some help with training please".',
+    expected: 'A clarification message arrives: "Reply *Policies*, *Training*, or *CQC* (or just 1, 2, or 3)".',
+  },
+  {
+    id: 'wa-label-reply',
+    category: 'WhatsApp Channel',
+    name: 'Replying with a label',
+    steps: 'Reply "Policies" (or "1") to the clarification message.',
+    expected: 'The original query is processed as a policy question and a full response is sent.',
+  },
+  {
+    id: 'wa-feedback-delay',
+    category: 'WhatsApp Channel',
+    name: 'Feedback prompt after 5 minutes',
+    steps: 'Send a policy question via WhatsApp and then do NOT reply for 5+ minutes.',
+    expected: 'After approximately 5 minutes, a "Was this helpful? 👍 / 👎" message is received.',
+  },
+  {
+    id: 'wa-feedback-cancelled',
+    category: 'WhatsApp Channel',
+    name: 'Feedback prompt cancelled by reply',
+    steps: 'Send a policy question via WhatsApp, then reply with another message within 5 minutes.',
+    expected: 'The "Was this helpful?" prompt is NOT sent because the user was still active.',
+  },
+  {
+    id: 'wa-voice-note',
+    category: 'WhatsApp Channel',
+    name: 'Voice note query',
+    steps: 'Send a WhatsApp voice note asking a policy question.',
+    expected: 'CareStream replies confirming what it heard ("I heard: ...") and then provides the policy answer.',
+  },
+  {
+    id: 'wa-phone-allowlist',
+    category: 'WhatsApp Channel',
+    name: 'Blocked sender (phone allowlist)',
+    steps: 'Message the CareStream WhatsApp number from a number NOT on the phone allowlist in Settings.',
+    expected: 'A rejection/guidance message is sent back. No policy response is provided.',
+  },
+
+  // ── Web Chat ────────────────────────────────────────────────────────────────
+  {
+    id: 'chat-policy-query',
+    category: 'Web Chat',
+    name: 'Policy query via web chat',
+    steps: 'Log in as a staff member, open the Chat page, select the Policies category, and ask a question about a policy.',
+    expected: 'A formatted HTML response arrives with the relevant policy content, citation badges, and suggested follow-up questions.',
+  },
+  {
+    id: 'chat-cqc-query',
+    category: 'Web Chat',
+    name: 'CQC query via web chat',
+    steps: 'In the chat interface, select the CQC category and ask a CQC-related question.',
+    expected: 'A response draws from uploaded CQC report data and relevant regulatory context.',
+  },
+  {
+    id: 'chat-conversation-history',
+    category: 'Web Chat',
+    name: 'Multi-turn conversation',
+    steps: 'Ask an initial question, then ask a follow-up in the same session that references the first answer (e.g. "What about for dementia residents specifically?").',
+    expected: 'The follow-up response is contextually aware — it does not ask for clarification and builds on the prior exchange.',
+  },
+  {
+    id: 'chat-feedback',
+    category: 'Web Chat',
+    name: 'Response feedback (thumbs)',
+    steps: 'After receiving a chat response, click the thumbs up or thumbs down button.',
+    expected: 'Feedback is saved. The button state changes to confirm. The rating should later appear in the Analytics tab.',
+  },
+  {
+    id: 'chat-session-delete',
+    category: 'Web Chat',
+    name: 'Delete a chat session',
+    steps: 'From the chat history sidebar, delete a previous session.',
+    expected: 'Session disappears from the staff member\'s view. It is still visible to admins in the Queries tab (soft-deleted).',
+  },
+
+  // ── Policy RAG Pipeline ─────────────────────────────────────────────────────
+  {
+    id: 'rag-policy-match',
+    category: 'Policy RAG Pipeline',
+    name: 'Policy match with citation',
+    steps: 'Ask a question that is directly covered by one of the uploaded policies.',
+    expected: 'Response includes the specific policy name as a citation. The answer reflects the actual content of that policy.',
+  },
+  {
+    id: 'rag-no-match',
+    category: 'Policy RAG Pipeline',
+    name: 'No-match handling',
+    steps: 'Ask a completely off-topic question that has no match in any uploaded policy (e.g. "What is the weather in London today?").',
+    expected: 'CareStream responds honestly that no matching policy was found. It does not fabricate an answer or cite a policy incorrectly.',
+  },
+  {
+    id: 'rag-multi-policy',
+    category: 'Policy RAG Pipeline',
+    name: 'Cross-policy retrieval',
+    steps: 'Ask a question that spans multiple policies (e.g. "What do I need to know about medication and safeguarding together?").',
+    expected: 'Response draws from both relevant policies and cites each one. No critical information from either policy is omitted.',
+  },
+  {
+    id: 'rag-language',
+    category: 'Policy RAG Pipeline',
+    name: 'Non-English query',
+    steps: 'Send a policy question in a language other than English (e.g. Polish or Romanian).',
+    expected: 'CareStream detects the language and responds in the same language. Language is recorded in the analytics.',
+  },
+
+  // ── CQC Reports ─────────────────────────────────────────────────────────────
+  {
+    id: 'cqc-report-generation',
+    category: 'CQC Reports',
+    name: 'Generate inspection evidence report',
+    steps: 'In the admin panel, navigate to the CQC Report section and trigger report generation.',
+    expected: 'A report is produced showing the five key questions (Safe, Effective, Caring, Responsive, Well-led) with evidence drawn from uploaded policies and CQC data.',
+  },
+  {
+    id: 'cqc-query-match',
+    category: 'CQC Reports',
+    name: 'CQC regulatory query match',
+    steps: 'Ask a question referencing a specific CQC regulation or key question via chat or email.',
+    expected: 'The response includes content from the CQC reports database alongside any relevant internal policies.',
+  },
+
+  // ── Training System ─────────────────────────────────────────────────────────
+  {
+    id: 'training-assignment',
+    category: 'Training System',
+    name: 'Assign training to a staff member',
+    steps: 'In the Training admin tab, assign a training module to a staff member.',
+    expected: 'The assignment appears in the staff member\'s record. If proactive mode is set, the first training question is sent via their preferred channel.',
+  },
+  {
+    id: 'training-answer-abcd',
+    category: 'Training System',
+    name: 'Answer a training question (A/B/C/D)',
+    steps: 'Receive a training question via WhatsApp or email and reply with A, B, C, or D.',
+    expected: 'The system processes the answer (correct or incorrect feedback) and sends the next question in the sequence.',
+  },
+  {
+    id: 'training-completion',
+    category: 'Training System',
+    name: 'Training module completion',
+    steps: 'Answer all questions in a training module correctly.',
+    expected: 'A completion confirmation is sent to the staff member. The module is marked complete in the admin Training tab.',
+  },
+  {
+    id: 'training-no-injection',
+    category: 'Training System',
+    name: 'Training NOT injected into policy chat',
+    steps: 'Send a policy question via WhatsApp (not a training answer — just a normal policy query).',
+    expected: 'The response contains ONLY the policy answer. No training questions are appended or sent as a follow-up. Training is a completely separate flow.',
+  },
+  {
+    id: 'training-renewal-reminder',
+    category: 'Training System',
+    name: 'Renewal reminder notifications',
+    steps: 'In Settings > Training renewal notifications, enable reminders. Check that a staff member with an upcoming expiry (within 90 days) is in the system.',
+    expected: 'The staff member receives a renewal reminder at the configured intervals (90d / 30d / 7d). The reminder arrives on their preferred channel.',
+  },
+
+  // ── Language Preferences ────────────────────────────────────────────────────
+  {
+    id: 'lang-set-on-invite',
+    category: 'Language Preferences',
+    name: 'Set language when adding a staff member',
+    steps: 'Add a new staff member via the Staff page. In the Language preferences panel, set First language to Polish and leave Second language blank. Complete the invite.',
+    expected: 'Staff member is created successfully. On the Staff list, their record reflects the Polish language preference.',
+  },
+  {
+    id: 'lang-set-second',
+    category: 'Language Preferences',
+    name: 'Set a second language',
+    steps: 'When adding or editing a staff member, set First language to Romanian and Second language to English.',
+    expected: 'Both languages are saved. The second language dropdown excludes the selected first language to prevent duplicates.',
+  },
+  {
+    id: 'lang-edit-existing',
+    category: 'Language Preferences',
+    name: 'Update language on existing staff member',
+    steps: 'Open the edit modal for an existing staff member. Change their First language from English to Tagalog and save.',
+    expected: 'Language is updated immediately. From this point, training questions sent to this staff member will be delivered in Tagalog.',
+  },
+  {
+    id: 'lang-training-translated',
+    category: 'Language Preferences',
+    name: 'Training question delivered in first language',
+    steps: 'Assign a training module to a staff member whose First language is set to a non-English language (e.g. Polish). Ensure the question trigger is set to "Send automatically on assignment" in Settings.',
+    expected: 'The training question arrives on the staff member\'s WhatsApp or email in Polish — both the question text and the answer options are translated. The A/B/C/D labels remain unchanged.',
+  },
+  {
+    id: 'lang-training-next-q-translated',
+    category: 'Language Preferences',
+    name: 'Follow-up questions also translated',
+    steps: 'With a non-English staff member in an active training module, answer the first question (reply A, B, C, or D).',
+    expected: 'The feedback (correct/incorrect) and the next training question are both delivered in the staff member\'s first language.',
+  },
+  {
+    id: 'lang-english-unchanged',
+    category: 'Language Preferences',
+    name: 'English staff receive unmodified questions',
+    steps: 'Assign a training module to a staff member whose first language is English.',
+    expected: 'Training questions are delivered in English, exactly as written. No translation API call is made.',
+  },
+  {
+    id: 'lang-default-existing',
+    category: 'Language Preferences',
+    name: 'Existing staff default to English',
+    steps: 'Open the edit modal for a staff member who was created before the language feature was added.',
+    expected: 'First language defaults to English. No errors occur. Their training and communications are unaffected.',
+  },
+
+  // ── CQC Staff Prep ──────────────────────────────────────────────────────────
+  {
+    id: 'cqc-question-bank-loads',
+    category: 'CQC Staff Prep',
+    name: 'Question bank loads with seed questions',
+    steps: 'Navigate to Admin → CQC Staff Prep. Open the Question Bank tab.',
+    expected: '21 pre-loaded questions appear across the five CQC domains (Safe, Effective, Caring, Responsive, Well-led). Each domain accordion shows the correct question count.',
+  },
+  {
+    id: 'cqc-send-to-staff',
+    category: 'CQC Staff Prep',
+    name: 'Send a question to a staff member',
+    steps: 'Open any domain accordion. Click "Send to staff" on a question. Select one staff member and click Send.',
+    expected: 'The question is delivered to the staff member\'s portal. A "Sent!" confirmation appears. The question appears in the staff member\'s CQC Prep page with status "Awaiting answer".',
+  },
+  {
+    id: 'cqc-send-all-domain',
+    category: 'CQC Staff Prep',
+    name: 'Send all questions in a domain to all staff',
+    steps: 'Click "Send all to staff" in the header of any domain (e.g. Safe). Confirm the action.',
+    expected: 'All active questions in that domain are sent to all active staff members simultaneously. The button shows a spinner then "Sent!" briefly. The Performance tab updates to show pending indicators for those staff.',
+  },
+  {
+    id: 'cqc-question-rephrased',
+    category: 'CQC Staff Prep',
+    name: 'Question is rephrased before delivery',
+    steps: 'Send the same question to two different staff members on separate occasions.',
+    expected: 'The rephrased_q stored on each delivery differs from the original question text. Staff see a varied wording that tests the same knowledge.',
+  },
+  {
+    id: 'cqc-staff-answer-submit',
+    category: 'CQC Staff Prep',
+    name: 'Staff submits a free-text answer',
+    steps: 'Log in as a staff member. Navigate to CQC Prep in the portal. Open a pending question and type an answer. Click Submit answer.',
+    expected: 'The answer is submitted, the AI evaluates it, and a score (0–100) plus written feedback is shown immediately. The question moves from "To answer" to "Completed".',
+  },
+  {
+    id: 'cqc-scoring-bands',
+    category: 'CQC Staff Prep',
+    name: 'Scoring reflects answer quality',
+    steps: 'Submit a comprehensive, detailed answer to one question. Submit a vague one-sentence answer to another.',
+    expected: 'The detailed answer scores significantly higher (80+). The vague answer scores lower. Feedback is specific and constructive in both cases.',
+  },
+  {
+    id: 'cqc-performance-grid',
+    category: 'CQC Staff Prep',
+    name: 'Performance grid shows per-domain scores',
+    steps: 'After one or more staff members have submitted answers, open the Performance tab in Admin → CQC Staff Prep.',
+    expected: 'The staff × domain grid shows average scores as coloured badges (green 80+, amber 60–79, orange 40–59, red <40). Domains with no answers show "—". Pending unanswered deliveries show a teal "…" indicator.',
+  },
+  {
+    id: 'cqc-ai-generate-question',
+    category: 'CQC Staff Prep',
+    name: 'AI generates a new question from a topic',
+    steps: 'Click "Add question". Select a domain. Switch to "AI Generate". Enter a topic (e.g. "end-of-life care"). Click Generate question.',
+    expected: 'An open-ended CQC inspector-style question and model answer are generated and pre-filled in the manual form. Both can be edited before saving.',
+  },
+  {
+    id: 'cqc-prompt-editable',
+    category: 'CQC Staff Prep',
+    name: 'CQC prompts are editable in platform console',
+    steps: 'Navigate to /platform/prompts. Find "CQC Staff Prep — Question Generation" and "CQC Staff Prep — Answer Evaluation" in the sidebar.',
+    expected: 'Both prompts are visible with their full content. They can be edited and saved. Changes take effect on the next question generation or answer evaluation without an API restart.',
+  },
+
+  // ── Monthly Audits ──────────────────────────────────────────────────────────
+  {
+    id: 'audits-page-loads',
+    category: 'Monthly Audits',
+    name: 'Monthly Audits page loads with templates',
+    steps: 'Navigate to Admin → Monthly Audits.',
+    expected: 'The page loads without errors. The "New audit" button is visible. The "How to use Monthly Audits" help accordion is present.',
+  },
+  {
+    id: 'audits-create-run',
+    category: 'Monthly Audits',
+    name: 'Create a new audit run',
+    steps: 'Click "New audit". Select a template (e.g. Health & Safety – Monthly), choose a month, enter an auditor name, and click "Start audit".',
+    expected: 'You are redirected to the audit form page. The correct template name is shown in the heading. Sections appear as tabs across the top.',
+  },
+  {
+    id: 'audits-yn-question',
+    category: 'Monthly Audits',
+    name: 'Answer a yes/no question',
+    steps: 'Open an in-progress audit with yes/no questions. Click "Yes" on one question and "No" on another.',
+    expected: 'Buttons highlight correctly. For the "No" answer, outcome and actions text fields appear immediately. The progress bar updates after each answer.',
+  },
+  {
+    id: 'audits-yn-na-question',
+    category: 'Monthly Audits',
+    name: 'Answer a yes/no/N/A question',
+    steps: 'In an audit that contains yes/no/N/A questions (e.g. Daily Room Checklist), click the N/A button on a question.',
+    expected: 'The N/A button highlights teal. The question is counted as answered in the progress bar. No outcome/actions fields appear for N/A answers.',
+  },
+  {
+    id: 'audits-findings-question',
+    category: 'Monthly Audits',
+    name: 'Answer a findings-type question',
+    steps: 'Open an audit with findings-type questions (e.g. Medicines Management). Type observations in the Findings field and planned steps in Actions & Timescales.',
+    expected: 'Both text fields are visible without a yes/no toggle. Text is saved automatically. The question counts as answered for progress purposes regardless of whether both fields are filled.',
+  },
+  {
+    id: 'audits-complete-flow',
+    category: 'Monthly Audits',
+    name: 'Complete an audit and get AI recommendations',
+    steps: 'Answer all required questions in an audit. Navigate to the Summary tab. Fill in strengths, areas for improvement, and a deadline. Click "Complete & get AI recommendations".',
+    expected: 'The audit status changes to Completed. An AI-generated report appears with sections: Immediate Actions Required, Priority Improvements, CQC KLOE Analysis, Commendations, Next Audit Cycle Focus, and a Quality Rating.',
+  },
+  {
+    id: 'audits-whatsapp-flow',
+    category: 'Monthly Audits',
+    name: 'Complete an audit via WhatsApp',
+    steps: 'Send "audit" to the CareStream WhatsApp number. Reply with a template number. Answer each question with yes, no, n/a, or typed findings. Confirm completion when prompted.',
+    expected: 'Each question is sent conversationally in sequence. Appropriate prompts appear for each question type (yes/no hint vs. findings prompt). On completion, answers are reflected in the web form.',
+  },
+  {
+    id: 'audits-auto-save',
+    category: 'Monthly Audits',
+    name: 'Answers persist after navigating away',
+    steps: 'Start an audit. Answer several questions. Navigate away from the audit page. Return to the audit by clicking it in the "In progress" list.',
+    expected: 'All previously entered answers are still present. Progress bar reflects the saved state. No data is lost between sessions.',
+  },
+  {
+    id: 'audits-repository',
+    category: 'Monthly Audits',
+    name: 'Completed audit appears in repository',
+    steps: 'After completing an audit, navigate back to Monthly Audits.',
+    expected: 'The audit no longer appears in "In progress". It appears in the Audit Repository table with status Completed, the correct month, and auditor name.',
+  },
+  {
+    id: 'audits-prompt-editable',
+    category: 'Monthly Audits',
+    name: 'Audit recommendations prompt editable in platform console',
+    steps: 'Navigate to /platform/prompts. Find "Audit Recommendations" in the prompt list.',
+    expected: 'The full prompt is visible and editable. Saving a change takes effect on the next audit completion without an API restart.',
+  },
+  {
+    id: 'audits-web-confirmation',
+    category: 'Monthly Audits',
+    name: 'Web: confirmation step before audit starts',
+    steps: 'Click "New audit". Select a template, choose a month, optionally enter auditor name. Click "Start audit".',
+    expected: 'A confirmation panel appears showing the template name, month, and auditor details with "Yes, start audit" and "Edit details" buttons. Clicking "Edit details" returns to the form. Clicking "Yes, start audit" navigates to the audit form.',
+  },
+  {
+    id: 'audits-web-save-exit',
+    category: 'Monthly Audits',
+    name: 'Web: pause an in-progress audit with Save & exit',
+    steps: 'Open an in-progress audit. Answer a few questions. Click the "Save & exit" button in the top-right header.',
+    expected: 'You are returned to the Monthly Audits page. The audit appears in the "In progress" section with the correct template name. No answers are lost.',
+  },
+  {
+    id: 'audits-web-resume',
+    category: 'Monthly Audits',
+    name: 'Web: resume a paused audit',
+    steps: 'From the Monthly Audits page, click any row in the "In progress" section.',
+    expected: 'The audit form opens. All previously entered answers are pre-populated. The progress bar reflects the saved state. You can continue answering from where you left off.',
+  },
+  {
+    id: 'audits-whatsapp-confirmation',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: confirmation step before audit starts',
+    steps: 'Send "audit" to the WhatsApp number. Reply with a template number (e.g. "1").',
+    expected: 'CareStream replies: "Ready to start [Template Name]? Reply yes to begin or no to cancel." Replying "no" cancels and returns a cancellation message. Replying "yes" proceeds to questions (or the shift/room prompt for applicable templates).',
+  },
+  {
+    id: 'audits-whatsapp-shift',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: Fire Marshall Checklist shift selection',
+    steps: 'Send "audit". Select "Fire Marshall Checklist" by number. Reply "yes" to confirm.',
+    expected: 'CareStream asks "Is this a day shift or night shift audit? Reply day or night." Replying "day" or "night" starts the questions and labels the run with the chosen shift. Sending an invalid reply prompts again.',
+  },
+  {
+    id: 'audits-whatsapp-room',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: Resident Bedrooms room number prompt',
+    steps: 'Send "audit". Select "Resident Bedrooms" by number. Reply "yes" to confirm.',
+    expected: 'CareStream asks "Please enter the room number for this checklist." After typing a room number (e.g. "12"), CareStream confirms the room and begins the questions.',
+  },
+  {
+    id: 'audits-whatsapp-pause',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: pause an audit mid-way with "stop"',
+    steps: 'Start a WhatsApp audit and answer at least one question. Then send the word "stop".',
+    expected: 'CareStream replies "⏸ Audit paused. Progress saved — X of N questions answered. Send audit to continue where you left off." The session is unlocked — sending a policy question receives a normal policy response (not an audit prompt).',
+  },
+  {
+    id: 'audits-whatsapp-resume',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: resume a paused audit',
+    steps: 'After pausing an audit, send "audit" and select the same template by number. Reply "yes" to the confirmation.',
+    expected: 'CareStream confirms resuming: "Resuming — X of N questions already answered." The first unanswered question is sent and the session lock is re-applied.',
+  },
+  {
+    id: 'audits-whatsapp-shift-resume',
+    category: 'Monthly Audits',
+    name: 'WhatsApp: Fire Marshall Checklist resumes correct shift run',
+    steps: 'Start a Fire Marshall Checklist day-shift audit, answer a few questions, then send "stop". Start again, select Fire Marshall Checklist, reply "yes", then reply "day".',
+    expected: 'CareStream finds the existing in-progress day-shift run and resumes it from the correct question — it does not create a duplicate run.',
+  },
+
+  // ── Business Continuity ─────────────────────────────────────────────────────
+  {
+    id: 'bc-knowledge-category-dropdown',
+    category: 'Business Continuity',
+    name: 'Knowledge Base: category dropdown includes Business Continuity',
+    steps: 'Go to Admin → Knowledge Base → Add entry. Open the Category dropdown.',
+    expected: 'The dropdown contains: General, Business Continuity, Policies & Procedures, HR & Staff Handbook, Health & Safety, Medication, Infection Control.',
+  },
+  {
+    id: 'bc-knowledge-add-entry',
+    category: 'Business Continuity',
+    name: 'Adding a Business Continuity entry',
+    steps: 'Add an entry with Category = Business Continuity (e.g. Q: "What do I do if we have a power cut?" A: "Call the on-call manager on ..."). Save and approve it.',
+    expected: 'Entry is saved as pending, then approved. It appears in the Knowledge Base list under the Business Continuity category group.',
+  },
+  {
+    id: 'bc-chat-card-visible',
+    category: 'Business Continuity',
+    name: 'Business Continuity card visible in staff chat portal',
+    steps: 'Open the staff portal chat. Look at the category selection screen.',
+    expected: 'A Business Continuity card with a LifeBuoy icon is visible alongside the other category cards.',
+  },
+  {
+    id: 'bc-chat-reads-kb',
+    category: 'Business Continuity',
+    name: 'Business Continuity chat reads approved entries',
+    steps: 'With at least one approved Business Continuity entry added, open the portal chat → click Business Continuity → ask the question you added.',
+    expected: 'The AI responds with an answer drawn from the approved Business Continuity entry. The response does not reference policies or CQC content.',
+  },
+  {
+    id: 'bc-chat-no-entries',
+    category: 'Business Continuity',
+    name: 'Business Continuity chat with no entries',
+    steps: 'If no Business Continuity entries exist (or all are unapproved), open the portal chat → Business Continuity → ask any question.',
+    expected: 'The AI acknowledges that no business continuity information has been added yet and advises the admin to add entries via the Knowledge Base.',
+  },
+  {
+    id: 'bc-chat-not-on-whatsapp',
+    category: 'Business Continuity',
+    name: 'Business Continuity not available on WhatsApp',
+    steps: 'Send a message on WhatsApp asking "What is our business continuity plan?" without starting an audit.',
+    expected: 'WhatsApp treats this as a general policy query (not a Business Continuity chat). The BC knowledge base entries do not appear in the response — the response comes from the general RAG pipeline.',
+  },
+
+  // ── Response Verbosity ──────────────────────────────────────────────────────
+  {
+    id: 'verbosity-standard-web',
+    category: 'Response Verbosity',
+    name: 'Standard responses via web chat',
+    steps: 'In Settings > Response detail level, select Standard. Then ask a policy question via the web chat.',
+    expected: 'A thorough response arrives: bullet points, full regulatory context, practical summary paragraph, and cited policy name.',
+  },
+  {
+    id: 'verbosity-concise-web',
+    category: 'Response Verbosity',
+    name: 'Concise responses via web chat',
+    steps: 'In Settings > Response detail level, select Concise. Ask the same policy question via web chat.',
+    expected: 'A shorter response arrives — 2 to 3 key points only, no lengthy prose, under approximately 200 words.',
+  },
+  {
+    id: 'verbosity-whatsapp-always-concise',
+    category: 'Response Verbosity',
+    name: 'WhatsApp always concise (ignores setting)',
+    steps: 'Set response detail level to Standard in Settings. Then ask the same question via WhatsApp.',
+    expected: 'The WhatsApp response is still concise, not a long formatted reply. WhatsApp ignores the tenant setting and always uses the concise format.',
+  },
+  {
+    id: 'verbosity-toggle-saves',
+    category: 'Response Verbosity',
+    name: 'Response style toggle saves correctly',
+    steps: 'Switch between Standard and Concise in Settings, then reload the page.',
+    expected: 'The selected option persists after reload — the setting was saved to the database.',
+  },
+
+  // ── Settings ────────────────────────────────────────────────────────────────
+  {
+    id: 'settings-facility-type',
+    category: 'Settings',
+    name: 'Facility type saves',
+    steps: 'Change the facility type field in Settings (e.g. to "nursing home") and click Save.',
+    expected: 'Value is saved. On reload, the updated facility type is shown. Future AI responses may reference the correct setting type.',
+  },
+  {
+    id: 'settings-email-allowlist',
+    category: 'Settings',
+    name: 'Email allowlist add and remove',
+    steps: 'Add a new email address to the email allowlist in Settings. Then remove it.',
+    expected: 'Address appears immediately on add. Disappears immediately on remove. No page reload required.',
+  },
+  {
+    id: 'settings-phone-allowlist',
+    category: 'Settings',
+    name: 'Phone allowlist add and remove',
+    steps: 'Add a phone number in international format (+447...) to the WhatsApp allowlist. Then remove it.',
+    expected: 'Number appears on add. Disappears on remove. Format validation rejects non-international numbers.',
+  },
+  {
+    id: 'settings-logo-upload',
+    category: 'Settings',
+    name: 'Organisation logo upload',
+    steps: 'Upload a PNG or JPEG logo file (under 2 MB) in Settings.',
+    expected: 'Logo is displayed in the settings panel immediately. It should also appear on generated CQC reports.',
+  },
+  {
+    id: 'settings-staff-roles',
+    category: 'Settings',
+    name: 'Custom staff roles',
+    steps: 'Add a new custom role (e.g. "Senior Carer") in Settings > Staff role types.',
+    expected: 'Role appears in the tags list. It should be available as an option when adding a new staff member.',
+  },
+  {
+    id: 'settings-email-prefs',
+    category: 'Settings',
+    name: 'Email preference toggles',
+    steps: 'Toggle one of the email preferences (e.g. Monthly usage report) from On to Off and back.',
+    expected: 'Each toggle saves immediately. On reload, the saved state is reflected.',
+  },
+  {
+    id: 'settings-multi-site',
+    category: 'Settings',
+    name: 'Multi-site: add and switch',
+    steps: 'In Settings > Sites, add a new site. Then switch to it using the Switch button.',
+    expected: 'New site appears in the list. Switching reloads the admin context to the new site — policies, staff, and queries shown are for the new site only.',
+  },
+
+  // ── Staff Management ────────────────────────────────────────────────────────
+  {
+    id: 'staff-add',
+    category: 'Staff Management',
+    name: 'Add a new staff member',
+    steps: 'In the Staff admin tab, add a new staff member with a name, email, role, and (optionally) phone number.',
+    expected: 'Staff member appears in the list. A welcome email is sent to their address. They can log in and use the chat.',
+  },
+  {
+    id: 'staff-role-change',
+    category: 'Staff Management',
+    name: 'Change a staff member\'s role',
+    steps: 'Select an existing staff member and change their role (e.g. from Staff to Admin).',
+    expected: 'Role updates immediately. If promoted to admin, the staff member gains access to Settings, Staff, and Analytics on next login.',
+  },
+  {
+    id: 'staff-deactivate',
+    category: 'Staff Management',
+    name: 'Deactivate a staff member',
+    steps: 'Remove or deactivate a staff member from the Staff tab.',
+    expected: 'Staff member can no longer log in. Their historical queries remain visible in the admin analytics.',
+  },
+
+  // ── Analytics ───────────────────────────────────────────────────────────────
+  {
+    id: 'analytics-query-count',
+    category: 'Analytics',
+    name: 'Query count accuracy',
+    steps: 'Note the current query count in Analytics. Send 3 queries via web chat. Refresh Analytics.',
+    expected: 'Query count increases by 3. The new sessions appear in the query list.',
+  },
+  {
+    id: 'analytics-no-match',
+    category: 'Analytics',
+    name: 'No-match rate tracking',
+    steps: 'Send a clearly off-topic query (no matching policy). Check the Analytics tab.',
+    expected: 'The query appears with a "No match" badge. The no-match rate percentage updates accordingly.',
+  },
+  {
+    id: 'analytics-language',
+    category: 'Analytics',
+    name: 'Language detection in analytics',
+    steps: 'Send a query in a language other than English. Check the Analytics tab.',
+    expected: 'The query is listed with the detected language (e.g. Polish). Language breakdown is visible in the analytics summary.',
+  },
+  {
+    id: 'analytics-feedback',
+    category: 'Analytics',
+    name: 'Feedback rating visible',
+    steps: 'Rate a web chat response (thumbs up or down). Check the Analytics tab for that session.',
+    expected: 'Feedback rating is shown against the relevant query record.',
+  },
+
+  // ── Knowledge Base ───────────────────────────────────────────────────────────
+  {
+    id: 'kb-add-entry',
+    category: 'Knowledge Base',
+    name: 'Add a knowledge entry',
+    steps: 'In the Knowledge admin tab, add a new knowledge entry with a question and answer.',
+    expected: 'Entry appears in the list with a "Pending approval" status.',
+  },
+  {
+    id: 'kb-approve-entry',
+    category: 'Knowledge Base',
+    name: 'Approve a knowledge entry',
+    steps: 'Approve the pending knowledge entry you just added.',
+    expected: 'Entry status changes to Active. The entry is now included in the vector search used by the RAG pipeline.',
+  },
+  {
+    id: 'kb-retrieval',
+    category: 'Knowledge Base',
+    name: 'Knowledge entry retrieval in chat',
+    steps: 'Ask a question via web chat that closely matches the approved knowledge entry.',
+    expected: 'The response includes content from the knowledge entry, not just uploaded policies.',
+  },
+
+  // ── Policies & Upload ────────────────────────────────────────────────────────
+  {
+    id: 'policy-upload',
+    category: 'Policies & Upload',
+    name: 'Upload a new policy PDF',
+    steps: 'In the Policies admin tab, upload a new policy PDF document.',
+    expected: 'Policy appears in the list with a processing status. After ingestion completes, its status becomes Active and it is queryable.',
+  },
+  {
+    id: 'policy-query-after-upload',
+    category: 'Policies & Upload',
+    name: 'Query a newly uploaded policy',
+    steps: 'Once a newly uploaded policy is Active, ask a question via chat that is answered by that policy.',
+    expected: 'The response cites the newly uploaded policy. Content matches what is in the document.',
+  },
+  {
+    id: 'policy-version',
+    category: 'Policies & Upload',
+    name: 'Policy versioning',
+    steps: 'Upload a revised version of an existing policy.',
+    expected: 'Previous version is archived. New version is marked Active and used in subsequent queries.',
+  },
+]
+
+const STORAGE_KEY = 'carestream_qa_results_v1'
+
+function loadResults(): Record<string, TestResult> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function saveResults(results: Record<string, TestResult>) {
+  if (typeof window === 'undefined') return
+  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(results)) } catch {}
+}
+
+function QATestingPanel() {
+  const [results,     setResults]     = useState<Record<string, TestResult>>(() => loadResults())
+  const [activeCategory, setActiveCategory] = useState<string>(QA_CATEGORIES[0])
+  const [expandedId,  setExpandedId]  = useState<string | null>(null)
+  const [showReport,  setShowReport]  = useState(false)
+
+  function setStatus(id: string, status: TestStatus) {
+    setResults(prev => {
+      const next = { ...prev, [id]: { ...prev[id], status, notes: prev[id]?.notes ?? '' } }
+      saveResults(next)
+      return next
+    })
+  }
+
+  function setNotes(id: string, notes: string) {
+    setResults(prev => {
+      const next = { ...prev, [id]: { status: prev[id]?.status ?? 'pending', notes } }
+      saveResults(next)
+      return next
+    })
+  }
+
+  function clearAll() {
+    if (!confirm('Clear all test results? This cannot be undone.')) return
+    setResults({})
+    saveResults({})
+  }
+
+  const categoryTests = (cat: string) => QA_TESTS.filter(t => t.category === cat)
+
+  function countForCategory(cat: string) {
+    const tests = categoryTests(cat)
+    return {
+      pass:       tests.filter(t => results[t.id]?.status === 'pass').length,
+      fail:       tests.filter(t => results[t.id]?.status === 'fail').length,
+      needs_dev:  tests.filter(t => results[t.id]?.status === 'needs_dev').length,
+      pending:    tests.filter(t => !results[t.id] || results[t.id].status === 'pending').length,
+      total:      tests.length,
+    }
+  }
+
+  const totals = {
+    pass:      QA_TESTS.filter(t => results[t.id]?.status === 'pass').length,
+    fail:      QA_TESTS.filter(t => results[t.id]?.status === 'fail').length,
+    needs_dev: QA_TESTS.filter(t => results[t.id]?.status === 'needs_dev').length,
+    pending:   QA_TESTS.filter(t => !results[t.id] || results[t.id].status === 'pending').length,
+    total:     QA_TESTS.length,
+  }
+
+  const pct = (n: number) => Math.round((n / totals.total) * 100)
+
+  if (showReport) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-dark">QA Test Report</h2>
+            <p className="text-xs text-neutral-mid mt-0.5">Generated {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+          <button
+            onClick={() => setShowReport(false)}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:bg-neutral-light"
+          >
+            <ChevronLeft size={14} />Back to tests
+          </button>
+        </div>
+
+        {/* Summary bar */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <p className="mb-3 text-sm font-semibold text-neutral-dark">Overall progress — {totals.total - totals.pending} / {totals.total} tests completed</p>
+          <div className="mb-4 flex h-4 w-full overflow-hidden rounded-full bg-gray-100">
+            {totals.pass > 0     && <div className="h-full bg-green-500"  style={{ width: `${pct(totals.pass)}%` }} title={`Pass: ${totals.pass}`} />}
+            {totals.needs_dev > 0 && <div className="h-full bg-amber-400" style={{ width: `${pct(totals.needs_dev)}%` }} title={`Needs dev: ${totals.needs_dev}`} />}
+            {totals.fail > 0     && <div className="h-full bg-red-400"    style={{ width: `${pct(totals.fail)}%` }} title={`Fail: ${totals.fail}`} />}
+          </div>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-green-500" /><strong className="text-neutral-dark">{totals.pass}</strong> <span className="text-neutral-mid">Working</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-amber-400" /><strong className="text-neutral-dark">{totals.needs_dev}</strong> <span className="text-neutral-mid">Needs development</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-red-400" /><strong className="text-neutral-dark">{totals.fail}</strong> <span className="text-neutral-mid">Didn't work</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-gray-300" /><strong className="text-neutral-dark">{totals.pending}</strong> <span className="text-neutral-mid">Not tested</span></span>
+          </div>
+        </div>
+
+        {/* Per-category breakdown */}
+        <div className="space-y-4">
+          {QA_CATEGORIES.map(cat => {
+            const tests = categoryTests(cat)
+            const failing = tests.filter(t => results[t.id]?.status === 'fail' || results[t.id]?.status === 'needs_dev')
+            return (
+              <div key={cat} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+                  <p className="text-sm font-semibold text-neutral-dark">{cat}</p>
+                  <div className="flex gap-2 text-xs">
+                    {(() => { const c = countForCategory(cat); return (<>
+                      <span className="text-green-600">{c.pass} pass</span>
+                      {c.needs_dev > 0 && <span className="text-amber-500">{c.needs_dev} dev</span>}
+                      {c.fail > 0     && <span className="text-red-500">{c.fail} fail</span>}
+                      {c.pending > 0  && <span className="text-neutral-mid">{c.pending} pending</span>}
+                    </>) })()}
+                  </div>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {tests.map(t => {
+                    const r = results[t.id]
+                    const status = r?.status ?? 'pending'
+                    return (
+                      <div key={t.id} className="flex items-start gap-3 px-5 py-3">
+                        <div className="mt-0.5 shrink-0">
+                          {status === 'pass'      && <CheckCircle2 size={15} className="text-green-500" />}
+                          {status === 'fail'      && <XCircle      size={15} className="text-red-400" />}
+                          {status === 'needs_dev' && <RefreshCw    size={15} className="text-amber-500" />}
+                          {status === 'pending'   && <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-300 mt-0.5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-dark">{t.name}</p>
+                          {r?.notes && <p className="mt-0.5 text-xs text-neutral-mid italic">"{r.notes}"</p>}
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          status === 'pass'      ? 'bg-green-50 text-green-600' :
+                          status === 'fail'      ? 'bg-red-50 text-red-500' :
+                          status === 'needs_dev' ? 'bg-amber-50 text-amber-600' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {status === 'pass' ? 'Working' : status === 'fail' ? "Didn't work" : status === 'needs_dev' ? 'Needs dev' : 'Not tested'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                {failing.length > 0 && (
+                  <div className="border-t border-dashed border-gray-200 bg-amber-50/50 px-5 py-3">
+                    <p className="text-xs font-medium text-amber-700 mb-1">Items needing attention:</p>
+                    <ul className="space-y-0.5 text-xs text-amber-800">
+                      {failing.map(t => <li key={t.id}>• {t.name}{results[t.id]?.notes ? ` — ${results[t.id].notes}` : ''}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-dark">CareStream QA Testing</h2>
+          <p className="mt-0.5 text-xs text-neutral-mid">
+            Work through each test, mark the result, and add notes. Results are saved in your browser.
+            Use the Report view to see a full summary of what needs attention.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            onClick={clearAll}
+            className="rounded-lg border border-gray-200 px-3 py-2 text-xs text-neutral-mid hover:bg-neutral-light"
+          >
+            Reset all
+          </button>
+          <button
+            onClick={() => setShowReport(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-2 text-xs font-medium text-white hover:bg-teal-dark"
+          >
+            <ClipboardList size={13} />Generate report
+          </button>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+        <div className="flex items-center justify-between text-xs mb-2">
+          <span className="font-medium text-neutral-dark">{totals.total - totals.pending} / {totals.total} tested</span>
+          <div className="flex gap-3">
+            <span className="text-green-600">{totals.pass} working</span>
+            <span className="text-amber-500">{totals.needs_dev} needs dev</span>
+            <span className="text-red-500">{totals.fail} failed</span>
+          </div>
+        </div>
+        <div className="flex h-2 w-full overflow-hidden rounded-full bg-gray-100">
+          {totals.pass > 0      && <div className="h-full bg-green-500 transition-all"  style={{ width: `${pct(totals.pass)}%` }} />}
+          {totals.needs_dev > 0 && <div className="h-full bg-amber-400 transition-all" style={{ width: `${pct(totals.needs_dev)}%` }} />}
+          {totals.fail > 0      && <div className="h-full bg-red-400 transition-all"    style={{ width: `${pct(totals.fail)}%` }} />}
+        </div>
+      </div>
+
+      {/* Layout: category sidebar + test list */}
+      <div className="flex gap-4">
+
+        {/* Category sidebar */}
+        <div className="w-48 shrink-0 space-y-1">
+          {QA_CATEGORIES.map(cat => {
+            const c = countForCategory(cat)
+            const active = activeCategory === cat
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`w-full rounded-lg px-3 py-2.5 text-left transition-colors ${
+                  active ? 'bg-teal text-white' : 'bg-white border border-gray-200 text-neutral-dark hover:bg-neutral-light'
+                }`}
+              >
+                <p className={`text-xs font-medium truncate ${active ? 'text-white' : 'text-neutral-dark'}`}>{cat}</p>
+                <div className={`mt-0.5 flex gap-1.5 text-[10px] ${active ? 'text-teal-light' : 'text-neutral-mid'}`}>
+                  <span>{c.pass}✓</span>
+                  {c.fail > 0     && <span className={active ? 'text-red-200' : 'text-red-400'}>{c.fail}✗</span>}
+                  {c.needs_dev > 0 && <span className={active ? 'text-amber-200' : 'text-amber-500'}>{c.needs_dev}~</span>}
+                  <span className="ml-auto">{c.total}</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Test cards */}
+        <div className="flex-1 space-y-3 min-w-0">
+          {categoryTests(activeCategory).map(test => {
+            const result  = results[test.id]
+            const status  = result?.status ?? 'pending'
+            const isOpen  = expandedId === test.id
+
+            return (
+              <div
+                key={test.id}
+                className={`rounded-xl border bg-white overflow-hidden transition-colors ${
+                  status === 'pass'      ? 'border-green-200' :
+                  status === 'fail'      ? 'border-red-200' :
+                  status === 'needs_dev' ? 'border-amber-200' :
+                  'border-gray-200'
+                }`}
+              >
+                {/* Card header */}
+                <div
+                  className="flex cursor-pointer items-center gap-3 px-4 py-3"
+                  onClick={() => setExpandedId(isOpen ? null : test.id)}
+                >
+                  {/* Status icon */}
+                  <div className="shrink-0">
+                    {status === 'pass'      && <CheckCircle2 size={18} className="text-green-500" />}
+                    {status === 'fail'      && <XCircle      size={18} className="text-red-400" />}
+                    {status === 'needs_dev' && <RefreshCw    size={18} className="text-amber-500" />}
+                    {status === 'pending'   && <div className="h-4.5 w-4.5 rounded-full border-2 border-gray-300" style={{ height: 18, width: 18 }} />}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-neutral-dark">{test.name}</p>
+                    {!isOpen && (
+                      <p className="mt-0.5 truncate text-xs text-neutral-mid">{test.steps.slice(0, 90)}{test.steps.length > 90 ? '…' : ''}</p>
+                    )}
+                  </div>
+
+                  {/* Inline status buttons (always visible) */}
+                  <div className="flex shrink-0 gap-1" onClick={e => e.stopPropagation()}>
+                    <button
+                      title="Working"
+                      onClick={() => setStatus(test.id, status === 'pass' ? 'pending' : 'pass')}
+                      className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                        status === 'pass'
+                          ? 'bg-green-100 text-green-700'
+                          : 'border border-gray-200 text-neutral-mid hover:bg-green-50 hover:text-green-600'
+                      }`}
+                    >
+                      ✓ Working
+                    </button>
+                    <button
+                      title="Didn't work"
+                      onClick={() => setStatus(test.id, status === 'fail' ? 'pending' : 'fail')}
+                      className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                        status === 'fail'
+                          ? 'bg-red-100 text-red-600'
+                          : 'border border-gray-200 text-neutral-mid hover:bg-red-50 hover:text-red-500'
+                      }`}
+                    >
+                      ✗ Didn't work
+                    </button>
+                    <button
+                      title="Needs development"
+                      onClick={() => setStatus(test.id, status === 'needs_dev' ? 'pending' : 'needs_dev')}
+                      className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                        status === 'needs_dev'
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'border border-gray-200 text-neutral-mid hover:bg-amber-50 hover:text-amber-500'
+                      }`}
+                    >
+                      ~ Needs dev
+                    </button>
+                  </div>
+
+                  <ChevronRight size={14} className={`shrink-0 text-neutral-mid transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                </div>
+
+                {/* Expanded detail */}
+                {isOpen && (
+                  <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg bg-blue-50 px-4 py-3">
+                        <p className="mb-1 text-xs font-semibold text-blue-700">How to test</p>
+                        <p className="text-xs leading-relaxed text-blue-800">{test.steps}</p>
+                      </div>
+                      <div className="rounded-lg bg-green-50 px-4 py-3">
+                        <p className="mb-1 text-xs font-semibold text-green-700">Expected result</p>
+                        <p className="text-xs leading-relaxed text-green-800">{test.expected}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-neutral-mid">Notes (optional)</label>
+                      <textarea
+                        value={result?.notes ?? ''}
+                        onChange={e => setNotes(test.id, e.target.value)}
+                        placeholder="Describe what happened, any error messages, or what needs fixing…"
+                        rows={2}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-neutral-dark placeholder:text-neutral-mid focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }

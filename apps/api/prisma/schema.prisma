@@ -15,16 +15,21 @@ datasource db {
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 model Plan {
-  id                    String   @id @default(uuid())
-  name                  String   @unique          // 'Starter' | 'Professional'
-  stripe_price_id_monthly String?
-  stripe_price_id_annual  String?
-  monthly_query_limit   Int
-  has_advanced_analytics Boolean @default(false)
-  has_cqc_report        Boolean @default(false)
-  price_monthly_pence   Int                       // stored in pence (UK)
-  is_active             Boolean @default(true)
-  tenants               Tenant[]
+  id                           String   @id @default(uuid())
+  name                         String   @unique          // 'Starter' | 'Professional'
+  stripe_price_id_monthly      String?
+  stripe_price_id_annual       String?
+  monthly_query_limit          Int
+  max_policies                 Int?     // null = unlimited; Starter = 25
+  max_staff_users              Int?     // null = unlimited; Starter = 10
+  max_handbooks                Int?     // null = unlimited; Starter = 1
+  max_manual_knowledge_entries Int?     // null = unlimited; Starter = 50
+  has_advanced_analytics       Boolean  @default(false)
+  has_cqc_report               Boolean  @default(false)
+  has_gap_detection            Boolean  @default(false)
+  price_monthly_pence          Int                       // stored in pence (UK)
+  is_active                    Boolean  @default(true)
+  tenants                      Tenant[]
 
   @@map("plans")
 }
@@ -41,15 +46,33 @@ model Tenant {
   plan_id             String?
   branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
   facility_type       String             @default("care home")              // e.g. nursing home, residential home
-  email_allowlist     String[]           @default([])                       // approved inbound sender addresses
-  created_at          DateTime           @default(now())
-  plan                Plan?              @relation(fields: [plan_id], references: [id])
-  users               User[]
-  policies            Policy[]
-  queries             QueryRecord[]
-  email_sessions      EmailSession[]
-  audit_logs          AuditLog[]
-  knowledge_entries   KnowledgeEntry[]
+  response_style      String             @default("standard")               // "standard" | "concise"
+  email_allowlist        String[]           @default([])                       // approved inbound sender addresses
+  phone_allowlist        String[]           @default([])                       // approved WhatsApp sender numbers (+447...)
+  twilio_whatsapp_number String?                                               // tenant's dedicated Twilio WA number (production)
+  logo_url               String?                                               // base64 data URL of tenant logo
+  email_preferences      Json               @default("{}")                     // per-type opt-in/out flags
+  staff_roles            String[]           @default([])                       // configurable job role list
+  parent_tenant_id       String?                                               // null = root/standalone; set = sub-tenant
+  created_at             DateTime           @default(now())
+  plan                   Plan?              @relation(fields: [plan_id], references: [id])
+  parent_tenant          Tenant?            @relation("TenantGroup", fields: [parent_tenant_id], references: [id])
+  sub_tenants            Tenant[]           @relation("TenantGroup")
+  users                  User[]
+  policies               Policy[]
+  queries                QueryRecord[]
+  email_sessions         EmailSession[]
+  whatsapp_sessions      WhatsAppSession[]
+  audit_logs             AuditLog[]
+  knowledge_entries      KnowledgeEntry[]
+  onboarding_flows       OnboardingFlow[]
+  onboarding_enrollments OnboardingEnrollment[]
+  training_settings       Json               @default("{}")
+  training_enrollments    TrainingEnrollment[]
+  cqc_staff_questions     CqcStaffQuestion[]
+  cqc_staff_deliveries    CqcStaffDelivery[]
+  audit_templates         AuditTemplate[]
+  audit_runs              AuditRun[]
 
   @@map("tenants")
 }
@@ -63,15 +86,25 @@ model User {
   name                   String
   role                   String         @default("staff")   // admin|staff
   password_hash          String
+  job_role               String?                            // e.g. "Care Assistant", "Registered Nurse"
+  phone_number           String?                            // E.164 format (+447...) — enables WhatsApp access
+  is_active              Boolean        @default(true)      // false = deactivated (access revoked)
   failed_login_attempts  Int            @default(0)         // §11.1 brute-force protection
   locked_until           DateTime?                          // lockout after 5 failed attempts
-  last_login_at          DateTime?
+  first_login_at         DateTime?                          // set once on first successful login
+  last_login_at          DateTime?                          // updated on every successful login
+  shift_type             String         @default("any")     // 'any' | 'day' | 'night'
+  first_language         String         @default("eng")     // ISO 639-3 — primary language for outbound comms
+  second_language        String?                            // optional secondary language
   created_at             DateTime       @default(now())
   tenant                 Tenant         @relation(fields: [tenant_id], references: [id])
   queries                QueryRecord[]
   email_sessions         EmailSession[]
   policies_uploaded      Policy[]       @relation("PolicyUploader")
   audit_logs             AuditLog[]
+  onboarding_enrollments OnboardingEnrollment[]
+  training_enrollments TrainingEnrollment[]
+  cqc_deliveries       CqcStaffDelivery[]
 
   @@index([tenant_id])
   @@map("users")
@@ -101,6 +134,7 @@ model Policy {
   uploader             User      @relation("PolicyUploader", fields: [uploaded_by], references: [id])
   newer_version        Policy?   @relation("PolicyVersionChain", fields: [superseded_by], references: [id])
   older_versions       Policy[]  @relation("PolicyVersionChain")
+  onboarding_steps     OnboardingStep[]
 
   @@index([tenant_id, status])
   @@index([tenant_id, document_category])
@@ -124,6 +158,7 @@ model QueryRecord {
   response_time_ms         Int
   chat_session_id          String?                            // groups multi-turn chat messages into one session
   chat_deleted_at          DateTime?                          // set when staff removes session from chat UI (records preserved)
+  feedback                 String?                            // 'positive' | 'negative' — one-click staff rating
   created_at               DateTime @default(now())
   tenant                   Tenant   @relation(fields: [tenant_id], references: [id])
   user                     User?    @relation(fields: [user_id], references: [id])
@@ -139,20 +174,44 @@ model QueryRecord {
 
 // §8.2 — Threaded email conversation tracking
 model EmailSession {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  user_id         String?            // null when sender is allowlisted but not a registered user
-  thread_id       String   @unique   // derived from original Message-ID header
-  subject         String
-  messages        Json     @default("[]") // [{role, content, timestamp, policy_ids_cited}]
-  last_message_at DateTime @default(now())
-  expires_at      DateTime             // 7 days from last_message_at (§8.4)
-  created_at      DateTime @default(now())
-  tenant          Tenant   @relation(fields: [tenant_id], references: [id])
-  user            User?    @relation(fields: [user_id], references: [id])
+  id                     String   @id @default(uuid())
+  tenant_id              String
+  user_id                String?            // null when sender is allowlisted but not a registered user
+  thread_id              String   @unique   // derived from original Message-ID header
+  subject                String
+  messages               Json     @default("[]") // [{role, content, timestamp, policy_ids_cited}]
+  detected_category      String?            // 'internal_policy' | 'training_module' | 'cqc_report'
+  awaiting_clarification Boolean  @default(false)
+  last_message_at        DateTime @default(now())
+  expires_at             DateTime             // 7 days from last_message_at (§8.4)
+  created_at             DateTime @default(now())
+  tenant                 Tenant   @relation(fields: [tenant_id], references: [id])
+  user                   User?    @relation(fields: [user_id], references: [id])
 
   @@index([tenant_id, expires_at])
   @@map("email_sessions")
+}
+
+// ─── WhatsApp Sessions ────────────────────────────────────────────────────────
+
+// 24-hour conversation window per sender phone number (mirrors WhatsApp's session model)
+model WhatsAppSession {
+  id                     String   @id @default(uuid())
+  tenant_id              String
+  phone_number           String                         // sender's E.164 number (+447...)
+  messages               Json     @default("[]")        // [{role, content, timestamp, policy_ids_cited}]
+  detected_category      String?                        // 'internal_policy' | 'training_module' | 'cqc_report' | 'audit'
+  awaiting_clarification Boolean  @default(false)
+  audit_run_id           String?                        // active audit run when detected_category = 'audit'
+  audit_step             String?                        // 'yn' | 'outcome' | 'actions' | 'strengths' | 'improvements' | 'deadline'
+  last_message_at        DateTime @default(now())
+  expires_at             DateTime                       // 24h TTL — matches WhatsApp session window
+  created_at             DateTime @default(now())
+  tenant                 Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id, phone_number])
+  @@index([tenant_id, expires_at])
+  @@map("whatsapp_sessions")
 }
 
 // ─── External Regulations ────────────────────────────────────────────────────
@@ -176,6 +235,77 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// ─── AI Prompt Versions ───────────────────────────────────────────────────────
+
+// Snapshot of each prompt before it is overwritten via the platform admin UI.
+model AiPromptVersion {
+  id        String   @id @default(uuid())
+  prompt_id String
+  usage     String
+  label     String
+  content   String
+  saved_at  DateTime @default(now())
+
+  @@index([prompt_id])
+  @@map("ai_prompt_versions")
+}
+
+// ─── AI Prompts ──────────────────────────────────────────────────────────────
+
+// Platform-level editable AI prompts. One row per usage slot.
+model AiPrompt {
+  id         String   @id @default(uuid())
+  usage      String   @unique  // 'policy_summary' | 'policy_full' | 'knowledge_extraction' | 'training_question_generation'
+  label      String
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@map("ai_prompts")
+}
+
+// ─── Training Seeds ──────────────────────────────────────────────────────────
+
+// Platform-level training knowledge base used as RAG source for generating
+// training module questions. No tenant_id — shared read-only across all tenants.
+model TrainingSeed {
+  id                       String    @id @default(uuid())
+  slug                     String    @unique               // e.g. 'safeguarding-adults'
+  training_type            String                          // full name, e.g. "Safeguarding Adults"
+  also_known_as            String[]                        // other search terms / aliases
+  summary                  String
+  care_context             String
+  care_company_interaction String
+  practical_meaning        String
+  source_urls              String[]
+  is_active                Boolean   @default(true)
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @default(now())
+
+  @@map("training_seeds")
+}
+
+// ─── CQC Seeds ──────────────────────────────────────────────────────────────
+
+// Platform-level CQC regulatory framework knowledge base.
+// No tenant_id — shared read-only across all tenants.
+model CqcSeed {
+  id                 String   @id @default(uuid())
+  slug               String   @unique
+  framework_area     String                          // 'Safe' | 'Effective' | 'Caring' | 'Responsive' | 'Well-led' | custom
+  also_known_as      String[]
+  description        String                          // Overview of what this CQC standard area covers
+  inspector_focus    String                          // What CQC inspectors look for in this area
+  evidence_expected  String                          // Documentation and practices expected as evidence
+  rating_indicators  String                          // What characterises Good and Outstanding ratings
+  source_urls        String[]
+  is_active          Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @default(now())
+
+  @@map("cqc_seeds")
+}
+
 // ─── Knowledge Base ───────────────────────────────────────────────────────────
 
 // Per-tenant Q&A pairs extracted from policies or added manually.
@@ -185,10 +315,11 @@ model KnowledgeEntry {
   tenant_id   String
   question    String
   answer      String
-  source_type String    // 'policy' | 'manual'
-  source_id   String?   // policy_id when source_type = 'policy'
-  source_name String    // human-readable (policy name or 'Manual entry')
-  vector_id   String?   // Pinecone vector ID — used for deletion
+  source_type         String    // 'policy' | 'manual'
+  source_id           String?   // policy_id when source_type = 'policy'
+  source_name         String    // human-readable (policy name or 'Manual entry')
+  knowledge_category  String    @default("general")  // 'general' | 'business_continuity' | etc.
+  vector_id           String?   // Pinecone vector ID — used for deletion
   approved    Boolean   @default(false)
   approved_at DateTime?
   approved_by String?   // email of the admin who approved
@@ -238,4 +369,372 @@ model AuditLog {
   @@index([tenant_id, created_at])
   @@index([tenant_id, event_type])
   @@map("audit_logs")
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+model BlogAuthor {
+  id         String     @id @default(uuid())
+  name       String
+  title      String?
+  photo_url  String?
+  bio        String?
+  created_at DateTime   @default(now())
+  posts      BlogPost[]
+
+  @@map("blog_authors")
+}
+
+model BlogPost {
+  id                    String      @id @default(uuid())
+  title                 String
+  slug                  String      @unique
+  excerpt               String?
+  meta_title            String?
+  meta_description      String?
+  feature_image_url     String?
+  feature_image_alt     String?
+  og_image_url          String?
+  content               String      @default("")
+  author_id             String?
+  category              String      @default("advice")
+  publication_date      DateTime?
+  status                String      @default("draft")  // draft|published|archived
+  is_featured           Boolean     @default(false)
+  read_time_minutes     Int         @default(1)
+  cta_text              String?
+  cta_url               String?
+  special_message       String?
+  special_message_color String?
+  key_info_title        String?
+  key_info_content      String?
+  faqs                  Json?
+  created_at            DateTime    @default(now())
+  updated_at            DateTime    @updatedAt
+  author                BlogAuthor? @relation(fields: [author_id], references: [id])
+
+  @@index([status, publication_date])
+  @@map("blog_posts")
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+model OnboardingFlow {
+  id          String               @id @default(uuid())
+  tenant_id   String
+  name        String               // "New Starter Induction"
+  description String?
+  job_roles   String[]             @default([]) // empty = applies to all roles
+  is_active   Boolean              @default(true)
+  created_at  DateTime             @default(now())
+  updated_at  DateTime             @updatedAt
+  tenant      Tenant               @relation(fields: [tenant_id], references: [id])
+  steps       OnboardingStep[]
+  enrollments OnboardingEnrollment[]
+
+  @@index([tenant_id, is_active])
+  @@map("onboarding_flows")
+}
+
+model OnboardingStep {
+  id        String   @id @default(uuid())
+  flow_id   String
+  order     Int
+  title     String
+  type      String   // read_policy | answer_question
+  policy_id String?  // required when type = read_policy or answer_question
+  question  String?  // required when type = answer_question
+  created_at DateTime @default(now())
+  flow      OnboardingFlow @relation(fields: [flow_id], references: [id], onDelete: Cascade)
+  policy    Policy?        @relation(fields: [policy_id], references: [id])
+  progress  OnboardingProgress[]
+
+  @@index([flow_id, order])
+  @@map("onboarding_steps")
+}
+
+model OnboardingEnrollment {
+  id           String               @id @default(uuid())
+  tenant_id    String
+  flow_id      String
+  user_id      String
+  enrolled_at  DateTime             @default(now())
+  completed_at DateTime?
+  due_date     DateTime?
+  tenant       Tenant               @relation(fields: [tenant_id], references: [id])
+  flow         OnboardingFlow       @relation(fields: [flow_id], references: [id])
+  user         User                 @relation(fields: [user_id], references: [id])
+  progress     OnboardingProgress[]
+
+  @@unique([flow_id, user_id])
+  @@index([tenant_id, user_id])
+  @@index([tenant_id, flow_id])
+  @@map("onboarding_enrollments")
+}
+
+model OnboardingProgress {
+  id              String               @id @default(uuid())
+  enrollment_id   String
+  step_id         String
+  completed_at    DateTime?
+  answer_text     String?
+  answer_correct  Boolean?
+  enrollment      OnboardingEnrollment @relation(fields: [enrollment_id], references: [id], onDelete: Cascade)
+  step            OnboardingStep       @relation(fields: [step_id], references: [id])
+
+  @@unique([enrollment_id, step_id])
+  @@map("onboarding_progress")
+}
+
+// ─── Training ─────────────────────────────────────────────────────────────────
+
+model TrainingModule {
+  id                  String                    @id @default(uuid())
+  slug                String                    @unique
+  name                String
+  description         String
+  category            String                    // 'statutory' | 'specialist'
+  questions           Json                      // Array<{ id, text, options, correct }>
+  is_annual           Boolean                   @default(true)
+  sort_order          Int                       @default(0)
+  is_active           Boolean                   @default(true)
+  questions_locked    Boolean                   @default(false)
+  questions_locked_at DateTime?
+  questions_version   Int                       @default(0)
+  created_at          DateTime                  @default(now())
+  enrollments         TrainingEnrollment[]
+  question_versions   TrainingQuestionVersion[]
+
+  @@map("training_modules")
+}
+
+model TrainingQuestionVersion {
+  id         String         @id @default(uuid())
+  module_id  String
+  version    Int
+  questions  Json           // full snapshot: Array<{ id, text, options, correct }>
+  created_at DateTime       @default(now())
+  created_by String?
+  module     TrainingModule @relation(fields: [module_id], references: [id], onDelete: Cascade)
+
+  @@unique([module_id, version])
+  @@index([module_id])
+  @@map("training_question_versions")
+}
+
+model TrainingEnrollment {
+  id              String          @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  module_id       String
+  status          String          @default("not_started") // not_started | in_progress | complete | expired
+  completed_at    DateTime?
+  expires_at      DateTime?
+  certificate_url String?
+  renewal_count   Int             @default(0)
+  assigned_by     String?
+  due_date        DateTime?
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  tenant          Tenant          @relation(fields: [tenant_id], references: [id])
+  user            User            @relation(fields: [user_id], references: [id])
+  module          TrainingModule  @relation(fields: [module_id], references: [id])
+  answers         TrainingAnswer[]
+
+  @@unique([tenant_id, user_id, module_id, renewal_count])
+  @@index([tenant_id, user_id])
+  @@index([tenant_id, expires_at])
+  @@map("training_enrollments")
+}
+
+model TrainingAnswer {
+  id            String             @id @default(uuid())
+  enrollment_id String
+  question_id   String
+  question_text String?            // snapshot of question text at time of answering
+  answer_text   String             // selected option letter: 'A', 'B', 'C', or 'D'
+  is_correct    Boolean            @default(false)
+  answered_at   DateTime           @default(now())
+  enrollment    TrainingEnrollment @relation(fields: [enrollment_id], references: [id], onDelete: Cascade)
+
+  @@unique([enrollment_id, question_id])
+  @@index([enrollment_id])
+  @@map("training_answers")
+}
+
+// ─── Training Delivery ────────────────────────────────────────────────────────
+
+model TrainingDeliveryRule {
+  id                 String   @id @default(uuid())
+  tenant_id          String
+  module_id          String?
+  name               String
+  rule_type          String   @default("scheduled")  // 'scheduled'
+  is_active          Boolean  @default(true)
+  target_audience    String   @default("all")         // 'all' | 'day_shift' | 'night_shift' | 'specific'
+  target_user_ids    String[] @default([])
+  days_of_week       Int[]    @default([])             // 0=Sun … 6=Sat
+  send_time          String?                           // 'HH:MM' Europe/London
+  questions_per_send Int      @default(3)
+  frequency_cap_day  Int?
+  frequency_cap_week Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  created_by         String?
+  send_logs          TrainingSendLog[]
+
+  @@index([tenant_id])
+  @@map("training_delivery_rules")
+}
+
+model TrainingSendLog {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  rule_id      String?
+  module_id    String?
+  user_id      String
+  question_ids String[]  @default([])
+  trigger_type String    // 'scheduled' | 'manual' | 'return_to_work' | 'post_incident' | 'quizme' | 'spaced_repetition'
+  triggered_by String?
+  context      String?
+  sent_at      DateTime  @default(now())
+  rule         TrainingDeliveryRule? @relation(fields: [rule_id], references: [id], onDelete: SetNull)
+
+  @@index([tenant_id, sent_at])
+  @@index([user_id])
+  @@map("training_send_log")
+}
+
+// ─── CQC Staff Questions ──────────────────────────────────────────────────────
+
+model CqcStaffQuestion {
+  id           String             @id @default(uuid())
+  tenant_id    String
+  domain       String             // 'safe' | 'effective' | 'caring' | 'responsive' | 'well_led'
+  question     String
+  model_answer String
+  is_active    Boolean            @default(true)
+  is_seed      Boolean            @default(false)  // true = pre-loaded default question
+  created_at   DateTime           @default(now())
+  updated_at   DateTime           @updatedAt
+  tenant       Tenant             @relation(fields: [tenant_id], references: [id])
+  deliveries   CqcStaffDelivery[]
+
+  @@index([tenant_id, domain])
+  @@index([tenant_id, is_active])
+  @@map("cqc_staff_questions")
+}
+
+model CqcStaffDelivery {
+  id           String           @id @default(uuid())
+  tenant_id    String
+  question_id  String
+  user_id      String
+  rephrased_q  String           // AI-rephrased version sent to staff
+  channel      String           @default("whatsapp")  // 'whatsapp' | 'email' | 'portal'
+  answer_text  String?
+  score        Int?             // 0–100 AI evaluation score
+  feedback     String?          // AI constructive feedback
+  status       String           @default("pending")  // 'pending' | 'answered' | 'evaluated'
+  sent_at      DateTime         @default(now())
+  answered_at  DateTime?
+  evaluated_at DateTime?
+  tenant       Tenant           @relation(fields: [tenant_id], references: [id])
+  question     CqcStaffQuestion @relation(fields: [question_id], references: [id])
+  user         User             @relation(fields: [user_id], references: [id])
+
+  @@index([tenant_id, user_id])
+  @@index([tenant_id, status])
+  @@index([user_id, status])
+  @@map("cqc_staff_deliveries")
+}
+
+// ─── Audits ───────────────────────────────────────────────────────────────────
+
+// Platform-level or tenant-custom audit template (e.g. "Health & Safety Monthly")
+model AuditTemplate {
+  id          String         @id @default(uuid())
+  tenant_id   String?                              // null = platform default (shared read-only)
+  name        String
+  description String?
+  is_active   Boolean        @default(true)
+  is_seed     Boolean        @default(false)
+  frequency   String         @default("monthly")  // daily | weekly | monthly | quarterly | periodic
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  tenant      Tenant?        @relation(fields: [tenant_id], references: [id])
+  sections    AuditSection[]
+  runs        AuditRun[]
+
+  @@index([tenant_id])
+  @@map("audit_templates")
+}
+
+model AuditSection {
+  id            String          @id @default(uuid())
+  template_id   String
+  title         String
+  section_order Int
+  template      AuditTemplate   @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  questions     AuditQuestion[]
+
+  @@index([template_id])
+  @@map("audit_sections")
+}
+
+model AuditQuestion {
+  id             String        @id @default(uuid())
+  section_id     String
+  question_text  String
+  question_order Int
+  question_type  String        @default("yes_no")   // yes_no | yes_no_na | findings | free_text
+  is_active      Boolean       @default(true)
+  section        AuditSection  @relation(fields: [section_id], references: [id], onDelete: Cascade)
+  answers        AuditAnswer[]
+
+  @@index([section_id])
+  @@map("audit_questions")
+}
+
+model AuditRun {
+  id                 String        @id @default(uuid())
+  tenant_id          String
+  template_id        String
+  audit_month        DateTime                           // first day of the audit month
+  auditor_name       String?
+  auditor_role       String?
+  shift              String?                                // 'day' | 'night' — for shift-based daily templates
+  room_number        String?                                // for room-by-room templates
+  status             String        @default("in_progress")  // in_progress | completed
+  ai_recommendations String?
+  strengths          String?
+  improvements       String?
+  actions_deadline   String?
+  completed_at       DateTime?
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  tenant             Tenant        @relation(fields: [tenant_id], references: [id])
+  template           AuditTemplate @relation(fields: [template_id], references: [id])
+  answers            AuditAnswer[]
+
+  @@index([tenant_id, status])
+  @@index([tenant_id, audit_month])
+  @@map("audit_runs")
+}
+
+model AuditAnswer {
+  id           String        @id @default(uuid())
+  run_id       String
+  question_id  String
+  answer_yn    Boolean?
+  answer_na    Boolean       @default(false)
+  outcome_text String?
+  actions_text String?
+  answered_at  DateTime      @default(now())
+  run          AuditRun      @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  question     AuditQuestion @relation(fields: [question_id], references: [id])
+
+  @@unique([run_id, question_id])
+  @@index([run_id])
+  @@map("audit_answers")
 }

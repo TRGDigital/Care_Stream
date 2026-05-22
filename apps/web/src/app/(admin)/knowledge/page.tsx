@@ -20,6 +20,21 @@ function groupBySource(entries: KnowledgeEntry[]): Map<string, KnowledgeEntry[]>
   return map
 }
 
+// Knowledge category options for manual entries.
+const KNOWLEDGE_CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'general',             label: 'General'                },
+  { value: 'business_continuity', label: 'Business Continuity'    },
+  { value: 'policies_procedures', label: 'Policies & Procedures'  },
+  { value: 'hr_staff',            label: 'HR & Staff Handbook'    },
+  { value: 'health_safety',       label: 'Health & Safety'        },
+  { value: 'medication',          label: 'Medication'             },
+  { value: 'infection_control',   label: 'Infection Control'      },
+]
+
+const KNOWLEDGE_CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  KNOWLEDGE_CATEGORY_OPTIONS.map(o => [o.value, o.label]),
+)
+
 // Maps each platform seed source_name to its display category.
 const PLATFORM_SOURCE_CATEGORY: Record<string, string> = {
   'CQC — Key Lines of Enquiry':                          'CQC & Inspection',
@@ -230,30 +245,25 @@ export default function KnowledgePage() {
             </section>
           )}
 
-          {/* Manual entries */}
+          {/* Manual entries — grouped by knowledge_category */}
           {manualEntries.length > 0 && (
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-mid">
                 Manual entries ({manualEntries.length})
               </h2>
-              <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
-                {manualEntries.map(entry => (
-                  <EntryRow
-                    key={entry.id}
-                    entry={entry}
-                    isEditing={editId === entry.id}
-                    token={session?.accessToken ?? ''}
-                    onEdit={() => setEditId(entry.id)}
-                    onCancelEdit={() => setEditId(null)}
-                    onSaved={(updated) => {
-                      setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
-                      setEditId(null)
-                    }}
-                    onDelete={() => handleDelete(entry)}
-                    onApprove={() => handleApprove(entry)}
-                  />
-                ))}
-              </div>
+              <ManualCategoryAccordion
+                entries={manualEntries}
+                editId={editId}
+                token={session?.accessToken ?? ''}
+                onEdit={setEditId}
+                onCancelEdit={() => setEditId(null)}
+                onSaved={(updated) => {
+                  setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
+                  setEditId(null)
+                }}
+                onDelete={handleDelete}
+                onApprove={handleApprove}
+              />
             </section>
           )}
 
@@ -285,6 +295,124 @@ export default function KnowledgePage() {
           }}
         />
       )}
+    </div>
+  )
+}
+
+// ─── Manual category accordion ────────────────────────────────────────────────
+
+function ManualCategoryAccordion({
+  entries,
+  editId,
+  token,
+  onEdit,
+  onCancelEdit,
+  onSaved,
+  onDelete,
+  onApprove,
+}: {
+  entries:      KnowledgeEntry[]
+  editId:       string | null
+  token:        string
+  onEdit:       (id: string) => void
+  onCancelEdit: () => void
+  onSaved:      (updated: KnowledgeEntry) => void
+  onDelete:     (entry: KnowledgeEntry) => void
+  onApprove:    (entry: KnowledgeEntry) => void
+}) {
+  // Group by knowledge_category
+  const grouped = new Map<string, KnowledgeEntry[]>()
+  for (const e of entries) {
+    const cat = e.knowledge_category || 'general'
+    if (!grouped.has(cat)) grouped.set(cat, [])
+    grouped.get(cat)!.push(e)
+  }
+  // Sort so known categories come first in a logical order, then any extras
+  const ORDER = ['business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control', 'general']
+  const sorted = [...grouped.entries()].sort(([a], [b]) => {
+    const ai = ORDER.indexOf(a); const bi = ORDER.indexOf(b)
+    if (ai === -1 && bi === -1) return a.localeCompare(b)
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
+
+  const [open, setOpen] = useState<Set<string>>(new Set(['general']))
+  const toggle = (key: string) =>
+    setOpen(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+
+  if (sorted.length === 1 && sorted[0][0] === 'general') {
+    // No categories in use yet — flat list for backwards compat
+    return (
+      <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        {sorted[0][1].map(entry => (
+          <EntryRow
+            key={entry.id}
+            entry={entry}
+            isEditing={editId === entry.id}
+            token={token}
+            onEdit={() => onEdit(entry.id)}
+            onCancelEdit={onCancelEdit}
+            onSaved={onSaved}
+            onDelete={() => onDelete(entry)}
+            onApprove={() => onApprove(entry)}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      {sorted.map(([cat, catEntries]) => {
+        const isOpen   = open.has(cat)
+        const approved = catEntries.filter(e => e.approved).length
+        const pending  = catEntries.length - approved
+        const label    = KNOWLEDGE_CATEGORY_LABELS[cat] ?? cat
+        return (
+          <div key={cat} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <button
+              onClick={() => toggle(cat)}
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-neutral-light/50"
+            >
+              {isOpen
+                ? <ChevronDown size={16} className="flex-shrink-0 text-neutral-mid" />
+                : <ChevronRight size={16} className="flex-shrink-0 text-neutral-mid" />
+              }
+              <BookOpen size={15} className="flex-shrink-0 text-teal" />
+              <span className="flex-1 text-sm font-semibold text-neutral-dark">{label}</span>
+              <span className="text-xs text-neutral-mid">{catEntries.length} entries</span>
+              {approved > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                  <ShieldCheck size={10} /> {approved}
+                </span>
+              )}
+              {pending > 0 && (
+                <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                  <Clock size={10} /> {pending}
+                </span>
+              )}
+            </button>
+            {isOpen && (
+              <div className="divide-y divide-gray-100 border-t border-gray-100">
+                {catEntries.map(entry => (
+                  <EntryRow
+                    key={entry.id}
+                    entry={entry}
+                    isEditing={editId === entry.id}
+                    token={token}
+                    onEdit={() => onEdit(entry.id)}
+                    onCancelEdit={onCancelEdit}
+                    onSaved={onSaved}
+                    onDelete={() => onDelete(entry)}
+                    onApprove={() => onApprove(entry)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -641,6 +769,7 @@ function AddEntryModal({
   const [question,   setQuestion]   = useState('')
   const [answer,     setAnswer]     = useState('')
   const [sourceName, setSourceName] = useState('')
+  const [category,   setCategory]   = useState('general')
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState<string | null>(null)
 
@@ -650,9 +779,10 @@ function AddEntryModal({
     setError(null)
     try {
       const entry = await createApiClient(token).knowledge.create({
-        question:    question.trim(),
-        answer:      answer.trim(),
-        source_name: sourceName.trim() || undefined,
+        question:           question.trim(),
+        answer:             answer.trim(),
+        source_name:        sourceName.trim() || undefined,
+        knowledge_category: category,
       })
       onSaved(entry)
     } catch (e: any) {
@@ -696,12 +826,27 @@ function AddEntryModal({
             />
           </div>
           <div>
+            <label className="mb-1 block text-xs font-medium text-neutral-mid">Category</label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+            >
+              {KNOWLEDGE_CATEGORY_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            {category === 'business_continuity' && (
+              <p className="mt-1 text-xs text-teal">This entry will appear in the Business Continuity chat on the staff portal.</p>
+            )}
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-medium text-neutral-mid">Source (optional)</label>
             <input
               type="text"
               value={sourceName}
               onChange={e => setSourceName(e.target.value)}
-              placeholder="e.g. Infection Control Policy"
+              placeholder="e.g. Business Continuity Plan v2"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
             />
           </div>

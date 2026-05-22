@@ -3,8 +3,8 @@
 export type SubscriptionStatus = 'active' | 'trialling' | 'past_due' | 'cancelled'
 export type UserRole = 'admin' | 'staff'
 export type PolicyStatus = 'active' | 'processing' | 'archived' | 'superseded'
-export type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'external_regulation'
-export type QueryChannel = 'chat' | 'email'
+export type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'external_regulation' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'
+export type QueryChannel = 'chat' | 'email' | 'whatsapp' | 'voice'
 export type IntentType = 'summary' | 'full_policy' | 'follow_up'
 
 export interface Plan {
@@ -109,6 +109,16 @@ export interface EmailMessage {
   content: string
   timestamp: string
   policy_ids_cited: string[]
+}
+
+export interface WhatsAppSession {
+  id: string
+  tenant_id: string
+  phone_number: string
+  messages: EmailMessage[]  // same message shape as email
+  last_message_at: Date
+  expires_at: Date
+  created_at: Date
 }
 
 export interface ExternalRegulation {

@@ -4,6 +4,7 @@ import { requireAdmin } from '../middleware/auth'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
+import { checkManualKnowledgeLimit, PlanLimitError } from '../lib/plan-limits'
 import {
   generateKnowledgeForPolicy,
   generateKnowledgeForAllPolicies,
@@ -45,10 +46,13 @@ knowledgeRouter.get('/', async (req: Request, res: Response) => {
 // ─── POST /knowledge ──────────────────────────────────────────────────────────
 // Create a manual Q&A entry. Auto-embeds to Pinecone.
 
+const KNOWLEDGE_CATEGORIES = ['general', 'business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control'] as const
+
 const CreateSchema = z.object({
-  question:    z.string().min(5).max(500),
-  answer:      z.string().min(5).max(5000),
-  source_name: z.string().min(1).max(200).optional(),
+  question:           z.string().min(5).max(500),
+  answer:             z.string().min(5).max(5000),
+  source_name:        z.string().min(1).max(200).optional(),
+  knowledge_category: z.enum(KNOWLEDGE_CATEGORIES).optional(),
 })
 
 knowledgeRouter.post('/', async (req: Request, res: Response) => {
@@ -57,16 +61,27 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
     err(res, 'VALIDATION_ERROR', parsed.error.issues.map(i => i.message).join(', '))
     return
   }
-  const { question, answer, source_name } = parsed.data
+  const { question, answer, source_name, knowledge_category } = parsed.data
   const tenantId = getTenantId()
+
+  try {
+    await checkManualKnowledgeLimit(tenantId)
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      err(res, e.code, e.message, 403)
+      return
+    }
+    throw e
+  }
 
   const entry = await (prisma as any).knowledgeEntry.create({
     data: {
-      tenant_id:   tenantId,
+      tenant_id:          tenantId,
       question,
       answer,
-      source_type: 'manual',
-      source_name: source_name ?? 'Manual entry',
+      source_type:        'manual',
+      source_name:        source_name ?? 'Manual entry',
+      knowledge_category: knowledge_category ?? 'general',
     },
   })
 
@@ -89,9 +104,10 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
 // Update a manual entry. Re-embeds to Pinecone.
 
 const UpdateSchema = z.object({
-  question:    z.string().min(5).max(500).optional(),
-  answer:      z.string().min(5).max(5000).optional(),
-  source_name: z.string().min(1).max(200).optional(),
+  question:           z.string().min(5).max(500).optional(),
+  answer:             z.string().min(5).max(5000).optional(),
+  source_name:        z.string().min(1).max(200).optional(),
+  knowledge_category: z.enum(KNOWLEDGE_CATEGORIES).optional(),
 })
 
 knowledgeRouter.patch('/:id', async (req: Request, res: Response) => {

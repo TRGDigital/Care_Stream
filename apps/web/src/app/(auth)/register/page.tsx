@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -48,9 +47,7 @@ export default function RegisterPage() {
       return
     }
 
-    await signIn('credentials', { email: form.email, password: form.password, redirect: false })
-    router.push('/dashboard')
-    router.refresh()
+    router.push(`/check-email?email=${encodeURIComponent(form.email)}`)
   }
 
   return (

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
+import crypto from 'crypto'
 import { prisma } from '../db/client'
 import { hashPassword, verifyPassword } from '../services/auth/password'
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, verifyAccessToken } from '../services/auth/tokens'
@@ -8,6 +9,13 @@ import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
+import { sendVerificationEmail } from '../services/email/outbound'
+
+const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+function generateVerificationToken(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
 
 export const authRouter = Router()
 
@@ -63,6 +71,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     return
   }
 
+  const verificationToken   = generateVerificationToken()
+  const verificationExpires = new Date(Date.now() + VERIFICATION_EXPIRY_MS)
+
   const [slug, password_hash] = await Promise.all([
     generateUniqueSlug(org_name),
     hashPassword(password),
@@ -74,7 +85,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
       data: {
         name: org_name,
         slug,
-        email_domain: slug,           // policies@{slug}.carestreamai.co.uk
+        email_domain: slug,
         subscription_status: 'trialling',
         plan_id: plan_id ?? null,
         branding_signoff: `The ${org_name} Team`,
@@ -88,6 +99,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         name,
         role: 'admin',
         password_hash,
+        email_verified:                false,
+        verification_token:             verificationToken,
+        verification_token_expires_at:  verificationExpires,
       },
     })
 
@@ -103,6 +117,13 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     metadata: { org_name, slug, plan_id: plan_id ?? null },
   })
 
+  // Send verification email (non-fatal — account still created)
+  const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
+  const verificationUrl = `${webUrl}/verify-email?token=${verificationToken}`
+  sendVerificationEmail(email, name, verificationUrl).catch(e =>
+    console.error('[register] Failed to send verification email:', e)
+  )
+
   // Plant platform knowledge seeds in the background — non-fatal
   ;(async () => {
     try {
@@ -112,25 +133,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     }
   })()
 
-  const accessToken  = generateAccessToken({ sub: user.id, tenant_id: tenant.id, role: 'admin' })
-  const refreshToken = generateRefreshToken(user.id)
-
-  ok(res, {
-    access_token:  accessToken,
-    refresh_token: refreshToken,
-    user: {
-      id:        user.id,
-      name:      user.name,
-      email:     user.email,
-      role:      user.role,
-      tenant_id: tenant.id,
-    },
-    tenant: {
-      id:   tenant.id,
-      name: tenant.name,
-      slug: tenant.slug,
-    },
-  }, 201)
+  ok(res, { email_verification_required: true, email }, 201)
 })
 
 // ─── POST /auth/login ─────────────────────────────────────────────────────────
@@ -168,6 +171,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
   if (user.is_active === false) {
     err(res, 'ACCOUNT_DEACTIVATED', 'This account has been deactivated. Please contact your administrator.', 403)
+    return
+  }
+
+  if (!user.email_verified) {
+    err(res, 'EMAIL_NOT_VERIFIED', 'Please verify your email address before signing in. Check your inbox for a verification link.', 403)
     return
   }
 
@@ -256,6 +264,83 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       subscription_status: user.tenant.subscription_status,
     },
   })
+})
+
+// ─── GET /auth/verify-email?token=xxx ────────────────────────────────────────
+
+authRouter.get('/verify-email', async (req: Request, res: Response) => {
+  const token = req.query.token as string | undefined
+  if (!token) {
+    err(res, 'VALIDATION_ERROR', 'Verification token is required.')
+    return
+  }
+
+  const user = await (prisma as any).user.findFirst({
+    where: { verification_token: token },
+  })
+
+  if (!user) {
+    err(res, 'INVALID_TOKEN', 'Verification link is invalid or has already been used.', 400)
+    return
+  }
+
+  if (user.email_verified) {
+    ok(res, { already_verified: true })
+    return
+  }
+
+  if (user.verification_token_expires_at && new Date() > new Date(user.verification_token_expires_at)) {
+    err(res, 'TOKEN_EXPIRED', 'Verification link has expired. Please request a new one.', 400)
+    return
+  }
+
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data: {
+      email_verified:                true,
+      verification_token:             null,
+      verification_token_expires_at:  null,
+    },
+  })
+
+  ok(res, { verified: true })
+})
+
+// ─── POST /auth/resend-verification ──────────────────────────────────────────
+
+authRouter.post('/resend-verification', async (req: Request, res: Response) => {
+  const { email } = req.body ?? {}
+  if (!email) {
+    err(res, 'VALIDATION_ERROR', 'Email address is required.')
+    return
+  }
+
+  const user = await (prisma as any).user.findUnique({ where: { email } })
+
+  // Return success even if user not found — prevents email enumeration
+  if (!user || user.email_verified) {
+    ok(res, { sent: true })
+    return
+  }
+
+  const token   = generateVerificationToken()
+  const expires = new Date(Date.now() + VERIFICATION_EXPIRY_MS)
+
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data: {
+      verification_token:            token,
+      verification_token_expires_at: expires,
+    },
+  })
+
+  const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
+  const verificationUrl = `${webUrl}/verify-email?token=${token}`
+  sendVerificationEmail(email, user.name, verificationUrl).catch(e =>
+    console.error('[resend-verification] Failed to send email:', e)
+  )
+
+  ok(res, { sent: true })
 })
 
 // ─── POST /auth/refresh ───────────────────────────────────────────────────────

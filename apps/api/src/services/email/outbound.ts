@@ -71,6 +71,65 @@ export async function sendRejectionEmail(to: string, subject: string): Promise<v
   })
 }
 
+// ─── Email verification ───────────────────────────────────────────────────────
+
+export async function sendVerificationEmail(to: string, name: string, verificationUrl: string): Promise<void> {
+  ensureInitialised()
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping verification email')
+    return
+  }
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = name.split(' ')[0] ?? name
+
+  const html = `
+<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#ffffff">
+
+  <div style="margin-bottom:32px">
+    <p style="margin:0;font-size:22px;font-weight:700;color:#0d9488">CareStreamAI</p>
+    <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Powered by TRG Digital</p>
+  </div>
+
+  <p style="color:#111827;font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+  <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+    Thanks for signing up to CareStreamAI. Please verify your email address to activate your account.
+  </p>
+
+  <div style="text-align:center;margin:0 0 32px">
+    <a href="${verificationUrl}"
+       style="display:inline-block;padding:14px 32px;background:#0d9488;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+      Verify my email address
+    </a>
+  </div>
+
+  <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+    This link expires in <strong>24 hours</strong>. If you did not create a CareStreamAI account, you can safely ignore this email.
+  </p>
+
+  <p style="color:#9ca3af;font-size:12px;margin:0">
+    If the button above does not work, copy and paste this link into your browser:<br>
+    <span style="color:#0d9488">${verificationUrl}</span>
+  </p>
+
+  <div style="border-top:1px solid #e5e7eb;padding-top:20px;margin-top:32px">
+    <p style="margin:0;font-size:12px;color:#9ca3af">
+      The CareStreamAI Team &mdash; Powered by TRG Digital
+    </p>
+  </div>
+
+</div>`.trim()
+
+  await sgMail.send({
+    to,
+    from,
+    subject: 'Verify your CareStreamAI email address',
+    html,
+  })
+}
+
 // ─── Staff welcome / credentials email ───────────────────────────────────────
 
 export interface SendWelcomeEmailOptions {

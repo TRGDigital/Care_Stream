@@ -22,6 +22,14 @@ export default function LoginPage() {
     setLoading(false)
 
     if (result?.error) {
+      if (result.error === 'EMAIL_NOT_VERIFIED') {
+        router.push(`/check-email?email=${encodeURIComponent(email)}`)
+        return
+      }
+      if (result.error === 'ACCOUNT_LOCKED') {
+        setError('Account is temporarily locked due to too many failed attempts. Please try again in 30 minutes.')
+        return
+      }
       setError('Invalid email or password.')
       return
     }

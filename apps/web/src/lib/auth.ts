@@ -89,9 +89,15 @@ export const authOptions: NextAuthOptions = {
           }),
         })
 
-        if (!res.ok) return null
         const body = await res.json()
-        if (!body.success) return null
+
+        if (!res.ok || !body.success) {
+          // Surface specific error codes so the login page can show targeted messages
+          const code = body?.error?.code
+          if (code === 'EMAIL_NOT_VERIFIED') throw new Error('EMAIL_NOT_VERIFIED')
+          if (code === 'ACCOUNT_LOCKED')     throw new Error('ACCOUNT_LOCKED')
+          return null
+        }
 
         const { user, tenant, access_token, refresh_token } = body.data
         return {

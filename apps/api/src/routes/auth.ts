@@ -9,7 +9,7 @@ import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
-import { sendVerificationEmail } from '../services/email/outbound'
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email/outbound'
 
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -336,6 +336,92 @@ authRouter.post('/resend-verification', async (req: Request, res: Response) => {
   }
 
   ok(res, { sent: true })
+})
+
+// ─── POST /auth/forgot-password ──────────────────────────────────────────────
+
+authRouter.post('/forgot-password', async (req: Request, res: Response) => {
+  const { email } = req.body ?? {}
+  if (!email) {
+    err(res, 'VALIDATION_ERROR', 'Email address is required.')
+    return
+  }
+
+  const user = await (prisma as any).user.findUnique({ where: { email } })
+
+  // Always return success — prevents email enumeration
+  if (!user) {
+    ok(res, { sent: true })
+    return
+  }
+
+  const token   = generateVerificationToken()
+  const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data: {
+      password_reset_token:            token,
+      password_reset_token_expires_at: expires,
+    },
+  })
+
+  const webUrl  = process.env.WEB_URL ?? 'http://localhost:3000'
+  const resetUrl = `${webUrl}/reset-password?token=${token}`
+
+  try {
+    await sendPasswordResetEmail(email, user.name, resetUrl)
+  } catch (e) {
+    console.error('[forgot-password] Failed to send email:', e)
+  }
+
+  ok(res, { sent: true })
+})
+
+// ─── POST /auth/reset-password ────────────────────────────────────────────────
+
+const ResetPasswordSchema = z.object({
+  token:    z.string().min(1),
+  password: z.string().min(8),
+})
+
+authRouter.post('/reset-password', async (req: Request, res: Response) => {
+  const parsed = ResetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    err(res, 'VALIDATION_ERROR', parsed.error.issues.map(i => i.message).join(', '))
+    return
+  }
+
+  const { token, password } = parsed.data
+
+  const user = await (prisma as any).user.findFirst({
+    where: { password_reset_token: token },
+  })
+
+  if (!user) {
+    err(res, 'INVALID_TOKEN', 'Reset link is invalid or has already been used.', 400)
+    return
+  }
+
+  if (user.password_reset_token_expires_at && new Date() > new Date(user.password_reset_token_expires_at)) {
+    err(res, 'TOKEN_EXPIRED', 'Reset link has expired. Please request a new one.', 400)
+    return
+  }
+
+  const password_hash = await hashPassword(password)
+
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data: {
+      password_hash,
+      password_reset_token:            null,
+      password_reset_token_expires_at: null,
+      failed_login_attempts:           0,
+      locked_until:                    null,
+    },
+  })
+
+  ok(res, { reset: true })
 })
 
 // ─── POST /auth/refresh ───────────────────────────────────────────────────────

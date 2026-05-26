@@ -92,6 +92,8 @@ model User {
   email_verified                Boolean   @default(false)
   verification_token             String?
   verification_token_expires_at  DateTime?
+  password_reset_token             String?
+  password_reset_token_expires_at  DateTime?
   failed_login_attempts  Int            @default(0)         // §11.1 brute-force protection
   locked_until           DateTime?                          // lockout after 5 failed attempts
   first_login_at         DateTime?                          // set once on first successful login

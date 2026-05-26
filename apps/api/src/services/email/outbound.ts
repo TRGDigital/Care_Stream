@@ -158,6 +158,54 @@ export async function sendVerificationEmail(to: string, name: string, verificati
   })
 }
 
+// ─── Password reset ───────────────────────────────────────────────────────────
+
+export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<void> {
+  ensureInitialised()
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping password reset email')
+    return
+  }
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = name.split(' ')[0] ?? name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      We received a request to reset the password for your CareStreamAI account.
+      Click the button below to choose a new password.
+    </p>
+
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${resetUrl}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        Reset my password
+      </a>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+      This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email — your password will not change.
+    </p>
+
+    <p style="color:#9ca3af;font-size:12px;margin:0">
+      If the button above does not work, copy and paste this link into your browser:<br>
+      <span style="color:${PURPLE}">${resetUrl}</span>
+    </p>
+
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to,
+    from,
+    subject: 'Reset your CareStreamAI password',
+    html,
+  })
+}
+
 // ─── Staff welcome / credentials email ───────────────────────────────────────
 
 export interface SendWelcomeEmailOptions {

@@ -28,6 +28,9 @@ import { apiLimiter } from './middleware/rateLimiter'
 const app = express()
 const PORT = process.env.PORT || 4000
 
+// Required for express-rate-limit and correct IP detection behind Vercel's proxy
+app.set('trust proxy', 1)
+
 app.use(helmet())
 const allowedOrigins = (process.env.WEB_URL ?? '')
   .split(',')

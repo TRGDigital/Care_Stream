@@ -92,7 +92,7 @@ function VerifyEmailContent() {
         This link is invalid or has already been used. Try requesting a new verification email.
       </p>
       <Link href="/check-email">
-        <Button variant="outline" className="w-full">Request a new link</Button>
+        <Button variant="secondary" className="w-full">Request a new link</Button>
       </Link>
       <p className="mt-4 text-sm text-neutral-mid">
         <Link href="/login" className="font-medium text-teal hover:underline">Back to sign in</Link>

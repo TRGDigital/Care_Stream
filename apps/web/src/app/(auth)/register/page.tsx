@@ -22,6 +22,7 @@ export default function RegisterPage() {
   })
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   function update(key: FormKey) {
@@ -47,7 +48,8 @@ export default function RegisterPage() {
       return
     }
 
-    router.push(`/check-email?email=${encodeURIComponent(form.email)}`)
+    setSuccess(true)
+    setTimeout(() => router.push(`/check-email?email=${encodeURIComponent(form.email)}`), 1500)
   }
 
   return (
@@ -73,8 +75,13 @@ export default function RegisterPage() {
           </div>
         ))}
         {error && <p className="text-sm text-status-error">{error}</p>}
-        <Button type="submit" className="w-full" size="lg" disabled={loading}>
-          {loading ? 'Creating account…' : 'Create account'}
+        {success && (
+          <p className="rounded-md bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+            Account created! We&apos;ve sent a verification email — check your inbox.
+          </p>
+        )}
+        <Button type="submit" className="w-full" size="lg" disabled={loading || success}>
+          {loading ? 'Creating account…' : success ? 'Account created!' : 'Create account'}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-neutral-mid">

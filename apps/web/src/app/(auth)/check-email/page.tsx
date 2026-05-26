@@ -56,7 +56,7 @@ function CheckEmailContent() {
       ) : (
         <>
           <p className="mb-3 text-sm text-neutral-mid">Didn&apos;t receive it?</p>
-          <Button variant="outline" onClick={handleResend} disabled={loading} className="w-full">
+          <Button variant="secondary" onClick={handleResend} disabled={loading} className="w-full">
             {loading ? 'Sending…' : 'Resend verification email'}
           </Button>
         </>

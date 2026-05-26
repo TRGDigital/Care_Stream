@@ -28,7 +28,7 @@ function ensureInitialised(): void {
 function emailHeader(): string {
   return `
   <div style="background:linear-gradient(135deg,#1A0830 0%,#3D1460 40%,#9B52B5 100%);padding:28px 32px;border-radius:10px 10px 0 0;text-align:center">
-    <img src="${LOGO_URL}" alt="CareStreamAI" height="40" style="display:inline-block;height:40px;max-width:200px">
+    <img src="${LOGO_URL}" alt="CareStreamAI" height="64" style="display:inline-block;height:64px;max-width:260px">
   </div>`
 }
 

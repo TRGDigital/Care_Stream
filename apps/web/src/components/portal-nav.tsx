@@ -24,8 +24,8 @@ export function PortalNav({ userName, userRole }: Props) {
 
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <Link href="/chat" className="text-lg font-bold text-teal">
-        CareStreamAI
+      <Link href="/chat">
+        <img src="/logo-color.png" alt="CareStreamAI" className="h-8 w-auto" />
       </Link>
       <div className="flex items-center gap-5">
         <Link href="/chat" className="text-sm font-medium text-neutral-mid hover:text-teal">

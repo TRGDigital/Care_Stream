@@ -3,9 +3,9 @@ import IORedis from 'ioredis'
 import type { DocumentCategory } from '../types'
 
 // §13.1 — BullMQ + Redis: async document processing so large uploads never block the API
-// When S3_BUCKET is not set (local dev), ingestion runs inline — no Redis required.
+// When REDIS_URL is not set (Vercel / local dev), ingestion runs inline — awaited before response.
 
-const USE_INLINE = !process.env.S3_BUCKET
+const USE_INLINE = !process.env.REDIS_URL
 
 let _redis: IORedis | null = null
 let _queue: Queue<IngestionJobData> | null = null
@@ -49,10 +49,9 @@ export interface IngestionJobData {
 
 export async function enqueueIngestion(data: IngestionJobData): Promise<void> {
   if (USE_INLINE) {
-    // Local dev: no Redis — import lazily to avoid circular dep, run async after response
-    import('../services/rag/ingestion').then(({ ingestDocument }) => {
-      ingestDocument(data).catch(e => console.error('[inline-ingest] failed:', e))
-    })
+    // No Redis (Vercel / local dev) — run synchronously so the function stays alive
+    const { ingestDocument } = await import('../services/rag/ingestion')
+    await ingestDocument(data)
     return
   }
   await getQueue().add('ingest', data)

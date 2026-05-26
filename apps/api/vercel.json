@@ -8,5 +8,10 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/src/app.ts" }
-  ]
+  ],
+  "functions": {
+    "src/app.ts": {
+      "maxDuration": 60
+    }
+  }
 }

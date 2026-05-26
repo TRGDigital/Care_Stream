@@ -3,6 +3,8 @@ import { requireAuth, requireAdmin } from '../middleware/auth'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import Anthropic from '@anthropic-ai/sdk'
+import { notifyUsers } from '../lib/notify'
+import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
@@ -143,6 +145,25 @@ onboardingRouter.post('/flows/:id/enroll', requireAdmin, async (req, res) => {
       )
     )
     res.json({ success: true, data: { enrolled: created.length } })
+
+    const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+    notifyUsers(tenantId, 'onboarding_updates', user_ids as string[], (email, name) =>
+      sendOnboardingUpdateEmail({
+        to:       email,
+        name,
+        orgName:  tenant?.name ?? '',
+        subject:  `You have been enrolled on an onboarding flow — ${tenant?.name ?? 'CareStreamAI'}`,
+        bodyHtml: `
+          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+            You have been enrolled on the <strong>${flow.name}</strong> induction flow${due_date ? ` with a due date of <strong>${new Date(due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>` : ''}.
+          </p>
+          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+            Log in to the portal to get started and complete your induction steps.
+          </p>`,
+        portalUrl,
+      })
+    ).catch(e => console.error('[onboarding/enroll] Notify error:', e))
   } catch (e: any) {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
   }

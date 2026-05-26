@@ -6,6 +6,8 @@ import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage } from '../services/storage/s3'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
+import { notifyAdmin } from '../lib/notify'
+import { sendTrainingUpdateEmail } from '../services/email/outbound'
 
 export const trainingRouter = Router()
 
@@ -92,7 +94,22 @@ trainingRouter.post('/enroll', async (req: Request, res: Response) => {
     }
     ok(res, { enrolled: created })
 
-    // Fire-and-forget: send first question immediately when question_trigger = 'auto'
+    // Notify admin and send proactive questions (both fire-and-forget)
+    if (created > 0) {
+      const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+      notifyAdmin(tenantId, 'training_updates', (email, name) =>
+        sendTrainingUpdateEmail({
+          to: email, name, orgName: tenant?.name ?? '',
+          subject: `Training assigned — ${user_ids.length} staff member${user_ids.length > 1 ? 's' : ''} enrolled`,
+          bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+            <strong>${created}</strong> training module assignment${created > 1 ? 's' : ''} have been created for
+            <strong>${user_ids.length}</strong> staff member${user_ids.length > 1 ? 's' : ''} across
+            <strong>${module_ids.length}</strong> module${module_ids.length > 1 ? 's' : ''}.
+            Staff will be contacted via their configured channel to complete their training.
+          </p>`,
+        })
+      ).catch(e => console.error('[training/enroll] Notify error:', e))
+    }
     sendProactiveTrainingQuestions(tenantId, user_ids, module_ids).catch(e =>
       console.error('[training/enroll] Proactive send error:', e)
     )

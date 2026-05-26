@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
+import { notifyUsers } from '../lib/notify'
+import { sendCqcPrepEmail } from '../services/email/outbound'
 
 export const cqcQuestionsRouter = Router()
 
@@ -307,6 +309,14 @@ Original: ${q.question}`,
     })
 
     ok(res, { delivered: deliveries.count })
+
+    if (deliveries.count > 0) {
+      const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+      const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+      notifyUsers(tenantId, 'cqc_staff_prep', user_ids, (email, name) =>
+        sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
+      ).catch(e => console.error('[cqc/deliver] Notify error:', e))
+    }
   } catch (e: any) {
     err(res, 'DELIVER_FAILED', e.message, 500)
   }

@@ -3,6 +3,8 @@ import { prisma } from '../db/client'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
+import { notifyAdmin } from '../lib/notify'
+import { sendAuditUpdateEmail } from '../services/email/outbound'
 
 export const auditsRouter = Router()
 
@@ -1223,6 +1225,24 @@ auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: 
   })
 
   ok(res, { run: completed, recommendations })
+
+  const orgName = run.tenant?.name ?? ''
+  notifyAdmin(run.tenant_id ?? tenantId, 'audit_updates', (email, name) =>
+    sendAuditUpdateEmail({
+      to:       email,
+      name,
+      orgName,
+      subject:  `Audit completed — ${run.template.name}`,
+      bodyHtml: `
+        <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+          The <strong>${run.template.name}</strong> audit for <strong>${new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</strong>
+          has been completed and AI recommendations have been generated.
+        </p>
+        <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+          Log in to your admin dashboard to view the full report and recommendations.
+        </p>`,
+    })
+  ).catch(e => console.error('[audits/complete] Notify error:', e))
 })
 
 // ─── GET /audits/runs/:id/report ──────────────────────────────────────────────

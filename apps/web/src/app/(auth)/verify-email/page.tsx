@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -11,25 +11,42 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'expired' | 'error'>('loading')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'already' | 'expired' | 'error'>('idle')
 
-  useEffect(() => {
+  async function handleVerify() {
     if (!token) { setStatus('error'); return }
+    setStatus('loading')
+    try {
+      const res  = await fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`)
+      const body = await res.json()
+      if (!body.success) {
+        setStatus(body?.error?.code === 'TOKEN_EXPIRED' ? 'expired' : 'error')
+        return
+      }
+      setStatus(body.data?.already_verified ? 'already' : 'success')
+    } catch {
+      setStatus('error')
+    }
+  }
 
-    fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`)
-      .then(r => r.json())
-      .then(body => {
-        if (!body.success) {
-          const code = body?.error?.code
-          if (code === 'TOKEN_EXPIRED') setStatus('expired')
-          else setStatus('error')
-          return
-        }
-        if (body.data?.already_verified) setStatus('already')
-        else setStatus('success')
-      })
-      .catch(() => setStatus('error'))
-  }, [token])
+  if (status === 'idle') {
+    return (
+      <div className="text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-teal/10">
+          <svg className="h-8 w-8 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Verify your email</h1>
+        <p className="mb-8 text-sm text-neutral-mid">
+          Click the button below to confirm your email address and activate your account.
+        </p>
+        <Button className="w-full" size="lg" onClick={handleVerify}>
+          Confirm my email address
+        </Button>
+      </div>
+    )
+  }
 
   if (status === 'loading') {
     return (

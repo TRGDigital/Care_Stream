@@ -20,6 +20,10 @@ const EMAIL_PREF_DEFAULTS: Record<string, boolean> = {
   plan_usage_warnings:     true,
   policy_review_reminders: true,
   staff_engagement_alerts: true,
+  training_updates:        true,
+  audit_updates:           true,
+  cqc_staff_prep:          true,
+  onboarding_updates:      true,
   monthly_invoice:         false,
   trg_product_updates:     false,
 }

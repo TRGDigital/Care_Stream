@@ -206,6 +206,131 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
   })
 }
 
+// ─── Training update notification ────────────────────────────────────────────
+
+export interface SendTrainingUpdateOptions {
+  to:       string
+  name:     string
+  orgName:  string
+  subject:  string
+  bodyHtml: string
+}
+
+export async function sendTrainingUpdateEmail(opts: SendTrainingUpdateOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    ${opts.bodyHtml}
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
+}
+
+// ─── Audit update notification ────────────────────────────────────────────────
+
+export interface SendAuditUpdateOptions {
+  to:       string
+  name:     string
+  orgName:  string
+  subject:  string
+  bodyHtml: string
+}
+
+export async function sendAuditUpdateEmail(opts: SendAuditUpdateOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    ${opts.bodyHtml}
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
+}
+
+// ─── CQC staff prep notification ─────────────────────────────────────────────
+
+export interface SendCqcPrepOptions {
+  to:           string
+  name:         string
+  orgName:      string
+  questionCount: number
+  portalUrl:    string
+}
+
+export async function sendCqcPrepEmail(opts: SendCqcPrepOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      You have <strong>${opts.questionCount} new CQC preparation ${opts.questionCount === 1 ? 'question' : 'questions'}</strong> assigned to you.
+      Take a few minutes to review and prepare your answers before the next inspection.
+    </p>
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${opts.portalUrl}/cqc"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        View my CQC questions
+      </a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({
+    to:   opts.to,
+    from,
+    subject: `You have ${opts.questionCount} new CQC prep ${opts.questionCount === 1 ? 'question' : 'questions'} — ${opts.orgName}`,
+    html,
+  })
+}
+
+// ─── Onboarding notification ──────────────────────────────────────────────────
+
+export interface SendOnboardingUpdateOptions {
+  to:        string
+  name:      string
+  orgName:   string
+  subject:   string
+  bodyHtml:  string
+  portalUrl: string
+}
+
+export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    ${opts.bodyHtml}
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${opts.portalUrl}/onboarding"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        View onboarding progress
+      </a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
+}
+
 // ─── Staff welcome / credentials email ───────────────────────────────────────
 
 export interface SendWelcomeEmailOptions {

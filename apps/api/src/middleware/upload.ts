@@ -24,6 +24,40 @@ const multerInstance = multer({
   },
 })
 
+// ─── Image upload (blog feature images) ──────────────────────────────────────
+
+const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+const ALLOWED_IMAGE_EXT  = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif'])
+const MAX_IMAGE_SIZE      = 10 * 1024 * 1024  // 10 MB
+
+const imageMulter = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_IMAGE_SIZE },
+  fileFilter: (_req, file, cb) => {
+    const ext = '.' + (file.originalname.split('.').pop()?.toLowerCase() ?? '')
+    if (!ALLOWED_IMAGE_MIME.has(file.mimetype) || !ALLOWED_IMAGE_EXT.has(ext)) {
+      cb(new Error('INVALID_IMAGE_TYPE'))
+      return
+    }
+    cb(null, true)
+  },
+})
+
+export function imageUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
+  imageMulter.single('image')(req, res, (multerErr) => {
+    if (!multerErr) { next(); return }
+    if (multerErr.message === 'INVALID_IMAGE_TYPE') {
+      err(res, 'INVALID_IMAGE_TYPE', 'Only JPG, PNG, WebP, and GIF images are accepted.')
+      return
+    }
+    if (multerErr.code === 'LIMIT_FILE_SIZE') {
+      err(res, 'FILE_TOO_LARGE', 'Image must be under 10 MB.', 413)
+      return
+    }
+    err(res, 'UPLOAD_ERROR', 'Image upload failed. Please try again.', 500)
+  })
+}
+
 function handleMulterError(multerErr: any, res: Response, next: NextFunction): void {
   if (!multerErr) { next(); return }
 

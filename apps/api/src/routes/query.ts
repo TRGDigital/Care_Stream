@@ -5,6 +5,7 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { runQueryPipeline } from '../services/rag/query'
 import { ok, err } from '../lib/response'
+import { checkQueryLimit, PlanLimitError } from '../lib/plan-limits'
 
 export const queryRouter = Router()
 
@@ -14,7 +15,7 @@ const QuerySchema = z.object({
   query_text:           z.string().min(1).max(2000),
   policy_id:            z.string().uuid().optional(),
   staff_name:           z.string().max(100).optional(),
-  document_category:    z.enum(['internal_policy', 'staff_handbook']).optional(),
+  document_category:    z.enum(['internal_policy', 'staff_handbook', 'training_module', 'cqc_report']).optional(),
   chat_session_id:      z.string().uuid().optional(),
   conversation_history: z.array(z.object({
     role:    z.enum(['user', 'assistant']),
@@ -34,6 +35,21 @@ queryRouter.post('/', async (req: Request, res: Response) => {
   const { query_text, policy_id, staff_name, document_category, chat_session_id, conversation_history } = parsed.data
   const tenantId = getTenantId()
 
+  try {
+    await checkQueryLimit(tenantId)
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      err(res, e.code, e.message, e.code === 'SUBSCRIPTION_CANCELLED' ? 403 : 429)
+      return
+    }
+    throw e
+  }
+
+  const tenantSettings = await (prisma as any).tenant.findUnique({
+    where:  { id: tenantId },
+    select: { response_style: true },
+  })
+
   let result
   try {
     result = await runQueryPipeline({
@@ -46,6 +62,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
       selectedCategory:    document_category,
       chatSessionId:       chat_session_id,
       conversationHistory: conversation_history,
+      responseStyle:       (tenantSettings?.response_style as 'standard' | 'concise') ?? 'standard',
     })
   } catch (e) {
     console.error('[route/query] Pipeline error:', e)
@@ -54,6 +71,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
   }
 
   ok(res, {
+    queryId:            result.queryId,
     responseHtml:       result.responseHtml,
     intentType:         result.intentType,
     citations:          result.citations,
@@ -62,6 +80,28 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     responseTimeMs:     result.responseTimeMs,
     suggestedQuestions: result.suggestedQuestions,
   })
+})
+
+// ─── POST /query/:id/feedback ────────────────────────────────────────────────
+// Staff rates a response (chat channel) — authenticated
+
+queryRouter.post('/:id/feedback', async (req: Request, res: Response) => {
+  const { rating } = req.body
+  if (rating !== 'positive' && rating !== 'negative') {
+    err(res, 'VALIDATION_ERROR', 'rating must be "positive" or "negative"')
+    return
+  }
+
+  const tenantId = getTenantId()
+
+  await prisma.$executeRaw`
+    UPDATE queries
+    SET feedback = ${rating}
+    WHERE id = ${req.params.id}
+    AND tenant_id = ${tenantId}
+  `
+
+  ok(res, { saved: true })
 })
 
 // ─── PATCH /query/session/:sessionId/delete ──────────────────────────────────

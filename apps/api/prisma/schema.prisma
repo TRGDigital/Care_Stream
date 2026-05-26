@@ -417,6 +417,28 @@ model BlogPost {
   @@map("blog_posts")
 }
 
+// ─── Site Pages ───────────────────────────────────────────────────────────────
+
+model SitePage {
+  id             String   @id @default(uuid())
+  path           String   @unique                          // e.g. /about
+  title          String   @default("")
+  description    String?
+  og_title       String?
+  og_description String?
+  og_image_url   String?
+  is_footer_page Boolean  @default(false)
+  footer_group   String?                                   // 'Product' | 'Trust & Legal' | 'Company' | 'Get Started'
+  footer_label   String?
+  footer_sort    Int      @default(0)
+  page_type      String   @default("marketing")            // 'marketing' | 'content'
+  status         String   @default("published")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("site_pages")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

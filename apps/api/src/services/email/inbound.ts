@@ -13,6 +13,9 @@
 import { prisma } from '../../db/client'
 import { runQueryPipeline } from '../rag/query'
 import { sendEmailReply, sendRejectionEmail } from './outbound'
+import { checkQueryLimit, PlanLimitError } from '../../lib/plan-limits'
+import { handleTrainingConversation } from '../training/conversation'
+import { classifyIntent, parseChoiceReply, EMAIL_CLARIFICATION_HTML } from '../intent/classifier'
 import type { EmailMessage } from '../../types'
 
 // ─── Payload type (SendGrid Inbound Parse fields) ─────────────────────────────
@@ -110,7 +113,7 @@ export async function handleInboundEmail(payload: InboundParsePayload): Promise<
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { slug },
-    select: { id: true, email_allowlist: true },
+    select: { id: true, email_allowlist: true, response_style: true },
   })
   if (!tenant) {
     console.warn('[email/inbound] No tenant found for slug:', slug)
@@ -183,7 +186,103 @@ export async function handleInboundEmail(payload: InboundParsePayload): Promise<
     }))
 
   // Greeting name: registered user's first name, or the local-part of the email
-  const staffName = user?.name ?? senderEmail.split('@')[0]
+  const staffName  = user?.name ?? senderEmail.split('@')[0]
+  const firstName  = staffName.split(' ')[0] ?? staffName
+
+  // 6.5 Training conversation — intercept A/B/C/D answers; attach pending question to normal replies
+  const trainingSend = async (html: string) => {
+    await sendEmailReply({
+      to:             user?.email ?? senderEmail,
+      subject:        session.subject as string,
+      htmlBody:       html,
+      threadId:       session.thread_id as string,
+      citations:      [],
+      staffFirstName: firstName,
+    })
+  }
+  const trainingResult = await handleTrainingConversation({
+    tenantId:     tenant.id,
+    userId:       user?.id ?? null,
+    incomingText: cleanBody,
+    channel:      'email',
+    send:         trainingSend,
+  })
+  if (trainingResult.handled) {
+    console.log(`[email/inbound] Handled as training answer: sender=${senderEmail}`)
+    return
+  }
+
+  // ─── Intent classification ────────────────────────────────────────────────
+  // Resolve which pipeline to run. Persisted on the session so subsequent
+  // turns in the same thread don't re-classify.
+
+  let detectedCategory = session.detected_category as string | null
+
+  if (!detectedCategory) {
+    if (session.awaiting_clarification) {
+      // User is replying to our "1/2/3" clarification message
+      const choice = parseChoiceReply(cleanBody)
+      if (choice) {
+        detectedCategory = choice
+        await (prisma as any).emailSession.update({
+          where: { id: session.id },
+          data:  { detected_category: choice, awaiting_clarification: false },
+        })
+      } else {
+        // Still unclear — re-send clarification and wait
+        await sendEmailReply({
+          to:             user?.email ?? senderEmail,
+          subject:        session.subject as string,
+          htmlBody:       EMAIL_CLARIFICATION_HTML,
+          threadId:       session.thread_id as string,
+          citations:      [],
+          staffFirstName: firstName,
+        })
+        console.log(`[email/inbound] Re-sent clarification to ${senderEmail}`)
+        return
+      }
+    } else {
+      // First message — classify from subject + body
+      const intent = await classifyIntent(cleanBody, payload.subject)
+      if (intent === 'unclear') {
+        // Ask the user to clarify, mark session as waiting
+        await (prisma as any).emailSession.update({
+          where: { id: session.id },
+          data:  { awaiting_clarification: true },
+        })
+        await sendEmailReply({
+          to:             user?.email ?? senderEmail,
+          subject:        session.subject as string,
+          htmlBody:       EMAIL_CLARIFICATION_HTML,
+          threadId:       session.thread_id as string,
+          citations:      [],
+          staffFirstName: firstName,
+        })
+        console.log(`[email/inbound] Intent unclear — sent clarification to ${senderEmail}`)
+        return
+      }
+      detectedCategory = intent
+      await (prisma as any).emailSession.update({
+        where: { id: session.id },
+        data:  { detected_category: intent },
+      })
+    }
+  }
+
+  // Check monthly query limit before running the pipeline
+  try {
+    await checkQueryLimit(tenant.id)
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      await sendRejectionEmail(
+        senderEmail,
+        'Monthly query limit reached',
+      ).catch(() => {})
+      console.warn(`[email/inbound] Query limit reached for tenant=${tenant.id}`)
+      return
+    }
+    throw e
+  }
 
   // Run RAG pipeline with full conversation history (§8.2)
   const result = await runQueryPipeline({
@@ -192,7 +291,9 @@ export async function handleInboundEmail(payload: InboundParsePayload): Promise<
     userId:              user?.id ?? null,
     staffName,
     channel:             'email',
+    selectedCategory:    (detectedCategory as any) ?? undefined,
     conversationHistory: priorMessages,
+    responseStyle:       (tenant.response_style as 'standard' | 'concise') ?? 'standard',
   })
 
   // 7. Append both turns to the session
@@ -224,8 +325,6 @@ export async function handleInboundEmail(payload: InboundParsePayload): Promise<
   })
 
   // 8. Send reply
-  const firstName = staffName.split(' ')[0] ?? staffName
-
   await sendEmailReply({
     to:             user?.email ?? senderEmail,
     subject:        session.subject as string,
@@ -233,6 +332,7 @@ export async function handleInboundEmail(payload: InboundParsePayload): Promise<
     threadId:       session.thread_id as string,
     citations:      result.citations,
     staffFirstName: firstName,
+    queryId:        result.queryId ?? undefined,
   })
 
   console.log(

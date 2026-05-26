@@ -10,6 +10,7 @@ import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
+import { checkPolicyLimit, remainingPolicySlots, PlanLimitError } from '../lib/plan-limits'
 
 export const policiesRouter = Router()
 
@@ -79,6 +80,16 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
   const { name, document_category, tags: rawTags, review_interval_days } = parsed.data
   const tenantId = req.user!.tenant_id
   const policyId = uuidv4()
+
+  try {
+    await checkPolicyLimit(tenantId, document_category)
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      err(res, e.code, e.message, 403)
+      return
+    }
+    throw e
+  }
 
   let policy: any
   await tenantContext.run({ tenantId }, async () => {
@@ -240,6 +251,26 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   // tenant_id from the JWT payload directly and re-enter the context explicitly.
   const tenantId = req.user!.tenant_id
   const category = req.body.document_category === 'staff_handbook' ? 'staff_handbook' : 'internal_policy'
+
+  try {
+    const slots = await remainingPolicySlots(tenantId, category)
+    if (slots !== null && files.length > slots) {
+      const label = category === 'staff_handbook' ? 'handbooks' : 'policies'
+      err(res, 'POLICY_LIMIT_REACHED',
+        slots === 0
+          ? `Your plan does not have capacity for any more ${label}. Archive existing ${label} or upgrade your plan.`
+          : `Your plan only has capacity for ${slots} more ${label}, but you are uploading ${files.length}. Archive existing ${label} or upgrade your plan.`,
+        403,
+      )
+      return
+    }
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      err(res, e.code, e.message, 403)
+      return
+    }
+    throw e
+  }
 
   let nameOverrides: string[] = []
   try {

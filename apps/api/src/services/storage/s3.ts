@@ -7,6 +7,7 @@ import {
   HeadObjectCommand,
 } from '@aws-sdk/client-s3'
 import type { Readable } from 'stream'
+import { randomUUID } from 'crypto'
 import fs from 'fs'
 import path from 'path'
 
@@ -200,6 +201,35 @@ export async function archiveVersionToS3(params: {
   }))
 
   return destKey
+}
+
+// ─── Blog image upload ────────────────────────────────────────────────────────
+
+export async function uploadBlogImage(params: {
+  filename: string
+  buffer:   Buffer
+  mimeType: string
+}): Promise<string> {
+  const ext = params.filename.split('.').pop()?.toLowerCase() || 'jpg'
+  const key = `blog/images/${randomUUID()}.${ext}`
+
+  if (USE_LOCAL) {
+    localWrite(key, params.buffer)
+    const apiBase = process.env.API_URL ?? `http://localhost:${process.env.PORT ?? 4000}`
+    return `${apiBase}/uploads/${key}`
+  }
+
+  await getS3().send(new PutObjectCommand({
+    Bucket:      BUCKET,
+    Key:         key,
+    Body:        params.buffer,
+    ContentType: params.mimeType,
+    ACL:         'public-read' as any,
+  }))
+
+  const region  = process.env.AWS_REGION ?? 'eu-west-2'
+  const baseUrl = process.env.MEDIA_BASE_URL ?? `https://${BUCKET}.s3.${region}.amazonaws.com`
+  return `${baseUrl}/${key}`
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -3,14 +3,23 @@ import fs from 'fs'
 import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
+import { imageUploadMiddleware } from '../middleware/upload'
+import { uploadBlogImage } from '../services/storage/s3'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
+import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
+import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
 import { seedTenantKnowledge, seedAllTenants, seedCustomSeedToAllTenants } from '../services/knowledge/seeder'
+import { hashPassword } from '../services/auth/password'
+import { sendStaffWelcomeEmail } from '../services/email/outbound'
+import crypto from 'crypto'
+import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
+import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 
 export const adminRouter = Router()
 
@@ -96,38 +105,53 @@ adminRouter.get('/stats', async (_req: Request, res: Response) => {
 })
 
 // ─── GET /admin/tenants ───────────────────────────────────────────────────────
-// List all tenants with per-tenant stats.
+// List root tenants (parent_tenant_id IS NULL) with per-tenant stats + sub-tenant count.
 
 adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const tenants = await (prisma as any).tenant.findMany({
+    where:   { parent_tenant_id: null },
     orderBy: { created_at: 'desc' },
-    include: { plan: { select: { name: true } } },
+    include: {
+      plan: {
+        select: {
+          name:                         true,
+          monthly_query_limit:          true,
+          max_policies:                 true,
+          max_staff_users:              true,
+          max_handbooks:                true,
+          max_manual_knowledge_entries: true,
+          has_gap_detection:            true,
+        },
+      },
+    },
   })
 
-  // Fetch per-tenant stats in parallel
+  const now            = new Date()
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
   const withStats = await Promise.all(
     tenants.map(async (t: any) => {
-      const [policyCount, knowledgeCount, queryCount, userCount, queriesThisMonth] = await Promise.all([
-        (prisma as any).policy.count({
-          where: { tenant_id: t.id, status: 'active' },
-        }),
-        (prisma as any).knowledgeEntry.count({
-          where: { tenant_id: t.id },
-        }),
-        (prisma as any).queryRecord.count({
-          where: { tenant_id: t.id },
-        }),
-        (prisma as any).user.count({
-          where: { tenant_id: t.id },
-        }),
-        (prisma as any).queryRecord.count({
-          where: {
-            tenant_id:  t.id,
-            created_at: { gte: new Date(Date.now() - 30 * 86_400_000) },
-          },
-        }),
+      const [
+        policyCount, handbookCount, knowledgeCount, manualKnowledgeCount,
+        queryCount, activeUserCount, queriesThisMonth, subTenantCount,
+      ] = await Promise.all([
+        (prisma as any).policy.count({ where: { tenant_id: t.id, status: 'active', document_category: 'internal_policy' } }),
+        (prisma as any).policy.count({ where: { tenant_id: t.id, status: 'active', document_category: 'staff_handbook' } }),
+        (prisma as any).knowledgeEntry.count({ where: { tenant_id: t.id } }),
+        (prisma as any).knowledgeEntry.count({ where: { tenant_id: t.id, source_type: 'manual' } }),
+        (prisma as any).queryRecord.count({ where: { tenant_id: t.id } }),
+        (prisma as any).user.count({ where: { tenant_id: t.id, is_active: true } }),
+        (prisma as any).queryRecord.count({ where: { tenant_id: t.id, created_at: { gte: thisMonthStart } } }),
+        (prisma as any).tenant.count({ where: { parent_tenant_id: t.id } }),
       ])
-      return { ...t, stats: { policyCount, knowledgeCount, queryCount, userCount, queriesThisMonth } }
+      return {
+        ...t,
+        stats: {
+          policyCount, handbookCount, knowledgeCount, manualKnowledgeCount,
+          queryCount, activeUserCount, queriesThisMonth,
+        },
+        sub_tenant_count: subTenantCount,
+      }
     })
   )
 
@@ -147,7 +171,10 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     return
   }
 
-  const [policies, recentQueries, knowledgeCount, userCount] = await Promise.all([
+  const now            = new Date()
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const [policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount] = await Promise.all([
     (prisma as any).policy.findMany({
       where:   { tenant_id: req.params.id },
       orderBy: { created_at: 'desc' },
@@ -166,14 +193,175 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
       },
     }),
     (prisma as any).knowledgeEntry.count({ where: { tenant_id: req.params.id } }),
-    (prisma as any).user.count({ where: { tenant_id: req.params.id } }),
+    (prisma as any).knowledgeEntry.count({ where: { tenant_id: req.params.id, source_type: 'manual' } }),
+    (prisma as any).user.count({ where: { tenant_id: req.params.id, is_active: true } }),
+    (prisma as any).queryRecord.count({ where: { tenant_id: req.params.id, created_at: { gte: thisMonthStart } } }),
+    (prisma as any).policy.count({ where: { tenant_id: req.params.id, status: 'active', document_category: 'staff_handbook' } }),
   ])
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, userCount })
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount })
+})
+
+// ─── GET /admin/tenants/:id/staff ────────────────────────────────────────────
+// Full staff list for a tenant, including login tracking fields.
+
+adminRouter.get('/tenants/:id/staff', async (req: Request, res: Response) => {
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: req.params.id }, select: { id: true },
+  })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  const users = await (prisma as any).user.findMany({
+    where:   { tenant_id: req.params.id },
+    select:  {
+      id: true, name: true, email: true, role: true, job_role: true,
+      is_active: true, created_at: true, first_login_at: true, last_login_at: true,
+    },
+    orderBy: { created_at: 'asc' },
+  })
+
+  ok(res, { users, total: users.length })
+})
+
+// ─── POST /admin/tenants/:id/staff/:userId/reset-password ────────────────────
+
+adminRouter.post('/tenants/:id/staff/:userId/reset-password', async (req: Request, res: Response) => {
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: req.params.userId },
+    select: { id: true, name: true, email: true, tenant_id: true },
+  })
+  if (!user || user.tenant_id !== req.params.id) {
+    err(res, 'NOT_FOUND', 'User not found.', 404); return
+  }
+
+  const tempPassword = crypto.randomBytes(10).toString('base64url')
+  const passwordHash = await hashPassword(tempPassword)
+
+  await (prisma as any).user.update({
+    where: { id: req.params.userId },
+    data:  { password_hash: passwordHash, failed_login_attempts: 0, locked_until: null },
+  })
+
+  ok(res, { user: { id: user.id, name: user.name, email: user.email }, temp_password: tempPassword })
+})
+
+// ─── POST /admin/tenants/:id/staff/:userId/send-credentials ──────────────────
+
+adminRouter.post('/tenants/:id/staff/:userId/send-credentials', async (req: Request, res: Response) => {
+  const { temp_password } = req.body
+  if (!temp_password || typeof temp_password !== 'string') {
+    err(res, 'VALIDATION_ERROR', 'temp_password is required.', 400); return
+  }
+
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: req.params.userId },
+    select: { id: true, name: true, email: true, tenant_id: true },
+  })
+  if (!user || user.tenant_id !== req.params.id) {
+    err(res, 'NOT_FOUND', 'User not found.', 404); return
+  }
+
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: req.params.id }, select: { name: true },
+  })
+
+  const portalUrl = process.env.FRONTEND_URL ?? 'https://app.carestreamai.co.uk'
+
+  try {
+    await sendStaffWelcomeEmail({
+      to:           user.email,
+      staffName:    user.name,
+      orgName:      tenant?.name ?? 'your organisation',
+      tempPassword: temp_password,
+      portalUrl,
+    })
+    ok(res, { sent: true })
+  } catch (e: any) {
+    err(res, 'EMAIL_FAILED', e.message ?? 'Failed to send email.', 500)
+  }
+})
+
+// ─── POST /admin/tenants/:id/staff/:userId/deactivate ────────────────────────
+
+adminRouter.post('/tenants/:id/staff/:userId/deactivate', async (req: Request, res: Response) => {
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: req.params.userId },
+    select: { id: true, tenant_id: true },
+  })
+  if (!user || user.tenant_id !== req.params.id) {
+    err(res, 'NOT_FOUND', 'User not found.', 404); return
+  }
+  await (prisma as any).user.update({ where: { id: req.params.userId }, data: { is_active: false } })
+  ok(res, { deactivated: true })
+})
+
+// ─── POST /admin/tenants/:id/staff/:userId/reactivate ────────────────────────
+
+adminRouter.post('/tenants/:id/staff/:userId/reactivate', async (req: Request, res: Response) => {
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: req.params.userId },
+    select: { id: true, tenant_id: true },
+  })
+  if (!user || user.tenant_id !== req.params.id) {
+    err(res, 'NOT_FOUND', 'User not found.', 404); return
+  }
+  await (prisma as any).user.update({ where: { id: req.params.userId }, data: { is_active: true } })
+  ok(res, { reactivated: true })
 })
 
 // ─── GET /admin/tenants/:id/sessions/:sessionId ──────────────────────────────
 // All messages for one chat session — used by the platform owner modal.
+
+// ─── GET /admin/tenants/:id/sub-tenants ──────────────────────────────────────
+
+adminRouter.get('/tenants/:id/sub-tenants', async (req: Request, res: Response) => {
+  const parent = await (prisma as any).tenant.findUnique({
+    where: { id: req.params.id }, select: { id: true },
+  })
+  if (!parent) { err(res, 'NOT_FOUND', 'Tenant not found.', 404); return }
+
+  const subTenants = await (prisma as any).tenant.findMany({
+    where:   { parent_tenant_id: req.params.id },
+    orderBy: { created_at: 'asc' },
+    select:  { id: true, name: true, slug: true, subscription_status: true, created_at: true },
+  })
+
+  ok(res, { sub_tenants: subTenants, total: subTenants.length })
+})
+
+// ─── POST /admin/tenants/:id/sub-tenants ─────────────────────────────────────
+
+adminRouter.post('/tenants/:id/sub-tenants', async (req: Request, res: Response) => {
+  const { name } = req.body ?? {}
+  if (!name?.trim()) { err(res, 'VALIDATION_ERROR', 'Site name is required.'); return }
+
+  const parent = await (prisma as any).tenant.findUnique({
+    where: { id: req.params.id }, select: { id: true, parent_tenant_id: true },
+  })
+  if (!parent) { err(res, 'NOT_FOUND', 'Parent tenant not found.', 404); return }
+  if (parent.parent_tenant_id) {
+    err(res, 'VALIDATION_ERROR', 'Cannot add a sub-tenant under another sub-tenant.', 400); return
+  }
+
+  const base   = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  let slug     = `${base}-${Date.now().toString(36)}`
+  while (await (prisma as any).tenant.findUnique({ where: { slug } })) {
+    slug = `${base}-${Date.now().toString(36)}`
+  }
+
+  const newTenant = await (prisma as any).tenant.create({
+    data: {
+      name:                name.trim(),
+      slug,
+      email_domain:        slug,
+      parent_tenant_id:    req.params.id,
+      subscription_status: 'active',
+      branding_signoff:    `The ${name.trim()} Team`,
+    },
+  })
+
+  ok(res, { tenant: { id: newTenant.id, name: newTenant.name, slug: newTenant.slug } })
+})
 
 adminRouter.get('/tenants/:id/sessions/:sessionId', async (req: Request, res: Response) => {
   const { id: tenantId, sessionId } = req.params
@@ -367,6 +555,127 @@ adminRouter.get('/tenants/:id/analytics', async (req: Request, res: Response) =>
   })
 })
 
+// ─── GET /admin/cqc-prep/summary ─────────────────────────────────────────────
+// Platform-level CQC Staff Prep analytics — aggregated across all tenants.
+
+adminRouter.get('/cqc-prep/summary', requirePlatformAdmin, async (_req: Request, res: Response) => {
+  try {
+    const DOMAINS = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+
+    const deliveries = await (prisma as any).cqcStaffDelivery.findMany({
+      include: {
+        question: { select: { domain: true } },
+        tenant:   { select: { id: true, name: true } },
+      },
+    })
+
+    const evaluated = deliveries.filter((d: any) => d.status === 'evaluated')
+
+    // Overall
+    const avgScore = evaluated.length
+      ? Math.round(evaluated.reduce((s: number, d: any) => s + (d.score ?? 0), 0) / evaluated.length)
+      : null
+
+    // Per-domain
+    const by_domain = DOMAINS.map(domain => {
+      const done = evaluated.filter((d: any) => d.question.domain === domain)
+      return {
+        domain,
+        total_answered: done.length,
+        avg_score: done.length ? Math.round(done.reduce((s: number, d: any) => s + (d.score ?? 0), 0) / done.length) : null,
+      }
+    })
+
+    // Per-tenant
+    const tenantMap = new Map<string, { name: string; sent: number; answered: number; total_score: number }>()
+    for (const d of deliveries) {
+      const tid = d.tenant.id
+      if (!tenantMap.has(tid)) tenantMap.set(tid, { name: d.tenant.name, sent: 0, answered: 0, total_score: 0 })
+      const t = tenantMap.get(tid)!
+      t.sent++
+      if (d.status === 'evaluated') { t.answered++; t.total_score += d.score ?? 0 }
+    }
+    const by_tenant = Array.from(tenantMap.entries()).map(([tenant_id, t]) => ({
+      tenant_id,
+      name:           t.name,
+      total_sent:     t.sent,
+      total_answered: t.answered,
+      avg_score:      t.answered ? Math.round(t.total_score / t.answered) : null,
+    })).sort((a, b) => b.total_sent - a.total_sent)
+
+    ok(res, {
+      summary: {
+        total_sent:     deliveries.length,
+        total_answered: evaluated.length,
+        avg_score:      avgScore,
+        tenants_active: by_tenant.filter(t => t.total_sent > 0).length,
+      },
+      by_domain,
+      by_tenant,
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// ─── GET /admin/audits/summary ───────────────────────────────────────────────
+// Platform-level audit analytics — aggregated across all tenants.
+
+adminRouter.get('/audits/summary', requirePlatformAdmin, async (_req: Request, res: Response) => {
+  try {
+    const FREQS = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic'] as const
+
+    const runs = await (prisma as any).auditRun.findMany({
+      select: {
+        status:       true,
+        completed_at: true,
+        tenant:       { select: { id: true, name: true } },
+        template:     { select: { frequency: true } },
+      },
+    })
+
+    const completed   = runs.filter((r: any) => r.status === 'completed')
+    const inProgress  = runs.filter((r: any) => r.status !== 'completed')
+
+    // By frequency
+    const by_frequency = FREQS.map(freq => {
+      const c = completed.filter((r: any) => r.template?.frequency === freq)
+      const p = inProgress.filter((r: any) => r.template?.frequency === freq)
+      const last = c.reduce((best: string | null, r: any) => {
+        const ca = r.completed_at ? new Date(r.completed_at).toISOString() : null
+        return ca && (!best || ca > best) ? ca : best
+      }, null)
+      return { frequency: freq, completed: c.length, in_progress: p.length, last_completed: last }
+    })
+
+    // By tenant
+    const tenantMap = new Map<string, { name: string; completed: number; in_progress: number }>()
+    for (const r of runs) {
+      const tid = r.tenant?.id
+      if (!tid) continue
+      if (!tenantMap.has(tid)) tenantMap.set(tid, { name: r.tenant.name, completed: 0, in_progress: 0 })
+      const t = tenantMap.get(tid)!
+      if (r.status === 'completed') t.completed++; else t.in_progress++
+    }
+    const by_tenant = Array.from(tenantMap.entries())
+      .map(([tenant_id, t]) => ({ tenant_id, tenant_name: t.name, completed: t.completed, in_progress: t.in_progress }))
+      .sort((a, b) => b.completed - a.completed)
+
+    ok(res, {
+      summary: {
+        total:       runs.length,
+        completed:   completed.length,
+        in_progress: inProgress.length,
+        tenants_active: by_tenant.filter(t => t.completed + t.in_progress > 0).length,
+      },
+      by_frequency,
+      by_tenant,
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
 // ─── GET /admin/tenants/:id/analytics/cqc-report ─────────────────────────────
 // Full CQC report for one tenant — no plan restrictions for platform owner.
 
@@ -509,6 +818,131 @@ adminRouter.get('/tenants/:id/analytics/cqc-report', async (req: Request, res: R
     multilingual_session_count: multilingualSessionCount,
     knowledge_gaps:        knowledgeGaps,
   })
+})
+
+// ─── GET /admin/revenue ───────────────────────────────────────────────────────
+// Platform revenue summary derived from DB plan pricing.
+// MRR/ARR are calculated from active subscriptions × plan price — 100% accurate
+// against what's in the DB. Stripe-dependent fields (actual payment history,
+// daily/monthly series) are returned as empty stubs with clear comments so
+// they can be wired up during Stripe integration without restructuring the response.
+
+adminRouter.get('/revenue', async (_req: Request, res: Response) => {
+  const tenants = await (prisma as any).tenant.findMany({
+    select: {
+      id:                  true,
+      name:                true,
+      subscription_status: true,
+      stripe_customer_id:  true,
+      created_at:          true,
+      plan: {
+        select: {
+          name:               true,
+          price_monthly_pence: true,
+        },
+      },
+    },
+    orderBy: { created_at: 'desc' },
+  })
+
+  // Aggregate counts by status
+  const statusCounts: Record<string, number> = {}
+  for (const t of tenants) {
+    const s = t.subscription_status as string
+    statusCounts[s] = (statusCounts[s] ?? 0) + 1
+  }
+
+  // MRR = sum of plan prices for active tenants only
+  let mrrPence = 0
+  for (const t of tenants) {
+    if (t.subscription_status === 'active' && t.plan?.price_monthly_pence) {
+      mrrPence += t.plan.price_monthly_pence as number
+    }
+  }
+
+  // Plan breakdown: group active tenants by plan
+  const planMap = new Map<string, { plan_name: string; plan_price_pence: number; active_count: number; trialling_count: number }>()
+  for (const t of tenants) {
+    const key  = t.plan?.name ?? 'No plan'
+    const price = t.plan?.price_monthly_pence ?? 0
+    if (!planMap.has(key)) planMap.set(key, { plan_name: key, plan_price_pence: price, active_count: 0, trialling_count: 0 })
+    const entry = planMap.get(key)!
+    if (t.subscription_status === 'active')    entry.active_count++
+    if (t.subscription_status === 'trialling') entry.trialling_count++
+  }
+  const planBreakdown = [...planMap.values()]
+    .map(p => ({ ...p, mrr_pence: p.active_count * p.plan_price_pence }))
+    .sort((a, b) => b.mrr_pence - a.mrr_pence)
+
+  const clientList = tenants.map((t: any) => ({
+    id:                  t.id,
+    name:                t.name,
+    plan_name:           t.plan?.name ?? null,
+    plan_price_pence:    t.plan?.price_monthly_pence ?? null,
+    subscription_status: t.subscription_status,
+    stripe_customer_id:  t.stripe_customer_id,
+    created_at:          t.created_at,
+  }))
+
+  ok(res, {
+    summary: {
+      mrr_pence:        mrrPence,
+      arr_pence:        mrrPence * 12,
+      active_count:     statusCounts['active']    ?? 0,
+      trialling_count:  statusCounts['trialling'] ?? 0,
+      past_due_count:   statusCounts['past_due']  ?? 0,
+      cancelled_count:  statusCounts['cancelled'] ?? 0,
+      total_count:      tenants.length,
+    },
+    plan_breakdown: planBreakdown,
+    clients:        clientList,
+    stripe_connected: false,
+    // ── Stripe integration points ─────────────────────────────────────────────
+    // monthly_series: replace [] with data from:
+    //   stripe.paymentIntents.list({ created: { gte, lte }, limit: 100 })
+    //   grouped by month, summing amount_received
+    monthly_series: [] as Array<{ month: string; revenue_pence: number }>,
+    // daily_series: replace [] with data from Stripe payment intents/charges
+    //   grouped by day for the selected period
+    daily_series: [] as Array<{ date: string; revenue_pence: number }>,
+  })
+})
+
+// ─── GET /admin/daily-activity ────────────────────────────────────────────────
+// Platform-wide daily query counts split by chat/email, over N days (max 90).
+
+adminRouter.get('/daily-activity', async (req: Request, res: Response) => {
+  const days = Math.min(parseInt((req.query.days as string) ?? '30', 10) || 30, 90)
+
+  const rows: Array<{ date: string; channel: string; count: number }> = await prisma.$queryRaw`
+    SELECT
+      TO_CHAR(DATE(created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS date,
+      COALESCE(channel, 'chat') AS channel,
+      COUNT(*)::int AS count
+    FROM queries
+    WHERE created_at >= NOW() - (${days} || ' days')::interval
+    GROUP BY DATE(created_at AT TIME ZONE 'UTC'), channel
+    ORDER BY date ASC
+  `
+
+  // Build full date spine so every day is present even with zero activity
+  const today = new Date()
+  const series: Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }> = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setUTCDate(d.getUTCDate() - i)
+    series.push({ date: d.toISOString().slice(0, 10), chat: 0, email: 0, whatsapp: 0, voice: 0 })
+  }
+  for (const row of rows) {
+    const entry = series.find(s => s.date === row.date)
+    if (!entry) continue
+    if (row.channel === 'email')         entry.email    += Number(row.count)
+    else if (row.channel === 'whatsapp') entry.whatsapp += Number(row.count)
+    else if (row.channel === 'voice')    entry.voice    += Number(row.count)
+    else                                 entry.chat     += Number(row.count)
+  }
+
+  ok(res, { series, days })
 })
 
 // ─── GET /admin/usage ─────────────────────────────────────────────────────────
@@ -699,25 +1133,412 @@ adminRouter.delete('/regulations/:id', async (req: Request, res: Response) => {
   ok(res, { deleted: true })
 })
 
-// ─── GET /admin/prompts ───────────────────────────────────────────────────────
-// Return the live AI prompt file contents so the platform owner can inspect them.
+// ─── Training Seeds CRUD ─────────────────────────────────────────────────────
+
+adminRouter.get('/training-seeds', async (_req: Request, res: Response) => {
+  try {
+    const seeds = await (prisma as any).trainingSeed.findMany({ orderBy: { training_type: 'asc' } })
+    ok(res, { seeds, total: seeds.length })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+adminRouter.post('/training-seeds', async (req: Request, res: Response) => {
+  const {
+    training_type, also_known_as = [], summary,
+    care_context = '', care_company_interaction = '', practical_meaning = '',
+    source_urls = [], is_active = true,
+  } = req.body ?? {}
+
+  if (!training_type || !summary) {
+    err(res, 'VALIDATION_ERROR', 'training_type and summary are required', 400); return
+  }
+
+  const slug = String(training_type).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+  const existing = await (prisma as any).trainingSeed.findUnique({ where: { slug } })
+  if (existing) {
+    err(res, 'CONFLICT', `Training seed with slug "${slug}" already exists`, 409); return
+  }
+
+  try {
+    const seed = await (prisma as any).trainingSeed.create({
+      data: {
+        slug,
+        training_type:            String(training_type),
+        also_known_as:            Array.isArray(also_known_as) ? also_known_as : [],
+        summary:                  String(summary),
+        care_context:             String(care_context),
+        care_company_interaction: String(care_company_interaction),
+        practical_meaning:        String(practical_meaning),
+        source_urls:              Array.isArray(source_urls) ? source_urls : [],
+        is_active:                Boolean(is_active),
+        updated_at:               new Date(),
+      },
+    })
+    ok(res, seed, 201)
+  } catch (e: any) {
+    err(res, 'CREATE_FAILED', e.message, 500)
+  }
+})
+
+adminRouter.patch('/training-seeds/:id', async (req: Request, res: Response) => {
+  const existing = await (prisma as any).trainingSeed.findUnique({ where: { id: req.params.id } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Training seed not found', 404); return }
+
+  const {
+    slug, training_type, also_known_as, summary, care_context,
+    care_company_interaction, practical_meaning, source_urls, is_active,
+  } = req.body ?? {}
+
+  // Validate slug uniqueness if changing
+  if (slug !== undefined && slug !== existing.slug) {
+    const clash = await (prisma as any).trainingSeed.findUnique({ where: { slug } })
+    if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
+  }
+
+  try {
+    const updated = await (prisma as any).trainingSeed.update({
+      where: { id: req.params.id },
+      data: {
+        ...(slug                     !== undefined ? { slug }                     : {}),
+        ...(training_type            !== undefined ? { training_type }            : {}),
+        ...(also_known_as            !== undefined ? { also_known_as }            : {}),
+        ...(summary                  !== undefined ? { summary }                  : {}),
+        ...(care_context             !== undefined ? { care_context }             : {}),
+        ...(care_company_interaction !== undefined ? { care_company_interaction } : {}),
+        ...(practical_meaning        !== undefined ? { practical_meaning }        : {}),
+        ...(source_urls              !== undefined ? { source_urls }              : {}),
+        ...(is_active                !== undefined ? { is_active }                : {}),
+        updated_at: new Date(),
+      },
+    })
+    ok(res, updated)
+  } catch (e: any) {
+    err(res, 'UPDATE_FAILED', e.message, 500)
+  }
+})
+
+adminRouter.delete('/training-seeds/:id', async (req: Request, res: Response) => {
+  const existing = await (prisma as any).trainingSeed.findUnique({ where: { id: req.params.id } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Training seed not found', 404); return }
+  try {
+    await (prisma as any).trainingSeed.delete({ where: { id: req.params.id } })
+    ok(res, { deleted: true })
+  } catch (e: any) {
+    err(res, 'DELETE_FAILED', e.message, 500)
+  }
+})
+
+// ─── CQC Seeds ────────────────────────────────────────────────────────────────
+
+adminRouter.get('/cqc-seeds', async (_req: Request, res: Response) => {
+  try {
+    const seeds = await (prisma as any).cqcSeed.findMany({ orderBy: { framework_area: 'asc' } })
+    ok(res, { seeds, total: seeds.length })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+adminRouter.post('/cqc-seeds', async (req: Request, res: Response) => {
+  const { slug, framework_area, also_known_as = [], description = '', inspector_focus = '', evidence_expected = '', rating_indicators = '', source_urls = [], is_active = true } = req.body ?? {}
+  if (!slug?.trim() || !framework_area?.trim()) {
+    err(res, 'INVALID', 'slug and framework_area are required', 400); return
+  }
+  const existing = await (prisma as any).cqcSeed.findUnique({ where: { slug } })
+  if (existing) { err(res, 'DUPLICATE', `A CQC seed with slug "${slug}" already exists.`, 409); return }
+  try {
+    const seed = await (prisma as any).cqcSeed.create({
+      data: {
+        id: crypto.randomUUID(),
+        slug: slug.trim().toLowerCase().replace(/\s+/g, '-'),
+        framework_area: framework_area.trim(),
+        also_known_as:  Array.isArray(also_known_as) ? also_known_as.filter(Boolean) : [],
+        description:    description ?? '',
+        inspector_focus: inspector_focus ?? '',
+        evidence_expected: evidence_expected ?? '',
+        rating_indicators: rating_indicators ?? '',
+        source_urls:    Array.isArray(source_urls) ? source_urls.filter(Boolean) : [],
+        is_active,
+        updated_at: new Date(),
+      },
+    })
+    ok(res, seed, 201)
+  } catch (e: any) { err(res, 'CREATE_FAILED', e.message, 500) }
+})
+
+adminRouter.patch('/cqc-seeds/:id', async (req: Request, res: Response) => {
+  const existing = await (prisma as any).cqcSeed.findUnique({ where: { id: req.params.id } })
+  if (!existing) { err(res, 'NOT_FOUND', 'CQC seed not found', 404); return }
+  const { framework_area, also_known_as, description, inspector_focus, evidence_expected, rating_indicators, source_urls, is_active } = req.body ?? {}
+  const data: Record<string, any> = { updated_at: new Date() }
+  if (framework_area    !== undefined) data.framework_area    = framework_area
+  if (also_known_as     !== undefined) data.also_known_as     = Array.isArray(also_known_as) ? also_known_as.filter(Boolean) : []
+  if (description       !== undefined) data.description       = description
+  if (inspector_focus   !== undefined) data.inspector_focus   = inspector_focus
+  if (evidence_expected !== undefined) data.evidence_expected = evidence_expected
+  if (rating_indicators !== undefined) data.rating_indicators = rating_indicators
+  if (source_urls       !== undefined) data.source_urls       = Array.isArray(source_urls) ? source_urls.filter(Boolean) : []
+  if (is_active         !== undefined) data.is_active         = Boolean(is_active)
+  try {
+    const updated = await (prisma as any).cqcSeed.update({ where: { id: req.params.id }, data })
+    ok(res, updated)
+  } catch (e: any) { err(res, 'UPDATE_FAILED', e.message, 500) }
+})
+
+adminRouter.delete('/cqc-seeds/:id', async (req: Request, res: Response) => {
+  const existing = await (prisma as any).cqcSeed.findUnique({ where: { id: req.params.id } })
+  if (!existing) { err(res, 'NOT_FOUND', 'CQC seed not found', 404); return }
+  try {
+    await (prisma as any).cqcSeed.delete({ where: { id: req.params.id } })
+    ok(res, { deleted: true })
+  } catch (e: any) { err(res, 'DELETE_FAILED', e.message, 500) }
+})
+
+// POST /admin/cqc-seeds/sync-sheet — pull from Google Sheet → upsert to DB
+adminRouter.post('/cqc-seeds/sync-sheet', async (_req: Request, res: Response) => {
+  try {
+    const result = await syncCqcSeedsFromSheets()
+    ok(res, {
+      synced_at: result.synced_at.toISOString(),
+      total_rows: result.total_rows,
+      upserted:   result.upserted,
+      unchanged:  result.unchanged,
+      errors:     result.errors,
+    })
+  } catch (e: any) {
+    err(res, 'SYNC_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/cqc-seeds/populate-sheet — push data file → Google Sheet
+adminRouter.post('/cqc-seeds/populate-sheet', async (_req: Request, res: Response) => {
+  try {
+    const result = await populateCqcSeedsSheet()
+    ok(res, { written: result.written, errors: result.errors })
+  } catch (e: any) {
+    err(res, 'POPULATE_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/training-reminders — trigger renewal reminder run (Vercel/external cron)
+adminRouter.post('/training-reminders', requirePlatformAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = await sendRenewalReminders()
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'REMINDER_FAILED', e.message, 500)
+  }
+})
+
+// ─── AI Prompts ──────────────────────────────────────────────────────────────
 
 const PROMPTS_DIR = path.resolve(__dirname, '../../../../prompts')
 
-adminRouter.get('/prompts', (_req: Request, res: Response) => {
+const FILE_MAP: Record<string, string> = {
+  policy_summary:                 'prompt-a-summary.txt',
+  policy_full:                    'prompt-b-full-policy.txt',
+  knowledge_extraction:           'prompt-c-knowledge-extraction.txt',
+}
+
+const USAGE_LABELS: Record<string, string> = {
+  policy_summary:                 'Prompt A — Summary & Questions',
+  policy_full:                    'Prompt B — Full Policy Formatter',
+  knowledge_extraction:           'Prompt C — Knowledge Base Extraction',
+  training_question_generation:   'Training Question Generation',
+  cqc_question_generation:        'CQC Staff Prep — Question Generation',
+  cqc_answer_evaluation:          'CQC Staff Prep — Answer Evaluation',
+  audit_recommendations:          'Monthly Audit — AI Recommendations',
+}
+
+// Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
+async function ensurePromptsSeeded() {
+  // File-based prompts (original A/B/C)
+  for (const [usage, filename] of Object.entries(FILE_MAP)) {
+    const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
+    if (existing) continue
+    const filePath = path.join(PROMPTS_DIR, filename)
+    try {
+      const content = fs.readFileSync(filePath, 'utf8')
+      await (prisma as any).aiPrompt.create({
+        data: { usage, label: USAGE_LABELS[usage] ?? usage, content, updated_at: new Date() },
+      })
+    } catch { /* file may not exist in some envs — skip */ }
+  }
+
+  // Inline default prompts (no file on disk)
+  const inlineDefaults: Record<string, string> = {
+    cqc_question_generation:  DEFAULT_QUESTION_GENERATION_PROMPT,
+    cqc_answer_evaluation:    DEFAULT_ANSWER_EVALUATION_PROMPT,
+    audit_recommendations:    DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT,
+  }
+  for (const [usage, content] of Object.entries(inlineDefaults)) {
+    const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
+    if (existing) continue
+    try {
+      await (prisma as any).aiPrompt.create({
+        data: { usage, label: USAGE_LABELS[usage] ?? usage, content, updated_at: new Date() },
+      })
+    } catch { /* skip on conflict */ }
+  }
+}
+
+adminRouter.get('/prompts', async (_req: Request, res: Response) => {
   try {
-    const promptA = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-a-summary.txt'),              'utf8')
-    const promptB = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-b-full-policy.txt'),           'utf8')
-    const promptC = fs.readFileSync(path.join(PROMPTS_DIR, 'prompt-c-knowledge-extraction.txt'), 'utf8')
-    ok(res, {
-      prompts: [
-        { id: 'prompt-a', label: 'Prompt A — Summary & Questions',      content: promptA },
-        { id: 'prompt-b', label: 'Prompt B — Full Policy Formatter',     content: promptB },
-        { id: 'prompt-c', label: 'Prompt C — Knowledge Base Extraction', content: promptC },
-      ],
-    })
+    await ensurePromptsSeeded()
+    const prompts = await (prisma as any).aiPrompt.findMany({ orderBy: { created_at: 'asc' } })
+    ok(res, { prompts })
   } catch (e) {
-    err(res, 'READ_FAILED', `Could not read prompt files: ${String(e)}`, 500)
+    err(res, 'READ_FAILED', `Could not load prompts: ${String(e)}`, 500)
+  }
+})
+
+adminRouter.post('/prompts', async (req: Request, res: Response) => {
+  const { usage, label, content } = req.body ?? {}
+  if (!usage || !content?.trim()) {
+    err(res, 'VALIDATION_ERROR', 'usage and content are required', 400); return
+  }
+  const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
+  if (existing) {
+    err(res, 'CONFLICT', `A prompt for usage "${usage}" already exists`, 409); return
+  }
+  try {
+    const prompt = await (prisma as any).aiPrompt.create({
+      data: { usage, label: label || USAGE_LABELS[usage] || usage, content: content.trim(), updated_at: new Date() },
+    })
+    ok(res, prompt, 201)
+  } catch (e: any) {
+    err(res, 'CREATE_FAILED', e.message, 500)
+  }
+})
+
+adminRouter.patch('/prompts/:id', async (req: Request, res: Response) => {
+  const { label, content } = req.body ?? {}
+  const existing = await (prisma as any).aiPrompt.findUnique({ where: { id: req.params.id } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Prompt not found', 404); return }
+  try {
+    // Save old version before overwriting (non-fatal if table not yet migrated)
+    await (prisma as any).aiPromptVersion.create({
+      data: {
+        id:        crypto.randomUUID(),
+        prompt_id: existing.id,
+        usage:     existing.usage,
+        label:     existing.label,
+        content:   existing.content,
+      },
+    }).catch((e: any) => console.warn('[admin/prompts] Version snapshot failed (migration pending?):', e.message))
+
+    const updated = await (prisma as any).aiPrompt.update({
+      where: { id: req.params.id },
+      data: {
+        ...(label   !== undefined ? { label }              : {}),
+        ...(content !== undefined ? { content: content.trim() } : {}),
+        updated_at: new Date(),
+      },
+    })
+    // Write back to file so the AI pipeline picks up the change without a deploy
+    const filename = FILE_MAP[existing.usage]
+    if (filename && content !== undefined) {
+      try { fs.writeFileSync(path.join(PROMPTS_DIR, filename), content.trim(), 'utf8') } catch { /* non-fatal */ }
+    }
+    ok(res, updated)
+  } catch (e: any) {
+    err(res, 'UPDATE_FAILED', e.message, 500)
+  }
+})
+
+// ─── GET /admin/prompts/outputs/:usage ────────────────────────────────────────
+// Returns recent AI outputs for a given prompt usage — platform owner analytics.
+// Accepts optional ?tenant_id= query param to scope to a specific tenant.
+
+adminRouter.get('/prompts/outputs/:usage', async (req: Request, res: Response) => {
+  const usage: string = req.params.usage as string
+  const limit    = Math.min(50, parseInt((req.query.limit as string) || '30'))
+  const tenantId = typeof req.query.tenant_id === 'string' ? req.query.tenant_id : null
+
+  const categoryMap: Record<string, string | null> = {
+    policy_summary:               null,
+    policy_full:                  null,
+    training_question_generation: 'training_module',
+    training_chat:                'training_module',
+    cqc_query:                    'cqc_report',
+    knowledge_extraction:         null,
+  }
+  const category = categoryMap[usage] ?? null
+
+  const tenantClause = tenantId ? `AND q.tenant_id = '${tenantId}'` : ''
+  const whereCategory = category
+    ? `AND document_category_queried = '${category}'`
+    : `AND (document_category_queried IS NULL OR document_category_queried IN ('internal_policy', 'staff_handbook'))`
+
+  try {
+    const rows: any[] = await prisma.$queryRawUnsafe(`
+      SELECT q.id, q.query_text, q.response_text, q.no_match, q.feedback,
+             q.response_time_ms, q.language_detected, q.created_at,
+             u.name AS user_name
+      FROM queries q
+      LEFT JOIN users u ON q.user_id = u.id
+      WHERE q.chat_deleted_at IS NULL
+      ${tenantClause}
+      ${whereCategory}
+      ORDER BY q.created_at DESC
+      LIMIT ${limit}
+    `)
+    ok(res, { outputs: rows })
+  } catch (e: any) {
+    console.error('[admin/prompts/outputs] Query failed:', e.message)
+    ok(res, { outputs: [] })
+  }
+})
+
+// ─── GET /admin/prompts/feedback-stats ────────────────────────────────────────
+// Aggregate feedback (positive/negative) per prompt category.
+// Accepts optional ?tenant_id= query param to scope to a specific tenant.
+
+adminRouter.get('/prompts/feedback-stats', async (req: Request, res: Response) => {
+  const tenantId = typeof req.query.tenant_id === 'string' ? req.query.tenant_id : null
+  const tenantClause = tenantId ? `AND tenant_id = '${tenantId}'` : ''
+
+  try {
+    const rows: any[] = await prisma.$queryRawUnsafe(`
+      SELECT
+        COALESCE(document_category_queried, 'policy') AS category,
+        COUNT(*)                                        AS total,
+        COUNT(*) FILTER (WHERE feedback = 'positive')  AS positive,
+        COUNT(*) FILTER (WHERE feedback = 'negative')  AS negative,
+        COUNT(*) FILTER (WHERE feedback IS NULL)        AS unrated,
+        ROUND(
+          COUNT(*) FILTER (WHERE feedback = 'positive') * 100.0
+          / NULLIF(COUNT(*) FILTER (WHERE feedback IS NOT NULL), 0), 1
+        ) AS positive_pct
+      FROM queries
+      WHERE chat_deleted_at IS NULL
+      ${tenantClause}
+      GROUP BY COALESCE(document_category_queried, 'policy')
+      ORDER BY total DESC
+    `)
+    ok(res, { stats: rows })
+  } catch (e: any) {
+    console.error('[admin/prompts/feedback-stats] Query failed:', e.message)
+    ok(res, { stats: [] })
+  }
+})
+
+// ─── GET /admin/prompts/:id/versions ─────────────────────────────────────────
+// Returns version history for a specific prompt (last 20 versions).
+
+adminRouter.get('/prompts/:id/versions', async (req: Request, res: Response) => {
+  try {
+    const versions = await (prisma as any).aiPromptVersion.findMany({
+      where:   { prompt_id: req.params.id },
+      orderBy: { saved_at: 'desc' },
+      take:    20,
+      select:  { id: true, label: true, content: true, saved_at: true },
+    })
+    ok(res, { versions })
+  } catch (e: any) {
+    console.error('[admin/prompts/versions] Query failed:', e.message)
+    ok(res, { versions: [] })
   }
 })
 
@@ -834,3 +1655,235 @@ adminRouter.post('/knowledge-seeds/seed-all', async (_req: Request, res: Respons
     err(res, 'SEED_FAILED', String(e), 500)
   }
 })
+
+// ─── Blog Authors ─────────────────────────────────────────────────────────────
+
+// ─── GET /admin/tenants/:id/audit-stats ──────────────────────────────────────
+
+adminRouter.get('/tenants/:id/audit-stats', async (req: Request, res: Response) => {
+  const tenantId = req.params.id
+
+  const runs = await (prisma as any).auditRun.findMany({
+    where:   { tenant_id: tenantId },
+    select:  { status: true, completed_at: true, template: { select: { frequency: true, name: true } } },
+  })
+
+  const FREQS = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic'] as const
+  const byFreq: Record<string, { completed: number; in_progress: number; last_completed: string | null }> = {}
+
+  for (const f of FREQS) {
+    byFreq[f] = { completed: 0, in_progress: 0, last_completed: null }
+  }
+
+  for (const run of runs) {
+    const freq = run.template?.frequency ?? 'monthly'
+    if (!byFreq[freq]) continue
+    if (run.status === 'completed') {
+      byFreq[freq].completed++
+      const ca = run.completed_at ? new Date(run.completed_at).toISOString() : null
+      if (ca && (!byFreq[freq].last_completed || ca > byFreq[freq].last_completed!)) {
+        byFreq[freq].last_completed = ca
+      }
+    } else {
+      byFreq[freq].in_progress++
+    }
+  }
+
+  ok(res, {
+    total:      runs.length,
+    completed:  runs.filter((r: any) => r.status === 'completed').length,
+    in_progress: runs.filter((r: any) => r.status !== 'completed').length,
+    by_frequency: byFreq,
+  })
+})
+
+// ─── GET /admin/audit-seeds ───────────────────────────────────────────────────
+
+adminRouter.get('/audit-seeds', async (_req: Request, res: Response) => {
+  const templates = await (prisma as any).auditTemplate.findMany({
+    where:   { is_seed: true, tenant_id: null },
+    include: {
+      sections: {
+        orderBy: { section_order: 'asc' },
+        include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } },
+      },
+    },
+    orderBy: { name: 'asc' },
+  })
+  ok(res, { templates, total: templates.length })
+})
+
+adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {
+  const authors = await (prisma as any).blogAuthor.findMany({ orderBy: { name: 'asc' } })
+  ok(res, { authors, total: authors.length })
+})
+
+adminRouter.post('/blog/authors', async (req: Request, res: Response) => {
+  const { name, title, photo_url, bio } = req.body ?? {}
+  if (!name?.trim()) { err(res, 'VALIDATION_ERROR', 'Author name is required.'); return }
+  const author = await (prisma as any).blogAuthor.create({
+    data: { name: name.trim(), title: title?.trim() || null, photo_url: photo_url || null, bio: bio?.trim() || null },
+  })
+  ok(res, { author })
+})
+
+adminRouter.patch('/blog/authors/:id', async (req: Request, res: Response) => {
+  const { name, title, photo_url, bio } = req.body ?? {}
+  const author = await (prisma as any).blogAuthor.update({
+    where: { id: req.params.id },
+    data:  {
+      ...(name      !== undefined && { name:      name.trim()        }),
+      ...(title     !== undefined && { title:     title?.trim() || null }),
+      ...(photo_url !== undefined && { photo_url: photo_url || null  }),
+      ...(bio       !== undefined && { bio:       bio?.trim() || null  }),
+    },
+  })
+  ok(res, { author })
+})
+
+adminRouter.delete('/blog/authors/:id', async (req: Request, res: Response) => {
+  await (prisma as any).blogAuthor.delete({ where: { id: req.params.id } })
+  ok(res, { deleted: true })
+})
+
+// ─── Blog Posts ───────────────────────────────────────────────────────────────
+
+adminRouter.get('/blog/posts', async (_req: Request, res: Response) => {
+  const posts = await (prisma as any).blogPost.findMany({
+    orderBy: { created_at: 'desc' },
+    include: { author: { select: { id: true, name: true, photo_url: true } } },
+  })
+  ok(res, { posts, total: posts.length })
+})
+
+adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
+  const { title, slug } = req.body ?? {}
+  if (!title?.trim()) { err(res, 'VALIDATION_ERROR', 'Title is required.'); return }
+  if (!slug?.trim())  { err(res, 'VALIDATION_ERROR', 'Slug is required.');  return }
+
+  const existing = await (prisma as any).blogPost.findUnique({ where: { slug: slug.trim() } })
+  if (existing) { err(res, 'CONFLICT', `A post with slug "${slug}" already exists.`, 409); return }
+
+  const post = await (prisma as any).blogPost.create({ data: buildPostData(req.body) })
+  ok(res, { post })
+})
+
+adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
+  const { slug } = req.body ?? {}
+  if (slug) {
+    const clash = await (prisma as any).blogPost.findFirst({ where: { slug: slug.trim(), NOT: { id: req.params.id } } })
+    if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
+  }
+  const post = await (prisma as any).blogPost.update({
+    where: { id: req.params.id },
+    data:  buildPostData(req.body),
+  })
+  ok(res, { post })
+})
+
+adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
+  await (prisma as any).blogPost.delete({ where: { id: req.params.id } })
+  ok(res, { deleted: true })
+})
+
+adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, res: Response) => {
+  if (!req.file) { err(res, 'NO_FILE', 'No image file provided.', 400); return }
+  try {
+    const url = await uploadBlogImage({
+      filename: req.file.originalname,
+      buffer:   req.file.buffer,
+      mimeType: req.file.mimetype,
+    })
+    ok(res, { url })
+  } catch (e: any) {
+    err(res, 'UPLOAD_FAILED', e.message, 500)
+  }
+})
+
+// ─── Site Pages ───────────────────────────────────────────────────────────────
+
+adminRouter.get('/site-pages', async (_req: Request, res: Response) => {
+  const pages = await (prisma as any).sitePage.findMany({ orderBy: { path: 'asc' } })
+  ok(res, { pages })
+})
+
+adminRouter.post('/site-pages', async (req: Request, res: Response) => {
+  const { path, ...rest } = req.body ?? {}
+  if (!path) { err(res, 'MISSING_PATH', 'path is required', 400); return }
+  const page = await (prisma as any).sitePage.upsert({
+    where:  { path: path.trim() },
+    update: buildPageData(rest),
+    create: { path: path.trim(), ...buildPageData(rest) },
+  })
+  ok(res, { page })
+})
+
+adminRouter.patch('/site-pages/:id', async (req: Request, res: Response) => {
+  const page = await (prisma as any).sitePage.update({
+    where: { id: req.params.id },
+    data:  buildPageData(req.body),
+  })
+  ok(res, { page })
+})
+
+adminRouter.delete('/site-pages/:id', async (req: Request, res: Response) => {
+  await (prisma as any).sitePage.delete({ where: { id: req.params.id } })
+  ok(res, { deleted: true })
+})
+
+function buildPageData(body: any) {
+  const {
+    title, description, og_title, og_description, og_image_url,
+    is_footer_page, footer_group, footer_label, footer_sort,
+    page_type, status,
+  } = body ?? {}
+  return {
+    ...(title          !== undefined && { title:          title?.trim() ?? ''          }),
+    ...(description    !== undefined && { description:    description?.trim() || null  }),
+    ...(og_title       !== undefined && { og_title:       og_title?.trim() || null     }),
+    ...(og_description !== undefined && { og_description: og_description?.trim() || null }),
+    ...(og_image_url   !== undefined && { og_image_url:   og_image_url?.trim() || null }),
+    ...(is_footer_page !== undefined && { is_footer_page: Boolean(is_footer_page)      }),
+    ...(footer_group   !== undefined && { footer_group:   footer_group || null         }),
+    ...(footer_label   !== undefined && { footer_label:   footer_label?.trim() || null }),
+    ...(footer_sort    !== undefined && { footer_sort:    Number(footer_sort) || 0     }),
+    ...(page_type      !== undefined && { page_type:      page_type || 'marketing'     }),
+    ...(status         !== undefined && { status:         status || 'published'        }),
+  }
+}
+
+function buildPostData(body: any) {
+  const {
+    title, slug, excerpt, meta_title, meta_description,
+    feature_image_url, feature_image_alt, og_image_url,
+    content, author_id, category, publication_date, status,
+    is_featured, read_time_minutes, cta_text, cta_url,
+    special_message, special_message_color, key_info_title, key_info_content,
+    faqs,
+  } = body ?? {}
+
+  return {
+    ...(title                !== undefined && { title:                 title?.trim()            }),
+    ...(slug                 !== undefined && { slug:                  slug?.trim()             }),
+    ...(excerpt              !== undefined && { excerpt:               excerpt?.trim() || null  }),
+    ...(meta_title           !== undefined && { meta_title:            meta_title?.trim() || null }),
+    ...(meta_description     !== undefined && { meta_description:      meta_description?.trim() || null }),
+    ...(feature_image_url    !== undefined && { feature_image_url:     feature_image_url || null }),
+    ...(feature_image_alt    !== undefined && { feature_image_alt:     feature_image_alt?.trim() || null }),
+    ...(og_image_url         !== undefined && { og_image_url:          og_image_url || null    }),
+    ...(content              !== undefined && { content:               content || ''            }),
+    ...(author_id            !== undefined && { author_id:             author_id || null        }),
+    ...(category             !== undefined && { category:              category || 'advice'     }),
+    ...(publication_date     !== undefined && { publication_date:      publication_date ? new Date(publication_date) : null }),
+    ...(status               !== undefined && { status:                status || 'draft'        }),
+    ...(is_featured          !== undefined && { is_featured:           Boolean(is_featured)     }),
+    ...(read_time_minutes    !== undefined && { read_time_minutes:     Number(read_time_minutes) || 1 }),
+    ...(cta_text             !== undefined && { cta_text:              cta_text?.trim() || null }),
+    ...(cta_url              !== undefined && { cta_url:               cta_url?.trim() || null  }),
+    ...(special_message      !== undefined && { special_message:       special_message?.trim() || null }),
+    ...(special_message_color !== undefined && { special_message_color: special_message_color || null }),
+    ...(key_info_title       !== undefined && { key_info_title:        key_info_title?.trim() || null }),
+    ...(key_info_content     !== undefined && { key_info_content:      key_info_content?.trim() || null }),
+    ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
+  }
+}

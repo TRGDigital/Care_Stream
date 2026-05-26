@@ -58,7 +58,7 @@ regulationsRouter.get('/:key', async (req: Request, res: Response) => {
 
   try {
     const regulation = await (prisma as any).externalRegulation.findUnique({
-      where: { reference_key: key.toLowerCase() },
+      where: { reference_key: (key as string).toLowerCase() },
     })
 
     if (!regulation || !regulation.is_active) {

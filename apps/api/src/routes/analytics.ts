@@ -7,6 +7,7 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
+import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 
 export const analyticsRouter = Router()
 
@@ -52,10 +53,12 @@ analyticsRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   const pct          = (a: number, b: number): number | null => b > 0 ? Math.round(((a - b) / b) * 100) : null
 
   // ── Channel split ─────────────────────────────────────────────────────────────
-  let chatCount = 0, emailCount = 0
+  let chatCount = 0, emailCount = 0, whatsappCount = 0, voiceCount = 0
   for (const q of thisMonthQueries) {
-    if (q.channel === 'chat')  chatCount++
-    else if (q.channel === 'email') emailCount++
+    if (q.channel === 'chat')           chatCount++
+    else if (q.channel === 'email')     emailCount++
+    else if (q.channel === 'whatsapp')  whatsappCount++
+    else if (q.channel === 'voice')     voiceCount++
   }
 
   // ── Policy citation counts ────────────────────────────────────────────────────
@@ -138,7 +141,7 @@ analyticsRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
     active_users:        { this_month: thisActiveUsers, last_month: lastActiveUsers, change_pct: pct(thisActiveUsers, lastActiveUsers)  },
     no_match_rate:       { this_month: thisNoMatchRate, last_month: lastNoMatchRate  },
     avg_response_ms:     avgResponseMs,
-    queries_by_channel:  { chat: chatCount, email: emailCount },
+    queries_by_channel:  { chat: chatCount, email: emailCount, whatsapp: whatsappCount, voice: voiceCount },
     full_vs_summary:     { full_policy: fullPolicyCount, summary: summaryCount, follow_up: followUpCount },
     plan_usage:          { used: thisTotal, limit: monthlyLimit, percent: monthlyLimit ? Math.round((thisTotal / monthlyLimit) * 100) : null },
     top_policies:        topPolicies,
@@ -252,6 +255,383 @@ analyticsRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   ok(res, { basic, advanced })
 })
 
+// ─── GET /analytics/gaps ─────────────────────────────────────────────────────
+// Policy gap detection — surfaces:
+//   1. Themes from unanswered (no_match) queries in the last 90 days
+//   2. External regulations with no tenant policy coverage
+//   3. A headline coverage score
+
+const STOPWORDS = new Set([
+  'a','about','above','after','also','an','and','any','are','as','at','be',
+  'been','by','can','do','for','from','get','how','i','if','in','is','it',
+  'its','just','me','my','no','not','of','on','or','our','please','send',
+  'should','so','tell','that','the','their','them','this','to','us','was',
+  'we','what','when','where','which','who','will','with','you','your',
+])
+
+function extractKeywords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOPWORDS.has(w))
+}
+
+analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId   = getTenantId()
+
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      err(res, e.code, e.message, 403)
+      return
+    }
+    throw e
+  }
+
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000)
+
+  const [noMatchQueries, activePolicies, regulations] = await Promise.all([
+    (prisma as any).queryRecord.findMany({
+      where:   { tenant_id: tenantId, no_match: true, created_at: { gte: ninetyDaysAgo } },
+      select:  { id: true, query_text: true, created_at: true },
+      orderBy: { created_at: 'desc' },
+    }),
+    (prisma as any).policy.findMany({
+      where:  { tenant_id: tenantId, status: 'active' },
+      select: { id: true, name: true, tags: true },
+    }),
+    (prisma as any).externalRegulation.findMany({
+      where:  { is_active: true },
+      select: {
+        reference_key:    true,
+        official_name:    true,
+        also_known_as:    true,
+        summary:          true,
+        care_home_context: true,
+      },
+    }),
+  ])
+
+  // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
+  // Score every keyword by how many no-match queries contain it
+  const termFreq = new Map<string, { count: number; queries: string[] }>()
+  for (const q of noMatchQueries) {
+    const kws = extractKeywords(q.query_text as string)
+    const unique = [...new Set(kws)]
+    for (const kw of unique) {
+      const e = termFreq.get(kw)
+      if (!e) {
+        termFreq.set(kw, { count: 1, queries: [q.query_text as string] })
+      } else {
+        e.count++
+        if (e.queries.length < 3) e.queries.push(q.query_text as string)
+      }
+    }
+  }
+
+  // Pick top themes: keywords appearing in 2+ queries, not substrings of each other
+  const candidates = [...termFreq.entries()]
+    .filter(([, v]) => v.count >= 2)
+    .sort((a, b) => b[1].count - a[1].count)
+
+  const themes: Array<{ theme: string; count: number; sample_questions: string[] }> = []
+  const usedTerms = new Set<string>()
+
+  for (const [term, { count, queries }] of candidates) {
+    if (usedTerms.has(term)) continue
+    // Skip if already covered by a higher-scoring theme
+    const dominated = themes.some(t => t.theme.includes(term) || term.includes(t.theme))
+    if (dominated) continue
+    themes.push({ theme: term, count, sample_questions: queries })
+    usedTerms.add(term)
+    if (themes.length >= 10) break
+  }
+
+  // ── 2. Regulation gap detection ───────────────────────────────────────────────
+  // For each regulation, check if any active policy name or tags mentions it.
+  // A regulation is "covered" if a policy plausibly addresses it.
+  const policyText = activePolicies
+    .map((p: any) => `${p.name} ${(p.tags as string[]).join(' ')}`.toLowerCase())
+    .join(' ')
+
+  const regulationGaps: Array<{
+    reference_key:     string
+    official_name:     string
+    summary:           string
+    care_home_context: string
+    covered:           boolean
+  }> = []
+
+  for (const reg of regulations) {
+    const terms = [
+      reg.official_name,
+      ...(reg.also_known_as as string[]),
+    ].map((t: string) => t.toLowerCase())
+
+    const covered = terms.some(t => policyText.includes(t))
+    regulationGaps.push({
+      reference_key:     reg.reference_key,
+      official_name:     reg.official_name,
+      summary:           reg.summary,
+      care_home_context: reg.care_home_context,
+      covered,
+    })
+  }
+
+  const coveredCount = regulationGaps.filter(r => r.covered).length
+  const totalCount   = regulationGaps.length
+  const coverageScore = totalCount > 0
+    ? Math.round((coveredCount / totalCount) * 100)
+    : 100
+
+  ok(res, {
+    coverage_score:    coverageScore,
+    unanswered_themes: themes,
+    regulation_gaps:   regulationGaps.sort((a, b) => Number(a.covered) - Number(b.covered)),
+    meta: {
+      no_match_total:    noMatchQueries.length,
+      days_analysed:     90,
+      regulations_total: totalCount,
+      regulations_covered: coveredCount,
+    },
+  })
+})
+
+// ─── GET /analytics/daily-activity ───────────────────────────────────────────
+// Returns daily query counts split by channel (chat / email) for the last N days.
+// Used by the dashboard line graph. Defaults to 30 days.
+
+analyticsRouter.get('/daily-activity', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const days     = Math.min(parseInt((req.query.days as string) ?? '30', 10) || 30, 90)
+
+  const rows: Array<{ date: string; channel: string; count: number }> = await (prisma as any).$queryRaw`
+    SELECT
+      TO_CHAR(DATE(created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS date,
+      COALESCE(channel, 'chat')                                   AS channel,
+      COUNT(*)::int                                               AS count
+    FROM   queries
+    WHERE  tenant_id  = ${tenantId}
+      AND  created_at >= NOW() - (${days} || ' days')::interval
+    GROUP  BY DATE(created_at AT TIME ZONE 'UTC'), channel
+    ORDER  BY date ASC
+  `
+
+  // Build a full date spine so days with zero activity still appear
+  const series: Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }> = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setUTCHours(0, 0, 0, 0)
+    d.setUTCDate(d.getUTCDate() - i)
+    series.push({ date: d.toISOString().slice(0, 10), chat: 0, email: 0, whatsapp: 0, voice: 0 })
+  }
+
+  for (const row of rows) {
+    const entry = series.find(s => s.date === row.date)
+    if (!entry) continue
+    if (row.channel === 'email')         entry.email    = row.count
+    else if (row.channel === 'whatsapp') entry.whatsapp = row.count
+    else if (row.channel === 'voice')    entry.voice    = row.count
+    else                                 entry.chat     = row.count
+  }
+
+  ok(res, { series, days })
+})
+
+// ─── GET /analytics/training ─────────────────────────────────────────────────
+// Training compliance summary: compliance rate, per-module breakdown, answer stats.
+
+analyticsRouter.get('/training', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const now = new Date()
+
+  const [users, enrollments, trainingModules] = await Promise.all([
+    (prisma as any).user.findMany({
+      where:  { tenant_id: tenantId, is_active: true },
+      select: { id: true },
+    }),
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId },
+      include: {
+        module:  { select: { id: true, name: true, category: true, sort_order: true } },
+        answers: { select: { is_correct: true } },
+      },
+    }),
+    (prisma as any).trainingModule.findMany({
+      where:   { is_active: true },
+      select:  { id: true, name: true, category: true, sort_order: true },
+      orderBy: { sort_order: 'asc' },
+    }),
+  ])
+
+  const enriched = enrollments.map((e: any) => {
+    let status = e.status as string
+    if (e.expires_at && new Date(e.expires_at) < now && status === 'complete') status = 'expired'
+    const daysUntilExpiry = e.expires_at
+      ? Math.ceil((new Date(e.expires_at).getTime() - now.getTime()) / 86400000)
+      : null
+    return { ...e, status, daysUntilExpiry }
+  })
+
+  const moduleBreakdown = trainingModules
+    .map((m: any) => {
+      const rows      = enriched.filter((e: any) => e.module_id === m.id)
+      const completed   = rows.filter((e: any) => e.status === 'complete').length
+      const in_progress = rows.filter((e: any) => e.status === 'in_progress').length
+      const not_started = rows.filter((e: any) => e.status === 'not_started').length
+      const expired     = rows.filter((e: any) => e.status === 'expired').length
+      return {
+        id: m.id, name: m.name, category: m.category, sort_order: m.sort_order,
+        enrolled: rows.length, completed, in_progress, not_started, expired,
+        completion_rate: rows.length > 0 ? Math.round((completed / rows.length) * 100) : 0,
+      }
+    })
+    .filter((m: any) => m.enrolled > 0)
+    .sort((a: any, b: any) => a.sort_order - b.sort_order)
+
+  const statutoryModules = trainingModules.filter((m: any) => m.category === 'statutory')
+  const compliantStaff   = users.filter((u: any) =>
+    statutoryModules.length === 0 || statutoryModules.every((m: any) => {
+      const e = enriched.find((e: any) => e.user_id === u.id && e.module_id === m.id)
+      return e?.status === 'complete'
+    })
+  ).length
+
+  const allAnswers        = enriched.flatMap((e: any) => e.answers ?? [])
+  const total_answers     = allAnswers.length
+  const correct_answers   = allAnswers.filter((a: any) => a.is_correct).length
+  const expiring_soon     = enriched.filter((e: any) =>
+    e.status === 'complete' && e.daysUntilExpiry !== null && e.daysUntilExpiry <= 90 && e.daysUntilExpiry > 0
+  ).length
+  const expired_count = enriched.filter((e: any) => e.status === 'expired').length
+
+  ok(res, {
+    compliance_rate:      users.length > 0 ? Math.round((compliantStaff / users.length) * 100) : 0,
+    compliant_staff:      compliantStaff,
+    total_staff:          users.length,
+    module_breakdown:     moduleBreakdown,
+    total_answers,
+    correct_answers,
+    correct_answer_rate:  total_answers > 0 ? Math.round((correct_answers / total_answers) * 100) : 0,
+    expiring_soon_count:  expiring_soon,
+    expired_count,
+  })
+})
+
+// ─── GET /analytics/training-gaps ────────────────────────────────────────────
+// Per-question failure analysis and per-staff-member knowledge gap summary.
+
+analyticsRouter.get('/training-gaps', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const now      = new Date()
+
+  const [trainingModules, enrollments] = await Promise.all([
+    (prisma as any).trainingModule.findMany({
+      where:   { is_active: true },
+      orderBy: { sort_order: 'asc' },
+    }),
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId },
+      include: {
+        user:    { select: { id: true, name: true, job_role: true } },
+        module:  { select: { id: true, name: true, category: true, sort_order: true } },
+        answers: { select: { question_id: true, question_text: true, answer_text: true, is_correct: true, answered_at: true } },
+      },
+    }),
+  ])
+
+  // Build a lookup of question text from the current module JSON for answers that lack a snapshot
+  const questionTextLookup: Record<string, string> = {}
+  for (const m of trainingModules) {
+    for (const q of (m.questions as any[]) ?? []) {
+      if (q.id && q.text) questionTextLookup[q.id] = q.text
+    }
+  }
+
+  // ── Per-question gap analysis ──────────────────────────────────────────────
+  // Aggregate all answers across the tenant, grouped by question_id
+  const questionStats: Record<string, { question_id: string; question_text: string; module_id: string; module_name: string; total: number; incorrect: number }> = {}
+
+  for (const enrollment of enrollments) {
+    for (const answer of (enrollment.answers as any[])) {
+      const qid   = answer.question_id
+      const qtext = answer.question_text ?? questionTextLookup[qid] ?? 'Unknown question'
+      if (!questionStats[qid]) {
+        questionStats[qid] = {
+          question_id:   qid,
+          question_text: qtext,
+          module_id:     enrollment.module_id,
+          module_name:   enrollment.module.name,
+          total:         0,
+          incorrect:     0,
+        }
+      }
+      questionStats[qid].total++
+      if (!answer.is_correct) questionStats[qid].incorrect++
+    }
+  }
+
+  const allQuestionStats = Object.values(questionStats).map(s => ({
+    ...s,
+    incorrect_rate: s.total > 0 ? Math.round((s.incorrect / s.total) * 100) : 0,
+  }))
+
+  // Gaps = questions where at least 2 people answered and incorrect rate >= 40%
+  const question_gaps = allQuestionStats
+    .filter(s => s.total >= 2 && s.incorrect_rate >= 40)
+    .sort((a, b) => b.incorrect_rate - a.incorrect_rate)
+
+  // ── Per-staff gap analysis ─────────────────────────────────────────────────
+  const staff_gaps = enrollments.map((enrollment: any) => {
+    const answers      = (enrollment.answers as any[]) ?? []
+    const total        = answers.length
+    const incorrect    = answers.filter((a: any) => !a.is_correct).length
+    const isExpired    = enrollment.expires_at && new Date(enrollment.expires_at) < now && enrollment.status === 'complete'
+    const status       = isExpired ? 'expired' : enrollment.status
+
+    // Weak areas = questions this person got wrong
+    const weak_questions = answers
+      .filter((a: any) => !a.is_correct)
+      .map((a: any) => a.question_text ?? questionTextLookup[a.question_id] ?? 'Unknown question')
+
+    return {
+      user_id:        enrollment.user.id,
+      user_name:      enrollment.user.name,
+      job_role:       enrollment.user.job_role,
+      module_id:      enrollment.module_id,
+      module_name:    enrollment.module.name,
+      module_category: enrollment.module.category,
+      status,
+      total_answers:  total,
+      incorrect,
+      incorrect_rate: total > 0 ? Math.round((incorrect / total) * 100) : 0,
+      weak_questions,
+    }
+  }).filter((s: any) => s.total_answers > 0 || s.status === 'expired')
+
+  // ── Module-level summary ───────────────────────────────────────────────────
+  const module_summary = trainingModules.map((m: any) => {
+    const moduleEnrollments = enrollments.filter((e: any) => e.module_id === m.id)
+    const moduleAnswers     = moduleEnrollments.flatMap((e: any) => e.answers ?? [])
+    const total             = moduleAnswers.length
+    const incorrect         = moduleAnswers.filter((a: any) => !a.is_correct).length
+    const gaps              = question_gaps.filter(q => q.module_id === m.id)
+    return {
+      module_id:      m.id,
+      module_name:    m.name,
+      category:       m.category,
+      total_answers:  total,
+      incorrect,
+      incorrect_rate: total > 0 ? Math.round((incorrect / total) * 100) : 0,
+      gap_count:      gaps.length,
+    }
+  }).filter((m: any) => m.total_answers > 0)
+
+  ok(res, { question_gaps, staff_gaps, module_summary })
+})
+
 // ─── GET /analytics/cqc-report ───────────────────────────────────────────────
 // §10.4 — CQC Readiness Report. Professional plan only (has_cqc_report = true).
 // Accepts date_from / date_to query params; defaults to a rolling 12-month window.
@@ -272,7 +652,7 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { name: true, plan: { select: { has_cqc_report: true } } },
+    select: { name: true, logo_url: true, plan: { select: { has_cqc_report: true } } },
   })
 
   if (!tenant?.plan?.has_cqc_report) {
@@ -467,9 +847,138 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
       created_at:  q.created_at,
     }))
 
+  // ── 9. Staff Training Compliance & Gaps ───────────────────────────────────────
+  const reportNow = new Date()
+  const [trainingUsers, trainingEnrollments, trainingModules] = await Promise.all([
+    (prisma as any).user.findMany({
+      where:  { tenant_id: tenantId, is_active: true },
+      select: { id: true, name: true, job_role: true },
+    }),
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId },
+      include: {
+        user:    { select: { id: true, name: true, job_role: true } },
+        module:  { select: { id: true, name: true, category: true, sort_order: true } },
+        answers: { select: { question_id: true, question_text: true, is_correct: true } },
+      },
+    }),
+    (prisma as any).trainingModule.findMany({
+      where:   { is_active: true },
+      orderBy: { sort_order: 'asc' },
+    }),
+  ])
+
+  const enrichedEnrollments = trainingEnrollments.map((e: any) => {
+    let status = e.status as string
+    if (e.expires_at && new Date(e.expires_at) < reportNow && status === 'complete') status = 'expired'
+    return { ...e, status }
+  })
+
+  const trainingModuleBreakdown = trainingModules
+    .map((m: any) => {
+      const rows        = enrichedEnrollments.filter((e: any) => e.module_id === m.id)
+      const completed   = rows.filter((e: any) => e.status === 'complete').length
+      const in_progress = rows.filter((e: any) => e.status === 'in_progress').length
+      const not_started = rows.filter((e: any) => e.status === 'not_started').length
+      const expired     = rows.filter((e: any) => e.status === 'expired').length
+      return {
+        name: m.name, category: m.category, sort_order: m.sort_order,
+        enrolled: rows.length, completed, in_progress, not_started, expired,
+        completion_rate: rows.length > 0 ? Math.round((completed / rows.length) * 100) : 0,
+      }
+    })
+    .filter((m: any) => m.enrolled > 0)
+    .sort((a: any, b: any) => a.sort_order - b.sort_order)
+
+  const trainingStatutoryModules = trainingModules.filter((m: any) => m.category === 'statutory')
+  const trainingCompliantStaff   = trainingUsers.filter((u: any) =>
+    trainingStatutoryModules.length === 0 || trainingStatutoryModules.every((m: any) => {
+      const e = enrichedEnrollments.find((e: any) => e.user_id === u.id && e.module_id === m.id)
+      return e?.status === 'complete'
+    })
+  ).length
+
+  const trainingAllAnswers   = enrichedEnrollments.flatMap((e: any) => e.answers ?? [])
+  const trainingCorrect      = trainingAllAnswers.filter((a: any) => a.is_correct).length
+  const trainingExpiringSoon = enrichedEnrollments.filter((e: any) => {
+    if (e.status !== 'complete' || !e.expires_at) return false
+    const days = Math.ceil((new Date(e.expires_at).getTime() - reportNow.getTime()) / 86400000)
+    return days > 0 && days <= 90
+  }).length
+
+  // Training gaps: per-question failure analysis
+  const questionTextLookup: Record<string, string> = {}
+  for (const m of trainingModules) {
+    for (const q of (m.questions as any[]) ?? []) {
+      if (q.id && q.text) questionTextLookup[q.id] = q.text
+    }
+  }
+  const qStats: Record<string, { question_text: string; module_name: string; total: number; incorrect: number }> = {}
+  for (const enrollment of enrichedEnrollments) {
+    for (const answer of (enrollment.answers as any[])) {
+      const qid   = answer.question_id
+      const qtext = answer.question_text ?? questionTextLookup[qid] ?? 'Unknown question'
+      if (!qStats[qid]) qStats[qid] = { question_text: qtext, module_name: enrollment.module.name, total: 0, incorrect: 0 }
+      qStats[qid].total++
+      if (!answer.is_correct) qStats[qid].incorrect++
+    }
+  }
+  const trainingQuestionGaps = Object.values(qStats)
+    .map(s => ({ ...s, incorrect_rate: s.total > 0 ? Math.round((s.incorrect / s.total) * 100) : 0 }))
+    .filter(s => s.total >= 2 && s.incorrect_rate >= 40)
+    .sort((a, b) => b.incorrect_rate - a.incorrect_rate)
+
+  // Training chat engagement: queries where staff were actively researching training topics
+  const trainingChatQueries = periodQueries.filter((q: any) => q.document_category_queried === 'training_module')
+  const trainingChatUserIds = new Set<string>(
+    trainingChatQueries.filter((q: any) => q.user_id).map((q: any) => q.user_id as string),
+  )
+
+  // Load names for users who engaged in training chat
+  const trainingChatUserRows: any[] = trainingChatUserIds.size > 0
+    ? await (prisma as any).user.findMany({
+        where:  { id: { in: [...trainingChatUserIds] }, tenant_id: tenantId },
+        select: { id: true, name: true, job_role: true },
+      })
+    : []
+  const trainingChatUserMap = new Map(trainingChatUserRows.map((u: any) => [u.id, u]))
+
+  const trainingChatByUser = [...trainingChatUserIds].map(uid => {
+    const userQueries = trainingChatQueries.filter((q: any) => q.user_id === uid)
+    const lastQ       = userQueries.reduce((a: any, b: any) => a.created_at > b.created_at ? a : b, userQueries[0])
+    return {
+      user_id:       uid,
+      user_name:     (trainingChatUserMap.get(uid) as any)?.name ?? 'Unknown',
+      job_role:      (trainingChatUserMap.get(uid) as any)?.job_role ?? null,
+      query_count:   userQueries.length,
+      last_active:   lastQ?.created_at ?? null,
+    }
+  }).sort((a, b) => b.query_count - a.query_count)
+
+  const trainingCompliance = {
+    compliance_rate:     trainingUsers.length > 0 ? Math.round((trainingCompliantStaff / trainingUsers.length) * 100) : 0,
+    compliant_staff:     trainingCompliantStaff,
+    total_staff:         trainingUsers.length,
+    total_enrollments:   trainingEnrollments.length,
+    module_breakdown:    trainingModuleBreakdown,
+    total_answers:       trainingAllAnswers.length,
+    correct_answers:     trainingCorrect,
+    correct_answer_rate: trainingAllAnswers.length > 0 ? Math.round((trainingCorrect / trainingAllAnswers.length) * 100) : 0,
+    expiring_soon_count: trainingExpiringSoon,
+    expired_count:       enrichedEnrollments.filter((e: any) => e.status === 'expired').length,
+    knowledge_gaps:      trainingQuestionGaps,
+    // Staff actively researching training topics via the learning chat
+    chat_engagement: {
+      total_queries:   trainingChatQueries.length,
+      unique_staff:    trainingChatUserIds.size,
+      by_user:         trainingChatByUser,
+    },
+  }
+
   ok(res, {
     meta: {
       org_name:                 tenant.name,
+      org_logo_url:             tenant.logo_url ?? null,
       date_from:                dateFrom.toISOString(),
       date_to:                  dateTo.toISOString(),
       generated_at:             new Date().toISOString(),
@@ -485,5 +994,78 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
     multilingual_session_count:  multilingualSessionCount,
     handbook_access:             handbookAccess,
     knowledge_gaps:         knowledgeGaps,
+    training_compliance:    trainingCompliance,
   })
+})
+
+// ─── GET /analytics/cqc-prep ─────────────────────────────────────────────────
+// CQC Staff Prep performance analytics for the current tenant.
+
+analyticsRouter.get('/cqc-prep', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const deliveries = await (prisma as any).cqcStaffDelivery.findMany({
+      where:   { tenant_id: tenantId },
+      include: {
+        question: { select: { domain: true } },
+        user:     { select: { id: true, name: true, job_role: true } },
+      },
+      orderBy: { sent_at: 'desc' },
+    })
+
+    const evaluated = deliveries.filter((d: any) => d.status === 'evaluated')
+    const pending   = deliveries.filter((d: any) => d.status === 'pending')
+
+    // Overall summary
+    const avgScore = evaluated.length
+      ? Math.round(evaluated.reduce((s: number, d: any) => s + (d.score ?? 0), 0) / evaluated.length)
+      : null
+    const pct80Plus = evaluated.length
+      ? Math.round(evaluated.filter((d: any) => (d.score ?? 0) >= 80).length / evaluated.length * 100)
+      : null
+
+    // Per-domain breakdown
+    const DOMAINS = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+    const by_domain = DOMAINS.map(domain => {
+      const sent  = deliveries.filter((d: any) => d.question.domain === domain)
+      const done  = sent.filter((d: any) => d.status === 'evaluated')
+      const avg      = done.length ? Math.round(done.reduce((s: number, d: any) => s + (d.score ?? 0), 0) / done.length) : null
+      const pct80    = done.length ? Math.round(done.filter((d: any) => (d.score ?? 0) >= 80).length / done.length * 100) : null
+      return { domain, total_sent: sent.length, total_answered: done.length, avg_score: avg, pct_80_plus: pct80 }
+    })
+
+    // Per-staff performance
+    const userMap = new Map<string, { name: string; job_role: string | null; answers: any[] }>()
+    for (const d of evaluated) {
+      if (!userMap.has(d.user_id)) {
+        userMap.set(d.user_id, { name: d.user.name, job_role: d.user.job_role, answers: [] })
+      }
+      userMap.get(d.user_id)!.answers.push(d)
+    }
+    const staff_performance = Array.from(userMap.entries()).map(([user_id, u]) => {
+      const overall = Math.round(u.answers.reduce((s, d) => s + (d.score ?? 0), 0) / u.answers.length)
+      const by_domain = DOMAINS.reduce((acc, dom) => {
+        const domAnswers = u.answers.filter((d: any) => d.question.domain === dom)
+        acc[dom] = domAnswers.length
+          ? Math.round(domAnswers.reduce((s: number, d: any) => s + (d.score ?? 0), 0) / domAnswers.length)
+          : null
+        return acc
+      }, {} as Record<string, number | null>)
+      return { user_id, name: u.name, job_role: u.job_role, total_answered: u.answers.length, avg_score: overall, by_domain }
+    }).sort((a, b) => b.avg_score - a.avg_score)
+
+    ok(res, {
+      summary: {
+        total_sent:     deliveries.length,
+        total_answered: evaluated.length,
+        pending:        pending.length,
+        avg_score:      avgScore,
+        pct_80_plus:    pct80Plus,
+      },
+      by_domain,
+      staff_performance,
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
 })

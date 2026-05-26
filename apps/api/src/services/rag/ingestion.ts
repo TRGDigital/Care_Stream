@@ -68,7 +68,7 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
   // ── Step 4: TOC detection (staff_handbook only) ───────────────────────────────
 
   const isHandbook = document_category === 'staff_handbook'
-  let chapters = []
+  let chapters: any[] = []
 
   if (isHandbook) {
     const tocResult = detectTOC(cleanText)

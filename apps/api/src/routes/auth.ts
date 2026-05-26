@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { prisma } from '../db/client'
 import { hashPassword, verifyPassword } from '../services/auth/password'
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../services/auth/tokens'
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, verifyAccessToken } from '../services/auth/tokens'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
@@ -166,6 +166,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     return
   }
 
+  if (user.is_active === false) {
+    err(res, 'ACCOUNT_DEACTIVATED', 'This account has been deactivated. Please contact your administrator.', 403)
+    return
+  }
+
   if (isAccountLocked(user.locked_until)) {
     await writeAuditLog({
       tenant_id: user.tenant_id,
@@ -210,13 +215,16 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     return
   }
 
-  // Success — reset failure counters and record login
+  // Success — reset failure counters and record login timestamps
+  const now = new Date()
   await (prisma as any).user.update({
     where: { id: user.id },
     data: {
       failed_login_attempts: 0,
-      locked_until: null,
-      last_login_at: new Date(),
+      locked_until:          null,
+      last_login_at:         now,
+      // first_login_at is written once and never overwritten
+      ...(user.first_login_at ? {} : { first_login_at: now }),
     },
   })
 
@@ -292,4 +300,65 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   })
 
   ok(res, { access_token: accessToken })
+})
+
+// ─── POST /auth/switch-site ───────────────────────────────────────────────────
+// Multi-site: lets a group admin switch context to another site in their group.
+// Validates the calling JWT, checks group membership, issues new JWT pair.
+
+authRouter.post('/switch-site', async (req: Request, res: Response) => {
+  const authorization = req.headers.authorization
+  if (!authorization?.startsWith('Bearer ')) {
+    err(res, 'MISSING_TOKEN', 'Authentication required.', 401); return
+  }
+
+  let payload: ReturnType<typeof verifyAccessToken>
+  try {
+    payload = verifyAccessToken(authorization.slice(7))
+  } catch {
+    err(res, 'INVALID_TOKEN', 'Token is invalid or expired.', 401); return
+  }
+
+  if (payload.role !== 'admin') {
+    err(res, 'FORBIDDEN', 'Admin access required.', 403); return
+  }
+
+  const { tenant_id } = req.body ?? {}
+  if (!tenant_id) {
+    err(res, 'VALIDATION_ERROR', 'tenant_id is required.'); return
+  }
+
+  const [currentTenant, targetTenant] = await Promise.all([
+    (prisma as any).tenant.findUnique({ where: { id: payload.tenant_id }, select: { id: true, parent_tenant_id: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenant_id }, select: { id: true, name: true, parent_tenant_id: true } }),
+  ])
+
+  if (!targetTenant) { err(res, 'NOT_FOUND', 'Target site not found.', 404); return }
+
+  // Group root for each tenant (parent_tenant_id ?? own id)
+  const currentRoot = currentTenant?.parent_tenant_id ?? payload.tenant_id
+  const targetRoot  = targetTenant.parent_tenant_id ?? tenant_id
+
+  if (currentRoot !== targetRoot) {
+    err(res, 'FORBIDDEN', 'Target site is not in the same group.', 403); return
+  }
+
+  if (tenant_id === payload.tenant_id) {
+    err(res, 'VALIDATION_ERROR', 'Already on this site.', 400); return
+  }
+
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: payload.sub },
+    select: { id: true, name: true, email: true },
+  })
+
+  const accessToken  = generateAccessToken({ sub: payload.sub, tenant_id, role: 'admin' })
+  const refreshToken = generateRefreshToken(payload.sub)
+
+  ok(res, {
+    access_token:  accessToken,
+    refresh_token: refreshToken,
+    tenant: { id: targetTenant.id, name: targetTenant.name },
+    user:   user ?? { id: payload.sub, name: '', email: '' },
+  })
 })

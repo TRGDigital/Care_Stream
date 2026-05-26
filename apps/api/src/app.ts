@@ -2,16 +2,25 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import { authRouter } from './routes/auth'
+import { feedbackRouter } from './routes/feedback'
 import { policiesRouter } from './routes/policies'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
 import { emailRouter } from './routes/email'
+import { whatsappRouter } from './routes/whatsapp'
 import { billingRouter, stripeWebhookHandler } from './routes/billing'
 import { regulationsRouter } from './routes/regulations'
 import { analyticsRouter } from './routes/analytics'
 import { adminRouter } from './routes/admin'
 import { settingsRouter } from './routes/settings'
 import { knowledgeRouter } from './routes/knowledge'
+import { sitesRouter } from './routes/sites'
+import { onboardingRouter } from './routes/onboarding'
+import { trainingRouter } from './routes/training'
+import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
+import { auditsRouter } from './routes/audits'
+import { seedTrainingModulesIfEmpty } from './lib/seed-training'
+import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
 import { tenantGuard } from './middleware/tenantGuard'
 import { apiLimiter } from './middleware/rateLimiter'
@@ -20,13 +29,33 @@ const app = express()
 const PORT = process.env.PORT || 4000
 
 app.use(helmet())
-app.use(cors({ origin: process.env.WEB_URL, credentials: true }))
+const allowedOrigins = (process.env.WEB_URL ?? '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean)
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no origin (server-to-server, curl)
+    if (!origin) return cb(null, true)
+    // In development, allow any localhost port
+    if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true)
+    if (allowedOrigins.includes(origin)) return cb(null, true)
+    cb(new Error(`CORS: origin not allowed — ${origin}`))
+  },
+  credentials: true,
+}))
+
+// Serve locally-uploaded files (blog images in dev when S3 is not configured)
+const LOCAL_UPLOAD_DIR = process.env.LOCAL_STORAGE_DIR ?? '/tmp/carestreamai'
+app.use('/uploads', express.static(LOCAL_UPLOAD_DIR))
 
 // §10.6 — Stripe webhook must receive the raw body for signature verification.
 // Mount before express.json() so the Buffer is preserved.
 app.post('/billing/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler)
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: false })) // Twilio webhooks send form-encoded payloads
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
@@ -41,6 +70,15 @@ app.use('/admin', adminRouter)
 // inside the service (sender looked up against tenant staff list).
 // Must be mounted BEFORE requireAuth.
 app.use('/email', emailRouter)
+
+// WhatsApp inbound webhook (Twilio). Unauthenticated at the Express layer —
+// Twilio signature validation is applied inside the router in production.
+// Must be mounted BEFORE requireAuth.
+app.use('/whatsapp', whatsappRouter)
+
+// One-click feedback links from email/WhatsApp — no auth required, HMAC-verified.
+// Must be mounted BEFORE requireAuth.
+app.use('/feedback', feedbackRouter)
 
 // §11.1 — All routes below require a valid JWT + tenant context.
 // apiLimiter: 100 req/min per user.
@@ -57,9 +95,41 @@ app.use('/analytics', analyticsRouter)
 app.use('/regulations', regulationsRouter)
 app.use('/settings', settingsRouter)
 app.use('/knowledge', knowledgeRouter)
+app.use('/sites', sitesRouter)
+app.use('/onboarding', onboardingRouter)
+app.use('/training', trainingRouter)
+app.use('/cqc-questions', cqcQuestionsRouter)
+app.use('/audits', auditsRouter)
+
+seedTrainingModulesIfEmpty()
+
+// Daily renewal reminder scheduler — fires at midnight, reschedules itself
+function scheduleMidnightReminders(): void {
+  const now  = new Date()
+  const next = new Date(now)
+  next.setDate(next.getDate() + 1)
+  next.setHours(0, 1, 0, 0)  // 00:01 to avoid exact-midnight edge cases
+  const msUntilMidnight = next.getTime() - now.getTime()
+
+  setTimeout(() => {
+    sendRenewalReminders().catch(e =>
+      console.error('[scheduler] Renewal reminder run failed:', e)
+    )
+    scheduleMidnightReminders()
+  }, msUntilMidnight)
+
+  console.log(`[scheduler] Next renewal reminder run in ${Math.round(msUntilMidnight / 60000)} minutes`)
+}
+
+// Prevent unhandled async errors from crashing the process in Express 4.
+// Route handlers should use try/catch, but this is the last-resort guard.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection] Caught unhandled promise rejection:', reason)
+})
 
 app.listen(PORT, () => {
   console.log(`CareStreamAI API running on port ${PORT}`)
+  scheduleMidnightReminders()
 })
 
 export default app

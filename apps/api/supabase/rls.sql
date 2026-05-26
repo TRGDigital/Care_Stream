@@ -39,11 +39,11 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION get_current_tenant_id()
-RETURNS uuid
+RETURNS text
 LANGUAGE sql
 STABLE
 AS $$
-  SELECT NULLIF(current_setting('app.current_tenant_id', true), '')::uuid;
+  SELECT NULLIF(current_setting('app.current_tenant_id', true), '');
 $$;
 
 

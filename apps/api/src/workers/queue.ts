@@ -48,6 +48,7 @@ export interface IngestionJobData {
 }
 
 export async function enqueueIngestion(data: IngestionJobData): Promise<void> {
+  console.log(`[queue] enqueueIngestion USE_INLINE=${USE_INLINE} REDIS_URL=${process.env.REDIS_URL ?? 'NOT_SET'} S3_BUCKET=${process.env.S3_BUCKET ?? 'NOT_SET'}`)
   if (USE_INLINE) {
     // No Redis (Vercel / local dev) — run synchronously so the function stays alive
     const { ingestDocument } = await import('../services/rag/ingestion')

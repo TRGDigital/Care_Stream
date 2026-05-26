@@ -92,50 +92,56 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
   }
 
   let policy: any
-  await tenantContext.run({ tenantId }, async () => {
-    const s3Key = await uploadPolicyFile({
-      tenantId,
-      policyId,
-      filename:  req.file!.originalname,
-      buffer:    req.file!.buffer,
-      mimeType:  req.file!.mimetype,
-    })
+  try {
+    await tenantContext.run({ tenantId }, async () => {
+      const s3Key = await uploadPolicyFile({
+        tenantId,
+        policyId,
+        filename:  req.file!.originalname,
+        buffer:    req.file!.buffer,
+        mimeType:  req.file!.mimetype,
+      })
 
-    policy = await (prisma as any).policy.create({
-      data: {
-        id:                  policyId,
-        tenant_id:           tenantId,
-        name,
-        filename:            req.file!.originalname,
-        s3_key:              s3Key,
+      policy = await (prisma as any).policy.create({
+        data: {
+          id:                  policyId,
+          tenant_id:           tenantId,
+          name,
+          filename:            req.file!.originalname,
+          s3_key:              s3Key,
+          document_category,
+          version:             1,
+          status:              'processing',
+          tags:                parseTags(rawTags),
+          uploaded_by:         req.user!.sub,
+          review_interval_days: review_interval_days ?? null,
+        },
+      })
+
+      await enqueueIngestion({
+        policy_id:         policyId,
+        tenant_id:         tenantId,
+        s3_key:            s3Key,
         document_category,
-        version:             1,
-        status:              'processing',
-        tags:                parseTags(rawTags),
-        uploaded_by:         req.user!.sub,
-        review_interval_days: review_interval_days ?? null,
-      },
-    })
+        filename:          req.file!.originalname,
+        mime_type:         req.file!.mimetype,
+        version:           1,
+      })
 
-    await enqueueIngestion({
-      policy_id:         policyId,
-      tenant_id:         tenantId,
-      s3_key:            s3Key,
-      document_category,
-      filename:          req.file!.originalname,
-      mime_type:         req.file!.mimetype,
-      version:           1,
+      await writeAuditLog({
+        tenant_id:   tenantId,
+        user_id:     req.user!.sub,
+        event_type:  'policy_upload',
+        entity_type: 'policy',
+        entity_id:   policyId,
+        metadata:    { name, document_category, filename: req.file!.originalname, size: req.file!.size },
+      })
     })
-
-    await writeAuditLog({
-      tenant_id:   tenantId,
-      user_id:     req.user!.sub,
-      event_type:  'policy_upload',
-      entity_type: 'policy',
-      entity_id:   policyId,
-      metadata:    { name, document_category, filename: req.file!.originalname, size: req.file!.size },
-    })
-  })
+  } catch (e) {
+    console.error('[policies/upload] Error:', e)
+    err(res, 'UPLOAD_FAILED', 'Policy upload failed. Check server logs.', 500)
+    return
+  }
 
   ok(res, { policy }, 201)
 })

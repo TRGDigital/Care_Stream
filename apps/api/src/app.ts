@@ -124,6 +124,13 @@ function scheduleMidnightReminders(): void {
   console.log(`[scheduler] Next renewal reminder run in ${Math.round(msUntilMidnight / 60000)} minutes`)
 }
 
+// Express 4 error handler — catches any error passed to next(err) or thrown in sync handlers.
+// Async handlers must use try/catch and call next(err), but this catches anything that slips through.
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[express-error]', err?.message ?? err)
+  if (!res.headersSent) res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } })
+})
+
 // Prevent unhandled async errors from crashing the process in Express 4.
 // Route handlers should use try/catch, but this is the last-resort guard.
 process.on('unhandledRejection', (reason) => {

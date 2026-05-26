@@ -8,61 +8,60 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
-.frame{background:#f0f4f4;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
-.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #d8e4e4}
+body{background:#EAE0F5;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
+.frame{background:#E2D6F2;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(26,5,48,0.22)}
+.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #D5C8E8}
 .dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}
 .d1{background:#ff6058}.d2{background:#ffbc2e}.d3{background:#28c840}
-.url-bar{flex:1;background:#f0f4f4;border-radius:6px;padding:5px 14px;font-size:12px;color:#5c7070;text-align:center}
-.page{background:#fff;border-radius:8px;border:0.5px solid #d8e4e4;overflow:hidden;display:flex;height:580px}
-.nav{width:210px;background:#f4f8f8;border-right:0.5px solid #e0e8e8;flex-shrink:0;display:flex;flex-direction:column}
-.nav-head{padding:18px;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;gap:10px}
-.logo-mark{width:30px;height:30px;background:#0D6E6E;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-text{font-size:13px;font-weight:700;color:#1c2b2b}
+.url-bar{flex:1;background:#EAE2F5;border-radius:6px;padding:5px 14px;font-size:12px;color:#5E4D70;text-align:center}
+.page{background:#fff;border-radius:8px;border:0.5px solid #D5C8E8;overflow:hidden;display:flex;height:580px}
+.nav{width:210px;background:#1A0830;border-right:none;flex-shrink:0;display:flex;flex-direction:column}
+.nav-head{padding:18px;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,#8B4DB8,#C4688E);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:700;color:white}
 .ns{padding:13px 9px}
-.nl{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
-.ni{padding:7px 8px;border-radius:7px;font-size:12px;color:#5c7070;margin-bottom:2px}
-.ni.active{background:#e6f4f4;color:#0D6E6E;font-weight:600;border-left:3px solid #0D6E6E;padding-left:5px}
-.main{flex:1;overflow-y:auto}
-.ph{padding:16px 22px;border-bottom:0.5px solid #e0e8e8}
-.pt{font-size:16px;font-weight:700;color:#1c2b2b}
-.ps{font-size:11px;color:#5c7070;margin-top:2px}
+.nl{font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
+.ni{padding:7px 8px;border-radius:7px;font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:2px}
+.ni.active{background:rgba(255,255,255,0.10);color:white;font-weight:600;border-left:3px solid #C4A8E0;padding-left:5px}
+.main{flex:1;overflow-y:auto;background:#F5F0FA}
+.ph{padding:16px 22px;border-bottom:0.5px solid #E8D8F4;background:white}
+.pt{font-size:16px;font-weight:700;color:#1A1530}
+.ps{font-size:11px;color:#5E4D70;margin-top:2px}
 .content{padding:18px 22px}
-.ea-card{background:#e6f4f4;border-radius:9px;padding:15px 18px;margin-bottom:22px;border:0.5px solid #9fd4c8}
-.ea-label{font-size:10px;font-weight:700;color:#085041;letter-spacing:0.07em;margin-bottom:7px}
+.ea-card{background:#F5EEFA;border-radius:9px;padding:15px 18px;margin-bottom:22px;border:0.5px solid #C4A8E0}
+.ea-label{font-size:10px;font-weight:700;color:#5E2D8A;letter-spacing:0.07em;margin-bottom:7px}
 .ea-row{display:flex;align-items:center;gap:11px}
-.ea-addr{font-size:14px;font-weight:700;color:#0D6E6E;font-family:monospace}
-.copy-btn{background:#0D6E6E;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;flex-shrink:0}
-.ea-note{font-size:11px;color:#5c7070;margin-top:9px}
-.st{font-size:13px;font-weight:700;color:#1c2b2b;margin-bottom:4px}
-.ss{font-size:11px;color:#5c7070;margin-bottom:13px}
+.ea-addr{font-size:14px;font-weight:700;color:#9B52B5;font-family:monospace}
+.copy-btn{background:linear-gradient(135deg,#8B4DB8,#C4688E);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;flex-shrink:0}
+.ea-note{font-size:11px;color:#5E4D70;margin-top:9px}
+.st{font-size:13px;font-weight:700;color:#1A1530;margin-bottom:4px}
+.ss{font-size:11px;color:#5E4D70;margin-bottom:13px}
 .add-form{display:flex;gap:8px;margin-bottom:16px;align-items:center}
-.ai{flex:1;background:#f4f8f8;border:0.5px solid #e0e8e8;border-radius:7px;padding:8px 13px;font-size:12px;color:#8fa8a8}
-.al{width:165px;background:#f4f8f8;border:0.5px solid #e0e8e8;border-radius:7px;padding:8px 13px;font-size:12px;color:#8fa8a8}
-.add-btn{background:#0D6E6E;color:white;border:none;border-radius:7px;padding:8px 18px;font-size:12px;font-weight:600;white-space:nowrap}
-.stbl{border:0.5px solid #e0e8e8;border-radius:9px;overflow:hidden;margin-bottom:22px}
-.sth{background:#f4f8f8;padding:9px 13px;display:grid;grid-template-columns:2.2fr 1.5fr 1fr 80px;font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;border-bottom:0.5px solid #e0e8e8}
-.str{padding:10px 13px;display:grid;grid-template-columns:2.2fr 1.5fr 1fr 80px;border-bottom:0.5px solid #f0f4f4;align-items:center}
+.ai{flex:1;background:white;border:0.5px solid #E8D8F4;border-radius:7px;padding:8px 13px;font-size:12px;color:#8E7AA8}
+.al{width:165px;background:white;border:0.5px solid #E8D8F4;border-radius:7px;padding:8px 13px;font-size:12px;color:#8E7AA8}
+.add-btn{background:linear-gradient(135deg,#8B4DB8,#C4688E);color:white;border:none;border-radius:7px;padding:8px 18px;font-size:12px;font-weight:600;white-space:nowrap}
+.stbl{border:0.5px solid #E8D8F4;border-radius:9px;overflow:hidden;margin-bottom:22px;background:white}
+.sth{background:#F5F0FA;padding:9px 13px;display:grid;grid-template-columns:2.2fr 1.5fr 1fr 80px;font-size:10px;font-weight:700;color:#5E4D70;letter-spacing:0.05em;border-bottom:0.5px solid #E8D8F4}
+.str{padding:10px 13px;display:grid;grid-template-columns:2.2fr 1.5fr 1fr 80px;border-bottom:0.5px solid #F0E8FA;align-items:center}
 .str:last-child{border-bottom:none}
-.sv{font-weight:600;color:#1c2b2b;font-family:monospace;font-size:11px}
-.slabel{font-size:10px;color:#5c7070;margin-top:1px}
+.sv{font-weight:600;color:#1A1530;font-family:monospace;font-size:11px}
+.slabel{font-size:10px;color:#5E4D70;margin-top:1px}
 .type-badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600}
-.t-ind{background:#e6f4f4;color:#085041}
+.t-ind{background:#F5EEFA;color:#5E2D8A}
 .t-dom{background:#e8f0fb;color:#185FA5}
 .remove{font-size:11px;color:#C0392B;background:none;border:none;cursor:pointer}
 .rtbl{border:0.5px solid #fde8e8;border-radius:9px;overflow:hidden}
-.rth{background:#fef5f5;padding:9px 13px;display:grid;grid-template-columns:2fr 1fr 130px;font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;border-bottom:0.5px solid #fde8e8}
-.rtr{padding:10px 13px;display:grid;grid-template-columns:2fr 1fr 130px;border-bottom:0.5px solid #fef5f5;align-items:center}
+.rth{background:#fef5f5;padding:9px 13px;display:grid;grid-template-columns:2fr 1fr 130px;font-size:10px;font-weight:700;color:#5E4D70;letter-spacing:0.05em;border-bottom:0.5px solid #fde8e8}
+.rtr{padding:10px 13px;display:grid;grid-template-columns:2fr 1fr 130px;border-bottom:0.5px solid #fef5f5;align-items:center;background:white}
 .rtr:last-child{border-bottom:none}
-.approve-btn{background:#0D6E6E;color:white;border:none;border-radius:6px;padding:4px 11px;font-size:10px;font-weight:600;white-space:nowrap}
+.approve-btn{background:linear-gradient(135deg,#8B4DB8,#C4688E);color:white;border:none;border-radius:6px;padding:4px 11px;font-size:10px;font-weight:600;white-space:nowrap}
 </style>
 <div class="frame">
 <div class="browser-bar">
   <div class="dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
-  <div class="url-bar">app.carestreamai.co.uk/admin/email-settings — Crossways Care Home</div>
+  <div class="url-bar">app.carestreamai.co.uk/settings — Crossways Care Home</div>
 </div>
 <div class="page">
   <div class="nav">
@@ -71,9 +70,10 @@ body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margi
       <span class="logo-text">CareStreamAI</span>
     </div>
     <div class="ns"><div class="nl">OVERVIEW</div><div class="ni">Dashboard</div><div class="ni">Query history</div></div>
-    <div class="ns"><div class="nl">DOCUMENTS</div><div class="ni">Policy library</div><div class="ni">Staff handbook</div></div>
-    <div class="ns"><div class="nl">TEAM</div><div class="ni">Staff management</div><div class="ni active">Email settings</div></div>
-    <div class="ns"><div class="nl">REPORTS</div><div class="ni">Analytics</div><div class="ni">CQC report</div></div>
+    <div class="ns"><div class="nl">CONTENT</div><div class="ni">Policy library</div><div class="ni">Knowledge base</div></div>
+    <div class="ns"><div class="nl">TEAM</div><div class="ni">Staff</div></div>
+    <div class="ns"><div class="nl">REPORTING</div><div class="ni">Analytics</div><div class="ni">CQC report</div></div>
+    <div class="ns"><div class="nl">ADMIN</div><div class="ni active">Settings</div><div class="ni">Billing</div></div>
   </div>
   <div class="main">
     <div class="ph"><div class="pt">Email settings</div><div class="ps">Manage your policy email address and control who can send queries by email</div></div>
@@ -92,21 +92,20 @@ body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margi
       </div>
       <div class="stbl">
         <div class="sth"><span>Address / domain</span><span>Label</span><span>Type</span><span>Added</span></div>
-        <div class="str"><div><div class="sv">nurses@crosswayscarehome.co.uk</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">Night shift nursing team</div><div><span class="type-badge t-ind">Individual</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8fa8a8">12 Apr</span><button class="remove">Remove</button></div></div>
-        <div class="str"><div><div class="sv">@crosswayscarehome.co.uk</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">All Crossways staff</div><div><span class="type-badge t-dom">Domain</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8fa8a8">1 Mar</span><button class="remove">Remove</button></div></div>
-        <div class="str"><div><div class="sv">m.luz@gmail.com</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5c7070">Maria Luz — personal email</div><div><span class="type-badge t-ind">Individual</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8fa8a8">2 May</span><button class="remove">Remove</button></div></div>
+        <div class="str"><div><div class="sv">nurses@crosswayscarehome.co.uk</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5E4D70">Night shift nursing team</div><div><span class="type-badge t-ind">Individual</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8E7AA8">12 Apr</span><button class="remove">Remove</button></div></div>
+        <div class="str"><div><div class="sv">@crosswayscarehome.co.uk</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5E4D70">All Crossways staff</div><div><span class="type-badge t-dom">Domain</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8E7AA8">1 Mar</span><button class="remove">Remove</button></div></div>
+        <div class="str"><div><div class="sv">m.luz@gmail.com</div><div class="slabel">Added by J. Okonkwo</div></div><div style="font-size:11px;color:#5E4D70">Maria Luz — personal email</div><div><span class="type-badge t-ind">Individual</span></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:#8E7AA8">2 May</span><button class="remove">Remove</button></div></div>
       </div>
       <div class="st" style="margin-bottom:4px">Rejected senders</div>
       <div class="ss">Recent emails that were not processed because the sender was not on your approved list.</div>
       <div class="rtbl">
         <div class="rth"><span>Sender</span><span>Received</span><span>Action</span></div>
-        <div class="rtr"><div style="font-size:11px;font-family:monospace;color:#1c2b2b">a.kemi@crosswayscarehome.co.uk</div><div style="font-size:11px;color:#5c7070">Today 08:42</div><div><button class="approve-btn">Add to approved list</button></div></div>
-        <div class="rtr"><div style="font-size:11px;font-family:monospace;color:#1c2b2b">p.nowak@crosswayscarehome.co.uk</div><div style="font-size:11px;color:#5c7070">Yesterday 22:15</div><div><button class="approve-btn">Add to approved list</button></div></div>
+        <div class="rtr"><div style="font-size:11px;font-family:monospace;color:#1A1530">a.kemi@crosswayscarehome.co.uk</div><div style="font-size:11px;color:#5E4D70">Today 08:42</div><div><button class="approve-btn">Add to approved list</button></div></div>
+        <div class="rtr"><div style="font-size:11px;font-family:monospace;color:#1A1530">p.nowak@crosswayscarehome.co.uk</div><div style="font-size:11px;color:#5E4D70">Yesterday 22:15</div><div><button class="approve-btn">Add to approved list</button></div></div>
       </div>
     </div>
   </div>
 </div>
 </div>
-
 </body>
 </html>

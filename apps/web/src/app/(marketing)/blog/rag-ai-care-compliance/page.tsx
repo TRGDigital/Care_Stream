@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/marketing/article-layout'
 
-export const metadata = { title: 'Why RAG is the right AI approach for care compliance — CareStreamAI Blog' }
+export const metadata = {
+  title: 'Why RAG is the Right AI Approach for Care Compliance',
+  description: 'Retrieval Augmented Generation (RAG) is the AI approach that stays grounded in your documents. Understand why it is the only safe choice for compliance-critical care environments.',
+  openGraph: {
+    title: 'Why RAG is the Right AI Approach for Care Compliance',
+    description: 'Why AI grounded in your documents is the only safe choice for compliance-critical care.',
+    url: 'https://carestreamai.co.uk/blog/rag-ai-care-compliance',
+  },
+}
 
 export default function Post() {
   return (
@@ -12,14 +20,14 @@ export default function Post() {
       title="Why Retrieval Augmented Generation (RAG) is the right AI approach for care compliance"
     >
       <p>
-        Not all AI systems work the same way — and in a regulated environment, the architecture of your
+        Not all AI systems work the same way, and in a regulated environment, the architecture of your
         AI solution matters as much as its capabilities. Here is why Retrieval Augmented Generation is
         the only responsible approach for answering questions from approved policy documents.
       </p>
 
       <h2>The problem with standard large language models</h2>
       <p>
-        Standard large language models (LLMs) — like the kind that power general-purpose AI assistants —
+        Standard large language models (LLMs), like the kind that power general-purpose AI assistants —
         are trained on enormous quantities of text from the internet, books, and other sources. They
         develop a broad general knowledge that allows them to answer a huge range of questions fluently.
       </p>
@@ -28,7 +36,7 @@ export default function Post() {
       </p>
       <p>
         A general LLM asked &ldquo;What is our procedure for reporting a controlled drugs discrepancy?&rdquo; will
-        produce a confident, plausible-sounding answer — based on its general knowledge of how care
+        produce a confident, plausible-sounding answer, based on its general knowledge of how care
         organisations typically handle this situation. But that answer is not your procedure. It may
         differ from your procedure in important details. And it was not sourced from your approved policy.
       </p>
@@ -65,7 +73,7 @@ export default function Post() {
       <h3>The system cannot contradict your policies</h3>
       <p>
         Because the AI only reads your documents, it cannot produce answers that contradict them. If your
-        policy says X, the AI says X. If your policy changes, the retrieved content changes — and so do
+        policy says X, the AI says X. If your policy changes, the retrieved content changes, and so do
         the answers.
       </p>
 
@@ -80,18 +88,18 @@ export default function Post() {
       <p>
         Because every RAG query retrieves specific document sections, every query can be logged with
         exactly which policies were cited in the response. This creates a precise, auditable record of
-        what guidance was given and from where — invaluable for CQC inspection evidence.
+        what guidance was given and from where, invaluable for CQC inspection evidence.
       </p>
 
       <h2>RAG + regulatory knowledge</h2>
       <p>
-        The RAG approach extends naturally to curated external knowledge bases — such as a structured
+        The RAG approach extends naturally to curated external knowledge bases, such as a structured
         knowledge base of UK care regulation. When staff ask about RIDDOR, the Care Act, or UK GDPR,
         the system retrieves content from a validated regulatory knowledge base rather than generating
         an answer from general training data.
       </p>
       <p>
-        This means staff get accurate, grounded regulatory explanations in their own language — not
+        This means staff get accurate, grounded regulatory explanations in their own language, not
         general AI output that may be out of date or jurisdiction-specific to the wrong country.
       </p>
 

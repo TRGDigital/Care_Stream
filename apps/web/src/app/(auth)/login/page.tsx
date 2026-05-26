@@ -33,7 +33,8 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="mb-6 text-xl font-semibold text-neutral-dark">Sign in to your account</h1>
+      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Welcome back</h1>
+      <p className="mb-7 text-sm text-neutral-mid">Sign in to your CareStreamAI account</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-neutral-dark">

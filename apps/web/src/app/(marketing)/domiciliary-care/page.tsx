@@ -1,6 +1,14 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'CareStreamAI for Domiciliary Care' }
+export const metadata = {
+  title: 'CareStreamAI for Domiciliary Care',
+  description: 'CareStreamAI helps domiciliary care providers give community care workers instant policy access on the move — in any language, via WhatsApp, email, or web chat.',
+  openGraph: {
+    title: 'CareStreamAI for Domiciliary Care',
+    description: 'Instant policy access for community care workers, on the move, in any language.',
+    url: 'https://carestreamai.co.uk/domiciliary-care',
+  },
+}
 
 export default function DomiciliaryCarePage() {
   return (

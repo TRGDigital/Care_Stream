@@ -48,10 +48,36 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name:        'credentials',
       credentials: {
-        email:    { label: 'Email',    type: 'email'    },
-        password: { label: 'Password', type: 'password' },
+        email:         { label: 'Email',    type: 'email'    },
+        password:      { label: 'Password', type: 'password' },
+        mode:          { label: 'Mode',         type: 'text' },
+        access_token:  { label: 'Access Token',  type: 'text' },
+        refresh_token: { label: 'Refresh Token', type: 'text' },
+        tenant_name:   { label: 'Tenant Name',   type: 'text' },
+        user_name:     { label: 'User Name',     type: 'text' },
+        user_email:    { label: 'User Email',    type: 'text' },
       },
       async authorize(credentials) {
+        // ─── Site-switch mode ─────────────────────────────────────────────────
+        // Called after a successful /auth/switch-site API call to update the
+        // NextAuth session with the new site's tokens, transparent to all pages.
+        if (credentials?.mode === 'switch') {
+          if (!credentials.access_token || !credentials.refresh_token || !credentials.tenant_name) return null
+          try {
+            const payload = JSON.parse(Buffer.from((credentials.access_token as string).split('.')[1], 'base64').toString())
+            return {
+              id:           payload.sub,
+              name:         (credentials.user_name as string) || '',
+              email:        (credentials.user_email as string) || '',
+              role:         payload.role as 'admin' | 'staff',
+              tenantId:     payload.tenant_id,
+              tenantName:   credentials.tenant_name as string,
+              accessToken:  credentials.access_token as string,
+              refreshToken: credentials.refresh_token as string,
+            }
+          } catch { return null }
+        }
+
         if (!credentials?.email || !credentials?.password) return null
 
         const res = await fetch(`${API_URL}/auth/login`, {

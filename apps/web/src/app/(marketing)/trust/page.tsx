@@ -2,7 +2,15 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'Trust & Security — CareStreamAI' }
+export const metadata = {
+  title: 'Trust & Security',
+  description: 'CareStreamAI only ever answers from your uploaded documents. No internet searches, no hallucinations, no cross-contamination. Here is how we keep your compliance data safe.',
+  openGraph: {
+    title: 'Trust & Security | CareStreamAI',
+    description: 'Answers from your documents only. How CareStreamAI keeps your compliance data safe.',
+    url: 'https://carestreamai.co.uk/trust',
+  },
+}
 
 export default function TrustPage() {
   return (
@@ -10,7 +18,7 @@ export default function TrustPage() {
       <PageHero
         label="Trust & Security"
         title="Powered by your policies. Nothing else."
-        subtitle="Not the internet. Not another organisation's documents. Not guesswork. Here is exactly how CareStreamAI works — and why you can trust it with your compliance-critical information."
+        subtitle="Not the internet. Not another organisation's documents. Not guesswork. Here is exactly how CareStreamAI works, and why you can trust it with your compliance-critical information."
       />
 
       {/* How the AI works */}
@@ -23,12 +31,12 @@ export default function TrustPage() {
               {
                 audience: 'For everyone',
                 icon: '👤',
-                content: 'Think of CareStreamAI as a colleague who has read every policy in your library — and nothing else. When a member of your team asks a question, CareStreamAI searches your policy library, finds the most relevant sections, and uses them — and only them — to write the answer. It does not search the internet. It does not use general knowledge. It does not guess.',
+                content: 'Think of CareStreamAI as a colleague who has read every policy in your library, and nothing else. When a member of your team asks a question, CareStreamAI searches your policy library, finds the most relevant sections, and uses them, and only them, to write the answer. It does not search the internet. It does not use general knowledge. It does not guess.',
               },
               {
                 audience: 'For operations and quality leads',
                 icon: '⚙️',
-                content: 'CareStreamAI uses Retrieval Augmented Generation (RAG) — the gold standard for AI systems that need to answer from a specific, trusted document set. Every query searches your private policy index first. The AI receives only the retrieved content as its input — and is explicitly instructed not to use anything outside it.',
+                content: 'CareStreamAI uses Retrieval Augmented Generation (RAG), the gold standard for AI systems that need to answer from a specific, trusted document set. Every query searches your private policy index first. The AI receives only the retrieved content as its input, and is explicitly instructed not to use anything outside it.',
               },
               {
                 audience: 'For boards and legal leads',
@@ -50,10 +58,10 @@ export default function TrustPage() {
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>What We Promise</SectionLabel>
-          <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark">Your data — seven commitments.</h2>
+          <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark">Your data, seven commitments.</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {[
-              { commitment: 'Complete data isolation', detail: 'Your policy library, query history, and staff data are in a private environment that no other subscriber can access — ever.' },
+              { commitment: 'Complete data isolation', detail: 'Your policy library, query history, and staff data are in a private environment that no other subscriber can access, ever.' },
               { commitment: 'Never used for AI training', detail: 'Your documents and query data are never used to improve AI models. This is a contractual commitment.' },
               { commitment: 'Encrypted at rest and in transit', detail: 'All data encrypted using AES-256 at rest and TLS 1.3 in transit.' },
               { commitment: 'UK data residency', detail: 'All data stored within UK/EEA regions. No transfer outside these regions.' },
@@ -82,10 +90,10 @@ export default function TrustPage() {
           <h2 className="mb-12 text-3xl font-extrabold text-neutral-dark">Security questions, answered.</h2>
           <div className="space-y-4">
             {[
-              { q: 'Will the AI make things up?', a: 'No. CareStreamAI is explicitly designed to prevent this. If no relevant policy is found, it says so — it does not generate content from general knowledge.' },
+              { q: 'Will the AI make things up?', a: 'No. CareStreamAI is explicitly designed to prevent this. If no relevant policy is found, it says so, it does not generate content from general knowledge.' },
               { q: 'Can other organisations see our policies?', a: 'No. Your policy library is completely isolated. No other subscriber can access it in any form.' },
               { q: 'Is our data used to train AI models?', a: 'No. Your data is never used for AI training. This is a contractual commitment.' },
-              { q: 'What if our policy has an error in it?', a: "CareStreamAI will accurately reflect what your policy says. This surfaces the need to keep policies accurate — which is the right incentive in a compliance setting." },
+              { q: 'What if our policy has an error in it?', a: "CareStreamAI will accurately reflect what your policy says. This surfaces the need to keep policies accurate, which is the right incentive in a compliance setting." },
               { q: 'What happens when we update a policy?', a: 'The old version is immediately retired from the retrieval system. All subsequent queries return answers based on the new version. The old version is retained in your audit archive.' },
             ].map(({ q, a }) => (
               <div key={q} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">

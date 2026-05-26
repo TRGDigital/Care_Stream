@@ -1,6 +1,14 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'CareStreamAI for Nursing Homes' }
+export const metadata = {
+  title: 'CareStreamAI for Nursing Homes',
+  description: 'CareStreamAI supports nursing home teams with instant policy access for registered nurses, care assistants, and senior carers — in any language, any shift, any time.',
+  openGraph: {
+    title: 'CareStreamAI for Nursing Homes',
+    description: 'Instant policy access for nursing home staff — any language, any shift, any time.',
+    url: 'https://carestreamai.co.uk/nursing-homes',
+  },
+}
 
 export default function NursingHomesPage() {
   return (

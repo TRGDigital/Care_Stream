@@ -17,6 +17,7 @@ import { createApiClient } from '@/lib/api-client'
 const NAV_SECTIONS = [
   {
     heading: 'Overview',
+    iconColor: 'text-teal-light',
     items: [
       { href: '/dashboard', label: 'Dashboard',     Icon: LayoutDashboard },
       { href: '/queries',   label: 'Query history', Icon: BarChart2       },
@@ -24,6 +25,7 @@ const NAV_SECTIONS = [
   },
   {
     heading: 'Content',
+    iconColor: 'text-blue-400',
     items: [
       { href: '/policies',  label: 'Policies',      Icon: FileText  },
       { href: '/knowledge', label: 'Knowledge Base', Icon: BookOpen },
@@ -31,28 +33,31 @@ const NAV_SECTIONS = [
   },
   {
     heading: 'Team',
+    iconColor: 'text-purple-400',
     items: [
       { href: '/staff', label: 'Staff', Icon: Users },
     ],
   },
   {
     heading: 'Reporting',
+    iconColor: 'text-amber-400',
     items: [
-      { href: '/analytics',            label: 'Analytics',   Icon: TrendingUp  },
-      { href: '/analytics/cqc-report', label: 'CQC Report',  Icon: ClipboardCheck },
-      { href: '/gaps',                 label: 'Policy Gaps', Icon: ShieldAlert  },
-      { href: '/training',             label: 'Training',       Icon: ShieldCheck   },
-      { href: '/cqc-questions',        label: 'CQC Staff Prep',    Icon: ClipboardList  },
-      { href: '/audits',               label: 'Monthly Audits',    Icon: ClipboardCheck },
+      { href: '/analytics',            label: 'Analytics',      Icon: TrendingUp     },
+      { href: '/analytics/cqc-report', label: 'CQC Report',     Icon: ClipboardCheck },
+      { href: '/gaps',                 label: 'Policy Gaps',    Icon: ShieldAlert    },
+      { href: '/training',             label: 'Training',       Icon: ShieldCheck    },
+      { href: '/cqc-questions',        label: 'CQC Staff Prep', Icon: ClipboardList  },
+      { href: '/audits',               label: 'Monthly Audits', Icon: ClipboardCheck },
     ],
   },
   {
     heading: 'Admin',
+    iconColor: 'text-slate-400',
     items: [
       { href: '/onboarding', label: 'Onboarding',    Icon: GraduationCap },
-      { href: '/billing',    label: 'Billing',      Icon: CreditCard    },
-      { href: '/settings',   label: 'Settings',     Icon: Settings      },
-      { href: '/guides',     label: 'Help & Guides', Icon: HelpCircle   },
+      { href: '/billing',    label: 'Billing',       Icon: CreditCard    },
+      { href: '/settings',   label: 'Settings',      Icon: Settings      },
+      { href: '/guides',     label: 'Help & Guides', Icon: HelpCircle    },
     ],
   },
 ]
@@ -119,20 +124,23 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
     <div className="flex h-screen overflow-hidden bg-neutral-light">
 
       {/* Sidebar */}
-      <aside className="hidden w-60 flex-shrink-0 flex-col bg-neutral-light md:flex print:hidden">
+      <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
         {/* Logo */}
-        <div className="flex h-14 items-center border-b border-gray-200 bg-white px-5">
-          <span className="font-bold text-teal">CareStreamAI</span>
+        <div className="border-b border-white/10 px-5 pb-5 pt-6">
+          <img src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
+          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+            Admin Portal
+          </p>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
-          {NAV_SECTIONS.map(({ heading, items }) => {
+        <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
+          {NAV_SECTIONS.map(({ heading, iconColor, items }) => {
             const allHrefs = NAV_SECTIONS.flatMap(s => s.items.map(i => i.href))
             const hasExactMatch = allHrefs.some(href => href === pathname)
             return (
               <div key={heading} className="mb-4">
-                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-mid/60">
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
                   {heading}
                 </p>
                 {items.map(({ href, label, Icon }) => {
@@ -144,12 +152,12 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
                       className={clsx(
                         'mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                         active
-                          ? 'border-l-2 border-teal bg-teal-light text-teal'
-                          : 'text-neutral-mid hover:bg-white hover:text-neutral-dark',
+                          ? 'border-l-2 border-teal-light bg-white/10 text-white'
+                          : 'text-white/70 hover:bg-white/10 hover:text-white',
                       )}
                       aria-current={active ? 'page' : undefined}
                     >
-                      <Icon size={16} />
+                      <Icon size={16} className={active ? 'text-teal-light' : iconColor} />
                       {label}
                     </Link>
                   )
@@ -160,12 +168,12 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         </nav>
 
         {/* Back to portal */}
-        <div className="border-t border-gray-200 px-3 py-3">
+        <div className="border-t border-white/10 px-3 py-3">
           <Link
             href="/chat"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:bg-white hover:text-neutral-dark"
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white"
           >
-            <MessageSquare size={16} />
+            <MessageSquare size={16} className="text-white/50" />
             Chat portal
           </Link>
         </div>

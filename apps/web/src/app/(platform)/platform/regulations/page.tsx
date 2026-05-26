@@ -98,6 +98,31 @@ export default function RegulationsPage() {
           </div>
         </div>
 
+        {/* How regulations work */}
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm space-y-4">
+          <p className="font-semibold text-blue-900">How regulations work in the AI pipeline</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">1. Via policy chunk metadata (automatic)</p>
+              <p className="text-blue-800 leading-relaxed">When a policy is ingested, each chunk is tagged with the regulation keys it relates to (e.g. <code className="rounded bg-blue-100 px-1 font-mono text-xs">regulation_12</code>, <code className="rounded bg-blue-100 px-1 font-mono text-xs">gdpr</code>). When a staff member asks a question, the AI retrieves the relevant policy chunks — and if those chunks cite a regulation, the full regulation text is pulled from the database and added to the AI response automatically.</p>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">2. Via direct name matching (explicit)</p>
+              <p className="text-blue-800 leading-relaxed">If a staff member mentions a regulation by name in their question (e.g. "what does CQC Regulation 13 say about safeguarding"), the system detects it by matching against the <strong>Reference key</strong>, <strong>Official name</strong>, and <strong>Also known as</strong> fields — and includes that regulation's full content directly in the AI response.</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-blue-200 bg-white px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Important — what this means in practice</p>
+            <ul className="space-y-1 text-blue-800 leading-relaxed">
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />A newly added regulation is immediately available to the AI and is searchable by name from the moment it is saved.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />It will <strong>not</strong> appear automatically in responses unless a policy chunk already cites it by its reference key, or a staff member asks a question that names it explicitly.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />Regulations are stored as a single entry — they are <strong>not</strong> chunked like policies. The full summary, care home context, care company interaction, and practical meaning fields are all passed to the AI when the regulation is triggered.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />To link a regulation to existing policies, those policies must be re-ingested so their chunks are tagged with the new regulation's reference key.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />The <strong>Also known as</strong> field is critical for detection — include every abbreviation, short name, and common variant (e.g. for GDPR: "Data Protection, UK GDPR, ICO").</li>
+            </ul>
+          </div>
+        </div>
+
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         )}

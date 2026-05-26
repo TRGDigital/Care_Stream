@@ -64,7 +64,7 @@ export function DemoForm() {
       </div>
       <div>
         <label className={labelClass}>Anything you&apos;d like to cover?</label>
-        <textarea name="message" rows={3} value={form.message} onChange={handleChange} className={inputClass} placeholder="Optional — e.g. data security, multilingual demo, CQC reporting…" />
+        <textarea name="message" rows={3} value={form.message} onChange={handleChange} className={inputClass} placeholder="Optional, e.g. data security, multilingual demo, CQC reporting…" />
       </div>
       <button type="submit" className="btn-amber w-full rounded-btn py-4 text-sm">
         Request Demo

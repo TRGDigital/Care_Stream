@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/marketing/article-layout'
 
-export const metadata = { title: 'RIDDOR in care homes: which incidents must you report and when — CareStreamAI Blog' }
+export const metadata = {
+  title: 'RIDDOR in Care Homes: Which Incidents Must You Report?',
+  description: 'A plain-language guide to RIDDOR for care home managers. Which incidents must be reported, to whom, by when, and what counts as a reportable dangerous occurrence.',
+  openGraph: {
+    title: 'RIDDOR in Care Homes: Which Incidents Must You Report?',
+    description: 'Plain-language RIDDOR guidance for care home managers — what to report, to whom, and by when.',
+    url: 'https://carestreamai.co.uk/blog/riddor-reporting-care-homes',
+  },
+}
 
 export default function Post() {
   return (
@@ -12,7 +20,7 @@ export default function Post() {
       title="RIDDOR in care homes: which incidents must you report and when"
     >
       <p>
-        RIDDOR — the Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013 — applies
+        RIDDOR, the Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013, applies
         to all workplaces, including residential and domiciliary care settings. But the specific triggers
         are frequently misunderstood, and non-compliance is a common finding at CQC inspection.
       </p>
@@ -53,9 +61,9 @@ export default function Post() {
         days (not counting the day of the accident), this must be reported within 15 days.
       </p>
 
-      <h3>Falls by residents — a specific care context</h3>
+      <h3>Falls by residents, a specific care context</h3>
       <p>
-        This is where many care homes have uncertainty. A resident fall that results in a <em>specified injury</em> (see above) may trigger RIDDOR — but only where the fall arose from a work-related activity or workplace hazard. Falls in care homes are complex: CQC guidance and HSE guidance should be read together to determine whether RIDDOR applies in a specific case.
+        This is where many care homes have uncertainty. A resident fall that results in a <em>specified injury</em> (see above) may trigger RIDDOR, but only where the fall arose from a work-related activity or workplace hazard. Falls in care homes are complex: CQC guidance and HSE guidance should be read together to determine whether RIDDOR applies in a specific case.
       </p>
       <p>
         Your falls policy should reference RIDDOR and set out how to assess each fall against the
@@ -72,7 +80,7 @@ export default function Post() {
       <h2>How to report</h2>
       <p>
         Reports are made to the HSE online via the RIDDOR reporting portal or by phone on the Incident
-        Contact Centre number. Keep a copy of all RIDDOR reports — CQC may ask to see them.
+        Contact Centre number. Keep a copy of all RIDDOR reports, CQC may ask to see them.
       </p>
 
       <h2>What happens at CQC inspection</h2>
@@ -85,7 +93,7 @@ export default function Post() {
       <div className="not-prose rounded-xl bg-teal-light p-6">
         <p className="mb-2 text-sm font-semibold text-teal">Need to explain RIDDOR to your team?</p>
         <p className="mb-4 text-sm text-neutral-mid">
-          CareStreamAI explains RIDDOR — and how it connects to your falls policy — in plain English, in
+          CareStreamAI explains RIDDOR, and how it connects to your falls policy, in plain English, in
           your staff&apos;s language.
         </p>
         <Link href="/regulatory-knowledge" className="text-sm font-medium text-teal hover:underline">See how regulatory knowledge works →</Link>

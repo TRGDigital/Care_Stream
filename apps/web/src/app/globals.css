@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* ── Marketing site global styles ─────────────────────────────────────────── */
 
 /* Smooth transitions on all interactive elements */
@@ -74,9 +77,9 @@ a, button { transition: all 0.18s ease; }
   letter-spacing: 0.12em;
 }
 
-/* Gradient text */
+/* Gradient text — Care brand gradient */
 .gradient-text-teal {
-  background: linear-gradient(135deg, #0D6E6E, #4AABAB);
+  background: linear-gradient(135deg, #8B4DB8, #C4688E);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -94,7 +97,7 @@ a, button { transition: all 0.18s ease; }
 .message-content li           { margin-bottom: 0.25rem; }
 .message-content strong       { font-weight: 600; }
 .message-content em           { font-style: italic; }
-.message-content hr           { border-color: #D8E8E8; margin: 1rem 0; }
+.message-content hr           { border-color: #E0D0EC; margin: 1rem 0; }
 
 /* CQC report print styles */
 @media print {

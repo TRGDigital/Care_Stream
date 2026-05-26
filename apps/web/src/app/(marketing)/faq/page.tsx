@@ -2,26 +2,34 @@ import Link from 'next/link'
 import { FaqAccordion } from './faq-accordion'
 import { PageHero, PageCta } from '@/components/marketing/ui'
 
-export const metadata = { title: 'FAQ — CareStreamAI' }
+export const metadata = {
+  title: 'FAQ',
+  description: 'Everything you need to know about CareStreamAI — how the AI works, what it can and cannot do, data security, pricing, and getting started. Answered plainly.',
+  openGraph: {
+    title: 'CareStreamAI FAQ',
+    description: 'Answers to the most common questions about CareStreamAI — plain and direct.',
+    url: 'https://carestreamai.co.uk/faq',
+  },
+}
 
 const FAQ_GROUPS = [
   {
     title: 'General',
     items: [
-      { q: 'What is CareStreamAI?', a: 'CareStreamAI is a policy assistant built specifically for UK care settings. You upload your policies and staff handbook; your team can then ask questions and get instant, accurate answers — in any of 50+ languages. Every interaction is logged for compliance and audit purposes.' },
+      { q: 'What is CareStreamAI?', a: 'CareStreamAI is a policy assistant built specifically for UK care settings. You upload your policies and staff handbook; your team can then ask questions and get instant, accurate answers, in any of 50+ languages. Every interaction is logged for compliance and audit purposes.' },
       { q: 'Who is it for?', a: 'CareStreamAI is designed for care homes, domiciliary care providers, supported living services, and any regulated health and social care setting. It is used by care workers, senior carers, registered managers, HR leads, and operations directors.' },
-      { q: 'Does it work for domiciliary care as well as residential care?', a: 'Yes. CareStreamAI is document-agnostic — it works with any policy library. Whether you are a residential home, a domiciliary provider, or a supported living service, it will work with your documents.' },
-      { q: 'What languages does it support?', a: 'CareStreamAI supports 50+ languages automatically. Staff type or email their question in any language — Polish, Romanian, Tagalog, Yoruba, Arabic, Hindi, and many more — and receive an answer in the same language. There is no language selection menu and no extra charge per language.' },
+      { q: 'Does it work for domiciliary care as well as residential care?', a: 'Yes. CareStreamAI is document-agnostic, it works with any policy library. Whether you are a residential home, a domiciliary provider, or a supported living service, it will work with your documents.' },
+      { q: 'What languages does it support?', a: 'CareStreamAI supports 50+ languages automatically. Staff type or email their question in any language, Polish, Romanian, Tagalog, Yoruba, Arabic, Hindi, and many more, and receive an answer in the same language. There is no language selection menu and no extra charge per language.' },
       { q: 'Is CareStreamAI affiliated with or endorsed by CQC?', a: 'No. CareStreamAI is an independent software product. It is not affiliated with, endorsed by, or certified by the Care Quality Commission. References to CQC are factual descriptions of how the product supports compliance evidence-building.' },
     ],
   },
   {
     title: 'AI & Trust',
     items: [
-      { q: 'Will the AI make things up?', a: 'No. CareStreamAI is designed specifically to prevent this. It only ever answers from your uploaded documents. If no relevant policy content is found, it says so — it does not generate content from general knowledge, training data, or the internet.' },
-      { q: 'How does it know the answer?', a: "When a question is submitted, CareStreamAI searches your policy library for the most relevant sections. It retrieves those sections and uses them — and only them — as the basis for its answer. This method is called Retrieval Augmented Generation (RAG) and is the gold standard for AI systems that need to answer from a trusted document set." },
-      { q: 'What if our policy has an error in it?', a: 'CareStreamAI will accurately reflect what your policy says. This is intentional — the system surfaces the need to keep policies accurate, which is the right incentive in a compliance setting.' },
-      { q: 'Can it answer questions about regulations not in our policies?', a: 'CareStreamAI also includes a curated knowledge base of UK regulatory frameworks — GDPR, RIDDOR, the Care Act, CQC Fundamental Standards, and more. Answers are always grounded in this knowledge base, not general AI output.' },
+      { q: 'Will the AI make things up?', a: 'No. CareStreamAI is designed specifically to prevent this. It only ever answers from your uploaded documents. If no relevant policy content is found, it says so, it does not generate content from general knowledge, training data, or the internet.' },
+      { q: 'How does it know the answer?', a: "When a question is submitted, CareStreamAI searches your policy library for the most relevant sections. It retrieves those sections and uses them, and only them, as the basis for its answer. This method is called Retrieval Augmented Generation (RAG) and is the gold standard for AI systems that need to answer from a trusted document set." },
+      { q: 'What if our policy has an error in it?', a: 'CareStreamAI will accurately reflect what your policy says. This is intentional, the system surfaces the need to keep policies accurate, which is the right incentive in a compliance setting.' },
+      { q: 'Can it answer questions about regulations not in our policies?', a: 'CareStreamAI also includes a curated knowledge base of UK regulatory frameworks, GDPR, RIDDOR, the Care Act, CQC Fundamental Standards, and more. Answers are always grounded in this knowledge base, not general AI output.' },
       { q: 'What happens when we update a policy?', a: 'Upload the new version in your admin panel. CareStreamAI immediately retires the old version from the retrieval system and activates the new one. All subsequent queries return answers based on the new version. The old version is retained in your audit archive.' },
     ],
   },
@@ -41,7 +49,7 @@ const FAQ_GROUPS = [
     items: [
       { q: 'Does staff need to select their language?', a: 'No. CareStreamAI detects the language of the query automatically. Staff simply type or email their question in their language and receive an answer in the same language.' },
       { q: 'What languages are supported?', a: 'Over 50 languages, including Polish, Romanian, Bulgarian, Hungarian, Tagalog, Hindi, Urdu, Arabic, Yoruba, Igbo, Somali, Portuguese, Spanish, French, and many more.' },
-      { q: 'Are answers translated word-for-word?', a: "No — CareStreamAI generates a natural-language response in the staff member's language. It does not machine-translate a pre-written English answer." },
+      { q: 'Are answers translated word-for-word?', a: "No, CareStreamAI generates a natural-language response in the staff member's language. It does not machine-translate a pre-written English answer." },
       { q: 'What if the original policy is in English and the query is in Romanian?', a: 'CareStreamAI retrieves the relevant English policy content, understands it, and produces a fluent Romanian response. Staff receive an answer in their language even when the source document is in English.' },
     ],
   },

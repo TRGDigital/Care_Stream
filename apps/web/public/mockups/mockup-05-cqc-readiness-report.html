@@ -8,71 +8,70 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
-.frame{background:#f0f4f4;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
-.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #d8e4e4}
+body{background:#EAE0F5;font-family:'Inter',system-ui,sans-serif;padding:0;margin:0;overflow:hidden}
+.frame{background:#E2D6F2;border-radius:12px;padding:20px;width:960px;box-shadow:0 8px 40px rgba(26,5,48,0.22)}
+.browser-bar{background:#fff;border-radius:8px;padding:11px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;border:0.5px solid #D5C8E8}
 .dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}
 .d1{background:#ff6058}.d2{background:#ffbc2e}.d3{background:#28c840}
-.url-bar{flex:1;background:#f0f4f4;border-radius:6px;padding:5px 14px;font-size:12px;color:#5c7070;text-align:center}
-.page{background:#fff;border-radius:8px;border:0.5px solid #d8e4e4;overflow:hidden;display:flex;height:580px}
-.nav{width:210px;background:#f4f8f8;border-right:0.5px solid #e0e8e8;flex-shrink:0}
-.nav-head{padding:18px;border-bottom:0.5px solid #e0e8e8;display:flex;align-items:center;gap:10px}
-.logo-mark{width:30px;height:30px;background:#0D6E6E;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-text{font-size:13px;font-weight:700;color:#1c2b2b}
+.url-bar{flex:1;background:#EAE2F5;border-radius:6px;padding:5px 14px;font-size:12px;color:#5E4D70;text-align:center}
+.page{background:#fff;border-radius:8px;border:0.5px solid #D5C8E8;overflow:hidden;display:flex;height:580px}
+.nav{width:210px;background:#1A0830;flex-shrink:0;display:flex;flex-direction:column}
+.nav-head{padding:18px;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,#8B4DB8,#C4688E);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:700;color:white}
 .ns{padding:13px 9px}
-.nl{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
-.ni{padding:7px 8px;border-radius:7px;font-size:12px;color:#5c7070;margin-bottom:2px}
-.ni.active{background:#e6f4f4;color:#0D6E6E;font-weight:600;border-left:3px solid #0D6E6E;padding-left:5px}
+.nl{font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.07em;padding:0 8px;margin-bottom:5px}
+.ni{padding:7px 8px;border-radius:7px;font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:2px}
+.ni.active{background:rgba(255,255,255,0.10);color:white;font-weight:600;border-left:3px solid #C4A8E0;padding-left:5px}
 .main{flex:1;overflow-y:auto}
-.rpt-head{background:#0D6E6E;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between}
+.rpt-head{background:linear-gradient(135deg,#8B4DB8,#C4688E);padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between}
 .rpt-title{color:white;font-size:16px;font-weight:700;margin-bottom:3px}
-.rpt-org{color:#9fd4c8;font-size:12px}
-.rpt-period{color:#9fd4c8;font-size:11px;margin-top:2px}
-.export-btn{background:white;color:#0D6E6E;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;white-space:nowrap}
-.content{padding:18px 22px}
+.rpt-org{color:rgba(255,255,255,0.7);font-size:12px}
+.rpt-period{color:rgba(255,255,255,0.55);font-size:11px;margin-top:2px}
+.export-btn{background:white;color:#9B52B5;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;white-space:nowrap}
+.content{padding:18px 22px;background:#F5F0FA}
 .ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
-.ev{border:0.5px solid #e0e8e8;border-radius:9px;padding:13px}
-.ev-label{font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;margin-bottom:6px}
-.ev-val{font-size:24px;font-weight:700;color:#0D6E6E;margin-bottom:2px}
-.ev-sub{font-size:11px;color:#5c7070}
-.ev-bar{margin-top:8px;background:#f4f8f8;border-radius:100px;height:4px}
-.ev-fill{height:4px;border-radius:100px;background:#0D6E6E}
-.sh{font-size:13px;font-weight:700;color:#1c2b2b;margin-bottom:11px}
-.ptbl{border:0.5px solid #e0e8e8;border-radius:9px;overflow:hidden;margin-bottom:18px}
-.pth{background:#f4f8f8;padding:8px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;font-size:10px;font-weight:700;color:#5c7070;letter-spacing:0.05em;border-bottom:0.5px solid #e0e8e8}
-.ptr{padding:9px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;border-bottom:0.5px solid #f0f4f4;align-items:center}
+.ev{border:0.5px solid #E8D8F4;border-radius:9px;padding:13px;background:white}
+.ev-label{font-size:10px;font-weight:700;color:#5E4D70;letter-spacing:0.05em;margin-bottom:6px}
+.ev-val{font-size:24px;font-weight:700;color:#9B52B5;margin-bottom:2px}
+.ev-sub{font-size:11px;color:#5E4D70}
+.ev-bar{margin-top:8px;background:#F0E8FA;border-radius:100px;height:4px}
+.ev-fill{height:4px;border-radius:100px;background:linear-gradient(to right,#8B4DB8,#C4688E)}
+.sh{font-size:13px;font-weight:700;color:#1A1530;margin-bottom:11px}
+.ptbl{border:0.5px solid #E8D8F4;border-radius:9px;overflow:hidden;margin-bottom:18px;background:white}
+.pth{background:#F5F0FA;padding:8px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;font-size:10px;font-weight:700;color:#5E4D70;letter-spacing:0.05em;border-bottom:0.5px solid #E8D8F4}
+.ptr{padding:9px 13px;display:grid;grid-template-columns:2fr 80px 80px 100px;border-bottom:0.5px solid #F0E8FA;align-items:center}
 .ptr:last-child{border-bottom:none}
-.pname{font-size:12px;font-weight:600;color:#1c2b2b}
-.pcat{font-size:10px;color:#5c7070}
+.pname{font-size:12px;font-weight:600;color:#1A1530}
+.pcat{font-size:10px;color:#5E4D70}
 .tick{color:#1A8754;font-weight:700;font-size:13px}
 .lang-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:18px}
-.lang{background:#f4f8f8;border-radius:7px;padding:9px 11px;text-align:center}
-.lang-name{font-size:11px;font-weight:600;color:#1c2b2b;margin-bottom:2px}
-.lang-n{font-size:15px;font-weight:700;color:#0D6E6E}
-.lang-p{font-size:10px;color:#5c7070}
-.cqc-wrap{border:0.5px solid #e0e8e8;border-radius:9px;padding:13px}
-.cqc-row{display:flex;align-items:center;gap:11px;padding:6px 0;border-bottom:0.5px solid #f0f4f4}
+.lang{background:white;border-radius:7px;padding:9px 11px;text-align:center;border:0.5px solid #E8D8F4}
+.lang-name{font-size:11px;font-weight:600;color:#1A1530;margin-bottom:2px}
+.lang-n{font-size:15px;font-weight:700;color:#9B52B5}
+.lang-p{font-size:10px;color:#5E4D70}
+.cqc-wrap{border:0.5px solid #E8D8F4;border-radius:9px;padding:13px;background:white}
+.cqc-row{display:flex;align-items:center;gap:11px;padding:6px 0;border-bottom:0.5px solid #F0E8FA}
 .cqc-row:last-child{border-bottom:none}
-.cqc-q{font-size:12px;font-weight:600;color:#1c2b2b;flex:0 0 100px}
-.cqc-bar{flex:1;background:#f4f8f8;border-radius:100px;height:7px}
-.cqc-fill{height:7px;border-radius:100px;background:#0D6E6E}
-.cqc-lbl{font-size:10px;color:#5c7070;flex:0 0 90px;text-align:right}
+.cqc-q{font-size:12px;font-weight:600;color:#1A1530;flex:0 0 100px}
+.cqc-bar{flex:1;background:#F0E8FA;border-radius:100px;height:7px}
+.cqc-fill{height:7px;border-radius:100px;background:linear-gradient(to right,#8B4DB8,#C4688E)}
+.cqc-lbl{font-size:10px;color:#5E4D70;flex:0 0 90px;text-align:right}
 </style>
 <div class="frame">
 <div class="browser-bar">
   <div class="dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
-  <div class="url-bar">app.carestreamai.co.uk/admin/cqc-report — Crossways Care Home</div>
+  <div class="url-bar">app.carestreamai.co.uk/analytics/cqc-report — Crossways Care Home</div>
 </div>
 <div class="page">
   <div class="nav">
     <div class="nav-head"><div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="white" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div><span class="logo-text">CareStreamAI</span></div>
     <div class="ns"><div class="nl">OVERVIEW</div><div class="ni">Dashboard</div><div class="ni">Query history</div></div>
-    <div class="ns"><div class="nl">DOCUMENTS</div><div class="ni">Policy library</div><div class="ni">Staff handbook</div></div>
-    <div class="ns"><div class="nl">TEAM</div><div class="ni">Staff management</div><div class="ni">Email settings</div></div>
-    <div class="ns"><div class="nl">REPORTS</div><div class="ni">Analytics</div><div class="ni active">CQC report</div></div>
+    <div class="ns"><div class="nl">CONTENT</div><div class="ni">Policy library</div><div class="ni">Knowledge base</div></div>
+    <div class="ns"><div class="nl">TEAM</div><div class="ni">Staff</div></div>
+    <div class="ns"><div class="nl">REPORTING</div><div class="ni">Analytics</div><div class="ni active">CQC report</div><div class="ni">Monthly audits</div></div>
   </div>
   <div class="main">
     <div class="rpt-head"><div><div class="rpt-title">CQC Readiness Report</div><div class="rpt-org">Crossways Care Home</div><div class="rpt-period">Period: 1 May 2025 – 1 May 2026 · Generated 1 May 2026</div></div><button class="export-btn">Export PDF</button></div>
@@ -86,9 +85,9 @@ body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margi
       <div class="sh">Policy access evidence — top policies</div>
       <div class="ptbl">
         <div class="pth"><span>Policy</span><span>Queries</span><span>Updated</span><span>Accessed after update</span></div>
-        <div class="ptr"><div><div class="pname">Falls Policy</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">312</div><div style="font-size:11px;color:#5c7070">Jan 2026</div><div class="tick">&#10003; Yes</div></div>
-        <div class="ptr"><div><div class="pname">Medication Administration</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">284</div><div style="font-size:11px;color:#5c7070">Feb 2026</div><div class="tick">&#10003; Yes</div></div>
-        <div class="ptr"><div><div class="pname">Safeguarding Adults</div><div class="pcat">Compliance</div></div><div style="font-size:13px;font-weight:700;color:#0D6E6E">219</div><div style="font-size:11px;color:#5c7070">Mar 2026</div><div class="tick">&#10003; Yes</div></div>
+        <div class="ptr"><div><div class="pname">Falls Policy</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#9B52B5">312</div><div style="font-size:11px;color:#5E4D70">Jan 2026</div><div class="tick">&#10003; Yes</div></div>
+        <div class="ptr"><div><div class="pname">Medication Administration</div><div class="pcat">Clinical</div></div><div style="font-size:13px;font-weight:700;color:#9B52B5">284</div><div style="font-size:11px;color:#5E4D70">Feb 2026</div><div class="tick">&#10003; Yes</div></div>
+        <div class="ptr"><div><div class="pname">Safeguarding Adults</div><div class="pcat">Compliance</div></div><div style="font-size:13px;font-weight:700;color:#9B52B5">219</div><div style="font-size:11px;color:#5E4D70">Mar 2026</div><div class="tick">&#10003; Yes</div></div>
       </div>
       <div class="sh">Multi-language access — CQC equality evidence</div>
       <div class="lang-grid">
@@ -112,6 +111,5 @@ body{background:#e8eeee;font-family:'Inter',system-ui,sans-serif;padding:0;margi
   </div>
 </div>
 </div>
-
 </body>
 </html>

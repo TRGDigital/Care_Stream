@@ -1,6 +1,14 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'Case Studies — CareStreamAI' }
+export const metadata = {
+  title: 'Case Studies',
+  description: 'See how UK care providers have used CareStreamAI to reduce out-of-hours manager calls, support international staff, and build stronger CQC inspection evidence.',
+  openGraph: {
+    title: 'CareStreamAI Case Studies',
+    description: 'Real results from UK care providers using CareStreamAI.',
+    url: 'https://carestreamai.co.uk/case-studies',
+  },
+}
 
 const CASE_STUDIES = [
   {
@@ -12,7 +20,7 @@ const CASE_STUDIES = [
       { label: 'Out-of-hours calls', before: '4–6 per week', after: 'Near zero' },
       { label: 'Time to answer', before: '10–30 minutes', after: 'Under 30 seconds' },
     ],
-    quote: "Night staff actually feel supported now. They get the answer they need without waking me up — and I know the right procedure was followed.",
+    quote: "Night staff actually feel supported now. They get the answer they need without waking me up, and I know the right procedure was followed.",
     attribution: 'Registered Manager, 45-bed residential home',
     initials: 'JM',
   },
@@ -25,14 +33,14 @@ const CASE_STUDIES = [
       { label: 'Languages used', before: '—', after: '11' },
       { label: 'HR query load', before: 'High (ongoing)', after: 'Reduced by ~60%' },
     ],
-    quote: "Our Romanian and Filipino carers told us they felt included for the first time. They didn't have to guess — they could just ask.",
+    quote: "Our Romanian and Filipino carers told us they felt included for the first time. They didn't have to guess, they could just ask.",
     attribution: 'HR Director, domiciliary care provider',
     initials: 'AO',
   },
   {
     tag: 'Group Operator',
     icon: '🏢',
-    title: 'CQC inspection evidence — built automatically across 4 homes',
+    title: 'CQC inspection evidence, built automatically across 4 homes',
     summary: "A group operator with four homes was manually assembling inspection evidence for each CQC visit. CareStreamAI's CQC Readiness Report replaced that process entirely.",
     metrics: [
       { label: 'Evidence prep time', before: '2–3 days per inspection', after: 'One click export' },

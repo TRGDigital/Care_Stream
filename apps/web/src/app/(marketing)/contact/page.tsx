@@ -2,7 +2,15 @@ import Link from 'next/link'
 import { PageHero } from '@/components/marketing/ui'
 import { ContactForm } from './contact-form'
 
-export const metadata = { title: 'Contact — CareStreamAI' }
+export const metadata = {
+  title: 'Contact',
+  description: 'Reach the CareStreamAI team with questions about pricing, your specific care setting, data security, or anything else. We respond within one business day.',
+  openGraph: {
+    title: 'Contact CareStreamAI',
+    description: 'Get in touch — we respond to every message within one business day.',
+    url: 'https://carestreamai.co.uk/contact',
+  },
+}
 
 export default function ContactPage() {
   return (
@@ -10,7 +18,7 @@ export default function ContactPage() {
       <PageHero
         label="Contact"
         title="Get in touch."
-        subtitle="Questions about the product, pricing, data security, or your specific situation — we respond to every message within one business day."
+        subtitle="Questions about the product, pricing, data security, or your specific situation, we respond to every message within one business day."
       />
 
       <section className="bg-white py-24">
@@ -35,7 +43,7 @@ export default function ContactPage() {
                   {
                     icon: '🛠️',
                     title: 'Technical support',
-                    detail: 'For existing subscribers — login issues, upload problems, or anything not working as expected.',
+                    detail: 'For existing subscribers, login issues, upload problems, or anything not working as expected.',
                     email: 'support@carestreamai.co.uk',
                   },
                 ].map(({ icon, title, detail, email }) => (

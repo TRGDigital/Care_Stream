@@ -8,8 +8,8 @@ const STYLES: Record<Variant, string> = {
   archived:   'bg-gray-100 text-neutral-mid',
   superseded: 'bg-gray-100 text-neutral-mid',
   failed:     'bg-red-50 text-status-error',
-  admin:      'bg-teal-light text-teal',
-  staff:      'bg-neutral-light text-neutral-mid',
+  admin:      'bg-teal text-white',
+  staff:      'bg-purple-50 text-purple-700',
   neutral:    'bg-neutral-light text-neutral-mid',
 }
 

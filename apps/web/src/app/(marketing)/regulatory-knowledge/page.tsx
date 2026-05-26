@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'Regulatory Knowledge — CareStreamAI' }
+export const metadata = {
+  title: 'Regulatory Knowledge',
+  description: 'CareStreamAI includes a built-in knowledge base covering UK care regulations — CQC Fundamental Standards, GDPR, RIDDOR, the Care Act, Mental Capacity Act, and more.',
+  openGraph: {
+    title: 'Regulatory Knowledge | CareStreamAI',
+    description: 'A built-in UK regulatory knowledge base: CQC, GDPR, RIDDOR, Care Act, Mental Capacity Act, and more.',
+    url: 'https://carestreamai.co.uk/regulatory-knowledge',
+  },
+}
 
 const FRAMEWORK_GROUPS = [
   {
@@ -12,7 +20,7 @@ const FRAMEWORK_GROUPS = [
   {
     icon: '📋',
     title: 'CQC and Regulated Activities',
-    items: ['Health and Social Care Act 2008 (Regulated Activities) Regulations 2014', 'CQC Fundamental Standards — Regulations 12, 13, 16, 17 and 20', 'Duty of Candour (Regulation 20)', 'CQC statutory notifications'],
+    items: ['Health and Social Care Act 2008 (Regulated Activities) Regulations 2014', 'CQC Fundamental Standards, Regulations 12, 13, 16, 17 and 20', 'Duty of Candour (Regulation 20)', 'CQC statutory notifications'],
   },
   {
     icon: '🛡️',
@@ -32,7 +40,7 @@ const FRAMEWORK_GROUPS = [
   {
     icon: '📚',
     title: 'Clinical Guidance and Professional Standards',
-    items: ['NICE guidelines (including infection prevention and control)', 'The Code — NMC professional standards', 'RPS professional guidance on medicines handling', 'Gold Standards Framework (end of life care)', 'UK Health Security Agency guidance'],
+    items: ['NICE guidelines (including infection prevention and control)', 'The Code, NMC professional standards', 'RPS professional guidance on medicines handling', 'Gold Standards Framework (end of life care)', 'UK Health Security Agency guidance'],
   },
 ]
 
@@ -41,7 +49,7 @@ const WORKED_EXAMPLES = [
     title: 'Falls and RIDDOR',
     flag: '🇬🇧',
     query: 'What do I do if a resident falls and injures themselves?',
-    policy: 'The falls policy sets out the immediate response — assess for injury, do not move if spinal injury suspected, call the senior carer, complete an incident form within 30 minutes.',
+    policy: 'The falls policy sets out the immediate response, assess for injury, do not move if spinal injury suspected, call the senior carer, complete an incident form within 30 minutes.',
     regulatory: 'Under RIDDOR 2013, certain falls resulting in specific injuries must be reported to the HSE. CareStreamAI explains which injuries trigger this requirement, the 10-day reporting window, and how this connects to your incident reporting procedure.',
     note: null,
   },
@@ -69,7 +77,7 @@ export default function RegulatoryKnowledgePage() {
       <PageHero
         label="The Joined-Up Answer"
         title="Your policies don't exist in isolation. Neither should your answers."
-        subtitle="When a care worker asks about a procedure, the answer often involves more than one document — your internal policy and the regulatory framework behind it. CareStreamAI understands both."
+        subtitle="When a care worker asks about a procedure, the answer often involves more than one document, your internal policy and the regulatory framework behind it. CareStreamAI understands both."
       />
 
       {/* The problem */}
@@ -90,7 +98,7 @@ export default function RegulatoryKnowledgePage() {
               </p>
               <p>
                 But when a care worker reads your falls policy, they rarely also read RIDDOR. The result is a gap
-                between what the policy says and what the regulation requires — and staff who follow procedures
+                between what the policy says and what the regulation requires, and staff who follow procedures
                 without fully understanding the framework behind them.
               </p>
             </div>
@@ -172,14 +180,14 @@ export default function RegulatoryKnowledgePage() {
           </h2>
           <p className="text-lg leading-relaxed text-gray-300">
             A care worker whose first language is Tagalog, Romanian, or Yoruba faces a double barrier when
-            it comes to regulatory knowledge. Not only is the legislation complex — it is written in legal
+            it comes to regulatory knowledge. Not only is the legislation complex, it is written in legal
             English that is challenging even for native speakers. CareStreamAI removes both barriers at once.
           </p>
         </div>
       </section>
 
       <PageCta
-        heading="Give your team the full picture — policy and regulation, together."
+        heading="Give your team the full picture, policy and regulation, together."
         sub="14-day free trial. No credit card required."
         primary={{ href: '/demo', label: 'Book a Free Demo' }}
         secondary={{ href: '/register', label: 'Start Free Trial' }}

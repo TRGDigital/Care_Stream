@@ -5,16 +5,22 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart,
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/platform/dashboard',   label: 'Dashboard',        Icon: LayoutDashboard },
-  { href: '/platform/clients',     label: 'Clients',          Icon: Building2       },
-  { href: '/platform/usage',       label: 'Usage',            Icon: BarChart2       },
-  { href: '/platform/regulations', label: 'Regulations',      Icon: BookOpen        },
-  { href: '/platform/seeds',       label: 'Knowledge Seeds',  Icon: Sparkles        },
-  { href: '/platform/prompts',     label: 'AI Prompts',       Icon: FileText        },
+  { href: '/platform/dashboard',       label: 'Dashboard',        Icon: LayoutDashboard },
+  { href: '/platform/clients',         label: 'Clients',          Icon: Building2       },
+  { href: '/platform/usage',           label: 'Usage',            Icon: BarChart2       },
+  { href: '/platform/analytics',       label: 'AI Analytics',     Icon: LineChart       },
+  { href: '/platform/regulations',     label: 'Regulations',      Icon: BookOpen        },
+  { href: '/platform/training-seeds',  label: 'Training Seeds',   Icon: ShieldCheck     },
+  { href: '/platform/cqc-seeds',       label: 'CQC Seeds',        Icon: ClipboardCheck  },
+  { href: '/platform/audit-seeds',     label: 'Audit Seeds',      Icon: ClipboardCheck  },
+  { href: '/platform/seeds',           label: 'Knowledge Seeds',  Icon: Sparkles        },
+  { href: '/platform/prompts',         label: 'AI Prompts',       Icon: FileText        },
+  { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },
+  { href: '/platform/blog',            label: 'Blog',             Icon: Newspaper       },
 ]
 
 export function PlatformShell({ children }: { children: React.ReactNode }) {

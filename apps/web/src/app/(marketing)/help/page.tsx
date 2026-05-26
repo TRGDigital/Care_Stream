@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { PageHero, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'Help Centre — CareStreamAI' }
+export const metadata = {
+  title: 'Help Centre',
+  description: 'Step-by-step guides for getting the most out of CareStreamAI. Covering account setup, policy uploads, staff access, analytics, and CQC compliance features.',
+  openGraph: {
+    title: 'CareStreamAI Help Centre',
+    description: 'Guides and support articles for CareStreamAI users.',
+    url: 'https://carestreamai.co.uk/help',
+  },
+}
 
 const CATEGORIES = [
   {
@@ -12,7 +20,7 @@ const CATEGORIES = [
       { title: 'Uploading your first policy', href: '/help/getting-started/upload-policy' },
       { title: 'Inviting staff to use CareStreamAI', href: '/help/getting-started/invite-staff' },
       { title: 'Setting up email access', href: '/help/getting-started/email-setup' },
-      { title: 'Your 14-day trial — what is included', href: '/help/getting-started/trial' },
+      { title: 'Your 14-day trial, what is included', href: '/help/getting-started/trial' },
     ],
   },
   {
@@ -32,7 +40,7 @@ const CATEGORIES = [
     articles: [
       { title: 'How multilingual support works', href: '/help/languages/how-it-works' },
       { title: 'Which languages are supported?', href: '/help/languages/supported-languages' },
-      { title: 'Email vs web chat — which to use?', href: '/help/languages/channels' },
+      { title: 'Email vs web chat, which to use?', href: '/help/languages/channels' },
       { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },
     ],
   },
@@ -42,7 +50,7 @@ const CATEGORIES = [
     articles: [
       { title: 'Understanding your analytics dashboard', href: '/help/analytics/dashboard' },
       { title: 'Generating a CQC Readiness Report', href: '/help/analytics/cqc-report' },
-      { title: 'Policy gap detection — how it works', href: '/help/analytics/gap-detection' },
+      { title: 'Policy gap detection, how it works', href: '/help/analytics/gap-detection' },
       { title: 'Exporting your audit log', href: '/help/analytics/export-audit' },
       { title: 'Understanding language analytics', href: '/help/analytics/language-analytics' },
     ],
@@ -64,7 +72,7 @@ const CATEGORIES = [
       { title: 'Changing your plan', href: '/help/billing/change-plan' },
       { title: 'Cancelling your subscription', href: '/help/billing/cancel' },
       { title: 'Updating payment details', href: '/help/billing/payment-details' },
-      { title: 'Group pricing — multiple homes', href: '/help/billing/group-pricing' },
+      { title: 'Group pricing, multiple homes', href: '/help/billing/group-pricing' },
     ],
   },
 ]

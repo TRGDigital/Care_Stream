@@ -9,19 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // §14.2 — CareStreamAI brand palette
+        // §14.2 — CareStreamAI brand palette (purple/mauve from Care wordmark gradient)
         teal: {
-          DEFAULT: '#0D6E6E',
-          light: '#E6F4F4',
-          dark: '#0A5858',
+          DEFAULT: '#9B52B5',
+          light: '#F5EEFA',
+          dark: '#7A3D9A',
         },
         amber: {
           brand: '#E8850A',
         },
         neutral: {
-          dark: '#1C2B2B',
-          mid: '#5C7070',
-          light: '#F4F8F8',
+          dark: '#1A1530',
+          mid: '#5E4D70',
+          light: '#F5F0FA',
         },
         status: {
           success: '#1A8754',
@@ -48,13 +48,13 @@ const config: Config = {
         card: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05)',
         'card-hover': '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.08)',
         elevated: '0 6px 24px rgba(0,0,0,0.10)',
-        'teal-glow': '0 4px 24px rgba(13,110,110,0.35)',
+        'teal-glow': '0 4px 24px rgba(155,82,181,0.35)',
         'amber-glow': '0 4px 24px rgba(232,133,10,0.35)',
       },
       backgroundImage: {
-        'hero-gradient': 'linear-gradient(135deg, #062F2F 0%, #0A4848 40%, #0D6E6E 100%)',
-        'section-gradient': 'linear-gradient(180deg, #F4F8F8 0%, #FFFFFF 100%)',
-        'teal-gradient': 'linear-gradient(135deg, #0D6E6E 0%, #0A5858 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #1A0830 0%, #3D1460 40%, #9B52B5 100%)',
+        'section-gradient': 'linear-gradient(180deg, #F5F0FA 0%, #FFFFFF 100%)',
+        'teal-gradient': 'linear-gradient(135deg, #8B4DB8 0%, #C4688E 100%)',
         'amber-gradient': 'linear-gradient(135deg, #E8850A 0%, #C96B00 100%)',
       },
       animation: {
@@ -74,7 +74,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }
 
 export default config

@@ -1,14 +1,20 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingNav } from '@/components/marketing/nav'
+
+export const metadata: Metadata = {
+  title:       'CareStreamAI — AI Policy Access for UK Care Homes',
+  description: 'Give your entire care team instant access to your policies in any language, 24/7. CareStreamAI delivers grounded answers via WhatsApp, email and chat — never the internet.',
+  openGraph:   { title: 'CareStreamAI — AI Policy Access for UK Care Homes', description: 'Instant multilingual policy access for UK care providers. Powered by your documents. Never the internet.', url: 'https://carestreamai.co.uk' },
+}
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
+import { HomeBlogSection } from '@/components/marketing/home-blog-section'
 import {
-  Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail,
-  BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check,
+  Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
+  BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
 } from 'lucide-react'
-
-// ─── Shared ───────────────────────────────────────────────────────────────────
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
   return (
@@ -26,8 +32,6 @@ function MockupPlaceholder({ label, aspect = 'aspect-video' }: { label: string; 
     </div>
   )
 }
-
-// ─── Hero ─────────────────────────────────────────────────────────────────────
 
 function Hero() {
   const langPills = [
@@ -75,7 +79,7 @@ function Hero() {
             </h1>
 
             <p className="mb-10 max-w-xl text-lg leading-relaxed text-white/75">
-              CareStreamAI gives every member of your care team instant access to your policies —
+              CareStreamAI gives every member of your care team instant access to your policies,
               in the language they think in. Powered by your documents. Never the internet.
             </p>
 
@@ -99,21 +103,27 @@ function Hero() {
           </div>
 
           <div className="relative lg:pl-4">
-            <Mockup {...MOCKUPS['mockup-01']} />
+            <div className="overflow-hidden rounded-2xl shadow-elevated">
+              <img
+                src="/images/hero.png"
+                alt="Care worker reviewing policies on a tablet in a residential care home"
+                className="w-full object-cover"
+              />
+            </div>
 
-            {/* 50+ Languages — bottom left */}
+            {/* 50+ Languages, bottom left */}
             <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-5 py-4 shadow-card-hover">
               <p className="text-2xl font-extrabold text-teal">50+</p>
               <p className="text-xs font-medium text-neutral-mid">Languages supported</p>
             </div>
 
-            {/* 24/7 — top right */}
+            {/* 24/7, top right */}
             <div className="absolute -right-2 top-6 rounded-2xl bg-white px-5 py-4 shadow-card-hover">
               <p className="text-2xl font-extrabold text-amber-brand">24/7</p>
               <p className="text-xs font-medium text-neutral-mid">Policy access</p>
             </div>
 
-            {/* < 30s — top, inset */}
+            {/* < 30s, top, inset */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-card-hover">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-light">
                 <Zap size={14} className="text-teal" />
@@ -124,22 +134,30 @@ function Hero() {
               </div>
             </div>
 
-            {/* Email + Chat channels — left middle */}
+            {/* Channels, left middle */}
             <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white px-4 py-3 shadow-card-hover">
               <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Access via</p>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex items-center gap-1.5 rounded-lg bg-teal-light px-2.5 py-1.5">
-                  <Mail size={11} className="text-teal" />
+                  <Mail size={10} className="text-teal" />
                   <span className="text-xs font-semibold text-teal">Email</span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5">
-                  <MessageSquare size={11} className="text-amber-brand" />
+                  <MessageSquare size={10} className="text-amber-brand" />
                   <span className="text-xs font-semibold text-amber-brand">Chat</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-lg bg-green-50 px-2.5 py-1.5">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  <span className="text-xs font-semibold text-green-700">WhatsApp</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-lg bg-purple-50 px-2.5 py-1.5">
+                  <Mic size={10} className="text-purple-600" />
+                  <span className="text-xs font-semibold text-purple-600">Voice</span>
                 </div>
               </div>
             </div>
 
-            {/* CQC audit trail — bottom right */}
+            {/* CQC audit trail, bottom right */}
             <div className="absolute -bottom-4 right-6 flex items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-card-hover">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-50">
                 <ClipboardCheck size={14} className="text-green-600" />
@@ -157,14 +175,12 @@ function Hero() {
   )
 }
 
-// ─── Stats Strip ──────────────────────────────────────────────────────────────
-
 function StatsStrip() {
   const stats = [
     { num: '30%+', label: 'UK care workers born outside the UK' },
     { num: '150+', label: 'Languages spoken in UK care settings' },
     { num: '1 in 3', label: 'Night-shift policy questions go unanswered' },
-    { num: '£49', label: 'per month — less than one agency shift hour' },
+    { num: '£49', label: 'per month, less than one agency shift hour' },
   ]
   return (
     <section className="border-b border-gray-100 bg-white py-14">
@@ -181,8 +197,6 @@ function StatsStrip() {
     </section>
   )
 }
-
-// ─── The Problem ──────────────────────────────────────────────────────────────
 
 function TheProblem() {
   return (
@@ -205,11 +219,11 @@ function TheProblem() {
                 the majority of the care team speaks English as a second language.
               </p>
               <p>
-                Yet every policy system operates entirely in English — creating a persistent gap between
+                Yet every policy system operates entirely in English, creating a persistent gap between
                 what the policy says and what staff can confidently act on.
               </p>
               <p className="text-gray-400">
-                At 3am, during an incident, in the first weeks of a new job — that gap leads to
+                At 3am, during an incident, in the first weeks of a new job, that gap leads to
                 hesitation, misinterpretation, and decisions made without the guidance that should
                 have been available.
               </p>
@@ -219,7 +233,7 @@ function TheProblem() {
           <div className="grid gap-4">
             {[
               { icon: '🌍', title: 'Policies in English only', body: 'Your carefully written procedures are inaccessible to a large portion of the people they are designed to protect.' },
-              { icon: '🕐', title: 'No support at 3am', body: 'Night staff face clinical uncertainty without a manager present — and no reliable way to find the right answer fast.' },
+              { icon: '🕐', title: 'No support at 3am', body: 'Night staff face clinical uncertainty without a manager present, and no reliable way to find the right answer fast.' },
               { icon: '📋', title: 'Compliance gaps at inspection', body: "CQC expects evidence that staff actively use and understand your policies. A folder on a shelf isn't evidence." },
             ].map(({ icon, title, body }) => (
               <div key={title} className="card-lift flex gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
@@ -236,8 +250,6 @@ function TheProblem() {
     </section>
   )
 }
-
-// ─── Care Settings ────────────────────────────────────────────────────────────
 
 function CareSettings() {
   const settings = [
@@ -263,7 +275,7 @@ function CareSettings() {
       slug: 'nursing',
       href: '/nursing-homes',
       label: 'Nursing Homes',
-      description: 'Giving nursing and care teams instant access to clinical procedures in any language, at any hour — with every query logged for inspection.',
+      description: 'Giving nursing and care teams instant access to clinical procedures in any language, at any hour, with every query logged for inspection.',
       image: '/images/nursing-home.png',
       gradient: 'from-[#0A5F5F] to-[#0D4A6E]',
       icon: (
@@ -351,17 +363,15 @@ function CareSettings() {
   )
 }
 
-// ─── Value Proposition ────────────────────────────────────────────────────────
-
 function ValueProposition() {
   const points = [
     {
       title: 'Policies your whole team can actually use',
-      body: 'From clinical procedures to safeguarding, your library is accessible in any language, at any hour, on any device — with no app to download and no training required.',
+      body: 'From clinical procedures to safeguarding, your library is accessible in any language, at any hour, on any device, with no app to download and no training required.',
     },
     {
       title: 'Compliance evidence that builds itself',
-      body: 'Every query is logged. Your CQC Readiness Report is compiled automatically from the audit trail — policy access, language activity, version history, staff engagement.',
+      body: 'Every query is logged. Your CQC Readiness Report is compiled automatically from the audit trail, policy access, language activity, version history, staff engagement.',
     },
     {
       title: 'Up and running in under an hour',
@@ -374,7 +384,7 @@ function ValueProposition() {
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-16 lg:grid-cols-2">
 
-          {/* Left — heading + feature list */}
+          {/* Left, heading + feature list */}
           <div>
             <SectionLabel>Why CareStreamAI</SectionLabel>
             <h2 className="mb-10 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
@@ -400,7 +410,7 @@ function ValueProposition() {
             </div>
           </div>
 
-          {/* Right — photo */}
+          {/* Right, photo */}
           <div className="relative">
             <div className="overflow-hidden rounded-2xl shadow-elevated">
               <img
@@ -417,8 +427,6 @@ function ValueProposition() {
   )
 }
 
-// ─── The Solution ─────────────────────────────────────────────────────────────
-
 function TheSolution() {
   const cols = [
     {
@@ -426,7 +434,7 @@ function TheSolution() {
       iconBg: 'bg-teal-light',
       iconColor: 'text-teal',
       title: 'Ask in any language',
-      body: 'Staff ask about your policies in any of 50+ languages via email or chat. Language is detected automatically — no setup, no menus, no extra cost.',
+      body: 'Staff ask about your policies in any of 50+ languages via email or chat. Language is detected automatically, no setup, no menus, no extra cost.',
     },
     {
       Icon: Zap,
@@ -440,7 +448,7 @@ function TheSolution() {
       iconBg: 'bg-green-50',
       iconColor: 'text-green-700',
       title: 'Evidence for inspection',
-      body: 'Every query is logged. The CQC Readiness Report turns your audit trail into inspection evidence — showing equitable policy access across your multilingual team.',
+      body: 'Every query is logged. The CQC Readiness Report turns your audit trail into inspection evidence, showing equitable policy access across your multilingual team.',
     },
   ]
   return (
@@ -470,15 +478,13 @@ function TheSolution() {
   )
 }
 
-// ─── Group Level ──────────────────────────────────────────────────────────────
-
 function GroupLevel() {
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-16 lg:grid-cols-2">
 
-          {/* Left — text */}
+          {/* Left, text */}
           <div>
             <SectionLabel>Group Providers</SectionLabel>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
@@ -488,11 +494,11 @@ function GroupLevel() {
               Real-time policy visibility across every service, for multi-site providers.
               With a single policy library and centralised oversight, group leaders can
               standardise procedures, spot compliance gaps earlier, and drive consistent
-              outcomes across every location — without adding headcount.
+              outcomes across every location, without adding headcount.
             </p>
           </div>
 
-          {/* Right — image */}
+          {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
             <img
               src="/images/group-care.png"
@@ -507,14 +513,12 @@ function GroupLevel() {
   )
 }
 
-// ─── Operate at Scale ─────────────────────────────────────────────────────────
-
 function OperateAtScale() {
   const points = [
     'Clear total cost of ownership across your group',
     'Lower cost per service user as you grow',
     'One policy library, consistently applied across every site',
-    'Multilingual access as standard — no extra configuration',
+    'Multilingual access as standard, no extra configuration',
     'Group-level CQC Readiness Reports, generated automatically',
     'A partner that listens and scales with you',
   ]
@@ -524,7 +528,7 @@ function OperateAtScale() {
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-16 lg:grid-cols-2">
 
-          {/* Left — heading + list + CTA */}
+          {/* Left, heading + list + CTA */}
           <div>
             <SectionLabel>Enterprise Ready</SectionLabel>
             <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
@@ -532,7 +536,7 @@ function OperateAtScale() {
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
               Everything a group operator needs to run consistent, compliant care across
-              multiple sites — without the complexity of enterprise software.
+              multiple sites, without the complexity of enterprise software.
             </p>
             <ul className="mb-10 space-y-4">
               {points.map((point) => (
@@ -550,7 +554,7 @@ function OperateAtScale() {
             </a>
           </div>
 
-          {/* Right — image */}
+          {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
             <img
               src="/images/operate-at-scale.png"
@@ -565,8 +569,6 @@ function OperateAtScale() {
   )
 }
 
-// ─── How It Works ─────────────────────────────────────────────────────────────
-
 function HowItWorks() {
   const steps = [
     {
@@ -578,7 +580,7 @@ function HowItWorks() {
     {
       num: '02',
       title: 'Staff start asking',
-      body: 'Your team sends questions via email or the web chat portal — in any language. CareStreamAI identifies the language automatically and retrieves the most relevant policy content.',
+      body: 'Your team sends questions via email or the web chat portal, in any language. CareStreamAI identifies the language automatically and retrieves the most relevant policy content.',
       mockup: 'mockup-01' as const,
     },
     {
@@ -590,7 +592,7 @@ function HowItWorks() {
     {
       num: '04',
       title: 'Your compliance evidence builds',
-      body: 'Every query is logged. Your CQC Readiness Report builds automatically — policy access, language activity, staff engagement, version history.',
+      body: 'Every query is logged. Your CQC Readiness Report builds automatically, policy access, language activity, staff engagement, version history.',
       mockup: 'mockup-05' as const,
     },
   ]
@@ -636,8 +638,6 @@ function HowItWorks() {
     </section>
   )
 }
-
-// ─── Trust ────────────────────────────────────────────────────────────────────
 
 function TrustSection() {
   return (
@@ -695,7 +695,178 @@ function TrustSection() {
   )
 }
 
-// ─── Home Knowledge Callout ───────────────────────────────────────────────────
+function RegulationLayerSection() {
+  const frameworks = [
+    { name: 'CQC Fundamental Standards',       reg: 'Reg 12, 17 & 19', desc: 'The baseline requirements every registered service must meet — safe care, governance, and fit and proper persons.' },
+    { name: 'Health & Safety at Work Act 1974', reg: 'HSWA 1974',       desc: 'Employer and employee duties around risk assessment, safe systems of work, and incident reporting.' },
+    { name: 'GDPR & Data Protection Act 2018',  reg: 'UK GDPR',         desc: 'How resident and staff data must be collected, stored, shared, and protected.' },
+    { name: 'Mental Capacity Act 2005',          reg: 'MCA 2005',        desc: 'Supporting residents who may lack capacity to make decisions, including best-interest processes.' },
+    { name: 'Safeguarding Adults',               reg: 'Care Act 2014',   desc: 'Legal duties to protect adults at risk from abuse, neglect, and exploitation.' },
+    { name: 'RIDDOR',                            reg: 'RIDDOR 2013',     desc: 'When and how to report workplace injuries, diseases, and dangerous occurrences to the HSE.' },
+  ]
+
+  return (
+    <section className="bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+
+        {/* Heading row */}
+        <div className="mb-14 grid items-end gap-8 lg:grid-cols-2">
+          <div>
+            <SectionLabel>Regulatory Intelligence</SectionLabel>
+            <h2 className="text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+              Your policies and the law,{' '}
+              <span className="gradient-text-teal">answered together.</span>
+            </h2>
+          </div>
+          <div className="lg:pb-1">
+            <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
+              Over 50 UK care regulations and statutory frameworks are pre-loaded into CareStreamAI.
+              When a staff member asks something that touches both your internal policy and an external
+              framework, the response explains how the two interact — not just what your policy says
+              in isolation.
+            </p>
+            <div className="inline-flex items-center gap-2 rounded-full bg-teal/10 px-4 py-2">
+              <div className="h-2 w-2 rounded-full bg-teal" />
+              <span className="text-sm font-semibold text-teal">50+ regulatory frameworks pre-loaded</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main visual: breakdown left + WhatsApp mockup right */}
+        <div className="mb-14 grid items-center gap-10 lg:grid-cols-2">
+
+          {/* Left: example breakdown */}
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
+            <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-neutral-mid">How it works — example</p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {/* Question */}
+              <div className="px-6 py-5">
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Staff asks via WhatsApp</p>
+                <p className="text-base font-medium text-neutral-dark">
+                  &ldquo;What do I need to document after a medication error?&rdquo;
+                </p>
+              </div>
+              {/* Sources */}
+              <div className="px-6 py-5">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Drawn from</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 rounded-lg bg-teal-light px-3 py-2">
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-teal" />
+                    <span className="text-xs font-semibold text-teal">Your Medication Error Policy v2.1</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 rounded-lg bg-amber-50 px-3 py-2">
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-amber-brand" />
+                    <span className="text-xs font-semibold text-amber-brand">CQC Reg 12 — Safe Care &amp; Treatment</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 rounded-lg bg-amber-50 px-3 py-2">
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-amber-brand" />
+                    <span className="text-xs font-semibold text-amber-brand">RIDDOR 2013 — Incident Reporting</span>
+                  </div>
+                </div>
+              </div>
+              {/* Answer */}
+              <div className="px-6 py-5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Answer includes</p>
+                <ul className="space-y-1.5 text-sm leading-relaxed text-neutral-mid">
+                  <li className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />Your home&apos;s exact documentation steps</li>
+                  <li className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />CQC&apos;s requirements for recording medication incidents</li>
+                  <li className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />Whether RIDDOR reporting is triggered</li>
+                  <li className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />How the two align and where your policy goes further</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: WhatsApp conversation mockup */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
+              {/* Header */}
+              <div className="flex items-center gap-3 px-4 py-3" style={{ background: '#202c33' }}>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25d366]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">CareStreamAI</p>
+                  <p className="text-xs text-green-400">online</p>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="space-y-3 px-3 py-4" style={{ background: '#0b141a', minHeight: 380 }}>
+                {/* Staff question */}
+                <div className="flex justify-end">
+                  <div className="max-w-[82%] rounded-2xl rounded-br-sm px-3 py-2.5" style={{ background: '#005c4b' }}>
+                    <p className="text-xs leading-relaxed text-white/90">What do I need to document after a medication error?</p>
+                    <p className="mt-0.5 text-right text-[10px] text-white/35">22:31 ✓✓</p>
+                  </div>
+                </div>
+
+                {/* AI response */}
+                <div className="flex justify-start">
+                  <div className="max-w-[88%] rounded-2xl rounded-bl-sm px-3 py-2.5" style={{ background: '#202c33' }}>
+
+                    {/* Internal policy section */}
+                    <div className="mb-2.5 rounded-lg border-l-2 border-teal bg-teal/10 px-2.5 py-2">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-teal">Your Medication Error Policy</p>
+                      <p className="text-xs leading-relaxed text-white/85">
+                        Complete a Medication Error form within 1 hour, record in the MAR chart, and notify the GP and next of kin by end of shift.
+                      </p>
+                    </div>
+
+                    {/* External regulation section */}
+                    <div className="mb-2.5 rounded-lg border-l-2 border-amber-brand bg-amber-brand/10 px-2.5 py-2">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-brand">CQC Regulation 12 also requires</p>
+                      <p className="text-xs leading-relaxed text-white/85">
+                        The incident must be reviewed as part of your quality monitoring. If the error caused harm, it may trigger a RIDDOR report within 10 days.
+                      </p>
+                    </div>
+
+                    {/* Interaction note */}
+                    <p className="text-xs italic leading-relaxed text-white/50">
+                      Your policy meets CQC Reg 12 and goes further with same-day notification requirements.
+                    </p>
+
+                    {/* Citations */}
+                    <div className="mt-2 space-y-0.5">
+                      <p className="text-[10px] text-white/30">📄 Medication Error Policy v2.1 · Section 4.2</p>
+                      <p className="text-[10px] text-white/30">⚖️ CQC Fundamental Standards · Reg 12</p>
+                      <p className="text-[10px] text-white/30">⚖️ RIDDOR 2013 · Regulation 4</p>
+                    </div>
+
+                    <p className="mt-0.5 text-right text-[10px] text-white/35">22:31</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Regulation cards */}
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <p className="text-sm font-semibold uppercase tracking-widest text-neutral-mid">A selection of frameworks included</p>
+          <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-xs font-bold text-teal">50+ total</span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {frameworks.map(({ name, reg, desc }) => (
+            <div key={name} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-card">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <p className="font-semibold leading-snug text-neutral-dark">{name}</p>
+                <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-brand">{reg}</span>
+              </div>
+              <p className="text-sm leading-relaxed text-neutral-mid">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  )
+}
 
 function HomeKnowledgeCallout() {
   const rows = [
@@ -724,8 +895,8 @@ function HomeKnowledgeCallout() {
           <span style={{ color: '#E8850A' }}>How your home works.</span>
         </h2>
         <p className="mb-14 max-w-2xl text-lg leading-relaxed text-gray-300">
-          CareStreamAI extracts the specific facts from your documents — named individuals, schedules, exact
-          local procedures — and makes them instantly answerable.
+          CareStreamAI extracts the specific facts from your documents, named individuals, schedules, exact
+          local procedures, and makes them instantly answerable.
         </p>
 
         <div className="overflow-hidden rounded-2xl border border-white/10">
@@ -841,15 +1012,29 @@ function HomeKnowledgeCallout() {
   )
 }
 
-// ─── Features Overview ────────────────────────────────────────────────────────
+const whatsappLogo = (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="#16a34a">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+)
 
 function FeaturesOverview() {
-  const features = [
-    { icon: '🌍', title: '50+ language support',        desc: 'Staff ask in any language. Answers come back in the same language — automatically.' },
-    { icon: '💬', title: 'Email & chat interface',      desc: 'No app downloads or training. Access via web chat or plain email.' },
-    { icon: '🏠', title: 'Your home, in detail',        desc: 'Knows your specific roles, schedules, and local procedures — not just generic policy text.', highlight: true },
-    { icon: '📊', title: 'CQC Readiness Report',        desc: 'Inspection evidence generated automatically — access logs, language activity, staff engagement.' },
-    { icon: '🔍', title: 'Policy gap detection',        desc: 'Identify which questions your policies aren\'t answering — before CQC does.' },
+  const features: Array<{ icon: React.ReactNode; title: string; desc: string; highlight?: boolean }> = [
+    { icon: '🌍', title: '50+ language support',        desc: 'Staff ask in any language. Answers come back in the same language, automatically.' },
+    { icon: '💬', title: 'Email & web chat',             desc: 'Access via plain email or the web portal. No app download, no login required for staff.' },
+    {
+      icon: whatsappLogo,
+      title: 'WhatsApp access',
+      desc: 'Staff send questions via WhatsApp on any phone. Responses arrive in under 30 seconds, in the language asked.',
+    },
+    {
+      icon: <Mic size={28} className="text-purple-600" />,
+      title: 'Voice input',
+      desc: 'Speak a question in any language, hands-free. Automatically transcribed, detected, and answered from your policies.',
+    },
+    { icon: '🏠', title: 'Your home, in detail',        desc: 'Knows your specific roles, schedules, and local procedures, not just generic policy text.', highlight: true },
+    { icon: '📊', title: 'CQC Readiness Report',        desc: 'Inspection evidence generated automatically, covering access logs, language activity and staff engagement.' },
+    { icon: '🔍', title: 'Policy gap detection',        desc: "Identify which questions your policies aren't answering, before CQC does." },
     { icon: '📚', title: 'Staff handbook self-service', desc: 'Turn your HR handbook into a 24/7 resource for leave, disciplinary, and employment questions.' },
     { icon: '🔒', title: 'Immutable audit trail',       desc: 'Every query logged, timestamped, and auditable. CQC-ready from day one.' },
   ]
@@ -858,7 +1043,7 @@ function FeaturesOverview() {
       <div className="mx-auto max-w-content px-6">
         <SectionLabel>What You Get</SectionLabel>
         <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark md:text-5xl">
-          Seven reasons care teams love it.
+          Nine reasons care teams love it.
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -871,7 +1056,9 @@ function FeaturesOverview() {
                   : 'border border-gray-100 bg-white shadow-card'
               }`}
             >
-              <div className={`mb-4 text-2xl ${highlight ? 'opacity-90' : ''}`}>{icon}</div>
+              <div className={`mb-4 flex h-8 w-8 items-center justify-center ${highlight ? 'opacity-90' : ''}`}>
+                {typeof icon === 'string' ? <span className="text-2xl leading-none">{icon}</span> : icon}
+              </div>
               <h3 className={`mb-2 font-bold ${highlight ? 'text-white' : 'text-neutral-dark'}`}>{title}</h3>
               <p className={`text-sm leading-relaxed ${highlight ? 'text-white/75' : 'text-neutral-mid'}`}>{desc}</p>
             </div>
@@ -879,7 +1066,7 @@ function FeaturesOverview() {
         </div>
 
         <div className="mt-10 text-center">
-          <Link href="/features" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
+          <Link href="/care-policies" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
             See all features <ArrowRight size={16} />
           </Link>
         </div>
@@ -888,7 +1075,328 @@ function FeaturesOverview() {
   )
 }
 
-// ─── Pricing Snapshot ─────────────────────────────────────────────────────────
+function WhatsAppSection() {
+  const chatMessages = [
+    {
+      side: 'right',
+      bg: '#005c4b',
+      text: 'Maaari mo bang ipadaan ang patakaran sa pagbagsak?',
+      meta: '22:14 ✓✓',
+    },
+    {
+      side: 'left',
+      bg: '#202c33',
+      label: '🇵🇭 Tagalog detected',
+      text: 'Manatili kasama ang residente. Huwag ilipat kung may suspetsa ng pinsala sa gulugod. Tawagan ang senior carer agad.',
+      source: 'Falls Policy v3.2 · Seksyon 4.1',
+      meta: '22:14',
+    },
+    {
+      side: 'right',
+      bg: '#005c4b',
+      text: 'Who is the on-call manager tonight?',
+      meta: '22:15 ✓✓',
+    },
+    {
+      side: 'left',
+      bg: '#202c33',
+      text: 'Sarah Ambridge is on call tonight. Duty number is on the medication room door.',
+      source: 'On-Call Rota · Updated 6 Nov',
+      meta: '22:15',
+    },
+  ]
+
+  return (
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+
+          {/* Left, text */}
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 border border-green-100">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#16a34a">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              <span className="text-sm font-semibold text-green-700">WhatsApp</span>
+            </div>
+            <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
+              Policy answers on the app your staff already use.
+            </h2>
+            <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
+              Your care team is already on WhatsApp. Now they can ask your policies a question
+              the same way they text a colleague, in any language, at any hour, from any phone.
+            </p>
+            <ul className="mb-10 space-y-4">
+              {[
+                'No app download. No training. No login.',
+                'Answers in under 30 seconds, in the language asked.',
+                'Every conversation logged for your CQC audit trail.',
+                'Works on every smartphone, including iOS and Android.',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <div className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                    <Check size={11} className="text-green-600" />
+                  </div>
+                  <span className="text-neutral-dark">{point}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/demo"
+              className="btn-amber inline-flex items-center gap-2 rounded-btn px-8 py-4 text-sm font-bold text-white"
+            >
+              See it in action <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* Right, WhatsApp chat mockup */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
+              {/* Header */}
+              <div className="flex items-center gap-3 px-4 py-3" style={{ background: '#202c33' }}>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25d366]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">CareStreamAI</p>
+                  <p className="text-xs text-green-400">online</p>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#aebac1"><path d="M15.9 14.3H15l-.3-.3c1-1.1 1.6-2.7 1.6-4.3 0-3.7-3-6.7-6.7-6.7S2.9 6 2.9 9.7s3 6.7 6.7 6.7c1.6 0 3.2-.6 4.3-1.6l.3.3v.8l5.1 5.1 1.5-1.5-4.9-5.2zm-6.2 0c-2.6 0-4.6-2.1-4.6-4.6s2.1-4.6 4.6-4.6 4.6 2.1 4.6 4.6-2 4.6-4.6 4.6z"/></svg>
+                </div>
+              </div>
+              {/* Messages */}
+              <div className="space-y-3 px-3 py-4" style={{ background: '#0b141a', minHeight: 280 }}>
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.side === 'right' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className="max-w-[82%] rounded-2xl px-3 py-2"
+                      style={{ background: msg.bg, borderRadius: msg.side === 'right' ? '18px 18px 4px 18px' : '18px 18px 18px 4px' }}
+                    >
+                      {msg.label && (
+                        <p className="mb-1.5 text-[10px] font-semibold text-green-400">{msg.label}</p>
+                      )}
+                      <p className="text-xs leading-relaxed text-white/90">{msg.text}</p>
+                      {msg.source && (
+                        <p className="mt-1 text-[10px] text-white/30">{msg.source}</p>
+                      )}
+                      <p className="mt-0.5 text-right text-[10px] text-white/35">{msg.meta}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function VoiceSection() {
+  const bars = [18, 32, 52, 38, 68, 48, 62, 42, 72, 54, 38, 58, 32, 48, 22]
+
+  return (
+    <section className="relative overflow-hidden bg-neutral-dark py-24">
+      <div className="pointer-events-none absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full border border-white/5" />
+      <div className="pointer-events-none absolute -left-20 bottom-0 h-[300px] w-[300px] rounded-full bg-teal/10" />
+
+      <div className="relative mx-auto max-w-content px-6">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+
+          {/* Left, voice visual */}
+          <div className="flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              {/* Pulse rings + mic button */}
+              <div className="relative mb-10 flex h-48 w-48 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-teal/8" />
+                <div className="absolute h-36 w-36 rounded-full bg-teal/12" />
+                <div className="absolute h-28 w-28 rounded-full bg-teal/18" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-teal shadow-teal-glow">
+                  <Mic size={30} className="text-white" />
+                </div>
+                {/* Recording indicator */}
+                <div className="absolute right-8 top-8 flex items-center gap-1.5 rounded-full bg-red-500/90 px-2.5 py-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  <span className="text-[10px] font-bold text-white">REC</span>
+                </div>
+              </div>
+              {/* Waveform */}
+              <div className="flex items-end gap-1">
+                {bars.map((h, i) => (
+                  <div
+                    key={i}
+                    className="w-2 rounded-full bg-teal/60"
+                    style={{ height: h }}
+                  />
+                ))}
+              </div>
+              {/* Language badge */}
+              <div className="mt-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-sm">
+                <span className="text-base">🇵🇱</span>
+                <span className="text-xs font-semibold text-white">Polish detected</span>
+                <span className="ml-1 h-1.5 w-1.5 rounded-full bg-green-400" />
+              </div>
+              {/* Transcript preview */}
+              <div className="mt-4 max-w-xs rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                <p className="text-center text-xs italic text-white/50">
+                  &ldquo;Co powinienem zrobić po upadku mieszkańca?&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right, text */}
+          <div>
+            <SectionLabel light>Voice Access</SectionLabel>
+            <h2 className="mb-5 text-3xl font-extrabold leading-tight text-white md:text-4xl lg:text-5xl">
+              Speak your question.{' '}
+              <span style={{ color: '#E8850A' }}>Get your answer.</span>
+            </h2>
+            <p className="mb-8 text-lg leading-relaxed text-gray-300">
+              Not everyone types quickly in their second language. Voice access lets staff ask
+              policy questions naturally, by speaking, hands-free, mid-task, in any language.
+            </p>
+            <div className="space-y-6">
+              {[
+                {
+                  icon: '🗣️',
+                  title: 'Any language, any accent',
+                  body: 'Voice input is automatically transcribed and language-detected across 50+ languages. Staff speak naturally; the system handles the rest.',
+                },
+                {
+                  icon: '⚡',
+                  title: 'Under 30 seconds',
+                  body: 'Spoken questions are processed at the same speed as typed ones. The answer arrives on screen in the language that was spoken.',
+                },
+                {
+                  icon: '📋',
+                  title: 'Same audit trail',
+                  body: 'Voice queries are logged identically to chat and email interactions, capturing date, time, user and policy cited, all for your CQC records.',
+                },
+              ].map(({ icon, title, body }) => (
+                <div key={title} className="flex gap-4">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl">{icon}</div>
+                  <div>
+                    <p className="mb-1 font-semibold text-white">{title}</p>
+                    <p className="text-sm leading-relaxed text-gray-400">{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function PolicyGapsSection() {
+  const gaps = [
+    { question: 'What is the procedure for end-of-life care documentation?', status: 'gap',     queries: 14 },
+    { question: 'How do we handle a resident requesting to leave against advice?',  status: 'gap',     queries: 9  },
+    { question: 'What is the medication review process for new admissions?',        status: 'covered', queries: 22 },
+    { question: 'Who authorises CCTV footage requests?',                            status: 'gap',     queries: 6  },
+    { question: 'What is the falls risk score threshold for bed rails?',            status: 'covered', queries: 18 },
+  ]
+
+  return (
+    <section className="bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+
+          {/* Left, text */}
+          <div>
+            <SectionLabel>Policy Gap Detection</SectionLabel>
+            <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
+              Find your policy gaps{' '}
+              <span className="gradient-text-teal">before CQC does.</span>
+            </h2>
+            <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
+              Every time a query can&apos;t be answered from your documents, it&apos;s flagged.
+              Over time, patterns emerge. You can see exactly which questions your staff are asking
+              that your policies don&apos;t yet address.
+            </p>
+            <ul className="mb-10 space-y-4">
+              {[
+                "See exactly which questions your policies can't answer.",
+                'Prioritised by query frequency, so you can fix the most common gaps first.',
+                'Monthly summary report, ready for your manager\'s review.',
+                'Included in your CQC Readiness Report as evidence of continuous improvement.',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <ShieldAlert size={16} className="mt-0.5 flex-shrink-0 text-amber-brand" />
+                  <span className="text-neutral-dark">{point}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/care-policies"
+              className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark"
+            >
+              Learn more about Policy Gap Detection <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* Right, gap detection panel */}
+          <div>
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
+              <div className="border-b border-gray-100 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-neutral-dark">Policy Gap Report</p>
+                    <p className="text-xs text-neutral-mid">Last 30 days · Crossways Care Home</p>
+                  </div>
+                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-brand">
+                    3 gaps found
+                  </span>
+                </div>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {gaps.map(({ question, status, queries }) => (
+                  <div key={question} className="flex items-start gap-3 px-6 py-4">
+                    <div className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
+                      status === 'gap' ? 'bg-red-50' : 'bg-green-50'
+                    }`}>
+                      {status === 'gap'
+                        ? <AlertTriangle size={10} className="text-red-500" />
+                        : <Check size={10} className="text-green-600" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-neutral-dark">{question}</p>
+                      <p className="mt-0.5 text-xs text-neutral-mid">{queries} queries this month</p>
+                    </div>
+                    {status === 'gap' && (
+                      <span className="flex-shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                        Gap
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-gray-100 bg-gray-50 px-6 py-4">
+                <div className="flex items-start gap-2">
+                  <ShieldAlert size={14} className="mt-0.5 flex-shrink-0 text-amber-brand" />
+                  <p className="text-xs text-neutral-mid">
+                    <strong className="text-neutral-dark">Tip:</strong>{' '}
+                    Adding a procedure for end-of-life care documentation would resolve 14
+                    unanswered queries from the past month.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function PricingSnapshot() {
   return (
@@ -949,8 +1457,6 @@ function PricingSnapshot() {
   )
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
-
 function Testimonials() {
   const slots = [
     {
@@ -985,7 +1491,7 @@ function Testimonials() {
             <div key={role} className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
               <div className="mb-6 text-5xl font-bold leading-none text-teal/20">&ldquo;</div>
               <p className="mb-8 text-base italic leading-relaxed text-neutral-mid">
-                [Testimonial — {placeholder}]
+                [Testimonial, {placeholder}]
               </p>
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-light text-sm font-bold text-teal">
@@ -1003,8 +1509,6 @@ function Testimonials() {
     </section>
   )
 }
-
-// ─── Final CTA ────────────────────────────────────────────────────────────────
 
 function FinalCta() {
   return (
@@ -1034,8 +1538,6 @@ function FinalCta() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -1051,8 +1553,13 @@ export default function HomePage() {
         <OperateAtScale />
         <HowItWorks />
         <TrustSection />
+        <RegulationLayerSection />
         <HomeKnowledgeCallout />
         <FeaturesOverview />
+        <WhatsAppSection />
+        <VoiceSection />
+        <PolicyGapsSection />
+        <HomeBlogSection />
         <PricingSnapshot />
         <Testimonials />
         <FinalCta />

@@ -1,0 +1,229 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { usePlatformAuth } from '@/hooks/use-platform-auth'
+import { createPlatformClient, type AuditSeedTemplate } from '@/lib/platform-api'
+import { PlatformShell } from '@/components/platform-shell'
+import { ChevronDown, ChevronUp, ClipboardCheck, Loader2 } from 'lucide-react'
+import { clsx } from 'clsx'
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  daily:     'Daily',
+  weekly:    'Weekly',
+  monthly:   'Monthly',
+  quarterly: 'Quarterly',
+  periodic:  'Periodic',
+}
+
+const TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  yes_no:     { label: 'Yes / No',          color: 'bg-blue-50 text-blue-700'   },
+  yes_no_na:  { label: 'Yes / No / N/A',    color: 'bg-purple-50 text-purple-700' },
+  findings:   { label: 'Findings',          color: 'bg-amber-50 text-amber-700'  },
+  free_text:  { label: 'Free text',         color: 'bg-gray-100 text-gray-600'   },
+}
+
+function QuestionTypeBadge({ type }: { type: string }) {
+  const t = TYPE_LABELS[type] ?? { label: type, color: 'bg-gray-100 text-gray-500' }
+  return (
+    <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', t.color)}>{t.label}</span>
+  )
+}
+
+function FrequencyBadge({ frequency }: { frequency: string }) {
+  return (
+    <span className="rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-medium text-teal">
+      {FREQUENCY_LABELS[frequency] ?? frequency}
+    </span>
+  )
+}
+
+function TemplateRow({ template }: { template: AuditSeedTemplate }) {
+  const [open, setOpen] = useState(false)
+
+  const totalQuestions = template.sections.reduce((n, s) => n + s.questions.length, 0)
+  const typeBreakdown  = Object.entries(
+    template.sections.flatMap(s => s.questions).reduce<Record<string, number>>((acc, q) => {
+      acc[q.question_type] = (acc[q.question_type] ?? 0) + 1
+      return acc
+    }, {}),
+  )
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-neutral-light/50"
+      >
+        {open
+          ? <ChevronDown size={16} className="shrink-0 text-neutral-mid" />
+          : <ChevronDown size={16} className={clsx('shrink-0 text-neutral-mid transition-transform', '-rotate-90')} />
+        }
+        <ClipboardCheck size={15} className="shrink-0 text-teal" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-neutral-dark">{template.name}</p>
+          {template.description && (
+            <p className="mt-0.5 text-xs text-neutral-mid line-clamp-1">{template.description}</p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <FrequencyBadge frequency={template.frequency} />
+          <span className="text-xs text-neutral-mid">{template.sections.length} sections · {totalQuestions} questions</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="divide-y divide-gray-100 border-t border-gray-100">
+          {/* Type breakdown */}
+          <div className="flex flex-wrap gap-2 px-4 py-3">
+            {typeBreakdown.map(([type, count]) => (
+              <span key={type} className="flex items-center gap-1.5 text-xs text-neutral-mid">
+                <QuestionTypeBadge type={type} />
+                <span className="font-medium text-neutral-dark">{count}</span>
+              </span>
+            ))}
+          </div>
+
+          {/* Sections & questions */}
+          {template.sections.map((section, si) => (
+            <div key={section.id} className="px-4 py-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
+                {section.title}
+              </p>
+              <div className="space-y-1.5">
+                {section.questions.map((q, qi) => (
+                  <div key={q.id} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 text-xs text-neutral-mid/60 tabular-nums w-5 shrink-0 text-right">{qi + 1}.</span>
+                    <p className="flex-1 text-xs text-neutral-dark">{q.question_text}</p>
+                    {q.question_type !== 'yes_no' && (
+                      <QuestionTypeBadge type={q.question_type} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function AuditSeedsPage() {
+  const token                        = usePlatformAuth()
+  const [templates, setTemplates]    = useState<AuditSeedTemplate[]>([])
+  const [loading,   setLoading]      = useState(true)
+  const [error,     setError]        = useState<string | null>(null)
+  const [search,    setSearch]       = useState('')
+
+  useEffect(() => {
+    if (!token) return
+    createPlatformClient(token).auditSeeds.list()
+      .then(d => setTemplates(d.templates))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (!token) return null
+
+  const FREQ_ORDER = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic']
+
+  const filtered = search
+    ? templates.filter(t =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.description?.toLowerCase().includes(search.toLowerCase()) ||
+        t.sections.some(s =>
+          s.questions.some(q => q.question_text.toLowerCase().includes(search.toLowerCase()))
+        )
+      )
+    : templates
+
+  const grouped = FREQ_ORDER.reduce<Record<string, AuditSeedTemplate[]>>((acc, f) => {
+    acc[f] = filtered.filter(t => t.frequency === f)
+    return acc
+  }, {})
+
+  const totalQuestions = templates.reduce(
+    (n, t) => n + t.sections.reduce((m, s) => m + s.questions.length, 0),
+    0,
+  )
+
+  return (
+    <PlatformShell>
+      <div className="space-y-6">
+
+        {/* Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-neutral-dark">Audit Seeds</h1>
+            <p className="mt-1 text-sm text-neutral-mid">
+              {templates.length} audit template{templates.length !== 1 ? 's' : ''} · {totalQuestions} total questions seeded into the platform
+            </p>
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search templates or questions…"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none"
+          />
+        </div>
+
+        {/* Info panel */}
+        <div className="rounded-xl border border-teal/20 bg-teal-light/30 p-5 text-sm space-y-3">
+          <p className="font-semibold text-teal-dark">How audit seeds work</p>
+          <p className="text-neutral-dark leading-relaxed">
+            These are the platform-default audit templates seeded into every CareStream tenant. They appear in each
+            tenant's <strong>Monthly Audits</strong> page as shared read-only templates.
+            Tenants can start a run against any template, answer questions via the web form or WhatsApp,
+            and generate AI recommendations on completion. Templates are seeded on the first
+            <code className="mx-1 rounded bg-white px-1 py-0.5 text-xs font-mono">GET /audits/templates</code>
+            request per environment.
+          </p>
+          <div className="rounded-lg border border-teal/20 bg-white px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-teal-dark">Question types</p>
+            <ul className="space-y-1 text-neutral-dark leading-relaxed">
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal" /><strong>Yes / No</strong> — toggle answer with optional outcome and actions text fields.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal" /><strong>Yes / No / N/A</strong> — same as Yes/No with a third Not Applicable option (e.g. daily room checklists).</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal" /><strong>Findings</strong> — two free-text fields labelled Findings and Actions &amp; Timescales; no toggle (e.g. Medicines Management).</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal" /><strong>Free text</strong> — single narrative text field; no toggle (e.g. Fire Drill observations).</li>
+            </ul>
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={28} className="animate-spin text-neutral-mid" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="py-10 text-center text-sm text-neutral-mid">
+            {templates.length === 0
+              ? 'No audit seeds found. Templates are seeded automatically on the first request to /audits/templates.'
+              : 'No results for that search.'}
+          </p>
+        ) : (
+          <div className="space-y-6">
+            {FREQ_ORDER.map(freq => {
+              const group = grouped[freq] ?? []
+              if (group.length === 0) return null
+              return (
+                <div key={freq}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-neutral-dark">{FREQUENCY_LABELS[freq]}</h2>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-neutral-mid">{group.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {group.map(t => <TemplateRow key={t.id} template={t} />)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </PlatformShell>
+  )
+}

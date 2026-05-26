@@ -1,6 +1,14 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
-export const metadata = { title: 'CareStreamAI for Residential Care Homes' }
+export const metadata = {
+  title: 'CareStreamAI for Residential Care Homes',
+  description: 'Give every member of your residential care home team instant access to your policies. CareStreamAI works across all shifts, all languages, and all care roles.',
+  openGraph: {
+    title: 'CareStreamAI for Residential Care Homes',
+    description: 'Instant policy access for every shift and every care role, in any language.',
+    url: 'https://carestreamai.co.uk/residential-care',
+  },
+}
 
 export default function ResidentialCarePage() {
   return (

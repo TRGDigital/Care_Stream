@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/marketing/article-layout'
 
-export const metadata = { title: 'Night shifts and policy access — CareStreamAI Blog' }
+export const metadata = {
+  title: 'Night Shifts and Policy Access',
+  description: 'Night shifts create a policy gap most registered managers overlook. Learn why staff working unsocial hours are less likely to access guidance, and how to close that gap.',
+  openGraph: {
+    title: 'Night Shifts and Policy Access',
+    description: 'The compliance gap most managers do not know they have — and how to close it.',
+    url: 'https://carestreamai.co.uk/blog/night-shift-policy-access',
+  },
+}
 
 export default function Post() {
   return (
@@ -13,7 +21,7 @@ export default function Post() {
     >
       <p>
         Most policy access in care homes happens during office hours, when managers are present. But
-        clinical uncertainty does not keep office hours — and staff working at 3am often have fewer
+        clinical uncertainty does not keep office hours, and staff working at 3am often have fewer
         resources than they need.
       </p>
 
@@ -29,12 +37,12 @@ export default function Post() {
       </p>
       <p>
         This scenario plays out in care homes every night. Most managers know it happens. Many have
-        normalised it — treating out-of-hours calls as an unavoidable cost of the job.
+        normalised it, treating out-of-hours calls as an unavoidable cost of the job.
       </p>
 
       <h2>Why the policy folder is not the answer</h2>
       <p>
-        Most homes have a policy folder — physical or digital. At 3am, it is unlikely to be consulted.
+        Most homes have a policy folder, physical or digital. At 3am, it is unlikely to be consulted.
         Not because staff are lazy or careless, but because:
       </p>
       <ul>
@@ -46,13 +54,13 @@ export default function Post() {
       <h2>What supported night shifts look like</h2>
       <p>
         The shift towards &ldquo;always-on&rdquo; policy access changes this picture. When a care worker can ask a
-        question in plain language — or their own language — and get an immediate, accurate answer from
+        question in plain language, or their own language, and get an immediate, accurate answer from
         the approved policy, the dynamics are different:
       </p>
       <ul>
         <li>The question gets answered correctly, without waking the manager</li>
         <li>The correct procedure is followed</li>
-        <li>The query is logged — so the manager sees it in the morning and can review whether a pattern is emerging</li>
+        <li>The query is logged, so the manager sees it in the morning and can review whether a pattern is emerging</li>
         <li>Staff feel supported and confident, rather than isolated</li>
       </ul>
 
@@ -64,7 +72,7 @@ export default function Post() {
         an indirect impact on retention.
       </p>
       <p>
-        The cost of staff turnover in care — recruitment, induction, temporary staffing — is significant.
+        The cost of staff turnover in care, recruitment, induction, temporary staffing, is significant.
         Improving night shift support is not just a safety issue. It is an economic one.
       </p>
 
@@ -72,7 +80,7 @@ export default function Post() {
       <p>
         Managers who have deployed CareStreamAI consistently report the same shift: out-of-hours calls
         drop significantly in the first month. Night staff report feeling more confident. And managers
-        gain something they rarely had before — a log of exactly what their night team was uncertain
+        gain something they rarely had before, a log of exactly what their night team was uncertain
         about and how those questions were answered.
       </p>
 

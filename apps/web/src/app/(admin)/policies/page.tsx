@@ -12,6 +12,7 @@ import { Upload, FolderUp, RefreshCw, X, CheckCircle, AlertCircle, Pencil, MoreH
 const CATEGORY_LABELS: Record<string, string> = {
   internal_policy: 'Internal policy',
   staff_handbook:  'Staff handbook',
+  cqc_report:      'CQC Report',
 }
 
 function statusVariant(s: string): 'active' | 'processing' | 'archived' | 'superseded' | 'failed' {
@@ -190,6 +191,15 @@ export default function PoliciesPage() {
             heading="Staff Handbooks"
             policies={visiblePolicies.filter(p => p.document_category === 'staff_handbook')}
             emptyText={tab === 'active' ? 'No active staff handbooks.' : 'No archived staff handbooks.'}
+            onNewVersion={p => setVersionTarget({ id: p.id, name: p.name })}
+            onRetry={p => retry(p.id)}
+            onArchive={p => archive(p.id, p.name)}
+            onDelete={p => permanentDelete(p.id, p.name)}
+          />
+          <PolicyGroup
+            heading="CQC Reports"
+            policies={visiblePolicies.filter(p => p.document_category === 'cqc_report')}
+            emptyText={tab === 'active' ? 'No active CQC reports.' : 'No archived CQC reports.'}
             onNewVersion={p => setVersionTarget({ id: p.id, name: p.name })}
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
@@ -420,6 +430,7 @@ function UploadModal({
             >
               <option value="internal_policy">Internal policy</option>
               <option value="staff_handbook">Staff handbook</option>
+              <option value="cqc_report">CQC Report</option>
             </select>
           </div>
           <div>
@@ -577,6 +588,7 @@ function BulkUploadModal({
             >
               <option value="internal_policy">Internal policy</option>
               <option value="staff_handbook">Staff handbook</option>
+              <option value="cqc_report">CQC Report</option>
             </select>
           </div>
 

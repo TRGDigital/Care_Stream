@@ -2,16 +2,18 @@ import Link from 'next/link'
 
 const PRODUCT = [
   { href: '/how-it-works',         label: 'How It Works' },
-  { href: '/features',             label: 'Features' },
+  { href: '/care-policies',         label: 'Features' },
   { href: '/pricing',              label: 'Pricing' },
   { href: '/who-its-for',          label: 'Who It\'s For' },
   { href: '/cqc-compliance',       label: 'CQC & Compliance' },
+  { href: '/staff-training',       label: 'Staff Training' },
   { href: '/regulatory-knowledge', label: 'Regulatory Knowledge' },
   { href: '/demo',                 label: 'Book a Demo' },
 ]
 
 const TRUST = [
   { href: '/trust',    label: 'Trust & Security' },
+  { href: '/rag',      label: 'RAG' },
   { href: '/privacy',  label: 'Privacy Policy' },
   { href: '/terms',    label: 'Terms of Service' },
   { href: '/dpa',      label: 'Data Processing Agreement' },
@@ -41,9 +43,7 @@ export function MarketingFooter() {
         {/* Brand + tagline */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-2xl font-extrabold tracking-tight">
-              CareStream<span className="text-amber-brand">AI</span>
-            </p>
+            <img src="/logo-white.png" alt="CareStreamAI" className="h-10 w-auto" />
             <p className="mt-1 text-sm italic text-gray-400">Policy access for every voice in your team.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

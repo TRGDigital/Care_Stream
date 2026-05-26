@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { Printer, ClipboardCheck } from 'lucide-react'
+import { Printer, FileDown, ClipboardCheck } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -38,14 +38,17 @@ function ReportSection({ title, children, className }: { title: string; children
   )
 }
 
-function Table({ headers, rows }: { headers: string[]; rows: (string | number | null)[][] }) {
+function Table({ headers, rows, highlightCols = [] }: { headers: string[]; rows: (string | number | null)[][]; highlightCols?: number[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-teal-light">
-            {headers.map(h => (
-              <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-teal-dark">{h}</th>
+            {headers.map((h, i) => (
+              <th key={h} className={clsx(
+                'px-3 py-2 text-xs font-semibold',
+                highlightCols.includes(i) ? 'text-center text-teal-dark bg-teal/10' : 'text-left text-teal-dark',
+              )}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -53,7 +56,12 @@ function Table({ headers, rows }: { headers: string[]; rows: (string | number | 
           {rows.map((row, i) => (
             <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-neutral-light/40'}>
               {row.map((cell, j) => (
-                <td key={j} className="px-3 py-1.5 text-neutral-dark">{cell ?? '—'}</td>
+                <td key={j} className={clsx(
+                  'px-3 py-1.5',
+                  highlightCols.includes(j)
+                    ? 'text-center font-bold text-teal text-base'
+                    : 'text-neutral-dark',
+                )}>{cell ?? '—'}</td>
               ))}
             </tr>
           ))}
@@ -84,11 +92,12 @@ export default function CQCReportPage() {
   const todayStr       = new Date().toISOString().slice(0, 10)
   const twelveMonthAgo = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10)
 
-  const [dateFrom, setDateFrom] = useState(twelveMonthAgo)
-  const [dateTo,   setDateTo]   = useState(todayStr)
-  const [loading,  setLoading]  = useState(false)
-  const [error,    setError]    = useState('')
-  const [report,   setReport]   = useState<any>(null)
+  const [dateFrom,      setDateFrom]      = useState(twelveMonthAgo)
+  const [dateTo,        setDateTo]        = useState(todayStr)
+  const [loading,       setLoading]       = useState(false)
+  const [pdfLoading,    setPdfLoading]    = useState(false)
+  const [error,         setError]         = useState('')
+  const [report,        setReport]        = useState<any>(null)
 
   async function generate() {
     if (!session?.accessToken) return
@@ -106,6 +115,26 @@ export default function CQCReportPage() {
     }
   }
 
+  async function downloadPdf() {
+    const element = document.getElementById('cqc-print-area')
+    if (!element || !report) return
+    setPdfLoading(true)
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      const filename = `CQC-Inspection-Evidence-${report.meta.org_name.replace(/\s+/g, '-')}-${report.meta.date_to.slice(0, 10)}.pdf`
+      await html2pdf().set({
+        margin:      [10, 10, 10, 10],
+        filename,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:   { mode: ['css', 'legacy'] },
+      } as any).from(element).save()
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
   return (
     <div>
 
@@ -114,13 +143,23 @@ export default function CQCReportPage() {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-neutral-dark">CQC Inspection Evidence Report</h1>
           {report && (
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
-            >
-              <Printer size={15} />
-              Print / Save as PDF
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={downloadPdf}
+                disabled={pdfLoading}
+                className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
+              >
+                <FileDown size={15} />
+                {pdfLoading ? 'Generating…' : 'Download PDF'}
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-2 rounded-md border border-teal px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light"
+              >
+                <Printer size={15} />
+                Print
+              </button>
+            </div>
           )}
         </div>
 
@@ -172,11 +211,28 @@ export default function CQCReportPage() {
       {report && (
         <div id="cqc-print-area">
 
-          {/* Print header (only visible on paper) */}
-          <div className="mb-6 hidden border-b-4 border-teal pb-4 print:block">
-            <p className="text-xs font-semibold uppercase tracking-widest text-teal">CareStreamAI</p>
-            <h1 className="mt-1 text-2xl font-bold text-neutral-dark">CQC Inspection Evidence Report</h1>
-            <p className="mt-1 text-sm text-neutral-mid">{report.meta.org_name}</p>
+          {/* Report header — logos + title, shown on screen, PDF, and print */}
+          <div className="mb-6 border-b-4 border-teal pb-5">
+            <div className="mb-4 flex items-center justify-between">
+              {/* Organisation logo (left) */}
+              <div className="flex h-14 w-44 items-center">
+                {report.meta.org_logo_url ? (
+                  <img
+                    src={report.meta.org_logo_url}
+                    alt={report.meta.org_name}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-neutral-dark">{report.meta.org_name}</span>
+                )}
+              </div>
+              {/* CareStreamAI branding (right) */}
+              <div className="text-right">
+                <p className="text-xs font-semibold uppercase tracking-widest text-teal">Powered by</p>
+                <p className="text-lg font-bold text-teal">CareStreamAI</p>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-neutral-dark">CQC Inspection Evidence Report</h1>
           </div>
 
           {/* Report meta */}
@@ -212,6 +268,7 @@ export default function CQCReportPage() {
             </p>
             <Table
               headers={['Policy', 'Category', 'Version', 'Total queries', 'Unique staff', 'Last accessed']}
+              highlightCols={[3, 4]}
               rows={report.policy_access.map((p: any) => [
                 p.name,
                 CATEGORY_LABELS[p.document_category] ?? p.document_category,
@@ -364,6 +421,82 @@ export default function CQCReportPage() {
               />
             )}
           </ReportSection>
+
+          {/* 9. Staff Training Compliance */}
+          {report.training_compliance && (
+            <ReportSection title="9. Staff Training Compliance" className="cqc-print-break">
+              <p className="mb-3 text-xs text-neutral-mid">
+                Training compliance evidence across all active staff. CQC expects staff to have current training records and for organisations to demonstrate active management of renewal. This section provides evidence for the Well-Led and Safe key questions.
+              </p>
+
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  {
+                    label: 'Statutory compliance rate',
+                    value: `${report.training_compliance.compliance_rate}%`,
+                    sub:   `${report.training_compliance.compliant_staff} of ${report.training_compliance.total_staff} staff fully current on all statutory modules`,
+                  },
+                  {
+                    label: 'MCQ answers submitted',
+                    value: report.training_compliance.total_answers.toLocaleString('en-GB'),
+                    sub:   'Training questions answered by staff via WhatsApp, email, or chat portal',
+                  },
+                  {
+                    label: 'Correct answer rate',
+                    value: report.training_compliance.total_answers > 0 ? `${report.training_compliance.correct_answer_rate}%` : '—',
+                    sub:   'Demonstrates active knowledge retention, not just completion',
+                  },
+                  {
+                    label: 'Expired / expiring',
+                    value: `${report.training_compliance.expired_count} expired, ${report.training_compliance.expiring_soon_count} due within 90 days`,
+                    sub:   'Automatic renewal reminders sent at 90, 30, and 7 days',
+                  },
+                ].map(({ label, value, sub }) => (
+                  <div key={label} className="rounded-md border border-gray-100 bg-neutral-light/40 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-mid">{label}</p>
+                    <p className="mt-1 text-base font-bold text-neutral-dark">{value}</p>
+                    <p className="mt-0.5 text-[10px] text-neutral-mid">{sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              {report.training_compliance.module_breakdown.length > 0 && (
+                <Table
+                  headers={['Training module', 'Type', 'Enrolled', 'Complete', 'In progress', 'Expired', 'Completion rate']}
+                  highlightCols={[6]}
+                  rows={report.training_compliance.module_breakdown.map((m: any) => [
+                    m.name,
+                    m.category === 'statutory' ? 'Statutory (annual)' : 'Specialist',
+                    m.enrolled,
+                    m.completed,
+                    m.in_progress,
+                    m.expired,
+                    `${m.completion_rate}%`,
+                  ])}
+                />
+              )}
+
+              {report.training_compliance.knowledge_gaps?.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Training knowledge gaps</p>
+                  <p className="mb-3 text-xs text-neutral-mid">
+                    Questions where 40% or more of respondents answered incorrectly (minimum 2 responses). These represent specific knowledge areas that may benefit from targeted refresher training or updated instructional materials.
+                  </p>
+                  <Table
+                    headers={['Question', 'Module', 'Responses', 'Incorrect', 'Error rate']}
+                    highlightCols={[4]}
+                    rows={report.training_compliance.knowledge_gaps.map((g: any) => [
+                      g.question_text,
+                      g.module_name,
+                      g.total,
+                      g.incorrect,
+                      `${g.incorrect_rate}%`,
+                    ])}
+                  />
+                </div>
+              )}
+            </ReportSection>
+          )}
 
           {/* Disclaimer */}
           <div className="mt-8 rounded-md border border-gray-200 px-4 py-3 text-xs text-neutral-mid">

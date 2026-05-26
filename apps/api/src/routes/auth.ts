@@ -117,21 +117,14 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     metadata: { org_name, slug, plan_id: plan_id ?? null },
   })
 
-  // Send verification email (non-fatal — account still created)
+  // Send verification email — awaited so it completes before the serverless function exits
   const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
   const verificationUrl = `${webUrl}/verify-email?token=${verificationToken}`
-  sendVerificationEmail(email, name, verificationUrl).catch(e =>
+  try {
+    await sendVerificationEmail(email, name, verificationUrl)
+  } catch (e) {
     console.error('[register] Failed to send verification email:', e)
-  )
-
-  // Plant platform knowledge seeds in the background — non-fatal
-  ;(async () => {
-    try {
-      await seedTenantKnowledge(tenant.id)
-    } catch (e) {
-      console.warn(`[register] Knowledge seeding failed (non-fatal): ${String(e)}`)
-    }
-  })()
+  }
 
   ok(res, { email_verification_required: true, email }, 201)
 })
@@ -336,9 +329,11 @@ authRouter.post('/resend-verification', async (req: Request, res: Response) => {
 
   const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
   const verificationUrl = `${webUrl}/verify-email?token=${token}`
-  sendVerificationEmail(email, user.name, verificationUrl).catch(e =>
+  try {
+    await sendVerificationEmail(email, user.name, verificationUrl)
+  } catch (e) {
     console.error('[resend-verification] Failed to send email:', e)
-  )
+  }
 
   ok(res, { sent: true })
 })

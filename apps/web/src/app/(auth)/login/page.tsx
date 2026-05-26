@@ -35,8 +35,7 @@ export default function LoginPage() {
     }
 
     // Reload so the server layout picks up the new session
-    router.push('/dashboard')
-    router.refresh()
+    window.location.href = '/dashboard'
   }
 
   return (

@@ -94,21 +94,24 @@ export async function uploadPolicyFile(params: {
   const key = buildPolicyKey(params.tenantId, params.policyId, params.filename)
 
   if (USE_LOCAL) {
+    console.log(`[s3] LOCAL upload: ${key}`)
     localWrite(key, params.buffer)
     return key
   }
 
+  console.log(`[s3] S3 upload to bucket=${BUCKET} key=${key}`)
   await getS3().send(new PutObjectCommand({
     Bucket:               BUCKET,
     Key:                  key,
     Body:                 params.buffer,
     ContentType:          params.mimeType,
-    ServerSideEncryption: 'AES256',   // §11.2 encryption at rest
+    ServerSideEncryption: 'AES256',
     Metadata: {
       tenant_id: params.tenantId,
       policy_id: params.policyId,
     },
   }))
+  console.log(`[s3] S3 upload complete: ${key}`)
 
   return key
 }

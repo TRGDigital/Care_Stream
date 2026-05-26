@@ -36,12 +36,18 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
     previous_version_policy_id,
   } = job
 
-  console.log(`[ingestion] Starting: policy=${policy_id} tenant=${tenant_id} category=${document_category}`)
+  console.log(`[ingestion] Starting: policy=${policy_id} tenant=${tenant_id} category=${document_category} USE_LOCAL=${!process.env.S3_BUCKET} S3_BUCKET=${process.env.S3_BUCKET ?? 'NOT SET'}`)
 
   // ── Step 1: Fetch raw file from S3 ──────────────────────────────────────────
 
-  const buffer = await downloadFile(s3_key)
-  console.log(`[ingestion] Downloaded ${buffer.length} bytes from S3: ${s3_key}`)
+  let buffer: Buffer
+  try {
+    buffer = await downloadFile(s3_key)
+    console.log(`[ingestion] Downloaded ${buffer.length} bytes from: ${s3_key}`)
+  } catch (e) {
+    await markFailed(policy_id, `File download failed: ${String(e)}`)
+    return
+  }
 
   // ── Step 2: Extract text ─────────────────────────────────────────────────────
 

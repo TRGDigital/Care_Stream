@@ -145,8 +145,11 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
   // ── Respond immediately — client no longer waiting ────────────────────────────
   ok(res, { policy }, 201)
 
-  // ── Phase 2: Ingestion runs after response is sent ────────────────────────────
-  tenantContext.run({ tenantId }, () =>
+  // ── Phase 2: Ingestion — awaited so Vercel keeps the function alive ──────────
+  // res.json() already sent the 201; client is unblocked. We await here so the
+  // handler doesn't return (which would let Vercel kill the Lambda) before
+  // ingestDocument() has finished embedding and upserting to Pinecone.
+  await tenantContext.run({ tenantId }, () =>
     enqueueIngestion({
       policy_id:         policyId,
       tenant_id:         tenantId,

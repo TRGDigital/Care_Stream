@@ -13,7 +13,7 @@ import {
   FileText, Loader2, Mail, MessageSquare, Search, TrendingUp, Users, X,
   Cpu, Globe, Database, Zap, GitBranch, Shield, GraduationCap, Bot,
   CheckCircle2, XCircle, RefreshCw, ClipboardList, ChevronRight, ChevronLeft, Download,
-  Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings,
+  Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings, HardDrive,
 } from 'lucide-react'
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
@@ -1449,6 +1449,56 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Email — SendGrid */}
+      <RefSection icon={Mail} title="Email — SendGrid">
+        <p className="leading-relaxed text-neutral-mid">
+          SendGrid handles both directions of staff email communication — receiving queries via the Inbound Parse webhook
+          and sending AI-generated replies as branded HTML emails that stay in the same thread.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Inbound (staff → CareStream)</p>
+            <p className="text-neutral-mid">
+              Staff send an email to <code className="text-xs bg-gray-100 px-1 rounded">policies@{'{slug}'}.carestreamai.co.uk</code>.
+              SendGrid Inbound Parse forwards it as a POST to <code className="text-xs bg-gray-100 px-1 rounded">/email/inbound</code> →
+              <code className="text-xs bg-gray-100 px-1 rounded"> services/email/inbound.ts</code>.
+              The tenant is resolved from the subdomain slug in the <code className="text-xs bg-gray-100 px-1 rounded">to</code> address.
+              The sender is checked against the tenant's staff list — non-staff get a rejection email.
+              Quoted reply text is stripped so only the new message is sent to the RAG pipeline.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Outbound (CareStream → staff)</p>
+            <p className="text-neutral-mid">
+              Replies are sent via <code className="text-xs bg-gray-100 px-1 rounded">services/email/outbound.ts → sendEmailReply()</code> using the
+              <code className="text-xs bg-gray-100 px-1 rounded"> @sendgrid/mail</code> library.
+              Each reply sets <code className="text-xs bg-gray-100 px-1 rounded">In-Reply-To</code> and <code className="text-xs bg-gray-100 px-1 rounded">References</code> headers
+              so all messages appear in the same thread in the staff member's inbox.
+              Emails are branded HTML with a purple gradient header and CareStream logo.
+              A thumbs up/thumbs down feedback link is included, signed with an HMAC token.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Other outbound uses</p>
+            <p className="text-neutral-mid">
+              Clarification emails (when intent is unclear — sends a 1/2/3 choice reply),
+              rejection emails (non-staff senders), and proactive training module delivery to staff
+              enrolled with the email channel all use the same outbound service.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Inbound domain"         value="carestreamai.co.uk — per-tenant address: policies@{slug}.carestreamai.co.uk" />
+          <RefRow label="From address"           value="noreply@carestreamai.co.uk" />
+          <RefRow label="Thread continuity"      value="Message-ID / In-Reply-To / References headers — replies always land in the same inbox thread" />
+          <RefRow label="Session TTL"            value="7 days — conversation history kept across replies within that window" />
+          <RefRow label="Webhook validation"     value="SENDGRID_INBOUND_PARSE_KEY used to verify the webhook signature on every inbound POST" />
+          <RefRow label="SENDGRID_API_KEY"       value="Authorises all outbound sends via @sendgrid/mail" />
+          <RefRow label="Service file (in)"      value="apps/api/src/services/email/inbound.ts" />
+          <RefRow label="Service file (out)"     value="apps/api/src/services/email/outbound.ts" />
+        </div>
+      </RefSection>
+
       {/* RAG Pipeline */}
       <RefSection icon={Zap} title="RAG Query Pipeline">
         <p className="leading-relaxed text-neutral-mid">
@@ -1519,6 +1569,39 @@ function SystemReference() {
           <RefRow label="Prompt A"            value="Summary + follow-up questions — used for most staff queries" />
           <RefRow label="Prompt B"            value="Full policy formatter — used when staff ask for the complete section" />
           <RefRow label="Knowledge extraction" value="Prompt C — extracts Q&A pairs from uploaded documents for the per-tenant knowledge base" />
+        </div>
+      </RefSection>
+
+      {/* AWS S3 File Storage */}
+      <RefSection icon={HardDrive} title="AWS S3 File Storage">
+        <p className="leading-relaxed text-neutral-mid">
+          All policy documents uploaded by care home managers are stored in AWS S3.
+          S3 is the permanent file store — Pinecone holds the derived vectors, but the original files always live in S3.
+        </p>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Bucket"               value="carestreamai-docs-prod-3" />
+          <RefRow label="Region"               value="eu-west-2 (London)" />
+          <RefRow label="IAM user"             value="carestreamai-api — access scoped to carestreamai-docs-prod-3 only" />
+          <RefRow label="Local fallback"       value="When S3_BUCKET env var is not set (dev), files go to /tmp/carestreamai — USE_LOCAL flag in s3.ts" />
+        </div>
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid mb-1.5">Key layout (tenant-scoped, never mixed)</p>
+          <div className="rounded-lg bg-gray-50 px-4 py-3 space-y-1.5 font-mono text-xs text-neutral-mid">
+            <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/policies/</span><span className="text-neutral-dark">{'{policy_id}'}/{'{filename}'}</span> <span className="text-neutral-mid ml-2">— live document</span></div>
+            <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/extracted/</span><span className="text-neutral-dark">{'{policy_id}'}.txt</span> <span className="text-neutral-mid ml-2">— plain-text cache post-ingestion</span></div>
+            <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/versions/</span><span className="text-neutral-dark">{'{policy_id}'}/v{'{n}'}/{'{file}'}</span> <span className="text-neutral-mid ml-2">— superseded versions archived</span></div>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Retention"            value="Files are never deleted — old versions archived under /versions/ (§10.5)" />
+          <RefRow label="Upload flow"          value="POST /policies/upload → multer buffer → S3 PutObject → Prisma creates policy record → ingestDocument() runs inline on Vercel (no Redis)" />
+          <RefRow label="Ingestion flow"       value="S3 GetObject → PDF/DOCX text extraction → chunk (800 tokens, 100 overlap) → OpenAI embed → Pinecone upsert → policy.status = active" />
+          <RefRow label="Text extraction"      value="pdf-parse for PDF files, mammoth for DOCX" />
+          <RefRow label="Service file"         value="apps/api/src/services/storage/s3.ts" />
+          <RefRow label="AWS_ACCESS_KEY_ID"    value="IAM user access key — set in Vercel Production env" />
+          <RefRow label="AWS_SECRET_ACCESS_KEY" value="IAM user secret — set in Vercel Production env" />
+          <RefRow label="AWS_REGION"           value="eu-west-2" />
+          <RefRow label="S3_BUCKET"            value="carestreamai-docs-prod-3" />
         </div>
       </RefSection>
 

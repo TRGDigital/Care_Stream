@@ -307,11 +307,22 @@ function PolicyActions({
   onDelete:     () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [pos,  setPos]  = useState({ top: 0, right: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  function handleOpen() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, right: window.innerWidth - r.right })
+    }
+    setOpen(v => !v)
+  }
 
   return (
-    <div className="relative inline-block text-left">
+    <div className="inline-block text-left">
       <button
-        onClick={() => setOpen(v => !v)}
+        ref={btnRef}
+        onClick={handleOpen}
         className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark shadow-sm hover:bg-gray-50"
       >
         Actions <MoreHorizontal size={13} />
@@ -320,7 +331,10 @@ function PolicyActions({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg">
+          <div
+            className="fixed z-20 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg"
+            style={{ top: pos.top, right: pos.right }}
+          >
             {(policy.status === 'active' || policy.status === 'failed') && (
               <button
                 onClick={() => { setOpen(false); onNewVersion() }}

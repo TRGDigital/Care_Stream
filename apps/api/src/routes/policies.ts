@@ -91,26 +91,24 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     throw e
   }
 
-  // ── Phase 1: S3 upload + DB record — respond immediately ─────────────────────
-  // ingestDocument() (OpenAI embed + Pinecone upsert) can take 20–50 s.
-  // On Vercel Hobby the hard limit is 60 s total, so we respond as soon as the
-  // file is stored and the DB record exists, then run ingestion in the background.
-  // Vercel keeps the function alive after res.json() until all async work settles
-  // or maxDuration is reached.
+  // S3 upload + DB record + ingestion run sequentially in one function call.
+  // Vercel terminates the Lambda as soon as res.json() is called, so we must
+  // complete all work before responding. Typical ingestion (extract → embed →
+  // Pinecone upsert) takes 15–30 s for standard policy documents — within the
+  // 60 s maxDuration.
 
   let policy: any
-  let s3Key: string
 
   try {
-    s3Key = await uploadPolicyFile({
-      tenantId,
-      policyId,
-      filename:  req.file!.originalname,
-      buffer:    req.file!.buffer,
-      mimeType:  req.file!.mimetype,
-    })
-
     await tenantContext.run({ tenantId }, async () => {
+      const s3Key = await uploadPolicyFile({
+        tenantId,
+        policyId,
+        filename:  req.file!.originalname,
+        buffer:    req.file!.buffer,
+        mimeType:  req.file!.mimetype,
+      })
+
       policy = await (prisma as any).policy.create({
         data: {
           id:                  policyId,
@@ -127,6 +125,16 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
         },
       })
 
+      await enqueueIngestion({
+        policy_id:         policyId,
+        tenant_id:         tenantId,
+        s3_key:            s3Key,
+        document_category,
+        filename:          req.file!.originalname,
+        mime_type:         req.file!.mimetype,
+        version:           1,
+      })
+
       await writeAuditLog({
         tenant_id:   tenantId,
         user_id:     req.user!.sub,
@@ -137,29 +145,10 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
       })
     })
   } catch (e) {
-    console.error('[policies/upload] Phase 1 error:', e)
+    console.error('[policies/upload] Error:', e)
     err(res, 'UPLOAD_FAILED', 'Policy upload failed. Check server logs.', 500)
     return
   }
-
-  // ── Respond immediately — client no longer waiting ────────────────────────────
-  ok(res, { policy }, 201)
-
-  // ── Phase 2: Ingestion — awaited so Vercel keeps the function alive ──────────
-  // res.json() already sent the 201; client is unblocked. We await here so the
-  // handler doesn't return (which would let Vercel kill the Lambda) before
-  // ingestDocument() has finished embedding and upserting to Pinecone.
-  await tenantContext.run({ tenantId }, () =>
-    enqueueIngestion({
-      policy_id:         policyId,
-      tenant_id:         tenantId,
-      s3_key:            s3Key,
-      document_category,
-      filename:          req.file!.originalname,
-      mime_type:         req.file!.mimetype,
-      version:           1,
-    })
-  ).catch(e => console.error('[policies/upload] Phase 2 ingestion error:', e))
 })
 
 // ─── POST /policies/:id/version ───────────────────────────────────────────────

@@ -105,7 +105,7 @@ function Hero() {
           <div className="relative lg:pl-4">
             <div className="overflow-hidden rounded-2xl shadow-elevated">
               <img
-                src="/images/hero.png"
+                src="/images/hero.jpg"
                 alt="Care worker reviewing policies on a tablet in a residential care home"
                 className="w-full object-cover"
               />
@@ -258,7 +258,7 @@ function CareSettings() {
       href: '/residential-care',
       label: 'Residential Care Homes',
       description: 'Supporting registered managers and care staff with 24/7 policy access, multilingual answers, and automatic CQC compliance evidence.',
-      image: '/images/residential-care.png',
+      image: '/images/residential-care.jpg',
       gradient: 'from-teal to-teal-dark',
       icon: (
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
@@ -276,7 +276,7 @@ function CareSettings() {
       href: '/nursing-homes',
       label: 'Nursing Homes',
       description: 'Giving nursing and care teams instant access to clinical procedures in any language, at any hour, with every query logged for inspection.',
-      image: '/images/nursing-home.png',
+      image: '/images/nursing-home.jpg',
       gradient: 'from-[#0A5F5F] to-[#0D4A6E]',
       icon: (
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
@@ -293,7 +293,7 @@ function CareSettings() {
       href: '/domiciliary-care',
       label: 'Domiciliary Care',
       description: 'Keeping dispersed home-care teams connected to approved procedures whether they are in the office, on the road, or supporting a client.',
-      image: '/images/domiciliary-care.png',
+      image: '/images/domiciliary-care.jpg',
       gradient: 'from-[#1A6B6B] to-[#0E5550]',
       icon: (
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
@@ -414,7 +414,7 @@ function ValueProposition() {
           <div className="relative">
             <div className="overflow-hidden rounded-2xl shadow-elevated">
               <img
-                src="/images/care-provider-hero.png"
+                src="/images/care-provider-hero.jpg"
                 alt="Care worker using CareStreamAI on a tablet in a residential care home"
                 className="w-full object-cover"
               />
@@ -501,7 +501,7 @@ function GroupLevel() {
           {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
             <img
-              src="/images/group-care.png"
+              src="/images/group-care.jpg"
               alt="Care team delivering group-level care across a residential setting"
               className="w-full object-cover"
             />
@@ -557,7 +557,7 @@ function OperateAtScale() {
           {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
             <img
-              src="/images/operate-at-scale.png"
+              src="/images/operate-at-scale.jpg"
               alt="Care manager reviewing policy compliance on screen"
               className="w-full object-cover"
             />

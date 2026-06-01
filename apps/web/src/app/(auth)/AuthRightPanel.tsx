@@ -35,10 +35,10 @@ const TESTIMONIAL = {
 }
 
 // Login page — Southeast Asian lady carer reading tablet, residents in background
-const IMAGE_LOGIN = '/auth-carer-female.png'
+const IMAGE_LOGIN = '/auth-carer-female.jpg'
 
 // Register page — South Asian male carer reading phone, residents in background
-const IMAGE_REGISTER = '/auth-carer-male.png'
+const IMAGE_REGISTER = '/auth-carer-male.jpg'
 
 export function AuthRightPanel() {
   const pathname = usePathname()

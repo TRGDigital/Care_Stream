@@ -21,17 +21,17 @@ export const metadata = {
 // Slugs without a real image fall back to a styled placeholder.
 
 const REAL_IMAGES: Record<string, string> = {
-  'residential-care-homes': '/images/who-its-for/residential-care-homes.png',
-  'nursing-homes':          '/images/who-its-for/nursing-homes.png',
-  'home-care':              '/images/who-its-for/home-care.png',
-  'extra-care':             '/images/who-its-for/extra-care.png',
-  'hospices':               '/images/who-its-for/hospices.png',
-  'day-services':           '/images/who-its-for/day-services.png',
-  'mental-health':          '/images/who-its-for/mental-health.png',
-  'learning-disability':    '/images/who-its-for/learning-disability.png',
-  'reablement':             '/images/who-its-for/reablement.png',
-  'community-care':         '/images/who-its-for/community-care.png',
-  'supported-living':       '/images/who-its-for/supported-living.png',
+  'residential-care-homes': '/images/who-its-for/residential-care-homes.jpg',
+  'nursing-homes':          '/images/who-its-for/nursing-homes.jpg',
+  'home-care':              '/images/who-its-for/home-care.jpg',
+  'extra-care':             '/images/who-its-for/extra-care.jpg',
+  'hospices':               '/images/who-its-for/hospices.jpg',
+  'day-services':           '/images/who-its-for/day-services.jpg',
+  'mental-health':          '/images/who-its-for/mental-health.jpg',
+  'learning-disability':    '/images/who-its-for/learning-disability.jpg',
+  'reablement':             '/images/who-its-for/reablement.jpg',
+  'community-care':         '/images/who-its-for/community-care.jpg',
+  'supported-living':       '/images/who-its-for/supported-living.jpg',
 }
 
 function SettingImage({ slug, alt }: { slug: string; alt: string }) {

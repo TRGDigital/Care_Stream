@@ -1849,8 +1849,8 @@ function SystemReference() {
       {/* Security Hardening */}
       <RefSection icon={Lock} title="Security Hardening — June 2026">
         <p className="leading-relaxed text-neutral-mid">
-          Full security review of the API completed 1 June 2026. The Critical and High severity
-          findings below were identified and fixed. Foundations already in place beforehand:
+          Full security review of the API completed 1 June 2026. The Critical, High and Medium
+          severity findings below were identified and fixed. Foundations already in place beforehand:
           bcrypt(12) password hashing, JWT auth with a separate refresh secret, account lockout,
           enumeration-resistant password resets, helmet, scoped CORS, and per-user rate limiting.
         </p>
@@ -1868,11 +1868,33 @@ function SystemReference() {
           <RefRow label="Feedback link signing" value="FEEDBACK_HMAC_SECRET set in production — one-click feedback links are HMAC-signed and verified in constant time (no shared dev-fallback secret)." />
         </div>
         <div className="mt-3 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Known follow-ups (not yet fixed)</p>
-          <RefRow label="Inbound email auth"   value="SENDGRID_INBOUND_PARSE_KEY is set but /email/inbound does not yet verify it — the sender 'from' is spoofable. Wire up Inbound Parse verification." />
-          <RefRow label="SVG logo upload"      value="Tenant logo upload accepts image/svg+xml stored as an inline data: URL — stored-XSS risk. Drop SVG or sanitise." />
-          <RefRow label="RLS coverage"         value="Extend Postgres RLS beyond the current 6 tables to all tenant-owned tables as defence-in-depth." />
-          <RefRow label="Shared module editing" value="TrainingModule has no tenant_id (global catalog); any tenant admin can edit the shared question bank. Consider restricting to platform admin." />
+          <p className="text-xs font-semibold uppercase tracking-wide text-yellow-600">Medium — fixed</p>
+          <RefRow label="SVG logo XSS"          value="Tenant logo upload no longer accepts image/svg+xml (SVGs can carry scripts and were stored as inline data: URLs). PNG/JPEG/WebP only. (routes/settings.ts)" />
+          <RefRow label="Self-deactivation bug" value="The 'can't deactivate your own account' guard compared req.user.id, but the JWT field is `sub` — so it never fired. Fixed, an admin can no longer lock themselves out. (routes/users.ts)" />
+          <RefRow label="Onboarding policy refs" value="Onboarding flow steps now validate that each referenced policy_id belongs to the tenant before storing (POST + PATCH). (routes/onboarding.ts)" />
+          <RefRow label="Feedback secret"       value="Removed the hard-coded HMAC fallback in production — feedback-link signing fails closed if the env secret is missing. (lib/feedback-token.ts)" />
+          <RefRow label="Inbound email auth"    value="Shared-secret verification added to /email/inbound (timing-safe ?key check). Built and deployed but OFF by default — activate via SendGrid Parse URL ?key=… + ENFORCE_INBOUND_PARSE_KEY=true. (routes/email.ts)" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Known follow-ups</p>
+          <RefRow label="Inbound email activation" value="Point the SendGrid Inbound Parse URL at .../email/inbound?key=<SENDGRID_INBOUND_PARSE_KEY>, then set ENFORCE_INBOUND_PARSE_KEY=true to enforce sender verification." />
+          <RefRow label="Shared module editing" value="TrainingModule has no tenant_id (global catalog); any tenant admin can edit the shared question bank. Consider restricting to platform admin (product decision)." />
+        </div>
+      </RefSection>
+
+      {/* Blog CMS */}
+      <RefSection icon={FileText} title="Blog (database-driven CMS)">
+        <p className="leading-relaxed text-neutral-mid">
+          The marketing blog is fully database-driven and managed here in the platform console (Blog tab).
+          Setting a post to <strong>published</strong> makes it appear on the live <code className="text-xs bg-gray-100 px-1 rounded">/blog</code> automatically — no code changes.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Storage"        value="blog_posts table — platform-level (no tenant_id). Authors in blog_authors." />
+          <RefRow label="Public API"     value="GET /public/blog/posts (published list) + /public/blog/posts/:slug — no auth, published only" />
+          <RefRow label="Public pages"   value="(marketing)/blog list + dynamic /blog/[slug], ISR (revalidate 60s), renders HTML content via ArticleLayout" />
+          <RefRow label="Editor"         value="WYSIWYG visual editor (contentEditable) — Style/H1-H3, bold, italic, link, lists, quote. Stores HTML. Also special message, key-info box, FAQs, CTA." />
+          <RefRow label="Feature images" value="Resized in-browser (max 1600px JPEG) before upload to stay under Vercel's 4.5MB limit; stored PRIVATELY in S3, served via GET /public/blog/image/:file with CORP: cross-origin." />
+          <RefRow label="Migration"      value="The 6 original hand-coded articles were migrated into the DB and their static files removed; all posts are now editable here." />
         </div>
       </RefSection>
     </div>

@@ -256,11 +256,13 @@ trainingRouter.post('/enrollments/:id/upload-certificate', imageUploadMiddleware
       err(res, 'FORBIDDEN', 'You can only upload a certificate for your own training.', 403); return
     }
 
-    const url = await uploadBlogImage({
+    const key  = await uploadBlogImage({
       filename: req.file.originalname,
       buffer:   req.file.buffer,
       mimeType: req.file.mimetype,
     })
+    const file = key.split('/').pop()
+    const url  = `${req.protocol}://${req.get('host')}/public/blog/image/${file}`
     await (prisma as any).trainingEnrollment.update({
       where: { id: req.params.id },
       data:  { certificate_url: url, updated_at: new Date() },

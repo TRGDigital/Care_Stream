@@ -208,6 +208,10 @@ export async function archiveVersionToS3(params: {
 
 // ─── Blog image upload ────────────────────────────────────────────────────────
 
+// Stores the image privately and returns its S3 KEY (e.g. blog/images/uuid.png).
+// The bucket stays private — images are served via the public API proxy route
+// GET /public/blog/image/:file (no public-read ACL, which the prod IAM user
+// isn't permitted to set, and which we don't want on the private docs bucket).
 export async function uploadBlogImage(params: {
   filename: string
   buffer:   Buffer
@@ -218,21 +222,18 @@ export async function uploadBlogImage(params: {
 
   if (USE_LOCAL) {
     localWrite(key, params.buffer)
-    const apiBase = process.env.API_URL ?? `http://localhost:${process.env.PORT ?? 4000}`
-    return `${apiBase}/uploads/${key}`
+    return key
   }
 
   await getS3().send(new PutObjectCommand({
-    Bucket:      BUCKET,
-    Key:         key,
-    Body:        params.buffer,
-    ContentType: params.mimeType,
-    ACL:         'public-read' as any,
+    Bucket:               BUCKET,
+    Key:                  key,
+    Body:                 params.buffer,
+    ContentType:          params.mimeType,
+    ServerSideEncryption: 'AES256',
   }))
 
-  const region  = process.env.AWS_REGION ?? 'eu-west-2'
-  const baseUrl = process.env.MEDIA_BASE_URL ?? `https://${BUCKET}.s3.${region}.amazonaws.com`
-  return `${baseUrl}/${key}`
+  return key
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -1816,11 +1816,13 @@ adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
 adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, res: Response) => {
   if (!req.file) { err(res, 'NO_FILE', 'No image file provided.', 400); return }
   try {
-    const url = await uploadBlogImage({
+    const key  = await uploadBlogImage({
       filename: req.file.originalname,
       buffer:   req.file.buffer,
       mimeType: req.file.mimetype,
     })
+    const file = key.split('/').pop()
+    const url  = `${req.protocol}://${req.get('host')}/public/blog/image/${file}`
     ok(res, { url })
   } catch (e: any) {
     err(res, 'UPLOAD_FAILED', e.message, 500)

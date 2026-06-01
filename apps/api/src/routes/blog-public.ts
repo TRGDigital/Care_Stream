@@ -1,6 +1,11 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
+import { downloadFile } from '../services/storage/s3'
 import { ok, err } from '../lib/response'
+
+const IMAGE_CONTENT_TYPES: Record<string, string> = {
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
+}
 
 // Public, unauthenticated blog endpoints for the marketing site (/blog).
 // Only ever return status='published' posts. Mounted before requireAuth in app.ts.
@@ -36,4 +41,24 @@ publicBlogRouter.get('/posts/:slug', async (req: Request, res: Response) => {
   })
   if (!post) { err(res, 'NOT_FOUND', 'Post not found.', 404); return }
   ok(res, { post })
+})
+
+// GET /public/blog/image/:file — streams a blog image from private storage.
+// Filenames are uuid.ext (set at upload), so the strict pattern blocks traversal.
+// Long immutable cache lets Vercel's edge serve repeats without hitting the function.
+publicBlogRouter.get('/image/:file', async (req: Request, res: Response) => {
+  const file = String(req.params.file ?? '')
+  if (!/^[a-f0-9-]+\.(png|jpe?g|webp|gif)$/i.test(file)) {
+    res.status(400).end()
+    return
+  }
+  const ext = file.split('.').pop()!.toLowerCase()
+  try {
+    const buffer = await downloadFile(`blog/images/${file}`)
+    res.setHeader('Content-Type', IMAGE_CONTENT_TYPES[ext] ?? 'application/octet-stream')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    res.send(buffer)
+  } catch {
+    res.status(404).end()
+  }
 })

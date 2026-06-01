@@ -96,7 +96,7 @@ function Hero() {
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-5 text-sm text-white/50">
+            <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50 md:flex-nowrap md:whitespace-nowrap">
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> 14-day free trial</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> No credit card required</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> Set up in under an hour</span>

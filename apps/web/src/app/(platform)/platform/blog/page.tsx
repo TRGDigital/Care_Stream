@@ -156,6 +156,21 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
   return (
     <div>
       <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5">
+        <select
+          value=""
+          onChange={e => {
+            const tag = e.target.value
+            if (tag) wrapSelection(`<${tag}>`, `</${tag}>`)
+            e.target.value = ''
+          }}
+          title="Heading — wraps the selected text"
+          className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark focus:outline-none cursor-pointer">
+          <option value="" disabled hidden>Heading</option>
+          <option value="h1">H1 — Title</option>
+          <option value="h2">H2 — Section</option>
+          <option value="h3">H3 — Subsection</option>
+        </select>
+        <div className="mx-1 h-3.5 w-px bg-gray-300" />
         <button type="button" onClick={() => wrapSelection('<strong>', '</strong>')}
           title="Bold"
           className="rounded px-2.5 py-0.5 text-xs font-bold text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">B</button>

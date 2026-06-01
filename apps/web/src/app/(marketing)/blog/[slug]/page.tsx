@@ -19,6 +19,8 @@ interface Post {
   meta_title: string | null
   meta_description: string | null
   og_image_url: string | null
+  feature_image_url: string | null
+  feature_image_alt: string | null
   special_message: string | null
   special_message_color: string | null
   key_info_title: string | null
@@ -80,6 +82,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       readTime={`${post.read_time_minutes} min read`}
       title={post.title}
     >
+      {post.feature_image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={post.feature_image_url}
+          alt={post.feature_image_alt ?? post.title}
+          className="not-prose mb-8 aspect-video w-full rounded-xl object-cover"
+        />
+      )}
+
       {post.special_message && (
         <div className={`not-prose mb-8 rounded-xl border px-5 py-4 text-sm ${MESSAGE_COLORS[post.special_message_color ?? 'teal'] ?? MESSAGE_COLORS.teal}`}>
           {post.special_message}

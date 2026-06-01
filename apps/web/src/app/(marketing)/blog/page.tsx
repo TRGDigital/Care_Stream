@@ -39,6 +39,7 @@ interface ListedPost {
   publication_date: string | null
   read_time_minutes: number
   is_featured: boolean
+  feature_image_url: string | null
 }
 
 async function getPosts(): Promise<ListedPost[]> {
@@ -73,8 +74,17 @@ export default async function BlogPage() {
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="card-lift group flex flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card"
+                  className="card-lift group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card"
                 >
+                  {post.feature_image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={post.feature_image_url}
+                      alt={post.title}
+                      className="aspect-video w-full object-cover"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col p-7">
                   <div className="mb-5 flex items-center justify-between">
                     <span className={`rounded-pill px-3 py-1 text-xs font-bold ${colorFor(post.category)}`}>{post.category}</span>
                     <span className="text-xs text-gray-400">{post.read_time_minutes} min read</span>
@@ -86,6 +96,7 @@ export default async function BlogPage() {
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{formatDate(post.publication_date)}</span>
                     <span className="font-semibold text-teal group-hover:underline">Read →</span>
+                  </div>
                   </div>
                 </Link>
               ))}

@@ -75,9 +75,16 @@ function Hero() {
               ))}
             </div>
 
-            <h1 className="mb-6 text-5xl font-extrabold leading-[1.08] tracking-tight text-white md:text-6xl lg:text-[62px]">
-              Your <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
-              <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
+            <h1 className="relative mb-6 text-5xl font-extrabold leading-[1.08] tracking-tight text-white md:text-6xl lg:text-[62px]">
+              {/* Invisible sizer — reserves the tallest layout (longest phrase) so the image
+                  and all the text around the hero never shift while the word animates. */}
+              <span aria-hidden="true" className="invisible">
+                Your CQC Staff Questions are written in English. Your workforce isn&apos;t.
+              </span>
+              <span className="absolute inset-0">
+                Your <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
+                <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
+              </span>
             </h1>
 
             <p className="mb-10 max-w-xl text-lg leading-relaxed text-white/75">

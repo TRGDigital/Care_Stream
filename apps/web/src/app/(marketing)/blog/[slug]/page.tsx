@@ -92,15 +92,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
 
       {post.special_message && (
-        <div className={`not-prose mb-8 rounded-xl border px-5 py-4 text-sm ${MESSAGE_COLORS[post.special_message_color ?? 'teal'] ?? MESSAGE_COLORS.teal}`}>
-          {post.special_message}
-        </div>
+        <div
+          className={`not-prose mb-8 rounded-xl border px-5 py-4 text-sm ${MESSAGE_COLORS[post.special_message_color ?? 'teal'] ?? MESSAGE_COLORS.teal}`}
+          dangerouslySetInnerHTML={{ __html: post.special_message }}
+        />
       )}
 
       {(post.key_info_title || post.key_info_content) && (
         <div className="not-prose mb-8 rounded-xl border border-teal/20 bg-teal-light/40 p-6">
           {post.key_info_title && <p className="mb-2 text-sm font-semibold text-teal-dark">{post.key_info_title}</p>}
-          {post.key_info_content && <p className="text-sm text-neutral-mid">{post.key_info_content}</p>}
+          {post.key_info_content && <div className="text-sm text-neutral-mid" dangerouslySetInnerHTML={{ __html: post.key_info_content }} />}
         </div>
       )}
 

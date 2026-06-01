@@ -696,6 +696,59 @@ function TrustSection() {
   )
 }
 
+function CareSectorAiSection() {
+  const bubbles = [
+    { label: 'Care Policies',       pos: 'left-3 top-[12%]' },
+    { label: 'Care Training',       pos: 'left-1 top-[45%]' },
+    { label: 'Care Audits',         pos: 'left-6 bottom-[12%]' },
+    { label: 'HR Policies',         pos: 'right-3 top-[18%]' },
+    { label: 'CQC Staff Questions', pos: 'right-2 top-[55%]' },
+  ]
+  return (
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="overflow-hidden rounded-3xl bg-[#e8f1fc] p-8 md:p-12 lg:p-14">
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            {/* Left — heading */}
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9L12 2zM5 15l.9 2.6L8.5 18.5 5.9 19.4 5 22l-.9-2.6L1.5 18.5l2.6-.9L5 15zm14 0l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" />
+                </svg>
+                New
+              </span>
+              <h2 className="mt-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+                Finally, AI that works for the Care Sector
+              </h2>
+            </div>
+
+            {/* Right — image with glowing frame and floating bubbles */}
+            <div className="relative">
+              <div className="relative overflow-hidden rounded-2xl shadow-elevated">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/care-sector-ai.jpg"
+                  alt="A care professional reading policies on a tablet in a care home lounge"
+                  className="aspect-[4/3] w-full object-cover"
+                />
+                <div className="pointer-events-none absolute inset-5 rounded-xl border-2 border-cyan-300 shadow-[0_0_24px_4px_rgba(56,189,248,0.55)]" />
+              </div>
+              {bubbles.map((b) => (
+                <span
+                  key={b.label}
+                  className={`absolute z-10 ${b.pos} rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-neutral-dark shadow-md ring-1 ring-black/5`}
+                >
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function RegulationLayerSection() {
   const frameworks = [
     { name: 'CQC Fundamental Standards',       reg: 'Reg 12, 17 & 19', desc: 'The baseline requirements every registered service must meet — safe care, governance, and fit and proper persons.' },
@@ -1587,6 +1640,7 @@ export default async function HomePage() {
         <OperateAtScale />
         <HowItWorks />
         <TrustSection />
+        <CareSectorAiSection />
         <RegulationLayerSection />
         <HomeKnowledgeCallout />
         <FeaturesOverview />

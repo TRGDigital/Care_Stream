@@ -287,6 +287,42 @@ const EMPTY_POST = {
   faqs: EMPTY_FAQS,
 }
 
+// Resize/compress an image in the browser before upload so it stays well under
+// Vercel's ~4.5MB request-body limit (oversized uploads are rejected with a
+// CORS-less 413, which surfaces in the browser as "Failed to fetch").
+async function resizeImageForUpload(file: File, maxWidth = 1600, quality = 0.82): Promise<File> {
+  // Only raster types we can draw to a canvas; leave gif/svg untouched.
+  if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file
+  try {
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(r.result as string)
+      r.onerror = () => reject(new Error('read failed'))
+      r.readAsDataURL(file)
+    })
+    const img: HTMLImageElement = await new Promise((resolve, reject) => {
+      const im = new Image()
+      im.onload = () => resolve(im)
+      im.onerror = () => reject(new Error('decode failed'))
+      im.src = dataUrl
+    })
+    // Already small enough — keep the original
+    if (img.width <= maxWidth && file.size < 3_000_000) return file
+    const scale = Math.min(1, maxWidth / img.width)
+    const canvas = document.createElement('canvas')
+    canvas.width  = Math.round(img.width * scale)
+    canvas.height = Math.round(img.height * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality))
+    if (!blob) return file
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
+  } catch {
+    return file
+  }
+}
+
 function PostForm({
   initial, authors, token, onSave, onCancel, saving, saveError,
 }: {
@@ -328,7 +364,12 @@ function PostForm({
     if (!token) return
     setImgUploading(true); setImgError('')
     try {
-      const url = await uploadBlogImage(token, file)
+      const prepared = await resizeImageForUpload(file)
+      if (prepared.size > 4_400_000) {
+        setImgError('Image is too large even after compression. Please use a smaller image.')
+        return
+      }
+      const url = await uploadBlogImage(token, prepared)
       set('feature_image_url', url)
       if (!form.feature_image_alt) set('feature_image_alt', file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '))
     } catch (e: any) {
@@ -680,6 +721,45 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/help',                  title: 'Help Centre',               footer_group: 'Get Started',   footer_label: 'Help Centre' },
   { path: '/register',              title: 'Register',                  footer_group: 'Get Started',   footer_label: 'Start Free Trial' },
   { path: '/login',                 title: 'Login',                     footer_group: 'Get Started',   footer_label: 'Sign In' },
+
+  // Help Centre · Getting Started
+  { path: '/help/getting-started/account-setup',  title: 'Help · Setting up your account' },
+  { path: '/help/getting-started/upload-policy',  title: 'Help · Uploading your first policy' },
+  { path: '/help/getting-started/invite-staff',   title: 'Help · Inviting staff to use CareStreamAI' },
+  { path: '/help/getting-started/email-setup',    title: 'Help · Setting up email access' },
+  { path: '/help/getting-started/trial',          title: 'Help · Your 14 day trial, what is included' },
+
+  // Help Centre · Policy Management
+  { path: '/help/policies/formats',           title: 'Help · Supported document formats' },
+  { path: '/help/policies/update-policy',     title: 'Help · How to update a policy' },
+  { path: '/help/policies/versioning',        title: 'Help · Policy version history and archiving' },
+  { path: '/help/policies/review-reminders',  title: 'Help · Setting policy review reminders' },
+  { path: '/help/policies/organising',        title: 'Help · Organising your policy library' },
+
+  // Help Centre · Staff Access and Languages
+  { path: '/help/languages/how-it-works',          title: 'Help · How multilingual support works' },
+  { path: '/help/languages/supported-languages',   title: 'Help · Which languages are supported' },
+  { path: '/help/languages/channels',              title: 'Help · Email versus web chat, which to use' },
+  { path: '/help/languages/staff-access',          title: 'Help · How staff access CareStreamAI' },
+
+  // Help Centre · Analytics and Reporting
+  { path: '/help/analytics/dashboard',           title: 'Help · Understanding your analytics dashboard' },
+  { path: '/help/analytics/cqc-report',          title: 'Help · Generating a CQC Readiness Report' },
+  { path: '/help/analytics/gap-detection',       title: 'Help · Policy gap detection, how it works' },
+  { path: '/help/analytics/export-audit',        title: 'Help · Exporting your audit log' },
+  { path: '/help/analytics/language-analytics',  title: 'Help · Understanding language analytics' },
+
+  // Help Centre · Data and Security
+  { path: '/help/security/data-storage',    title: 'Help · Where is our data stored' },
+  { path: '/help/security/data-isolation',  title: 'Help · How data isolation works' },
+  { path: '/help/security/dpa',             title: 'Help · Requesting your Data Processing Agreement' },
+  { path: '/help/security/retention',       title: 'Help · Data retention and deletion' },
+
+  // Help Centre · Account and Billing
+  { path: '/help/billing/change-plan',       title: 'Help · Changing your plan' },
+  { path: '/help/billing/cancel',            title: 'Help · Cancelling your subscription' },
+  { path: '/help/billing/payment-details',   title: 'Help · Updating payment details' },
+  { path: '/help/billing/group-pricing',     title: 'Help · Group pricing for multiple homes' },
 ]
 
 const EMPTY_PAGE: Partial<SitePage> & { path: string } = {

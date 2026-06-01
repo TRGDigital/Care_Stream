@@ -20,7 +20,7 @@ export function HomeFaq({ faqs }: { faqs: Faq[] }) {
 
   return (
     <section className="bg-neutral-light py-24">
-      <div className="mx-auto max-w-3xl px-6">
+      <div className="mx-auto max-w-content px-6">
         <div className="text-center">
           <SectionLabel>FAQs</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark md:text-5xl">

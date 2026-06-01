@@ -57,6 +57,9 @@ publicBlogRouter.get('/image/:file', async (req: Request, res: Response) => {
     const buffer = await downloadFile(`blog/images/${file}`)
     res.setHeader('Content-Type', IMAGE_CONTENT_TYPES[ext] ?? 'application/octet-stream')
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    // helmet sets CORP: same-origin globally, which blocks the marketing site and
+    // the admin console (different origin) from loading these images. Allow it.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
     res.send(buffer)
   } catch {
     res.status(404).end()

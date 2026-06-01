@@ -12,6 +12,7 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
+import { blogImagePublicUrl } from '../lib/urls'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
@@ -1821,8 +1822,7 @@ adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, r
       buffer:   req.file.buffer,
       mimeType: req.file.mimetype,
     })
-    const file = key.split('/').pop()
-    const url  = `${req.protocol}://${req.get('host')}/public/blog/image/${file}`
+    const url  = blogImagePublicUrl(req, key)
     ok(res, { url })
   } catch (e: any) {
     err(res, 'UPLOAD_FAILED', e.message, 500)

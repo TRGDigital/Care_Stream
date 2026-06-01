@@ -327,13 +327,3 @@ export async function queryKnowledgeVectors(
     metadata: m.metadata as KnowledgeVectorMetadata,
   }))
 }
-
-// ─── Retained stub ─────────────────────────────────────────────────────────────
-
-// Paid-tier Pinecone supports delete-by-filter; v1 uses prefix listing.
-export async function deleteVectorsByFilter(
-  _namespace: string,
-  _filter:    Record<string, unknown>,
-): Promise<void> {
-  throw new Error('Use deletePolicyVectors() (ID prefix approach) for v1')
-}

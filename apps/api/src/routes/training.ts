@@ -9,6 +9,7 @@ import { callClaude } from '../services/ai/claude'
 import { notifyAdmin } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
+import { blogImagePublicUrl } from '../lib/urls'
 
 export const trainingRouter = Router()
 
@@ -261,8 +262,7 @@ trainingRouter.post('/enrollments/:id/upload-certificate', imageUploadMiddleware
       buffer:   req.file.buffer,
       mimeType: req.file.mimetype,
     })
-    const file = key.split('/').pop()
-    const url  = `${req.protocol}://${req.get('host')}/public/blog/image/${file}`
+    const url  = blogImagePublicUrl(req, key)
     await (prisma as any).trainingEnrollment.update({
       where: { id: req.params.id },
       data:  { certificate_url: url, updated_at: new Date() },

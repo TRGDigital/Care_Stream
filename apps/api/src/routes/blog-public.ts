@@ -30,6 +30,8 @@ publicBlogRouter.get('/posts', async (_req: Request, res: Response) => {
       author: { select: { name: true, photo_url: true } },
     },
   })
+  // Public, rarely-changing content — let Vercel's edge cache it (stale-while-revalidate).
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
   ok(res, { posts })
 })
 
@@ -40,6 +42,7 @@ publicBlogRouter.get('/posts/:slug', async (req: Request, res: Response) => {
     include: { author: { select: { name: true, title: true, photo_url: true, bio: true } } },
   })
   if (!post) { err(res, 'NOT_FOUND', 'Post not found.', 404); return }
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
   ok(res, { post })
 })
 

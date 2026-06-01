@@ -1,7 +1,6 @@
 import pdfParse from 'pdf-parse'
 import mammoth from 'mammoth'
 import AdmZip from 'adm-zip'
-import { stripHeadersFooters as _strip, normaliseWhitespace } from './stripper'
 
 // §4.1.1 — Text extraction from PDF, DOCX, ODT, and plain text.
 // §4.6.2 — Header/footer stripping delegated to stripper.ts.
@@ -79,7 +78,5 @@ function extractFromOdt(buffer: Buffer): string {
 //   2. PDF page-zone pass  (header/footer zones via \f boundaries, ≥40% pages)
 //   3. Frequency pass  (catch-all: any short line appearing ≥4 times)
 
-export { normaliseWhitespace } from './stripper'
-export function stripHeadersFooters(text: string): string {
-  return _strip(text)
-}
+// Header/footer stripping + whitespace normalisation live in ./stripper —
+// import them directly from there (this module no longer re-exports them).

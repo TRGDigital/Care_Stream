@@ -294,34 +294,21 @@ UPDATE external_regulations SET also_known_as_tsv =
 CREATE INDEX IF NOT EXISTS idx_queries_tenant_created
   ON queries (tenant_id, created_at DESC);
 
--- queries: language analytics (§10.3)
-CREATE INDEX IF NOT EXISTS idx_queries_tenant_language
-  ON queries (tenant_id, language_detected);
-
 -- queries: policy not-found rate (§10.2)
 CREATE INDEX IF NOT EXISTS idx_queries_no_match
   ON queries (tenant_id, no_match) WHERE no_match = true;
-
--- policies: active lookup
-CREATE INDEX IF NOT EXISTS idx_policies_tenant_status
-  ON policies (tenant_id, status);
-
--- policies: document category scoping (§4.6.5 query routing)
-CREATE INDEX IF NOT EXISTS idx_policies_tenant_category
-  ON policies (tenant_id, document_category);
 
 -- policies: review reminders (§10.5)
 CREATE INDEX IF NOT EXISTS idx_policies_review_due
   ON policies (tenant_id, last_reviewed_at)
   WHERE status = 'active' AND review_interval_days IS NOT NULL;
 
--- email_sessions: expiry check (§8.4)
-CREATE INDEX IF NOT EXISTS idx_email_sessions_expires
-  ON email_sessions (tenant_id, expires_at);
-
--- users: tenant lookup
-CREATE INDEX IF NOT EXISTS idx_users_tenant
-  ON users (tenant_id);
+-- NOTE (June 2026): idx_queries_tenant_language, idx_policies_tenant_status,
+-- idx_policies_tenant_category, idx_email_sessions_expires and idx_users_tenant
+-- were dropped as duplicates of Prisma's @@index-generated indexes
+-- (queries_tenant_id_language_detected_idx, policies_tenant_id_status_idx,
+-- policies_tenant_id_document_category_idx, email_sessions_tenant_id_expires_at_idx,
+-- users_tenant_id_idx). See migration perf_fk_indexes_and_dedupe.
 
 -- external_regulations: full-text search on synonyms (§6.2)
 CREATE INDEX IF NOT EXISTS idx_regulations_tsv

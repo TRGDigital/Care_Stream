@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3'
 import type { Readable } from 'stream'
 import { randomUUID } from 'crypto'
+import sharp from 'sharp'
 import fs from 'fs'
 import path from 'path'
 
@@ -217,19 +218,42 @@ export async function uploadBlogImage(params: {
   buffer:   Buffer
   mimeType: string
 }): Promise<string> {
-  const ext = params.filename.split('.').pop()?.toLowerCase() || 'jpg'
+  // ── Upload optimisation rule ──────────────────────────────────────────────
+  // EVERY uploaded image is optimised here so storage/bandwidth stays small
+  // regardless of how big the source was: auto-orient via EXIF (also fixes
+  // sideways phone photos), cap the largest side at 1600px, and re-encode as
+  // WebP (q80). Animated GIFs pass through untouched (preserve animation).
+  // Falls back to the original bytes if optimisation throws.
+  let buffer      = params.buffer
+  let ext         = (params.filename.split('.').pop() || 'webp').toLowerCase()
+  let contentType = params.mimeType
+
+  if (params.mimeType !== 'image/gif') {
+    try {
+      buffer = await sharp(params.buffer)
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer()
+      ext         = 'webp'
+      contentType = 'image/webp'
+    } catch (e) {
+      console.warn('[s3] image optimise failed, storing original:', String(e))
+    }
+  }
+
   const key = `blog/images/${randomUUID()}.${ext}`
 
   if (USE_LOCAL) {
-    localWrite(key, params.buffer)
+    localWrite(key, buffer)
     return key
   }
 
   await getS3().send(new PutObjectCommand({
     Bucket:               BUCKET,
     Key:                  key,
-    Body:                 params.buffer,
-    ContentType:          params.mimeType,
+    Body:                 buffer,
+    ContentType:          contentType,
     ServerSideEncryption: 'AES256',
   }))
 

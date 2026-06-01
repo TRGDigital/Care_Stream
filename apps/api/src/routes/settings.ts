@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import multer from 'multer'
+import sharp from 'sharp'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 
@@ -181,7 +182,7 @@ settingsRouter.post('/logo', (req: Request, res: Response) => {
   logoUpload.single('logo')(req, res, async (multerErr: any) => {
     if (multerErr) {
       if (multerErr.message === 'INVALID_FILE_TYPE') {
-        return err(res, 'INVALID_FILE_TYPE', 'Only PNG, JPEG, WebP, and SVG images are accepted.', 400)
+        return err(res, 'INVALID_FILE_TYPE', 'Only PNG, JPEG, and WebP images are accepted.', 400)
       }
       if (multerErr.code === 'LIMIT_FILE_SIZE') {
         return err(res, 'FILE_TOO_LARGE', 'Logo must be under 2 MB.', 413)
@@ -192,7 +193,20 @@ settingsRouter.post('/logo', (req: Request, res: Response) => {
     const file = (req as any).file
     if (!file) return err(res, 'NO_FILE', 'No file provided.', 400)
 
-    const dataUrl = `data:${file.mimetype};base64,${(file.buffer as Buffer).toString('base64')}`
+    // Optimise the logo (upload rule): cap at 400px and re-encode as WebP
+    // (preserves transparency) so the stored data URL stays small.
+    let buffer = file.buffer as Buffer
+    let mime   = file.mimetype as string
+    try {
+      buffer = await sharp(file.buffer)
+        .rotate()
+        .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 85 })
+        .toBuffer()
+      mime = 'image/webp'
+    } catch { /* keep the original bytes if optimisation fails */ }
+
+    const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`
 
     await (prisma as any).tenant.update({
       where: { id: user.tenant_id },

@@ -100,6 +100,7 @@ function Hero() {
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> 14-day free trial</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> No credit card required</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> Set up in under an hour</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> GDPR Compliant</span>
             </div>
           </div>
 

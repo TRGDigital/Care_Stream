@@ -1386,7 +1386,7 @@ function SystemReference() {
         <p className="text-sm font-semibold text-teal-dark">CareStream AI — Internal System Reference</p>
         <p className="mt-1 text-xs text-neutral-mid">
           Quick reference for the core systems, logic, and integrations. Click any section to expand.
-          Last reviewed: May 2026.
+          Last reviewed: June 2026.
         </p>
       </div>
 
@@ -1838,10 +1838,41 @@ function SystemReference() {
         <div className="mt-2 space-y-1">
           <RefRow label="App layer"           value="Prisma middleware in db/client.ts auto-injects tenant_id into all read/write operations on tenant-scoped models" />
           <RefRow label="DB layer"            value="Supabase RLS policies reject cross-tenant access at the PostgreSQL level when connecting as carestreamai_api role" />
-          <RefRow label="Tenant-scoped models" value="User, Policy, QueryRecord, EmailSession, AuditLog, KnowledgeEntry, WhatsAppSession, TrainingDelivery" />
-          <RefRow label="Platform-only (shared)" value="ExternalRegulation, TrainingSeed, CqcSeed, AiPrompt, Plan — no tenant_id, read-only to tenants" />
+          <RefRow label="Auto-scoped models"  value="User, Policy, QueryRecord, EmailSession, AuditLog, KnowledgeEntry — Prisma middleware injects tenant_id automatically (note: NOT for findUnique)" />
+          <RefRow label="Manually-scoped models" value="Training*, Audit* (tool), Cqc*, Onboarding*, WhatsAppSession, Blog*, SitePage — NOT auto-scoped; every query must include where:{ tenant_id } explicitly" />
+          <RefRow label="Platform-only (shared)" value="ExternalRegulation, TrainingSeed, CqcSeed, AiPrompt, Plan, TrainingModule — no tenant_id, read-only to tenants" />
           <RefRow label="Pinecone isolation"  value="Each chunk metadata includes tenant_id — all vector queries filter by tenant_id" />
           <RefRow label="RLS activation"      value="set_config('app.current_tenant_id', tenantId) called at transaction start via withTenantTx()" />
+        </div>
+      </RefSection>
+
+      {/* Security Hardening */}
+      <RefSection icon={Lock} title="Security Hardening — June 2026">
+        <p className="leading-relaxed text-neutral-mid">
+          Full security review of the API completed 1 June 2026. The Critical and High severity
+          findings below were identified and fixed. Foundations already in place beforehand:
+          bcrypt(12) password hashing, JWT auth with a separate refresh secret, account lockout,
+          enumeration-resistant password resets, helmet, scoped CORS, and per-user rate limiting.
+        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Critical — fixed</p>
+          <RefRow label="Audit-tool isolation"  value="Every /audits/* handler read an unset variable for tenant_id, so Prisma dropped the filter and all audit data was cross-tenant readable/writable. Now scoped to the caller's JWT tenant_id. (routes/audits.ts)" />
+          <RefRow label="SQLi — chat sessions"  value="GET /query interpolated document_category / language_detected from the query string into raw SQL. Converted to bound parameters. (routes/query.ts)" />
+          <RefRow label="SQLi — admin analytics" value="Three /admin/* analytics routes interpolated tenant_id into raw SQL. Converted to bound parameters. (routes/admin.ts)" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">High — fixed</p>
+          <RefRow label="Platform console login" value="Now email allowlist (PLATFORM_ADMIN_EMAILS) + password, not password-only. Constant-time compare, 10 req/min rate limit, generic 'incorrect email or password' error. Returns PLATFORM_ADMIN_TOKEN on success." />
+          <RefRow label="Training integrity"   value="answer / complete / upload-certificate now require the enrolled staff member (or admin) — no forging another user's record. /enroll is admin-only and validates recipients + modules belong to the tenant. (routes/training.ts)" />
+          <RefRow label="CQC staff prep"       value="create / generate / delete / deliver / all-deliveries are now admin-only; deliver validates recipient user_ids belong to the tenant. (routes/cqc-staff-questions.ts)" />
+          <RefRow label="Feedback link signing" value="FEEDBACK_HMAC_SECRET set in production — one-click feedback links are HMAC-signed and verified in constant time (no shared dev-fallback secret)." />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Known follow-ups (not yet fixed)</p>
+          <RefRow label="Inbound email auth"   value="SENDGRID_INBOUND_PARSE_KEY is set but /email/inbound does not yet verify it — the sender 'from' is spoofable. Wire up Inbound Parse verification." />
+          <RefRow label="SVG logo upload"      value="Tenant logo upload accepts image/svg+xml stored as an inline data: URL — stored-XSS risk. Drop SVG or sanitise." />
+          <RefRow label="RLS coverage"         value="Extend Postgres RLS beyond the current 6 tables to all tenant-owned tables as defence-in-depth." />
+          <RefRow label="Shared module editing" value="TrainingModule has no tenant_id (global catalog); any tenant admin can edit the shared question bank. Consider restricting to platform admin." />
         </div>
       </RefSection>
     </div>
@@ -1891,7 +1922,7 @@ const QA_TESTS: TestItem[] = [
     id: 'auth-platform-login',
     category: 'Authentication',
     name: 'Platform admin login',
-    steps: 'Navigate to /platform/login and enter the platform admin password.',
+    steps: 'Navigate to /platform/login and enter an allowlisted admin email and the platform admin password.',
     expected: 'Access is granted and you are redirected to the platform dashboard.',
   },
   {

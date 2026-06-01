@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
+import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
 import { sendCqcPrepEmail } from '../services/email/outbound'
 
@@ -215,8 +216,8 @@ cqcQuestionsRouter.get('/', async (req: Request, res: Response) => {
   }
 })
 
-// POST /cqc-questions — create a question manually
-cqcQuestionsRouter.post('/', async (req: Request, res: Response) => {
+// POST /cqc-questions — create a question manually (admin only)
+cqcQuestionsRouter.post('/', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const { domain, question, model_answer } = req.body
   if (!domain || !question || !model_answer) {
@@ -233,7 +234,7 @@ cqcQuestionsRouter.post('/', async (req: Request, res: Response) => {
 })
 
 // POST /cqc-questions/generate — AI generates a question + model answer from a topic
-cqcQuestionsRouter.post('/generate', async (req: Request, res: Response) => {
+cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Response) => {
   const { domain, topic } = req.body
   if (!domain || !topic) {
     return err(res, 'MISSING_FIELDS', 'domain and topic are required', 400)
@@ -262,7 +263,7 @@ cqcQuestionsRouter.post('/generate', async (req: Request, res: Response) => {
 })
 
 // DELETE /cqc-questions/:id — deactivate (soft delete)
-cqcQuestionsRouter.delete('/:id', async (req: Request, res: Response) => {
+cqcQuestionsRouter.delete('/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
     await (prisma as any).cqcStaffQuestion.updateMany({
@@ -276,7 +277,7 @@ cqcQuestionsRouter.delete('/:id', async (req: Request, res: Response) => {
 })
 
 // POST /cqc-questions/:id/deliver — send rephrased question to selected staff
-cqcQuestionsRouter.post('/:id/deliver', async (req: Request, res: Response) => {
+cqcQuestionsRouter.post('/:id/deliver', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const { user_ids, channel = 'portal' } = req.body
   if (!Array.isArray(user_ids) || user_ids.length === 0) {
@@ -288,6 +289,17 @@ cqcQuestionsRouter.post('/:id/deliver', async (req: Request, res: Response) => {
     })
     if (!q) return err(res, 'NOT_FOUND', 'Question not found', 404)
 
+    // Only deliver to users that actually belong to this tenant — prevents
+    // arbitrary/cross-tenant user_ids from being written into deliveries or emailed.
+    const members = await (prisma as any).user.findMany({
+      where:  { id: { in: user_ids }, tenant_id: tenantId },
+      select: { id: true },
+    })
+    const validUserIds: string[] = members.map((m: any) => m.id)
+    if (validUserIds.length === 0) {
+      return err(res, 'NO_VALID_RECIPIENTS', 'No recipients belong to this organisation.', 400)
+    }
+
     // Rephrase the question so staff cannot memorise exact wording
     const rephrased = await callClaude(
       'You are a CQC interview preparation assistant. Rephrase questions slightly to test the same knowledge without allowing rote memorisation.',
@@ -298,7 +310,7 @@ Original: ${q.question}`,
     ).catch(() => q.question as string)
 
     const deliveries = await (prisma as any).cqcStaffDelivery.createMany({
-      data: user_ids.map((uid: string) => ({
+      data: validUserIds.map((uid: string) => ({
         tenant_id:  tenantId,
         question_id: q.id,
         user_id:    uid,
@@ -313,7 +325,7 @@ Original: ${q.question}`,
     if (deliveries.count > 0) {
       const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
       const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
-      notifyUsers(tenantId, 'cqc_staff_prep', user_ids, (email, name) =>
+      notifyUsers(tenantId, 'cqc_staff_prep', validUserIds, (email, name) =>
         sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))
     }
@@ -323,7 +335,7 @@ Original: ${q.question}`,
 })
 
 // GET /cqc-questions/deliveries — admin: all deliveries with user + question info
-cqcQuestionsRouter.get('/deliveries', async (req: Request, res: Response) => {
+cqcQuestionsRouter.get('/deliveries', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
     const deliveries = await (prisma as any).cqcStaffDelivery.findMany({

@@ -12,6 +12,7 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
+import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
 import { seedTenantKnowledge, seedAllTenants, seedCustomSeedToAllTenants } from '../services/knowledge/seeder'
@@ -24,21 +25,39 @@ import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 export const adminRouter = Router()
 
 // ─── POST /admin/login ────────────────────────────────────────────────────────
-// Password-based login for the platform owner UI. No token required.
-// Returns the PLATFORM_ADMIN_TOKEN on success so the UI can store it.
+// Email + password login for the platform owner UI. No token required.
+// The email must be on the PLATFORM_ADMIN_EMAILS allowlist (comma-separated) AND
+// the password must match PLATFORM_ADMIN_PASSWORD. Returns the PLATFORM_ADMIN_TOKEN
+// on success so the UI can store it for subsequent /admin/* calls.
 
-adminRouter.post('/login', (req: Request, res: Response) => {
-  const { password } = req.body ?? {}
+// authLimiter (10 req/min) throttles brute-forcing of the platform owner login.
+adminRouter.post('/login', authLimiter, (req: Request, res: Response) => {
+  const { email, password } = req.body ?? {}
   const adminPassword = process.env.PLATFORM_ADMIN_PASSWORD
   const adminToken    = process.env.PLATFORM_ADMIN_TOKEN
+  const adminEmails   = (process.env.PLATFORM_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
 
-  if (!adminPassword || !adminToken) {
+  if (!adminPassword || !adminToken || adminEmails.length === 0) {
     err(res, 'NOT_CONFIGURED', 'Platform admin credentials not configured.', 503)
     return
   }
 
-  if (!password || password !== adminPassword) {
-    err(res, 'INVALID_CREDENTIALS', 'Incorrect password.', 401)
+  const emailMatches =
+    typeof email === 'string' && adminEmails.includes(email.trim().toLowerCase())
+
+  // Constant-time password comparison — computed unconditionally so the response
+  // time does not reveal whether the email was valid.
+  const provided = Buffer.from(String(password ?? ''), 'utf8')
+  const expected = Buffer.from(adminPassword, 'utf8')
+  const passwordMatches =
+    provided.length === expected.length && crypto.timingSafeEqual(provided, expected)
+
+  // Generic error — never reveal which of email / password was wrong.
+  if (!emailMatches || !passwordMatches) {
+    err(res, 'INVALID_CREDENTIALS', 'Incorrect email or password.', 401)
     return
   }
 
@@ -410,7 +429,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
         MIN(q.created_at) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text))                      AS started_at,
         BOOL_OR(q.chat_deleted_at IS NOT NULL) OVER (PARTITION BY COALESCE(q.chat_session_id::text, q.id::text)) AS deleted_from_chat
       FROM queries q
-      WHERE q.tenant_id = '${tenantId}'
+      WHERE q.tenant_id = $1
     ),
     lang_agg AS (
       SELECT
@@ -418,7 +437,7 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
         ARRAY_AGG(DISTINCT language_detected ORDER BY language_detected)
           FILTER (WHERE language_detected IS NOT NULL) AS all_languages
       FROM queries
-      WHERE tenant_id = '${tenantId}'
+      WHERE tenant_id = $1
       GROUP BY COALESCE(chat_session_id::text, id::text)
     )
     SELECT sd.session_key, sd.chat_session_id, sd.id,
@@ -433,13 +452,13 @@ adminRouter.get('/tenants/:id/queries', async (req: Request, res: Response) => {
     LEFT   JOIN lang_agg la ON sd.session_key = la.session_key
     WHERE  sd.rn = 1
     ORDER  BY sd.last_message_at DESC
-    LIMIT  ${limit} OFFSET ${offset}
-  `)
+    LIMIT  $2 OFFSET $3
+  `, tenantId, limit, offset)
 
   const totalRows: any[] = await prisma.$queryRawUnsafe(`
     SELECT COUNT(DISTINCT COALESCE(chat_session_id::text, id::text))::int AS total
-    FROM queries WHERE tenant_id = '${tenantId}'
-  `)
+    FROM queries WHERE tenant_id = $1
+  `, tenantId)
 
   const sessions = rawSessions.map((r: any) => ({
     session_key:               r.session_key,
@@ -1466,10 +1485,16 @@ adminRouter.get('/prompts/outputs/:usage', async (req: Request, res: Response) =
   }
   const category = categoryMap[usage] ?? null
 
-  const tenantClause = tenantId ? `AND q.tenant_id = '${tenantId}'` : ''
+  // user-supplied tenant_id is bound as a parameter; `category` is from the
+  // fixed categoryMap above (never user input), so it is safe to interpolate.
+  const params: any[] = []
+  let tenantClause = ''
+  if (tenantId) { params.push(tenantId); tenantClause = `AND q.tenant_id = $${params.length}` }
   const whereCategory = category
     ? `AND document_category_queried = '${category}'`
     : `AND (document_category_queried IS NULL OR document_category_queried IN ('internal_policy', 'staff_handbook'))`
+  params.push(limit)
+  const limitParam = `$${params.length}`
 
   try {
     const rows: any[] = await prisma.$queryRawUnsafe(`
@@ -1482,8 +1507,8 @@ adminRouter.get('/prompts/outputs/:usage', async (req: Request, res: Response) =
       ${tenantClause}
       ${whereCategory}
       ORDER BY q.created_at DESC
-      LIMIT ${limit}
-    `)
+      LIMIT ${limitParam}
+    `, ...params)
     ok(res, { outputs: rows })
   } catch (e: any) {
     console.error('[admin/prompts/outputs] Query failed:', e.message)
@@ -1497,7 +1522,9 @@ adminRouter.get('/prompts/outputs/:usage', async (req: Request, res: Response) =
 
 adminRouter.get('/prompts/feedback-stats', async (req: Request, res: Response) => {
   const tenantId = typeof req.query.tenant_id === 'string' ? req.query.tenant_id : null
-  const tenantClause = tenantId ? `AND tenant_id = '${tenantId}'` : ''
+  const params: any[] = []
+  let tenantClause = ''
+  if (tenantId) { params.push(tenantId); tenantClause = `AND tenant_id = $${params.length}` }
 
   try {
     const rows: any[] = await prisma.$queryRawUnsafe(`
@@ -1516,7 +1543,7 @@ adminRouter.get('/prompts/feedback-stats', async (req: Request, res: Response) =
       ${tenantClause}
       GROUP BY COALESCE(document_category_queried, 'policy')
       ORDER BY total DESC
-    `)
+    `, ...params)
     ok(res, { stats: rows })
   } catch (e: any) {
     console.error('[admin/prompts/feedback-stats] Query failed:', e.message)

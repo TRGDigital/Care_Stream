@@ -40,11 +40,11 @@ async function adminFetch<T>(
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 
-export async function platformLogin(password: string): Promise<string> {
+export async function platformLogin(email: string, password: string): Promise<string> {
   const res = await fetch(`${API_URL}/admin/login`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ password }),
+    body:    JSON.stringify({ email, password }),
   })
   const body = await res.json()
   if (!res.ok || !body.success) {

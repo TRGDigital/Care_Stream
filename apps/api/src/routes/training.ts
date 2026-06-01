@@ -8,6 +8,7 @@ import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
 import { notifyAdmin } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
+import { requireAdmin } from '../middleware/auth'
 
 export const trainingRouter = Router()
 
@@ -58,8 +59,8 @@ trainingRouter.get('/compliance', async (req: Request, res: Response) => {
   }
 })
 
-// POST /training/enroll — assign modules to staff members
-trainingRouter.post('/enroll', async (req: Request, res: Response) => {
+// POST /training/enroll — assign modules to staff members (admin only)
+trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const { user_ids, module_ids, due_date } = req.body ?? {}
@@ -72,9 +73,21 @@ trainingRouter.post('/enroll', async (req: Request, res: Response) => {
   }
 
   try {
+    // Restrict to user_ids that actually belong to this tenant, and module_ids that
+    // exist and are active — prevents injecting foreign/arbitrary UUIDs into this
+    // tenant's enrollment table (and emailing strangers).
+    const [members, modules] = await Promise.all([
+      (prisma as any).user.findMany({ where: { id: { in: user_ids }, tenant_id: tenantId }, select: { id: true } }),
+      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true }, select: { id: true } }),
+    ])
+    const validUserIds:   string[] = members.map((m: any) => m.id)
+    const validModuleIds: string[] = modules.map((m: any) => m.id)
+    if (validUserIds.length === 0)   { err(res, 'INVALID', 'No valid recipients for this organisation.', 400); return }
+    if (validModuleIds.length === 0) { err(res, 'INVALID', 'No valid modules selected.', 400); return }
+
     let created = 0
-    for (const uid of user_ids) {
-      for (const mid of module_ids) {
+    for (const uid of validUserIds) {
+      for (const mid of validModuleIds) {
         const existing = await (prisma as any).trainingEnrollment.findFirst({
           where: { tenant_id: tenantId, user_id: uid, module_id: mid, status: { not: 'expired' } },
         })
@@ -100,17 +113,17 @@ trainingRouter.post('/enroll', async (req: Request, res: Response) => {
       notifyAdmin(tenantId, 'training_updates', (email, name) =>
         sendTrainingUpdateEmail({
           to: email, name, orgName: tenant?.name ?? '',
-          subject: `Training assigned — ${user_ids.length} staff member${user_ids.length > 1 ? 's' : ''} enrolled`,
+          subject: `Training assigned — ${validUserIds.length} staff member${validUserIds.length > 1 ? 's' : ''} enrolled`,
           bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
             <strong>${created}</strong> training module assignment${created > 1 ? 's' : ''} have been created for
-            <strong>${user_ids.length}</strong> staff member${user_ids.length > 1 ? 's' : ''} across
-            <strong>${module_ids.length}</strong> module${module_ids.length > 1 ? 's' : ''}.
+            <strong>${validUserIds.length}</strong> staff member${validUserIds.length > 1 ? 's' : ''} across
+            <strong>${validModuleIds.length}</strong> module${validModuleIds.length > 1 ? 's' : ''}.
             Staff will be contacted via their configured channel to complete their training.
           </p>`,
         })
       ).catch(e => console.error('[training/enroll] Notify error:', e))
     }
-    sendProactiveTrainingQuestions(tenantId, user_ids, module_ids).catch(e =>
+    sendProactiveTrainingQuestions(tenantId, validUserIds, validModuleIds).catch(e =>
       console.error('[training/enroll] Proactive send error:', e)
     )
   } catch (e: any) {
@@ -151,6 +164,12 @@ trainingRouter.post('/enrollments/:id/answer', async (req: Request, res: Respons
       include: { module: { select: { questions: true } } },
     })
     if (!enrollment) { err(res, 'NOT_FOUND', 'Enrollment not found', 404); return }
+
+    // Only the enrolled staff member (or an admin) may answer — prevents one user
+    // submitting/overwriting another user's assessment.
+    if (enrollment.user_id !== (req as any).user.sub && (req as any).user.role !== 'admin') {
+      err(res, 'FORBIDDEN', 'You can only answer your own training.', 403); return
+    }
 
     // Determine if the selected option is correct
     const questions = (enrollment.module.questions as any[]) ?? []
@@ -195,6 +214,12 @@ trainingRouter.post('/enrollments/:id/complete', async (req: Request, res: Respo
     })
     if (!enrollment) { err(res, 'NOT_FOUND', 'Enrollment not found', 404); return }
 
+    // Only the enrolled staff member (or an admin) may mark it complete —
+    // prevents forging another user's training-completion record.
+    if (enrollment.user_id !== (req as any).user.sub && (req as any).user.role !== 'admin') {
+      err(res, 'FORBIDDEN', 'You can only complete your own training.', 403); return
+    }
+
     const now = new Date()
     const expiresAt = enrollment.module.is_annual
       ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
@@ -225,6 +250,11 @@ trainingRouter.post('/enrollments/:id/upload-certificate', imageUploadMiddleware
       where: { id: req.params.id, tenant_id: tenantId },
     })
     if (!enrollment) { err(res, 'NOT_FOUND', 'Enrollment not found', 404); return }
+
+    // Only the enrolled staff member (or an admin) may attach a certificate.
+    if (enrollment.user_id !== req.user.sub && req.user.role !== 'admin') {
+      err(res, 'FORBIDDEN', 'You can only upload a certificate for your own training.', 403); return
+    }
 
     const url = await uploadBlogImage({
       filename: req.file.originalname,

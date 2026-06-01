@@ -163,10 +163,25 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
 
   const { no_match, language_detected, document_category } = req.query as Record<string, string>
 
-  // Build optional WHERE clauses (appended after tenant filter)
-  const conditions: string[] = [`q.tenant_id = '${tenantId}'`]
-  if (document_category)  conditions.push(`q.document_category_queried = '${document_category}'`)
-  if (language_detected)  conditions.push(`q.language_detected = '${language_detected}'`)
+  // Build optional WHERE clauses using bind parameters ($1, $2, …) — user-supplied
+  // values are NEVER interpolated into the SQL string (prevents SQL injection).
+  // The resulting whereClause contains only placeholders + column names, so it is
+  // safe to interpolate into the query text below.
+  const whereParams: any[] = []
+  const conditions: string[] = []
+
+  whereParams.push(tenantId)
+  const tenantParam = `$${whereParams.length}`
+  conditions.push(`q.tenant_id = ${tenantParam}`)
+
+  if (document_category) {
+    whereParams.push(document_category)
+    conditions.push(`q.document_category_queried = $${whereParams.length}`)
+  }
+  if (language_detected) {
+    whereParams.push(language_detected)
+    conditions.push(`q.language_detected = $${whereParams.length}`)
+  }
   if (no_match === 'true')  conditions.push(`q.no_match = true`)
   if (no_match === 'false') conditions.push(`q.no_match = false`)
 
@@ -221,7 +236,7 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
         ARRAY_AGG(DISTINCT language_detected ORDER BY language_detected)
           FILTER (WHERE language_detected IS NOT NULL) AS all_languages
       FROM queries
-      WHERE tenant_id = '${tenantId}'
+      WHERE tenant_id = ${tenantParam}
       GROUP BY COALESCE(chat_session_id::text, id::text)
     )
     SELECT
@@ -250,14 +265,14 @@ queryRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
     LEFT JOIN lang_agg la ON sd.session_key = la.session_key
     WHERE sd.rn = 1
     ORDER BY sd.last_message_at DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `)
+    LIMIT $${whereParams.length + 1} OFFSET $${whereParams.length + 2}
+  `, ...whereParams, limit, offset)
 
   const totalRows: any[] = await prisma.$queryRawUnsafe(`
     SELECT COUNT(DISTINCT COALESCE(chat_session_id::text, id::text))::int AS total
     FROM queries q
     WHERE ${whereClause}
-  `)
+  `, ...whereParams)
 
   const total = Number(totalRows[0]?.total ?? 0)
 

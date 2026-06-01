@@ -898,7 +898,7 @@ async function ensurePlatformTemplatesSeeded() {
 
 auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response) => {
   await ensurePlatformTemplatesSeeded()
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
 
   const templates = await (prisma as any).auditTemplate.findMany({
     where: {
@@ -918,7 +918,7 @@ auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response)
 // ─── POST /audits/templates ───────────────────────────────────────────────────
 
 auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId                  = (req as any).tenantId as string
+  const tenantId                  = req.user!.tenant_id
   const { name, description, sections } = req.body
 
   if (!name?.trim()) return err(res, 'MISSING_NAME', 'Template name is required', 400)
@@ -955,7 +955,7 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
 // ─── GET /audits/stats ───────────────────────────────────────────────────────
 
 auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
 
   const runs = await (prisma as any).auditRun.findMany({
     where:  { tenant_id: tenantId },
@@ -991,7 +991,7 @@ auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => 
 // ─── GET /audits/runs ─────────────────────────────────────────────────────────
 
 auditsRouter.get('/runs', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
   const { status, template_id } = req.query
 
   const where: any = { tenant_id: tenantId }
@@ -1013,7 +1013,7 @@ auditsRouter.get('/runs', requireAdmin, async (req: Request, res: Response) => {
 // ─── POST /audits/runs ────────────────────────────────────────────────────────
 
 auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId                                    = (req as any).tenantId as string
+  const tenantId                                    = req.user!.tenant_id
   const { template_id, audit_month, auditor_name, auditor_role } = req.body
 
   if (!template_id)  return err(res, 'MISSING_TEMPLATE', 'template_id is required', 400)
@@ -1049,7 +1049,7 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
 // ─── GET /audits/runs/:id ─────────────────────────────────────────────────────
 
 auditsRouter.get('/runs/:id', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
@@ -1078,7 +1078,7 @@ auditsRouter.get('/runs/:id', requireAdmin, async (req: Request, res: Response) 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────
 
 auditsRouter.put('/runs/:id', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
   const { auditor_name, auditor_role, strengths, improvements, actions_deadline } = req.body
 
   const existing = await (prisma as any).auditRun.findFirst({
@@ -1103,7 +1103,7 @@ auditsRouter.put('/runs/:id', requireAdmin, async (req: Request, res: Response) 
 // ─── POST /audits/runs/:id/answers ───────────────────────────────────────────
 
 auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
   const { answers } = req.body  // Array<{ question_id, answer_yn?, outcome_text?, actions_text? }>
 
   if (!Array.isArray(answers) || answers.length === 0)
@@ -1142,7 +1142,7 @@ auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: R
 // ─── POST /audits/runs/:id/complete ──────────────────────────────────────────
 
 auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
@@ -1248,7 +1248,7 @@ auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: 
 // ─── GET /audits/runs/:id/report ──────────────────────────────────────────────
 
 auditsRouter.get('/runs/:id/report', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).tenantId as string
+  const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },

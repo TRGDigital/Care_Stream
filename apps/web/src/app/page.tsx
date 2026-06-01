@@ -81,7 +81,7 @@ function Hero() {
               <span aria-hidden="true" className="invisible">
                 Your CQC Staff Questions are written in English. Your workforce isn&apos;t.
               </span>
-              <span className="absolute inset-0">
+              <span className="absolute inset-x-0 bottom-0">
                 Your <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
                 <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
               </span>

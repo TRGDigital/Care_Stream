@@ -1,8 +1,8 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Exporting your audit log',
-  description: 'How to export your CareStreamAI audit log for a chosen period, giving you a clear record of activity for governance and for CQC inspection.',
+  title: { absolute: 'Exporting Your Audit Log | CareStream' },
+  description: 'How to export your CareStream audit log for a chosen period, giving you a clear record of activity for governance and for CQC inspection.',
 }
 
 export default function Page() {

@@ -1,8 +1,8 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'How to update a policy',
-  description: 'How to upload a new version of a policy in CareStreamAI so staff always see current guidance, while previous versions are kept in your history.',
+  title: { absolute: 'How to Update a Policy | CareStream' },
+  description: 'How to upload a new version of a policy in CareStream so staff always see current guidance, while previous versions are kept in your history.',
 }
 
 export default function Page() {

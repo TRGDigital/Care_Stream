@@ -1,8 +1,8 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Which languages are supported',
-  description: 'CareStreamAI supports the languages spoken across UK care teams, including English, Polish, Romanian, Portuguese, Tagalog and many more.',
+  title: { absolute: 'Which Languages Are Supported | CareStream' },
+  description: 'CareStream supports the languages spoken across UK care teams, including English, Polish, Romanian, Portuguese, Tagalog and many more.',
 }
 
 export default function Page() {

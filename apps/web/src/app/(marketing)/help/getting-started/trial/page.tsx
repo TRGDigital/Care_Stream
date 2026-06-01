@@ -1,8 +1,8 @@
 import { HelpArticle, MockDashboard } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Your 14 day trial, what is included',
-  description: 'What your free CareStreamAI trial includes. Full access to every feature, unlimited staff users and unlimited policy uploads for 14 days, no card needed.',
+  title: { absolute: 'What Your 14 Day Trial Includes | CareStream' },
+  description: 'What your free CareStream trial includes. Full access to every feature, unlimited staff users and unlimited policy uploads for 14 days, no card needed.',
 }
 
 export default function Page() {

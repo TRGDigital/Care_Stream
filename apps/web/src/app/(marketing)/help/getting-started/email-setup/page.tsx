@@ -1,8 +1,8 @@
 import { HelpArticle, MockEmailSettings } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Setting up email access',
-  description: 'How to switch on email access in CareStreamAI so staff can ask policy questions by email and receive an answer back in the same thread.',
+  title: { absolute: 'Setting Up Email Access | CareStream' },
+  description: 'How to switch on email access in CareStream so staff can ask policy questions by email and receive an answer back in the same thread.',
 }
 
 export default function Page() {

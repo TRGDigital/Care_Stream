@@ -1,8 +1,8 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Data retention and deletion',
-  description: 'How CareStreamAI handles data retention and deletion. You stay in control of your information, including how long it is kept and how it can be removed.',
+  title: { absolute: 'Data Retention and Deletion | CareStream' },
+  description: 'How CareStream handles data retention and deletion. You stay in control of your information, including how long it is kept and how it can be removed.',
 }
 
 export default function Page() {

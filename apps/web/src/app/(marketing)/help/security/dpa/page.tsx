@@ -1,8 +1,8 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Requesting your Data Processing Agreement',
-  description: 'What a Data Processing Agreement covers and how to request your copy from CareStreamAI. Available to every subscriber at no extra cost.',
+  title: { absolute: 'Requesting Your Data Processing Agreement | CareStream' },
+  description: 'What a Data Processing Agreement covers and how to request your copy from CareStream. Available to every subscriber at no extra cost.',
 }
 
 export default function Page() {

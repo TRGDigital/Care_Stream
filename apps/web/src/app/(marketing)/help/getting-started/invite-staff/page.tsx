@@ -1,8 +1,8 @@
 import { HelpArticle, MockStaff } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Inviting staff to use CareStreamAI',
-  description: 'How to invite your care team to CareStreamAI. Add unlimited staff users, choose staff or admin roles, and let everyone ask policy questions from any device.',
+  title: { absolute: 'Inviting Staff to CareStream | CareStream' },
+  description: 'How to invite your care team to CareStream. Add unlimited staff users, choose staff or admin roles, and let everyone ask policy questions from any device.',
 }
 
 export default function Page() {

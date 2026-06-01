@@ -1,8 +1,8 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Cancelling your subscription',
-  description: 'How to cancel your CareStreamAI subscription. There is no long lock in. You keep access until the end of your billing period and will not be charged again.',
+  title: { absolute: 'Cancelling Your Subscription | CareStream' },
+  description: 'How to cancel your CareStream subscription. There is no long lock in. You keep access until the end of your billing period and will not be charged again.',
 }
 
 export default function Page() {

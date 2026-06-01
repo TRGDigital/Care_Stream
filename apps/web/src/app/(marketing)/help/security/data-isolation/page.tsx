@@ -1,8 +1,8 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'How data isolation works',
-  description: 'How CareStreamAI keeps your account separate from every other organisation, so your policies and activity stay private and are never used to train AI.',
+  title: { absolute: 'How Data Isolation Works | CareStream' },
+  description: 'How CareStream keeps your account separate from every other organisation, so your policies and activity stay private and are never used to train AI.',
 }
 
 export default function Page() {

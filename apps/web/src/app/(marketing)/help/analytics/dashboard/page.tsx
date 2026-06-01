@@ -1,8 +1,8 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Understanding your analytics dashboard',
-  description: 'How to read your CareStreamAI analytics dashboard. See how often staff ask questions, which policies they need most, and which channels and languages they use.',
+  title: { absolute: 'Understanding Your Analytics Dashboard | CareStream' },
+  description: 'How to read your CareStream analytics dashboard. See how often staff ask questions, which policies they need most, and which channels and languages they use.',
 }
 
 export default function Page() {

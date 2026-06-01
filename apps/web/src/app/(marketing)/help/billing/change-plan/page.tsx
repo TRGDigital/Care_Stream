@@ -1,8 +1,8 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Changing your plan',
-  description: 'How to switch between CareStreamAI plans at any time. Your staff and policies stay exactly as they are, and you keep unlimited staff users on every plan.',
+  title: { absolute: 'Changing Your Plan | CareStream' },
+  description: 'How to switch between CareStream plans at any time. Your staff and policies stay exactly as they are, and you keep unlimited staff users on every plan.',
 }
 
 export default function Page() {

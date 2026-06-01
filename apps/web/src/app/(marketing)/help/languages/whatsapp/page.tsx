@@ -1,7 +1,7 @@
 import { HelpArticle, MockWhatsApp } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Using CareStreamAI on WhatsApp',
+  title: { absolute: 'Using CareStream on WhatsApp | CareStream' },
   description: 'How staff ask policy questions on WhatsApp and get an answer back in the same chat, in their own language, drawn from your own policies.',
 }
 

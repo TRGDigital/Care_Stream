@@ -1,7 +1,7 @@
 import { HelpArticle, MockEmail } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Asking questions by email',
+  title: { absolute: 'Asking Questions by Email | CareStream' },
   description: 'How staff ask policy questions by email and receive an answer back in the same thread, in their own language, with the source policy noted.',
 }
 

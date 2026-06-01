@@ -1,8 +1,8 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'How staff access CareStreamAI',
-  description: 'How your care team uses CareStreamAI from any device with nothing to download. Staff sign in, then ask policy questions by web chat or email.',
+  title: { absolute: 'How Staff Access CareStream | CareStream' },
+  description: 'How your care team uses CareStream from any device with nothing to download. Staff sign in, then ask policy questions by web chat or email.',
 }
 
 export default function Page() {

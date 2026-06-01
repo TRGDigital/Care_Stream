@@ -1,8 +1,8 @@
 import { HelpArticle, MockDashboard } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Setting up your account',
-  description: 'How to set up your CareStreamAI account after you sign up. Sign in, add your care home details, upload a policy and invite your team in a few minutes.',
+  title: { absolute: 'Setting Up Your CareStream Account | CareStream' },
+  description: 'How to set up your CareStream account after you sign up. Sign in, add your care home details, upload a policy and invite your team in minutes.',
 }
 
 export default function Page() {

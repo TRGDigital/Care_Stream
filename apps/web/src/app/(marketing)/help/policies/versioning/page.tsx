@@ -1,8 +1,8 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Policy version history and archiving',
-  description: 'How CareStreamAI keeps a history of every policy version and how to archive policies you no longer use, giving you a clear record for CQC.',
+  title: { absolute: 'Policy Version History and Archiving | CareStream' },
+  description: 'How CareStream keeps a history of every policy version and how to archive policies you no longer use, giving you a clear record for CQC.',
 }
 
 export default function Page() {

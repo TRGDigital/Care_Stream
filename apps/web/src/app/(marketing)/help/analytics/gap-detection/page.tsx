@@ -1,8 +1,8 @@
 import { HelpArticle, MockGaps } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Policy gap detection, how it works',
-  description: 'How CareStreamAI highlights staff questions your current policies do not yet answer, with a coverage score, so you know which policies to add next.',
+  title: { absolute: 'How Policy Gap Detection Works | CareStream' },
+  description: 'How CareStream highlights staff questions your current policies do not yet answer, with a coverage score, so you know which policies to add next.',
 }
 
 export default function Page() {

@@ -1,8 +1,8 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Understanding language analytics',
-  description: 'How CareStreamAI language analytics show which languages your team asks in, helping you understand your workforce and show you support a diverse team.',
+  title: { absolute: 'Understanding Language Analytics | CareStream' },
+  description: 'How CareStream language analytics show which languages your team asks in, helping you understand your workforce and show you support a diverse team.',
 }
 
 export default function Page() {

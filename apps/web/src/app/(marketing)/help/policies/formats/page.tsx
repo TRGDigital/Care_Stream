@@ -1,8 +1,8 @@
 import { HelpArticle, MockUpload } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Supported document formats',
-  description: 'The document types you can upload to CareStreamAI, including PDF, Word and plain text, plus tips for getting the best results from your policies.',
+  title: { absolute: 'Supported Document Formats | CareStream' },
+  description: 'The document types you can upload to CareStream, including PDF, Word and plain text, plus tips for getting the best results from your policies.',
 }
 
 export default function Page() {

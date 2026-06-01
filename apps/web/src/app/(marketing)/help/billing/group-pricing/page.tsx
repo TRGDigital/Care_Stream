@@ -1,7 +1,7 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Group pricing for multiple homes',
+  title: { absolute: 'Group Pricing for Multiple Homes | CareStream' },
   description: 'How group pricing works for providers running more than one care home. Per home pricing with unlimited staff users, and help setting up each location.',
 }
 

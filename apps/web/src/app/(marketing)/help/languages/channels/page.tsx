@@ -1,8 +1,8 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Email versus web chat, which to use',
-  description: 'Your team can ask CareStreamAI questions by web chat or email. Both give the same answers from your policies, so staff can pick what suits them.',
+  title: { absolute: 'Email or Web Chat, Which to Use | CareStream' },
+  description: 'Your team can ask CareStream questions by web chat or email. Both give the same answers from your policies, so staff can pick what suits them.',
 }
 
 export default function Page() {

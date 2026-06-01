@@ -1,8 +1,8 @@
 import { HelpArticle, MockCqcReport } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Generating a CQC Readiness Report',
-  description: 'How to generate and download a CQC Readiness Report in CareStreamAI, bringing your evidence across the five key questions together in one document.',
+  title: { absolute: 'Generating a CQC Readiness Report | CareStream' },
+  description: 'How to generate and download a CQC Readiness Report in CareStream, bringing your evidence across the five key questions together in one document.',
 }
 
 export default function Page() {

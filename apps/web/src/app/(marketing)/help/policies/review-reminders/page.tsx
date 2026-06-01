@@ -1,8 +1,8 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Setting policy review reminders',
-  description: 'How to set review dates for your policies in CareStreamAI so you are reminded before each one falls due, keeping your review schedule in one place.',
+  title: { absolute: 'Setting Policy Review Reminders | CareStream' },
+  description: 'How to set review dates for your policies in CareStream so you are reminded before each one falls due, keeping your whole review schedule in one place.',
 }
 
 export default function Page() {

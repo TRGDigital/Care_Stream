@@ -1,8 +1,8 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Updating payment details',
-  description: 'How to update your payment details in CareStreamAI so your service continues without interruption. Your details are handled securely.',
+  title: { absolute: 'Updating Payment Details | CareStream' },
+  description: 'How to update your payment details in CareStream so your service continues without interruption. Your details are handled securely.',
 }
 
 export default function Page() {

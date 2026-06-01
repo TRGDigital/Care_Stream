@@ -1,8 +1,8 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Organising your policy library',
-  description: 'How to keep your CareStreamAI policy library tidy with clear categories and names, so staff find what they need and you can spot any gaps.',
+  title: { absolute: 'Organising Your Policy Library | CareStream' },
+  description: 'How to keep your CareStream policy library tidy with clear categories and names, so staff find what they need and you can spot any gaps.',
 }
 
 export default function Page() {

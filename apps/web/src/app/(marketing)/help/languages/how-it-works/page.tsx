@@ -1,8 +1,8 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'How multilingual support works',
-  description: 'How CareStreamAI lets staff ask questions in their own language and receive answers in that same language, all drawn from your own policies.',
+  title: { absolute: 'How Multilingual Support Works | CareStream' },
+  description: 'How CareStream lets staff ask questions in their own language and receive answers in that same language, all drawn from your own policies.',
 }
 
 export default function Page() {

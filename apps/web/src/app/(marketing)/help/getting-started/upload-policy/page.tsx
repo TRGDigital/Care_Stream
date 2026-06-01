@@ -1,8 +1,8 @@
 import { HelpArticle, MockUpload } from '@/components/marketing/help'
 
 export const metadata = {
-  title: 'Uploading your first policy',
-  description: 'How to upload a policy to CareStreamAI so your whole team can ask questions about it. Supports PDF, Word and plain text documents.',
+  title: { absolute: 'Uploading Your First Policy | CareStream' },
+  description: 'How to upload a policy to CareStream so your whole team can ask questions about it. Supports PDF, Word and plain text documents.',
 }
 
 export default function Page() {

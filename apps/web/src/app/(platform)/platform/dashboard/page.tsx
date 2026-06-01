@@ -17,10 +17,13 @@ import {
 } from 'lucide-react'
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend,
-} from 'recharts'
+import dynamic from 'next/dynamic'
+
+// recharts is heavy (~90KB) and only used on the Overview tab — load it lazily.
+const QueryVolumeChart = dynamic(() => import('@/components/query-volume-chart'), {
+  ssr: false,
+  loading: () => <div className="flex h-[220px] items-center justify-center"><p className="text-sm text-neutral-mid">Loading chart…</p></div>,
+})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -362,44 +365,7 @@ export default function PlatformDashboard() {
                         <p className="text-sm text-neutral-mid">Loading…</p>
                       </div>
                     ) : (
-                      <ResponsiveContainer width="100%" height={220}>
-                        <LineChart data={chartData} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                          <XAxis
-                            dataKey="date"
-                            tick={{ fontSize: 11, fill: '#9ca3af' }}
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={d => {
-                              const dt = new Date(d)
-                              return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                            }}
-                            interval={chartDays <= 7 ? 0 : chartDays <= 30 ? 4 : 9}
-                          />
-                          <YAxis
-                            tick={{ fontSize: 11, fill: '#9ca3af' }}
-                            tickLine={false}
-                            axisLine={false}
-                            allowDecimals={false}
-                            width={32}
-                          />
-                          <Tooltip
-                            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-                            labelFormatter={d => new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                            formatter={(value: any, name: any) => [value, name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp']}
-                          />
-                          <Legend
-                            iconType="circle"
-                            iconSize={8}
-                            formatter={name => name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp'}
-                            wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
-                          />
-                          <Line type="monotone" dataKey="chat"     stroke="#0d9488" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                          <Line type="monotone" dataKey="voice"    stroke="#9333ea" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                          <Line type="monotone" dataKey="email"    stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                          <Line type="monotone" dataKey="whatsapp" stroke="#16a34a" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
+                      <QueryVolumeChart data={chartData} days={chartDays} />
                     )}
                   </div>
                 </div>

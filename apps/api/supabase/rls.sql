@@ -383,3 +383,104 @@ CREATE TRIGGER email_session_expiry_trigger
   BEFORE INSERT OR UPDATE OF last_message_at ON email_sessions
   FOR EACH ROW
   EXECUTE FUNCTION update_email_session_expiry();
+
+
+-- =============================================================================
+-- SECTION 11 — RLS widening (June 2026, defence-in-depth)
+-- Enables RLS + tenant-scoped policies on ALL remaining tenant-owned tables, and
+-- RLS (app-role read-only) on platform/global tables. The app connects as the
+-- `postgres` role (BYPASSRLS) so this does not change app behaviour; it denies the
+-- Supabase anon/authenticated (PostgREST) roles. Applied via Supabase migrations
+-- widen_rls_tenant_tables + rls_platform_tables_and_function_hardening.
+-- =============================================================================
+
+-- Tenant tables that carry tenant_id directly
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'audit_runs','cqc_staff_deliveries','cqc_staff_questions','knowledge_entries',
+    'onboarding_enrollments','onboarding_flows','training_delivery_rules',
+    'training_enrollments','training_send_log','whatsapp_sessions'
+  ] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t||'_tenant_isolation', t);
+    EXECUTE format(
+      'CREATE POLICY %I ON public.%I FOR ALL TO carestreamai_api '
+      'USING (tenant_id = get_current_tenant_id()) '
+      'WITH CHECK (tenant_id = get_current_tenant_id())',
+      t||'_tenant_isolation', t);
+  END LOOP;
+END $$;
+
+-- audit_templates: own rows + platform seed templates (tenant_id IS NULL) readable
+ALTER TABLE public.audit_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "audit_templates_select" ON public.audit_templates;
+CREATE POLICY "audit_templates_select" ON public.audit_templates FOR SELECT TO carestreamai_api
+  USING (tenant_id = get_current_tenant_id() OR tenant_id IS NULL);
+DROP POLICY IF EXISTS "audit_templates_insert" ON public.audit_templates;
+CREATE POLICY "audit_templates_insert" ON public.audit_templates FOR INSERT TO carestreamai_api
+  WITH CHECK (tenant_id = get_current_tenant_id());
+DROP POLICY IF EXISTS "audit_templates_update" ON public.audit_templates;
+CREATE POLICY "audit_templates_update" ON public.audit_templates FOR UPDATE TO carestreamai_api
+  USING (tenant_id = get_current_tenant_id()) WITH CHECK (tenant_id = get_current_tenant_id());
+DROP POLICY IF EXISTS "audit_templates_delete" ON public.audit_templates;
+CREATE POLICY "audit_templates_delete" ON public.audit_templates FOR DELETE TO carestreamai_api
+  USING (tenant_id = get_current_tenant_id());
+
+-- Child tables scoped through their tenant-owning parent
+ALTER TABLE public.audit_answers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "audit_answers_tenant_isolation" ON public.audit_answers;
+CREATE POLICY "audit_answers_tenant_isolation" ON public.audit_answers FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.audit_runs r WHERE r.id = audit_answers.run_id AND r.tenant_id = get_current_tenant_id()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.audit_runs r WHERE r.id = audit_answers.run_id AND r.tenant_id = get_current_tenant_id()));
+
+ALTER TABLE public.audit_sections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "audit_sections_tenant_isolation" ON public.audit_sections;
+CREATE POLICY "audit_sections_tenant_isolation" ON public.audit_sections FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.audit_templates t WHERE t.id = audit_sections.template_id AND (t.tenant_id = get_current_tenant_id() OR t.tenant_id IS NULL)))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.audit_templates t WHERE t.id = audit_sections.template_id AND t.tenant_id = get_current_tenant_id()));
+
+ALTER TABLE public.audit_questions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "audit_questions_tenant_isolation" ON public.audit_questions;
+CREATE POLICY "audit_questions_tenant_isolation" ON public.audit_questions FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.audit_sections s JOIN public.audit_templates t ON t.id = s.template_id WHERE s.id = audit_questions.section_id AND (t.tenant_id = get_current_tenant_id() OR t.tenant_id IS NULL)))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.audit_sections s JOIN public.audit_templates t ON t.id = s.template_id WHERE s.id = audit_questions.section_id AND t.tenant_id = get_current_tenant_id()));
+
+ALTER TABLE public.onboarding_progress ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "onboarding_progress_tenant_isolation" ON public.onboarding_progress;
+CREATE POLICY "onboarding_progress_tenant_isolation" ON public.onboarding_progress FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.onboarding_enrollments e WHERE e.id = onboarding_progress.enrollment_id AND e.tenant_id = get_current_tenant_id()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.onboarding_enrollments e WHERE e.id = onboarding_progress.enrollment_id AND e.tenant_id = get_current_tenant_id()));
+
+ALTER TABLE public.onboarding_steps ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "onboarding_steps_tenant_isolation" ON public.onboarding_steps;
+CREATE POLICY "onboarding_steps_tenant_isolation" ON public.onboarding_steps FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.onboarding_flows f WHERE f.id = onboarding_steps.flow_id AND f.tenant_id = get_current_tenant_id()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.onboarding_flows f WHERE f.id = onboarding_steps.flow_id AND f.tenant_id = get_current_tenant_id()));
+
+ALTER TABLE public.training_answers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "training_answers_tenant_isolation" ON public.training_answers;
+CREATE POLICY "training_answers_tenant_isolation" ON public.training_answers FOR ALL TO carestreamai_api
+  USING (EXISTS (SELECT 1 FROM public.training_enrollments e WHERE e.id = training_answers.enrollment_id AND e.tenant_id = get_current_tenant_id()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.training_enrollments e WHERE e.id = training_answers.enrollment_id AND e.tenant_id = get_current_tenant_id()));
+
+-- Platform/global tables: RLS on, app-role read-only, anon denied
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'training_modules','training_question_versions','cqc_seeds','training_seeds',
+    'platform_custom_seeds','blog_authors','blog_posts','ai_prompts',
+    'ai_prompt_versions','site_pages'
+  ] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t||'_read', t);
+    EXECUTE format('CREATE POLICY %I ON public.%I FOR SELECT TO carestreamai_api USING (true)', t||'_read', t);
+  END LOOP;
+END $$;
+
+-- Pin non-mutable search_path on helper/trigger functions
+ALTER FUNCTION public.get_current_tenant_id() SET search_path = '';
+ALTER FUNCTION public.prevent_audit_log_mutation() SET search_path = '';
+ALTER FUNCTION public.update_email_session_expiry() SET search_path = '';

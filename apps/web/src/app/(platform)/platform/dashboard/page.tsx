@@ -1836,13 +1836,13 @@ function SystemReference() {
           Isolation is enforced at two layers.
         </p>
         <div className="mt-2 space-y-1">
-          <RefRow label="App layer"           value="Prisma middleware in db/client.ts auto-injects tenant_id into all read/write operations on tenant-scoped models" />
-          <RefRow label="DB layer"            value="Supabase RLS policies reject cross-tenant access at the PostgreSQL level when connecting as carestreamai_api role" />
-          <RefRow label="Auto-scoped models"  value="User, Policy, QueryRecord, EmailSession, AuditLog, KnowledgeEntry — Prisma middleware injects tenant_id automatically (note: NOT for findUnique)" />
-          <RefRow label="Manually-scoped models" value="Training*, Audit* (tool), Cqc*, Onboarding*, WhatsAppSession, Blog*, SitePage — NOT auto-scoped; every query must include where:{ tenant_id } explicitly" />
-          <RefRow label="Platform-only (shared)" value="ExternalRegulation, TrainingSeed, CqcSeed, AiPrompt, Plan, TrainingModule — no tenant_id, read-only to tenants" />
-          <RefRow label="Pinecone isolation"  value="Each chunk metadata includes tenant_id — all vector queries filter by tenant_id" />
-          <RefRow label="RLS activation"      value="set_config('app.current_tenant_id', tenantId) called at transaction start via withTenantTx()" />
+          <RefRow label="Primary (app layer)"  value="The app connects as the postgres role (BYPASSRLS), so tenant isolation is enforced in the app: Prisma middleware auto-injects tenant_id for 6 models + every other tenant query includes where:{ tenant_id } explicitly." />
+          <RefRow label="DB layer (RLS)"        value="Defence-in-depth: as of June 2026 RLS is enabled on ALL tables. Tenant tables have tenant-scoped policies (get_current_tenant_id()); child tables scope via their parent. Denies the Supabase anon/PostgREST roles." />
+          <RefRow label="Auto-scoped models"    value="User, Policy, QueryRecord, EmailSession, AuditLog, KnowledgeEntry — Prisma middleware injects tenant_id automatically (note: NOT for findUnique)" />
+          <RefRow label="Manually-scoped models" value="Training*, Audit* (tool), Cqc*, Onboarding*, WhatsAppSession — NOT auto-scoped; every query includes where:{ tenant_id } explicitly" />
+          <RefRow label="Platform-only (shared)" value="ExternalRegulation, Plan, *Seed, AiPrompt(+versions), TrainingModule(+versions), Blog*, SitePage — no tenant_id; RLS-enabled (read-only to the app role, denied to anon)" />
+          <RefRow label="Pinecone isolation"    value="Each chunk metadata includes tenant_id — all vector queries filter by tenant_id" />
+          <RefRow label="Future hardening"      value="To make RLS protect the app's own queries too, switch the app to the carestreamai_api role + set_config('app.current_tenant_id') per request (withTenantTx)." />
         </div>
       </RefSection>
 
@@ -1874,6 +1874,11 @@ function SystemReference() {
           <RefRow label="Onboarding policy refs" value="Onboarding flow steps now validate that each referenced policy_id belongs to the tenant before storing (POST + PATCH). (routes/onboarding.ts)" />
           <RefRow label="Feedback secret"       value="Removed the hard-coded HMAC fallback in production — feedback-link signing fails closed if the env secret is missing. (lib/feedback-token.ts)" />
           <RefRow label="Inbound email auth"    value="Shared-secret verification added to /email/inbound (timing-safe ?key check). Built and deployed but OFF by default — activate via SendGrid Parse URL ?key=… + ENFORCE_INBOUND_PARSE_KEY=true. (routes/email.ts)" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-teal">Database hardening — done</p>
+          <RefRow label="RLS widened"          value="Row Level Security now enabled on EVERY table (was 6). All 17 tenant-data tables got tenant-scoped policies (child tables scope via their parent); 10 platform tables are RLS-on, app-role read-only. Closes the Supabase anon/REST path to tenant data. Supabase security advisor: clean." />
+          <RefRow label="Function search_path"  value="Pinned a non-mutable search_path on the RLS/trigger helper functions (get_current_tenant_id, prevent_audit_log_mutation, update_email_session_expiry)." />
         </div>
         <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Known follow-ups</p>

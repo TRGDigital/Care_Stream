@@ -38,7 +38,9 @@ function mergePrefs(stored: unknown): Record<string, boolean> {
 }
 
 const LOGO_MAX_BYTES  = 2 * 1024 * 1024  // 2 MB
-const LOGO_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'])
+// SVG is intentionally excluded — SVGs can contain <script>, and the logo is
+// stored as an inline data: URL, so an SVG logo is a stored-XSS vector.
+const LOGO_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
 const logoUpload = multer({
   storage: multer.memoryStorage(),

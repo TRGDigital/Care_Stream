@@ -207,8 +207,8 @@ usersRouter.post('/:id/deactivate', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { id }   = req.params
 
-  // Prevent admins from deactivating themselves
-  if (id === (req.user as any).id) {
+  // Prevent admins from deactivating themselves (JWT identifies the user via `sub`)
+  if (id === req.user!.sub) {
     err(res, 'FORBIDDEN', 'You cannot deactivate your own account.', 403)
     return
   }

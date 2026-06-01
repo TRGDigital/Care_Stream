@@ -11,6 +11,20 @@ onboardingRouter.use(requireAuth)
 
 const ai = new Anthropic()
 
+// Returns any step policy_ids that do NOT belong to the given tenant. Steps may
+// reference a policy by id from the request body, so we must confirm ownership
+// before storing it (otherwise a flow could reference another tenant's policy).
+async function invalidStepPolicyIds(steps: any[], tenantId: string): Promise<string[]> {
+  const ids = [...new Set((steps ?? []).map(s => s?.policy_id).filter(Boolean))] as string[]
+  if (ids.length === 0) return []
+  const found = await prisma.policy.findMany({
+    where:  { id: { in: ids }, tenant_id: tenantId },
+    select: { id: true },
+  })
+  const ok = new Set(found.map(p => p.id))
+  return ids.filter(id => !ok.has(id))
+}
+
 // ─── Admin: Flows CRUD ────────────────────────────────────────────────────────
 
 // GET /onboarding/flows
@@ -38,6 +52,10 @@ onboardingRouter.post('/flows', requireAdmin, async (req, res) => {
 
   try {
     const tenantId = getTenantId()
+    const badPolicies = await invalidStepPolicyIds(steps, tenantId)
+    if (badPolicies.length) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_POLICY', message: 'A step references a policy that does not belong to your organisation.' } })
+    }
     const flow = await prisma.onboardingFlow.create({
       data: {
         tenant_id:   tenantId,
@@ -70,6 +88,13 @@ onboardingRouter.patch('/flows/:id', requireAdmin, async (req, res) => {
     const id       = String(req.params.id)
     const existing = await prisma.onboardingFlow.findFirst({ where: { id, tenant_id: tenantId } })
     if (!existing) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Flow not found' } })
+
+    if (steps !== undefined) {
+      const badPolicies = await invalidStepPolicyIds(steps, tenantId)
+      if (badPolicies.length) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_POLICY', message: 'A step references a policy that does not belong to your organisation.' } })
+      }
+    }
 
     if (steps !== undefined) {
       await prisma.onboardingStep.deleteMany({ where: { flow_id: id } })

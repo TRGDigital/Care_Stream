@@ -28,7 +28,7 @@ export default function Page() {
           'Share your CareStreamAI WhatsApp number with your team.',
           'Approved staff can start asking questions straight away.',
         ] },
-        { type: 'note', text: 'Only approved phone numbers can use WhatsApp, which keeps your account secure. WhatsApp is included on selected plans, so contact us if you are unsure whether you have it.' },
+        { type: 'note', text: 'Only approved phone numbers can use WhatsApp, which keeps your account secure. WhatsApp is included on every plan.' },
       ]}
       related={[
         { title: 'Asking questions by email', href: '/help/languages/email' },

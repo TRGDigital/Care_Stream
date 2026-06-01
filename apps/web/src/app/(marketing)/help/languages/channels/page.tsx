@@ -27,7 +27,7 @@ export default function Page() {
           'Useful when someone wants a written record in their inbox.',
         ] },
         { type: 'p', text: 'There is no wrong choice. Many teams use both, and the answers are drawn from the same policies either way.' },
-        { type: 'note', text: 'Some plans also include WhatsApp and voice. Your team can use whichever channels suit them best.' },
+        { type: 'note', text: 'WhatsApp is included on every plan, and some plans also add voice. Your team can use whichever channels suit them best.' },
       ]}
       related={[
         { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },

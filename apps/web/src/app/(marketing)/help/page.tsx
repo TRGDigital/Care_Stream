@@ -41,6 +41,8 @@ const CATEGORIES = [
       { title: 'How multilingual support works', href: '/help/languages/how-it-works' },
       { title: 'Which languages are supported?', href: '/help/languages/supported-languages' },
       { title: 'Email vs web chat, which to use?', href: '/help/languages/channels' },
+      { title: 'Using CareStreamAI on WhatsApp', href: '/help/languages/whatsapp' },
+      { title: 'Asking questions by email', href: '/help/languages/email' },
       { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },
     ],
   },

@@ -203,6 +203,49 @@ export function MockChat() {
   )
 }
 
+export function MockWhatsApp() {
+  return (
+    <MockFrame label="WhatsApp · CareStreamAI">
+      <div className="space-y-3">
+        <div className="ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-green-500 px-4 py-2.5 text-sm text-white">
+          What should I do if a resident has a fall?
+        </div>
+        <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-neutral-light px-4 py-2.5 text-sm text-neutral-dark">
+          <p>Your Falls Policy says to:</p>
+          <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-neutral-mid">
+            <li>Keep the person still and check for injury</li>
+            <li>Call the nurse in charge before moving them</li>
+            <li>Record the fall on an incident form</li>
+          </ul>
+          <p className="mt-2 text-xs text-teal">Source: Falls Policy, Section 3.1</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm text-neutral-mid">
+        Message...
+      </div>
+    </MockFrame>
+  )
+}
+
+export function MockEmail() {
+  return (
+    <MockFrame label="Email · CareStreamAI">
+      <div className="space-y-3 text-sm">
+        <div className="rounded-lg border border-gray-100 p-3">
+          <p className="text-xs text-neutral-mid">To: policies@crossways.carestreamai.co.uk</p>
+          <p className="mt-1 font-semibold text-neutral-dark">Annual leave question</p>
+          <p className="mt-1 text-neutral-mid">How much notice do I need to give to book annual leave?</p>
+        </div>
+        <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-3">
+          <p className="text-xs text-neutral-mid">From: CareStreamAI</p>
+          <p className="mt-1 text-neutral-dark">From your Staff Handbook: you need to give at least four weeks notice to book annual leave.</p>
+          <p className="mt-2 text-xs text-teal">Source: Staff Handbook, Section 6.2</p>
+        </div>
+      </div>
+    </MockFrame>
+  )
+}
+
 export function MockAnalytics() {
   return (
     <MockFrame label="CareStreamAI · Analytics">

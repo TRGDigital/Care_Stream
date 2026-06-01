@@ -115,7 +115,9 @@ function AuthorForm({
   )
 }
 
-// ─── Rich editor ──────────────────────────────────────────────────────────────
+// ─── Rich editor (WYSIWYG) ──────────────────────────────────────────────────────
+// A visual editor: you see formatted text, not HTML. Stores HTML via the
+// browser's contentEditable so the public site (which renders HTML) is unchanged.
 
 function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
   value:       string
@@ -123,118 +125,94 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
   rows?:       number
   placeholder?: string
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null)
+  const ref       = useRef<HTMLDivElement>(null)
+  const lastHtml  = useRef<string>('')
+  const savedRange = useRef<Range | null>(null)
 
-  function wrapSelection(before: string, after: string) {
+  // Push external value changes into the div WITHOUT resetting on our own edits
+  // (which would jump the caret to the start mid-typing).
+  useEffect(() => {
+    const el = ref.current
+    if (el && value !== lastHtml.current && value !== el.innerHTML) {
+      el.innerHTML = value || ''
+      lastHtml.current = value || ''
+    }
+  }, [value])
+
+  function sync() {
+    const html = ref.current?.innerHTML ?? ''
+    lastHtml.current = html
+    onChange(html)
+  }
+
+  // Remember the caret/selection so toolbar controls (esp. the dropdown, which
+  // steals focus) can act on the right place in the text.
+  function saveSelection() {
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount > 0 && ref.current?.contains(sel.anchorNode)) {
+      savedRange.current = sel.getRangeAt(0)
+    }
+  }
+
+  function exec(command: string, arg?: string) {
     const el = ref.current
     if (!el) return
-    const start = el.selectionStart
-    const end   = el.selectionEnd
-    const selected = value.slice(start, end)
-    const newVal    = value.slice(0, start) + before + selected + after + value.slice(end)
-    const newCursor = end + before.length + after.length
-    onChange(newVal)
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(newCursor, newCursor) })
+    el.focus()
+    const sel = window.getSelection()
+    if (savedRange.current && sel && el.contains(savedRange.current.commonAncestorContainer)) {
+      sel.removeAllRanges()
+      sel.addRange(savedRange.current)
+    }
+    document.execCommand(command, false, arg)
+    saveSelection()
+    sync()
   }
 
   function insertLink() {
-    const el = ref.current
-    if (!el) return
-    const start    = el.selectionStart
-    const end      = el.selectionEnd
-    const selected = value.slice(start, end)
-    const url      = window.prompt('Enter URL:', 'https://')
-    if (!url) return
-    const linkText = selected || 'link text'
-    const insert   = `<a href="${url}">${linkText}</a>`
-    const newVal   = value.slice(0, start) + insert + value.slice(end)
-    const cursor   = start + insert.length
-    onChange(newVal)
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
+    const url = window.prompt('Enter URL:', 'https://')
+    if (url) exec('createLink', url)
   }
 
-  // Wrap the selection in a <ul>/<ol>, one <li> per non-empty selected line.
-  function insertList(ordered: boolean) {
-    const el = ref.current
-    if (!el) return
-    const start    = el.selectionStart
-    const end      = el.selectionEnd
-    const selected = value.slice(start, end)
-    const tag      = ordered ? 'ol' : 'ul'
-    const lines    = selected ? selected.split('\n').filter(l => l.trim() !== '') : []
-    const items    = (lines.length ? lines : ['']).map(l => `  <li>${l.trim()}</li>`).join('\n')
-    const insert   = `<${tag}>\n${items}\n</${tag}>`
-    const newVal   = value.slice(0, start) + insert + value.slice(end)
-    const cursor   = start + insert.length
-    onChange(newVal)
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
-  }
-
-  // Prompt for a URL + alt text and insert an inline <img>.
-  function insertImage() {
-    const el = ref.current
-    if (!el) return
-    const start  = el.selectionStart
-    const end    = el.selectionEnd
-    const url    = window.prompt('Image URL:', 'https://')
-    if (!url) return
-    const alt    = window.prompt('Alt text (for accessibility & SEO):', '') ?? ''
-    const insert = `<img src="${url}" alt="${alt}" />`
-    const newVal = value.slice(0, start) + insert + value.slice(end)
-    const cursor = start + insert.length
-    onChange(newVal)
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
-  }
+  // mousedown-preventDefault keeps the editor's selection while clicking a button
+  const btn = 'rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark'
+  const minHeight = `${Math.max(rows, 3) * 1.6}rem`
 
   return (
     <div>
-      <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-1 rounded-t-md border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5">
         <select
           value=""
-          onChange={e => {
-            const tag = e.target.value
-            if (tag) wrapSelection(`<${tag}>`, `</${tag}>`)
-            e.target.value = ''
-          }}
-          title="Heading — wraps the selected text"
-          className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark focus:outline-none cursor-pointer">
-          <option value="" disabled hidden>Heading</option>
-          <option value="h1">H1 — Title</option>
-          <option value="h2">H2 — Section</option>
-          <option value="h3">H3 — Subsection</option>
+          onChange={e => { if (e.target.value) exec('formatBlock', `<${e.target.value}>`); e.target.value = '' }}
+          title="Text style"
+          className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 focus:outline-none cursor-pointer">
+          <option value="" disabled hidden>Style</option>
+          <option value="p">Normal text</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
         </select>
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
-        <button type="button" onClick={() => wrapSelection('<strong>', '</strong>')}
-          title="Bold"
-          className="rounded px-2.5 py-0.5 text-xs font-bold text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">B</button>
-        <button type="button" onClick={() => wrapSelection('<em>', '</em>')}
-          title="Italic"
-          className="rounded px-2.5 py-0.5 text-xs italic text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">I</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('bold')}   title="Bold"   className={`${btn} font-bold`}>B</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('italic')} title="Italic" className={`${btn} italic`}>I</button>
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
-        <button type="button" onClick={insertLink}
-          title="Insert link"
-          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">Link</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={insertLink} title="Insert link" className={btn}>Link</button>
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
-        <button type="button" onClick={() => insertList(false)}
-          title="Bullet list"
-          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">• List</button>
-        <button type="button" onClick={() => insertList(true)}
-          title="Numbered list"
-          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">1. List</button>
-        <button type="button" onClick={() => wrapSelection('<blockquote>', '</blockquote>')}
-          title="Blockquote"
-          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">❝ Quote</button>
-        <button type="button" onClick={insertImage}
-          title="Insert image"
-          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">Image</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('insertUnorderedList')} title="Bullet list"   className={btn}>• List</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('insertOrderedList')}   title="Numbered list" className={btn}>1. List</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('formatBlock', '<blockquote>')} title="Blockquote" className={btn}>❝ Quote</button>
+        <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('removeFormat')} title="Clear formatting" className={btn}>Clear</button>
       </div>
-      <textarea
+      <div
         ref={ref}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        rows={rows}
-        placeholder={placeholder}
-        className="w-full resize-y rounded-b-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+        contentEditable
+        suppressContentEditableWarning
+        onInput={sync}
+        onBlur={() => { saveSelection(); sync() }}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
+        data-placeholder={placeholder}
+        style={{ minHeight }}
+        className="prose prose-sm max-w-none overflow-y-auto rounded-b-md border border-gray-200 bg-white px-3 py-2 text-sm leading-relaxed text-neutral-dark focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal prose-headings:font-bold prose-headings:text-neutral-dark prose-a:text-teal empty:before:text-gray-400 empty:before:content-[attr(data-placeholder)]"
       />
     </div>
   )
@@ -740,6 +718,8 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/help/languages/how-it-works',          title: 'Help · How multilingual support works' },
   { path: '/help/languages/supported-languages',   title: 'Help · Which languages are supported' },
   { path: '/help/languages/channels',              title: 'Help · Email versus web chat, which to use' },
+  { path: '/help/languages/whatsapp',              title: 'Help · Using CareStreamAI on WhatsApp' },
+  { path: '/help/languages/email',                 title: 'Help · Asking questions by email' },
   { path: '/help/languages/staff-access',          title: 'Help · How staff access CareStreamAI' },
 
   // Help Centre · Analytics and Reporting

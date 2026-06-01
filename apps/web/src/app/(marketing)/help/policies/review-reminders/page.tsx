@@ -1,8 +1,13 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Setting Policy Review Reminders | CareStream' },
-  description: 'How to set review dates for your policies in CareStream so you are reminded before each one falls due, keeping your whole review schedule in one place.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/policies/review-reminders', {
+    title: 'Setting Policy Review Reminders | CareStream',
+    description: 'How to set review dates for your policies in CareStream so you are reminded before each one falls due, keeping your whole review schedule in one place.',
+  })
 }
 
 export default function Page() {

@@ -1,8 +1,13 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'How to Update a Policy | CareStream' },
-  description: 'How to upload a new version of a policy in CareStream so staff always see current guidance, while previous versions are kept in your history.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/policies/update-policy', {
+    title: 'How to Update a Policy | CareStream',
+    description: 'How to upload a new version of a policy in CareStream so staff always see current guidance, while previous versions are kept in your history.',
+  })
 }
 
 export default function Page() {

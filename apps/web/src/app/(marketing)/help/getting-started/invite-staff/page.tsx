@@ -1,8 +1,13 @@
 import { HelpArticle, MockStaff } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Inviting Staff to CareStream | CareStream' },
-  description: 'How to invite your care team to CareStream. Add unlimited staff users, choose staff or admin roles, and let everyone ask policy questions from any device.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/getting-started/invite-staff', {
+    title: 'Inviting Staff to CareStream | CareStream',
+    description: 'How to invite your care team to CareStream. Add unlimited staff users, choose staff or admin roles, and let everyone ask policy questions from any device.',
+  })
 }
 
 export default function Page() {

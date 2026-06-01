@@ -1,8 +1,13 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'How Data Isolation Works | CareStream' },
-  description: 'How CareStream keeps your account separate from every other organisation, so your policies and activity stay private and are never used to train AI.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/security/data-isolation', {
+    title: 'How Data Isolation Works | CareStream',
+    description: 'How CareStream keeps your account separate from every other organisation, so your policies and activity stay private and are never used to train AI.',
+  })
 }
 
 export default function Page() {

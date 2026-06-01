@@ -1,8 +1,13 @@
 import { HelpArticle, MockDashboard } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Setting Up Your CareStream Account | CareStream' },
-  description: 'How to set up your CareStream account after you sign up. Sign in, add your care home details, upload a policy and invite your team in minutes.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/getting-started/account-setup', {
+    title: 'Setting Up Your CareStream Account | CareStream',
+    description: 'How to set up your CareStream account after you sign up. Sign in, add your care home details, upload a policy and invite your team in minutes.',
+  })
 }
 
 export default function Page() {

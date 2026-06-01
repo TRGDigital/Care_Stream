@@ -1,8 +1,13 @@
 import { HelpArticle, MockDashboard } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'What Your 14 Day Trial Includes | CareStream' },
-  description: 'What your free CareStream trial includes. Full access to every feature, unlimited staff users and unlimited policy uploads for 14 days, no card needed.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/getting-started/trial', {
+    title: 'What Your 14 Day Trial Includes | CareStream',
+    description: 'What your free CareStream trial includes. Full access to every feature, unlimited staff users and unlimited policy uploads for 14 days, no card needed.',
+  })
 }
 
 export default function Page() {

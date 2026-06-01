@@ -1,8 +1,13 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Policy Version History and Archiving | CareStream' },
-  description: 'How CareStream keeps a history of every policy version and how to archive policies you no longer use, giving you a clear record for CQC.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/policies/versioning', {
+    title: 'Policy Version History and Archiving | CareStream',
+    description: 'How CareStream keeps a history of every policy version and how to archive policies you no longer use, giving you a clear record for CQC.',
+  })
 }
 
 export default function Page() {

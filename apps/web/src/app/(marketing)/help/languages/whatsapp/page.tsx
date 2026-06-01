@@ -1,8 +1,13 @@
 import { HelpArticle, MockWhatsApp } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Using CareStream on WhatsApp | CareStream' },
-  description: 'How staff ask policy questions on WhatsApp and get an answer back in the same chat, in their own language, drawn from your own policies.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/whatsapp', {
+    title: 'Using CareStream on WhatsApp | CareStream',
+    description: 'How staff ask policy questions on WhatsApp and get an answer back in the same chat, in their own language, drawn from your own policies.',
+  })
 }
 
 export default function Page() {

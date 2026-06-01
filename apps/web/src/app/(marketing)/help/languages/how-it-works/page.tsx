@@ -1,8 +1,13 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'How Multilingual Support Works | CareStream' },
-  description: 'How CareStream lets staff ask questions in their own language and receive answers in that same language, all drawn from your own policies.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/how-it-works', {
+    title: 'How Multilingual Support Works | CareStream',
+    description: 'How CareStream lets staff ask questions in their own language and receive answers in that same language, all drawn from your own policies.',
+  })
 }
 
 export default function Page() {

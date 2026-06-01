@@ -1,8 +1,13 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Data Retention and Deletion | CareStream' },
-  description: 'How CareStream handles data retention and deletion. You stay in control of your information, including how long it is kept and how it can be removed.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/security/retention', {
+    title: 'Data Retention and Deletion | CareStream',
+    description: 'How CareStream handles data retention and deletion. You stay in control of your information, including how long it is kept and how it can be removed.',
+  })
 }
 
 export default function Page() {

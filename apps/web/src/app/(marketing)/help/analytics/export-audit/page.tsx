@@ -1,8 +1,13 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Exporting Your Audit Log | CareStream' },
-  description: 'How to export your CareStream audit log for a chosen period, giving you a clear record of activity for governance and for CQC inspection.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/analytics/export-audit', {
+    title: 'Exporting Your Audit Log | CareStream',
+    description: 'How to export your CareStream audit log for a chosen period, giving you a clear record of activity for governance and for CQC inspection.',
+  })
 }
 
 export default function Page() {

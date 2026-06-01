@@ -1,8 +1,13 @@
 import { HelpArticle, MockGaps } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'How Policy Gap Detection Works | CareStream' },
-  description: 'How CareStream highlights staff questions your current policies do not yet answer, with a coverage score, so you know which policies to add next.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/analytics/gap-detection', {
+    title: 'How Policy Gap Detection Works | CareStream',
+    description: 'How CareStream highlights staff questions your current policies do not yet answer, with a coverage score, so you know which policies to add next.',
+  })
 }
 
 export default function Page() {

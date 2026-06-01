@@ -1,8 +1,13 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Cancelling Your Subscription | CareStream' },
-  description: 'How to cancel your CareStream subscription. There is no long lock in. You keep access until the end of your billing period and will not be charged again.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/billing/cancel', {
+    title: 'Cancelling Your Subscription | CareStream',
+    description: 'How to cancel your CareStream subscription. There is no long lock in. You keep access until the end of your billing period and will not be charged again.',
+  })
 }
 
 export default function Page() {

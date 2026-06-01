@@ -1,8 +1,13 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Updating Payment Details | CareStream' },
-  description: 'How to update your payment details in CareStream so your service continues without interruption. Your details are handled securely.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/billing/payment-details', {
+    title: 'Updating Payment Details | CareStream',
+    description: 'How to update your payment details in CareStream so your service continues without interruption. Your details are handled securely.',
+  })
 }
 
 export default function Page() {

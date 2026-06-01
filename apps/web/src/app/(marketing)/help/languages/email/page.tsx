@@ -1,8 +1,13 @@
 import { HelpArticle, MockEmail } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Asking Questions by Email | CareStream' },
-  description: 'How staff ask policy questions by email and receive an answer back in the same thread, in their own language, with the source policy noted.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/email', {
+    title: 'Asking Questions by Email | CareStream',
+    description: 'How staff ask policy questions by email and receive an answer back in the same thread, in their own language, with the source policy noted.',
+  })
 }
 
 export default function Page() {

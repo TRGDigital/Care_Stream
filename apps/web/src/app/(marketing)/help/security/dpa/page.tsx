@@ -1,8 +1,13 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Requesting Your Data Processing Agreement | CareStream' },
-  description: 'What a Data Processing Agreement covers and how to request your copy from CareStream. Available to every subscriber at no extra cost.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/security/dpa', {
+    title: 'Requesting Your Data Processing Agreement | CareStream',
+    description: 'What a Data Processing Agreement covers and how to request your copy from CareStream. Available to every subscriber at no extra cost.',
+  })
 }
 
 export default function Page() {

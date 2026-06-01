@@ -1,8 +1,13 @@
 import { HelpArticle, MockBilling } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Changing Your Plan | CareStream' },
-  description: 'How to switch between CareStream plans at any time. Your staff and policies stay exactly as they are, and you keep unlimited staff users on every plan.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/billing/change-plan', {
+    title: 'Changing Your Plan | CareStream',
+    description: 'How to switch between CareStream plans at any time. Your staff and policies stay exactly as they are, and you keep unlimited staff users on every plan.',
+  })
 }
 
 export default function Page() {

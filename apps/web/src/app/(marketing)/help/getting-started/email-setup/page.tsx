@@ -1,8 +1,13 @@
 import { HelpArticle, MockEmailSettings } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Setting Up Email Access | CareStream' },
-  description: 'How to switch on email access in CareStream so staff can ask policy questions by email and receive an answer back in the same thread.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/getting-started/email-setup', {
+    title: 'Setting Up Email Access | CareStream',
+    description: 'How to switch on email access in CareStream so staff can ask policy questions by email and receive an answer back in the same thread.',
+  })
 }
 
 export default function Page() {

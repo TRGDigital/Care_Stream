@@ -1,8 +1,13 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'How Staff Access CareStream | CareStream' },
-  description: 'How your care team uses CareStream from any device with nothing to download. Staff sign in, then ask policy questions by web chat or email.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/staff-access', {
+    title: 'How Staff Access CareStream | CareStream',
+    description: 'How your care team uses CareStream from any device with nothing to download. Staff sign in, then ask policy questions by web chat or email.',
+  })
 }
 
 export default function Page() {

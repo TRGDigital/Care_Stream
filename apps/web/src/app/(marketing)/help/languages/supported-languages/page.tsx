@@ -1,8 +1,13 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Which Languages Are Supported | CareStream' },
-  description: 'CareStream supports the languages spoken across UK care teams, including English, Polish, Romanian, Portuguese, Tagalog and many more.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/supported-languages', {
+    title: 'Which Languages Are Supported | CareStream',
+    description: 'CareStream supports the languages spoken across UK care teams, including English, Polish, Romanian, Portuguese, Tagalog and many more.',
+  })
 }
 
 export default function Page() {

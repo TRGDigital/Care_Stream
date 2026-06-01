@@ -1,8 +1,13 @@
 import { HelpArticle, MockPolicyLibrary } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Organising Your Policy Library | CareStream' },
-  description: 'How to keep your CareStream policy library tidy with clear categories and names, so staff find what they need and you can spot any gaps.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/policies/organising', {
+    title: 'Organising Your Policy Library | CareStream',
+    description: 'How to keep your CareStream policy library tidy with clear categories and names, so staff find what they need and you can spot any gaps.',
+  })
 }
 
 export default function Page() {

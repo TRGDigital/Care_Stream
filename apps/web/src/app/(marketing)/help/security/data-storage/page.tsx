@@ -1,8 +1,13 @@
 import { HelpArticle, MockSecurity } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Where Is Our Data Stored | CareStream' },
-  description: 'Where your CareStream data is stored. Your information is kept within the UK and EEA, is private to your organisation, and is never used to train AI.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/security/data-storage', {
+    title: 'Where Is Our Data Stored | CareStream',
+    description: 'Where your CareStream data is stored. Your information is kept within the UK and EEA, is private to your organisation, and is never used to train AI.',
+  })
 }
 
 export default function Page() {

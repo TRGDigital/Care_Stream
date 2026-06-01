@@ -1,8 +1,13 @@
 import { HelpArticle, MockChat } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Email or Web Chat, Which to Use | CareStream' },
-  description: 'Your team can ask CareStream questions by web chat or email. Both give the same answers from your policies, so staff can pick what suits them.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/languages/channels', {
+    title: 'Email or Web Chat, Which to Use | CareStream',
+    description: 'Your team can ask CareStream questions by web chat or email. Both give the same answers from your policies, so staff can pick what suits them.',
+  })
 }
 
 export default function Page() {

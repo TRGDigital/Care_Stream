@@ -1,8 +1,13 @@
 import { HelpArticle, MockUpload } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Uploading Your First Policy | CareStream' },
-  description: 'How to upload a policy to CareStream so your whole team can ask questions about it. Supports PDF, Word and plain text documents.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/getting-started/upload-policy', {
+    title: 'Uploading Your First Policy | CareStream',
+    description: 'How to upload a policy to CareStream so your whole team can ask questions about it. Supports PDF, Word and plain text documents.',
+  })
 }
 
 export default function Page() {

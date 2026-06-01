@@ -1,8 +1,13 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Understanding Language Analytics | CareStream' },
-  description: 'How CareStream language analytics show which languages your team asks in, helping you understand your workforce and show you support a diverse team.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/analytics/language-analytics', {
+    title: 'Understanding Language Analytics | CareStream',
+    description: 'How CareStream language analytics show which languages your team asks in, helping you understand your workforce and show you support a diverse team.',
+  })
 }
 
 export default function Page() {

@@ -1,8 +1,13 @@
 import { HelpArticle, MockAnalytics } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Understanding Your Analytics Dashboard | CareStream' },
-  description: 'How to read your CareStream analytics dashboard. See how often staff ask questions, which policies they need most, and which channels and languages they use.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/analytics/dashboard', {
+    title: 'Understanding Your Analytics Dashboard | CareStream',
+    description: 'How to read your CareStream analytics dashboard. See how often staff ask questions, which policies they need most, and which channels and languages they use.',
+  })
 }
 
 export default function Page() {

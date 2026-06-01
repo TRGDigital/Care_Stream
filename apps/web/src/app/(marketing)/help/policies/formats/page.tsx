@@ -1,8 +1,13 @@
 import { HelpArticle, MockUpload } from '@/components/marketing/help'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: { absolute: 'Supported Document Formats | CareStream' },
-  description: 'The document types you can upload to CareStream, including PDF, Word and plain text, plus tips for getting the best results from your policies.',
+export const revalidate = 60
+
+export async function generateMetadata() {
+  return pageMetadata('/help/policies/formats', {
+    title: 'Supported Document Formats | CareStream',
+    description: 'The document types you can upload to CareStream, including PDF, Word and plain text, plus tips for getting the best results from your policies.',
+  })
 }
 
 export default function Page() {

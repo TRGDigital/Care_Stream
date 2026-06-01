@@ -76,7 +76,7 @@ function Hero() {
             </div>
 
             <h1 className="mb-6 text-5xl font-extrabold leading-[1.08] tracking-tight text-white md:text-6xl lg:text-[62px]">
-              <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
+              Your <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
               <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
             </h1>
 

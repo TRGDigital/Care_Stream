@@ -705,7 +705,7 @@ function CareSectorAiSection() {
     { label: 'CQC Staff Questions', pos: 'right-2 top-[55%]' },
   ]
   return (
-    <section className="bg-white py-24">
+    <section className="bg-white pt-12 pb-24">
       <div className="mx-auto max-w-content px-6">
         <div className="overflow-hidden rounded-3xl bg-[#e8f1fc] p-8 md:p-12 lg:p-14">
           <div className="grid items-center gap-10 md:grid-cols-2">

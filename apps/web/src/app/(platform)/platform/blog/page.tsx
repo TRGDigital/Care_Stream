@@ -298,16 +298,24 @@ function PostForm({
   saving:     boolean
   saveError:  string
 }) {
-  const [form, setForm] = useState<any>(() => ({
-    ...EMPTY_POST,
-    ...(initial ?? {}),
-    publication_date: initial?.publication_date
+  const [form, setForm] = useState<any>(() => {
+    const merged: any = { ...EMPTY_POST, ...(initial ?? {}) }
+    // The DB returns null for unset optional fields (meta_title, special_message,
+    // cta_url, etc.). Restore the empty-string defaults so inputs stay controlled
+    // and direct .length access (e.g. char counters) never hits null.
+    for (const k of Object.keys(EMPTY_POST)) {
+      if (typeof (EMPTY_POST as any)[k] === 'string' && merged[k] == null) {
+        merged[k] = (EMPTY_POST as any)[k]
+      }
+    }
+    merged.publication_date = initial?.publication_date
       ? new Date(initial.publication_date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0],
-    faqs: (initial?.faqs && Array.isArray(initial.faqs) && initial.faqs.length > 0)
+      : new Date().toISOString().split('T')[0]
+    merged.faqs = (initial?.faqs && Array.isArray(initial.faqs) && initial.faqs.length > 0)
       ? initial.faqs
-      : EMPTY_FAQS,
-  }))
+      : EMPTY_FAQS
+    return merged
+  })
   const set    = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
   const setFaq = (i: number, field: 'question' | 'answer', val: string) =>
     set('faqs', (form.faqs as any[]).map((f, idx) => idx === i ? { ...f, [field]: val } : f))

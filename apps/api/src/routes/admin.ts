@@ -149,31 +149,51 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const now            = new Date()
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const withStats = await Promise.all(
-    tenants.map(async (t: any) => {
-      const [
-        policyCount, handbookCount, knowledgeCount, manualKnowledgeCount,
-        queryCount, activeUserCount, queriesThisMonth, subTenantCount,
-      ] = await Promise.all([
-        (prisma as any).policy.count({ where: { tenant_id: t.id, status: 'active', document_category: 'internal_policy' } }),
-        (prisma as any).policy.count({ where: { tenant_id: t.id, status: 'active', document_category: 'staff_handbook' } }),
-        (prisma as any).knowledgeEntry.count({ where: { tenant_id: t.id } }),
-        (prisma as any).knowledgeEntry.count({ where: { tenant_id: t.id, source_type: 'manual' } }),
-        (prisma as any).queryRecord.count({ where: { tenant_id: t.id } }),
-        (prisma as any).user.count({ where: { tenant_id: t.id, is_active: true } }),
-        (prisma as any).queryRecord.count({ where: { tenant_id: t.id, created_at: { gte: thisMonthStart } } }),
-        (prisma as any).tenant.count({ where: { parent_tenant_id: t.id } }),
-      ])
-      return {
-        ...t,
-        stats: {
-          policyCount, handbookCount, knowledgeCount, manualKnowledgeCount,
-          queryCount, activeUserCount, queriesThisMonth,
-        },
-        sub_tenant_count: subTenantCount,
-      }
-    })
-  )
+  // Aggregate stats for ALL tenants in a few grouped queries instead of 8 counts
+  // per tenant (was 8×N round-trips → 7 total).
+  const [
+    policyGroups, knowledgeAll, knowledgeManual, queryAll, queryMonth, activeUsers, subTenants,
+  ] = await Promise.all([
+    (prisma as any).policy.groupBy({ by: ['tenant_id', 'document_category'], where: { status: 'active' }, _count: { _all: true } }),
+    (prisma as any).knowledgeEntry.groupBy({ by: ['tenant_id'], _count: { _all: true } }),
+    (prisma as any).knowledgeEntry.groupBy({ by: ['tenant_id'], where: { source_type: 'manual' }, _count: { _all: true } }),
+    (prisma as any).queryRecord.groupBy({ by: ['tenant_id'], _count: { _all: true } }),
+    (prisma as any).queryRecord.groupBy({ by: ['tenant_id'], where: { created_at: { gte: thisMonthStart } }, _count: { _all: true } }),
+    (prisma as any).user.groupBy({ by: ['tenant_id'], where: { is_active: true }, _count: { _all: true } }),
+    (prisma as any).tenant.groupBy({ by: ['parent_tenant_id'], where: { parent_tenant_id: { not: null } }, _count: { _all: true } }),
+  ])
+
+  const policyByTenant = new Map<string, { internal: number; handbook: number }>()
+  for (const g of policyGroups as any[]) {
+    const e = policyByTenant.get(g.tenant_id) ?? { internal: 0, handbook: 0 }
+    if (g.document_category === 'internal_policy') e.internal = g._count._all
+    else if (g.document_category === 'staff_handbook') e.handbook = g._count._all
+    policyByTenant.set(g.tenant_id, e)
+  }
+  const toMap = (arr: any[], key = 'tenant_id') => new Map<string, number>(arr.map((g: any) => [g[key], g._count._all]))
+  const knowledgeMap  = toMap(knowledgeAll as any[])
+  const manualMap     = toMap(knowledgeManual as any[])
+  const queryMap      = toMap(queryAll as any[])
+  const queryMonthMap = toMap(queryMonth as any[])
+  const usersMap      = toMap(activeUsers as any[])
+  const subTenantMap  = toMap(subTenants as any[], 'parent_tenant_id')
+
+  const withStats = tenants.map((t: any) => {
+    const p = policyByTenant.get(t.id) ?? { internal: 0, handbook: 0 }
+    return {
+      ...t,
+      stats: {
+        policyCount:          p.internal,
+        handbookCount:        p.handbook,
+        knowledgeCount:       knowledgeMap.get(t.id)     ?? 0,
+        manualKnowledgeCount: manualMap.get(t.id)        ?? 0,
+        queryCount:           queryMap.get(t.id)         ?? 0,
+        activeUserCount:      usersMap.get(t.id)         ?? 0,
+        queriesThisMonth:     queryMonthMap.get(t.id)    ?? 0,
+      },
+      sub_tenant_count: subTenantMap.get(t.id) ?? 0,
+    }
+  })
 
   ok(res, { tenants: withStats, total: withStats.length })
 })

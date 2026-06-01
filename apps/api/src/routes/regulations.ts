@@ -35,6 +35,9 @@ regulationsRouter.get('/', async (req: Request, res: Response) => {
       (prisma as any).externalRegulation.count({ where: { is_active: true } }),
     ])
 
+    // Platform-synced reference data, identical for everyone and rarely changing.
+    // Behind auth, so private (per-browser) caching only.
+    res.setHeader('Cache-Control', 'private, max-age=300')
     ok(res, {
       items,
       pagination: {
@@ -66,6 +69,7 @@ regulationsRouter.get('/:key', async (req: Request, res: Response) => {
       return
     }
 
+    res.setHeader('Cache-Control', 'private, max-age=300')
     ok(res, regulation)
   } catch (e) {
     console.error('[regulations/get] Failed:', e)

@@ -1114,27 +1114,30 @@ auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: R
   })
   if (!run) return err(res, 'NOT_FOUND', 'In-progress audit run not found', 404)
 
-  // Upsert each answer
-  for (const a of answers) {
-    await (prisma as any).auditAnswer.upsert({
-      where:  { run_id_question_id: { run_id: run.id, question_id: a.question_id } },
-      create: {
-        run_id:       run.id,
-        question_id:  a.question_id,
-        answer_yn:    a.answer_yn    ?? null,
-        answer_na:    a.answer_na    ?? false,
-        outcome_text: a.outcome_text ?? null,
-        actions_text: a.actions_text ?? null,
-      },
-      update: {
-        ...(a.answer_yn    !== undefined && { answer_yn:    a.answer_yn }),
-        ...(a.answer_na    !== undefined && { answer_na:    a.answer_na }),
-        ...(a.outcome_text !== undefined && { outcome_text: a.outcome_text }),
-        ...(a.actions_text !== undefined && { actions_text: a.actions_text }),
-        answered_at: new Date(),
-      },
-    })
-  }
+  // Upsert all answers in a single transaction — one round-trip, atomic
+  // (no half-saved audit state) instead of N sequential awaits.
+  await (prisma as any).$transaction(
+    answers.map((a: any) =>
+      (prisma as any).auditAnswer.upsert({
+        where:  { run_id_question_id: { run_id: run.id, question_id: a.question_id } },
+        create: {
+          run_id:       run.id,
+          question_id:  a.question_id,
+          answer_yn:    a.answer_yn    ?? null,
+          answer_na:    a.answer_na    ?? false,
+          outcome_text: a.outcome_text ?? null,
+          actions_text: a.actions_text ?? null,
+        },
+        update: {
+          ...(a.answer_yn    !== undefined && { answer_yn:    a.answer_yn }),
+          ...(a.answer_na    !== undefined && { answer_na:    a.answer_na }),
+          ...(a.outcome_text !== undefined && { outcome_text: a.outcome_text }),
+          ...(a.actions_text !== undefined && { actions_text: a.actions_text }),
+          answered_at: new Date(),
+        },
+      })
+    )
+  )
 
   ok(res, { saved: answers.length })
 })

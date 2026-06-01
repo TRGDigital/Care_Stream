@@ -1884,7 +1884,7 @@ function buildPageData(body: any) {
   const {
     title, description, og_title, og_description, og_image_url,
     is_footer_page, footer_group, footer_label, footer_sort,
-    page_type, status,
+    page_type, status, faqs,
   } = body ?? {}
   return {
     ...(title          !== undefined && { title:          title?.trim() ?? ''          }),
@@ -1898,7 +1898,16 @@ function buildPageData(body: any) {
     ...(footer_sort    !== undefined && { footer_sort:    Number(footer_sort) || 0     }),
     ...(page_type      !== undefined && { page_type:      page_type || 'marketing'     }),
     ...(status         !== undefined && { status:         status || 'published'        }),
+    ...(faqs           !== undefined && { faqs:           normaliseFaqs(faqs)          }),
   }
+}
+
+// Keep only well-formed { question, answer } pairs with content on both sides.
+function normaliseFaqs(faqs: any): Array<{ question: string; answer: string }> {
+  if (!Array.isArray(faqs)) return []
+  return faqs
+    .map((f: any) => ({ question: String(f?.question ?? '').trim(), answer: String(f?.answer ?? '').trim() }))
+    .filter((f: { question: string; answer: string }) => f.question && f.answer)
 }
 
 function buildPostData(body: any) {

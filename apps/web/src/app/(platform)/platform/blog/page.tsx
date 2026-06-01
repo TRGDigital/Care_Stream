@@ -745,7 +745,60 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
 const EMPTY_PAGE: Partial<SitePage> & { path: string } = {
   path: '', title: '', description: null, og_title: null, og_description: null, og_image_url: null,
   is_footer_page: false, footer_group: null, footer_label: null, footer_sort: 0,
-  page_type: 'marketing', status: 'published',
+  page_type: 'marketing', status: 'published', faqs: [],
+}
+
+function FaqEditor({
+  faqs, onChange,
+}: {
+  faqs: Array<{ question: string; answer: string }>
+  onChange: (faqs: Array<{ question: string; answer: string }>) => void
+}) {
+  const items = Array.isArray(faqs) ? faqs : []
+  const update = (i: number, key: 'question' | 'answer', val: string) =>
+    onChange(items.map((f, idx) => (idx === i ? { ...f, [key]: val } : f)))
+  const add = () => onChange([...items, { question: '', answer: '' }])
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir
+    if (j < 0 || j >= items.length) return
+    const next = items.slice()
+    const tmp = next[i]; next[i] = next[j]; next[j] = tmp
+    onChange(next)
+  }
+  return (
+    <div className="space-y-3">
+      {items.length === 0 && (
+        <p className="text-xs text-neutral-mid">No FAQs yet. Click Add FAQ to create your first question.</p>
+      )}
+      {items.map((f, i) => (
+        <div key={i} className="rounded-lg border border-gray-200 bg-white p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-neutral-mid">FAQ {i + 1}</span>
+            <div className="flex items-center gap-1 text-xs">
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↑</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↓</button>
+              <button type="button" onClick={() => remove(i)} className="rounded px-2 py-0.5 font-medium text-red-600 hover:bg-red-50">Remove</button>
+            </div>
+          </div>
+          <input
+            value={f.question}
+            onChange={(e) => update(i, 'question', e.target.value)}
+            placeholder="Question"
+            className="mb-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+          />
+          <textarea
+            value={f.answer}
+            onChange={(e) => update(i, 'answer', e.target.value)}
+            rows={3}
+            placeholder="Answer"
+            className="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+          />
+        </div>
+      ))}
+      <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add FAQ</button>
+    </div>
+  )
 }
 
 function PageForm({
@@ -842,6 +895,12 @@ function PageForm({
           </div>
         </div>
       </AccordionSection>
+
+      {form.path === '/' && (
+        <AccordionSection title="Home Page FAQs" description="Questions and answers shown in the FAQ section on the home page" defaultOpen>
+          <FaqEditor faqs={form.faqs ?? []} onChange={(faqs) => set('faqs', faqs)} />
+        </AccordionSection>
+      )}
 
       <AccordionSection title="Footer" description="Control whether this page appears in the site footer">
         <div className="space-y-4">

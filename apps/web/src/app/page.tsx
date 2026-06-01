@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingNav } from '@/components/marketing/nav'
+import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 
 export const metadata: Metadata = {
   title:       'CareStreamAI — AI Policy Access for UK Care Homes',
@@ -1538,7 +1539,40 @@ function FinalCta() {
   )
 }
 
-export default function HomePage() {
+export const revalidate = 60
+
+// Code fallback. The live FAQs are managed in the platform Pages tab (home page),
+// stored on the site_pages row for "/". This list is used only if that is empty.
+const DEFAULT_HOME_FAQS: Faq[] = [
+  { question: 'What is CareStream?', answer: 'CareStream is a tool for UK care providers that lets every member of your team ask questions about your own policies and get a clear answer in seconds, by web chat, email or WhatsApp.' },
+  { question: 'How does CareStream work?', answer: 'You upload your policies once. Your staff can then ask a question in plain language and receive an answer drawn from your own documents, with the source policy shown so they can check it.' },
+  { question: 'Who is CareStream for?', answer: 'It is built for care homes, nursing homes, domiciliary care and other registered care services, and for everyone in the team from new starters to senior managers.' },
+  { question: 'Can staff ask questions in their own language?', answer: 'Yes. Staff can ask in the language they are most comfortable with and receive the answer back in that same language, which is a great help for international teams.' },
+  { question: 'How do staff access CareStream?', answer: 'Staff can use it from any phone, tablet or computer through web chat, by email or on WhatsApp. There is nothing to download.' },
+  { question: 'Will the answers always match our policies?', answer: 'Yes. Answers are based only on the documents you upload, so the guidance staff receive is always your own. The source policy is shown with each answer.' },
+  { question: 'Does CareStream help with CQC inspections?', answer: 'Yes. It records how your team engages with your policies and can produce a CQC Readiness Report, giving you helpful evidence to prepare for inspection.' },
+  { question: 'Is our data kept private and secure?', answer: 'Yes. Your information is private to your organisation, is stored within the UK and EEA, and is never used to train AI models. A Data Processing Agreement is available to every subscriber.' },
+  { question: 'How long does it take to get started?', answer: 'Most homes are up and running the same day. You upload your first policy, invite your team, and staff can begin asking questions straight away.' },
+  { question: 'How much does CareStream cost?', answer: 'Pricing is per home with unlimited staff users, so there are no per user fees. You can start with a free 14 day trial, and no card is needed to begin.' },
+]
+
+async function getHomeFaqs(): Promise<Faq[]> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+  try {
+    const res = await fetch(`${API_URL}/public/site-pages?path=/`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const body = await res.json()
+      const faqs = body?.data?.page?.faqs
+      if (Array.isArray(faqs) && faqs.length > 0) return faqs as Faq[]
+    }
+  } catch {
+    // fall back to the code list below
+  }
+  return DEFAULT_HOME_FAQS
+}
+
+export default async function HomePage() {
+  const faqs = await getHomeFaqs()
   return (
     <div className="flex min-h-screen flex-col">
       <MarketingNav />
@@ -1561,6 +1595,7 @@ export default function HomePage() {
         <PolicyGapsSection />
         <HomeBlogSection />
         <PricingSnapshot />
+        <HomeFaq faqs={faqs} />
         <Testimonials />
         <FinalCta />
       </main>

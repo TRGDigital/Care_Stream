@@ -438,6 +438,7 @@ model SitePage {
   footer_sort    Int      @default(0)
   page_type      String   @default("marketing")            // 'marketing' | 'content'
   status         String   @default("published")
+  faqs           Json     @default("[]")                    // [{ question, answer }] — currently used on the home page only
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 

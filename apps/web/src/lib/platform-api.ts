@@ -170,6 +170,7 @@ export interface SitePage {
   footer_sort:    number
   page_type:      string
   status:         string
+  faqs:           Array<{ question: string; answer: string }>
   created_at:     string
   updated_at:     string
 }

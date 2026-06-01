@@ -71,3 +71,16 @@ export function CookieConsent() {
     </div>
   )
 }
+
+// Re-opens the consent banner so visitors can change their choice. Place in the footer.
+export function CookieSettingsButton({ className }: { className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event('open-cookie-consent'))}
+      className={className}
+    >
+      Cookie settings
+    </button>
+  )
+}

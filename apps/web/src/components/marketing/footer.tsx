@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CookieSettingsButton } from './cookie-consent'
 
 const PRODUCT = [
   { href: '/how-it-works',         label: 'How It Works' },
@@ -97,6 +98,7 @@ export function MarketingFooter() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <CookieSettingsButton className="hover:text-white transition-colors" />
             <a href="mailto:hello@carestreamai.co.uk" className="hover:text-white transition-colors">
               hello@carestreamai.co.uk
             </a>

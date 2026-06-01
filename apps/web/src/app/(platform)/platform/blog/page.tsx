@@ -153,6 +153,39 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
     requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
   }
 
+  // Wrap the selection in a <ul>/<ol>, one <li> per non-empty selected line.
+  function insertList(ordered: boolean) {
+    const el = ref.current
+    if (!el) return
+    const start    = el.selectionStart
+    const end      = el.selectionEnd
+    const selected = value.slice(start, end)
+    const tag      = ordered ? 'ol' : 'ul'
+    const lines    = selected ? selected.split('\n').filter(l => l.trim() !== '') : []
+    const items    = (lines.length ? lines : ['']).map(l => `  <li>${l.trim()}</li>`).join('\n')
+    const insert   = `<${tag}>\n${items}\n</${tag}>`
+    const newVal   = value.slice(0, start) + insert + value.slice(end)
+    const cursor   = start + insert.length
+    onChange(newVal)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
+  }
+
+  // Prompt for a URL + alt text and insert an inline <img>.
+  function insertImage() {
+    const el = ref.current
+    if (!el) return
+    const start  = el.selectionStart
+    const end    = el.selectionEnd
+    const url    = window.prompt('Image URL:', 'https://')
+    if (!url) return
+    const alt    = window.prompt('Alt text (for accessibility & SEO):', '') ?? ''
+    const insert = `<img src="${url}" alt="${alt}" />`
+    const newVal = value.slice(0, start) + insert + value.slice(end)
+    const cursor = start + insert.length
+    onChange(newVal)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor) })
+  }
+
   return (
     <div>
       <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5">
@@ -181,6 +214,19 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
         <button type="button" onClick={insertLink}
           title="Insert link"
           className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">Link</button>
+        <div className="mx-1 h-3.5 w-px bg-gray-300" />
+        <button type="button" onClick={() => insertList(false)}
+          title="Bullet list"
+          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">• List</button>
+        <button type="button" onClick={() => insertList(true)}
+          title="Numbered list"
+          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">1. List</button>
+        <button type="button" onClick={() => wrapSelection('<blockquote>', '</blockquote>')}
+          title="Blockquote"
+          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">❝ Quote</button>
+        <button type="button" onClick={insertImage}
+          title="Insert image"
+          className="rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark">Image</button>
       </div>
       <textarea
         ref={ref}

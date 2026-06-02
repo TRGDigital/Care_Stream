@@ -1886,6 +1886,47 @@ function SystemReference() {
           <RefRow label="Code"              value="components/marketing/cookie-consent.tsx (CookieConsent + CookieSettingsButton), mounted in app/layout.tsx." />
         </div>
       </RefSection>
+
+      {/* SEO — Structured Data (schema.org JSON-LD) */}
+      <RefSection icon={Globe} title="SEO — Structured Data (schema.org JSON-LD)">
+        <p className="leading-relaxed text-neutral-mid">
+          Every public page emits schema.org JSON-LD so Google can build rich results (sitelinks search box,
+          breadcrumbs, FAQ accordions, article cards) and understand the entity behind the site. All builders
+          live in one file and render through a single <code className="text-xs bg-gray-100 px-1 rounded">&lt;JsonLd&gt;</code> component.
+          CareStreamAI is described as a <strong>B2B SaaS (Organization + SoftwareApplication)</strong> — deliberately
+          NOT LocalBusiness/NursingHome, which would be misleading structured data for a software company and an SEO risk.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Site-wide (root layout — every page)</p>
+            <p className="text-neutral-mid">
+              <code className="text-xs bg-gray-100 px-1 rounded">Organization</code> (CareStreamAI Limited, logo, support ContactPoint),
+              <code className="text-xs bg-gray-100 px-1 rounded"> WebSite</code>, and
+              <code className="text-xs bg-gray-100 px-1 rounded"> SiteNavigationElement</code> (the 10 primary nav links).
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Page-specific</p>
+            <p className="text-neutral-mid">
+              Homepage adds <code className="text-xs bg-gray-100 px-1 rounded">WebApplication/SoftwareApplication</code> (HealthApplication
+              category + Starter £49 / Professional £129 Offers) and <code className="text-xs bg-gray-100 px-1 rounded">FAQPage</code>.
+              All marketing pages add <code className="text-xs bg-gray-100 px-1 rounded">BreadcrumbList</code>.
+              <code className="text-xs bg-gray-100 px-1 rounded"> /faq</code> adds FAQPage (all Q&amp;As).
+              Blog articles add <code className="text-xs bg-gray-100 px-1 rounded">BlogPosting</code> (+ FAQPage when the post has FAQs).
+              CMS catch-all pages add FAQPage when the page carries FAQs.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Builders"           value="apps/web/src/lib/schema.ts — organizationSchema, webSiteSchema, siteNavigationSchema, webApplicationSchema, breadcrumbSchema, blogPostingSchema, faqPageSchema" />
+          <RefRow label="Render component"    value="components/json-ld.tsx (<JsonLd>) + components/breadcrumbs-json-ld.tsx (client, derives crumbs from usePathname)" />
+          <RefRow label="Wired in"            value="app/layout.tsx (Org+WebSite+Nav), (marketing)/layout.tsx (Breadcrumbs), app/page.tsx (WebApp+FAQ), blog/[slug], faq, [...slug] catch-all" />
+          <RefRow label="Canonical site URL"  value="https://carestreamai.com (SITE_URL constant) — metadataBase, sitemap, OG and all @id anchors use it" />
+          <RefRow label="Entity type"         value="Organization (SaaS) — NOT LocalBusiness/NursingHome. No address/geo/openingHours (would be misleading for software)." />
+          <RefRow label="Pending real data"   value="Org address (PostalAddress), telephone, and sameAs social URLs are intentionally omitted until supplied — add to organizationSchema() in schema.ts." />
+          <RefRow label="Validate"            value="Test live with Google Rich Results Test (search.google.com/test/rich-results) and Schema.org Validator (validator.schema.org). See QA Testing tab." />
+        </div>
+      </RefSection>
     </div>
   )
 }
@@ -1925,6 +1966,7 @@ const QA_CATEGORIES = [
   'Analytics',
   'Knowledge Base',
   'Policies & Upload',
+  'SEO & Structured Data',
 ] as const
 
 const QA_TESTS: TestItem[] = [
@@ -2639,6 +2681,86 @@ const QA_TESTS: TestItem[] = [
     name: 'Policy versioning',
     steps: 'Upload a revised version of an existing policy.',
     expected: 'Previous version is archived. New version is marked Active and used in subsequent queries.',
+  },
+
+  // ── SEO & Structured Data ────────────────────────────────────────────────────
+  // Tick these off once the live site (carestreamai.com) is serving on its own domain.
+  {
+    id: 'seo-domain-live',
+    category: 'SEO & Structured Data',
+    name: 'Live domain resolves & serves',
+    steps: 'Visit https://carestreamai.com (and https://www.carestreamai.com). Confirm DNS has propagated from GoDaddy and the site loads over HTTPS with a valid certificate.',
+    expected: 'Both apex and www load the marketing site over HTTPS (one redirects to the other consistently). No certificate warning.',
+  },
+  {
+    id: 'seo-org-schema',
+    category: 'SEO & Structured Data',
+    name: 'Organization schema (site-wide)',
+    steps: "View page source on any page and search for application/ld+json. Confirm an Organization block is present (name CareStreamAI, legalName CareStreamAI Limited, logo, support ContactPoint). Or paste the URL into validator.schema.org.",
+    expected: 'Organization JSON-LD is present on every page and validates with no errors. (Address / telephone / sameAs are intentionally absent until supplied.)',
+  },
+  {
+    id: 'seo-website-nav-schema',
+    category: 'SEO & Structured Data',
+    name: 'WebSite + SiteNavigation schema',
+    steps: 'In page source, confirm a WebSite block and a SiteNavigationElement block (listing the 10 primary nav links) are present.',
+    expected: 'Both WebSite and SiteNavigationElement JSON-LD are present site-wide and validate.',
+  },
+  {
+    id: 'seo-webapp-homepage',
+    category: 'SEO & Structured Data',
+    name: 'Homepage WebApplication + FAQ',
+    steps: 'On the homepage, confirm a WebApplication/SoftwareApplication block (HealthApplication category, Starter £49 + Professional £129 Offers) and an FAQPage block are present.',
+    expected: 'Both render. Google Rich Results Test (search.google.com/test/rich-results) detects FAQ rich result eligibility.',
+  },
+  {
+    id: 'seo-breadcrumbs',
+    category: 'SEO & Structured Data',
+    name: 'Breadcrumbs on interior pages',
+    steps: 'Open an interior marketing page (e.g. /pricing) and confirm a BreadcrumbList block (Home › … › Page) is present.',
+    expected: 'BreadcrumbList renders on every marketing page; positions and URLs are correct. Validates in Rich Results Test.',
+  },
+  {
+    id: 'seo-faq-page',
+    category: 'SEO & Structured Data',
+    name: '/faq FAQPage rich result',
+    steps: 'Run /faq through Google Rich Results Test.',
+    expected: 'FAQPage detected with all questions/answers; eligible for the FAQ rich result. No errors.',
+  },
+  {
+    id: 'seo-blogposting',
+    category: 'SEO & Structured Data',
+    name: 'Blog article BlogPosting schema',
+    steps: 'Open any /blog/[slug] article and run it through Rich Results Test. Confirm a BlogPosting block (headline, author, datePublished, publisher) — plus FAQPage if the post has FAQs.',
+    expected: 'BlogPosting (and FAQPage when present) detected and valid. Article eligible for rich results.',
+  },
+  {
+    id: 'seo-no-404s',
+    category: 'SEO & Structured Data',
+    name: 'No broken internal links (404s)',
+    steps: 'Crawl the live site (e.g. Screaming Frog free tier, or browse the nav + footer links). Confirm no internal link returns 404.',
+    expected: 'All internal links resolve (200). The previously-fixed /admin/policies link now points to /policies.',
+  },
+  {
+    id: 'seo-meta-canonical',
+    category: 'SEO & Structured Data',
+    name: 'Meta titles, descriptions & canonical',
+    steps: 'Spot-check key pages (home, pricing, about, a blog post). Confirm each has a unique <title>, meta description, OpenGraph tags, and a canonical URL pointing to https://carestreamai.com.',
+    expected: 'Every page has a unique title + description; OG image renders in a link preview; canonical uses the .com domain.',
+  },
+  {
+    id: 'seo-sitemap-robots',
+    category: 'SEO & Structured Data',
+    name: 'Sitemap & robots.txt',
+    steps: 'Visit /sitemap.xml and /robots.txt on the live domain. Confirm the sitemap lists current pages with .com URLs and robots allows indexing. Submit the sitemap in Google Search Console.',
+    expected: 'Sitemap loads with carestreamai.com URLs; robots.txt allows crawling; sitemap accepted in Search Console.',
+  },
+  {
+    id: 'seo-org-data-complete',
+    category: 'SEO & Structured Data',
+    name: 'Organization real data added',
+    steps: 'Once the postal address, telephone, and social (LinkedIn) URLs are confirmed, add them to organizationSchema() in apps/web/src/lib/schema.ts (address as PostalAddress, telephone, sameAs).',
+    expected: 'Organization schema includes address, telephone and sameAs, and still validates with no errors.',
   },
 ]
 

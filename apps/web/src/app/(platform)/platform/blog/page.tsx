@@ -980,6 +980,13 @@ export default function BlogPage() {
   const [savingPage,  setSavingPage]  = useState(false)
   const [pageError,   setPageError]   = useState('')
   const [pageSearch,  setPageSearch]  = useState('')
+  const pageEditRef = useRef<HTMLDivElement>(null)
+
+  // When a page is opened for editing (including from the Footer Links tab),
+  // scroll the editor into view so it is obvious that it opened.
+  useEffect(() => {
+    if (editPage) pageEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [editPage])
 
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
@@ -1389,6 +1396,21 @@ export default function BlogPage() {
                   />
                 )}
 
+                {editPage && (
+                  <div ref={pageEditRef} className="scroll-mt-4 rounded-xl border-2 border-teal/30 bg-teal-light/10 p-4">
+                    <p className="mb-3 text-sm font-semibold text-neutral-dark">
+                      Editing <span className="font-mono text-teal">{editPage.path}</span>
+                    </p>
+                    <PageForm
+                      initial={editPage}
+                      onSave={savePage}
+                      onCancel={() => setEditPage(null)}
+                      saving={savingPage}
+                      saveError={pageError}
+                    />
+                  </div>
+                )}
+
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   {loading ? (
                     <div className="flex justify-center py-10">
@@ -1398,18 +1420,7 @@ export default function BlogPage() {
                     <div className="divide-y divide-gray-100">
                       {filteredPages.map(page => (
                         <div key={page.path}>
-                          {editPage?.path === page.path ? (
-                            <div className="p-4">
-                              <PageForm
-                                initial={editPage}
-                                onSave={savePage}
-                                onCancel={() => setEditPage(null)}
-                                saving={savingPage}
-                                saveError={pageError}
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-light/50">
+                          <div className={`flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-light/50 ${editPage?.path === page.path ? 'bg-teal-light/30' : ''}`}>
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <Globe size={12} className="shrink-0 text-neutral-mid" />
@@ -1453,7 +1464,6 @@ export default function BlogPage() {
                                 )}
                               </div>
                             </div>
-                          )}
                         </div>
                       ))}
                     </div>

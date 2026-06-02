@@ -5,6 +5,7 @@ import {
   Star, RefreshCw, Moon, ClipboardList, Camera,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { SiteImage } from '@/components/site-image'
 
 export const metadata = {
   title: "Who It's For",
@@ -40,7 +41,7 @@ function SettingImage({ slug, alt }: { slug: string; alt: string }) {
   if (src) {
     return (
       <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-elevated">
-        <img
+        <SiteImage
           src={src}
           alt={alt}
           className="h-full w-full object-cover"

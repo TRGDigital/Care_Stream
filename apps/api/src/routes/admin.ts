@@ -1849,6 +1849,26 @@ adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, r
   }
 })
 
+// ─── Image Alt Tags ───────────────────────────────────────────────────────────
+// Central alt-text management for static site images. Surfaced on the marketing
+// pages via the <SiteImage> component (GET /public/image-alts).
+
+adminRouter.get('/image-alts', async (_req: Request, res: Response) => {
+  const images = await (prisma as any).siteImageAlt.findMany({ orderBy: { src: 'asc' } })
+  ok(res, { images, total: images.length })
+})
+
+adminRouter.put('/image-alts', async (req: Request, res: Response) => {
+  const { src, alt } = req.body ?? {}
+  if (!src?.trim()) { err(res, 'MISSING_SRC', 'src is required.'); return }
+  const image = await (prisma as any).siteImageAlt.upsert({
+    where:  { src: src.trim() },
+    create: { src: src.trim(), alt: (alt ?? '').trim() },
+    update: { alt: (alt ?? '').trim() },
+  })
+  ok(res, { image })
+})
+
 // ─── Site Pages ───────────────────────────────────────────────────────────────
 
 adminRouter.get('/site-pages', async (_req: Request, res: Response) => {

@@ -1868,6 +1868,24 @@ function SystemReference() {
           <RefRow label="Migration"      value="The 6 original hand-coded articles were migrated into the DB and their static files removed; all posts are now editable here." />
         </div>
       </RefSection>
+
+      {/* GDPR / Cookie Consent */}
+      <RefSection icon={Shield} title="GDPR & Cookie Consent">
+        <p className="leading-relaxed text-neutral-mid">
+          The public marketing site shows a GDPR cookie-consent banner on first visit. No tracking
+          loads until the visitor explicitly accepts — this keeps the site compliant with UK GDPR /
+          PECR (consent before non-essential cookies).
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="What it gates"     value="Microsoft Clarity (privacy-friendly analytics: heatmaps + session insight). Nothing else loads without consent." />
+          <RefRow label="Banner behaviour"  value="Shown on first visit. Accept → loads Clarity; Decline → loads nothing. The choice is remembered so the banner doesn't reappear." />
+          <RefRow label="Where the choice is stored" value="Browser localStorage key 'cookie_consent' = 'accepted' | 'declined'. Per-device, no server record (privacy by design)." />
+          <RefRow label="Changing consent"  value="A 'Cookie settings' button (CookieSettingsButton, for the footer) re-opens the banner via the 'open-cookie-consent' window event so visitors can change their mind." />
+          <RefRow label="Cookie Policy"     value="The banner links to /cookies. Keep that page's wording in step with what Clarity collects." />
+          <RefRow label="Config"            value="Set NEXT_PUBLIC_CLARITY_ID in the web project's Vercel env to enable Clarity. Without it, consent is still recorded but no analytics script loads." />
+          <RefRow label="Code"              value="components/marketing/cookie-consent.tsx (CookieConsent + CookieSettingsButton), mounted in app/layout.tsx." />
+        </div>
+      </RefSection>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, uploadBlogImage, type BlogAuthor, type BlogPost, type SitePage } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
+import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
 import {
   Check, ChevronDown, Clock, Globe, Loader2, Pencil, Plus, Trash2, Upload, User, X,
@@ -956,7 +957,7 @@ function PageForm({
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'altTags'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -1154,7 +1155,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6">
-            {(['posts', 'authors', 'pages'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -1164,7 +1165,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : `Pages (${allPages.length})`}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -1507,6 +1508,8 @@ export default function BlogPage() {
             )}
           </div>
         )}
+
+        {tab === 'altTags' && token && <AltTagsPanel token={token} />}
 
       </div>
     </PlatformShell>

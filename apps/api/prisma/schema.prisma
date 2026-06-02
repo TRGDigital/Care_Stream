@@ -445,6 +445,17 @@ model SitePage {
   @@map("site_pages")
 }
 
+// Central alt-text store for static site images (managed in the platform console
+// → Blog → Alt Tags, surfaced on the marketing pages via the SiteImage component).
+model SiteImageAlt {
+  id         String   @id @default(uuid())
+  src        String   @unique
+  alt        String   @default("")
+  updated_at DateTime @updatedAt
+
+  @@map("site_image_alts")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

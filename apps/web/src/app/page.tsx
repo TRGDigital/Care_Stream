@@ -13,6 +13,7 @@ import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
 import { HomeBlogSection } from '@/components/marketing/home-blog-section'
+import { SiteImage } from '@/components/site-image'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
@@ -114,7 +115,7 @@ function Hero() {
 
           <div className="relative lg:pl-4">
             <div className="overflow-hidden rounded-2xl shadow-elevated">
-              <img
+              <SiteImage
                 src="/images/hero.jpg"
                 alt="Care worker reviewing policies on a tablet in a residential care home"
                 className="w-full object-cover"
@@ -338,7 +339,7 @@ function CareSettings() {
               {/* Image card */}
               <div className={`relative mb-5 overflow-hidden rounded-2xl aspect-[4/3] ${image ? '' : `bg-gradient-to-br ${gradient}`}`}>
                 {image ? (
-                  <img
+                  <SiteImage
                     src={image}
                     alt={label}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -423,7 +424,7 @@ function ValueProposition() {
           {/* Right, photo */}
           <div className="relative">
             <div className="overflow-hidden rounded-2xl shadow-elevated">
-              <img
+              <SiteImage
                 src="/images/care-provider-hero.jpg"
                 alt="Care worker using CareStreamAI on a tablet in a residential care home"
                 className="w-full object-cover"
@@ -510,7 +511,7 @@ function GroupLevel() {
 
           {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
-            <img
+            <SiteImage
               src="/images/group-care.jpg"
               alt="Care team delivering group-level care across a residential setting"
               className="w-full object-cover"
@@ -535,7 +536,7 @@ function FreeTrialBand() {
             {/* circular photo */}
             <div className="absolute inset-2 overflow-hidden rounded-full ring-8 ring-[#fce4a3]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <SiteImage
                 src="/images/free-trial.jpg"
                 alt="A care worker chatting warmly with a resident over a cup of tea"
                 className="h-full w-full object-cover"
@@ -628,7 +629,7 @@ function OperateAtScale() {
 
           {/* Right, image */}
           <div className="overflow-hidden rounded-2xl shadow-elevated">
-            <img
+            <SiteImage
               src="/images/operate-at-scale.jpg"
               alt="Care manager reviewing policy compliance on screen"
               className="w-full object-cover"
@@ -797,7 +798,7 @@ function CareSectorAiSection() {
             <div className="relative">
               <div className="relative overflow-hidden rounded-2xl shadow-elevated">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <SiteImage
                   src="/images/care-sector-ai.jpg"
                   alt="A care professional reading policies on a tablet in a care home lounge"
                   className="aspect-[4/3] w-full object-cover"

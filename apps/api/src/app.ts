@@ -21,6 +21,7 @@ import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicPagesRouter } from './routes/pages-public'
+import { publicImageAltsRouter } from './routes/image-alts'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -90,6 +91,9 @@ app.use('/public/blog', publicBlogRouter)
 
 // Public marketing page SEO metadata — published pages only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/site-pages', publicPagesRouter)
+
+// Public alt-text map for static site images, no auth. Must be mounted BEFORE requireAuth.
+app.use('/public/image-alts', publicImageAltsRouter)
 
 // §11.1 — All routes below require a valid JWT + tenant context.
 // apiLimiter: 100 req/min per user.

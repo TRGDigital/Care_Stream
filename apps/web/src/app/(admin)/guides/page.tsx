@@ -718,7 +718,7 @@ export default function HelpPage() {
           <div>
             <p className="text-sm font-semibold text-neutral-dark">Need more help?</p>
             <p className="mt-1 text-sm text-neutral-mid">
-              Contact the CareStream team at <a href="mailto:support@carestreamai.co.uk" className="text-teal underline underline-offset-2 hover:opacity-80">support@carestreamai.co.uk</a>. We typically respond within one business day.
+              Contact the CareStream team at <a href="mailto:support@carestreamai.com" className="text-teal underline underline-offset-2 hover:opacity-80">support@carestreamai.com</a>. We typically respond within one business day.
             </p>
           </div>
         </div>

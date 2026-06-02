@@ -32,19 +32,19 @@ export default function ContactPage() {
                     icon: '✉️',
                     title: 'General enquiries',
                     detail: 'Questions about the product, pricing, or how CareStreamAI would work in your setting.',
-                    email: 'hello@carestreamai.co.uk',
+                    email: 'hello@carestreamai.com',
                   },
                   {
                     icon: '⚖️',
                     title: 'Data protection and legal',
                     detail: 'UK GDPR enquiries, DPA requests, and legal correspondence.',
-                    email: 'dpo@carestreamai.co.uk',
+                    email: 'dpo@carestreamai.com',
                   },
                   {
                     icon: '🛠️',
                     title: 'Technical support',
                     detail: 'For existing subscribers, login issues, upload problems, or anything not working as expected.',
-                    email: 'support@carestreamai.co.uk',
+                    email: 'support@carestreamai.com',
                   },
                 ].map(({ icon, title, detail, email }) => (
                   <div key={title} className="card-lift flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-card">

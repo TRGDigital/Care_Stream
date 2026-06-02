@@ -128,8 +128,8 @@ export async function MarketingFooter() {
           </div>
           <div className="flex items-center gap-4">
             <CookieSettingsButton className="hover:text-white transition-colors" />
-            <a href="mailto:hello@carestreamai.co.uk" className="hover:text-white transition-colors">
-              hello@carestreamai.co.uk
+            <a href="mailto:hello@carestreamai.com" className="hover:text-white transition-colors">
+              hello@carestreamai.com
             </a>
             <a
               href="https://linkedin.com"

@@ -60,8 +60,12 @@ export function AltTagsPanel({ token }: { token: string }) {
           const dirty = (drafts[img.src] ?? '') !== img.alt
           return (
             <div key={img.src} className="flex items-center gap-4 p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.src} alt={drafts[img.src] ?? ''} className="h-14 w-20 shrink-0 rounded border bg-neutral-light object-cover" />
+              {/\.(jpe?g|png|webp|gif|svg)$/i.test(img.src) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img.src} alt={drafts[img.src] ?? ''} className="h-14 w-20 shrink-0 rounded border bg-neutral-light object-cover" />
+              ) : (
+                <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded border bg-neutral-light text-[10px] font-semibold uppercase tracking-wide text-neutral-mid">Mock-up</div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="mb-1 truncate font-mono text-xs text-neutral-mid">{img.src}</p>
                 <div className="flex gap-2">

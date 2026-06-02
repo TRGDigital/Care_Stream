@@ -6,6 +6,7 @@
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { SiteImage } from '@/components/site-image'
 import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
@@ -127,7 +128,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
       <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
         {/* Logo */}
         <div className="border-b border-white/10 px-5 pb-5 pt-6">
-          <img src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
+          <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
           <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
             Admin Portal
           </p>

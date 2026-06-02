@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
+import { useImageAlt } from '@/components/alt-map-provider'
 
 export { MOCKUPS } from './mockup-data'
 
@@ -15,6 +16,8 @@ export function Mockup({ src, nativeWidth = 960, nativeHeight = 680, className =
   const containerRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [scale, setScale] = useState<number | null>(null)
+  // Editable in the console → Blog → Alt Tags (keyed by the mock-up's src).
+  const title = useImageAlt(src, 'Product mockup')
 
   useEffect(() => {
     const el = containerRef.current
@@ -50,7 +53,7 @@ export function Mockup({ src, nativeWidth = 960, nativeHeight = 680, className =
         <iframe
           ref={iframeRef}
           scrolling="no"
-          title="Product mockup"
+          title={title}
           style={{
             width: nativeWidth,
             height: nativeHeight,

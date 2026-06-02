@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { CookieSettingsButton } from './cookie-consent'
+import { SiteImage } from '@/components/site-image'
 
 const PRODUCT = [
   { href: '/how-it-works',         label: 'How It Works' },
@@ -44,7 +45,7 @@ export function MarketingFooter() {
         {/* Brand + tagline */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <img src="/logo-white.png" alt="CareStreamAI" className="h-10 w-auto" />
+            <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-10 w-auto" />
             <p className="mt-1 text-sm italic text-gray-400">Policy access for every voice in your team.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

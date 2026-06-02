@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { CheckCircle2, Mail, Mic, MessageSquare } from 'lucide-react'
+import { SiteImage } from '@/components/site-image'
 
 const CHANNELS = [
   { label: 'Chat',      icon: <MessageSquare size={13} />, bg: 'bg-white/15' },
@@ -48,10 +49,9 @@ export function AuthRightPanel() {
     <div className="relative hidden flex-col overflow-hidden bg-teal lg:flex lg:w-[54%]">
 
       {/* Background photo */}
-      <img
+      <SiteImage
         src={imageSrc}
         alt=""
-        aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
 

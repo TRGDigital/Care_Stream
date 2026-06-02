@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import { SiteImage } from '@/components/site-image'
 import {
   Menu, X, ChevronDown,
   GraduationCap, Users, ClipboardList, Shield, HelpCircle, RefreshCw, MessageSquare, FileText,
@@ -123,7 +124,7 @@ export function MarketingNav() {
       <div className="mx-auto flex h-[72px] max-w-content items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex flex-shrink-0 items-center gap-2">
-          <img src="/logo-color.png" alt="CareStreamAI" className="h-14 w-auto" />
+          <SiteImage src="/logo-color.png" alt="CareStreamAI" className="h-14 w-auto" />
         </Link>
 
         {/* Desktop nav */}

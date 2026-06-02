@@ -1,4 +1,6 @@
-import { getSiteAltMap } from '@/lib/image-alts'
+'use client'
+
+import { useImageAlt } from './alt-map-provider'
 
 type SiteImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'alt'> & {
   src: string
@@ -6,12 +8,12 @@ type SiteImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'alt'> & {
   alt?: string
 }
 
-// Async Server Component. Renders a plain <img> but pulls its alt text from the
-// central store (platform console → Blog → Alt Tags), so editing an alt there is
-// reflected in the server-rendered HTML (good for SEO). Falls back to the alt prop.
-export async function SiteImage({ src, alt = '', ...rest }: SiteImageProps) {
-  const map = await getSiteAltMap()
-  const resolved = map[src] || alt
+// Renders a plain <img> but pulls its alt text from the central store via context
+// (provided by the marketing/auth layout). Works in both server and client
+// component trees, and the alt is present during SSR so it's in the HTML for SEO.
+// Manage the values in the platform console → Blog → Alt Tags.
+export function SiteImage({ src, alt = '', ...rest }: SiteImageProps) {
+  const resolved = useImageAlt(src, alt)
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={resolved} {...rest} />
 }

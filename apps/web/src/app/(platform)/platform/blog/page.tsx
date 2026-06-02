@@ -897,8 +897,8 @@ function PageForm({
         </div>
       </AccordionSection>
 
-      {form.page_type === 'content' && (
-        <AccordionSection title="Page Content" description="The body shown on this page. Set Page Type to Content to use it (e.g. legal pages)." defaultOpen>
+      {form.path !== '/' && (
+        <AccordionSection title="Page Content" description="The body shown on this page. Used for pages without a coded layout, such as legal and agreement pages." defaultOpen>
           <RichEditor
             value={form.content ?? ''}
             onChange={(v) => set('content', v)}

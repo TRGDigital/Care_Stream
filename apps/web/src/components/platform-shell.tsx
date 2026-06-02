@@ -38,7 +38,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 items-center border-b border-gray-200 px-5">
           <Link href="/platform/dashboard" className="flex flex-col gap-0.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.svg" alt="CareStreamAI" className="h-6 w-auto" />
+            <img src="/logo-color.svg" alt="CareStreamAI" className="h-9 w-auto" />
             <span className="text-xs text-neutral-mid">Platform Console</span>
           </Link>
         </div>

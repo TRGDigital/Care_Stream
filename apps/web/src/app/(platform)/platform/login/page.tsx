@@ -30,9 +30,10 @@ export default function PlatformLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-light p-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-teal">CareStreamAI</h1>
-          <p className="mt-1 text-sm text-neutral-mid">Platform owner access</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-color.svg" alt="CareStreamAI" className="h-14 w-auto" />
+          <p className="mt-3 text-sm text-neutral-mid">Platform owner access</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -8,6 +8,17 @@ import { ok, err } from '../lib/response'
 
 export const publicPagesRouter = Router()
 
+// GET /public/site-pages/footer — published pages flagged to show in the site footer
+publicPagesRouter.get('/footer', async (_req: Request, res: Response) => {
+  const pages = await (prisma as any).sitePage.findMany({
+    where:   { is_footer_page: true, status: 'published' },
+    select:  { path: true, title: true, footer_group: true, footer_label: true, footer_sort: true },
+    orderBy: { footer_sort: 'asc' },
+  })
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  ok(res, { pages })
+})
+
 // GET /public/site-pages?path=/help/... — SEO meta for a single published page
 publicPagesRouter.get('/', async (req: Request, res: Response) => {
   const path = String(req.query.path ?? '').trim()

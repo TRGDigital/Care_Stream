@@ -37,7 +37,40 @@ const GET_STARTED = [
   { href: '/help',     label: 'Help Centre' },
 ]
 
-export function MarketingFooter() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+const STATIC_GROUPS: Array<{ heading: string; links: Array<{ href: string; label: string }> }> = [
+  { heading: 'Product',       links: PRODUCT },
+  { heading: 'Trust & Legal', links: TRUST },
+  { heading: 'Company',       links: COMPANY },
+  { heading: 'Get Started',   links: GET_STARTED },
+]
+
+interface FooterPage { path: string; title: string; footer_group: string | null; footer_label: string | null; footer_sort: number }
+
+// CMS-managed footer links (Pages tab → "Show in footer navigation") are merged
+// into the static groups below, so new pages appear without a code change.
+async function getFooterPages(): Promise<FooterPage[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/site-pages/footer`, { next: { revalidate: 60 } })
+    if (res.ok) return (await res.json())?.data?.pages ?? []
+  } catch {
+    // fall back to the static links only
+  }
+  return []
+}
+
+const stripBrand = (t: string) => t.replace(/\s*\|\s*CareStream\s*$/i, '').trim()
+
+export async function MarketingFooter() {
+  const dbPages = await getFooterPages()
+  const groups = STATIC_GROUPS.map(({ heading, links }) => {
+    const extra = dbPages
+      .filter(p => p.footer_group === heading && !links.some(l => l.href === p.path))
+      .sort((a, b) => (a.footer_sort || 0) - (b.footer_sort || 0))
+      .map(p => ({ href: p.path, label: p.footer_label || stripBrand(p.title || p.path) }))
+    return { heading, links: [...links, ...extra] }
+  })
   return (
     <footer className="bg-neutral-dark text-white">
       {/* Top section */}
@@ -66,12 +99,7 @@ export function MarketingFooter() {
 
         {/* Links grid */}
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {[
-            { heading: 'Product',      links: PRODUCT },
-            { heading: 'Trust & Legal', links: TRUST },
-            { heading: 'Company',      links: COMPANY },
-            { heading: 'Get Started',  links: GET_STARTED },
-          ].map(({ heading, links }) => (
+          {groups.map(({ heading, links }) => (
             <div key={heading}>
               <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">{heading}</p>
               <ul className="space-y-2.5">

@@ -1904,7 +1904,7 @@ function buildPageData(body: any) {
   const {
     title, description, og_title, og_description, og_image_url,
     is_footer_page, footer_group, footer_label, footer_sort,
-    page_type, status, faqs,
+    page_type, status, faqs, content,
   } = body ?? {}
   return {
     ...(title          !== undefined && { title:          title?.trim() ?? ''          }),
@@ -1919,6 +1919,7 @@ function buildPageData(body: any) {
     ...(page_type      !== undefined && { page_type:      page_type || 'marketing'     }),
     ...(status         !== undefined && { status:         status || 'published'        }),
     ...(faqs           !== undefined && { faqs:           normaliseFaqs(faqs)          }),
+    ...(content        !== undefined && { content:        typeof content === 'string' ? content : '' }),
   }
 }
 

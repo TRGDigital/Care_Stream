@@ -171,6 +171,7 @@ export interface SitePage {
   page_type:      string
   status:         string
   faqs:           Array<{ question: string; answer: string }>
+  content:        string
   created_at:     string
   updated_at:     string
 }

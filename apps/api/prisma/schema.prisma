@@ -439,6 +439,7 @@ model SitePage {
   page_type      String   @default("marketing")            // 'marketing' | 'content'
   status         String   @default("published")
   faqs           Json     @default("[]")                    // [{ question, answer }] — currently used on the home page only
+  content        String   @default("")                      // HTML body, rendered on content pages (e.g. legal pages)
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 

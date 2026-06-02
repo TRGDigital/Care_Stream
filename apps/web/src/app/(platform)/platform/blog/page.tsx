@@ -746,7 +746,7 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
 const EMPTY_PAGE: Partial<SitePage> & { path: string } = {
   path: '', title: '', description: null, og_title: null, og_description: null, og_image_url: null,
   is_footer_page: false, footer_group: null, footer_label: null, footer_sort: 0,
-  page_type: 'marketing', status: 'published', faqs: [],
+  page_type: 'marketing', status: 'published', faqs: [], content: '',
 }
 
 function FaqEditor({
@@ -896,6 +896,17 @@ function PageForm({
           </div>
         </div>
       </AccordionSection>
+
+      {form.page_type === 'content' && (
+        <AccordionSection title="Page Content" description="The body shown on this page. Set Page Type to Content to use it (e.g. legal pages)." defaultOpen>
+          <RichEditor
+            value={form.content ?? ''}
+            onChange={(v) => set('content', v)}
+            rows={14}
+            placeholder="Write the page content here…"
+          />
+        </AccordionSection>
+      )}
 
       {form.path === '/' && (
         <AccordionSection title="Home Page FAQs" description="Questions and answers shown in the FAQ section on the home page" defaultOpen>

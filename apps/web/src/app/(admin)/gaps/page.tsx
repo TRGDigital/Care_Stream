@@ -119,7 +119,7 @@ export default function GapsPage() {
                 </ul>
                 <div className="mt-3">
                   <a
-                    href="/admin/policies"
+                    href="/policies"
                     className="text-xs font-semibold text-teal hover:underline"
                   >
                     Upload a policy to cover this →
@@ -151,7 +151,7 @@ export default function GapsPage() {
                 <p className="mb-1 text-xs text-neutral-mid">{reg.summary}</p>
                 <p className="mb-3 text-xs italic text-neutral-mid">{reg.care_home_context}</p>
                 <a
-                  href="/admin/policies"
+                  href="/policies"
                   className="text-xs font-semibold text-teal hover:underline"
                 >
                   Add a policy →

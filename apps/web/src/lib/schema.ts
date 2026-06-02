@@ -1,0 +1,129 @@
+// Centralised schema.org (JSON-LD) builders. Rendered via <JsonLd>. All entities
+// describe CareStreamAI accurately as a B2B SaaS (Organization + SoftwareApplication),
+// not a care facility.
+
+export const SITE_URL  = 'https://carestreamai.com'
+export const SITE_NAME = 'CareStreamAI'
+export const ORG_ID    = `${SITE_URL}/#organization`
+export const SITE_ID   = `${SITE_URL}/#website`
+
+// Top-level navigation used for SiteNavigationElement.
+export const PRIMARY_NAV: Array<{ name: string; path: string }> = [
+  { name: 'How It Works',        path: '/how-it-works' },
+  { name: 'Features',            path: '/care-policies' },
+  { name: 'CQC & Compliance',    path: '/cqc-compliance' },
+  { name: 'Staff Training',      path: '/staff-training' },
+  { name: 'Regulatory Knowledge',path: '/regulatory-knowledge' },
+  { name: 'Who It’s For',        path: '/who-its-for' },
+  { name: 'Pricing',             path: '/pricing' },
+  { name: 'Blog',                path: '/blog' },
+  { name: 'About',               path: '/about' },
+  { name: 'Contact',             path: '/contact' },
+]
+
+export function organizationSchema() {
+  return {
+    '@context':   'https://schema.org',
+    '@type':      'Organization',
+    '@id':        ORG_ID,
+    name:         SITE_NAME,
+    legalName:    'CareStreamAI Limited',
+    url:          SITE_URL,
+    logo:         `${SITE_URL}/logo-color.png`,
+    email:        'hello@carestreamai.com',
+    description:  'AI-powered policy access and compliance platform for UK care providers — instant, multilingual access to your own policies via web, email and WhatsApp.',
+    // sameAs / address / telephone added once the real values are supplied.
+    contactPoint: {
+      '@type':       'ContactPoint',
+      contactType:   'customer support',
+      email:         'support@carestreamai.com',
+      url:           `${SITE_URL}/contact`,
+      areaServed:    'GB',
+      availableLanguage: ['en'],
+    },
+  }
+}
+
+export function webSiteSchema() {
+  return {
+    '@context':  'https://schema.org',
+    '@type':     'WebSite',
+    '@id':       SITE_ID,
+    name:        SITE_NAME,
+    url:         SITE_URL,
+    inLanguage:  'en-GB',
+    publisher:   { '@id': ORG_ID },
+  }
+}
+
+export function siteNavigationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type':    'SiteNavigationElement',
+    name:       PRIMARY_NAV.map(i => i.name),
+    url:        PRIMARY_NAV.map(i => `${SITE_URL}${i.path}`),
+  }
+}
+
+export function webApplicationSchema() {
+  return {
+    '@context':           'https://schema.org',
+    '@type':              ['WebApplication', 'SoftwareApplication'],
+    name:                 SITE_NAME,
+    url:                  SITE_URL,
+    applicationCategory:  'HealthApplication',
+    operatingSystem:      'Web (also accessible via email and WhatsApp)',
+    description:          'Gives care teams 24/7 access to their organisation’s own policies, in 50+ languages, via web chat, email and WhatsApp — grounded in approved documents (RAG), with training, audits and CQC readiness reporting.',
+    provider:             { '@id': ORG_ID },
+    offers: [
+      { '@type': 'Offer', name: 'Starter',      price: '49.00',  priceCurrency: 'GBP', category: 'subscription', url: `${SITE_URL}/pricing` },
+      { '@type': 'Offer', name: 'Professional', price: '129.00', priceCurrency: 'GBP', category: 'subscription', url: `${SITE_URL}/pricing` },
+    ],
+  }
+}
+
+export function breadcrumbSchema(items: Array<{ name: string; path: string }>) {
+  return {
+    '@context':        'https://schema.org',
+    '@type':           'BreadcrumbList',
+    itemListElement:   items.map((it, i) => ({
+      '@type':   'ListItem',
+      position:  i + 1,
+      name:      it.name,
+      item:      `${SITE_URL}${it.path}`,
+    })),
+  }
+}
+
+export function blogPostingSchema(post: {
+  slug: string; title: string; excerpt: string | null; meta_description?: string | null
+  feature_image_url: string | null; publication_date: string | null
+  author?: { name: string } | null
+}) {
+  return {
+    '@context':          'https://schema.org',
+    '@type':             'BlogPosting',
+    headline:            post.title,
+    description:         post.excerpt || post.meta_description || '',
+    ...(post.feature_image_url ? { image: [post.feature_image_url] } : {}),
+    ...(post.publication_date ? { datePublished: post.publication_date } : {}),
+    author:              post.author?.name
+      ? { '@type': 'Person', name: post.author.name }
+      : { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },
+    publisher:           { '@id': ORG_ID },
+    mainEntityOfPage:    `${SITE_URL}/blog/${post.slug}`,
+    inLanguage:          'en-GB',
+  }
+}
+
+export function faqPageSchema(faqs: Array<{ question: string; answer: string }>) {
+  return {
+    '@context':  'https://schema.org',
+    '@type':     'FAQPage',
+    mainEntity:  faqs.map(f => ({
+      '@type':         'Question',
+      name:            f.question,
+      acceptedAnswer:  { '@type': 'Answer', text: f.answer },
+    })),
+  }
+}

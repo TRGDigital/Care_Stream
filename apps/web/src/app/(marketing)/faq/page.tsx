@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { FaqAccordion } from './faq-accordion'
 import { PageHero, PageCta } from '@/components/marketing/ui'
+import { JsonLd } from '@/components/json-ld'
+import { faqPageSchema } from '@/lib/schema'
 
 export const metadata = {
   title: 'FAQ',
@@ -75,9 +77,12 @@ const FAQ_GROUPS = [
   },
 ]
 
+const ALL_FAQS = FAQ_GROUPS.flatMap(g => g.items).map(i => ({ question: i.q, answer: i.a }))
+
 export default function FaqPage() {
   return (
     <>
+      <JsonLd data={faqPageSchema(ALL_FAQS)} />
       <PageHero
         label="FAQ"
         title="Everything you want to know."

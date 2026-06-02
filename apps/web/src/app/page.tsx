@@ -14,6 +14,8 @@ import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
 import { HomeBlogSection } from '@/components/marketing/home-blog-section'
 import { SiteImage } from '@/components/site-image'
+import { JsonLd } from '@/components/json-ld'
+import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
@@ -1700,6 +1702,7 @@ export default async function HomePage() {
   const faqs = await getHomeFaqs()
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />
       <MarketingNav />
       <main className="flex-1">
         <Hero />

@@ -5,6 +5,8 @@ import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
 import { AltMapProvider } from '@/components/alt-map-provider'
 import { getSiteAltMap } from '@/lib/image-alts'
+import { JsonLd } from '@/components/json-ld'
+import { organizationSchema, webSiteSchema, siteNavigationSchema } from '@/lib/schema'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
@@ -53,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
+        <JsonLd data={[organizationSchema(), webSiteSchema(), siteNavigationSchema()]} />
         <AltMapProvider map={altMap}>
           {children}
         </AltMapProvider>

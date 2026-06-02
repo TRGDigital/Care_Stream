@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArticleLayout } from '@/components/marketing/article-layout'
+import { JsonLd } from '@/components/json-ld'
+import { blogPostingSchema, faqPageSchema } from '@/lib/schema'
 
 export const revalidate = 60
 
@@ -76,7 +78,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const faqs = (post.faqs ?? []).filter(f => f?.question?.trim() && f?.answer?.trim())
 
   return (
-    <ArticleLayout
+    <>
+      <JsonLd data={faqs.length > 0 ? [blogPostingSchema(post), faqPageSchema(faqs)] : [blogPostingSchema(post)]} />
+      <ArticleLayout
       category={post.category}
       date={date}
       readTime={`${post.read_time_minutes} min read`}
@@ -129,6 +133,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Link>
         </div>
       )}
-    </ArticleLayout>
+      </ArticleLayout>
+    </>
   )
 }

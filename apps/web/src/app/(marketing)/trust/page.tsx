@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: 'Trust & Security | CareStreamAI',
     description: 'Answers from your documents only. How CareStreamAI keeps your compliance data safe.',
-    url: 'https://carestreamai.co.uk/trust',
+    url: 'https://carestreamai.com/trust',
   },
 }
 

@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: 'Monthly Care Audits | CareStreamAI',
     description: 'Guided monthly audits with AI-generated templates, chat-based completion, and CQC evidence reports.',
-    url: 'https://carestreamai.co.uk/care-audits',
+    url: 'https://carestreamai.com/care-audits',
   },
 }
 

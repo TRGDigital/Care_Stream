@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: 'Care Policies | CareStreamAI',
     description: 'Digital policy access for your entire team — 50+ languages, WhatsApp, email, and web.',
-    url: 'https://carestreamai.co.uk/care-policies',
+    url: 'https://carestreamai.com/care-policies',
   },
 }
 

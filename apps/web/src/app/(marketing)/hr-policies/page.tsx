@@ -11,7 +11,7 @@ export const metadata = {
   openGraph: {
     title: 'HR Policies and Staff Handbook | CareStreamAI',
     description: 'Instant HR and employment answers from your actual staff handbook — in any language, 24/7.',
-    url: 'https://carestreamai.co.uk/hr-policies',
+    url: 'https://carestreamai.com/hr-policies',
   },
 }
 

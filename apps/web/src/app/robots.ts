@@ -29,6 +29,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://carestreamai.co.uk/sitemap.xml',
+    sitemap: 'https://carestreamai.com/sitemap.xml',
   }
 }

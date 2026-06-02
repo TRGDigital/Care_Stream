@@ -11,7 +11,7 @@ export const metadata = {
   openGraph: {
     title: 'CQC Staff Preparation Questions | CareStreamAI',
     description: 'Practice CQC inspector questions aligned to the five key lines of enquiry — delivered via WhatsApp, email, and chat.',
-    url: 'https://carestreamai.co.uk/cqc-staff-questions',
+    url: 'https://carestreamai.com/cqc-staff-questions',
   },
 }
 

@@ -13,7 +13,7 @@ export const metadata = {
   openGraph: {
     title: "Who CareStreamAI Is For",
     description: 'Built for residential, nursing, domiciliary, supported living, hospice, and every regulated UK care setting.',
-    url: 'https://carestreamai.co.uk/who-its-for',
+    url: 'https://carestreamai.com/who-its-for',
   },
 }
 

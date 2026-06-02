@@ -11,7 +11,7 @@ export const metadata = {
   openGraph: {
     title: 'CareStreamAI Blog',
     description: 'Regulatory guidance and practical resources for everyone working in UK health and social care.',
-    url: 'https://carestreamai.co.uk/blog',
+    url: 'https://carestreamai.com/blog',
   },
 }
 

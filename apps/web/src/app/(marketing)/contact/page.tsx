@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: 'Contact CareStreamAI',
     description: 'Get in touch — we respond to every message within one business day.',
-    url: 'https://carestreamai.co.uk/contact',
+    url: 'https://carestreamai.com/contact',
   },
 }
 

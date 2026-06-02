@@ -6,7 +6,7 @@ export const metadata = {
   openGraph: {
     title: 'CareStreamAI for Residential Care Homes',
     description: 'Instant policy access for every shift and every care role, in any language.',
-    url: 'https://carestreamai.co.uk/residential-care',
+    url: 'https://carestreamai.com/residential-care',
   },
 }
 

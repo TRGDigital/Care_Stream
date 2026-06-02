@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: 'Business Continuity Planning | CareStreamAI',
     description: 'Your business continuity plan, instantly queryable by every staff member, any time.',
-    url: 'https://carestreamai.co.uk/business-continuity',
+    url: 'https://carestreamai.com/business-continuity',
   },
 }
 

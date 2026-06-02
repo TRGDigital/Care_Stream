@@ -9,14 +9,14 @@ import { getSiteAltMap } from '@/lib/image-alts'
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://carestreamai.co.uk'),
+  metadataBase: new URL('https://carestreamai.com'),
   title: {
     default:  'CareStreamAI — AI Policy Access for UK Care Homes',
     template: '%s | CareStreamAI',
   },
   description: 'Give every member of your care team instant access to your policies in any language, 24/7. AI-powered policy access via WhatsApp, email and chat — built for UK care providers.',
   keywords:    ['care home policies', 'CQC compliance', 'care AI', 'multilingual care', 'UK care training'],
-  authors:     [{ name: 'CareStreamAI', url: 'https://carestreamai.co.uk' }],
+  authors:     [{ name: 'CareStreamAI', url: 'https://carestreamai.com' }],
   openGraph: {
     type:      'website',
     siteName:  'CareStreamAI',

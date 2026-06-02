@@ -44,7 +44,7 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
     openGraph: {
       title: ogTitle || title,
       description: ogDescription || description,
-      url: `https://carestreamai.co.uk${path}`,
+      url: `https://carestreamai.com${path}`,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
   }

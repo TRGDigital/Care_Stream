@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: 'Book a CareStreamAI Demo',
     description: 'A 30-minute walkthrough using your own policies. No pressure, just the product.',
-    url: 'https://carestreamai.co.uk/demo',
+    url: 'https://carestreamai.com/demo',
   },
 }
 

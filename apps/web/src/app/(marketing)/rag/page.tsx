@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: 'How Our AI Works | CareStreamAI',
     description: 'Retrieval Augmented Generation: every answer grounded in verified source material.',
-    url: 'https://carestreamai.co.uk/rag',
+    url: 'https://carestreamai.com/rag',
   },
 }
 

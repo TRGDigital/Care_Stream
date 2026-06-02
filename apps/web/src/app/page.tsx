@@ -7,7 +7,7 @@ import { Typewriter } from '@/components/marketing/typewriter'
 export const metadata: Metadata = {
   title:       'CareStreamAI — AI Policy Access for UK Care Homes',
   description: 'Give your entire care team instant access to your policies in any language, 24/7. CareStreamAI delivers grounded answers via WhatsApp, email and chat — never the internet.',
-  openGraph:   { title: 'CareStreamAI — AI Policy Access for UK Care Homes', description: 'Instant multilingual policy access for UK care providers. Powered by your documents. Never the internet.', url: 'https://carestreamai.co.uk' },
+  openGraph:   { title: 'CareStreamAI — AI Policy Access for UK Care Homes', description: 'Instant multilingual policy access for UK care providers. Powered by your documents. Never the internet.', url: 'https://carestreamai.com' },
 }
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'

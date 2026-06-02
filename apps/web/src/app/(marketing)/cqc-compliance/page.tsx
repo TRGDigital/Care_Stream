@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: 'CQC & Compliance | CareStreamAI',
     description: 'Always-on CQC readiness: evidence tracking, policy gap detection, and team preparation tools.',
-    url: 'https://carestreamai.co.uk/cqc-compliance',
+    url: 'https://carestreamai.com/cqc-compliance',
   },
 }
 

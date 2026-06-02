@@ -11,7 +11,7 @@ export const metadata = {
   openGraph: {
     title: 'How CareStreamAI Works',
     description: 'Upload policies, enable staff queries in 50+ languages, review every interaction. Three steps.',
-    url: 'https://carestreamai.co.uk/how-it-works',
+    url: 'https://carestreamai.com/how-it-works',
   },
 }
 

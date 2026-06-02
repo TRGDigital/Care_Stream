@@ -11,7 +11,7 @@ export const metadata = {
   openGraph: {
     title: 'Staff Training and Compliance | CareStreamAI',
     description: 'Year-round staff training engagement via WhatsApp, email, and chat — with compliance dashboards.',
-    url: 'https://carestreamai.co.uk/staff-training',
+    url: 'https://carestreamai.com/staff-training',
   },
 }
 

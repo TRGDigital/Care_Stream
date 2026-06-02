@@ -1397,7 +1397,7 @@ export default function BlogPage() {
                     <div className="divide-y divide-gray-100">
                       {filteredPages.map(page => (
                         <div key={page.path}>
-                          {editPage?.id === page.id ? (
+                          {editPage?.path === page.path ? (
                             <div className="p-4">
                               <PageForm
                                 initial={editPage}

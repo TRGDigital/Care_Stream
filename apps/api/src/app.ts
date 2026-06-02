@@ -60,8 +60,9 @@ app.use('/uploads', express.static(LOCAL_UPLOAD_DIR))
 // Mount before express.json() so the Buffer is preserved.
 app.post('/billing/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler)
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: false })) // Twilio webhooks send form-encoded payloads
+// Larger limit so the CMS can save page content (HTML body) and rich text.
+app.use(express.json({ limit: '5mb' }))
+app.use(express.urlencoded({ extended: false, limit: '5mb' })) // Twilio webhooks send form-encoded payloads
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 

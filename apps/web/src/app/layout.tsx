@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
+import { AltMapProvider } from '@/components/alt-map-provider'
+import { getSiteAltMap } from '@/lib/image-alts'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
@@ -30,11 +32,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const altMap = await getSiteAltMap()
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
+        <AltMapProvider map={altMap}>
+          {children}
+        </AltMapProvider>
         <CookieConsent />
       </body>
     </html>

@@ -36,10 +36,11 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-neutral-light">
       <aside className="hidden w-56 flex-shrink-0 flex-col bg-white border-r border-gray-200 md:flex">
         <div className="flex h-14 items-center border-b border-gray-200 px-5">
-          <div>
-            <p className="font-bold text-teal text-sm">CareStreamAI</p>
-            <p className="text-xs text-neutral-mid">Platform Console</p>
-          </div>
+          <Link href="/platform/dashboard" className="flex flex-col gap-0.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-color.svg" alt="CareStreamAI" className="h-6 w-auto" />
+            <span className="text-xs text-neutral-mid">Platform Console</span>
+          </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Platform navigation">

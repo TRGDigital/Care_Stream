@@ -566,7 +566,21 @@ function BulkUploadModal({
         error:  errorMap.get(f.file.name),
       })))
     } else {
-      setFiles(prev => prev.map(f => ({ ...f, status: 'error', error: 'Upload failed' })))
+      // The request was lost on the client (timeout / dropped response) — but the
+      // server may well have created the policies. Reconcile against the server by
+      // re-fetching the list and matching filenames, so we never report a false
+      // "failed" (and never prompt a duplicate re-upload) for files that landed.
+      try {
+        const data: any = await api.policies.list()
+        const landed = new Set<string>((data?.policies ?? data ?? []).map((p: any) => p.filename))
+        setFiles(prev => prev.map(f => ({
+          ...f,
+          status: landed.has(f.file.name) ? 'done' : 'error',
+          error:  landed.has(f.file.name) ? undefined : 'Could not confirm — check the policy list before re-uploading.',
+        })))
+      } catch {
+        setFiles(prev => prev.map(f => ({ ...f, status: 'error', error: 'Upload response was lost — check the policy list before re-uploading to avoid duplicates.' })))
+      }
     }
 
     setUploading(false)

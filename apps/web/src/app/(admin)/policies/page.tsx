@@ -547,40 +547,59 @@ function BulkUploadModal({
     if (files.length === 0) return
     setUploading(true)
 
-    const form = new FormData()
-    files.forEach(f => form.append('files', f.file))
-    form.append('document_category', category)
-    form.append('names', JSON.stringify(files.map(f => f.name)))
-
     const api = createApiClient(token)
-    const res = await api.policies.bulkUpload(form).catch(() => null)
 
-    if (res?.results) {
-      const successNames = new Set<string>(res.results.map((r: any) => r.filename))
-      const errorMap = new Map<string, string>(
-        (res.errors ?? []).map((e: any) => [e.filename, e.error])
-      )
+    // Vercel caps a request body at 4.5MB, so a single bulk request with many
+    // files is rejected platform-side before it reaches the API. Split into
+    // size-bounded batches (and a sane file count) so every request stays well
+    // under the limit; upload them one batch at a time and reconcile each.
+    const MAX_BATCH_BYTES = 4 * 1024 * 1024
+    const MAX_BATCH_FILES = 20
+    const batches: (typeof files)[] = []
+    let current: typeof files = []
+    let currentBytes = 0
+    for (const f of files) {
+      if (current.length > 0 && (currentBytes + f.file.size > MAX_BATCH_BYTES || current.length >= MAX_BATCH_FILES)) {
+        batches.push(current); current = []; currentBytes = 0
+      }
+      current.push(f); currentBytes += f.file.size
+    }
+    if (current.length > 0) batches.push(current)
+
+    const succeeded = new Set<string>()
+    const errored   = new Map<string, string>()
+
+    for (const batch of batches) {
+      const form = new FormData()
+      batch.forEach(f => form.append('files', f.file))
+      form.append('document_category', category)
+      form.append('names', JSON.stringify(batch.map(f => f.name)))
+
+      const res = await api.policies.bulkUpload(form).catch(() => null)
+
+      if (res?.results) {
+        ;(res.results as any[]).forEach(r => succeeded.add(r.filename))
+        ;(res.errors ?? []).forEach((e: any) => errored.set(e.filename, e.error))
+      } else {
+        // Request lost — reconcile against the server so files that landed aren't
+        // falsely marked failed (and we never invite a duplicate re-upload).
+        try {
+          const data: any = await api.policies.list()
+          const landed = new Set<string>((data?.policies ?? data ?? []).map((p: any) => p.filename))
+          batch.forEach(f => landed.has(f.file.name)
+            ? succeeded.add(f.file.name)
+            : errored.set(f.file.name, 'Could not confirm — check the policy list before re-uploading.'))
+        } catch {
+          batch.forEach(f => errored.set(f.file.name, 'Upload response was lost — check the policy list before re-uploading.'))
+        }
+      }
+
+      // Progressive feedback as each batch completes.
       setFiles(prev => prev.map(f => ({
         ...f,
-        status: successNames.has(f.file.name) ? 'done' : 'error',
-        error:  errorMap.get(f.file.name),
+        status: succeeded.has(f.file.name) ? 'done' : errored.has(f.file.name) ? 'error' : f.status,
+        error:  errored.get(f.file.name),
       })))
-    } else {
-      // The request was lost on the client (timeout / dropped response) — but the
-      // server may well have created the policies. Reconcile against the server by
-      // re-fetching the list and matching filenames, so we never report a false
-      // "failed" (and never prompt a duplicate re-upload) for files that landed.
-      try {
-        const data: any = await api.policies.list()
-        const landed = new Set<string>((data?.policies ?? data ?? []).map((p: any) => p.filename))
-        setFiles(prev => prev.map(f => ({
-          ...f,
-          status: landed.has(f.file.name) ? 'done' : 'error',
-          error:  landed.has(f.file.name) ? undefined : 'Could not confirm — check the policy list before re-uploading.',
-        })))
-      } catch {
-        setFiles(prev => prev.map(f => ({ ...f, status: 'error', error: 'Upload response was lost — check the policy list before re-uploading to avoid duplicates.' })))
-      }
     }
 
     setUploading(false)

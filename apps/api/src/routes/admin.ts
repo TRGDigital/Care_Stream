@@ -287,7 +287,16 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     (prisma as any).policy.count({ where: { tenant_id: req.params.id, status: 'active', document_category: 'staff_handbook' } }),
   ])
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount })
+  // S3 location for this tenant's documents — lets the platform team match a
+  // client to its bucket prefix (and vice versa) when investigating issues.
+  const storage = {
+    bucket:         process.env.S3_BUCKET ?? null,
+    region:         process.env.AWS_REGION ?? 'eu-west-2',
+    prefix:         `tenants/${req.params.id}/`,
+    policies_prefix: `tenants/${req.params.id}/policies/`,
+  }
+
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage })
 })
 
 // ─── GET /admin/tenants/:id/staff ────────────────────────────────────────────

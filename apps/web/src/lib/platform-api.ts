@@ -125,6 +125,12 @@ export interface TenantDetail {
   userCount:            number
   queriesThisMonth:     number
   handbookCount:        number
+  storage?: {
+    bucket:          string | null
+    region:          string
+    prefix:          string
+    policies_prefix: string
+  }
 }
 
 export interface AuditFreqStats {

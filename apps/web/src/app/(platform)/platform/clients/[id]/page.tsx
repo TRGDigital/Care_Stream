@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
   ClipboardCheck, Copy, ExternalLink, KeyRound, Loader2, Mail, MoreVertical, Plus,
-  Sparkles, UserMinus, UserPlus, UserX,
+  Sparkles, UserMinus, UserPlus, UserX, HardDrive,
 } from 'lucide-react'
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
@@ -480,6 +480,34 @@ export default function ClientDetailPage() {
                 </div>
               ))}
             </div>
+
+            {/* Document storage (S3) — match a client to its bucket location */}
+            {detail.storage && (
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <HardDrive size={15} className="text-teal" />
+                  <h2 className="text-sm font-semibold text-neutral-dark">Document storage (S3)</h2>
+                </div>
+                <p className="mb-4 text-xs text-neutral-mid">
+                  This client&rsquo;s policies &amp; documents live under this prefix. The folder is the tenant ID
+                  ({detail.tenant.slug} → <span className="font-mono">{id}</span>) — it stays stable even if the client is renamed.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-neutral-mid">Bucket ({detail.storage.region})</p>
+                    <CopyField value={detail.storage.bucket ?? '— not configured —'} />
+                  </div>
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-neutral-mid">Tenant prefix</p>
+                    <CopyField value={detail.storage.prefix} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="mb-1 text-xs font-medium text-neutral-mid">Policies prefix</p>
+                    <CopyField value={detail.storage.policies_prefix} />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Plan usage */}
             {detail.tenant.plan && (

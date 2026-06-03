@@ -221,7 +221,7 @@ function ActionMenu({
   function openMenu() {
     if (!btnRef.current) return
     const rect        = btnRef.current.getBoundingClientRect()
-    const menuHeight  = 88 // approx height of the two-item dropdown
+    const menuHeight  = 168 // approx height of the four-item dropdown
     const spaceBelow  = window.innerHeight - rect.bottom
     const right       = window.innerWidth - rect.right
 
@@ -289,6 +289,13 @@ function ActionMenu({
           >
             <Pencil size={14} className="text-neutral-mid" />
             Edit details
+          </button>
+          <button
+            onClick={handleReset}
+            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+          >
+            <Mail size={14} className="text-neutral-mid" />
+            Re-send login
           </button>
           <button
             onClick={handleReset}
@@ -481,6 +488,8 @@ export default function StaffPage() {
                         <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Day</span>
                       ) : u.shift_type === 'night' ? (
                         <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">Night</span>
+                      ) : u.shift_type === 'any' ? (
+                        <span className="inline-flex items-center rounded-full bg-teal-light px-2 py-0.5 text-xs font-medium text-teal">Flexible</span>
                       ) : (
                         <span className="text-xs italic text-neutral-mid/50">—</span>
                       )}

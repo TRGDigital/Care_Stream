@@ -15,6 +15,21 @@ export const usersRouter = Router()
 // All /users routes are admin-only
 usersRouter.use(requireAdmin)
 
+const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
+const LOGIN_URL = `${process.env.WEB_URL ?? process.env.FRONTEND_URL ?? 'https://care-stream-web.vercel.app'}/login`
+const PLATFORM_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER ?? ''
+
+// The three ways a staff member reaches CareStream — shown on the credentials
+// overlay and in the welcome email. WhatsApp uses the tenant's dedicated number,
+// falling back to the shared platform number.
+function tenantContact(tenant: { slug: string; twilio_whatsapp_number?: string | null }) {
+  return {
+    login_url:       LOGIN_URL,
+    inbound_email:   `policies@${tenant.slug}.${INBOUND_DOMAIN}`,
+    whatsapp_number: tenant.twilio_whatsapp_number || PLATFORM_WHATSAPP_NUMBER || null,
+  }
+}
+
 // ─── GET /users ───────────────────────────────────────────────────────────────
 
 usersRouter.get('/', async (req: Request, res: Response) => {
@@ -117,7 +132,16 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     }
   }
 
-  ok(res, { user, temp_password: tempPassword }, 201)
+  const contactTenant = await (prisma as any).tenant.findUnique({
+    where:  { id: tenantId },
+    select: { slug: true, twilio_whatsapp_number: true },
+  })
+
+  ok(res, {
+    user,
+    temp_password: tempPassword,
+    contact:       contactTenant ? tenantContact(contactTenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null },
+  }, 201)
 })
 
 // ─── PATCH /users/:id ─────────────────────────────────────────────────────────
@@ -282,18 +306,20 @@ usersRouter.post('/:id/send-credentials', async (req: Request, res: Response) =>
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { name: true },
+    select: { name: true, slug: true, twilio_whatsapp_number: true },
   })
 
-  const portalUrl = process.env.FRONTEND_URL ?? 'https://app.carestreamai.co.uk'
+  const contact = tenant ? tenantContact(tenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null }
 
   try {
     await sendStaffWelcomeEmail({
-      to:           user.email as string,
-      staffName:    user.name  as string,
-      orgName:      tenant?.name ?? 'your organisation',
-      tempPassword: temp_password,
-      portalUrl,
+      to:             user.email as string,
+      staffName:      user.name  as string,
+      orgName:        tenant?.name ?? 'your organisation',
+      tempPassword:   temp_password,
+      portalUrl:      contact.login_url,
+      inboundEmail:   contact.inbound_email,
+      whatsappNumber: contact.whatsapp_number,
     })
     ok(res, { sent: true })
   } catch (e: any) {
@@ -326,8 +352,14 @@ usersRouter.post('/:id/reset-password', async (req: Request, res: Response) => {
     data:  { password_hash: passwordHash, failed_login_attempts: 0, locked_until: null },
   })
 
+  const tenant = await (prisma as any).tenant.findUnique({
+    where:  { id: tenantId },
+    select: { slug: true, twilio_whatsapp_number: true },
+  })
+
   ok(res, {
     user:          { id: user.id, name: user.name, email: user.email },
     temp_password: tempPassword,
+    contact:       tenant ? tenantContact(tenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null },
   })
 })

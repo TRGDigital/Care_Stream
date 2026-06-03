@@ -4,6 +4,12 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+export interface StaffContact {
+  login_url:       string
+  inbound_email:   string | null
+  whatsapp_number: string | null
+}
+
 export interface Citation {
   policy_id:         string
   policy_name:       string
@@ -122,7 +128,7 @@ export function createApiClient(token: string) {
     users: {
       list: () => apiFetch<any>('/users', token),
       invite: (data: { email: string; name: string; role: string; job_role?: string; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string }) =>
-        apiFetch<{ user: any; temp_password: string }>('/users/invite', token, {
+        apiFetch<{ user: any; temp_password: string; contact: StaffContact }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
@@ -133,7 +139,7 @@ export function createApiClient(token: string) {
       reactivate: (id: string) =>
         apiFetch<{ reactivated: boolean }>(`/users/${id}/reactivate`, token, { method: 'POST' }),
       resetPassword: (id: string) =>
-        apiFetch<{ user: { id: string; name: string; email: string }; temp_password: string }>(
+        apiFetch<{ user: { id: string; name: string; email: string }; temp_password: string; contact: StaffContact }>(
           `/users/${id}/reset-password`, token, { method: 'POST' }
         ),
       sendCredentials: (id: string, tempPassword: string) =>

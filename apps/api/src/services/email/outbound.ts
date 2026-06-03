@@ -334,11 +334,13 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
 // ─── Staff welcome / credentials email ───────────────────────────────────────
 
 export interface SendWelcomeEmailOptions {
-  to:           string
-  staffName:    string
-  orgName:      string
-  tempPassword: string
-  portalUrl:    string
+  to:             string
+  staffName:      string
+  orgName:        string
+  tempPassword:   string
+  portalUrl:      string
+  inboundEmail?:  string | null
+  whatsappNumber?: string | null
 }
 
 export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Promise<void> {
@@ -377,6 +379,25 @@ export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Prom
           <td style="padding:6px 0;font-size:14px;color:${NEUTRAL_DARK};font-family:monospace;font-weight:600;letter-spacing:0.05em">${opts.tempPassword}</td>
         </tr>
       </table>
+    </div>
+
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px 24px;margin:0 0 24px">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:${NEUTRAL_MID};text-transform:uppercase;letter-spacing:0.05em">Ways to ask CareStreamAI a question</p>
+      <table style="width:100%;border-collapse:collapse">
+        <tr>
+          <td style="padding:6px 0;font-size:14px;color:#6b7280;width:100px">Web portal</td>
+          <td style="padding:6px 0;font-size:14px"><a href="${opts.portalUrl}" style="color:${PURPLE};font-weight:600">${opts.portalUrl}</a></td>
+        </tr>
+        ${opts.inboundEmail ? `<tr>
+          <td style="padding:6px 0;font-size:14px;color:#6b7280">Email</td>
+          <td style="padding:6px 0;font-size:14px;color:${NEUTRAL_DARK};font-weight:500">${opts.inboundEmail}</td>
+        </tr>` : ''}
+        ${opts.whatsappNumber ? `<tr>
+          <td style="padding:6px 0;font-size:14px;color:#6b7280">WhatsApp</td>
+          <td style="padding:6px 0;font-size:14px;color:${NEUTRAL_DARK};font-weight:500">${opts.whatsappNumber}</td>
+        </tr>` : ''}
+      </table>
+      <p style="margin:12px 0 0;font-size:13px;color:#6b7280;line-height:1.6">Ask in any language by web chat, email, or WhatsApp — you'll get an answer in the same language.</p>
     </div>
 
     <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">

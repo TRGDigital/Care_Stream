@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Check, ChevronDown, Copy, KeyRound, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, UserMinus, UserPlus, UserX } from 'lucide-react'
@@ -81,6 +81,7 @@ function CredentialsPanel({
   userId,
   email,
   password,
+  contact,
   token,
   onDone,
 }: {
@@ -89,14 +90,15 @@ function CredentialsPanel({
   userId:   string
   email:    string
   password: string
+  contact?: StaffContact
   token:    string
   onDone:   () => void
 }) {
-  const [copiedField,  setCopiedField]  = useState<'email' | 'password' | null>(null)
+  const [copiedField,  setCopiedField]  = useState<string | null>(null)
   const [emailStatus,  setEmailStatus]  = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [emailError,   setEmailError]   = useState('')
 
-  async function copy(value: string, field: 'email' | 'password') {
+  async function copy(value: string, field: string) {
     await navigator.clipboard.writeText(value)
     setCopiedField(field)
     setTimeout(() => setCopiedField(null), 2000)
@@ -143,6 +145,34 @@ function CredentialsPanel({
           </div>
         ))}
       </div>
+
+      {/* How to reach CareStream */}
+      {contact && (
+        <div className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">How {email.split('@')[0] || 'they'} reaches CareStream</p>
+          <div className="space-y-2">
+            {[
+              { label: 'Log in',  value: contact.login_url,        field: 'login'   },
+              ...(contact.inbound_email   ? [{ label: 'Email questions to', value: contact.inbound_email,   field: 'inbound' }] : []),
+              ...(contact.whatsapp_number ? [{ label: 'WhatsApp',           value: contact.whatsapp_number, field: 'wa'      }] : []),
+            ].map(({ label, value, field }) => (
+              <div key={field}>
+                <p className="mb-1 text-xs font-medium text-neutral-mid">{label}</p>
+                <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-neutral-light px-3 py-2">
+                  <span className="flex-1 select-all break-all text-sm text-neutral-dark">{value}</span>
+                  <button onClick={() => copy(value, field)} className="flex shrink-0 items-center gap-1 rounded px-2 py-1 text-xs font-medium text-neutral-mid transition-colors hover:bg-gray-200 hover:text-neutral-dark">
+                    {copiedField === field ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                    {copiedField === field ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            ))}
+            {!contact.whatsapp_number && (
+              <p className="text-xs text-neutral-mid">WhatsApp number not set up for this home yet.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Send by email */}
       <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light px-4 py-3">
@@ -200,7 +230,7 @@ function ActionMenu({
   user:            any
   token:           string
   onEdit:          (user: any) => void
-  onResetPassword: (creds: { userId: string; name: string; email: string; password: string }) => void
+  onResetPassword: (creds: { userId: string; name: string; email: string; password: string; contact?: StaffContact }) => void
   onDeactivate:    (id: string) => void
   onReactivate:    (id: string) => void
 }) {
@@ -239,7 +269,7 @@ function ActionMenu({
     setWorking(true)
     try {
       const res = await createApiClient(token).users.resetPassword(user.id)
-      onResetPassword({ userId: res.user.id, name: res.user.name, email: res.user.email, password: res.temp_password })
+      onResetPassword({ userId: res.user.id, name: res.user.name, email: res.user.email, password: res.temp_password, contact: res.contact })
     } catch { /* ignore */ } finally { setWorking(false) }
   }
 
@@ -337,7 +367,7 @@ export default function StaffPage() {
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
   const [editUser,     setEditUser]    = useState<any | null>(null)
-  const [resetCreds,   setResetCreds]  = useState<{ userId: string; name: string; email: string; password: string } | null>(null)
+  const [resetCreds,   setResetCreds]  = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
 
   function load() {
     if (!session?.accessToken) return
@@ -422,6 +452,7 @@ export default function StaffPage() {
               userId={resetCreds.userId}
               email={resetCreds.email}
               password={resetCreds.password}
+              contact={resetCreds.contact}
               token={session?.accessToken ?? ''}
               onDone={() => setResetCreds(null)}
             />
@@ -712,7 +743,7 @@ function InviteModal({
   onInvited:  () => void
 }) {
   const [step,      setStep]      = useState<ModalStep>('form')
-  const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string } | null>(null)
+  const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
   const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '' })
   const [error,     setError]     = useState('')
@@ -751,7 +782,7 @@ function InviteModal({
 
     // Refresh the list in the background, but keep modal open to show credentials
     onInvited()
-    setCreds({ userId: res.user.id, name: form.name, email: form.email, password: res.temp_password })
+    setCreds({ userId: res.user.id, name: form.name, email: form.email, password: res.temp_password, contact: res.contact })
     setNewUserId(res.user.id)
     setStep('credentials')
   }
@@ -907,6 +938,7 @@ function InviteModal({
             userId={creds.userId}
             email={creds.email}
             password={creds.password}
+            contact={creds.contact}
             token={token}
             onDone={() => setStep('training')}
           />

@@ -14,6 +14,7 @@ import {
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 
 const NAV_SECTIONS = [
   {
@@ -111,6 +112,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         user_name:     session.user.name  ?? '',
         user_email:    session.user.email ?? '',
       })
+      pageCache.clear()  // drop the previous site's cached page data
       router.refresh()
     } catch {
       // silent — user stays on current site

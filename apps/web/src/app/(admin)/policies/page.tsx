@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Upload, FolderUp, RefreshCw, X, CheckCircle, AlertCircle, Pencil, MoreHorizontal, Archive, RotateCcw, Search } from 'lucide-react'
@@ -61,8 +62,8 @@ function sectionColour(name: string): string {
 
 export default function PoliciesPage() {
   const { data: session }           = useSession()
-  const [policies,       setPolicies]       = useState<any[]>([])
-  const [loading,        setLoading]        = useState(true)
+  const [policies,       setPolicies]       = useState<any[]>(() => pageCache.get<any[]>('admin-policies') ?? [])
+  const [loading,        setLoading]        = useState(() => !pageCache.get('admin-policies'))
   const [tab,            setTab]            = useState<'active' | 'archived'>('active')
   const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
@@ -74,7 +75,7 @@ export default function PoliciesPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     api.policies.list({ limit: '2000' })
-      .then(data => setPolicies(data?.policies ?? []))
+      .then(data => { const list = data?.policies ?? []; setPolicies(list); pageCache.set('admin-policies', list) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Mail, MessageSquare, Mic, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
@@ -195,14 +196,22 @@ function SidebarGuide() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+type DashboardCache = {
+  stats:     { activePolicies: string; staffCount: string; totalQueries: string }
+  queries:   any[]
+  chartData: Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>
+  channels:  { chat: number; email: number; whatsapp: number; voice: number }
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
-  const [queries,    setQueries]    = useState<any[]>([])
-  const [chartData,  setChartData]  = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>([])
+  const cached = pageCache.get<DashboardCache>('admin-dashboard')
+  const [queries,    setQueries]    = useState<any[]>(cached?.queries ?? [])
+  const [chartData,  setChartData]  = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>(cached?.chartData ?? [])
   const [chartDays,  setChartDays]  = useState(30)
-  const [loading,    setLoading]    = useState(true)
-  const [channels,   setChannels]   = useState({ chat: 0, email: 0, whatsapp: 0, voice: 0 })
-  const [stats,      setStats]      = useState({ activePolicies: '—', staffCount: '—', totalQueries: '—' })
+  const [loading,    setLoading]    = useState(!cached)
+  const [channels,   setChannels]   = useState(cached?.channels ?? { chat: 0, email: 0, whatsapp: 0, voice: 0 })
+  const [stats,      setStats]      = useState(cached?.stats ?? { activePolicies: '—', staffCount: '—', totalQueries: '—' })
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -215,22 +224,22 @@ export default function DashboardPage() {
       api.analytics.dailyActivity(chartDays),
       api.analytics.get(),
     ]).then(([policiesRes, usersRes, queriesRes, chartRes, analyticsRes]) => {
-      setStats({
+      const nextStats = {
         activePolicies: policiesRes.status === 'fulfilled' ? String(policiesRes.value?.total ?? '—') : '—',
         staffCount:     usersRes.status   === 'fulfilled' ? String(usersRes.value?.total ?? (Array.isArray(usersRes.value) ? usersRes.value.length : '—')) : '—',
         totalQueries:   queriesRes.status === 'fulfilled' ? String(queriesRes.value?.total ?? '—') : '—',
-      })
-      if (queriesRes.status === 'fulfilled') {
-        setQueries(queriesRes.value?.queries ?? queriesRes.value?.items ?? [])
       }
-      if (chartRes.status === 'fulfilled') {
-        setChartData(chartRes.value.series.map((s: any) => ({ voice: 0, ...s })))
-      }
+      const nextQueries  = queriesRes.status === 'fulfilled' ? (queriesRes.value?.queries ?? queriesRes.value?.items ?? []) : queries
+      const nextChart    = chartRes.status === 'fulfilled' ? chartRes.value.series.map((s: any) => ({ voice: 0, ...s })) : chartData
+      let   nextChannels = channels
       if (analyticsRes.status === 'fulfilled') {
         const ch = analyticsRes.value?.basic?.queries_by_channel
-        if (ch) setChannels({ chat: ch.chat ?? 0, email: ch.email ?? 0, whatsapp: ch.whatsapp ?? 0, voice: ch.voice ?? 0 })
+        if (ch) nextChannels = { chat: ch.chat ?? 0, email: ch.email ?? 0, whatsapp: ch.whatsapp ?? 0, voice: ch.voice ?? 0 }
       }
+      setStats(nextStats); setQueries(nextQueries); setChartData(nextChart); setChannels(nextChannels)
+      pageCache.set<DashboardCache>('admin-dashboard', { stats: nextStats, queries: nextQueries, chartData: nextChart, channels: nextChannels })
     }).finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken, chartDays])
 
   const totalChannelQueries = channels.chat + channels.email + channels.whatsapp + channels.voice

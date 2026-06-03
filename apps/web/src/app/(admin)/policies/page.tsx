@@ -696,8 +696,8 @@ function BulkUploadModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {/* Category — hidden once the upload is complete */}
-          {!done && (
+          {/* Category — only while selecting files; locked in once you reach the review step */}
+          {phase === 'select' && !done && (
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-neutral-dark whitespace-nowrap">Category (all files):</label>
               <select

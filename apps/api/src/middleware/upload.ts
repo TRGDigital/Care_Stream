@@ -58,6 +58,27 @@ export function imageUploadMiddleware(req: Request, res: Response, next: NextFun
   })
 }
 
+// busboy (under multer) decodes multipart filenames as latin1, which corrupts
+// non-ASCII characters (em-dash, en-dash, curly quotes, accents). Re-decode the
+// latin1 bytes as UTF-8 to restore the original filename. No-op for pure ASCII.
+function fixUtf8Filename(name: string): string {
+  try {
+    const fixed = Buffer.from(name, 'latin1').toString('utf8')
+    // Only adopt the re-decode if it round-trips cleanly (guards against rare
+    // already-UTF-8 inputs); for ASCII both sides are identical anyway.
+    return Buffer.from(fixed, 'utf8').toString('latin1') === name ? fixed : name
+  } catch {
+    return name
+  }
+}
+
+function fixUploadedFilenames(req: Request): void {
+  if (req.file) req.file.originalname = fixUtf8Filename(req.file.originalname)
+  if (Array.isArray(req.files)) {
+    for (const f of req.files as Express.Multer.File[]) f.originalname = fixUtf8Filename(f.originalname)
+  }
+}
+
 function handleMulterError(multerErr: any, res: Response, next: NextFunction): void {
   if (!multerErr) { next(); return }
 
@@ -77,9 +98,15 @@ function handleMulterError(multerErr: any, res: Response, next: NextFunction): v
 }
 
 export function uploadMiddleware(req: Request, res: Response, next: NextFunction): void {
-  multerInstance.single('file')(req, res, (multerErr) => handleMulterError(multerErr, res, next))
+  multerInstance.single('file')(req, res, (multerErr) => {
+    if (!multerErr) fixUploadedFilenames(req)
+    handleMulterError(multerErr, res, next)
+  })
 }
 
 export function bulkUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
-  multerInstance.array('files', 50)(req, res, (multerErr) => handleMulterError(multerErr, res, next))
+  multerInstance.array('files', 50)(req, res, (multerErr) => {
+    if (!multerErr) fixUploadedFilenames(req)
+    handleMulterError(multerErr, res, next)
+  })
 }

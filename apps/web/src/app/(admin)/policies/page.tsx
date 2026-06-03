@@ -589,9 +589,11 @@ function BulkUploadModal({
   // Step 2 — upload. Exact duplicates are skipped; name matches the admin chose
   // to "replace" go through the versioning endpoint; everything else is a new
   // policy, uploaded in size-bounded batches (Vercel's 4.5MB body limit).
-  async function runUpload(skipChecks = false) {
+  async function runUpload(skipChecks = false, subset?: BulkFile[]) {
     setUploading(true)
+    setDone(false)
     const api = createApiClient(token)
+    const list = subset ?? files
 
     const succeeded = new Set<string>()
     const errored   = new Map<string, string>()
@@ -599,7 +601,7 @@ function BulkUploadModal({
 
     const toBulk: BulkFile[] = []
     const toReplace: BulkFile[] = []
-    for (const f of files) {
+    for (const f of list) {
       const c = skipChecks ? undefined : checks[f.file.name]
       if (c?.classification === 'exact_duplicate') { skipped.add(f.file.name); continue }
       if (c?.classification === 'name_match' && decisions[f.file.name] === 'replace' && c.existing) { toReplace.push(f); continue }
@@ -669,7 +671,7 @@ function BulkUploadModal({
 
     // Final guard: anything the server never confirmed (not done/skipped/errored)
     // must be surfaced, never left as a silent 'pending'.
-    files.forEach(f => {
+    list.forEach(f => {
       if (!succeeded.has(f.file.name) && !skipped.has(f.file.name) && !errored.has(f.file.name)) {
         errored.set(f.file.name, 'Not confirmed by the server — please re-upload this file.')
       }
@@ -678,6 +680,16 @@ function BulkUploadModal({
 
     setUploading(false)
     setDone(true)
+  }
+
+  // Re-upload just the files that failed — reuses the files already in the
+  // browser, so the admin doesn't have to find them on disk again. Server-side
+  // dedup skips any that actually landed, so this never creates duplicates.
+  async function retryFailed() {
+    const failed = files.filter(f => f.status === 'error')
+    if (failed.length === 0) return
+    setFiles(prev => prev.map(f => f.status === 'error' ? { ...f, status: 'pending', error: undefined } : f))
+    await runUpload(true, failed)
   }
 
   const doneCount    = files.filter(f => f.status === 'done').length
@@ -891,7 +903,7 @@ function BulkUploadModal({
 
                 {failedFiles.length > 0 && (
                   <div className="mt-3">
-                    <p className="mb-1 text-xs font-semibold text-status-error">Did not upload — please re-try these:</p>
+                    <p className="mb-1 text-xs font-semibold text-status-error">Did not upload:</p>
                     <ul className="space-y-1">
                       {failedFiles.map(f => (
                         <li key={f.file.name} className="flex items-start gap-1.5 text-xs">
@@ -900,6 +912,16 @@ function BulkUploadModal({
                         </li>
                       ))}
                     </ul>
+                    <button
+                      type="button"
+                      onClick={retryFailed}
+                      disabled={uploading}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-60"
+                    >
+                      <RefreshCw size={13} className={uploading ? 'animate-spin' : ''} />
+                      {uploading ? 'Re-trying…' : `Re-try ${failedFiles.length} failed file${failedFiles.length !== 1 ? 's' : ''}`}
+                    </button>
+                    <p className="mt-1 text-[11px] text-neutral-mid">No need to find them again — this re-uploads the files you already selected. Any that actually landed are skipped automatically.</p>
                   </div>
                 )}
 

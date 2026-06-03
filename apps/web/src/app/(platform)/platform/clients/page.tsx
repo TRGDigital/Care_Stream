@@ -70,7 +70,8 @@ export default function ClientsPage() {
   const filtered = search
     ? tenants.filter(t =>
         t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.slug.toLowerCase().includes(search.toLowerCase())
+        t.slug.toLowerCase().includes(search.toLowerCase()) ||
+        (t.account_number ?? '').toLowerCase().includes(search.toLowerCase())
       )
     : tenants
 
@@ -93,7 +94,7 @@ export default function ClientsPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search clients…"
+            placeholder="Search by name, slug or account no. (CS-…)"
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
           />
         </div>
@@ -135,6 +136,9 @@ export default function ClientsPage() {
                           {risk && <AlertTriangle size={12} className="shrink-0 text-amber-500" />}
                         </div>
                         <div className="flex items-center gap-2">
+                          {t.account_number && (
+                            <span className="rounded bg-neutral-light px-1.5 py-0.5 font-mono text-xs font-medium text-neutral-dark">{t.account_number}</span>
+                          )}
                           <p className="text-xs text-neutral-mid">{t.slug}</p>
                           {t.sub_tenant_count > 0 && (
                             <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">

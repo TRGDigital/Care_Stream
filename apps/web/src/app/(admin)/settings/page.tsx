@@ -80,6 +80,7 @@ export default function SettingsPage() {
   const { data: session }           = useSession()
   const router                      = useRouter()
   const [inboundEmail,   setInboundEmail]   = useState('')
+  const [accountNumber,  setAccountNumber]  = useState('')
   const [allowlist,      setAllowlist]      = useState<string[]>([])
   const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>([])
   const [newPhone,       setNewPhone]       = useState('')
@@ -121,6 +122,7 @@ export default function SettingsPage() {
     ])
       .then(([data, sitesData, trainingData]) => {
         setInboundEmail(data.inbound_email)
+        setAccountNumber((data as any).account_number ?? '')
         setAllowlist(data.email_allowlist)
         setPhoneAllowlist((data as any).phone_allowlist ?? [])
         setFacilityType((data as any).facility_type ?? 'care home')
@@ -320,8 +322,18 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Settings</h1>
-      <p className="mb-6 text-sm text-neutral-mid">Click any section to expand and make changes. Changes save automatically.</p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Settings</h1>
+          <p className="text-sm text-neutral-mid">Click any section to expand and make changes. Changes save automatically.</p>
+        </div>
+        {accountNumber && (
+          <div className="rounded-lg border border-gray-200 bg-neutral-light px-4 py-2 text-right">
+            <p className="text-xs font-medium text-neutral-mid">Account number</p>
+            <p className="font-mono text-base font-semibold text-neutral-dark">{accountNumber}</p>
+          </div>
+        )}
+      </div>
 
       {loadError && (
         <div className="mb-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">

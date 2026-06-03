@@ -38,6 +38,7 @@ model Plan {
 
 model Tenant {
   id                  String             @id @default(uuid())
+  account_number      String             @unique @default(dbgenerated("('CS-'::text || nextval('tenant_account_seq'::regclass))")) // CS-1001, CS-1002…
   name                String
   slug                String             @unique   // e.g. sunrise-care
   email_domain        String             @unique   // inbound: policies@{slug}.carestreamai.co.uk

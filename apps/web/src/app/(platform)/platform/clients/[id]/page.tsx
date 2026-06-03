@@ -422,6 +422,9 @@ export default function ClientDetailPage() {
               </h1>
               {detail && (
                 <p className="text-xs text-neutral-mid">
+                  {detail.tenant.account_number && (
+                    <span className="mr-1 font-mono font-medium text-neutral-dark">{detail.tenant.account_number}</span>
+                  )}
                   {detail.tenant.slug} · {(detail.tenant.plan as any)?.name ?? 'No plan'}
                 </p>
               )}

@@ -164,7 +164,7 @@ export function createApiClient(token: string) {
     },
 
     settings: {
-      get: () => apiFetch<{ inbound_email: string; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; response_style: 'standard' | 'concise' }>('/settings', token),
+      get: () => apiFetch<{ inbound_email: string; account_number: string; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; response_style: 'standard' | 'concise' }>('/settings', token),
       update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; email_preferences?: Record<string, boolean>; staff_roles?: string[]; response_style?: 'standard' | 'concise' }) =>
         apiFetch<{ email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; email_preferences: Record<string, boolean>; staff_roles: string[]; response_style: 'standard' | 'concise' }>('/settings', token, {
           method: 'PATCH',

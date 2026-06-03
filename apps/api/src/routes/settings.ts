@@ -62,13 +62,14 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, email_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
 
   ok(res, {
     inbound_email:      `policies@${tenant.slug}.${INBOUND_DOMAIN}`,
+    account_number:     tenant.account_number as string,
     email_allowlist:    tenant.email_allowlist as string[],
     facility_type:      tenant.facility_type as string,
     response_style:     (tenant.response_style as string) ?? 'standard',

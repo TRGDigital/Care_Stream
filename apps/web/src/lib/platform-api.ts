@@ -99,6 +99,7 @@ export interface PlanLimits {
 
 export interface TenantSummary {
   id:                  string
+  account_number:      string
   name:                string
   slug:                string
   subscription_status: string

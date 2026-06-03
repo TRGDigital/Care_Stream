@@ -37,6 +37,14 @@ const LANGUAGES = [
   { code: 'kan', name: 'Kannada' },
   { code: 'mal', name: 'Malayalam' },
   { code: 'tel', name: 'Telugu' },
+  // Creoles & related (common in UK care)
+  { code: 'mfe', name: 'Mauritian Creole' },
+  { code: 'hat', name: 'Haitian Creole' },
+  { code: 'crs', name: 'Seychellois Creole' },
+  { code: 'kea', name: 'Cape Verdean Creole' },
+  { code: 'jam', name: 'Jamaican Patois (Creole)' },
+  { code: 'gcf', name: 'Antillean Creole (Guadeloupe/Martinique)' },
+  { code: 'pcm', name: 'Nigerian Pidgin' },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

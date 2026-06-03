@@ -2078,9 +2078,26 @@ function SystemReference() {
               never falsely marked failed and a duplicate re-upload is never invited.
             </p>
           </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Duplicate detection (on upload)</p>
+            <p className="text-neutral-mid">
+              Every file is SHA-256 hashed (column <code className="text-xs bg-gray-100 px-1 rounded">policies.content_hash</code>). On bulk upload the client first
+              calls <code className="text-xs bg-gray-100 px-1 rounded">POST /policies/check</code>, which classifies each file against the tenant&rsquo;s ACTIVE policies as:
+            </p>
+            <ul className="mt-2 ml-4 list-disc space-y-1 text-neutral-mid">
+              <li><strong>exact_duplicate</strong> (hash matches) → <strong>auto-skipped</strong>, reported in the summary. Never stored twice.</li>
+              <li><strong>name_match</strong> (same policy name, different content) → admin chooses <strong>Replace</strong> (new version via the <code className="text-xs bg-gray-100 px-1 rounded">/:id/version</code> flow — old archived/superseded) or <strong>Keep both</strong>, per file.</li>
+              <li><strong>new</strong> → uploaded as a brand-new policy.</li>
+            </ul>
+            <p className="mt-2 text-neutral-mid">
+              The bulk endpoint <em>also</em> skips byte-identical files server-side (and within the same batch) as a fail-safe, returning them in a <code className="text-xs bg-gray-100 px-1 rounded">skipped</code> array.
+              Policies uploaded before this feature have no hash yet, so they match by <strong>name</strong> only until re-versioned.
+            </p>
+          </div>
         </div>
         <div className="mt-3 space-y-1">
-          <RefRow label="Upload UI"          value="apps/web/src/app/(admin)/policies/page.tsx — single + bulk; bulk auto-chunks by size/count and shows per-file progress." />
+          <RefRow label="Upload UI"          value="apps/web/src/app/(admin)/policies/page.tsx — single + bulk; bulk auto-chunks by size/count, runs a duplicate-check review step, shows per-file progress." />
+          <RefRow label="Duplicate check"    value="POST /policies/check — SHA-256 + normalised-name match vs active policies. Exact dupes auto-skip; name matches prompt Replace/Keep both. content_hash column + policies_tenant_hash_idx." />
           <RefRow label="API"                value="POST /policies (single), POST /policies/bulk (≤50 files), GET /policies. apps/api/src/routes/policies.ts." />
           <RefRow label="Upload limits"      value="multer memoryStorage, 50MB/file; accepted: PDF, DOCX, ODT, TXT (MIME + extension checked). middleware/upload.ts." />
           <RefRow label="Storage service"    value="apps/api/src/services/storage/s3.ts — buildPolicyKey(); falls back to local disk if S3_BUCKET unset." />

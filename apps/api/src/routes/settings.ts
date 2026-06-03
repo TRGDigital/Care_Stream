@@ -3,6 +3,7 @@ import multer from 'multer'
 import sharp from 'sharp'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { effectiveSections } from '../lib/policy-sections'
 
 // Tenant settings: inbound email address, email allowlist, logo, email preferences.
 // Mounted at /settings in app.ts, behind requireAuth + tenantGuard.
@@ -62,7 +63,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, policy_sections: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -70,6 +71,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
   ok(res, {
     inbound_email:      `policies@${tenant.slug}.${INBOUND_DOMAIN}`,
     account_number:     tenant.account_number as string,
+    policy_sections:    effectiveSections(tenant.policy_sections as string[]),
     email_allowlist:    tenant.email_allowlist as string[],
     facility_type:      tenant.facility_type as string,
     response_style:     (tenant.response_style as string) ?? 'standard',
@@ -90,7 +92,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, facility_type, response_style, email_preferences, staff_roles } = req.body
+  const { email_allowlist, facility_type, response_style, email_preferences, staff_roles, policy_sections } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -143,6 +145,19 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.staff_roles = normalised
   }
 
+  if (policy_sections !== undefined) {
+    if (!Array.isArray(policy_sections)) {
+      return err(res, 'INVALID_INPUT', 'policy_sections must be an array', 400)
+    }
+    const normalised = [...new Set(
+      (policy_sections as unknown[])
+        .filter(s => typeof s === 'string')
+        .map(s => (s as string).trim())
+        .filter(s => s.length > 0 && s.length <= 100),
+    )]
+    updateData.policy_sections = normalised
+  }
+
   if (email_preferences !== undefined) {
     if (typeof email_preferences !== 'object' || Array.isArray(email_preferences)) {
       return err(res, 'INVALID_INPUT', 'email_preferences must be an object', 400)
@@ -160,7 +175,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true },
+    select: { email_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, policy_sections: true },
   })
 
   ok(res, {
@@ -168,6 +183,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     facility_type:     updated.facility_type,
     email_preferences: mergePrefs(updated.email_preferences),
     staff_roles:       updated.staff_roles,
+    policy_sections:   effectiveSections(updated.policy_sections),
   })
 })
 

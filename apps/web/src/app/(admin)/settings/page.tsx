@@ -91,6 +91,9 @@ export default function SettingsPage() {
   const [staffRoles,     setStaffRoles]     = useState<string[]>([])
   const [newRole,        setNewRole]        = useState('')
   const [savingRoles,    setSavingRoles]    = useState(false)
+  const [policySections, setPolicySections] = useState<string[]>([])
+  const [newSection,     setNewSection]     = useState('')
+  const [savingSections, setSavingSections] = useState(false)
   const [loading,        setLoading]        = useState(true)
   const [loadError,      setLoadError]      = useState('')
   const [saving,         setSaving]         = useState(false)
@@ -129,6 +132,7 @@ export default function SettingsPage() {
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
+        setPolicySections((data as any).policy_sections ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
         setSites(sitesData.sites)
         setTrainingSettings(trainingData.settings ?? {})
@@ -176,6 +180,31 @@ export default function SettingsPage() {
   function removeRole(role: string) {
     const updated = staffRoles.filter(r => r !== role)
     setStaffRoles(updated); saveStaffRoles(updated)
+  }
+
+  async function saveSections(updated: string[]) {
+    if (!session?.accessToken) return
+    setSavingSections(true)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ policy_sections: updated })
+      setPolicySections(data.policy_sections)
+    } catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingSections(false) }
+  }
+
+  function addSection() {
+    const s = newSection.trim()
+    if (!s) return
+    if (policySections.some(x => x.toLowerCase() === s.toLowerCase())) { setError('That section already exists.'); return }
+    setError('')
+    const updated = [...policySections, s]
+    setPolicySections(updated); setNewSection('')
+    saveSections(updated)
+  }
+
+  function removeSection(s: string) {
+    const updated = policySections.filter(x => x !== s)
+    setPolicySections(updated); saveSections(updated)
   }
 
   async function uploadLogo(file: File) {
@@ -479,6 +508,34 @@ export default function SettingsPage() {
             </div>
           )}
           {savingRoles && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── Policy sections ───────────────────────────────────────────────── */}
+        <SettingSection icon={SlidersHorizontal} title="Policy sections" description="The sections you can file internal policies under when uploading.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            When you bulk-upload internal policies, you can tag the batch with one of these sections (e.g. Safeguarding, GDPR). Add your own to match how your policies are organised.
+          </p>
+          <div className="mb-4 flex gap-2">
+            <input type="text" value={newSection} onChange={e => { setNewSection(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addSection()} placeholder="e.g. Medication management" className={INPUT} />
+            <Button onClick={addSection} disabled={savingSections || !newSection.trim()} size="md">
+              <Plus size={14} className="mr-1.5" />Add
+            </Button>
+          </div>
+          {policySections.length === 0 ? (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No sections yet.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {policySections.map(s => (
+                <span key={s} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
+                  {s}
+                  <button onClick={() => removeSection(s)} disabled={savingSections} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {savingSections && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
         {/* ── Approved sender addresses ─────────────────────────────────────── */}

@@ -35,6 +35,7 @@ export default function PoliciesPage() {
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
+  const [sections,       setSections]       = useState<string[]>([])
 
   function load() {
     if (!session?.accessToken) return
@@ -47,6 +48,14 @@ export default function PoliciesPage() {
 
   useEffect(load, [session?.accessToken])
 
+  // The tenant's configurable internal-policy sections (for the upload dropdowns).
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).settings.get()
+      .then(s => setSections(s.policy_sections ?? []))
+      .catch(() => {})
+  }, [session?.accessToken])
+
   const activePolicies   = policies.filter(p => ACTIVE_STATUSES.has(p.status))
   const archivedPolicies = policies.filter(p => ARCHIVED_STATUSES.has(p.status))
   const tabPolicies      = tab === 'active' ? activePolicies : archivedPolicies
@@ -55,7 +64,7 @@ export default function PoliciesPage() {
   const q = search.trim().toLowerCase()
   const visiblePolicies = q
     ? tabPolicies.filter(p =>
-        `${p.name ?? ''} ${p.filename ?? ''}`.toLowerCase().includes(q))
+        `${p.name ?? ''} ${p.filename ?? ''} ${p.section ?? ''}`.toLowerCase().includes(q))
     : tabPolicies
 
   async function archive(id: string, name: string) {
@@ -142,6 +151,7 @@ export default function PoliciesPage() {
       {showUpload && (
         <UploadModal
           token={session?.accessToken ?? ''}
+          sections={sections}
           onClose={() => setShowUpload(false)}
           onUploaded={() => { setShowUpload(false); setLoading(true); load() }}
         />
@@ -149,6 +159,7 @@ export default function PoliciesPage() {
       {showBulkUpload && (
         <BulkUploadModal
           token={session?.accessToken ?? ''}
+          sections={sections}
           onClose={() => setShowBulkUpload(false)}
           onUploaded={() => { setShowBulkUpload(false); setLoading(true); load() }}
         />
@@ -294,7 +305,10 @@ function PolicyGroup({
             <tbody>
               {policies.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
-                  <td className="px-6 py-4 font-medium text-neutral-dark truncate">{p.name}</td>
+                  <td className="px-6 py-4 truncate">
+                    <span className="font-medium text-neutral-dark">{p.name}</span>
+                    {p.section && <span className="ml-2 rounded-full bg-teal-light px-2 py-0.5 text-[11px] font-medium text-teal">{p.section}</span>}
+                  </td>
                   <td className="px-6 py-4">
                     <Badge variant={statusVariant(p.status)}>
                       {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
@@ -407,15 +421,18 @@ function PolicyActions({
 
 function UploadModal({
   token,
+  sections,
   onClose,
   onUploaded,
 }: {
   token:      string
+  sections:   string[]
   onClose:    () => void
   onUploaded: () => void
 }) {
   const [name,     setName]     = useState('')
   const [category, setCategory] = useState('internal_policy')
+  const [section,  setSection]  = useState('')
   const [file,     setFile]     = useState<File | null>(null)
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
@@ -431,6 +448,7 @@ function UploadModal({
     form.append('file', file)
     form.append('name', name || file.name.replace(/\.[^.]+$/, ''))
     form.append('document_category', category)
+    if (category === 'internal_policy' && section) form.append('section', section)
 
     const api = createApiClient(token)
     const res = await api.policies.upload(form)
@@ -479,6 +497,19 @@ function UploadModal({
               <option value="cqc_report">CQC Report</option>
             </select>
           </div>
+          {category === 'internal_policy' && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Section</label>
+              <select
+                value={section}
+                onChange={e => setSection(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              >
+                <option value="">— none —</option>
+                {sections.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
               Document (PDF, DOCX, ODT, or TXT)
@@ -555,15 +586,18 @@ function deriveNameFromFile(filename: string): string {
 
 function BulkUploadModal({
   token,
+  sections,
   onClose,
   onUploaded,
 }: {
   token:      string
+  sections:   string[]
   onClose:    () => void
   onUploaded: () => void
 }) {
   const [files,    setFiles]    = useState<BulkFile[]>([])
   const [category, setCategory] = useState('internal_policy')
+  const [section,  setSection]  = useState('')
   const [uploading, setUploading] = useState(false)
   const [done,      setDone]      = useState(false)
   const [dragOver,  setDragOver]  = useState(false)
@@ -693,6 +727,7 @@ function BulkUploadModal({
       const form = new FormData()
       batch.forEach(f => form.append('files', f.file))
       form.append('document_category', category)
+      if (category === 'internal_policy' && section) form.append('section', section)
       form.append('names', JSON.stringify(batch.map(f => f.name)))
 
       // Cap each batch at 90s — if it hangs, fall through to the reconcile path
@@ -767,7 +802,7 @@ function BulkUploadModal({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Category — only while selecting files; locked in once you reach the review step */}
           {phase === 'select' && !done && (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <label className="text-sm font-medium text-neutral-dark whitespace-nowrap">Category (all files):</label>
               <select
                 value={category}
@@ -779,6 +814,20 @@ function BulkUploadModal({
                 <option value="staff_handbook">Staff handbook</option>
                 <option value="cqc_report">CQC Report</option>
               </select>
+              {category === 'internal_policy' && (
+                <>
+                  <label className="text-sm font-medium text-neutral-dark whitespace-nowrap">Section:</label>
+                  <select
+                    value={section}
+                    onChange={e => setSection(e.target.value)}
+                    disabled={uploading}
+                    className="rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  >
+                    <option value="">— none —</option>
+                    {sections.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </>
+              )}
             </div>
           )}
 

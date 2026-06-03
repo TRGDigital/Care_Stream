@@ -21,6 +21,7 @@ const UploadSchema = z.object({
   name:                z.string().min(1).max(200),
   document_category:   z.enum(['internal_policy', 'staff_handbook']),  // tenants never upload external_regulation (§4.5)
   tags:                z.string().optional(),                           // JSON array string
+  section:             z.string().max(100).optional(),                 // internal-policy section
   review_interval_days: z.coerce.number().int().min(1).optional(),
 })
 
@@ -140,7 +141,7 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     return
   }
 
-  const { name, document_category, tags: rawTags, review_interval_days } = parsed.data
+  const { name, document_category, tags: rawTags, section, review_interval_days } = parsed.data
   const tenantId = req.user!.tenant_id
   const policyId = uuidv4()
 
@@ -183,6 +184,7 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
           version:             1,
           status:              'processing',
           content_hash:        sha256(req.file!.buffer),
+          section:             document_category === 'internal_policy' ? (section?.trim() || null) : null,
           tags:                parseTags(rawTags),
           uploaded_by:         req.user!.sub,
           review_interval_days: review_interval_days ?? null,
@@ -328,6 +330,10 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   // tenant_id from the JWT payload directly and re-enter the context explicitly.
   const tenantId = req.user!.tenant_id
   const category = req.body.document_category === 'staff_handbook' ? 'staff_handbook' : 'internal_policy'
+  // Section applies to internal policies only; one section per bulk batch.
+  const section  = category === 'internal_policy' && typeof req.body.section === 'string'
+    ? (req.body.section.trim().slice(0, 100) || null)
+    : null
 
   try {
     const slots = await remainingPolicySlots(tenantId, category)
@@ -408,6 +414,7 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
             version:           1,
             status:            'processing',
             content_hash:      hash,
+            section,
             tags:              [],
             uploaded_by:       req.user!.sub,
           },

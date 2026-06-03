@@ -54,6 +54,7 @@ model Tenant {
   logo_url               String?                                               // base64 data URL of tenant logo
   email_preferences      Json               @default("{}")                     // per-type opt-in/out flags
   staff_roles            String[]           @default([])                       // configurable job role list
+  policy_sections        String[]           @default([])                       // configurable internal-policy sections (empty → API default set)
   parent_tenant_id       String?                                               // null = root/standalone; set = sub-tenant
   created_at             DateTime           @default(now())
   plan                   Plan?              @relation(fields: [plan_id], references: [id])
@@ -128,6 +129,7 @@ model Policy {
   version              Int       @default(1)
   status               String    @default("processing")   // active|processing|archived|superseded
   content_hash         String?                              // SHA-256 of file bytes — duplicate detection
+  section              String?                              // internal-policy section/taxonomy (tenant-configurable)
   tags                 Json      @default("[]")
   uploaded_by          String
   pinecone_namespace   String?                             // active Pinecone namespace for this version

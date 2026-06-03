@@ -164,6 +164,23 @@ export async function activateStagedVectors(tenantId: string, policyId: string):
   console.log(`[pinecone] Activated ${allIds.length} vectors for policy=${policyId} → ${activeNs}`)
 }
 
+// Per-namespace vector counts for a tenant (policy passages, handbook chapters,
+// knowledge base). Reads Pinecone's index stats — one call returns all namespaces.
+export async function getTenantVectorStats(tenantId: string): Promise<{
+  namespaces: Array<{ name: string; label: string; count: number }>
+  total: number
+}> {
+  const stats: any = await getIndex().describeIndexStats()
+  const ns: Record<string, any> = stats?.namespaces ?? {}
+  const countOf = (name: string) => Number(ns[name]?.recordCount ?? ns[name]?.vectorCount ?? 0)
+  const namespaces = [
+    { name: getTenantNamespace(tenantId),          label: 'Policy passages' },
+    { name: getHandbookChapterNamespace(tenantId), label: 'Handbook chapters' },
+    { name: getKnowledgeNamespace(tenantId),        label: 'Knowledge base' },
+  ].map(e => ({ ...e, count: countOf(e.name) }))
+  return { namespaces, total: namespaces.reduce((s, e) => s + e.count, 0) }
+}
+
 // Wipe ALL of a tenant's policy + knowledge vectors (every namespace that holds
 // content derived from their uploaded policies). Used by the platform "reset
 // policies" action. Each deleteAll is best-effort — a namespace may not exist.

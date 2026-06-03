@@ -4,12 +4,12 @@ import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { imageUploadMiddleware } from '../middleware/upload'
-import { uploadBlogImage, deleteTenantFiles } from '../services/storage/s3'
+import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats } from '../services/storage/s3'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
-import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors } from '../services/vector/pinecone'
+import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
 import { blogImagePublicUrl } from '../lib/urls'
@@ -170,6 +170,49 @@ adminRouter.get('/leads', async (_req: Request, res: Response) => {
     (prisma as any).marketingLead.count({ where: { status: 'new' } }),
   ])
   ok(res, { leads, total, newCount })
+})
+
+// ─── GET /admin/tenants/:id/insights ──────────────────────────────────────────
+// Per-tenant observability: Pinecone namespaces + vector counts, S3 storage, and
+// ESTIMATED monthly costs (usage × published unit prices — not invoiced amounts).
+
+adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId } })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  const since30 = new Date(Date.now() - 30 * 86_400_000)
+  const [vectors, storage, queriesTotal, queries30] = await Promise.all([
+    getTenantVectorStats(tenantId).catch(() => null),
+    getTenantStorageStats(tenantId).catch(() => null),
+    (prisma as any).queryRecord.count({ where: { tenant_id: tenantId } }),
+    (prisma as any).queryRecord.count({ where: { tenant_id: tenantId, created_at: { gte: since30 } } }),
+  ])
+
+  // ── Estimated monthly cost — usage × published unit prices, NOT invoiced. ──
+  const GB = 1024 ** 3
+  const PINECONE_USD_PER_GB_MONTH = 0.33
+  const S3_USD_PER_GB_MONTH       = 0.024                 // eu-west-2 S3 Standard
+  const BYTES_PER_VECTOR          = 1536 * 4 + 1600        // 1536-dim float32 + ~chunk_text metadata
+  const AI_USD_PER_QUERY          = 0.02                   // ~4k in + ~600 out tokens, Claude Sonnet
+  const EMBED_USD_PER_VECTOR      = 0.000005               // ~250 tokens × $0.02/1M (text-embedding-3-small)
+
+  const vectorTotal   = vectors?.total ?? 0
+  const pinecone_usd  = (vectorTotal * BYTES_PER_VECTOR / GB) * PINECONE_USD_PER_GB_MONTH
+  const s3_usd        = ((storage?.bytes ?? 0) / GB) * S3_USD_PER_GB_MONTH
+  const ai_usd        = queries30 * AI_USD_PER_QUERY
+  const embed_onetime = vectorTotal * EMBED_USD_PER_VECTOR
+
+  ok(res, {
+    vectors: vectors ? { ...vectors, available: true } : { namespaces: [], total: 0, available: false },
+    storage: storage ? { ...storage, available: true } : { objects: 0, bytes: 0, available: false },
+    queries: { total: queriesTotal, last30: queries30 },
+    costs: {
+      pinecone_usd, s3_usd, ai_usd, embed_onetime,
+      total_monthly_usd: pinecone_usd + s3_usd + ai_usd,
+      note: 'Estimated monthly cost from usage × published unit prices — not invoiced amounts. AI = last-30-day queries × ~$0.02 each (per-query token logging not yet captured); embeddings shown separately as a one-off.',
+    },
+  })
 })
 
 // ─── POST /admin/tenants/:id/policies/reset ───────────────────────────────────

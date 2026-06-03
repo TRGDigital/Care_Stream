@@ -117,6 +117,24 @@ export interface TenantSummary {
   }
 }
 
+export interface TenantInsights {
+  vectors: {
+    namespaces: Array<{ name: string; label: string; count: number }>
+    total: number
+    available: boolean
+  }
+  storage: { objects: number; bytes: number; available: boolean }
+  queries: { total: number; last30: number }
+  costs: {
+    pinecone_usd: number
+    s3_usd: number
+    ai_usd: number
+    embed_onetime: number
+    total_monthly_usd: number
+    note: string
+  }
+}
+
 export interface TenantDetail {
   tenant:               TenantSummary & { email_domain: string; branding_signoff: string }
   policies:             any[]
@@ -391,6 +409,9 @@ export function createPlatformClient(token: string) {
         adminFetch<{ policies_deleted: number; knowledge_deleted: number; files_deleted: number }>(
           `/tenants/${id}/policies/reset`, token, { method: 'POST' }
         ),
+
+      insights: (id: string) =>
+        adminFetch<TenantInsights>(`/tenants/${id}/insights`, token),
 
       reactivateStaff: (tenantId: string, userId: string) =>
         adminFetch<{ reactivated: boolean }>(`/tenants/${tenantId}/staff/${userId}/reactivate`, token, { method: 'POST' }),

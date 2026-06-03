@@ -3,14 +3,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient, type TenantDetail, type TenantAuditStats } from '@/lib/platform-api'
+import { createPlatformClient, type TenantDetail, type TenantAuditStats, type TenantInsights } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
   ClipboardCheck, Copy, ExternalLink, KeyRound, Loader2, Mail, MoreVertical, Plus,
-  Sparkles, UserMinus, UserPlus, UserX, HardDrive,
+  Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw,
 } from 'lucide-react'
+
+const fmtUsd = (n: number) => n <= 0 ? '$0.00' : n < 0.01 ? '<$0.01' : `$${n.toFixed(2)}`
+function fmtBytes(n: number): string {
+  if (!n) return '0 B'
+  if (n < 1024) return `${n} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let v = n / 1024, i = 0
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }
+  return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`
+}
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
 
@@ -351,6 +361,19 @@ export default function ClientDetailPage() {
   const [resetMsg,    setResetMsg]    = useState('')
   const [resetErr,    setResetErr]    = useState('')
 
+  // Vectors + cost insight
+  const [insights,        setInsights]        = useState<TenantInsights | null>(null)
+  const [insightsLoading, setInsightsLoading] = useState(true)
+
+  async function loadInsights() {
+    if (!token || !id) return
+    setInsightsLoading(true)
+    try { setInsights(await createPlatformClient(token).tenants.insights(id)) }
+    catch { setInsights(null) }
+    finally { setInsightsLoading(false) }
+  }
+  useEffect(() => { loadInsights() /* eslint-disable-next-line */ }, [token, id])
+
   // Sub-tenants state
   const [subTenants,     setSubTenants]     = useState<any[]>([])
   const [showAddSubSite, setShowAddSubSite] = useState(false)
@@ -392,9 +415,10 @@ export default function ClientDetailPage() {
       const r = await createPlatformClient(token).tenants.resetPolicies(id)
       setResetMsg(`Deleted ${r.policies_deleted} policies, ${r.knowledge_deleted} knowledge entries, ${r.files_deleted} files.`)
       setShowReset(false); setResetText('')
-      // Reload the tenant so counts refresh.
+      // Reload the tenant + vector/cost insight so counts refresh.
       const fresh = await createPlatformClient(token).tenants.get(id)
       setDetail(fresh)
+      loadInsights()
     } catch (e: any) {
       setResetErr(e?.message ?? 'Reset failed — please try again.')
     } finally {
@@ -535,6 +559,66 @@ export default function ClientDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Search vectors + estimated cost */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database size={15} className="text-teal" />
+                  <h2 className="text-sm font-semibold text-neutral-dark">Search vectors &amp; estimated cost</h2>
+                </div>
+                <button
+                  onClick={loadInsights}
+                  disabled={insightsLoading}
+                  className="flex items-center gap-1 text-xs text-neutral-mid hover:text-neutral-dark disabled:opacity-50"
+                >
+                  <RefreshCw size={12} className={insightsLoading ? 'animate-spin' : ''} /> Refresh
+                </button>
+              </div>
+
+              {insightsLoading ? (
+                <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-neutral-mid" /></div>
+              ) : !insights ? (
+                <p className="text-sm text-neutral-mid">Couldn&rsquo;t load vector / cost data right now — try Refresh.</p>
+              ) : (
+                <>
+                  <p className="mb-2 text-xs font-medium text-neutral-mid">Pinecone namespaces {insights.vectors.available ? '' : '(unavailable)'}</p>
+                  <div className="space-y-1.5">
+                    {insights.vectors.namespaces.map(ns => (
+                      <div key={ns.name} className="flex items-center justify-between gap-3 text-sm">
+                        <div className="min-w-0">
+                          <span className="text-neutral-dark">{ns.label}</span>
+                          <span className="ml-2 break-all font-mono text-xs text-neutral-mid">{ns.name}</span>
+                        </div>
+                        <span className="shrink-0 font-semibold text-neutral-dark">{ns.count.toLocaleString()}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-1.5 text-sm">
+                      <span className="font-medium text-neutral-dark">Total vectors / chunks</span>
+                      <span className="font-bold text-neutral-dark">{insights.vectors.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-neutral-mid">S3 storage</span>
+                    <span className="text-neutral-dark">{fmtBytes(insights.storage.bytes)} · {insights.storage.objects.toLocaleString()} files</span>
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
+                    <p className="mb-2 text-xs font-semibold text-neutral-dark">Estimated monthly cost</p>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between"><span className="text-neutral-mid">Pinecone (vectors)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.pinecone_usd)}</span></div>
+                      <div className="flex justify-between"><span className="text-neutral-mid">S3 (storage)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.s3_usd)}</span></div>
+                      <div className="flex justify-between"><span className="text-neutral-mid">AI (queries, last 30d)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.ai_usd)}</span></div>
+                      <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold text-neutral-dark"><span>Total / month</span><span>{fmtUsd(insights.costs.total_monthly_usd)}</span></div>
+                    </div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-neutral-mid">
+                      Embeddings (one-off): {fmtUsd(insights.costs.embed_onetime)}. {insights.costs.note}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Plan usage */}
             {detail.tenant.plan && (

@@ -4,6 +4,8 @@ import {
   GetObjectCommand,
   CopyObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
   HeadObjectCommand,
 } from '@aws-sdk/client-s3'
 import type { Readable } from 'stream'
@@ -177,6 +179,36 @@ export async function fileExists(s3Key: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+// Delete every object under a tenant's prefix — policies, extracted text and
+// versions all live under tenants/{id}/. Used by the platform "reset policies"
+// action. Returns the number of objects deleted.
+export async function deleteTenantFiles(tenantId: string): Promise<number> {
+  const prefix = `tenants/${tenantId}/`
+
+  if (USE_LOCAL) {
+    try { fs.rmSync(path.join(LOCAL_DIR, prefix), { recursive: true, force: true }) } catch { /* ignore */ }
+    return 0
+  }
+
+  let deleted = 0
+  let token: string | undefined
+  do {
+    const list = await getS3().send(new ListObjectsV2Command({
+      Bucket: BUCKET, Prefix: prefix, ContinuationToken: token,
+    }))
+    const objects = (list.Contents ?? []).map(o => ({ Key: o.Key! })).filter(o => o.Key)
+    if (objects.length > 0) {
+      // DeleteObjects handles up to 1000 keys per request.
+      await getS3().send(new DeleteObjectsCommand({ Bucket: BUCKET, Delete: { Objects: objects, Quiet: true } }))
+      deleted += objects.length
+    }
+    token = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (token)
+
+  console.log(`[s3] Deleted ${deleted} objects under ${prefix}`)
+  return deleted
 }
 
 // ─── Versioning (§10.5) ───────────────────────────────────────────────────────

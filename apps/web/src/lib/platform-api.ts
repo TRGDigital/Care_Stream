@@ -387,6 +387,11 @@ export function createPlatformClient(token: string) {
       deactivateStaff: (tenantId: string, userId: string) =>
         adminFetch<{ deactivated: boolean }>(`/tenants/${tenantId}/staff/${userId}/deactivate`, token, { method: 'POST' }),
 
+      resetPolicies: (id: string) =>
+        adminFetch<{ policies_deleted: number; knowledge_deleted: number; files_deleted: number }>(
+          `/tenants/${id}/policies/reset`, token, { method: 'POST' }
+        ),
+
       reactivateStaff: (tenantId: string, userId: string) =>
         adminFetch<{ reactivated: boolean }>(`/tenants/${tenantId}/staff/${userId}/reactivate`, token, { method: 'POST' }),
       subTenants: (id: string) =>

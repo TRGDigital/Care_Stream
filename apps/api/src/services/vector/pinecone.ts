@@ -164,6 +164,26 @@ export async function activateStagedVectors(tenantId: string, policyId: string):
   console.log(`[pinecone] Activated ${allIds.length} vectors for policy=${policyId} → ${activeNs}`)
 }
 
+// Wipe ALL of a tenant's policy + knowledge vectors (every namespace that holds
+// content derived from their uploaded policies). Used by the platform "reset
+// policies" action. Each deleteAll is best-effort — a namespace may not exist.
+export async function deleteAllTenantPolicyVectors(tenantId: string): Promise<void> {
+  const index = getIndex()
+  const namespaces = [
+    getTenantNamespace(tenantId),          // policy passage chunks
+    getHandbookChapterNamespace(tenantId), // handbook chapter summaries
+    getKnowledgeNamespace(tenantId),        // policy-derived knowledge entries
+  ]
+  for (const ns of namespaces) {
+    try {
+      await index.namespace(ns).deleteAll()
+      console.log(`[pinecone] Cleared namespace ${ns}`)
+    } catch (e) {
+      console.warn(`[pinecone] deleteAll skipped for ${ns}: ${(e as Error)?.message}`)
+    }
+  }
+}
+
 // Delete all vectors for a specific policy_id from the active namespace.
 // Uses ID prefix listing so no paid-tier filter capability is required.
 export async function deletePolicyVectors(tenantId: string, policyId: string): Promise<void> {

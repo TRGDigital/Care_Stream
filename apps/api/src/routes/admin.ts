@@ -4,12 +4,12 @@ import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { imageUploadMiddleware } from '../middleware/upload'
-import { uploadBlogImage } from '../services/storage/s3'
+import { uploadBlogImage, deleteTenantFiles } from '../services/storage/s3'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
-import { upsertRegulationVectors, deleteRegulationVector } from '../services/vector/pinecone'
+import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
 import { blogImagePublicUrl } from '../lib/urls'
@@ -170,6 +170,34 @@ adminRouter.get('/leads', async (_req: Request, res: Response) => {
     (prisma as any).marketingLead.count({ where: { status: 'new' } }),
   ])
   ok(res, { leads, total, newCount })
+})
+
+// ─── POST /admin/tenants/:id/policies/reset ───────────────────────────────────
+// Platform-owner action: permanently delete ALL of a tenant's policy data so they
+// can re-upload from scratch — Pinecone vectors, S3 files, policy rows, and the
+// policy-derived knowledge entries. Nothing else (account, settings, staff,
+// platform content) is touched. Irreversible.
+
+adminRouter.post('/tenants/:id/policies/reset', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId } })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  // 1. Pinecone — clear policy/chapter/knowledge namespaces (else deleted content
+  //    still surfaces in answers). Best-effort.
+  await deleteAllTenantPolicyVectors(tenantId).catch(e => console.error('[reset] pinecone:', (e as Error)?.message))
+
+  // 2. S3 — every file under tenants/{id}/.
+  const filesDeleted = await deleteTenantFiles(tenantId).catch(e => { console.error('[reset] s3:', (e as Error)?.message); return 0 })
+
+  // 3. Postgres — drop version self-links first so policy delete can't hit the FK,
+  //    then policy-derived knowledge, then the policies themselves.
+  await (prisma as any).$executeRaw`UPDATE policies SET superseded_by = NULL WHERE tenant_id = ${tenantId}`
+  const knowledge = await (prisma as any).knowledgeEntry.deleteMany({ where: { tenant_id: tenantId, source_type: 'policy' } })
+  const policies  = await (prisma as any).policy.deleteMany({ where: { tenant_id: tenantId } })
+
+  console.log(`[reset] tenant=${tenantId} policies=${policies.count} knowledge=${knowledge.count} files=${filesDeleted}`)
+  ok(res, { policies_deleted: policies.count, knowledge_deleted: knowledge.count, files_deleted: filesDeleted })
 })
 
 // ─── GET /admin/tenants ───────────────────────────────────────────────────────

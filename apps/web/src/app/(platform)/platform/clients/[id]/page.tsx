@@ -344,6 +344,12 @@ export default function ClientDetailPage() {
   const [showInactive, setShowInactive] = useState(false)
   const [resetCreds,   setResetCreds]   = useState<{ userId: string; name: string; email: string; password: string } | null>(null)
 
+  // Reset-policies (danger zone) state
+  const [showReset,   setShowReset]   = useState(false)
+  const [resetText,   setResetText]   = useState('')
+  const [resetting,   setResetting]   = useState(false)
+  const [resetMsg,    setResetMsg]    = useState('')
+
   // Sub-tenants state
   const [subTenants,     setSubTenants]     = useState<any[]>([])
   const [showAddSubSite, setShowAddSubSite] = useState(false)
@@ -375,6 +381,23 @@ export default function ClientDetailPage() {
       setError(e.message ?? 'Seeding failed')
     } finally {
       setSeeding(false)
+    }
+  }
+
+  async function handleResetPolicies() {
+    if (!token || !id) return
+    setResetting(true); setResetMsg(''); setError(null)
+    try {
+      const r = await createPlatformClient(token).tenants.resetPolicies(id)
+      setResetMsg(`Deleted ${r.policies_deleted} policies, ${r.knowledge_deleted} knowledge entries, ${r.files_deleted} files.`)
+      setShowReset(false); setResetText('')
+      // Reload the tenant so counts refresh.
+      const fresh = await createPlatformClient(token).tenants.get(id)
+      setDetail(fresh)
+    } catch (e: any) {
+      setError(e.message ?? 'Reset failed')
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -879,6 +902,60 @@ export default function ClientDetailPage() {
               </table>
             </div>
 
+            {/* Danger zone — reset all policies */}
+            <div className="rounded-xl border border-red-200 bg-red-50/40 p-5">
+              <h2 className="text-sm font-semibold text-red-700">Danger zone</h2>
+              <p className="mt-1 text-xs text-neutral-mid">
+                Permanently delete <strong>all {detail.policies.length} policies</strong> for {detail.tenant.name} — their files, search vectors, and the
+                knowledge entries generated from them. The account, staff and settings are kept. This cannot be undone.
+              </p>
+              {resetMsg && <p className="mt-2 text-xs font-medium text-green-700">{resetMsg}</p>}
+              <button
+                onClick={() => { setShowReset(true); setResetText('') }}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+              >
+                Delete all policies
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* Reset confirmation */}
+        {showReset && detail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+              <h2 className="text-lg font-semibold text-red-700">Delete all policies?</h2>
+              <p className="mt-2 text-sm text-neutral-mid">
+                This permanently deletes <strong>all {detail.policies.length} policies</strong>, their files and search vectors, and the
+                policy-derived knowledge entries for <strong>{detail.tenant.name}</strong>. It cannot be undone.
+              </p>
+              <p className="mt-4 text-xs font-medium text-neutral-dark">
+                Type <span className="font-mono text-red-600">{detail.tenant.account_number}</span> to confirm:
+              </p>
+              <input
+                value={resetText}
+                onChange={e => setResetText(e.target.value)}
+                placeholder={detail.tenant.account_number}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+              />
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  onClick={() => { setShowReset(false); setResetText('') }}
+                  disabled={resetting}
+                  className="rounded-md border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleResetPolicies}
+                  disabled={resetting || resetText.trim() !== detail.tenant.account_number}
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {resetting ? 'Deleting…' : 'Delete everything'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

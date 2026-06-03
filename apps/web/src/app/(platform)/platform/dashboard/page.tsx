@@ -1571,6 +1571,55 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Language Detection & Multilingual Responses */}
+      <RefSection icon={Globe} title="Language Detection & Multilingual Responses">
+        <p className="leading-relaxed text-neutral-mid">
+          Every inbound message (web chat, email, WhatsApp) is language-detected so the AI can reply in the
+          staff member&rsquo;s own language. Detection uses <strong>franc</strong> (ISO 639-3, 180+ languages); the answer
+          is generated in the target language by Claude. There is no language menu — it&rsquo;s automatic.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Three interaction patterns</p>
+            <ul className="ml-4 list-disc space-y-1 text-neutral-mid">
+              <li><strong>Pattern 1</strong> — English question, no request → English answer.</li>
+              <li><strong>Pattern 2</strong> — English question with an explicit request (&ldquo;reply in Polish&rdquo;, &ldquo;in Tagalog please&rdquo;) → answer in that language (extracted by regex).</li>
+              <li><strong>Pattern 3</strong> — non-English question → answer in the detected language.</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Accuracy safeguards</p>
+            <p className="text-neutral-mid">
+              Below <strong>0.5 confidence</strong> the system defaults to English and flags the message
+              <code className="text-xs bg-gray-100 px-1 rounded"> lowConfidence</code> for review. franc over-detects short English as Scots/Afrikaans/Old English, so those are
+              treated as English. A staff member&rsquo;s saved <strong>first/second language</strong> (Staff tab) is also used to
+              proactively deliver training in their language.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Engine"            value="franc (ISO 639-3), dynamic ESM import. apps/api/src/services/language/detector.ts." />
+          <RefRow label="Confidence floor"  value="0.5 — below this defaults to English + lowConfidence flag for review." />
+          <RefRow label="Response language" value="apps/api/src/lib/translate.ts (langName) maps the code to a name fed to Claude; staff first/second language drives proactive training delivery." />
+          <RefRow label="Channels"          value="Detection runs on web chat, email and WhatsApp inbound; replies stay in-thread in the same language." />
+        </div>
+        <p className="mt-3 mb-1 text-sm font-semibold text-neutral-dark">Languages we name &amp; respond in</p>
+        <p className="mb-2 text-xs text-neutral-mid">franc can detect 180+ languages; these are the ones we map to a friendly name (UK-care-common in bold). Claude can answer in many more.</p>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            ['English', true], ['Polish', true], ['Romanian', true], ['Portuguese', true], ['Filipino', true], ['Tagalog', true], ['Yoruba', true], ['Hindi', true],
+            ['French', false], ['German', false], ['Spanish', false], ['Italian', false], ['Dutch', false], ['Swedish', false], ['Norwegian', false],
+            ['Mandarin Chinese', false], ['Chinese', false], ['Vietnamese', false], ['Arabic', false], ['Turkish', false], ['Greek', false],
+            ['Bengali', false], ['Urdu', false], ['Punjabi', false], ['Gujarati', false], ['Tamil', false], ['Telugu', false], ['Sinhala', false], ['Nepali', false],
+            ['Lithuanian', false], ['Latvian', false], ['Czech', false], ['Slovak', false], ['Bulgarian', false], ['Croatian', false], ['Serbian', false], ['Hungarian', false],
+            ['Swahili', false], ['Somali', true], ['Tigrinya', false], ['Amharic', false], ['Welsh', false],
+            ['Mauritian Creole', false], ['Haitian Creole', false], ['Seychellois Creole', false], ['Cape Verdean Creole', false], ['Jamaican Patois', false], ['Antillean Creole', false], ['Nigerian Pidgin', false],
+          ].map(([lang, common]) => (
+            <span key={lang as string} className={`rounded-full px-2.5 py-0.5 text-xs ${common ? 'bg-teal-light font-semibold text-teal' : 'bg-gray-100 text-neutral-mid'}`}>{lang}</span>
+          ))}
+        </div>
+      </RefSection>
+
       {/* Email — SendGrid */}
       <RefSection icon={Mail} title="Email — SendGrid">
         <p className="leading-relaxed text-neutral-mid">

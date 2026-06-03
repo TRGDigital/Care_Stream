@@ -78,6 +78,12 @@ const LANGUAGE_NAMES: Record<string, string> = {
   sin: 'Sinhala',
   nep: 'Nepali',
   hat: 'Haitian Creole',
+  mfe: 'Mauritian Creole',
+  crs: 'Seychellois Creole',
+  kea: 'Cape Verdean Creole',
+  jam: 'Jamaican Patois',
+  gcf: 'Antillean Creole',
+  pcm: 'Nigerian Pidgin',
   cym: 'Welsh',
 }
 

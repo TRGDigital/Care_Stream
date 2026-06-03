@@ -349,6 +349,7 @@ export default function ClientDetailPage() {
   const [resetText,   setResetText]   = useState('')
   const [resetting,   setResetting]   = useState(false)
   const [resetMsg,    setResetMsg]    = useState('')
+  const [resetErr,    setResetErr]    = useState('')
 
   // Sub-tenants state
   const [subTenants,     setSubTenants]     = useState<any[]>([])
@@ -386,7 +387,7 @@ export default function ClientDetailPage() {
 
   async function handleResetPolicies() {
     if (!token || !id) return
-    setResetting(true); setResetMsg(''); setError(null)
+    setResetting(true); setResetMsg(''); setResetErr(''); setError(null)
     try {
       const r = await createPlatformClient(token).tenants.resetPolicies(id)
       setResetMsg(`Deleted ${r.policies_deleted} policies, ${r.knowledge_deleted} knowledge entries, ${r.files_deleted} files.`)
@@ -395,7 +396,7 @@ export default function ClientDetailPage() {
       const fresh = await createPlatformClient(token).tenants.get(id)
       setDetail(fresh)
     } catch (e: any) {
-      setError(e.message ?? 'Reset failed')
+      setResetErr(e?.message ?? 'Reset failed — please try again.')
     } finally {
       setResetting(false)
     }
@@ -939,6 +940,7 @@ export default function ClientDetailPage() {
                 placeholder={detail.tenant.account_number}
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
               />
+              {resetErr && <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{resetErr}</p>}
               <div className="mt-5 flex justify-end gap-2">
                 <button
                   onClick={() => { setShowReset(false); setResetText('') }}

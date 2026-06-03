@@ -2124,7 +2124,8 @@ function SystemReference() {
           <RefRow label="Agent tracking"      value="Every tool execute() fires a beacon to POST /public/marketing/agent-events → one row per invocation in agent_events (tool_name, path, status, source). Wrapped in lib/webmcp.ts; fire-and-forget, never blocks the tool." />
           <RefRow label="Console view"        value="Platform console → Dashboard → 'AI Agents' tab: total / 7d / 30d tool calls, per-tool breakdown, recent invocations, plus recent leads (contact+demo) with web vs AI-agent source. API: GET /admin/agent-events and GET /admin/leads." />
           <RefRow label="Auth context"        value="Tools run client-side under the visitor's own session — so tenant isolation / RLS hold automatically. No new credentials or API surface." />
-          <RefRow label="Phase 2 (planned)"   value="Authenticated tenant tools (ask_policy_question, search_policies, list_training) inside the logged-in app; mutating actions gated by human confirmation + audit log." />
+          <RefRow label="Tenant tools (Phase 2)" value="components/agent/tenant-agent-tools.tsx — ask_policy_question, search_policies, list_training_modules. Mounted in (portal) + (admin) layouts; use the user's NextAuth accessToken via createApiClient, so RLS/role/tenant checks all hold. Read-only; answers tagged untrustedContentHint." />
+          <RefRow label="Phase 3 (planned)"   value="Mutating tenant tools (e.g. start_audit, update settings) gated by human confirmation + audit-log entry tagged agent-initiated. Optional: hosted MCP server for headless/desktop agents (per-tenant API keys/OAuth)." />
           <RefRow label="llms.txt"            value="GET /llms.txt — curated site map for LLMs per llmstxt.org (H1 + blockquote + H2 link-lists + Optional section). Route at app/llms.txt/route.ts." />
           <RefRow label="Data tables"         value="marketing_leads + agent_events (platform-level, RLS-enabled, no anon policies — API postgres role bypasses). Migration: apps/api/prisma/migrations/manual_marketing_leads_and_agent_events.sql." />
           <RefRow label="Browser support"     value="Chrome Canary only (flag), HTTPS-only, June 2026. Verify in Rich Results-style agent tooling once GA. See QA Testing tab." />
@@ -3039,6 +3040,27 @@ const QA_TESTS: TestItem[] = [
     name: 'AI Agents dashboard tab loads',
     steps: 'Open the platform console → Dashboard → AI Agents tab.',
     expected: 'The tab loads without error and shows the stat cards, invocations-by-tool, recent invocations, and recent leads sections (empty states read cleanly when there is no data yet).',
+  },
+  {
+    id: 'webmcp-tenant-tools-register',
+    category: 'WebMCP & AI Agents',
+    name: 'Tenant tools register when logged in',
+    steps: 'In Chrome Canary, log in as a tenant user and open the app (/chat or an admin page). Inspect the registered tools.',
+    expected: 'ask_policy_question, search_policies and list_training_modules are registered. They are NOT present on the public marketing site or when logged out.',
+  },
+  {
+    id: 'webmcp-ask-policy',
+    category: 'WebMCP & AI Agents',
+    name: 'ask_policy_question answers from policies',
+    steps: 'Logged in, invoke ask_policy_question with a question your policies cover (e.g. "what is our fire evacuation procedure?").',
+    expected: 'Returns a grounded answer with citations, in the same way the chat does. Runs under your session — only your tenant’s policies are used (RLS/tenant isolation hold).',
+  },
+  {
+    id: 'webmcp-tenant-isolation',
+    category: 'WebMCP & AI Agents',
+    name: 'Tenant tools respect isolation & role',
+    steps: 'Invoke search_policies / list_training_modules as a staff user, then as an admin in a different tenant.',
+    expected: 'Each only ever sees their own tenant’s data. No tool can reach another tenant’s policies or training — calls go through the authenticated API, not a privileged path.',
   },
 ]
 

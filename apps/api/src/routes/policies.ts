@@ -48,7 +48,9 @@ function normaliseName(name: string): string {
 policiesRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   const { status, document_category } = req.query as Record<string, string>
   const page  = Math.max(1, parseInt((req.query.page  as string) || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20')))
+  // Admin policy list loads the full library client-side (for tab/category counts),
+  // so allow a high cap. A care-home policy set is a few hundred at most.
+  const limit = Math.min(2000, Math.max(1, parseInt((req.query.limit as string) || '20')))
 
   const where: Record<string, unknown> = {}
   if (status)             where.status             = status

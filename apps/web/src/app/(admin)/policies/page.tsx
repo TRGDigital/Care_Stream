@@ -38,7 +38,7 @@ export default function PoliciesPage() {
   function load() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    api.policies.list({ limit: '500' })
+    api.policies.list({ limit: '2000' })
       .then(data => setPolicies(data?.policies ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))

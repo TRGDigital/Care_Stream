@@ -814,7 +814,10 @@ function BulkUploadModal({
           {phase === 'review' && !done && (
             <div className="space-y-3">
               <div className="rounded-md border border-teal/20 bg-teal/5 px-4 py-3 text-sm">
-                <p className="font-medium text-neutral-dark">Duplicate check complete</p>
+                <p className="flex items-center gap-1.5 font-medium text-neutral-dark">
+                  <CheckCircle size={16} className="text-status-success" />
+                  Duplicate check complete
+                </p>
                 <p className="mt-1 text-neutral-mid text-xs">
                   <span className="font-medium text-neutral-dark">{reviewNew}</span> new
                   {reviewExact > 0 && <> · <span className="font-medium text-amber-600">{reviewExact}</span> identical (will skip)</>}

@@ -696,31 +696,20 @@ function BulkUploadModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {/* Category */}
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-neutral-dark whitespace-nowrap">Category (all files):</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              disabled={uploading}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-            >
-              <option value="internal_policy">Internal policy</option>
-              <option value="staff_handbook">Staff handbook</option>
-              <option value="cqc_report">CQC Report</option>
-            </select>
-          </div>
-
-          {/* Upload in progress */}
-          {uploading && (
-            <div className="flex items-center gap-3 rounded-md border border-teal/20 bg-teal/5 px-4 py-3 text-sm">
-              <RefreshCw size={16} className="shrink-0 animate-spin text-teal" />
-              <div>
-                <p className="font-medium text-neutral-dark">Uploading your policies… please keep this window open.</p>
-                <p className="mt-0.5 text-xs text-neutral-mid">
-                  {doneCount} uploaded{skippedCount > 0 ? `, ${skippedCount} skipped` : ''}{errorCount > 0 ? `, ${errorCount} failed` : ''} of {files.length}. Larger batches can take a minute.
-                </p>
-              </div>
+          {/* Category — hidden once the upload is complete */}
+          {!done && (
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-neutral-dark whitespace-nowrap">Category (all files):</label>
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                disabled={uploading}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              >
+                <option value="internal_policy">Internal policy</option>
+                <option value="staff_handbook">Staff handbook</option>
+                <option value="cqc_report">CQC Report</option>
+              </select>
             </div>
           )}
 
@@ -806,6 +795,19 @@ function BulkUploadModal({
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Upload in progress — sits right where the Upload button is, so no scrolling back up */}
+          {uploading && (
+            <div className="flex items-center gap-3 rounded-md border border-teal/20 bg-teal/5 px-4 py-3 text-sm">
+              <RefreshCw size={16} className="shrink-0 animate-spin text-teal" />
+              <div>
+                <p className="font-medium text-neutral-dark">Uploading your policies… please keep this window open.</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  {doneCount} uploaded{skippedCount > 0 ? `, ${skippedCount} skipped` : ''}{errorCount > 0 ? `, ${errorCount} failed` : ''} of {files.length}. Larger batches can take a minute.
+                </p>
+              </div>
             </div>
           )}
 

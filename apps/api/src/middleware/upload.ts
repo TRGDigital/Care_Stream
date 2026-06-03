@@ -91,7 +91,7 @@ function handleMulterError(multerErr: any, res: Response, next: NextFunction): v
     return
   }
   if (multerErr.code === 'LIMIT_UNEXPECTED_FILE') {
-    err(res, 'TOO_MANY_FILES', 'Maximum 50 files per bulk upload.', 400)
+    err(res, 'TOO_MANY_FILES', 'Too many files in a single batch — please try again.', 400)
     return
   }
   err(res, 'UPLOAD_ERROR', 'File upload failed. Please try again.', 500)
@@ -105,7 +105,9 @@ export function uploadMiddleware(req: Request, res: Response, next: NextFunction
 }
 
 export function bulkUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
-  multerInstance.array('files', 50)(req, res, (multerErr) => {
+  // The client uploads in size-bounded batches (≤20 files each), so this
+  // per-request cap is generous headroom rather than a user-facing limit.
+  multerInstance.array('files', 200)(req, res, (multerErr) => {
     if (!multerErr) fixUploadedFilenames(req)
     handleMulterError(multerErr, res, next)
   })

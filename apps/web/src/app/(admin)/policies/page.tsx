@@ -543,7 +543,7 @@ function BulkUploadModal({
       const novel = accepted
         .filter(f => !existing.has(f.name + f.size))
         .map(f => ({ file: f, name: deriveNameFromFile(f.name), editing: false, status: 'pending' as const }))
-      return [...prev, ...novel].slice(0, 50)
+      return [...prev, ...novel]
     })
   }, [])
 
@@ -569,7 +569,13 @@ function BulkUploadModal({
       const payload = await Promise.all(files.map(async f => ({
         filename: f.file.name, name: f.name, hash: await sha256Hex(f.file),
       })))
-      const { checks: result } = await api.policies.check(payload)
+      // Check in chunks (the endpoint takes ≤200 at a time) so any number of
+      // selected files works.
+      const result: Array<{ filename: string; classification: DupCheck['classification']; existing?: DupCheck['existing'] }> = []
+      for (let i = 0; i < payload.length; i += 200) {
+        const { checks } = await api.policies.check(payload.slice(i, i + 200))
+        result.push(...checks)
+      }
       const map: Record<string, DupCheck> = {}
       for (const c of result) {
         map[c.filename] = { classification: c.classification, existing: c.existing }
@@ -709,7 +715,7 @@ function BulkUploadModal({
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-neutral-dark">Bulk upload policies</h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">Up to 50 PDF, DOCX, ODT, or TXT files at once. Names are auto-detected from filenames — click the pencil to edit.</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">PDF, DOCX, ODT, or TXT files — upload as many as you need at once. Names are auto-detected from filenames — click the pencil to edit.</p>
           </div>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={20} /></button>
         </div>

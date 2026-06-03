@@ -301,7 +301,8 @@ policiesRouter.post('/:id/version', requireAdmin, uploadMiddleware, async (req: 
 })
 
 // ─── POST /policies/bulk ──────────────────────────────────────────────────────
-// Upload up to 50 policy files in one request.
+// Upload a batch of policy files in one request (the client splits large
+// selections into size-bounded batches, so there is no user-facing file cap).
 // Names are derived from filename by default; the client can send a JSON array
 // of overrides in the `names` field (indexed to match the files array).
 // Category applies to all files in the batch.

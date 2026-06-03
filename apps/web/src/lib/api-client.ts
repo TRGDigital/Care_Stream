@@ -108,7 +108,11 @@ export function createApiClient(token: string) {
           method:  'POST',
           headers: { Authorization: `Bearer ${token}` },
           body:    formData,
-        }).then(r => r.json()),
+        }).then(r => r.json()).then((b: any) => b?.data ?? null),  // unwrap { results, errors, skipped, total }
+      check: (files: Array<{ filename: string; name: string; hash: string }>) =>
+        apiFetch<{ checks: Array<{ filename: string; classification: 'new' | 'exact_duplicate' | 'name_match'; existing?: { id: string; name: string; version: number } }> }>(
+          '/policies/check', token, { method: 'POST', body: JSON.stringify({ files }) }
+        ),
       retry: (id: string) =>
         apiFetch<any>(`/policies/${id}/retry`, token, { method: 'POST' }),
       permanentDelete: (id: string) =>

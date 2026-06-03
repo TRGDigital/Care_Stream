@@ -488,8 +488,18 @@ type BulkFile = {
   file:     File
   name:     string
   editing:  boolean
-  status:   'pending' | 'done' | 'error'
+  status:   'pending' | 'done' | 'error' | 'skipped'
   error?:   string
+}
+
+type DupCheck = {
+  classification: 'new' | 'exact_duplicate' | 'name_match'
+  existing?: { id: string; name: string; version: number }
+}
+
+async function sha256Hex(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 function deriveNameFromFile(filename: string): string {
@@ -518,6 +528,12 @@ function BulkUploadModal({
   const [dragOver,  setDragOver]  = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Pre-flight duplicate detection (by content hash + name).
+  const [phase,     setPhase]     = useState<'select' | 'review'>('select')
+  const [checking,  setChecking]  = useState(false)
+  const [checks,    setChecks]    = useState<Record<string, DupCheck>>({})       // by filename
+  const [decisions, setDecisions] = useState<Record<string, 'replace' | 'keep'>>({}) // name_match → choice
+
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const accepted = Array.from(incoming).filter(f =>
       /\.(pdf|docx|odt|txt)$/i.test(f.name)
@@ -543,31 +559,88 @@ function BulkUploadModal({
     setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, editing: !f.editing } : f))
   }
 
-  async function handleUpload() {
+  // Step 1 — hash files, ask the server which are duplicates / updates, then
+  // show the review screen. Falls back to a direct upload if the check fails.
+  async function runPreflight() {
     if (files.length === 0) return
-    setUploading(true)
+    setChecking(true)
+    const api = createApiClient(token)
+    try {
+      const payload = await Promise.all(files.map(async f => ({
+        filename: f.file.name, name: f.name, hash: await sha256Hex(f.file),
+      })))
+      const { checks: result } = await api.policies.check(payload)
+      const map: Record<string, DupCheck> = {}
+      const dec: Record<string, 'replace' | 'keep'> = {}
+      for (const c of result) {
+        map[c.filename] = { classification: c.classification, existing: c.existing }
+        if (c.classification === 'name_match') dec[c.filename] = 'replace'  // default to update
+      }
+      setChecks(map)
+      setDecisions(dec)
+      setPhase('review')
+    } catch {
+      // Pre-flight unavailable — don't block; upload directly (server still
+      // auto-skips exact duplicates as a fail-safe).
+      await runUpload(true)
+    } finally {
+      setChecking(false)
+    }
+  }
 
+  // Step 2 — upload. Exact duplicates are skipped; name matches the admin chose
+  // to "replace" go through the versioning endpoint; everything else is a new
+  // policy, uploaded in size-bounded batches (Vercel's 4.5MB body limit).
+  async function runUpload(skipChecks = false) {
+    setUploading(true)
     const api = createApiClient(token)
 
-    // Vercel caps a request body at 4.5MB, so a single bulk request with many
-    // files is rejected platform-side before it reaches the API. Split into
-    // size-bounded batches (and a sane file count) so every request stays well
-    // under the limit; upload them one batch at a time and reconcile each.
+    const succeeded = new Set<string>()
+    const errored   = new Map<string, string>()
+    const skipped   = new Set<string>()
+
+    const toBulk: BulkFile[] = []
+    const toReplace: BulkFile[] = []
+    for (const f of files) {
+      const c = skipChecks ? undefined : checks[f.file.name]
+      if (c?.classification === 'exact_duplicate') { skipped.add(f.file.name); continue }
+      if (c?.classification === 'name_match' && decisions[f.file.name] === 'replace' && c.existing) { toReplace.push(f); continue }
+      toBulk.push(f)
+    }
+
+    const flush = () => setFiles(prev => prev.map(f => ({
+      ...f,
+      status: succeeded.has(f.file.name) ? 'done'
+            : skipped.has(f.file.name)   ? 'skipped'
+            : errored.has(f.file.name)   ? 'error' : f.status,
+      error:  errored.get(f.file.name),
+    })))
+    flush()
+
+    // Replacements (new version of an existing policy) — one request each.
+    for (const f of toReplace) {
+      const c = checks[f.file.name]!
+      const form = new FormData()
+      form.append('file', f.file)
+      const vres = await api.policies.version(c.existing!.id, form).catch(() => null)
+      if (vres?.success) succeeded.add(f.file.name)
+      else errored.set(f.file.name, 'Replace failed — try again.')
+      flush()
+    }
+
+    // New / keep-both → size-bounded batches under the 4.5MB body limit.
     const MAX_BATCH_BYTES = 4 * 1024 * 1024
     const MAX_BATCH_FILES = 20
-    const batches: (typeof files)[] = []
-    let current: typeof files = []
+    const batches: BulkFile[][] = []
+    let current: BulkFile[] = []
     let currentBytes = 0
-    for (const f of files) {
+    for (const f of toBulk) {
       if (current.length > 0 && (currentBytes + f.file.size > MAX_BATCH_BYTES || current.length >= MAX_BATCH_FILES)) {
         batches.push(current); current = []; currentBytes = 0
       }
       current.push(f); currentBytes += f.file.size
     }
     if (current.length > 0) batches.push(current)
-
-    const succeeded = new Set<string>()
-    const errored   = new Map<string, string>()
 
     for (const batch of batches) {
       const form = new FormData()
@@ -576,10 +649,10 @@ function BulkUploadModal({
       form.append('names', JSON.stringify(batch.map(f => f.name)))
 
       const res = await api.policies.bulkUpload(form).catch(() => null)
-
       if (res?.results) {
         ;(res.results as any[]).forEach(r => succeeded.add(r.filename))
         ;(res.errors ?? []).forEach((e: any) => errored.set(e.filename, e.error))
+        ;(res.skipped ?? []).forEach((s: any) => skipped.add(s.filename))  // server-side exact-dup fail-safe
       } else {
         // Request lost — reconcile against the server so files that landed aren't
         // falsely marked failed (and we never invite a duplicate re-upload).
@@ -593,22 +666,21 @@ function BulkUploadModal({
           batch.forEach(f => errored.set(f.file.name, 'Upload response was lost — check the policy list before re-uploading.'))
         }
       }
-
-      // Progressive feedback as each batch completes.
-      setFiles(prev => prev.map(f => ({
-        ...f,
-        status: succeeded.has(f.file.name) ? 'done' : errored.has(f.file.name) ? 'error' : f.status,
-        error:  errored.get(f.file.name),
-      })))
+      flush()
     }
 
     setUploading(false)
     setDone(true)
   }
 
-  const pending = files.filter(f => f.status === 'pending').length
-  const doneCount  = files.filter(f => f.status === 'done').length
-  const errorCount = files.filter(f => f.status === 'error').length
+  const doneCount    = files.filter(f => f.status === 'done').length
+  const errorCount   = files.filter(f => f.status === 'error').length
+  const skippedCount = files.filter(f => f.status === 'skipped').length
+
+  // Review-phase tallies.
+  const reviewNew     = files.filter(f => (checks[f.file.name]?.classification ?? 'new') === 'new').length
+  const reviewExact   = files.filter(f => checks[f.file.name]?.classification === 'exact_duplicate').length
+  const reviewMatches = files.filter(f => checks[f.file.name]?.classification === 'name_match')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -705,12 +777,13 @@ function BulkUploadModal({
                       </td>
                       <td className="px-4 py-2 text-right">
                         {f.status === 'done'  && <CheckCircle size={16} className="ml-auto text-status-success" />}
+                        {f.status === 'skipped' && <span className="text-xs font-medium text-neutral-mid">skipped</span>}
                         {f.status === 'error' && (
                           <span title={f.error} className="ml-auto block">
                             <AlertCircle size={16} className="text-status-error" />
                           </span>
                         )}
-                        {f.status === 'pending' && !uploading && (
+                        {f.status === 'pending' && !uploading && phase === 'select' && (
                           <button onClick={() => removeFile(i)} className="text-neutral-mid hover:text-status-error">
                             <X size={14} />
                           </button>
@@ -723,14 +796,60 @@ function BulkUploadModal({
             </div>
           )}
 
+          {/* Duplicate review (before upload) */}
+          {phase === 'review' && !done && (
+            <div className="space-y-3">
+              <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
+                <p className="font-medium text-neutral-dark">Duplicate check</p>
+                <p className="mt-1 text-neutral-mid text-xs">
+                  <span className="font-medium text-neutral-dark">{reviewNew}</span> new
+                  {reviewExact > 0 && <> · <span className="font-medium text-amber-600">{reviewExact}</span> identical (will skip)</>}
+                  {reviewMatches.length > 0 && <> · <span className="font-medium text-blue-600">{reviewMatches.length}</span> match an existing policy</>}
+                </p>
+              </div>
+
+              {reviewMatches.length > 0 && (
+                <div className="rounded-md border border-blue-100 bg-blue-50/40 px-4 py-3">
+                  <p className="mb-2 text-sm font-medium text-neutral-dark">These match a policy you already have — replace it, or keep both?</p>
+                  <div className="space-y-2">
+                    {reviewMatches.map(f => {
+                      const ex = checks[f.file.name]?.existing
+                      const choice = decisions[f.file.name] ?? 'replace'
+                      return (
+                        <div key={f.file.name} className="flex flex-wrap items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2 text-sm">
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-neutral-dark">{f.name}</p>
+                            <p className="truncate text-xs text-neutral-mid">matches “{ex?.name}” (v{ex?.version})</p>
+                          </div>
+                          <div className="flex shrink-0 gap-1">
+                            {(['replace', 'keep'] as const).map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => setDecisions(d => ({ ...d, [f.file.name]: opt }))}
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium ${choice === opt ? 'bg-teal text-white' : 'border border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
+                              >
+                                {opt === 'replace' ? `Replace (→ v${(ex?.version ?? 1) + 1})` : 'Keep both'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Summary after upload */}
           {done && (
             <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
               <p className="font-medium text-neutral-dark">
                 {doneCount} of {files.length} uploaded successfully.
+                {skippedCount > 0 && <span className="ml-1 text-neutral-mid">{skippedCount} skipped (duplicates).</span>}
                 {errorCount > 0 && <span className="ml-1 text-status-error">{errorCount} failed.</span>}
               </p>
-              <p className="mt-1 text-neutral-mid text-xs">Policies are now processing — they will become searchable once ingestion completes (usually under a minute each).</p>
+              <p className="mt-1 text-neutral-mid text-xs">New policies are now processing — they will become searchable once ingestion completes (usually under a minute each).</p>
             </div>
           )}
         </div>
@@ -743,11 +862,21 @@ function BulkUploadModal({
           <div className="flex gap-3">
             {done ? (
               <Button onClick={onUploaded}>Done</Button>
+            ) : phase === 'review' ? (
+              <>
+                <Button variant="secondary" onClick={() => setPhase('select')} disabled={uploading}>Back</Button>
+                <Button onClick={() => runUpload()} disabled={uploading}>
+                  {uploading ? 'Uploading…' : (() => {
+                    const willUpload = files.filter(f => checks[f.file.name]?.classification !== 'exact_duplicate').length
+                    return `Upload ${willUpload} file${willUpload !== 1 ? 's' : ''}`
+                  })()}
+                </Button>
+              </>
             ) : (
               <>
-                <Button variant="secondary" onClick={onClose} disabled={uploading}>Cancel</Button>
-                <Button onClick={handleUpload} disabled={uploading || files.length === 0}>
-                  {uploading ? `Uploading ${files.length} file${files.length !== 1 ? 's' : ''}…` : `Upload ${files.length > 0 ? files.length : ''} file${files.length !== 1 ? 's' : ''}`}
+                <Button variant="secondary" onClick={onClose} disabled={checking}>Cancel</Button>
+                <Button onClick={runPreflight} disabled={checking || files.length === 0}>
+                  {checking ? 'Checking…' : `Continue (${files.length})`}
                 </Button>
               </>
             )}

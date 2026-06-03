@@ -127,6 +127,7 @@ model Policy {
   document_category    String    @default("internal_policy") // §4.5: internal_policy|staff_handbook
   version              Int       @default(1)
   status               String    @default("processing")   // active|processing|archived|superseded
+  content_hash         String?                              // SHA-256 of file bytes — duplicate detection
   tags                 Json      @default("[]")
   uploaded_by          String
   pinecone_namespace   String?                             // active Pinecone namespace for this version

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
 import { requireAdmin } from '../middleware/auth'
 import { uploadMiddleware, bulkUploadMiddleware } from '../middleware/upload'
 import { prisma } from '../db/client'
@@ -30,6 +31,16 @@ function parseTags(raw?: string): string[] {
   try { return JSON.parse(raw) } catch { return [] }
 }
 
+// SHA-256 of file bytes — for byte-for-byte duplicate detection.
+function sha256(buffer: Buffer): string {
+  return crypto.createHash('sha256').update(buffer).digest('hex')
+}
+
+// Normalise a policy name for "same policy" matching (case/space-insensitive).
+function normaliseName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
 // ─── GET /policies ────────────────────────────────────────────────────────────
 // List all policies for the current tenant. Admin only.
 // Supports filtering by status and document_category; paginated.
@@ -55,6 +66,54 @@ policiesRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   ])
 
   ok(res, { policies, total, page, limit })
+})
+
+// ─── POST /policies/check ─────────────────────────────────────────────────────
+// Pre-flight duplicate detection. The client sends each file's name + content
+// hash; we classify against the tenant's ACTIVE policies so the upload UI can
+// auto-skip exact duplicates and offer Replace/Keep-both for name matches.
+
+const CheckSchema = z.object({
+  files: z.array(z.object({
+    filename: z.string().min(1).max(400),
+    name:     z.string().min(1).max(400),
+    hash:     z.string().min(8).max(128),
+  })).min(1).max(200),
+})
+
+policiesRouter.post('/check', requireAdmin, async (req: Request, res: Response) => {
+  const parsed = CheckSchema.safeParse(req.body)
+  if (!parsed.success) {
+    err(res, 'VALIDATION_ERROR', 'Invalid check payload.')
+    return
+  }
+  const tenantId = getTenantId()
+
+  const active = await (prisma as any).policy.findMany({
+    where:  { tenant_id: tenantId, status: 'active' },
+    select: { id: true, name: true, version: true, content_hash: true },
+  }) as Array<{ id: string; name: string; version: number; content_hash: string | null }>
+
+  const byHash = new Map<string, { id: string; name: string; version: number }>()
+  const byName = new Map<string, { id: string; name: string; version: number }>()
+  for (const p of active) {
+    if (p.content_hash) byHash.set(p.content_hash, p)
+    byName.set(normaliseName(p.name), p)
+  }
+
+  const checks = parsed.data.files.map(f => {
+    const exact = byHash.get(f.hash)
+    if (exact) {
+      return { filename: f.filename, classification: 'exact_duplicate' as const, existing: { id: exact.id, name: exact.name, version: exact.version } }
+    }
+    const named = byName.get(normaliseName(f.name))
+    if (named) {
+      return { filename: f.filename, classification: 'name_match' as const, existing: { id: named.id, name: named.name, version: named.version } }
+    }
+    return { filename: f.filename, classification: 'new' as const }
+  })
+
+  ok(res, { checks })
 })
 
 // ─── POST /policies ───────────────────────────────────────────────────────────
@@ -119,6 +178,7 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
           document_category,
           version:             1,
           status:              'processing',
+          content_hash:        sha256(req.file!.buffer),
           tags:                parseTags(rawTags),
           uploaded_by:         req.user!.sub,
           review_interval_days: review_interval_days ?? null,
@@ -200,6 +260,7 @@ policiesRouter.post('/:id/version', requireAdmin, uploadMiddleware, async (req: 
         document_category:   existing.document_category,
         version:             newVersion,
         status:              'processing',
+        content_hash:        sha256(req.file!.buffer),
         tags:                existing.tags,
         uploaded_by:         req.user!.sub,
         review_interval_days: existing.review_interval_days,
@@ -290,14 +351,38 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
 
   const results: Array<{ filename: string; policy_id: string; name: string; status: string }> = []
   const errors:  Array<{ filename: string; error: string }> = []
+  const skipped: Array<{ filename: string; reason: string; existing_name?: string }> = []
+
+  // Fail-safe: auto-skip byte-for-byte duplicates. Load existing active hashes
+  // once; also dedupe identical files within this same batch.
+  const existingActive = await (prisma as any).policy.findMany({
+    where:  { tenant_id: tenantId, status: 'active' },
+    select: { name: true, content_hash: true },
+  }) as Array<{ name: string; content_hash: string | null }>
+  const existingHashes = new Map<string, string>()  // hash → existing policy name
+  for (const p of existingActive) if (p.content_hash) existingHashes.set(p.content_hash, p.name)
+  const seenInBatch = new Set<string>()
 
   // Re-enter tenant context so all async service calls (Prisma, Pinecone, audit)
   // can access getTenantId() without relying on the multer-broken chain.
   await tenantContext.run({ tenantId }, async () => {
     await Promise.all(files!.map(async (file, i) => {
       const name = (nameOverrides[i] ?? '').trim() || deriveNameFromFilename(file.originalname)
-      const policyId = uuidv4()
+      const hash = sha256(file.buffer)
 
+      // Skip exact duplicates — of an existing active policy, or earlier in this batch.
+      const dupOfExisting = existingHashes.get(hash)
+      if (dupOfExisting) {
+        skipped.push({ filename: file.originalname, reason: 'identical_to_existing', existing_name: dupOfExisting })
+        return
+      }
+      if (seenInBatch.has(hash)) {
+        skipped.push({ filename: file.originalname, reason: 'identical_within_upload' })
+        return
+      }
+      seenInBatch.add(hash)
+
+      const policyId = uuidv4()
       try {
         const s3Key = await uploadPolicyFile({
           tenantId,
@@ -317,6 +402,7 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
             document_category: category,
             version:           1,
             status:            'processing',
+            content_hash:      hash,
             tags:              [],
             uploaded_by:       req.user!.sub,
           },
@@ -345,12 +431,12 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
         event_type:  'policy_bulk_upload',
         entity_type: 'policy',
         entity_id:   tenantId,
-        metadata:    { count: results.length, errors: errors.length, category },
+        metadata:    { count: results.length, errors: errors.length, skipped: skipped.length, category },
       })
     }
   })
 
-  ok(res, { results, errors, total: files.length }, 201)
+  ok(res, { results, errors, skipped, total: files.length }, 201)
 })
 
 // ─── GET /policies/:id ────────────────────────────────────────────────────────

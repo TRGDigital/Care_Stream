@@ -571,13 +571,11 @@ function BulkUploadModal({
       })))
       const { checks: result } = await api.policies.check(payload)
       const map: Record<string, DupCheck> = {}
-      const dec: Record<string, 'replace' | 'keep'> = {}
       for (const c of result) {
         map[c.filename] = { classification: c.classification, existing: c.existing }
-        if (c.classification === 'name_match') dec[c.filename] = 'replace'  // default to update
       }
       setChecks(map)
-      setDecisions(dec)
+      setDecisions({})  // no default — the admin must explicitly choose Replace / Keep both
       setPhase('review')
     } catch {
       // Pre-flight unavailable — don't block; upload directly (server still
@@ -681,6 +679,7 @@ function BulkUploadModal({
   const reviewNew     = files.filter(f => (checks[f.file.name]?.classification ?? 'new') === 'new').length
   const reviewExact   = files.filter(f => checks[f.file.name]?.classification === 'exact_duplicate').length
   const reviewMatches = files.filter(f => checks[f.file.name]?.classification === 'name_match')
+  const allMatchesDecided = reviewMatches.every(f => decisions[f.file.name] !== undefined)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -822,9 +821,11 @@ function BulkUploadModal({
                   {reviewMatches.length > 0 && <> · <span className="font-medium text-blue-600">{reviewMatches.length}</span> match an existing policy</>}
                 </p>
                 <p className="mt-2 text-xs text-neutral-dark">
-                  {reviewMatches.length > 0
-                    ? <>Choose <strong>Replace</strong> or <strong>Keep both</strong> for the matches below, then press <strong>“Upload”</strong> at the bottom to continue.</>
-                    : <>Nothing to review — press <strong>“Upload”</strong> at the bottom to start uploading.</>}
+                  {reviewMatches.length === 0
+                    ? <>Nothing to review — press <strong>“Upload”</strong> at the bottom to start uploading.</>
+                    : allMatchesDecided
+                      ? <>All set — press <strong>“Upload”</strong> at the bottom to continue.</>
+                      : <>Choose <strong>Replace</strong> or <strong>Keep both</strong> for each match below. The upload won&rsquo;t start until all are answered.</>}
                 </p>
               </div>
 
@@ -834,19 +835,22 @@ function BulkUploadModal({
                   <div className="space-y-2">
                     {reviewMatches.map(f => {
                       const ex = checks[f.file.name]?.existing
-                      const choice = decisions[f.file.name] ?? 'replace'
+                      const choice = decisions[f.file.name]   // undefined until the admin chooses
                       return (
-                        <div key={f.file.name} className="flex flex-wrap items-center justify-between gap-2 rounded border border-gray-100 bg-white px-3 py-2 text-sm">
+                        <div key={f.file.name} className={`flex flex-wrap items-center justify-between gap-2 rounded border bg-white px-3 py-2 text-sm ${choice ? 'border-gray-100' : 'border-amber-200'}`}>
                           <div className="min-w-0">
                             <p className="truncate font-medium text-neutral-dark">{f.name}</p>
-                            <p className="truncate text-xs text-neutral-mid">matches “{ex?.name}” (v{ex?.version})</p>
+                            <p className="truncate text-xs text-neutral-mid">
+                              matches “{ex?.name}” (v{ex?.version}){!choice && <span className="ml-1 font-medium text-amber-600">— choose one</span>}
+                            </p>
                           </div>
                           <div className="flex shrink-0 gap-1">
                             {(['replace', 'keep'] as const).map(opt => (
                               <button
                                 key={opt}
+                                type="button"
                                 onClick={() => setDecisions(d => ({ ...d, [f.file.name]: opt }))}
-                                className={`rounded-md px-2.5 py-1 text-xs font-medium ${choice === opt ? 'bg-teal text-white' : 'border border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${choice === opt ? 'bg-teal text-white ring-2 ring-teal/30' : 'border border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
                               >
                                 {opt === 'replace' ? `Replace (→ v${(ex?.version ?? 1) + 1})` : 'Keep both'}
                               </button>
@@ -877,7 +881,9 @@ function BulkUploadModal({
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
           <span className="text-xs text-neutral-mid">
-            {files.length > 0 && !done && `${files.length} file${files.length !== 1 ? 's' : ''} ready`}
+            {phase === 'review' && !done && reviewMatches.length > 0 && !allMatchesDecided
+              ? <span className="text-amber-600">Answer all {reviewMatches.length} match{reviewMatches.length !== 1 ? 'es' : ''} to continue</span>
+              : files.length > 0 && !done && `${files.length} file${files.length !== 1 ? 's' : ''} ready`}
           </span>
           <div className="flex gap-3">
             {done ? (
@@ -885,7 +891,7 @@ function BulkUploadModal({
             ) : phase === 'review' ? (
               <>
                 <Button variant="secondary" onClick={() => setPhase('select')} disabled={uploading}>Back</Button>
-                <Button onClick={() => runUpload()} disabled={uploading}>
+                <Button onClick={() => runUpload()} disabled={uploading || (reviewMatches.length > 0 && !allMatchesDecided)}>
                   {uploading ? 'Uploading…' : (() => {
                     const willUpload = files.filter(f => checks[f.file.name]?.classification !== 'exact_duplicate').length
                     return `Upload ${willUpload} file${willUpload !== 1 ? 's' : ''}`

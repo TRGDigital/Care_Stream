@@ -711,8 +711,21 @@ function BulkUploadModal({
             </select>
           </div>
 
+          {/* Upload in progress */}
+          {uploading && (
+            <div className="flex items-center gap-3 rounded-md border border-teal/20 bg-teal/5 px-4 py-3 text-sm">
+              <RefreshCw size={16} className="shrink-0 animate-spin text-teal" />
+              <div>
+                <p className="font-medium text-neutral-dark">Uploading your policies… please keep this window open.</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  {doneCount} uploaded{skippedCount > 0 ? `, ${skippedCount} skipped` : ''}{errorCount > 0 ? `, ${errorCount} failed` : ''} of {files.length}. Larger batches can take a minute.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Drop zone */}
-          {!done && (
+          {phase === 'select' && !done && (
             <div
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
@@ -799,12 +812,17 @@ function BulkUploadModal({
           {/* Duplicate review (before upload) */}
           {phase === 'review' && !done && (
             <div className="space-y-3">
-              <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-                <p className="font-medium text-neutral-dark">Duplicate check</p>
+              <div className="rounded-md border border-teal/20 bg-teal/5 px-4 py-3 text-sm">
+                <p className="font-medium text-neutral-dark">Duplicate check complete</p>
                 <p className="mt-1 text-neutral-mid text-xs">
                   <span className="font-medium text-neutral-dark">{reviewNew}</span> new
                   {reviewExact > 0 && <> · <span className="font-medium text-amber-600">{reviewExact}</span> identical (will skip)</>}
                   {reviewMatches.length > 0 && <> · <span className="font-medium text-blue-600">{reviewMatches.length}</span> match an existing policy</>}
+                </p>
+                <p className="mt-2 text-xs text-neutral-dark">
+                  {reviewMatches.length > 0
+                    ? <>Choose <strong>Replace</strong> or <strong>Keep both</strong> for the matches below, then press <strong>“Upload”</strong> at the bottom to continue.</>
+                    : <>Nothing to review — press <strong>“Upload”</strong> at the bottom to start uploading.</>}
                 </p>
               </div>
 

@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, CheckCircle, AlertCircle, Pencil, MoreHorizontal, Archive, RotateCcw } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, CheckCircle, AlertCircle, Pencil, MoreHorizontal, Archive, RotateCcw, Search } from 'lucide-react'
 
 const CATEGORY_LABELS: Record<string, string> = {
   internal_policy: 'Internal policy',
@@ -31,6 +31,7 @@ export default function PoliciesPage() {
   const [policies,       setPolicies]       = useState<any[]>([])
   const [loading,        setLoading]        = useState(true)
   const [tab,            setTab]            = useState<'active' | 'archived'>('active')
+  const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
@@ -48,7 +49,14 @@ export default function PoliciesPage() {
 
   const activePolicies   = policies.filter(p => ACTIVE_STATUSES.has(p.status))
   const archivedPolicies = policies.filter(p => ARCHIVED_STATUSES.has(p.status))
-  const visiblePolicies  = tab === 'active' ? activePolicies : archivedPolicies
+  const tabPolicies      = tab === 'active' ? activePolicies : archivedPolicies
+
+  // Free-text search across name + filename, applied within the current tab.
+  const q = search.trim().toLowerCase()
+  const visiblePolicies = q
+    ? tabPolicies.filter(p =>
+        `${p.name ?? ''} ${p.filename ?? ''}`.toLowerCase().includes(q))
+    : tabPolicies
 
   async function archive(id: string, name: string) {
     if (!session?.accessToken) return
@@ -163,17 +171,41 @@ export default function PoliciesPage() {
         </p>
       )}
 
+      {/* Search */}
+      {!loading && tabPolicies.length > 0 && (
+        <div className="relative mb-4 max-w-md">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search policies by name…"
+            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-9 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark" aria-label="Clear search">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="rounded-card bg-white shadow-card px-6 py-6">
           <p className="text-sm text-neutral-mid">Loading…</p>
         </div>
-      ) : visiblePolicies.length === 0 ? (
+      ) : tabPolicies.length === 0 ? (
         <div className="rounded-card bg-white shadow-card px-6 py-6">
           <p className="text-sm text-neutral-mid">
             {tab === 'active'
               ? 'No active policies. Upload a PDF, DOCX, ODT, or TXT file to get started.'
               : 'No archived policies.'}
+          </p>
+        </div>
+      ) : visiblePolicies.length === 0 ? (
+        <div className="rounded-card bg-white shadow-card px-6 py-6">
+          <p className="text-sm text-neutral-mid">
+            No policies match &ldquo;<span className="font-medium text-neutral-dark">{search}</span>&rdquo;. It may not have been uploaded yet.
           </p>
         </div>
       ) : (
@@ -968,7 +1000,9 @@ function BulkUploadModal({
           </span>
           <div className="flex gap-3">
             {done ? (
-              <Button onClick={onUploaded}>Done</Button>
+              <Button variant="success" onClick={onUploaded}>
+                <CheckCircle size={15} className="mr-1.5" /> Done — close
+              </Button>
             ) : phase === 'review' ? (
               <>
                 <Button variant="secondary" onClick={() => setPhase('select')} disabled={uploading}>Back</Button>

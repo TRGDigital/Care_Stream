@@ -26,6 +26,39 @@ function statusVariant(s: string): 'active' | 'processing' | 'archived' | 'super
 const ACTIVE_STATUSES   = new Set(['active', 'processing', 'failed'])
 const ARCHIVED_STATUSES = new Set(['archived', 'superseded'])
 
+// Distinct colour per section so they're easy to scan. The 15 standard sections
+// get fixed colours; any custom section gets a stable colour from a name hash.
+const SECTION_COLOURS: Record<string, string> = {
+  'Activities':                   'bg-pink-50 text-pink-700',
+  'Admission management':         'bg-blue-50 text-blue-700',
+  'Business procedures':          'bg-slate-100 text-slate-700',
+  'Care and health of residents': 'bg-emerald-50 text-emerald-700',
+  'Complaints and compliments':   'bg-orange-50 text-orange-700',
+  'Emergency planning':           'bg-amber-50 text-amber-700',
+  'Fees and funding':             'bg-lime-50 text-lime-700',
+  'GDPR':                         'bg-indigo-50 text-indigo-700',
+  'Governance':                   'bg-violet-50 text-violet-700',
+  'Home Premises':                'bg-yellow-50 text-yellow-700',
+  'Infection control':            'bg-cyan-50 text-cyan-700',
+  'Quality Assurance':            'bg-fuchsia-50 text-fuchsia-700',
+  'Safeguarding':                 'bg-rose-50 text-rose-700',
+  'Staff':                        'bg-sky-50 text-sky-700',
+  'Training':                     'bg-teal-50 text-teal-700',
+}
+const SECTION_PALETTE = [
+  'bg-pink-50 text-pink-700', 'bg-blue-50 text-blue-700', 'bg-emerald-50 text-emerald-700',
+  'bg-orange-50 text-orange-700', 'bg-indigo-50 text-indigo-700', 'bg-violet-50 text-violet-700',
+  'bg-amber-50 text-amber-700', 'bg-cyan-50 text-cyan-700', 'bg-fuchsia-50 text-fuchsia-700',
+  'bg-rose-50 text-rose-700', 'bg-sky-50 text-sky-700', 'bg-teal-50 text-teal-700',
+  'bg-lime-50 text-lime-700', 'bg-slate-100 text-slate-700',
+]
+function sectionColour(name: string): string {
+  if (SECTION_COLOURS[name]) return SECTION_COLOURS[name]
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return SECTION_PALETTE[h % SECTION_PALETTE.length]
+}
+
 export default function PoliciesPage() {
   const { data: session }           = useSession()
   const [policies,       setPolicies]       = useState<any[]>([])
@@ -307,7 +340,7 @@ function PolicyGroup({
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
                   <td className="px-6 py-4 truncate">
                     <span className="font-medium text-neutral-dark">{p.name}</span>
-                    {p.section && <span className="ml-2 rounded-full bg-teal-light px-2 py-0.5 text-[11px] font-medium text-teal">{p.section}</span>}
+                    {p.section && <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${sectionColour(p.section)}`}>{p.section}</span>}
                   </td>
                   <td className="px-6 py-4">
                     <Badge variant={statusVariant(p.status)}>

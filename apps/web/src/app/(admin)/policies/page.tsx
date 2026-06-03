@@ -502,6 +502,15 @@ async function sha256Hex(file: File): Promise<string> {
   return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
+// Reject if a request hangs past `ms` so the upload loop reconciles against the
+// server instead of freezing forever on a lost/slow response.
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
 function deriveNameFromFile(filename: string): string {
   return filename
     .replace(/\.[^.]+$/, '')
@@ -654,7 +663,9 @@ function BulkUploadModal({
       form.append('document_category', category)
       form.append('names', JSON.stringify(batch.map(f => f.name)))
 
-      const res = await api.policies.bulkUpload(form).catch(() => null)
+      // Cap each batch at 90s — if it hangs, fall through to the reconcile path
+      // (re-fetch the policy list) rather than freezing the whole upload.
+      const res = await withTimeout(api.policies.bulkUpload(form), 90_000).catch(() => null)
       if (res?.results) {
         ;(res.results as any[]).forEach(r => succeeded.add(r.filename))
         ;(res.errors ?? []).forEach((e: any) => errored.set(e.filename, e.error))

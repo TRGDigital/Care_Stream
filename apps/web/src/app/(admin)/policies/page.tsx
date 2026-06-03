@@ -667,6 +667,15 @@ function BulkUploadModal({
       flush()
     }
 
+    // Final guard: anything the server never confirmed (not done/skipped/errored)
+    // must be surfaced, never left as a silent 'pending'.
+    files.forEach(f => {
+      if (!succeeded.has(f.file.name) && !skipped.has(f.file.name) && !errored.has(f.file.name)) {
+        errored.set(f.file.name, 'Not confirmed by the server — please re-upload this file.')
+      }
+    })
+    flush()
+
     setUploading(false)
     setDone(true)
   }
@@ -869,16 +878,46 @@ function BulkUploadModal({
           )}
 
           {/* Summary after upload */}
-          {done && (
-            <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-              <p className="font-medium text-neutral-dark">
-                {doneCount} of {files.length} uploaded successfully.
-                {skippedCount > 0 && <span className="ml-1 text-neutral-mid">{skippedCount} skipped (duplicates).</span>}
-                {errorCount > 0 && <span className="ml-1 text-status-error">{errorCount} failed.</span>}
-              </p>
-              <p className="mt-1 text-neutral-mid text-xs">New policies are now processing — they will become searchable once ingestion completes (usually under a minute each).</p>
-            </div>
-          )}
+          {done && (() => {
+            const failedFiles  = files.filter(f => f.status === 'error')
+            const skippedFiles = files.filter(f => f.status === 'skipped')
+            return (
+              <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
+                <p className="font-medium text-neutral-dark">
+                  {doneCount} of {files.length} uploaded successfully.
+                  {skippedCount > 0 && <span className="ml-1 text-neutral-mid">{skippedCount} skipped (duplicates).</span>}
+                  {errorCount > 0 && <span className="ml-1 text-status-error">{errorCount} failed.</span>}
+                </p>
+
+                {failedFiles.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-xs font-semibold text-status-error">Did not upload — please re-try these:</p>
+                    <ul className="space-y-1">
+                      {failedFiles.map(f => (
+                        <li key={f.file.name} className="flex items-start gap-1.5 text-xs">
+                          <AlertCircle size={13} className="mt-0.5 shrink-0 text-status-error" />
+                          <span className="text-neutral-dark"><span className="font-medium">{f.file.name}</span>{f.error ? <span className="text-neutral-mid"> — {f.error}</span> : null}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {skippedFiles.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-xs font-semibold text-neutral-mid">Skipped as duplicates:</p>
+                    <ul className="space-y-1">
+                      {skippedFiles.map(f => (
+                        <li key={f.file.name} className="text-xs text-neutral-mid">• {f.file.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <p className="mt-3 text-neutral-mid text-xs">New policies are now processing — they will become searchable once ingestion completes (usually under a minute each).</p>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Footer */}

@@ -89,8 +89,10 @@ policiesRouter.post('/check', requireAdmin, async (req: Request, res: Response) 
   }
   const tenantId = getTenantId()
 
+  // Match against active AND processing policies so a re-run shortly after an
+  // upload (while ingestion is still finishing) doesn't create duplicates.
   const active = await (prisma as any).policy.findMany({
-    where:  { tenant_id: tenantId, status: 'active' },
+    where:  { tenant_id: tenantId, status: { in: ['active', 'processing'] } },
     select: { id: true, name: true, version: true, content_hash: true },
   }) as Array<{ id: string; name: string; version: number; content_hash: string | null }>
 
@@ -356,7 +358,7 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   // Fail-safe: auto-skip byte-for-byte duplicates. Load existing active hashes
   // once; also dedupe identical files within this same batch.
   const existingActive = await (prisma as any).policy.findMany({
-    where:  { tenant_id: tenantId, status: 'active' },
+    where:  { tenant_id: tenantId, status: { in: ['active', 'processing'] } },
     select: { name: true, content_hash: true },
   }) as Array<{ name: string; content_hash: string | null }>
   const existingHashes = new Map<string, string>()  // hash → existing policy name

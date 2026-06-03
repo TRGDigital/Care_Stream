@@ -445,3 +445,74 @@ function buildHtmlEmail(
     ${emailFooter()}
   `)
 }
+
+// ─── Marketing lead notification ──────────────────────────────────────────────
+// Sent to the sales inbox when a contact/demo form is submitted (by a human or an
+// AI agent via WebMCP), so leads are never lost. Recipient: SALES_NOTIFICATION_EMAIL,
+// falling back to the first PLATFORM_ADMIN_EMAILS entry, then hello@.
+
+export interface SendLeadNotificationOptions {
+  type:         'contact' | 'demo'
+  source:       'web' | 'agent'
+  name:         string
+  email:        string
+  organisation?: string | null
+  role?:        string | null
+  phone?:       string | null
+  homes?:       string | null
+  subject?:     string | null
+  message?:     string | null
+}
+
+const esc = (s: string) =>
+  s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+
+export async function sendLeadNotificationEmail(opts: SendLeadNotificationOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const to =
+    process.env.SALES_NOTIFICATION_EMAIL ??
+    (process.env.PLATFORM_ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)[0] ??
+    'hello@carestreamai.com'
+
+  const heading = opts.type === 'demo' ? 'New demo request' : 'New contact enquiry'
+  const via = opts.source === 'agent' ? ' (submitted by an AI agent via WebMCP)' : ''
+
+  const rows: Array<[string, string | null | undefined]> = [
+    ['Name', opts.name],
+    ['Email', opts.email],
+    ['Organisation', opts.organisation],
+    ['Role', opts.role],
+    ['Phone', opts.phone],
+    ['Homes / locations', opts.homes],
+    ['Subject', opts.subject],
+    ['Source', opts.source === 'agent' ? 'AI agent (WebMCP)' : 'Website'],
+  ]
+  const rowsHtml = rows
+    .filter(([, v]) => v != null && String(v).trim() !== '')
+    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:${NEUTRAL_MID};font-size:13px;vertical-align:top"><strong>${k}</strong></td><td style="padding:6px 0;color:${NEUTRAL_DARK};font-size:13px">${esc(String(v))}</td></tr>`)
+    .join('')
+
+  const messageHtml = opts.message?.trim()
+    ? `<p style="color:${NEUTRAL_MID};font-size:13px;margin:18px 0 6px"><strong>Message</strong></p>
+       <p style="color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;white-space:pre-wrap;margin:0">${esc(opts.message)}</p>`
+    : ''
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 4px">${heading}</p>
+    <p style="color:${NEUTRAL_MID};font-size:13px;margin:0 0 18px">A new lead came in via the CareStreamAI website${via}.</p>
+    <table style="border-collapse:collapse;width:100%">${rowsHtml}</table>
+    ${messageHtml}
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to,
+    from,
+    replyTo: opts.email,
+    subject: `${heading}: ${opts.name}${opts.organisation ? ` — ${opts.organisation}` : ''}`,
+    html,
+  })
+}

@@ -65,6 +65,24 @@ export interface PlatformStats {
   queriesLast30Days: number
 }
 
+export interface AgentEventsData {
+  total:       number
+  last7Days:   number
+  last30Days:  number
+  byTool:      Array<{ tool: string; count: number }>
+  recent:      Array<{ id: string; tool_name: string; source: string; path: string | null; status: string; created_at: string }>
+}
+
+export interface LeadsData {
+  total:    number
+  newCount: number
+  leads:    Array<{
+    id: string; type: string; name: string; email: string
+    organisation: string | null; role: string | null; phone: string | null; homes: string | null
+    subject: string | null; message: string | null; source: string; status: string; created_at: string
+  }>
+}
+
 export interface PlanLimits {
   name:                         string
   monthly_query_limit:          number
@@ -402,6 +420,12 @@ export function createPlatformClient(token: string) {
 
     revenue: () =>
       adminFetch<RevenueData>('/revenue', token),
+
+    agentEvents: () =>
+      adminFetch<AgentEventsData>('/agent-events', token),
+
+    leads: () =>
+      adminFetch<LeadsData>('/leads', token),
 
     dailyActivity: (days = 30) =>
       adminFetch<{ series: Array<{ date: string; chat: number; email: number; whatsapp: number }>; days: number }>(

@@ -3,17 +3,37 @@
 import { useState } from 'react'
 import { useAgentForm } from '@/components/agent/use-agent-form'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+type ContactValues = { name: string; email: string; subject: string; message: string }
+
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [error, setError] = useState('')
+  const [form, setForm] = useState<ContactValues>({ name: '', email: '', subject: '', message: '' })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function submitLead(values: ContactValues, source: 'web' | 'agent') {
+    const res = await fetch(`${API_URL}/public/marketing/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'contact', source, ...values }),
+    })
+    if (!res.ok) throw new Error('submit failed')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
+    setError('')
+    try {
+      await submitLead(form, 'web')
+      setSubmitted(true)
+    } catch {
+      setError('Something went wrong — please try again, or email hello@carestreamai.com.')
+    }
   }
 
   // Expose this form to AI agents via WebMCP (no-op where unsupported).
@@ -28,8 +48,10 @@ export function ContactForm() {
       { name: 'subject', description: 'Topic of the enquiry', required: true, enum: ['product', 'pricing', 'data', 'support', 'other'] },
       { name: 'message', description: 'The message body', required: true },
     ],
-    onSubmit: (v) => {
-      setForm(f => ({ ...f, ...v }))
+    onSubmit: async (v) => {
+      const merged = { ...form, ...v } as ContactValues
+      setForm(merged)
+      await submitLead(merged, 'agent')
       setSubmitted(true)
     },
   })
@@ -74,6 +96,7 @@ export function ContactForm() {
         <label className={labelClass}>Message *</label>
         <textarea name="message" rows={5} required value={form.message} onChange={handleChange} className={inputClass} />
       </div>
+      {error && <p className="text-center text-sm text-red-600">{error}</p>}
       <button type="submit" className="btn-amber w-full rounded-btn py-4 text-sm">
         Send Message
       </button>

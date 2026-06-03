@@ -124,6 +124,50 @@ adminRouter.get('/stats', async (_req: Request, res: Response) => {
   })
 })
 
+// ─── GET /admin/agent-events ──────────────────────────────────────────────────
+// How AI agents are interacting with CareStream via WebMCP. Aggregate stats +
+// per-tool breakdown + recent invocations, for the platform console (AI Agents tab).
+
+adminRouter.get('/agent-events', async (_req: Request, res: Response) => {
+  const since7  = new Date(Date.now() - 7  * 86_400_000)
+  const since30 = new Date(Date.now() - 30 * 86_400_000)
+
+  const [total, last7Days, last30Days, byToolRaw, recent] = await Promise.all([
+    (prisma as any).agentEvent.count(),
+    (prisma as any).agentEvent.count({ where: { created_at: { gte: since7 } } }),
+    (prisma as any).agentEvent.count({ where: { created_at: { gte: since30 } } }),
+    (prisma as any).agentEvent.groupBy({
+      by: ['tool_name'],
+      _count: { tool_name: true },
+      orderBy: { _count: { tool_name: 'desc' } },
+    }),
+    (prisma as any).agentEvent.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 50,
+      select: { id: true, tool_name: true, source: true, path: true, status: true, created_at: true },
+    }),
+  ])
+
+  const byTool = (byToolRaw as Array<{ tool_name: string; _count: { tool_name: number } }>).map(r => ({
+    tool: r.tool_name,
+    count: r._count.tool_name,
+  }))
+
+  ok(res, { total, last7Days, last30Days, byTool, recent })
+})
+
+// ─── GET /admin/leads ─────────────────────────────────────────────────────────
+// Contact + demo form submissions (newest first) so leads are never lost.
+
+adminRouter.get('/leads', async (_req: Request, res: Response) => {
+  const [leads, total, newCount] = await Promise.all([
+    (prisma as any).marketingLead.findMany({ orderBy: { created_at: 'desc' }, take: 200 }),
+    (prisma as any).marketingLead.count(),
+    (prisma as any).marketingLead.count({ where: { status: 'new' } }),
+  ])
+  ok(res, { leads, total, newCount })
+})
+
 // ─── GET /admin/tenants ───────────────────────────────────────────────────────
 // List root tenants (parent_tenant_id IS NULL) with per-tenant stats + sub-tenant count.
 

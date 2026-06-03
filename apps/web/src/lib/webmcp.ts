@@ -40,6 +40,29 @@ interface ModelContextLike {
   registerTool: (tool: object, options?: { signal?: AbortSignal; exposedTo?: string[] }) => void
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// Records one row per agent tool-invocation so the platform console can show how
+// AI agents are interacting with CareStream. Fire-and-forget — never blocks or
+// breaks a tool if tracking fails.
+function trackAgentEvent(toolName: string, status: 'ok' | 'error'): void {
+  try {
+    const body = JSON.stringify({
+      tool_name: toolName,
+      status,
+      path: typeof location !== 'undefined' ? location.pathname : undefined,
+    })
+    fetch(`${API_URL}/public/marketing/agent-events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    /* tracking must never affect the tool */
+  }
+}
+
 /** True when the browser exposes the WebMCP API in this (secure) context. */
 export function isWebMcpAvailable(): boolean {
   return (
@@ -60,6 +83,18 @@ export function registerAgentTool(def: AgentToolDef): () => void {
   const mc = (document as unknown as { modelContext: ModelContextLike }).modelContext
   const controller = new AbortController()
 
+  // Wrap execute to record each agent invocation (ok/error) for console tracking.
+  const trackedExecute = async (input: Record<string, unknown>) => {
+    try {
+      const result = await def.execute(input)
+      trackAgentEvent(def.name, 'ok')
+      return result
+    } catch (e) {
+      trackAgentEvent(def.name, 'error')
+      throw e
+    }
+  }
+
   try {
     mc.registerTool(
       {
@@ -68,7 +103,7 @@ export function registerAgentTool(def: AgentToolDef): () => void {
         description: def.description,
         inputSchema: def.inputSchema,
         annotations: def.annotations,
-        execute: def.execute,
+        execute: trackedExecute,
       },
       { signal: controller.signal },
     )

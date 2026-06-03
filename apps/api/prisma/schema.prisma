@@ -457,6 +457,48 @@ model SiteImageAlt {
   @@map("site_image_alts")
 }
 
+// ─── Marketing leads ──────────────────────────────────────────────────────────
+// Contact + demo form submissions from the public marketing site. Platform-level
+// (no tenant_id). source='agent' when submitted via a WebMCP tool by an AI agent.
+
+model MarketingLead {
+  id           String   @id @default(uuid())
+  type         String                              // contact | demo
+  name         String
+  email        String
+  organisation String?
+  role         String?
+  phone        String?
+  homes        String?
+  subject      String?
+  message      String?
+  source       String   @default("web")            // web | agent
+  user_agent   String?
+  status       String   @default("new")            // new | contacted | archived
+  created_at   DateTime @default(now())
+
+  @@index([created_at])
+  @@map("marketing_leads")
+}
+
+// ─── Agent events ─────────────────────────────────────────────────────────────
+// Tracks how AI agents interact with CareStream via WebMCP — one row per tool
+// invocation. Platform-level, surfaced in the platform console (AI Agents tab).
+
+model AgentEvent {
+  id         String   @id @default(uuid())
+  tool_name  String
+  source     String   @default("webmcp")           // webmcp | mcp-server
+  path       String?
+  user_agent String?
+  status     String   @default("ok")               // ok | error
+  created_at DateTime @default(now())
+
+  @@index([created_at])
+  @@index([tool_name])
+  @@map("agent_events")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

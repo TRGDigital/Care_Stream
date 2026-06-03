@@ -6,6 +6,8 @@ import {
   createPlatformClient,
   type PlatformStats,
   type TenantSummary,
+  type AgentEventsData,
+  type LeadsData,
 } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import {
@@ -100,7 +102,7 @@ function atRisk(stats: TenantSummary['stats'], plan: PlanLimits | null): boolean
   ].some(({ used, limit }) => limit != null && limit > 0 && used / limit >= 0.9)
 }
 
-type TabId = 'overview' | 'queries' | 'analytics' | 'cqc' | 'channels' | 'reference' | 'qa'
+type TabId = 'overview' | 'queries' | 'analytics' | 'cqc' | 'channels' | 'agents' | 'reference' | 'qa'
 
 // ─── Client selector ──────────────────────────────────────────────────────────
 
@@ -270,6 +272,7 @@ export default function PlatformDashboard() {
     { id: 'analytics', label: 'Analytics'       },
     { id: 'cqc',       label: 'CQC Report'      },
     { id: 'channels',  label: 'Channel Routing'  },
+    { id: 'agents',    label: 'AI Agents'       },
     { id: 'reference', label: 'System Reference' },
     { id: 'qa',        label: 'QA Testing'      },
   ]
@@ -989,6 +992,9 @@ export default function PlatformDashboard() {
             {/* ── Channel Routing ──────────────────────────────────────────── */}
             {tab === 'channels' && <ChannelRoutingMap />}
 
+            {/* ── AI Agents (WebMCP) ───────────────────────────────────────── */}
+            {tab === 'agents' && <AgentInteractions token={token} />}
+
             {/* ── System Reference ─────────────────────────────────────────── */}
             {tab === 'reference' && <SystemReference />}
 
@@ -1088,6 +1094,152 @@ export default function PlatformDashboard() {
         </div>
       )}
     </PlatformShell>
+  )
+}
+
+// ─── AI Agents (WebMCP interaction tracking) ──────────────────────────────────
+
+function AgentStatCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div className={`rounded-xl border p-5 ${accent ? 'border-teal/30 bg-teal-light/40' : 'border-gray-200 bg-white'}`}>
+      <p className="text-xs font-medium text-neutral-mid">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${accent ? 'text-teal-dark' : 'text-neutral-dark'}`}>{value.toLocaleString()}</p>
+    </div>
+  )
+}
+
+function AgentInteractions({ token }: { token: string | null }) {
+  const [events,  setEvents]  = useState<AgentEventsData | null>(null)
+  const [leads,   setLeads]   = useState<LeadsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState('')
+
+  useEffect(() => {
+    if (!token) return
+    setLoading(true)
+    const api = createPlatformClient(token)
+    Promise.all([api.agentEvents(), api.leads()])
+      .then(([e, l]) => { setEvents(e); setLeads(l) })
+      .catch((err: Error) => setError(err.message ?? 'Failed to load agent data'))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin text-neutral-mid" /></div>
+  }
+  if (error) {
+    return <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+  }
+
+  const maxToolCount = Math.max(1, ...(events?.byTool ?? []).map(t => t.count))
+  const fmt = (d: string) => new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const agentLeads = (leads?.leads ?? []).filter(l => l.source === 'agent').length
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-teal/20 bg-teal-light/30 px-5 py-4">
+        <p className="text-sm font-semibold text-teal-dark">AI Agent Interactions (WebMCP)</p>
+        <p className="mt-1 text-xs text-neutral-mid">
+          How AI agents are using CareStream&rsquo;s WebMCP tools. One row is logged per tool invocation
+          (<code className="rounded bg-gray-100 px-1">/public/marketing/agent-events</code>). Live once browsers ship WebMCP — Chrome Canary today.
+        </p>
+      </div>
+
+      {/* Headline stats */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <AgentStatCard label="Tool calls (all time)" value={events?.total ?? 0} accent />
+        <AgentStatCard label="Last 7 days"           value={events?.last7Days ?? 0} />
+        <AgentStatCard label="Last 30 days"          value={events?.last30Days ?? 0} />
+        <AgentStatCard label="Leads via agents"      value={agentLeads} />
+      </div>
+
+      {/* Per-tool breakdown */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <p className="mb-4 text-sm font-semibold text-neutral-dark">Invocations by tool</p>
+        {(events?.byTool ?? []).length === 0 ? (
+          <p className="text-sm text-neutral-mid">No agent tool calls recorded yet.</p>
+        ) : (
+          <div className="space-y-2.5">
+            {events!.byTool.map(t => (
+              <div key={t.tool} className="flex items-center gap-3">
+                <span className="w-44 shrink-0 truncate font-mono text-xs text-neutral-dark">{t.tool}</span>
+                <div className="h-3 flex-1 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-teal" style={{ width: `${(t.count / maxToolCount) * 100}%` }} />
+                </div>
+                <span className="w-10 shrink-0 text-right text-sm font-semibold text-neutral-dark">{t.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent invocations */}
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <p className="border-b border-gray-100 px-5 py-3 text-sm font-semibold text-neutral-dark">Recent invocations</p>
+        {(events?.recent ?? []).length === 0 ? (
+          <p className="px-5 py-4 text-sm text-neutral-mid">Nothing yet.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-neutral-light/50 text-left text-xs text-neutral-mid">
+              <tr>
+                <th className="px-5 py-2 font-medium">Tool</th>
+                <th className="px-5 py-2 font-medium">Page</th>
+                <th className="px-5 py-2 font-medium">Status</th>
+                <th className="px-5 py-2 font-medium">When</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {events!.recent.map(r => (
+                <tr key={r.id}>
+                  <td className="px-5 py-2 font-mono text-xs text-neutral-dark">{r.tool_name}</td>
+                  <td className="px-5 py-2 text-neutral-mid">{r.path ?? '—'}</td>
+                  <td className="px-5 py-2">
+                    <span className={r.status === 'ok' ? 'text-green-600' : 'text-red-500'}>{r.status}</span>
+                  </td>
+                  <td className="px-5 py-2 text-neutral-mid">{fmt(r.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Leads (so they're never lost) */}
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+          <p className="text-sm font-semibold text-neutral-dark">Recent leads (contact &amp; demo)</p>
+          <span className="text-xs text-neutral-mid">{leads?.newCount ?? 0} new · {leads?.total ?? 0} total</span>
+        </div>
+        {(leads?.leads ?? []).length === 0 ? (
+          <p className="px-5 py-4 text-sm text-neutral-mid">No leads captured yet.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-neutral-light/50 text-left text-xs text-neutral-mid">
+              <tr>
+                <th className="px-5 py-2 font-medium">Type</th>
+                <th className="px-5 py-2 font-medium">Name</th>
+                <th className="px-5 py-2 font-medium">Email</th>
+                <th className="px-5 py-2 font-medium">Organisation</th>
+                <th className="px-5 py-2 font-medium">Via</th>
+                <th className="px-5 py-2 font-medium">When</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {leads!.leads.slice(0, 30).map(l => (
+                <tr key={l.id}>
+                  <td className="px-5 py-2"><RefTag color={l.type === 'demo' ? 'purple' : 'blue'}>{l.type}</RefTag></td>
+                  <td className="px-5 py-2 text-neutral-dark">{l.name}</td>
+                  <td className="px-5 py-2 text-neutral-mid">{l.email}</td>
+                  <td className="px-5 py-2 text-neutral-mid">{l.organisation ?? '—'}</td>
+                  <td className="px-5 py-2">{l.source === 'agent' ? <RefTag color="teal">AI agent</RefTag> : <span className="text-xs text-neutral-mid">web</span>}</td>
+                  <td className="px-5 py-2 text-neutral-mid">{fmt(l.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -1967,10 +2119,14 @@ function SystemReference() {
         <div className="mt-3 space-y-1">
           <RefRow label="Core + hooks"        value="apps/web/src/lib/webmcp.ts, hooks/use-agent-tool.ts, components/agent/use-agent-form.ts" />
           <RefRow label="Public tool registry" value="lib/agent-tools.ts — carestream_overview, get_pricing, search_blog (all read-only). Mounted site-wide via components/agent/marketing-agent-tools.tsx in (marketing)/layout.tsx." />
-          <RefRow label="Form tools"          value="contact_carestream (contact form), book_demo (demo form) — wrapped with useAgentForm." />
+          <RefRow label="Form tools"          value="contact_carestream (contact form), book_demo (demo form) — wrapped with useAgentForm. Submit to POST /public/marketing/leads with source='agent'." />
+          <RefRow label="Lead capture"        value="POST /public/marketing/leads (apps/api/src/routes/marketing-public.ts) → persists to marketing_leads table + emails sales via sendLeadNotificationEmail (SALES_NOTIFICATION_EMAIL, falls back to PLATFORM_ADMIN_EMAILS[0], then hello@). Both the website forms and agent tools use it — leads are no longer lost." />
+          <RefRow label="Agent tracking"      value="Every tool execute() fires a beacon to POST /public/marketing/agent-events → one row per invocation in agent_events (tool_name, path, status, source). Wrapped in lib/webmcp.ts; fire-and-forget, never blocks the tool." />
+          <RefRow label="Console view"        value="Platform console → Dashboard → 'AI Agents' tab: total / 7d / 30d tool calls, per-tool breakdown, recent invocations, plus recent leads (contact+demo) with web vs AI-agent source. API: GET /admin/agent-events and GET /admin/leads." />
           <RefRow label="Auth context"        value="Tools run client-side under the visitor's own session — so tenant isolation / RLS hold automatically. No new credentials or API surface." />
           <RefRow label="Phase 2 (planned)"   value="Authenticated tenant tools (ask_policy_question, search_policies, list_training) inside the logged-in app; mutating actions gated by human confirmation + audit log." />
           <RefRow label="llms.txt"            value="GET /llms.txt — curated site map for LLMs per llmstxt.org (H1 + blockquote + H2 link-lists + Optional section). Route at app/llms.txt/route.ts." />
+          <RefRow label="Data tables"         value="marketing_leads + agent_events (platform-level, RLS-enabled, no anon policies — API postgres role bypasses). Migration: apps/api/prisma/migrations/manual_marketing_leads_and_agent_events.sql." />
           <RefRow label="Browser support"     value="Chrome Canary only (flag), HTTPS-only, June 2026. Verify in Rich Results-style agent tooling once GA. See QA Testing tab." />
         </div>
       </RefSection>
@@ -2852,9 +3008,37 @@ const QA_TESTS: TestItem[] = [
   {
     id: 'webmcp-form-persistence',
     category: 'WebMCP & AI Agents',
-    name: 'Contact/demo submissions reach a backend',
-    steps: 'Submit the contact and demo forms (as a human). Confirm the lead is actually delivered somewhere (email/DB) — currently the forms only show a success screen and do NOT persist or send the submission.',
-    expected: 'Submissions are delivered to sales (email or stored). NOTE: needs a backend endpoint wired — flagged as a follow-up; the WebMCP form tool becomes fully useful once this is done.',
+    name: 'Contact/demo submissions reach the backend',
+    steps: 'Submit the contact form and the demo form as a normal visitor. Then check the AI Agents tab → Recent leads, and confirm the sales inbox (SALES_NOTIFICATION_EMAIL) received an email.',
+    expected: 'Each submission appears in marketing_leads (shown in the AI Agents tab) with source "web", and a notification email is delivered to sales. No lead is lost.',
+  },
+  {
+    id: 'webmcp-form-error',
+    category: 'WebMCP & AI Agents',
+    name: 'Form shows an error if submit fails',
+    steps: 'Temporarily block the API (e.g. offline) and submit the contact form.',
+    expected: 'A clear inline error is shown ("Something went wrong — please try again, or email hello@…") and the form is NOT marked as sent.',
+  },
+  {
+    id: 'webmcp-agent-source',
+    category: 'WebMCP & AI Agents',
+    name: 'Agent-submitted leads tagged correctly',
+    steps: 'In Chrome Canary, invoke the book_demo (or contact_carestream) tool via an agent with test values.',
+    expected: 'The lead is saved with source "agent" and shows an "AI agent" tag in the AI Agents tab → Recent leads.',
+  },
+  {
+    id: 'webmcp-event-tracking',
+    category: 'WebMCP & AI Agents',
+    name: 'Tool invocations are tracked',
+    steps: 'In Chrome Canary, invoke a few tools (get_pricing, search_blog). Open the platform console → Dashboard → AI Agents tab.',
+    expected: 'Tool-call totals (all-time / 7d / 30d) increase, the per-tool breakdown lists the tools used, and recent invocations show tool, page, status and time.',
+  },
+  {
+    id: 'webmcp-agents-tab',
+    category: 'WebMCP & AI Agents',
+    name: 'AI Agents dashboard tab loads',
+    steps: 'Open the platform console → Dashboard → AI Agents tab.',
+    expected: 'The tab loads without error and shows the stat cards, invocations-by-tool, recent invocations, and recent leads sections (empty states read cleanly when there is no data yet).',
   },
 ]
 

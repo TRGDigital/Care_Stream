@@ -3,17 +3,37 @@
 import { useState } from 'react'
 import { useAgentForm } from '@/components/agent/use-agent-form'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+type DemoValues = { name: string; role: string; organisation: string; email: string; phone: string; homes: string; message: string }
+
 export function DemoForm() {
   const [submitted, setSubmitted] = useState(false)
-  const [form, setForm] = useState({ name: '', role: '', organisation: '', email: '', phone: '', homes: '', message: '' })
+  const [error, setError] = useState('')
+  const [form, setForm] = useState<DemoValues>({ name: '', role: '', organisation: '', email: '', phone: '', homes: '', message: '' })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function submitLead(values: DemoValues, source: 'web' | 'agent') {
+    const res = await fetch(`${API_URL}/public/marketing/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'demo', source, ...values }),
+    })
+    if (!res.ok) throw new Error('submit failed')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
+    setError('')
+    try {
+      await submitLead(form, 'web')
+      setSubmitted(true)
+    } catch {
+      setError('Something went wrong — please try again, or email hello@carestreamai.com.')
+    }
   }
 
   // Expose the demo request to AI agents via WebMCP (no-op where unsupported).
@@ -31,8 +51,10 @@ export function DemoForm() {
       { name: 'homes', description: 'Number of homes / locations', enum: ['1', '2-5', '6-15', '16+'] },
       { name: 'message', description: 'Anything specific to cover in the demo (optional)' },
     ],
-    onSubmit: (v) => {
-      setForm(f => ({ ...f, ...v }))
+    onSubmit: async (v) => {
+      const merged = { ...form, ...v } as DemoValues
+      setForm(merged)
+      await submitLead(merged, 'agent')
       setSubmitted(true)
     },
   })
@@ -88,6 +110,7 @@ export function DemoForm() {
         <label className={labelClass}>Anything you&apos;d like to cover?</label>
         <textarea name="message" rows={3} value={form.message} onChange={handleChange} className={inputClass} placeholder="Optional, e.g. data security, multilingual demo, CQC reporting…" />
       </div>
+      {error && <p className="text-center text-sm text-red-600">{error}</p>}
       <button type="submit" className="btn-amber w-full rounded-btn py-4 text-sm">
         Request Demo
       </button>

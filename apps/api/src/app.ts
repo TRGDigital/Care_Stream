@@ -22,6 +22,7 @@ import { auditsRouter } from './routes/audits'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
+import { marketingPublicRouter } from './routes/marketing-public'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -95,6 +96,10 @@ app.use('/public/site-pages', publicPagesRouter)
 
 // Public alt-text map for static site images, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/image-alts', publicImageAltsRouter)
+
+// Public marketing leads (contact/demo forms) + WebMCP agent-event tracking, no auth.
+// Must be mounted BEFORE requireAuth.
+app.use('/public/marketing', marketingPublicRouter)
 
 // §11.1 — All routes below require a valid JWT + tenant context.
 // apiLimiter: 100 req/min per user.

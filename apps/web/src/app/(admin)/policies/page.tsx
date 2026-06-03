@@ -54,14 +54,14 @@ export default function PoliciesPage() {
     if (!session?.accessToken) return
     if (!confirm(`Archive "${name}"? It will no longer be searchable.`)) return
     const api = createApiClient(session.accessToken)
-    await api.policies.archive(id).catch(() => {})
+    try { await api.policies.archive(id) } catch (e: any) { alert(e?.message ?? 'Archive failed.') }
     load()
   }
 
   async function retry(id: string) {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    await api.policies.retry(id).catch(() => {})
+    try { await api.policies.retry(id) } catch (e: any) { alert(e?.message ?? 'Retry failed.') }
     load()
   }
 
@@ -69,7 +69,7 @@ export default function PoliciesPage() {
     if (!session?.accessToken) return
     if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return
     const api = createApiClient(session.accessToken)
-    await api.policies.permanentDelete(id).catch(() => {})
+    try { await api.policies.permanentDelete(id) } catch (e: any) { alert(e?.message ?? 'Delete failed.') }
     load()
   }
 

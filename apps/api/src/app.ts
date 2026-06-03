@@ -23,6 +23,7 @@ import { publicBlogRouter } from './routes/blog-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
+import { agentActionsRouter } from './routes/agent-actions'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -121,6 +122,7 @@ app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
+app.use('/agent-actions', agentActionsRouter)
 
 seedTrainingModulesIfEmpty()
 

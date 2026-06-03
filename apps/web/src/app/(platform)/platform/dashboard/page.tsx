@@ -1146,10 +1146,11 @@ function AgentInteractions({ token }: { token: string | null }) {
       </div>
 
       {/* Headline stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <AgentStatCard label="Tool calls (all time)" value={events?.total ?? 0} accent />
         <AgentStatCard label="Last 7 days"           value={events?.last7Days ?? 0} />
         <AgentStatCard label="Last 30 days"          value={events?.last30Days ?? 0} />
+        <AgentStatCard label="Confirmed mutations"   value={events?.mutations ?? 0} />
         <AgentStatCard label="Leads via agents"      value={agentLeads} />
       </div>
 
@@ -1183,7 +1184,7 @@ function AgentInteractions({ token }: { token: string | null }) {
             <thead className="bg-neutral-light/50 text-left text-xs text-neutral-mid">
               <tr>
                 <th className="px-5 py-2 font-medium">Tool</th>
-                <th className="px-5 py-2 font-medium">Page</th>
+                <th className="px-5 py-2 font-medium">Detail</th>
                 <th className="px-5 py-2 font-medium">Status</th>
                 <th className="px-5 py-2 font-medium">When</th>
               </tr>
@@ -1191,10 +1192,13 @@ function AgentInteractions({ token }: { token: string | null }) {
             <tbody className="divide-y divide-gray-50">
               {events!.recent.map(r => (
                 <tr key={r.id}>
-                  <td className="px-5 py-2 font-mono text-xs text-neutral-dark">{r.tool_name}</td>
-                  <td className="px-5 py-2 text-neutral-mid">{r.path ?? '—'}</td>
                   <td className="px-5 py-2">
-                    <span className={r.status === 'ok' ? 'text-green-600' : 'text-red-500'}>{r.status}</span>
+                    <span className="font-mono text-xs text-neutral-dark">{r.tool_name}</span>
+                    {r.mutation && <RefTag color="amber">mutation</RefTag>}
+                  </td>
+                  <td className="px-5 py-2 text-neutral-mid">{r.summary ?? r.path ?? '—'}</td>
+                  <td className="px-5 py-2">
+                    <span className={r.status === 'ok' ? 'text-green-600' : r.status === 'declined' ? 'text-amber-600' : 'text-red-500'}>{r.status}</span>
                   </td>
                   <td className="px-5 py-2 text-neutral-mid">{fmt(r.created_at)}</td>
                 </tr>
@@ -2125,7 +2129,10 @@ function SystemReference() {
           <RefRow label="Console view"        value="Platform console → Dashboard → 'AI Agents' tab: total / 7d / 30d tool calls, per-tool breakdown, recent invocations, plus recent leads (contact+demo) with web vs AI-agent source. API: GET /admin/agent-events and GET /admin/leads." />
           <RefRow label="Auth context"        value="Tools run client-side under the visitor's own session — so tenant isolation / RLS hold automatically. No new credentials or API surface." />
           <RefRow label="Tenant tools (Phase 2)" value="components/agent/tenant-agent-tools.tsx — ask_policy_question, search_policies, list_training_modules. Mounted in (portal) + (admin) layouts; use the user's NextAuth accessToken via createApiClient, so RLS/role/tenant checks all hold. Read-only; answers tagged untrustedContentHint." />
-          <RefRow label="Phase 3 (planned)"   value="Mutating tenant tools (e.g. start_audit, update settings) gated by human confirmation + audit-log entry tagged agent-initiated. Optional: hosted MCP server for headless/desktop agents (per-tenant API keys/OAuth)." />
+          <RefRow label="Mutating tools (Phase 3)" value="Admin-only: create_knowledge_entry, start_audit (+ list_audit_templates helper). Each AWAITS a human-confirmation dialog before running, then logs the decision (approved/declined/error) to the agent audit log. Server also enforces admin (requireAdmin)." />
+          <RefRow label="Confirmation gate"   value="lib/agent-confirm.ts (module store) + components/agent/agent-action-dialog.tsx (modal, rendered by TenantAgentTools). No agent-initiated mutation runs without an explicit human click." />
+          <RefRow label="Agent audit log"     value="POST /agent-actions (apps/api/src/routes/agent-actions.ts, requireAuth+requireAdmin) writes an agent_events row with mutation=true, confirmed, summary, tenant_id + user_id (from JWT — agent can only log under its own tenant). Shown in the AI Agents tab (Confirmed mutations stat + 'mutation' tag + summary)." />
+          <RefRow label="Phase 4 (optional)"  value="Hosted MCP server for headless/desktop agents (Claude/ChatGPT desktop) with per-tenant API keys/OAuth — separate, heavier security model." />
           <RefRow label="llms.txt"            value="GET /llms.txt — curated site map for LLMs per llmstxt.org (H1 + blockquote + H2 link-lists + Optional section). Route at app/llms.txt/route.ts." />
           <RefRow label="Data tables"         value="marketing_leads + agent_events (platform-level, RLS-enabled, no anon policies — API postgres role bypasses). Migration: apps/api/prisma/migrations/manual_marketing_leads_and_agent_events.sql." />
           <RefRow label="Browser support"     value="Chrome Canary only (flag), HTTPS-only, June 2026. Verify in Rich Results-style agent tooling once GA. See QA Testing tab." />
@@ -3061,6 +3068,27 @@ const QA_TESTS: TestItem[] = [
     name: 'Tenant tools respect isolation & role',
     steps: 'Invoke search_policies / list_training_modules as a staff user, then as an admin in a different tenant.',
     expected: 'Each only ever sees their own tenant’s data. No tool can reach another tenant’s policies or training — calls go through the authenticated API, not a privileged path.',
+  },
+  {
+    id: 'webmcp-mutate-admin-only',
+    category: 'WebMCP & AI Agents',
+    name: 'Mutating tools are admin-only',
+    steps: 'Log in as a non-admin staff user (Chrome Canary) and inspect the registered tools.',
+    expected: 'create_knowledge_entry, start_audit and list_audit_templates are NOT registered for staff. They appear only for admins. (The API also enforces requireAdmin.)',
+  },
+  {
+    id: 'webmcp-confirm-gate',
+    category: 'WebMCP & AI Agents',
+    name: 'Mutations require human confirmation',
+    steps: 'As an admin, invoke create_knowledge_entry (or start_audit) via an agent. A confirmation dialog should appear. Click Cancel.',
+    expected: 'Nothing is created/started; the tool returns "declined". Then repeat and click Approve — only now is the change made.',
+  },
+  {
+    id: 'webmcp-audit-log',
+    category: 'WebMCP & AI Agents',
+    name: 'Confirmed mutations are audit-logged',
+    steps: 'Approve a create_knowledge_entry, then open the platform console → AI Agents tab.',
+    expected: 'The "Confirmed mutations" stat increments and the action appears in recent invocations with a "mutation" tag, the summary, and status "ok". A declined attempt shows status "declined".',
   },
 ]
 

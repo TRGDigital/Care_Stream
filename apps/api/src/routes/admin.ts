@@ -132,10 +132,11 @@ adminRouter.get('/agent-events', async (_req: Request, res: Response) => {
   const since7  = new Date(Date.now() - 7  * 86_400_000)
   const since30 = new Date(Date.now() - 30 * 86_400_000)
 
-  const [total, last7Days, last30Days, byToolRaw, recent] = await Promise.all([
+  const [total, last7Days, last30Days, mutations, byToolRaw, recent] = await Promise.all([
     (prisma as any).agentEvent.count(),
     (prisma as any).agentEvent.count({ where: { created_at: { gte: since7 } } }),
     (prisma as any).agentEvent.count({ where: { created_at: { gte: since30 } } }),
+    (prisma as any).agentEvent.count({ where: { mutation: true } }),
     (prisma as any).agentEvent.groupBy({
       by: ['tool_name'],
       _count: { tool_name: true },
@@ -144,7 +145,10 @@ adminRouter.get('/agent-events', async (_req: Request, res: Response) => {
     (prisma as any).agentEvent.findMany({
       orderBy: { created_at: 'desc' },
       take: 50,
-      select: { id: true, tool_name: true, source: true, path: true, status: true, created_at: true },
+      select: {
+        id: true, tool_name: true, source: true, path: true, status: true, created_at: true,
+        mutation: true, confirmed: true, summary: true, tenant_id: true,
+      },
     }),
   ])
 
@@ -153,7 +157,7 @@ adminRouter.get('/agent-events', async (_req: Request, res: Response) => {
     count: r._count.tool_name,
   }))
 
-  ok(res, { total, last7Days, last30Days, byTool, recent })
+  ok(res, { total, last7Days, last30Days, mutations, byTool, recent })
 })
 
 // ─── GET /admin/leads ─────────────────────────────────────────────────────────

@@ -399,6 +399,12 @@ export function createApiClient(token: string) {
       }>('/audits/stats', token),
     },
 
+    // Audit log for confirmed, agent-initiated mutations (WebMCP Phase 3).
+    agentActions: {
+      log: (data: { tool_name: string; summary: string; confirmed: boolean; status?: 'ok' | 'error' | 'declined'; path?: string }) =>
+        apiFetch<{ logged: boolean }>('/agent-actions', token, { method: 'POST', body: JSON.stringify(data) }),
+    },
+
     analytics: {
       get: () => apiFetch<any>('/analytics', token),
       training: () => apiFetch<any>('/analytics/training', token),

@@ -69,8 +69,12 @@ export interface AgentEventsData {
   total:       number
   last7Days:   number
   last30Days:  number
+  mutations:   number
   byTool:      Array<{ tool: string; count: number }>
-  recent:      Array<{ id: string; tool_name: string; source: string; path: string | null; status: string; created_at: string }>
+  recent:      Array<{
+    id: string; tool_name: string; source: string; path: string | null; status: string; created_at: string
+    mutation?: boolean; confirmed?: boolean | null; summary?: string | null; tenant_id?: string | null
+  }>
 }
 
 export interface LeadsData {

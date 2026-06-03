@@ -4,6 +4,44 @@ import { useSession } from 'next-auth/react'
 import { useAgentTools } from '@/hooks/use-agent-tool'
 import { createApiClient } from '@/lib/api-client'
 import type { AgentToolDef } from '@/lib/webmcp'
+import { requestAgentConfirmation } from '@/lib/agent-confirm'
+import { AgentActionDialog } from './agent-action-dialog'
+
+type TenantApi = ReturnType<typeof createApiClient>
+
+// Runs a mutating action only after the human approves it in the dialog, and
+// records the decision (approved/declined/error) to the agent-initiated audit
+// log. This is the Phase 3 confirmation + audit gate.
+async function gatedMutation(
+  api: TenantApi,
+  opts: {
+    toolName: string
+    title: string
+    summary: string
+    details?: Array<{ label: string; value: string }>
+    confirmLabel?: string
+    run: () => Promise<unknown>
+  },
+): Promise<unknown> {
+  const approved = await requestAgentConfirmation({
+    title: opts.title,
+    summary: opts.summary,
+    details: opts.details,
+    confirmLabel: opts.confirmLabel,
+  })
+  if (!approved) {
+    api.agentActions.log({ tool_name: opts.toolName, summary: opts.summary, confirmed: false, status: 'declined' }).catch(() => {})
+    return { declined: true, message: 'The user declined this action — nothing was changed.' }
+  }
+  try {
+    const result = await opts.run()
+    api.agentActions.log({ tool_name: opts.toolName, summary: opts.summary, confirmed: true, status: 'ok' }).catch(() => {})
+    return { success: true, ...(result as object) }
+  } catch (e) {
+    api.agentActions.log({ tool_name: opts.toolName, summary: opts.summary, confirmed: true, status: 'error' }).catch(() => {})
+    throw e
+  }
+}
 
 // Phase 2 — authenticated WebMCP tools for the logged-in tenant app.
 //
@@ -23,10 +61,10 @@ const stripHtml = (html: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-function buildTenantTools(token: string): AgentToolDef[] {
+function buildTenantTools(token: string, role?: string): AgentToolDef[] {
   const api = createApiClient(token)
 
-  return [
+  const readOnly: AgentToolDef[] = [
     {
       name: 'ask_policy_question',
       title: 'Ask a policy question',
@@ -105,14 +143,104 @@ function buildTenantTools(token: string): AgentToolDef[] {
       },
     },
   ]
+
+  // Mutating tools are admin-only and gated by human confirmation + audit log.
+  if (role !== 'admin') return readOnly
+
+  const adminTools: AgentToolDef[] = [
+    {
+      name: 'list_audit_templates',
+      title: 'List audit templates',
+      description: 'List available compliance-audit templates (id + name) so an audit can be started with start_audit. Admin only.',
+      annotations: { readOnlyHint: true },
+      execute: async () => {
+        const data = await api.audits.templates()
+        return { templates: (data.templates ?? []).map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })) }
+      },
+    },
+    {
+      name: 'create_knowledge_entry',
+      title: 'Add a knowledge-base entry',
+      description:
+        "Add an approved question→answer entry to this care home's knowledge base so future queries can use it. Admin only. The user must confirm before it is saved.",
+      inputSchema: {
+        type: 'object',
+        properties: {
+          question: { type: 'string', description: 'The question staff might ask.' },
+          answer: { type: 'string', description: 'The approved answer to store.' },
+          category: { type: 'string', description: 'Optional knowledge category.' },
+        },
+        required: ['question', 'answer'],
+      },
+      annotations: { readOnlyHint: false },
+      execute: async (input) => {
+        const question = String((input as { question?: unknown }).question ?? '').trim()
+        const answer = String((input as { answer?: unknown }).answer ?? '').trim()
+        if (!question || !answer) return { error: 'Both question and answer are required.' }
+        const category = (input as { category?: string }).category
+        return gatedMutation(api, {
+          toolName: 'create_knowledge_entry',
+          title: 'Add a knowledge-base entry',
+          summary: 'Add a new question & answer to your knowledge base.',
+          details: [
+            { label: 'Question', value: question },
+            { label: 'Answer', value: answer.length > 300 ? answer.slice(0, 300) + '…' : answer },
+          ],
+          confirmLabel: 'Add entry',
+          run: async () => {
+            const entry = await api.knowledge.create({ question, answer, ...(category ? { knowledge_category: category } : {}) })
+            return { created: { id: (entry as { id?: string })?.id ?? null, question } }
+          },
+        })
+      },
+    },
+    {
+      name: 'start_audit',
+      title: 'Start a compliance audit',
+      description:
+        'Start a new monthly compliance-audit run from a template. Admin only. Call list_audit_templates first to get a template_id. The user must confirm before it starts.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          template_id: { type: 'string', description: 'Template id from list_audit_templates.' },
+          audit_month: { type: 'string', description: 'Month to audit, e.g. "2026-06".' },
+        },
+        required: ['template_id', 'audit_month'],
+      },
+      annotations: { readOnlyHint: false },
+      execute: async (input) => {
+        const template_id = String((input as { template_id?: unknown }).template_id ?? '').trim()
+        const audit_month = String((input as { audit_month?: unknown }).audit_month ?? '').trim()
+        if (!template_id || !audit_month) return { error: 'template_id and audit_month are required.' }
+        return gatedMutation(api, {
+          toolName: 'start_audit',
+          title: 'Start a compliance audit',
+          summary: `Start a new compliance-audit run for ${audit_month}.`,
+          details: [
+            { label: 'Month', value: audit_month },
+            { label: 'Template', value: template_id },
+          ],
+          confirmLabel: 'Start audit',
+          run: async () => {
+            const r = await api.audits.createRun({ template_id, audit_month })
+            return { run: { id: (r as { run?: { id?: string } })?.run?.id ?? null, month: audit_month } }
+          },
+        })
+      },
+    },
+  ]
+
+  return [...readOnly, ...adminTools]
 }
 
-// Registers the authenticated tenant tools. Renders nothing; feature-detects
-// WebMCP and no-ops where unsupported. Re-registers if the access token changes.
+// Registers the authenticated tenant tools + renders the confirmation dialog for
+// mutating actions. Feature-detects WebMCP and no-ops where unsupported.
+// Re-registers if the access token or role changes.
 export function TenantAgentTools() {
   const { data: session } = useSession()
   const token = (session as { accessToken?: string } | null)?.accessToken
+  const role = (session?.user as { role?: string } | undefined)?.role
 
-  useAgentTools(token ? buildTenantTools(token) : [], [token])
-  return null
+  useAgentTools(token ? buildTenantTools(token, role) : [], [token, role])
+  return <AgentActionDialog />
 }

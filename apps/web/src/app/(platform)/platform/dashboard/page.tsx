@@ -2043,6 +2043,53 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Policy Upload & Ingestion */}
+      <RefSection icon={Database} title="Policy Upload, Storage & Ingestion">
+        <p className="leading-relaxed text-neutral-mid">
+          Admins upload policies (single or bulk) in the tenant app. Files are stored in S3, then an async
+          worker extracts the text and embeds it into Pinecone for retrieval. A policy is queryable once its
+          status reaches <code className="text-xs bg-gray-100 px-1 rounded">active</code>.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Storage (S3)</p>
+            <p className="text-neutral-mid">
+              Bucket <code className="text-xs bg-gray-100 px-1 rounded">{`$S3_BUCKET`}</code> (e.g. carestreamai-docs-prod-3, eu-west-2). Key pattern:
+              <code className="text-xs bg-gray-100 px-1 rounded">tenants/&#123;tenantId&#125;/policies/&#123;policyId&#125;/&#123;filename&#125;</code>.
+              The prefix is the immutable tenant ID, so it survives renames. Each client&rsquo;s S3 prefix is shown on
+              their Clients → detail page (Document storage card).
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Ingestion pipeline</p>
+            <p className="text-neutral-mid">
+              Upload → S3 → DB row (<code className="text-xs bg-gray-100 px-1 rounded">processing</code>) → enqueue (BullMQ/Redis) →
+              worker downloads from S3, extracts text (PDF/DOCX/ODT/TXT), caches extracted text to S3, embeds to Pinecone →
+              status <code className="text-xs bg-gray-100 px-1 rounded">active</code>. So <strong>active = a confirmed S3 round-trip</strong> (written and read back), the practical &ldquo;it hit the bucket&rdquo; signal.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Bulk upload — the 4.5MB body limit</p>
+            <p className="text-neutral-mid">
+              Vercel rejects any request body over 4.5MB <em>before</em> it reaches the API, so a single bulk request with many
+              files silently fails (0 created, &ldquo;N failed&rdquo;). The client therefore <strong>splits the selection into batches</strong>
+              (&lt;4MB and ≤20 files each) and uploads them sequentially. If a response is lost mid-batch, it
+              <strong> reconciles against the server</strong> (re-fetches the policy list, matches by filename) so files that landed are
+              never falsely marked failed and a duplicate re-upload is never invited.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Upload UI"          value="apps/web/src/app/(admin)/policies/page.tsx — single + bulk; bulk auto-chunks by size/count and shows per-file progress." />
+          <RefRow label="API"                value="POST /policies (single), POST /policies/bulk (≤50 files), GET /policies. apps/api/src/routes/policies.ts." />
+          <RefRow label="Upload limits"      value="multer memoryStorage, 50MB/file; accepted: PDF, DOCX, ODT, TXT (MIME + extension checked). middleware/upload.ts." />
+          <RefRow label="Storage service"    value="apps/api/src/services/storage/s3.ts — buildPolicyKey(); falls back to local disk if S3_BUCKET unset." />
+          <RefRow label="Worker"             value="src/workers/ingestion.worker.ts — text extraction + Pinecone embedding; sets status active." />
+          <RefRow label="Status meanings"    value="processing = uploaded, awaiting ingestion · active = ingested & queryable · failed = ingestion error · archived/superseded = replaced." />
+          <RefRow label="Verify a client"    value="DB policies row (s3_key + status) and Clients → detail → Document storage prefix. status active confirms the bucket landing." />
+        </div>
+      </RefSection>
+
       {/* SEO — Structured Data (schema.org JSON-LD) */}
       <RefSection icon={Globe} title="SEO — Structured Data (schema.org JSON-LD)">
         <p className="leading-relaxed text-neutral-mid">

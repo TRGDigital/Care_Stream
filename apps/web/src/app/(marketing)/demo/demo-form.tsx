@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAgentForm } from '@/components/agent/use-agent-form'
 
 export function DemoForm() {
   const [submitted, setSubmitted] = useState(false)
@@ -14,6 +15,27 @@ export function DemoForm() {
     e.preventDefault()
     setSubmitted(true)
   }
+
+  // Expose the demo request to AI agents via WebMCP (no-op where unsupported).
+  useAgentForm({
+    name: 'book_demo',
+    title: 'Book a CareStream demo',
+    description:
+      'Request a product demo of CareStreamAI. Use when someone wants to see the product, arrange a walkthrough, or be contacted by sales.',
+    fields: [
+      { name: 'name', description: 'Full name', required: true },
+      { name: 'role', description: 'Job title / role', required: true },
+      { name: 'organisation', description: 'Care organisation name', required: true },
+      { name: 'email', description: 'Work email address', required: true },
+      { name: 'phone', description: 'Phone number (optional)' },
+      { name: 'homes', description: 'Number of homes / locations', enum: ['1', '2-5', '6-15', '16+'] },
+      { name: 'message', description: 'Anything specific to cover in the demo (optional)' },
+    ],
+    onSubmit: (v) => {
+      setForm(f => ({ ...f, ...v }))
+      setSubmitted(true)
+    },
+  })
 
   const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-neutral-dark placeholder:text-gray-400 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20 transition-colors"
   const labelClass = "mb-1.5 block text-sm font-semibold text-neutral-dark"

@@ -1927,6 +1927,53 @@ function SystemReference() {
           <RefRow label="Validate"            value="Test live with Google Rich Results Test (search.google.com/test/rich-results) and Schema.org Validator (validator.schema.org). See QA Testing tab." />
         </div>
       </RefSection>
+
+      {/* WebMCP — AI-Agent Tooling */}
+      <RefSection icon={Bot} title="WebMCP — AI-Agent Tooling & llms.txt">
+        <p className="leading-relaxed text-neutral-mid">
+          WebMCP (Web Model Context Protocol) lets the site hand AI agents a typed
+          &ldquo;instruction manual&rdquo; of actions via <code className="text-xs bg-gray-100 px-1 rounded">document.modelContext.registerTool()</code>.
+          Once a tool is registered the agent can invoke it directly through the browser instead of simulating clicks.
+          It&rsquo;s a W3C <strong>Community Group draft</strong> (June 2026) — live only in Chrome Canary behind a flag — so we
+          feature-detect and <strong>no-op everywhere it&rsquo;s unsupported</strong>; existing users are never affected.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Imperative API (what we use today)</p>
+            <p className="text-neutral-mid">
+              <code className="text-xs bg-gray-100 px-1 rounded">lib/webmcp.ts</code> wraps registerTool with feature detection +
+              an AbortSignal so tools auto-unregister on unmount. <code className="text-xs bg-gray-100 px-1 rounded">hooks/use-agent-tool.ts</code>
+              (<code className="text-xs bg-gray-100 px-1 rounded">useAgentTool</code> / <code className="text-xs bg-gray-100 px-1 rounded">useAgentTools</code>) ties registration to the React lifecycle.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Declarative API (forms)</p>
+            <p className="text-neutral-mid">
+              The WebMCP HTML declarative API (auto-deriving a tool from <code className="text-xs bg-gray-100 px-1 rounded">&lt;form&gt;</code> markup) is still a
+              spec TODO, so <code className="text-xs bg-gray-100 px-1 rounded">components/agent/use-agent-form.ts</code> gives a declarative-feeling wrapper that
+              compiles a form&rsquo;s fields into the imperative call today. The contact form (<code className="text-xs bg-gray-100 px-1 rounded">contact_carestream</code>)
+              and demo form (<code className="text-xs bg-gray-100 px-1 rounded">book_demo</code>) are wrapped. When the HTML standard ships, only this wrapper changes.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-neutral-dark mb-1">Safety annotations</p>
+            <p className="text-neutral-mid">
+              Read/lookup tools are tagged <code className="text-xs bg-gray-100 px-1 rounded">readOnlyHint</code>; anything returning customer-uploaded text is
+              tagged <code className="text-xs bg-gray-100 px-1 rounded">untrustedContentHint</code> (treat as data, not instructions — our prompt-injection guard).
+              Form submits are NOT read-only.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Core + hooks"        value="apps/web/src/lib/webmcp.ts, hooks/use-agent-tool.ts, components/agent/use-agent-form.ts" />
+          <RefRow label="Public tool registry" value="lib/agent-tools.ts — carestream_overview, get_pricing, search_blog (all read-only). Mounted site-wide via components/agent/marketing-agent-tools.tsx in (marketing)/layout.tsx." />
+          <RefRow label="Form tools"          value="contact_carestream (contact form), book_demo (demo form) — wrapped with useAgentForm." />
+          <RefRow label="Auth context"        value="Tools run client-side under the visitor's own session — so tenant isolation / RLS hold automatically. No new credentials or API surface." />
+          <RefRow label="Phase 2 (planned)"   value="Authenticated tenant tools (ask_policy_question, search_policies, list_training) inside the logged-in app; mutating actions gated by human confirmation + audit log." />
+          <RefRow label="llms.txt"            value="GET /llms.txt — curated site map for LLMs per llmstxt.org (H1 + blockquote + H2 link-lists + Optional section). Route at app/llms.txt/route.ts." />
+          <RefRow label="Browser support"     value="Chrome Canary only (flag), HTTPS-only, June 2026. Verify in Rich Results-style agent tooling once GA. See QA Testing tab." />
+        </div>
+      </RefSection>
     </div>
   )
 }
@@ -1967,6 +2014,7 @@ const QA_CATEGORIES = [
   'Knowledge Base',
   'Policies & Upload',
   'SEO & Structured Data',
+  'WebMCP & AI Agents',
 ] as const
 
 const QA_TESTS: TestItem[] = [
@@ -2761,6 +2809,52 @@ const QA_TESTS: TestItem[] = [
     name: 'Organization real data added',
     steps: 'Once the postal address, telephone, and social (LinkedIn) URLs are confirmed, add them to organizationSchema() in apps/web/src/lib/schema.ts (address as PostalAddress, telephone, sameAs).',
     expected: 'Organization schema includes address, telephone and sameAs, and still validates with no errors.',
+  },
+
+  // ── WebMCP & AI Agents ───────────────────────────────────────────────────────
+  // WebMCP is Chrome-Canary-only behind a flag (June 2026). Test in Canary with
+  // the WebMCP/agent flag enabled; the site must stay 100% normal in all other browsers.
+  {
+    id: 'webmcp-no-regression',
+    category: 'WebMCP & AI Agents',
+    name: 'No regression in normal browsers',
+    steps: 'Open the marketing site, contact form and demo form in a standard browser (Chrome stable, Safari, Firefox). Use them as a normal visitor.',
+    expected: 'Everything works exactly as before. No console errors. WebMCP feature-detects to a no-op when unsupported.',
+  },
+  {
+    id: 'webmcp-tools-register',
+    category: 'WebMCP & AI Agents',
+    name: 'Public tools register (Chrome Canary)',
+    steps: 'In Chrome Canary with the WebMCP flag on, open a marketing page and inspect document.modelContext (or the agent tool list). Confirm carestream_overview, get_pricing and search_blog are registered.',
+    expected: 'All three read-only tools appear and return correct data (overview, pricing £49/£129, blog results).',
+  },
+  {
+    id: 'webmcp-form-tools',
+    category: 'WebMCP & AI Agents',
+    name: 'Form tools registered on form pages',
+    steps: 'In Chrome Canary, open /contact and /demo. Confirm contact_carestream (on /contact) and book_demo (on /demo) are registered, and that invoking them with test values populates and submits the form.',
+    expected: 'Form tools appear only on their page, fill the visible fields, and trigger the success state.',
+  },
+  {
+    id: 'webmcp-unregister',
+    category: 'WebMCP & AI Agents',
+    name: 'Tools unregister on navigation',
+    steps: 'In Chrome Canary, navigate away from /contact to another page and re-check the tool list.',
+    expected: 'contact_carestream is no longer registered after leaving the page (AbortSignal cleanup works).',
+  },
+  {
+    id: 'llmstxt-live',
+    category: 'WebMCP & AI Agents',
+    name: 'llms.txt served and valid',
+    steps: 'Visit https://carestreamai.com/llms.txt. Confirm it returns the curated markdown (H1 CareStreamAI, blockquote summary, Product / Company / Resources / Compliance / Optional sections) with absolute .com links.',
+    expected: 'llms.txt loads as text, follows the llmstxt.org format, and every link resolves (200).',
+  },
+  {
+    id: 'webmcp-form-persistence',
+    category: 'WebMCP & AI Agents',
+    name: 'Contact/demo submissions reach a backend',
+    steps: 'Submit the contact and demo forms (as a human). Confirm the lead is actually delivered somewhere (email/DB) — currently the forms only show a success screen and do NOT persist or send the submission.',
+    expected: 'Submissions are delivered to sales (email or stored). NOTE: needs a backend endpoint wired — flagged as a follow-up; the WebMCP form tool becomes fully useful once this is done.',
   },
 ]
 

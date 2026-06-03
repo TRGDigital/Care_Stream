@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAgentForm } from '@/components/agent/use-agent-form'
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false)
@@ -14,6 +15,24 @@ export function ContactForm() {
     e.preventDefault()
     setSubmitted(true)
   }
+
+  // Expose this form to AI agents via WebMCP (no-op where unsupported).
+  useAgentForm({
+    name: 'contact_carestream',
+    title: 'Contact CareStream',
+    description:
+      'Send a message to the CareStream team. Use for product, pricing, data-protection/security, or support enquiries submitted through the website contact form.',
+    fields: [
+      { name: 'name', description: 'Full name of the person making contact', required: true },
+      { name: 'email', description: 'Email address to reply to', required: true },
+      { name: 'subject', description: 'Topic of the enquiry', required: true, enum: ['product', 'pricing', 'data', 'support', 'other'] },
+      { name: 'message', description: 'The message body', required: true },
+    ],
+    onSubmit: (v) => {
+      setForm(f => ({ ...f, ...v }))
+      setSubmitted(true)
+    },
+  })
 
   const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-neutral-dark placeholder:text-gray-400 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20 transition-colors"
   const labelClass = "mb-1.5 block text-sm font-semibold text-neutral-dark"

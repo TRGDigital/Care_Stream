@@ -256,6 +256,7 @@ export default function PoliciesPage() {
         <div className="space-y-6">
           <PolicyGroup
             heading="Internal Policies"
+            showSection
             policies={visiblePolicies.filter(p => p.document_category === 'internal_policy')}
             emptyText={tab === 'active' ? 'No active internal policies.' : 'No archived internal policies.'}
             onNewVersion={p => setVersionTarget({ id: p.id, name: p.name })}
@@ -293,6 +294,7 @@ function PolicyGroup({
   heading,
   policies,
   emptyText,
+  showSection,
   onNewVersion,
   onRetry,
   onArchive,
@@ -301,6 +303,7 @@ function PolicyGroup({
   heading:      string
   policies:     any[]
   emptyText:    string
+  showSection?: boolean
   onNewVersion: (p: any) => void
   onRetry:      (p: any) => void
   onArchive:    (p: any) => void
@@ -321,6 +324,7 @@ function PolicyGroup({
           <table className="w-full table-fixed text-sm">
             <colgroup>
               <col />
+              {showSection && <col className="w-44" />}
               <col className="w-28" />
               <col className="w-20" />
               <col className="w-28" />
@@ -329,6 +333,7 @@ function PolicyGroup({
             <thead>
               <tr className="border-b border-gray-100 text-left">
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Name</th>
+                {showSection && <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Section</th>}
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Status</th>
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Version</th>
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Uploaded</th>
@@ -338,10 +343,14 @@ function PolicyGroup({
             <tbody>
               {policies.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
-                  <td className="px-6 py-4 truncate">
-                    <span className="font-medium text-neutral-dark">{p.name}</span>
-                    {p.section && <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${sectionColour(p.section)}`}>{p.section}</span>}
-                  </td>
+                  <td className="px-6 py-4 truncate font-medium text-neutral-dark">{p.name}</td>
+                  {showSection && (
+                    <td className="px-6 py-4">
+                      {p.section
+                        ? <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${sectionColour(p.section)}`}>{p.section}</span>
+                        : <span className="text-xs italic text-neutral-mid/50">—</span>}
+                    </td>
+                  )}
                   <td className="px-6 py-4">
                     <Badge variant={statusVariant(p.status)}>
                       {p.status.charAt(0).toUpperCase() + p.status.slice(1)}

@@ -119,6 +119,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
             ))}
           </div>
         </SectionBlock>
+        <SectionBlock title="Policy sections (internal policies)">
+          <p className="text-sm text-neutral-mid">
+            Internal policies can be filed under a <strong>section</strong> — e.g. Safeguarding, GDPR, Infection control — so your library is organised and easy to scan. Each section shows in its own colour in a dedicated column on the Policies page.
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}>When you upload internal policies, choose the <strong>Section</strong> shown next to the category. For a bulk upload it applies to the whole batch, so upload each section&rsquo;s policies together.</Step>
+            <Step n={2}>To add your own sections, go to <strong>Settings → Policy sections</strong>, type a name and click <strong>Add</strong>. Remove one with the <strong>×</strong> on its chip.</Step>
+            <Step n={3}>Any section you add appears in the dropdown the next time you upload, and gets its own colour automatically.</Step>
+          </div>
+          <div className="mt-3"><Tip>You start with 15 standard sections (Activities, Admission management, Safeguarding, Training, and more). Add as many of your own as you need to match how your policies are grouped.</Tip></div>
+        </SectionBlock>
         <Tip>If you update a policy, delete the old version and re-upload the new one. CareStream will re-index it automatically.</Tip>
       </div>
     ),

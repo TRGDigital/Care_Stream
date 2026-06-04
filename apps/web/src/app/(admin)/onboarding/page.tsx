@@ -241,6 +241,7 @@ export default function OnboardingPage() {
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }>>([])
   const [adoptingId, setAdoptingId] = useState<string | null>(null)
   const [adoptNote, setAdoptNote] = useState('')
+  const [tab, setTab] = useState<'active' | 'ready'>('active')
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
@@ -330,36 +331,68 @@ export default function OnboardingPage() {
         <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/30 px-4 py-3 text-sm text-neutral-dark">{adoptNote}</div>
       )}
 
+      {/* Tabs */}
+      <div className="mb-5 flex gap-6 border-b border-gray-200">
+        {([['active', 'Active flows', flows.length], ['ready', 'Ready-made flows', templates.length]] as const).map(([key, label, count]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`-mb-px border-b-2 px-1 pb-2.5 text-sm font-medium transition-colors ${tab === key ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}
+          >
+            {label}
+            <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-neutral-mid">{count}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Ready-made flows from CareStream */}
-      {templates.some(t => !t.already_adopted) && (
-        <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
-          <div className="border-b border-gray-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-neutral-dark">Ready-made onboarding flows</h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">Adopt a CareStream induction for a role — we&rsquo;ll map each step to your own policies. You can edit it afterwards.</p>
+      {tab === 'ready' && (
+        templates.length === 0 ? (
+          <div className="rounded-card border border-gray-100 bg-white px-5 py-10 text-center text-sm text-neutral-mid shadow-card">
+            No ready-made flows are available right now.
           </div>
-          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.filter(t => !t.already_adopted).map(t => (
-              <div key={t.id} className="flex flex-col rounded-lg border border-gray-200 p-4">
-                <div className="mb-1 flex items-center gap-2">
-                  <p className="font-semibold text-neutral-dark">{t.name}</p>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">{t.flow_kind === 'secondary' ? 'Specialism' : 'Role'}</span>
+        ) : (
+          <div className="rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-neutral-dark">Ready-made onboarding flows</h2>
+              <p className="mt-0.5 text-xs text-neutral-mid">Adopt a CareStream induction for a role — we&rsquo;ll map each step to your own policies. Once adopted it moves to <strong>Active flows</strong>, where you can edit it.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+              {templates.map(t => (
+                <div key={t.id} className="flex flex-col rounded-lg border border-gray-200 p-4">
+                  <div className="mb-1 flex items-center gap-2">
+                    <p className="font-semibold text-neutral-dark">{t.name}</p>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">{t.flow_kind === 'secondary' ? 'Specialism' : 'Role'}</span>
+                  </div>
+                  <p className="mb-3 flex-1 text-xs text-neutral-mid">{t.read_count} policies to read · {t.question_count} questions</p>
+                  {t.already_adopted ? (
+                    <span className="flex items-center justify-center gap-1.5 rounded-md bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700"><CheckCircle2 size={12} /> Adopted</span>
+                  ) : (
+                    <button
+                      onClick={() => adopt(t.id)}
+                      disabled={adoptingId === t.id}
+                      className="flex items-center justify-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
+                    >
+                      {adoptingId === t.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                      {adoptingId === t.id ? 'Adding & matching…' : 'Adopt'}
+                    </button>
+                  )}
                 </div>
-                <p className="mb-3 flex-1 text-xs text-neutral-mid">{t.read_count} policies to read · {t.question_count} questions</p>
-                <button
-                  onClick={() => adopt(t.id)}
-                  disabled={adoptingId === t.id}
-                  className="flex items-center justify-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
-                >
-                  {adoptingId === t.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                  {adoptingId === t.id ? 'Adding & matching…' : 'Adopt'}
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )
       )}
 
-      {flows.length === 0 && !showForm && <DemoPreview />}
+      {/* Active flows */}
+      {tab === 'active' && <>
+      {flows.length === 0 && !showForm && (
+        templates.some(t => !t.already_adopted) ? (
+          <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/20 px-5 py-4 text-sm text-neutral-dark">
+            You have no active flows yet. Head to the <button onClick={() => setTab('ready')} className="font-semibold text-teal underline">Ready-made flows</button> tab to adopt one, or create your own with <strong>New flow</strong>.
+          </div>
+        ) : <DemoPreview />
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {flows.map(flow => {
@@ -424,6 +457,7 @@ export default function OnboardingPage() {
           )
         })}
       </div>
+      </>}
 
       {showForm && (
         <FlowForm

@@ -11,6 +11,8 @@ import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
+import { translateQuestionCached, translateText } from '../lib/translate'
+import { languageNameForCode } from '../data/languages'
 
 export const trainingRouter = Router()
 
@@ -336,21 +338,37 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
   try {
-    const enrollments = await (prisma as any).trainingEnrollment.findMany({
-      where:   { tenant_id: tenantId, user_id: userId },
-      include: {
-        module:  { select: { id: true, name: true, category: true, description: true, questions: true } },
-        answers: { orderBy: { answered_at: 'asc' } },
-      },
-      orderBy: { created_at: 'asc' },
-    })
-    // Strip the 'correct' index from questions before sending to staff
-    const sanitised = enrollments.map((e: any) => ({
-      ...e,
-      module: {
-        ...e.module,
-        questions: (e.module.questions as any[]).map(({ correct: _c, ...q }) => q),
-      },
+    const [enrollments, user, tenant] = await Promise.all([
+      (prisma as any).trainingEnrollment.findMany({
+        where:   { tenant_id: tenantId, user_id: userId },
+        include: {
+          module:  { select: { id: true, name: true, category: true, description: true, questions: true } },
+          answers: { orderBy: { answered_at: 'asc' } },
+        },
+        orderBy: { created_at: 'asc' },
+      }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+    ])
+
+    // Honour the staff member's language preference: when their comms toggle is
+    // on (default) and their first language isn't English, deliver the module
+    // name and every question (text + options) translated into it. Option order
+    // is preserved, so the A/B/C/D answer mapping stays valid.
+    const langCode = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+    const langName = languageNameForCode(langCode, tenant?.custom_languages)
+    const translate = langCode !== 'eng'
+
+    const sanitised = await Promise.all((enrollments as any[]).map(async (e: any) => {
+      const baseQuestions = (e.module.questions as any[]).map(({ correct: _c, ...q }) => q)
+      const questions = translate
+        ? await Promise.all(baseQuestions.map(async (q: any) => {
+            const t = await translateQuestionCached({ text: q.text, options: (q.options as string[]) ?? [] }, langCode, langName)
+            return { ...q, text: t.text, options: t.options }
+          }))
+        : baseQuestions
+      const name = translate ? await translateText(e.module.name, langCode, langName) : e.module.name
+      return { ...e, module: { ...e.module, name, questions } }
     }))
     ok(res, { enrollments: sanitised })
   } catch (e: any) {

@@ -77,3 +77,52 @@ export async function translateTrainingQuestion(
     return question
   }
 }
+
+// ─── Cached helpers for portal rendering (training & onboarding views) ─────────
+// Portal views re-fetch on every visit, so we memoise translations per warm
+// process to avoid repeat Haiku calls for identical (language, source) pairs.
+
+const _qCache = new Map<string, { text: string; options: string[] }>()
+const _tCache = new Map<string, string>()
+
+export async function translateQuestionCached(
+  question: { text: string; options: string[] },
+  langCode: string,
+  langName?: string,
+): Promise<{ text: string; options: string[] }> {
+  if (!langCode || langCode === 'eng' || !question.text) return question
+  const key = `${langCode}::${question.text}::${(question.options ?? []).join('|')}`
+  const hit = _qCache.get(key)
+  if (hit) return hit
+  const result = await translateTrainingQuestion(question, langCode, langName)
+  _qCache.set(key, result)
+  return result
+}
+
+// Translate a single short string (e.g. a step title or module name).
+export async function translateText(text: string, langCode: string, langName?: string): Promise<string> {
+  if (!text || !langCode || langCode === 'eng') return text
+  const name = langName ?? langName_internal(langCode)
+  const key  = `${langCode}::${text}`
+  const hit  = _tCache.get(key)
+  if (hit) return hit
+  try {
+    const msg = await anthropic.messages.create({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      messages:   [{ role: 'user', content: `Translate the following short text into ${name}. Return ONLY the translation — no quotes, labels, or explanation.\n\n${text}` }],
+    })
+    recordUsage('claude-haiku-4-5-20251001', msg.usage)
+    const out = ((msg.content[0] as any).text as string).trim()
+    const result = out || text
+    _tCache.set(key, result)
+    return result
+  } catch (e) {
+    console.error('[translate] Failed to translate text:', e)
+    return text
+  }
+}
+
+function langName_internal(code: string): string {
+  return LANG_NAMES[code] ?? languageNameForCode(code)
+}

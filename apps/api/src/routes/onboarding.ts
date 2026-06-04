@@ -8,6 +8,8 @@ import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { facilityTypeToSetting } from '../lib/care-setting'
+import { translateQuestionCached, translateText } from '../lib/translate'
+import { languageNameForCode } from '../data/languages'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
@@ -245,33 +247,57 @@ onboardingRouter.get('/my', async (req, res) => {
     const tenantId = getTenantId()
     const userId   = req.user!.sub
 
-    const enrollments = await prisma.onboardingEnrollment.findMany({
-      where:   { user_id: userId, tenant_id: tenantId },
-      include: {
-        flow:     { include: { steps: { orderBy: { order: 'asc' } } } },
-        progress: true,
-      },
-      orderBy: { enrolled_at: 'asc' },
-    })
+    const [enrollments, user, tenant] = await Promise.all([
+      prisma.onboardingEnrollment.findMany({
+        where:   { user_id: userId, tenant_id: tenantId },
+        include: {
+          flow:     { include: { steps: { orderBy: { order: 'asc' } } } },
+          progress: true,
+        },
+        orderBy: { enrolled_at: 'asc' },
+      }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+    ])
 
-    const result = enrollments.map(e => ({
+    // Deliver the induction in the staff member's first language when their
+    // comms toggle is on (default). Step titles and MCQ questions/options are
+    // translated; option order is preserved so answer indices stay valid.
+    const langCode = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+    const langName = languageNameForCode(langCode, tenant?.custom_languages)
+    const translate = langCode !== 'eng'
+
+    const result = await Promise.all(enrollments.map(async e => ({
       enrollment_id: e.id,
       flow_id:       e.flow_id,
-      flow_name:     e.flow.name,
+      flow_name:     translate ? await translateText(e.flow.name, langCode, langName) : e.flow.name,
       enrolled_at:   e.enrolled_at,
       due_date:      e.due_date,
       completed_at:  e.completed_at,
-      steps:         e.flow.steps.map(s => ({
-        id:        s.id,
-        order:     s.order,
-        title:     s.title,
-        type:      s.type,
-        policy_id: s.policy_id,
-        question:  s.question,
-        options:   s.options,              // shown to staff for MCQ — correct_option is NOT exposed
-        progress:  e.progress.find(p => p.step_id === s.id) ?? null,
+      steps:         await Promise.all(e.flow.steps.map(async s => {
+        let title    = s.title
+        let question = s.question
+        let options  = s.options
+        if (translate) {
+          title = await translateText(s.title, langCode, langName)
+          if (s.type === 'answer_question' && s.question) {
+            const t = await translateQuestionCached({ text: s.question, options: (s.options as string[]) ?? [] }, langCode, langName)
+            question = t.text
+            options  = t.options as any
+          }
+        }
+        return {
+          id:        s.id,
+          order:     s.order,
+          title,
+          type:      s.type,
+          policy_id: s.policy_id,
+          question,
+          options,                           // shown to staff for MCQ — correct_option is NOT exposed
+          progress:  e.progress.find(p => p.step_id === s.id) ?? null,
+        }
       })),
-    }))
+    })))
 
     res.json({ success: true, data: { enrollments: result } })
   } catch (e: any) {

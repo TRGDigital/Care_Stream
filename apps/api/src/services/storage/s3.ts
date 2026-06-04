@@ -200,6 +200,22 @@ export async function getTenantStorageStats(tenantId: string): Promise<{ objects
   return { objects, bytes }
 }
 
+// Platform-wide storage across ALL tenants (everything under tenants/).
+export async function getPlatformStorageStats(): Promise<{ objects: number; bytes: number }> {
+  if (USE_LOCAL) return { objects: 0, bytes: 0 }
+  let objects = 0
+  let bytes = 0
+  let token: string | undefined
+  do {
+    const list = await getS3().send(new ListObjectsV2Command({
+      Bucket: BUCKET, Prefix: 'tenants/', ContinuationToken: token,
+    }))
+    for (const o of list.Contents ?? []) { objects++; bytes += o.Size ?? 0 }
+    token = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (token)
+  return { objects, bytes }
+}
+
 // Delete every object under a tenant's prefix — policies, extracted text and
 // versions all live under tenants/{id}/. Used by the platform "reset policies"
 // action. Returns the number of objects deleted.

@@ -4,12 +4,12 @@ import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { imageUploadMiddleware } from '../middleware/upload'
-import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats } from '../services/storage/s3'
+import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats } from '../services/storage/s3'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
-import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats } from '../services/vector/pinecone'
+import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats, getPlatformVectorStats } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
 import { blogImagePublicUrl } from '../lib/urls'
@@ -231,6 +231,72 @@ adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => 
         ? 'AI cost is measured from real per-query token usage (input/output tokens × per-model prices). Storage costs are estimated from usage × published unit prices; embeddings shown separately as a one-off.'
         : `AI cost is measured from real token logging for ${costedQueries} of ${queries30} recent queries; the remaining ${uncosted} (logged before token capture) use a ~$0.02/query estimate. Storage costs are estimated; embeddings shown separately.`,
     },
+  })
+})
+
+// ─── GET /admin/costs ─────────────────────────────────────────────────────────
+// Platform-wide cost dashboard: AI (measured from per-query token logging),
+// Pinecone (vector storage), S3 (file storage) and Email (SendGrid) — last 30
+// days for recurring usage, point-in-time for storage. Estimated from usage ×
+// published unit prices except AI, which is measured. Not invoiced amounts.
+
+adminRouter.get('/costs', async (_req: Request, res: Response) => {
+  const since30 = new Date(Date.now() - 30 * 86_400_000)
+
+  const [vectors, storage, aiAgg, emailQueries30, trainingSends30] = await Promise.all([
+    getPlatformVectorStats().catch(() => null),
+    getPlatformStorageStats().catch(() => null),
+    (prisma as any).queryRecord.aggregate({
+      where:  { created_at: { gte: since30 } },
+      _sum:   { ai_cost_usd: true, prompt_tokens: true, completion_tokens: true },
+      _count: { _all: true, ai_cost_usd: true },
+    }),
+    // Outbound email replies ≈ one per email-channel query (inbound parse is free).
+    (prisma as any).queryRecord.count({ where: { channel: 'email', created_at: { gte: since30 } } }),
+    // Training pulses delivered (email or WhatsApp) — counted toward email estimate.
+    (prisma as any).trainingSendLog.count({ where: { sent_at: { gte: since30 } } }).catch(() => 0),
+  ])
+
+  // Unit prices (USD). Storage is monthly; AI/email are last-30-day usage.
+  const GB = 1024 ** 3
+  const PINECONE_USD_PER_GB_MONTH = 0.33
+  const S3_USD_PER_GB_MONTH       = 0.024
+  const BYTES_PER_VECTOR          = 1536 * 4 + 1600
+  const AI_USD_PER_QUERY          = 0.02            // fallback for pre-logging queries
+  const EMAIL_USD_PER_SEND        = 0.001           // ~SendGrid Essentials blended rate
+
+  const vectorTotal  = vectors?.total ?? 0
+  const pinecone_usd = (vectorTotal * BYTES_PER_VECTOR / GB) * PINECONE_USD_PER_GB_MONTH
+  const s3_usd       = ((storage?.bytes ?? 0) / GB) * S3_USD_PER_GB_MONTH
+
+  const totalQueries30 = aiAgg?._count?._all ?? 0
+  const realCost       = aiAgg?._sum?.ai_cost_usd ?? 0
+  const costedQueries  = aiAgg?._count?.ai_cost_usd ?? 0
+  const uncosted       = Math.max(0, totalQueries30 - costedQueries)
+  const ai_usd         = realCost + uncosted * AI_USD_PER_QUERY
+  const ai_is_measured = costedQueries > 0 && uncosted === 0
+
+  const emailSends = (emailQueries30 ?? 0) + (trainingSends30 ?? 0)
+  const email_usd  = emailSends * EMAIL_USD_PER_SEND
+
+  const total_monthly_usd = pinecone_usd + s3_usd + ai_usd + email_usd
+
+  ok(res, {
+    period_days: 30,
+    ai: {
+      usd: ai_usd,
+      measured: ai_is_measured,
+      costed_queries: costedQueries,
+      uncosted_queries: uncosted,
+      total_queries: totalQueries30,
+      input_tokens: aiAgg?._sum?.prompt_tokens ?? 0,
+      output_tokens: aiAgg?._sum?.completion_tokens ?? 0,
+    },
+    pinecone: { usd: pinecone_usd, vectors: vectorTotal, namespaces: vectors?.namespaces ?? 0, available: !!vectors },
+    s3:       { usd: s3_usd, bytes: storage?.bytes ?? 0, objects: storage?.objects ?? 0, available: !!storage },
+    email:    { usd: email_usd, sends: emailSends, reply_emails: emailQueries30 ?? 0, training_sends: trainingSends30 ?? 0 },
+    total_monthly_usd,
+    note: 'Platform-wide. AI cost is measured from real per-query token usage; Pinecone, S3 and Email are estimated from usage × published unit prices (not invoiced amounts). Email = email-channel replies + training sends over the last 30 days. Inbound email parsing is free.',
   })
 })
 

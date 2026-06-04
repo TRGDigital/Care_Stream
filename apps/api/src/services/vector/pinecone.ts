@@ -181,6 +181,16 @@ export async function getTenantVectorStats(tenantId: string): Promise<{
   return { namespaces, total: namespaces.reduce((s, e) => s + e.count, 0) }
 }
 
+// Platform-wide vector total across EVERY namespace (all tenants) — one index call.
+export async function getPlatformVectorStats(): Promise<{ total: number; namespaces: number }> {
+  const stats: any = await getIndex().describeIndexStats()
+  const ns: Record<string, any> = stats?.namespaces ?? {}
+  const entries = Object.values(ns)
+  const summed = entries.reduce((s: number, n: any) => s + Number(n?.recordCount ?? n?.vectorCount ?? 0), 0)
+  const total = Number(stats?.totalRecordCount ?? stats?.totalVectorCount ?? summed) || summed
+  return { total, namespaces: Object.keys(ns).length }
+}
+
 // Wipe ALL of a tenant's policy + knowledge vectors (every namespace that holds
 // content derived from their uploaded policies). Used by the platform "reset
 // policies" action. Each deleteAll is best-effort — a namespace may not exist.

@@ -102,7 +102,7 @@ function atRisk(stats: TenantSummary['stats'], plan: PlanLimits | null): boolean
   ].some(({ used, limit }) => limit != null && limit > 0 && used / limit >= 0.9)
 }
 
-type TabId = 'overview' | 'queries' | 'analytics' | 'cqc' | 'channels' | 'agents' | 'reference' | 'qa'
+type TabId = 'overview' | 'queries' | 'analytics' | 'cqc' | 'costs' | 'channels' | 'agents' | 'reference' | 'qa'
 
 // ─── Client selector ──────────────────────────────────────────────────────────
 
@@ -271,6 +271,7 @@ export default function PlatformDashboard() {
     { id: 'queries',   label: 'Queries'         },
     { id: 'analytics', label: 'Analytics'       },
     { id: 'cqc',       label: 'CQC Report'      },
+    { id: 'costs',     label: 'Costs'           },
     { id: 'channels',  label: 'Channel Routing'  },
     { id: 'agents',    label: 'AI Agents'       },
     { id: 'reference', label: 'System Reference' },
@@ -990,6 +991,8 @@ export default function PlatformDashboard() {
             )}
 
             {/* ── Channel Routing ──────────────────────────────────────────── */}
+            {tab === 'costs' && <PlatformCosts token={token} />}
+
             {tab === 'channels' && <ChannelRoutingMap />}
 
             {/* ── AI Agents (WebMCP) ───────────────────────────────────────── */}
@@ -1104,6 +1107,117 @@ function AgentStatCard({ label, value, accent }: { label: string; value: number;
     <div className={`rounded-xl border p-5 ${accent ? 'border-teal/30 bg-teal-light/40' : 'border-gray-200 bg-white'}`}>
       <p className="text-xs font-medium text-neutral-mid">{label}</p>
       <p className={`mt-1 text-2xl font-bold ${accent ? 'text-teal-dark' : 'text-neutral-dark'}`}>{value.toLocaleString()}</p>
+    </div>
+  )
+}
+
+function PlatformCosts({ token }: { token: string | null }) {
+  const [costs,   setCosts]   = useState<import('@/lib/platform-api').PlatformCosts | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState('')
+
+  function load() {
+    if (!token) return
+    setLoading(true)
+    createPlatformClient(token).tenants.costs()
+      .then(setCosts)
+      .catch((e: Error) => setError(e.message ?? 'Failed to load costs'))
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [token])
+
+  const fmtUsd   = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const fmtBytes = (b: number) => {
+    if (b < 1024) return `${b} B`
+    const u = ['KB', 'MB', 'GB', 'TB']; let i = -1; let v = b
+    do { v /= 1024; i++ } while (v >= 1024 && i < u.length - 1)
+    return `${v.toFixed(1)} ${u[i]}`
+  }
+  const fmtNum = (n: number) => n.toLocaleString('en-GB')
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin text-neutral-mid" /></div>
+  }
+  if (error) {
+    return <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+  }
+  if (!costs) return null
+
+  const cards = [
+    {
+      key: 'ai', label: 'AI (Claude)', Icon: Cpu, usd: costs.ai.usd,
+      badge: costs.ai.measured ? { text: 'Measured', cls: 'bg-green-50 text-green-700' } : { text: 'Part-estimated', cls: 'bg-amber-50 text-amber-700' },
+      lines: [
+        `${fmtNum(costs.ai.total_queries)} queries (30d)`,
+        `${fmtNum(costs.ai.input_tokens)} in / ${fmtNum(costs.ai.output_tokens)} out tokens`,
+        costs.ai.uncosted_queries > 0 ? `${fmtNum(costs.ai.uncosted_queries)} pre-logging (estimated)` : 'All queries token-logged',
+      ],
+    },
+    {
+      key: 'pinecone', label: 'Pinecone (vectors)', Icon: Database, usd: costs.pinecone.usd,
+      badge: { text: 'Estimated', cls: 'bg-gray-100 text-neutral-mid' },
+      lines: [
+        `${fmtNum(costs.pinecone.vectors)} vectors`,
+        `${fmtNum(costs.pinecone.namespaces)} namespaces`,
+        'Monthly storage',
+      ],
+    },
+    {
+      key: 's3', label: 'S3 (file storage)', Icon: HardDrive, usd: costs.s3.usd,
+      badge: { text: 'Estimated', cls: 'bg-gray-100 text-neutral-mid' },
+      lines: [
+        fmtBytes(costs.s3.bytes),
+        `${fmtNum(costs.s3.objects)} files`,
+        'Monthly storage',
+      ],
+    },
+    {
+      key: 'email', label: 'Email (SendGrid)', Icon: Mail, usd: costs.email.usd,
+      badge: { text: 'Estimated', cls: 'bg-gray-100 text-neutral-mid' },
+      lines: [
+        `${fmtNum(costs.email.sends)} sends (30d)`,
+        `${fmtNum(costs.email.reply_emails)} reply emails`,
+        `${fmtNum(costs.email.training_sends)} training sends`,
+      ],
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-dark">Platform costs</h2>
+          <p className="text-sm text-neutral-mid">Across all clients · last {costs.period_days} days (storage is point-in-time monthly)</p>
+        </div>
+        <button onClick={load} className="flex items-center gap-1 text-xs text-neutral-mid hover:text-neutral-dark">
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
+
+      {/* Total */}
+      <div className="rounded-xl border border-teal/20 bg-teal-light/30 px-6 py-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-teal">Estimated total / month</p>
+        <p className="mt-1 text-4xl font-extrabold text-neutral-dark">{fmtUsd(costs.total_monthly_usd)}</p>
+      </div>
+
+      {/* Breakdown cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map(c => (
+          <div key={c.key} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <c.Icon size={16} className="text-teal" />
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.badge.cls}`}>{c.badge.text}</span>
+            </div>
+            <p className="text-xs font-medium text-neutral-mid">{c.label}</p>
+            <p className="mt-0.5 text-2xl font-bold text-neutral-dark">{fmtUsd(c.usd)}</p>
+            <ul className="mt-3 space-y-0.5 border-t border-gray-100 pt-3 text-xs text-neutral-mid">
+              {c.lines.map((l, i) => <li key={i}>{l}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px] leading-relaxed text-neutral-mid">{costs.note}</p>
     </div>
   )
 }

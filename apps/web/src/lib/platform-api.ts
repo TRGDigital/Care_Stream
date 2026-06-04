@@ -140,6 +140,24 @@ export interface TenantInsights {
   }
 }
 
+export interface PlatformCosts {
+  period_days: number
+  ai: {
+    usd: number
+    measured: boolean
+    costed_queries: number
+    uncosted_queries: number
+    total_queries: number
+    input_tokens: number
+    output_tokens: number
+  }
+  pinecone: { usd: number; vectors: number; namespaces: number; available: boolean }
+  s3:       { usd: number; bytes: number; objects: number; available: boolean }
+  email:    { usd: number; sends: number; reply_emails: number; training_sends: number }
+  total_monthly_usd: number
+  note: string
+}
+
 export interface TenantDetail {
   tenant:               TenantSummary & { email_domain: string; branding_signoff: string }
   policies:             any[]
@@ -417,6 +435,8 @@ export function createPlatformClient(token: string) {
 
       insights: (id: string) =>
         adminFetch<TenantInsights>(`/tenants/${id}/insights`, token),
+
+      costs: () => adminFetch<PlatformCosts>(`/costs`, token),
 
       reactivateStaff: (tenantId: string, userId: string) =>
         adminFetch<{ reactivated: boolean }>(`/tenants/${tenantId}/staff/${userId}/reactivate`, token, { method: 'POST' }),

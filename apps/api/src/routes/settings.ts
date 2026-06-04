@@ -63,7 +63,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, policy_sections: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, policy_sections: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -73,6 +73,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     account_number:     tenant.account_number as string,
     policy_sections:    effectiveSections(tenant.policy_sections as string[]),
     email_allowlist:    tenant.email_allowlist as string[],
+    phone_allowlist:    (tenant.phone_allowlist as string[]) ?? [],
     facility_type:      tenant.facility_type as string,
     response_style:     (tenant.response_style as string) ?? 'standard',
     logo_url:           tenant.logo_url as string | null,
@@ -92,10 +93,14 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, facility_type, response_style, email_preferences, staff_roles, policy_sections } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, policy_sections } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
+  }
+
+  if (phone_allowlist !== undefined && !Array.isArray(phone_allowlist)) {
+    return err(res, 'INVALID_INPUT', 'phone_allowlist must be an array', 400)
   }
 
   if (facility_type !== undefined && (typeof facility_type !== 'string' || !facility_type.trim())) {
@@ -119,6 +124,21 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
       return err(res, 'INVALID_EMAIL', `Invalid email addresses: ${invalid.join(', ')}`, 400)
     }
     updateData.email_allowlist = normalised
+  }
+
+  if (phone_allowlist !== undefined) {
+    const normalised = [...new Set(
+      (phone_allowlist as unknown[])
+        .filter(p => typeof p === 'string')
+        .map(p => (p as string).trim())
+        .filter(Boolean),
+    )]
+    const phoneRe = /^\+[1-9]\d{7,14}$/
+    const invalid = normalised.filter(p => !phoneRe.test(p))
+    if (invalid.length > 0) {
+      return err(res, 'INVALID_PHONE', `Invalid phone numbers (use international format, e.g. +447911123456): ${invalid.join(', ')}`, 400)
+    }
+    updateData.phone_allowlist = normalised
   }
 
   if (facility_type !== undefined) {
@@ -175,11 +195,12 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, policy_sections: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, policy_sections: true },
   })
 
   ok(res, {
     email_allowlist:   updated.email_allowlist,
+    phone_allowlist:   updated.phone_allowlist ?? [],
     facility_type:     updated.facility_type,
     email_preferences: mergePrefs(updated.email_preferences),
     staff_roles:       updated.staff_roles,

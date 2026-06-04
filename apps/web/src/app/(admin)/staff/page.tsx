@@ -1374,7 +1374,7 @@ function EditModal({
                   onChange={update('first_language')}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                 >
-                  {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                  {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                 </select>
               </div>
               <div>
@@ -1388,7 +1388,7 @@ function EditModal({
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                 >
                   <option value="">— none —</option>
-                  {LANGUAGES.filter(l => l.code !== form.first_language).map(l => (
+                  {languages.filter(l => l.code !== form.first_language).map(l => (
                     <option key={l.code} value={l.code}>{l.name}</option>
                   ))}
                 </select>

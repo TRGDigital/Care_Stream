@@ -78,6 +78,8 @@ export interface QueryInput {
   chatSessionId?:      string           // groups all turns of one chat into one session
   // §8.2 — prior email thread turns passed to Claude for multi-turn continuity
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
+  // Staff explicitly chose a reply language in the portal — overrides detection
+  forcedLanguage?:      { code: string; name: string }
 }
 
 export interface Citation {
@@ -347,12 +349,22 @@ export function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
 
 async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
-  const { queryText, tenantId, userId, staffName, channel, responseStyle, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory } = input
+  const { queryText, tenantId, userId, staffName, channel, responseStyle, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory, forcedLanguage } = input
   const verbosity = resolveVerbosity(channel, responseStyle)
 
   // 1. Detect language (§5.1)
   const langDetection  = await detectLanguage(queryText)
-  const langResolution = resolveLanguagePattern(langDetection, queryText)
+  let   langResolution = resolveLanguagePattern(langDetection, queryText)
+
+  // The staff member explicitly picked a reply language in the portal — that
+  // overrides auto-detection. English → reply in English; anything else →
+  // force the reply into that language (Pattern 2).
+  if (forcedLanguage?.code) {
+    ;(langDetection as any).code = forcedLanguage.code
+    langResolution = forcedLanguage.code === 'eng'
+      ? { pattern: 1 }
+      : { pattern: 2, requestedLanguage: forcedLanguage.name }
+  }
 
   // §5.1 — flag low-confidence detections for review (defaulted to English)
   if (langDetection.lowConfidence) {

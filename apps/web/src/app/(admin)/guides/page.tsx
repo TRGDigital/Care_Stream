@@ -272,6 +272,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Staff visit your portal URL (shown in Settings under <em>Portal access</em>). They enter their name and ask their question. No login is required unless you have enabled access restrictions.
           </p>
         </SectionBlock>
+        <SectionBlock title="Replying in the staff member's language">
+          <p className="text-sm text-neutral-mid">
+            By default CareStream replies in whatever language the staff member writes in. Under the message box there's a <strong>“Reply in”</strong> picker — they can leave it on <em>Auto-detect</em>, or choose a fixed language so every answer comes back in it (their choice is remembered on that device). The picker lists all your available languages, including any you've added in <strong>Settings → Languages</strong>.
+          </p>
+        </SectionBlock>
         <SectionBlock title="What staff can ask">
           <div className="space-y-2 text-sm text-neutral-mid">
             <p>Staff choose a topic area before they start chatting. Each area uses a different knowledge source:</p>

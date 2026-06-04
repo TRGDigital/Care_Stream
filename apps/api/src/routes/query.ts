@@ -6,6 +6,7 @@ import { getTenantId } from '../db/tenant-context'
 import { runQueryPipeline } from '../services/rag/query'
 import { ok, err } from '../lib/response'
 import { checkQueryLimit, PlanLimitError } from '../lib/plan-limits'
+import { languageNameForCode } from '../data/languages'
 
 export const queryRouter = Router()
 
@@ -17,6 +18,7 @@ const QuerySchema = z.object({
   staff_name:           z.string().max(100).optional(),
   document_category:    z.enum(['internal_policy', 'staff_handbook', 'training_module', 'cqc_report']).optional(),
   chat_session_id:      z.string().uuid().optional(),
+  language:             z.string().length(3).optional(),   // staff-chosen reply language (ISO 639-3 / private-use)
   conversation_history: z.array(z.object({
     role:    z.enum(['user', 'assistant']),
     content: z.string().max(10_000),
@@ -32,7 +34,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     return
   }
 
-  const { query_text, policy_id, staff_name, document_category, chat_session_id, conversation_history } = parsed.data
+  const { query_text, policy_id, staff_name, document_category, chat_session_id, conversation_history, language } = parsed.data
   const tenantId = getTenantId()
 
   try {
@@ -47,8 +49,14 @@ queryRouter.post('/', async (req: Request, res: Response) => {
 
   const tenantSettings = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { response_style: true },
+    select: { response_style: true, custom_languages: true },
   })
+
+  // Resolve the staff-chosen reply language (if any) to a {code, name} pair,
+  // honouring the tenant's custom languages for private-use codes.
+  const forcedLanguage = language
+    ? { code: language, name: languageNameForCode(language, tenantSettings?.custom_languages) }
+    : undefined
 
   let result
   try {
@@ -63,6 +71,7 @@ queryRouter.post('/', async (req: Request, res: Response) => {
       chatSessionId:       chat_session_id,
       conversationHistory: conversation_history,
       responseStyle:       (tenantSettings?.response_style as 'standard' | 'concise') ?? 'standard',
+      forcedLanguage,
     })
   } catch (e) {
     console.error('[route/query] Pipeline error:', e)

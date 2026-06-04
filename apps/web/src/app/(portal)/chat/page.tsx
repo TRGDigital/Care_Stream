@@ -10,7 +10,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, Users, XCircle } from 'lucide-react'
+import { BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, Users, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -185,6 +185,8 @@ export default function ChatPage() {
   const [fullPolicyRequestedIds, setFullPolicyRequestedIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId]          = useState<string | null>(null)
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
+  const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
+  const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
@@ -193,8 +195,26 @@ export default function ChatPage() {
   useEffect(() => {
     if (userId !== 'guest') {
       setSessions(loadSessions(userId))
+      try { const v = localStorage.getItem(`cs_reply_lang_${userId}`); if (v) setReplyLang(v) } catch { /* ignore */ }
     }
   }, [userId])
+
+  // Fetch the tenant's available languages (defaults + admin-added) for the
+  // reply-language picker. Settings reads are open to all authenticated staff.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).settings.get()
+      .then(s => { if (Array.isArray((s as any).languages)) setLangList((s as any).languages) })
+      .catch(() => { /* picker falls back to Auto-detect only */ })
+  }, [session?.accessToken])
+
+  function chooseReplyLang(code: string) {
+    setReplyLang(code)
+    try { localStorage.setItem(`cs_reply_lang_${userId}`, code) } catch { /* ignore */ }
+  }
+
+  // Code → name map for the detected-language chip (static + tenant languages).
+  const langNameMap: Record<string, string> = { ...LANG_NAMES, ...Object.fromEntries(langList.map(l => [l.code, l.name])) }
 
   // Auto-save current session whenever messages settle (skip loading states and restores)
   useEffect(() => {
@@ -322,6 +342,7 @@ export default function ChatPage() {
         staff_name:           session.user?.name ?? undefined,
         document_category:    category ?? undefined,
         chat_session_id:      sessionId,
+        language:             replyLang || undefined,
         conversation_history: history.length > 0 ? history : undefined,
       })
 
@@ -532,7 +553,7 @@ export default function ChatPage() {
                     sendMessage('Please send me the full policy')
                   }}
                   fullPolicyRequested={fullPolicyRequestedIds.has(msg.id)}
-                  langNames={LANG_NAMES}
+                  langNames={langNameMap}
                   sessionRef={msg.id === firstUserMsgId ? sessionRef(sessionId) : undefined}
                   feedbackState={msg.queryId ? msgFeedback[msg.queryId] : undefined}
                   onSubmitFeedback={submitFeedback}
@@ -601,6 +622,21 @@ export default function ChatPage() {
               <Send size={16} />
             </button>
           </form>
+
+          {/* Reply-language picker — forces responses into the chosen language */}
+          <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end gap-1.5">
+            <Globe size={13} className="text-neutral-mid" />
+            <label htmlFor="reply-lang" className="text-xs text-neutral-mid">Reply in</label>
+            <select
+              id="reply-lang"
+              value={replyLang}
+              onChange={e => chooseReplyLang(e.target.value)}
+              className="rounded-md border border-gray-200 bg-white py-1 pl-2 pr-7 text-xs text-neutral-dark outline-none focus:border-teal focus:ring-1 focus:ring-teal/20"
+            >
+              <option value="">Auto-detect</option>
+              {langList.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+          </div>
           <p className="mt-1.5 text-center text-xs text-neutral-mid">
             {input.length > 800
               ? `${input.length}/1000 characters`

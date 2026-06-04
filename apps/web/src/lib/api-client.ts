@@ -73,7 +73,7 @@ async function apiFetch<T>(
 export function createApiClient(token: string) {
   return {
     query: {
-      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
+      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
         apiFetch<QueryResponse>('/query', token, {
           method: 'POST',
           body:   JSON.stringify(data),

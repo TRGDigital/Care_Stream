@@ -4,6 +4,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { recordUsage } from './token-usage'
+import { languageNameForCode } from '../data/languages'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -23,16 +24,18 @@ export const LANG_NAMES: Record<string, string> = {
 }
 
 export function langName(code: string): string {
-  return LANG_NAMES[code] ?? code
+  // Local map first, then the shared catalog (covers added/custom languages).
+  return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
 export async function translateTrainingQuestion(
   question: { text: string; options: string[] },
   targetLang: string,
+  targetLangName?: string,   // explicit name (e.g. a tenant's custom language) — overrides code lookup
 ): Promise<{ text: string; options: string[] }> {
   if (!targetLang || targetLang === 'eng') return question
 
-  const name = langName(targetLang)
+  const name = targetLangName ?? langName(targetLang)
   const opts  = question.options ?? []
 
   const prompt = [

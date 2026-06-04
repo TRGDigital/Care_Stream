@@ -71,6 +71,7 @@ model Tenant {
   onboarding_flows       OnboardingFlow[]
   onboarding_enrollments OnboardingEnrollment[]
   training_settings       Json               @default("{}")
+  custom_languages        Json               @default("[]")                     // admin-added staff languages: [{ code, name }]
   training_enrollments    TrainingEnrollment[]
   training_modules        TrainingModule[]
   cqc_staff_questions     CqcStaffQuestion[]

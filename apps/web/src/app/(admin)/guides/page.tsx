@@ -149,6 +149,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={4}>Choose the <strong>Staff type</strong> — <em>New starter</em> auto-enrols them in the onboarding for their position and specialisms; <em>Existing staff member</em> doesn't.</Step>
             <Step n={5}>Optionally add a WhatsApp number and their first/second language, then share the login details shown on screen.</Step>
           </div>
+          <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step — tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
+        </SectionBlock>
+        <SectionBlock title="Viewing & managing a staff member">
+          <p className="text-sm text-neutral-mid">
+            Click a staff member's <strong>name</strong> on the Staff page to open their detail card — a single view of everything they're set up for:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>Their <strong>profile</strong> — position, specialist roles, shift, WhatsApp, email access and account status.</li>
+            <li><strong>Language</strong> — their first and second language, and the communication toggle (below).</li>
+            <li><strong>Training</strong> — every module assigned to them with a live status (Not started, In progress, Complete, Expired). Use <strong>+ Assign training</strong> to add more at any time.</li>
+            <li><strong>Onboarding</strong> — the induction flows they're enrolled on, with step-by-step progress. Use <strong>+ Assign onboarding</strong> to enrol them on more (flows they're already on are marked and can't be double-assigned).</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            To change their details — name, position, specialisms, languages, shift or WhatsApp — use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
+          </p>
         </SectionBlock>
         <SectionBlock title="Positions & specialist roles — how they drive onboarding & training">
           <p className="text-sm text-neutral-mid">
@@ -163,10 +178,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Language preferences">
           <p className="text-sm text-neutral-mid">
-            When adding a staff member you can record their first language and an optional second language. CareStream uses this to automatically send training questions and automated messages in the staff member's own language. If a staff member's first language is Polish, their training quiz questions will be delivered in Polish. The same applies to renewal reminders and any other proactive communications CareStream sends.
+            When adding a staff member you can record their <strong>first language</strong> and an optional <strong>second language</strong>. CareStream uses the first language to send training questions and automated messages in the staff member's own language — if their first language is Polish, their training quiz questions arrive in Polish. The same applies to renewal reminders and other proactive communications.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            You can update a staff member's language preferences at any time by clicking the edit icon next to their name on the Staff page. Over 25 languages are supported, covering the most common first languages across the UK care workforce.
+            Each staff member has an <strong>“Always communicate in their first language”</strong> toggle (in the Add / Edit forms and on their detail card). When it's <strong>on</strong> — the default — every message CareStream sends them is translated into their first language. Turn it <strong>off</strong> for staff who'd rather receive everything in English. You can flip it instantly from the detail card.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, add it in <strong>Settings → Languages</strong> (type its English name, e.g. “Shona”) and it appears in the first &amp; second language dropdowns straight away.
           </p>
         </SectionBlock>
         <SectionBlock title="Approved senders & WhatsApp access (added automatically)">

@@ -9,6 +9,7 @@
 
 import { prisma } from '../../db/client'
 import { translateTrainingQuestion } from '../../lib/translate'
+import { languageNameForCode } from '../../data/languages'
 
 const OPTION_MAP: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 }
 const LABELS = ['A', 'B', 'C', 'D']
@@ -83,12 +84,18 @@ export async function handleTrainingConversation({
 
   // ── Path 1: Single A/B/C/D ────────────────────────────────────────────────
   if (isTrainingAnswer(trimmed)) {
-    const userRecord = await (prisma as any).user.findUnique({
-      where: { id: userId }, select: { first_language: true, comms_always_first_language: true },
-    }).catch(() => null)
+    const [userRecord, tenantRecord] = await Promise.all([
+      (prisma as any).user.findUnique({
+        where: { id: userId }, select: { first_language: true, comms_always_first_language: true },
+      }).catch(() => null),
+      (prisma as any).tenant.findUnique({
+        where: { id: tenantId }, select: { custom_languages: true },
+      }).catch(() => null),
+    ])
     const userLang: string = userRecord?.comms_always_first_language === false
       ? 'eng'
       : ((userRecord?.first_language as string) ?? 'eng')
+    const userLangName = languageNameForCode(userLang, tenantRecord?.custom_languages)
     const letter      = trimmed.toUpperCase()
     const selectedIdx = OPTION_MAP[letter]
 
@@ -199,6 +206,7 @@ export async function handleTrainingConversation({
       const translated = await translateTrainingQuestion(
         { text: nextQ.text, options: (nextQ.options as string[]) ?? [] },
         userLang,
+        userLangName,
       )
       const nextQFmt = { ...nextQ, text: translated.text, options: translated.options }
 

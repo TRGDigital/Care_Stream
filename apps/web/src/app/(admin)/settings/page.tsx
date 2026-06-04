@@ -97,6 +97,11 @@ export default function SettingsPage() {
   const [specialistRoles, setSpecialistRoles] = useState<string[]>(cData?.specialist_roles ?? [])
   const [newSpecialist,   setNewSpecialist]   = useState('')
   const [savingSpecialists, setSavingSpecialists] = useState(false)
+  const [languages,      setLanguages]      = useState<Array<{ code: string; name: string }>>((cData as any)?.languages ?? [])
+  const [defaultLangCodes, setDefaultLangCodes] = useState<string[]>((cData as any)?.default_language_codes ?? [])
+  const [newLanguage,    setNewLanguage]    = useState('')
+  const [savingLanguage, setSavingLanguage] = useState(false)
+  const [languageNote,   setLanguageNote]   = useState('')
   const [policySections, setPolicySections] = useState<string[]>(cData?.policy_sections ?? [])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
@@ -154,6 +159,8 @@ export default function SettingsPage() {
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
         setSpecialistRoles((data as any).specialist_roles ?? [])
+        setLanguages((data as any).languages ?? [])
+        setDefaultLangCodes((data as any).default_language_codes ?? [])
         setPolicySections((data as any).policy_sections ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
         setSites(sitesData.sites)
@@ -226,6 +233,36 @@ export default function SettingsPage() {
   function removeSpecialist(r: string) {
     const updated = specialistRoles.filter(x => x !== r)
     setSpecialistRoles(updated); saveSpecialistRoles(updated)
+  }
+
+  async function addLanguage() {
+    const name = newLanguage.trim()
+    if (!name || !session?.accessToken) return
+    if (languages.some(l => l.name.toLowerCase() === name.toLowerCase())) {
+      setError('That language is already available.'); return
+    }
+    setError(''); setLanguageNote(''); setSavingLanguage(true)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ add_language: name })
+      if ((data as any).languages) setLanguages((data as any).languages)
+      setNewLanguage('')
+      const added = (data as any).added_language
+      if (added) {
+        setLanguageNote(added.resolved
+          ? `Added ${added.name} — staff can now write to CareStream in it and it will auto-detect their messages.`
+          : `Added ${added.name}. CareStream will translate all outbound messages into it; inbound auto-detection may be limited, but staff with this set as their first language still receive everything translated.`)
+      }
+    } catch (e: any) { setError(e.message ?? 'Failed to add language') }
+    finally { setSavingLanguage(false) }
+  }
+  async function removeLanguage(code: string) {
+    if (!session?.accessToken) return
+    setSavingLanguage(true); setLanguageNote('')
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ remove_language: code })
+      if ((data as any).languages) setLanguages((data as any).languages)
+    } catch (e: any) { setError(e.message ?? 'Failed to remove language') }
+    finally { setSavingLanguage(false) }
   }
 
   async function saveSections(updated: string[]) {
@@ -582,6 +619,43 @@ export default function SettingsPage() {
             </div>
           )}
           {savingSpecialists && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── Staff languages ───────────────────────────────────────────────── */}
+        <SettingSection icon={Plus} title="Languages" description="The languages you can pick as a staff member's first or second language.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            CareStream supports 50+ languages out of the box. Add any others your team speaks — they’ll appear in the first &amp; second language dropdowns when adding or editing a staff member, so their training and communications can be personalised to them.
+          </p>
+          <div className="mb-1 flex gap-2">
+            <input type="text" value={newLanguage} onChange={e => { setNewLanguage(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addLanguage()} placeholder="e.g. Twi, Shona, Malayalam" className={INPUT} />
+            <Button onClick={addLanguage} disabled={savingLanguage || !newLanguage.trim()} size="md">
+              <Plus size={14} className="mr-1.5" />Add
+            </Button>
+          </div>
+          <p className="mb-4 text-xs text-neutral-mid">Type the language’s English name (e.g. “Shona”). Default languages are always available; only the ones you add can be removed.</p>
+          {languageNote && (
+            <div className="mb-4 rounded-md border border-teal/20 bg-teal-light/30 px-4 py-2.5 text-xs text-neutral-dark">{languageNote}</div>
+          )}
+          {languages.length === 0 ? (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">Loading languages…</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {languages.map(l => {
+                const isDefault = defaultLangCodes.includes(l.code)
+                return (
+                  <span key={l.code} className={`flex items-center gap-1.5 rounded-full border py-1 pl-3 text-sm ${isDefault ? 'border-gray-200 bg-neutral-light pr-3 text-neutral-mid' : 'border-teal/30 bg-teal-light/30 pr-2 text-neutral-dark'}`}>
+                    {l.name}
+                    {!isDefault && (
+                      <button onClick={() => removeLanguage(l.code)} disabled={savingLanguage} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                        <X size={10} />
+                      </button>
+                    )}
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          {savingLanguage && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
         {/* ── Policy sections ───────────────────────────────────────────────── */}

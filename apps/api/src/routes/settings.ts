@@ -5,6 +5,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { effectiveSections } from '../lib/policy-sections'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
+import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES } from '../data/languages'
 
 // Tenant settings: inbound email address, email allowlist, logo, email preferences.
 // Mounted at /settings in app.ts, behind requireAuth + tenantGuard.
@@ -64,7 +65,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -81,6 +82,8 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     email_preferences:  mergePrefs(tenant.email_preferences),
     staff_roles:        effectiveStaffRoles(tenant.staff_roles as string[]),
     specialist_roles:   effectiveSpecialistRoles(tenant.specialist_roles as string[]),
+    languages:          effectiveLanguages(tenant.custom_languages),
+    default_language_codes: DEFAULT_LANGUAGES.map(l => l.code),
   })
 })
 
@@ -95,7 +98,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -206,10 +209,46 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.email_preferences = sanitised
   }
 
+  // ── Custom languages: add by name / remove by code ──────────────────────────
+  // Mutates the tenant's custom_languages list. Adding resolves the typed name
+  // to a real ISO 639-3 code where possible (falling back to a private-use code).
+  let addedLanguage: { code: string; name: string; resolved: boolean } | null = null
+  if (add_language !== undefined || remove_language !== undefined) {
+    const current = await (prisma as any).tenant.findUnique({
+      where: { id: tenantId }, select: { custom_languages: true },
+    })
+    let customList: { code: string; name: string }[] = Array.isArray(current?.custom_languages)
+      ? (current.custom_languages as any[]).filter(c => c && typeof c.code === 'string' && typeof c.name === 'string')
+      : []
+
+    if (typeof add_language === 'string' && add_language.trim()) {
+      const defaultCodes = DEFAULT_LANGUAGES.map(l => l.code)
+      const taken = new Set<string>([...defaultCodes, ...customList.map(c => c.code)])
+      const resolved = resolveLanguageName(add_language, taken)
+      if (!resolved) {
+        return err(res, 'INVALID_INPUT', 'Language name is required', 400)
+      }
+      // Skip if it's already available (default or custom) — avoids duplicates.
+      const alreadyDefault = defaultCodes.includes(resolved.code)
+      const alreadyCustom  = customList.some(c => c.code === resolved.code)
+      if (!alreadyDefault && !alreadyCustom) {
+        customList = [...customList, { code: resolved.code, name: resolved.name }]
+      }
+      addedLanguage = resolved
+    }
+
+    if (typeof remove_language === 'string' && remove_language.trim()) {
+      // Only custom languages can be removed; defaults are always available.
+      customList = customList.filter(c => c.code !== remove_language)
+    }
+
+    updateData.custom_languages = customList
+  }
+
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true },
   })
 
   ok(res, {
@@ -220,6 +259,8 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     staff_roles:       effectiveStaffRoles(updated.staff_roles),
     specialist_roles:  effectiveSpecialistRoles(updated.specialist_roles),
     policy_sections:   effectiveSections(updated.policy_sections),
+    languages:         effectiveLanguages(updated.custom_languages),
+    added_language:    addedLanguage,
   })
 })
 

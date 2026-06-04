@@ -10,6 +10,7 @@ import { prisma } from '../../db/client'
 import { splitIntoChunks } from '../../utils/htmlToWhatsApp'
 import { fmtQuestionWA, fmtQuestionEmail } from './conversation'
 import { translateTrainingQuestion, langName } from '../../lib/translate'
+import { languageNameForCode } from '../../data/languages'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WA_NUMBER      = process.env.TWILIO_WHATSAPP_NUMBER ?? ''
@@ -79,7 +80,7 @@ export async function sendProactiveTrainingQuestions(
   // Load tenant settings + slug
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { training_settings: true, slug: true },
+    select: { training_settings: true, slug: true, custom_languages: true },
   })
 
   const settings = (tenant?.training_settings as any) ?? {}
@@ -123,10 +124,12 @@ export async function sendProactiveTrainingQuestions(
         // Honour the per-staff comms toggle: only translate into their first
         // language when it's enabled (default). When off, send in English.
         const userLang    = user.comms_always_first_language === false ? 'eng' : ((user.first_language as string) ?? 'eng')
+        const userLangName = languageNameForCode(userLang, tenant?.custom_languages)
 
         const translatedQ = await translateTrainingQuestion(
           { text: firstQ.text, options: (firstQ.options as string[]) ?? [] },
           userLang,
+          userLangName,
         )
         const questionForFmt = { ...firstQ, text: translatedQ.text, options: translatedQ.options }
 

@@ -64,16 +64,16 @@ function LastSeen({ iso }: { iso: string | null | undefined }) {
   return <span className={`text-xs ${colour}`}>{fmtDate(iso)}</span>
 }
 
-function langNameOf(code: string | null | undefined) {
-  return LANGUAGES.find(l => l.code === code)?.name ?? 'their first language'
+function langNameOf(code: string | null | undefined, langs: { code: string; name: string }[] = LANGUAGES) {
+  return langs.find(l => l.code === code)?.name ?? LANGUAGES.find(l => l.code === code)?.name ?? 'their first language'
 }
 
 // Per-staff toggle: when on, every outbound CareStream message is translated
 // into the staff member's first language; when off, messages are sent in English.
-function CommsLanguageToggle({ on, onChange, langCode, disabled }: {
+function CommsLanguageToggle({ on, onChange, langName, disabled }: {
   on: boolean
   onChange: (v: boolean) => void
-  langCode: string
+  langName: string
   disabled?: boolean
 }) {
   return (
@@ -82,7 +82,7 @@ function CommsLanguageToggle({ on, onChange, langCode, disabled }: {
         <p className="text-xs font-medium text-neutral-dark">Always communicate in their first language</p>
         <p className="mt-0.5 text-xs text-neutral-mid">
           {on
-            ? `All messages CareStream sends are translated into ${langNameOf(langCode)}.`
+            ? `All messages CareStream sends are translated into ${langName}.`
             : 'Messages are sent in English.'}
         </p>
       </div>
@@ -398,10 +398,11 @@ function ActionMenu({
 
 export default function StaffPage() {
   const { data: session }              = useSession()
-  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[] }>('admin-staff')
+  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[] }>('admin-staff')
   const [users,        setUsers]       = useState<any[]>(staffCache?.users ?? [])
   const [staffRoles,   setStaffRoles]  = useState<string[]>(staffCache?.staffRoles ?? [])
   const [specialistRoles, setSpecialistRoles] = useState<string[]>(staffCache?.specialistRoles ?? [])
+  const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(staffCache?.languages ?? LANGUAGES)
   const [loading,      setLoading]     = useState(!staffCache)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
@@ -417,8 +418,9 @@ export default function StaffPage() {
         const list = Array.isArray(userData) ? userData : (userData?.users ?? [])
         const roles = (settings as any).staff_roles ?? []
         const specialists = (settings as any).specialist_roles ?? []
-        setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists)
-        pageCache.set('admin-staff', { users: list, staffRoles: roles, specialistRoles: specialists })
+        const langs = (settings as any).languages ?? LANGUAGES
+        setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists); setLanguages(langs)
+        pageCache.set('admin-staff', { users: list, staffRoles: roles, specialistRoles: specialists, languages: langs })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -466,6 +468,7 @@ export default function StaffPage() {
           token={session?.accessToken ?? ''}
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
+          languages={languages}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
         />
@@ -478,6 +481,7 @@ export default function StaffPage() {
           token={session?.accessToken ?? ''}
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
+          languages={languages}
           onClose={() => setEditUser(null)}
           onSaved={(updated: any) => {
             setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
@@ -491,6 +495,7 @@ export default function StaffPage() {
         <StaffDetailModal
           userId={detailUserId}
           token={session?.accessToken ?? ''}
+          languages={languages}
           onClose={() => setDetailUserId(null)}
           onEdit={(u) => { setDetailUserId(null); setEditUser(u) }}
           onChanged={(updated) => {
@@ -902,12 +907,14 @@ function InviteModal({
   token,
   staffRoles,
   specialistRoles,
+  languages,
   onClose,
   onInvited,
 }: {
   token:           string
   staffRoles:      string[]
   specialistRoles: string[]
+  languages:       { code: string; name: string }[]
   onClose:         () => void
   onInvited:       () => void
 }) {
@@ -1122,7 +1129,7 @@ function InviteModal({
                     onChange={update('first_language')}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                   >
-                    {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                    {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1136,13 +1143,13 @@ function InviteModal({
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                   >
                     <option value="">— none —</option>
-                    {LANGUAGES.filter(l => l.code !== form.first_language).map(l => (
+                    {languages.filter(l => l.code !== form.first_language).map(l => (
                       <option key={l.code} value={l.code}>{l.name}</option>
                     ))}
                   </select>
                 </div>
               </div>
-              <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langCode={form.first_language} />
+              <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -1192,6 +1199,7 @@ function EditModal({
   token,
   staffRoles,
   specialistRoles,
+  languages,
   onClose,
   onSaved,
 }: {
@@ -1199,6 +1207,7 @@ function EditModal({
   token:           string
   staffRoles:      string[]
   specialistRoles: string[]
+  languages:       { code: string; name: string }[]
   onClose:         () => void
   onSaved:         (updated: any) => void
 }) {
@@ -1385,7 +1394,7 @@ function EditModal({
                 </select>
               </div>
             </div>
-            <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langCode={form.first_language} />
+            <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -1424,9 +1433,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
+function StaffDetailModal({ userId, token, languages, onClose, onEdit, onChanged }: {
   userId:    string
   token:     string
+  languages: { code: string; name: string }[]
   onClose:   () => void
   onEdit:    (user: any) => void
   onChanged: (updated: any | null) => void
@@ -1537,10 +1547,10 @@ function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Globe size={15} className="text-teal" /> Language</p>
               <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 p-4">
-                <Field label="First language">{langNameOf(user.first_language)}</Field>
-                <Field label="Second language">{user.second_language ? langNameOf(user.second_language) : <span className="italic text-neutral-mid/60">None</span>}</Field>
+                <Field label="First language">{langNameOf(user.first_language, languages)}</Field>
+                <Field label="Second language">{user.second_language ? langNameOf(user.second_language, languages) : <span className="italic text-neutral-mid/60">None</span>}</Field>
                 <div className="col-span-2">
-                  <CommsLanguageToggle on={user.comms_always_first_language !== false} onChange={toggleComms} langCode={user.first_language} disabled={savingComms} />
+                  <CommsLanguageToggle on={user.comms_always_first_language !== false} onChange={toggleComms} langName={langNameOf(user.first_language, languages)} disabled={savingComms} />
                 </div>
               </div>
             </div>

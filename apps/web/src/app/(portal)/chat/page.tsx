@@ -1313,7 +1313,38 @@ function InductionView({ token }: { token: string }) {
                               </button>
                             )}
 
-                            {!isCompleted && !isLocked && step.type === 'answer_question' && (
+                            {!isCompleted && !isLocked && step.type === 'answer_question' && Array.isArray(step.options) && step.options.length > 0 && (
+                              <div className="mt-3 space-y-2">
+                                <p className="text-sm italic text-neutral-dark">&ldquo;{step.question}&rdquo;</p>
+                                <div className="space-y-1.5">
+                                  {step.options.map((opt: string, oi: number) => (
+                                    <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm
+                                      ${String(answers[step.id]) === String(oi) ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
+                                      <input
+                                        type="radio"
+                                        name={`mcq-${step.id}`}
+                                        checked={String(answers[step.id]) === String(oi)}
+                                        onChange={() => setAnswers(prev => ({ ...prev, [step.id]: String(oi) }))}
+                                        className="text-teal"
+                                      />
+                                      {opt}
+                                    </label>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => completeStep(e.enrollment_id, step.id, answers[step.id])}
+                                  disabled={completing === step.id || answers[step.id] == null || answers[step.id] === ''}
+                                  className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
+                                >
+                                  {completing === step.id ? 'Checking…' : 'Submit answer'}
+                                </button>
+                                {step.progress?.answer_correct === false && (
+                                  <p className="text-xs text-amber-600">That&rsquo;s not quite right — review the policy and try again.</p>
+                                )}
+                              </div>
+                            )}
+
+                            {!isCompleted && !isLocked && step.type === 'answer_question' && (!Array.isArray(step.options) || step.options.length === 0) && (
                               <div className="mt-3 space-y-2">
                                 <p className="text-sm italic text-neutral-dark">&ldquo;{step.question}&rdquo;</p>
                                 <textarea

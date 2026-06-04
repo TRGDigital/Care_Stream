@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { notifyUsers } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
+import { downloadExtractedText } from '../services/storage/s3'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
@@ -65,11 +66,14 @@ onboardingRouter.post('/flows', requireAdmin, async (req, res) => {
         job_roles:   job_roles   ?? [],
         steps: steps?.length ? {
           create: (steps as any[]).map((s, i) => ({
-            order:     i,
-            title:     s.title,
-            type:      s.type,
-            policy_id: s.policy_id ?? null,
-            question:  s.question  ?? null,
+            order:          i,
+            title:          s.title,
+            type:           s.type,
+            policy_id:      s.policy_id ?? null,
+            policy_section: s.policy_section ?? null,
+            question:       s.question  ?? null,
+            options:        Array.isArray(s.options) ? s.options.map((o: any) => String(o)) : [],
+            correct_option: typeof s.correct_option === 'number' ? s.correct_option : null,
           })),
         } : undefined,
       },
@@ -257,8 +261,14 @@ onboardingRouter.get('/my', async (req, res) => {
       due_date:      e.due_date,
       completed_at:  e.completed_at,
       steps:         e.flow.steps.map(s => ({
-        ...s,
-        progress: e.progress.find(p => p.step_id === s.id) ?? null,
+        id:        s.id,
+        order:     s.order,
+        title:     s.title,
+        type:      s.type,
+        policy_id: s.policy_id,
+        question:  s.question,
+        options:   s.options,              // shown to staff for MCQ — correct_option is NOT exposed
+        progress:  e.progress.find(p => p.step_id === s.id) ?? null,
       })),
     }))
 
@@ -285,27 +295,38 @@ onboardingRouter.post('/enrollments/:enrollmentId/steps/:stepId/complete', async
     if (!step) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Step not found' } })
 
     let answer_correct: boolean | null = null
+    let mcqIncorrect = false
 
-    if (step.type === 'answer_question' && step.question && answer_text) {
-      const msg = await ai.messages.create({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 10,
-        messages:   [{
-          role:    'user',
-          content: `Question: "${step.question}"\nStaff answer: "${answer_text}"\n\nIs this answer correct or broadly acceptable? Reply with only "yes" or "no".`,
-        }],
-      })
-      const verdict = ((msg.content[0] as any).text as string)?.trim().toLowerCase()
-      answer_correct = verdict === 'yes'
+    if (step.type === 'answer_question' && answer_text != null) {
+      const options = (step.options as string[]) ?? []
+      if (options.length > 0 && step.correct_option != null) {
+        // MCQ — answer_text is the selected option index (0-based); grade deterministically.
+        const sel = parseInt(String(answer_text), 10)
+        answer_correct = Number.isInteger(sel) && sel === step.correct_option
+        mcqIncorrect   = answer_correct === false   // wrong MCQ → make them retry (don't complete)
+      } else if (step.question) {
+        // Free-text — AI verdict on whether the answer is broadly acceptable.
+        const msg = await ai.messages.create({
+          model:      'claude-haiku-4-5-20251001',
+          max_tokens: 10,
+          messages:   [{
+            role:    'user',
+            content: `Question: "${step.question}"\nStaff answer: "${answer_text}"\n\nIs this answer correct or broadly acceptable? Reply with only "yes" or "no".`,
+          }],
+        })
+        const verdict = ((msg.content[0] as any).text as string)?.trim().toLowerCase()
+        answer_correct = verdict === 'yes'
+      }
     }
 
+    const completedAt = mcqIncorrect ? null : new Date()
     const progress = await prisma.onboardingProgress.upsert({
       where:  { enrollment_id_step_id: { enrollment_id: req.params.enrollmentId, step_id: req.params.stepId } },
-      update: { completed_at: new Date(), answer_text: answer_text ?? null, answer_correct },
+      update: { completed_at: completedAt, answer_text: answer_text ?? null, answer_correct },
       create: {
         enrollment_id:  req.params.enrollmentId,
         step_id:        req.params.stepId,
-        completed_at:   new Date(),
+        completed_at:   completedAt,
         answer_text:    answer_text ?? null,
         answer_correct,
       },
@@ -405,6 +426,50 @@ async function matchStepsToPolicies(
   }
 }
 
+// Tailor each MCQ question to the wording of the tenant's matched policy (Haiku,
+// one call). Returns step-index -> tailored {question, options, correct_option}.
+// Anything that can't be tailored keeps the original template question.
+async function tailorQuestionsToPolicies(
+  tenantId: string,
+  steps: Array<{ type: string; question: string | null; options: string[] | null; correct_option: number | null }>,
+  mapped: (string | null)[],
+): Promise<Map<number, { question: string; options: string[]; correct_option: number }>> {
+  const result = new Map<number, { question: string; options: string[]; correct_option: number }>()
+  const targets = steps
+    .map((s, i) => ({ s, i, pid: mapped[i] }))
+    .filter(t => t.s.type === 'answer_question' && t.pid && Array.isArray(t.s.options) && (t.s.options as string[]).length === 4)
+  if (targets.length === 0) return result
+
+  const pids = [...new Set(targets.map(t => t.pid as string))]
+  const excerpts = new Map<string, string>()
+  await Promise.all(pids.map(async pid => {
+    const txt = await downloadExtractedText(tenantId, pid).catch(() => '')
+    if (txt && txt.trim()) excerpts.set(pid, txt.slice(0, 1500))
+  }))
+  const usable = targets.filter(t => excerpts.has(t.pid as string))
+  if (usable.length === 0) return result
+
+  try {
+    const system = `You adapt onboarding quiz questions to a specific care home's own policy wording. Output ONLY JSON.`
+    const user = [
+      `Rewrite each multiple-choice question so it reflects the home's actual policy extract, keeping a single best answer and EXACTLY 4 options. Keep the meaning and difficulty similar.`,
+      ...usable.map(t => `\n--- item ${t.i} ---\nPolicy extract: ${excerpts.get(t.pid as string)}\nCurrent question: ${t.s.question}\nCurrent options: ${JSON.stringify(t.s.options)}`),
+      ``,
+      `Output JSON: {"items":[{"i":<index>,"question":"...","options":["","","",""],"correct_option":<0-3>}]}`,
+    ].join('\n')
+    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 3000, temperature: 0.3 })
+    const noFence = raw.replace(/```(?:json)?/gi, '').trim()
+    const parsed = JSON.parse(noFence.slice(noFence.indexOf('{'), noFence.lastIndexOf('}') + 1))
+    for (const it of (parsed?.items ?? [])) {
+      if (typeof it?.i === 'number' && it.question && Array.isArray(it.options) && it.options.length === 4 &&
+          typeof it.correct_option === 'number' && it.correct_option >= 0 && it.correct_option <= 3) {
+        result.set(it.i, { question: String(it.question), options: it.options.map((o: any) => String(o)), correct_option: it.correct_option })
+      }
+    }
+  } catch { /* keep originals */ }
+  return result
+}
+
 // POST /onboarding/templates/:id/adopt — clone a platform template into an
 // editable tenant copy, mapping each step to the tenant's own policies.
 onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => {
@@ -425,6 +490,12 @@ onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => 
       (template.steps as any[]).map(s => ({ policy_section: s.policy_section, title: s.title, question: s.question })),
       policies as any[],
     )
+    // Tailor MCQs to the matched policies' wording (best-effort; falls back to template question).
+    const tailored = await tailorQuestionsToPolicies(
+      tenantId,
+      (template.steps as any[]).map(s => ({ type: s.type, question: s.question, options: s.options, correct_option: s.correct_option })),
+      mapped,
+    )
 
     const flow = await (prisma as any).onboardingFlow.create({
       data: {
@@ -436,16 +507,19 @@ onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => 
         source_flow_id: template.id,
         is_active:      true,
         steps: {
-          create: (template.steps as any[]).map((s, i) => ({
-            order:          s.order,
-            title:          s.title,
-            type:           s.type,
-            policy_id:      mapped[i] ?? null,
-            policy_section: s.policy_section,
-            question:       s.question,
-            options:        s.options ?? [],
-            correct_option: s.correct_option,
-          })),
+          create: (template.steps as any[]).map((s, i) => {
+            const t = tailored.get(i)
+            return {
+              order:          s.order,
+              title:          t ? t.question.slice(0, 200) : s.title,
+              type:           s.type,
+              policy_id:      mapped[i] ?? null,
+              policy_section: s.policy_section,
+              question:       t ? t.question : s.question,
+              options:        t ? t.options : (s.options ?? []),
+              correct_option: t ? t.correct_option : s.correct_option,
+            }
+          }),
         },
       },
       include: { steps: { orderBy: { order: 'asc' } } },

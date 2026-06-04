@@ -184,33 +184,50 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What an onboarding flow is">
           <p className="text-sm text-neutral-mid">
-            An onboarding flow is a guided induction for new staff — a checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong> (to check understanding). New starters complete their flow from the staff portal, and you can track who has finished.
+            An onboarding flow is a guided induction for new staff — an ordered checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong>. New starters complete their flow from the staff portal, and you can track who has finished.
           </p>
         </SectionBlock>
-        <SectionBlock title="Creating a flow">
+        <SectionBlock title="Ready-made flows (the quickest way to start)">
+          <p className="text-sm text-neutral-mid">
+            On the <strong>Onboarding</strong> page you'll see a set of <strong>ready-made flows</strong> built by CareStream for common care-home roles and specialisms. Click <strong>Adopt</strong> and CareStream:
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}>copies the flow into your own editable copy;</Step>
+            <Step n={2}>automatically <strong>matches each step to your own uploaded policies</strong> (so &ldquo;read the infection control policy&rdquo; links to <em>your</em> infection control policy); and</Step>
+            <Step n={3}>tailors the questions to the wording of your policies.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            If a step can't be matched (because you haven't uploaded a policy for that area yet), the flow tells you so you can upload it and link the step. You can edit anything afterwards.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Where the ready-made flows come from">
+          <p className="text-sm text-neutral-mid">
+            The ready-made flows are built from a library of real care-sector policies that have been <strong>anonymised</strong> — every home name, address, person and contact detail removed — so they reflect genuine, well-written procedures without belonging to any one home. When you adopt a flow, CareStream uses this as the starting point but always matches and tailors it to <em>your</em> own policies, so what your staff read and answer is specific to your home.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Multiple-choice questions">
+          <p className="text-sm text-neutral-mid">
+            Questions can be <strong>multiple choice</strong> — staff pick an answer in the portal and it's marked instantly. A wrong answer asks them to review the policy and try again, so a completed flow is real evidence they understood it. You can also use free-text questions (CareStream assesses the answer) when you build your own steps.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Building your own flow">
           <div className="space-y-3">
-            <Step n={1}>Go to <strong>Onboarding</strong> in the sidebar and click <strong>New flow</strong>.</Step>
-            <Step n={2}>Give it a name (e.g. &ldquo;Care Assistant induction&rdquo;) and choose which <strong>job roles</strong> it applies to. Leave roles empty to apply it to <em>every</em> new starter.</Step>
-            <Step n={3}>Add the steps — pick policies for staff to read and write questions for them to answer, in the order you want them completed.</Step>
-            <Step n={4}>Make sure the flow is <strong>active</strong>. Only active flows are assigned to new starters.</Step>
+            <Step n={1}>Click <strong>New flow</strong>, name it, and choose which <strong>job roles</strong> it applies to (leave blank for all staff).</Step>
+            <Step n={2}>Add steps — a policy to read, or a question. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
+            <Step n={3}>Make sure the flow is <strong>active</strong> — only active flows are assigned to new starters.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">
-            When you add a staff member and choose <strong>New starter</strong> on the Staff page, CareStream automatically enrols them in every active onboarding flow whose job roles match theirs (plus any flow set to apply to all roles). You don't need to enrol them by hand — set the flow up once and every new starter for that role is enrolled from day one. The confirmation screen tells you how many flows they joined.
+            When you add a staff member and choose <strong>New starter</strong> on the Staff page, CareStream automatically enrols them in every active flow (adopted or your own) whose job roles match theirs. Set the flow up once and every new starter for that role is enrolled from day one — the confirmation screen tells you how many flows they joined.
           </p>
         </SectionBlock>
         <SectionBlock title="Tracking progress">
           <p className="text-sm text-neutral-mid">
-            On the Onboarding page you can see each flow's enrolled staff and how far through they are, so you have a clear, auditable record that every new starter completed their induction.
+            Each flow shows its enrolled staff and how far through they are, giving you a clear, auditable record that every new starter completed their induction — useful CQC evidence.
           </p>
         </SectionBlock>
-        <SectionBlock title="Ready-made onboarding flows">
-          <p className="text-sm text-neutral-mid">
-            CareStream is building a library of ready-made onboarding flows — covering common care-sector inductions — that any home can use as a starting point and tailor to their own policies. When these become available you'll be able to adopt one in a couple of clicks rather than building a flow from scratch.
-          </p>
-        </SectionBlock>
-        <Tip>If you add a new starter before creating a matching flow, no onboarding is assigned — create the flow on the Onboarding page and future new starters in that role will be enrolled automatically.</Tip>
+        <Tip>If you add a new starter before a matching flow exists, no onboarding is assigned — adopt or create a flow for that role and future new starters will be enrolled automatically.</Tip>
       </div>
     ),
   },

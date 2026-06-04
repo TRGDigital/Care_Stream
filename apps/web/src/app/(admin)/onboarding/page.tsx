@@ -6,7 +6,7 @@ import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
 
-type Step = { title: string; type: 'read_policy' | 'answer_question'; policy_id?: string; question?: string }
+type Step = { title: string; type: 'read_policy' | 'answer_question'; policy_id?: string; policy_section?: string | null; question?: string; options?: string[]; correct_option?: number | null }
 type Flow  = {
   id: string; name: string; description?: string; job_roles: string[]; is_active: boolean
   steps: Array<Step & { id: string; order: number }>
@@ -465,13 +465,15 @@ function FlowForm({ api, initial, onClose, onSaved }: {
   const [jobRoles,    setJobRoles]    = useState<string[]>(initial?.job_roles ?? [])
   const [newRole,     setNewRole]     = useState('')
   const [steps,       setSteps]       = useState<Step[]>(
-    initial?.steps.map(s => ({ title: s.title, type: s.type, policy_id: s.policy_id, question: s.question })) ?? []
+    initial?.steps.map((s: any) => ({ title: s.title, type: s.type, policy_id: s.policy_id, policy_section: s.policy_section, question: s.question, options: s.options ?? [], correct_option: s.correct_option ?? 0 })) ?? []
   )
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState('')
 
   function addStep(type: 'read_policy' | 'answer_question') {
-    setSteps(prev => [...prev, { title: '', type, policy_id: '', question: '' }])
+    setSteps(prev => [...prev, type === 'answer_question'
+      ? { title: '', type, question: '', options: ['', '', '', ''], correct_option: 0 }
+      : { title: '', type, policy_id: '' }])
   }
 
   function removeStep(i: number) {
@@ -489,7 +491,17 @@ function FlowForm({ api, initial, onClose, onSaved }: {
     setSaving(true)
     setErr('')
     try {
-      const payload = { name: name.trim(), description: description.trim() || undefined, job_roles: jobRoles, steps }
+      // A question step with all 4 options filled is treated as auto-marked MCQ;
+      // otherwise it's a free-text question (options cleared).
+      const normalizedSteps = steps.map(s => {
+        if (s.type !== 'answer_question') return s
+        const opts = s.options ?? []
+        const mcq = opts.length === 4 && opts.every(o => o.trim())
+        return mcq
+          ? { ...s, options: opts.map(o => o.trim()), correct_option: Math.min(Math.max(s.correct_option ?? 0, 0), 3) }
+          : { ...s, options: [], correct_option: null }
+      })
+      const payload = { name: name.trim(), description: description.trim() || undefined, job_roles: jobRoles, steps: normalizedSteps }
       const result = initial
         ? await api.onboarding.updateFlow(initial.id, payload)
         : await api.onboarding.createFlow(payload)
@@ -565,10 +577,23 @@ function FlowForm({ api, initial, onClose, onSaved }: {
                       className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-neutral-mid focus:border-teal focus:outline-none" />
                   )}
                   {step.type === 'answer_question' && (
-                    <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value })}
-                      placeholder="The question staff must answer (Claude will assess the answer)"
-                      rows={2}
-                      className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                    <div className="space-y-2">
+                      <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value })}
+                        placeholder="The question staff must answer"
+                        rows={2}
+                        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                      <p className="text-[11px] text-neutral-mid">Fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</p>
+                      {[0, 1, 2, 3].map(oi => (
+                        <label key={oi} className="flex items-center gap-2">
+                          <input type="radio" name={`correct-${i}`} checked={(step.correct_option ?? 0) === oi}
+                            onChange={() => updateStep(i, { correct_option: oi })} className="text-teal" title="Correct answer" />
+                          <input value={step.options?.[oi] ?? ''}
+                            onChange={e => updateStep(i, { options: [0,1,2,3].map(k => k === oi ? e.target.value : (step.options?.[k] ?? '')) })}
+                            placeholder={`Option ${oi + 1}${(step.correct_option ?? 0) === oi ? ' (correct)' : ''}`}
+                            className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                        </label>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}

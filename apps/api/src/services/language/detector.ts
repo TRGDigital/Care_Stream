@@ -75,6 +75,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
   guj: 'Gujarati',
   tam: 'Tamil',
   tel: 'Telugu',
+  mal: 'Malayalam',    // common in UK care (Kerala)
+  sna: 'Shona',        // common in UK care (Zimbabwe)
   sin: 'Sinhala',
   nep: 'Nepali',
   hat: 'Haitian Creole',

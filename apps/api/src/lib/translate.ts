@@ -15,6 +15,7 @@ export const LANG_NAMES: Record<string, string> = {
   pan: 'Punjabi',    tam: 'Tamil',       zho: 'Chinese',    sin: 'Sinhala',
   nep: 'Nepali',     cym: 'Welsh',       deu: 'German',     ita: 'Italian',
   bho: 'Bhojpuri',   kan: 'Kannada',     mal: 'Malayalam',  tel: 'Telugu',
+  sna: 'Shona',
   // Creoles & related
   mfe: 'Mauritian Creole',  hat: 'Haitian Creole',  crs: 'Seychellois Creole',
   kea: 'Cape Verdean Creole', jam: 'Jamaican Patois', gcf: 'Antillean Creole',

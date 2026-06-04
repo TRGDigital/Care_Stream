@@ -47,6 +47,7 @@ const LANG_NAMES: Record<string, string> = {
   ara: 'Arabic',     ita: 'Italian',    lit: 'Lithuanian',
   lav: 'Latvian',    bul: 'Bulgarian',  ces: 'Czech',
   slk: 'Slovak',     hun: 'Hungarian',
+  mal: 'Malayalam',  sna: 'Shona',
   mfe: 'Mauritian Creole', hat: 'Haitian Creole', crs: 'Seychellois Creole',
   kea: 'Cape Verdean Creole', jam: 'Jamaican Patois', gcf: 'Antillean Creole',
   pcm: 'Nigerian Pidgin',

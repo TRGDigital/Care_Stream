@@ -9,3 +9,6 @@ build/
 .DS_Store
 coverage/
 .turbo/
+
+# Local working notes (may contain secrets) — never commit
+memory/

@@ -18,6 +18,7 @@ const NAV = [
   { href: '/platform/cqc-seeds',       label: 'CQC Seeds',        Icon: ClipboardCheck  },
   { href: '/platform/audit-seeds',     label: 'Audit Seeds',      Icon: ClipboardCheck  },
   { href: '/platform/onboarding-flows', label: 'Onboarding Flows', Icon: UserPlus       },
+  { href: '/platform/policy-seeds',    label: 'Policy Seeds',     Icon: FileText        },
   { href: '/platform/seeds',           label: 'Knowledge Seeds',  Icon: Sparkles        },
   { href: '/platform/prompts',         label: 'AI Prompts',       Icon: FileText        },
   { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },

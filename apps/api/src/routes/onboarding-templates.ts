@@ -88,10 +88,23 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
 
   // System prompt is editable in the platform /prompts page (usage: onboarding_flow_generation).
   const system = await getOnboardingPrompt()
+
+  // Ground the questions in real (anonymised) policy text when reviewed seeds exist —
+  // one excerpt per section, truncated to keep the prompt bounded.
+  const seeds = await (prisma as any).policySeed.findMany({
+    where:   { reviewed: true, NOT: { section: null } },
+    select:  { section: true, content: true },
+    orderBy: { updated_at: 'desc' },
+  }).catch(() => [] as any[])
+  const bySection = new Map<string, string>()
+  for (const s of seeds as any[]) if (s.section && !bySection.has(s.section)) bySection.set(s.section, s.content)
+  const refBlock = [...bySection.entries()].map(([sec, content]) => `## ${sec}\n${String(content).slice(0, 1000)}`).join('\n\n')
+
   const user = [
     `Role or specialism: "${role}" (${isSecond ? 'specialism' : 'job role'}).`,
     `Available policy areas: ${sections}.`,
-  ].join('\n')
+    refBlock ? `\nReference policy extracts — base your questions on the wording and procedures in these where relevant:\n${refBlock}` : '',
+  ].filter(Boolean).join('\n')
 
   let parsed: any
   try {

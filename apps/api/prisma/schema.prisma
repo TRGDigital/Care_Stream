@@ -590,6 +590,27 @@ model OnboardingProgress {
   @@map("onboarding_progress")
 }
 
+// ─── Policy Seeds ─────────────────────────────────────────────────────────────
+
+// Platform-level anonymised reference policies (sourced from a real home, stripped
+// of identifying detail). Used to ground onboarding flow generation and, in Phase 2,
+// to match a tenant's uploaded policies to onboarding steps.
+model PolicySeed {
+  id                String   @id @default(uuid())
+  section           String?                              // policy section (e.g. "Infection control")
+  title             String
+  content           String                               // anonymised policy text
+  document_category String   @default("internal_policy")
+  source_tenant_id  String?                              // provenance only
+  source_policy_id  String?  @unique                     // provenance + dedupe on re-import
+  reviewed          Boolean  @default(false)             // admin has checked the anonymisation
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  @@index([section])
+  @@map("policy_seeds")
+}
+
 // ─── Training ─────────────────────────────────────────────────────────────────
 
 model TrainingModule {

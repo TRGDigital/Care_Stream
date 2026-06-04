@@ -13,6 +13,7 @@ const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-5'
 export interface ClaudeOptions {
   maxTokens?:  number
   temperature?: number
+  model?:      string
 }
 
 export async function callClaude(
@@ -20,15 +21,16 @@ export async function callClaude(
   userMessage:  string,
   options?:     ClaudeOptions,
 ): Promise<string> {
+  const model = options?.model ?? MODEL
   const response = await client.messages.create({
-    model:      MODEL,
+    model,
     max_tokens: options?.maxTokens  ?? 4096,
     ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
     system:     systemPrompt,
     messages:   [{ role: 'user', content: userMessage }],
   })
 
-  recordUsage(MODEL, response.usage)
+  recordUsage(model, response.usage)
 
   const block = response.content[0]
   if (!block || block.type !== 'text') {

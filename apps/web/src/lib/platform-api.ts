@@ -647,7 +647,33 @@ export function createPlatformClient(token: string) {
       seedRoles: () =>
         adminFetch<{ created: number }>('/onboarding-templates/seed-roles', token, { method: 'POST' }),
     },
+
+    policySeeds: {
+      list: () => adminFetch<{ seeds: PolicySeedMeta[] }>('/policy-seeds', token),
+      get: (id: string) => adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}`, token),
+      update: (id: string, data: Partial<{ section: string | null; title: string; content: string; reviewed: boolean }>) =>
+        adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      remove: (id: string) => adminFetch<{ deleted: boolean }>(`/policy-seeds/${id}`, token, { method: 'DELETE' }),
+      importBatch: (tenantId: string, limit = 4) =>
+        adminFetch<{ imported: number; remaining: number; total: number; already: number }>(
+          `/policy-seeds/import/${tenantId}?limit=${limit}`, token, { method: 'POST' }),
+    },
   }
+}
+
+export interface PolicySeedMeta {
+  id:                string
+  section:           string | null
+  title:             string
+  document_category: string
+  reviewed:          boolean
+  source_policy_id:  string | null
+  updated_at:        string
+}
+
+export interface PolicySeed extends PolicySeedMeta {
+  content:          string
+  source_tenant_id: string | null
 }
 
 export interface OnboardingTemplateStep {

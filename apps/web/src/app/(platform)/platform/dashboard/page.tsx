@@ -2365,6 +2365,51 @@ function SystemReference() {
           <RefRow label="Browser support"     value="Chrome Canary only (flag), HTTPS-only, June 2026. Verify in Rich Results-style agent tooling once GA. See QA Testing tab." />
         </div>
       </RefSection>
+
+      {/* Policy Seeds */}
+      <RefSection icon={FileText} title="Policy Seeds (anonymised reference library)">
+        <p className="leading-relaxed text-neutral-mid">
+          Policy Seeds are a <strong>platform-level library of anonymised reference policies</strong> sourced from a real home.
+          They serve two jobs: they <strong>ground onboarding question generation</strong> in real policy wording, and they give
+          the tenant-adoption flow a canonical reference to match a home&rsquo;s own policies against. Managed in
+          <strong> Platform console → Policy Seeds</strong>.
+        </p>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Table"            value="policy_seeds (platform-level): section, title, content (anonymised), document_category, source_tenant_id, source_policy_id (UNIQUE — dedupe), reviewed." />
+          <RefRow label="Import"           value="POST /admin/policy-seeds/import/:tenantId?limit= — BATCHED. Per policy: downloadExtractedText (S3) → deterministic strip → Haiku anonymise pass → policy_seeds row (reviewed=false)." />
+          <RefRow label="Anonymisation"    value="Deterministic: strips tenant name/slug/email_domain/branding_signoff + every staff name/email/phone + generic email & UK-phone regex. Then a Haiku AI pass (capped at 12k chars) genericises residuals (address, town, named individuals)." />
+          <RefRow label="Timeout safety"   value="Each import call self-limits to a 45s wall-clock budget (and a count cap) so a batch of large policies can't exceed the 60s function limit; client loops with retry. Resumable via source_policy_id dedupe." />
+          <RefRow label="Review gate"      value="Seeds land as 'needs review'. The platform owner reviews/edits each (check no identifying detail remains) and marks Reviewed before it is used." />
+          <RefRow label="Grounding"        value="Onboarding AI-draft injects REVIEWED seed excerpts (one per section, ≤1000 chars) so generated questions reflect real policy text. No effect until seeds are imported + reviewed." />
+          <RefRow label="Editable prompt"  value="usage 'policy_anonymisation' ('Policy Seed Anonymisation') in /prompts — Haiku instructions for the anonymise pass." />
+          <RefRow label="Files"            value="apps/api/src/routes/policy-seeds.ts; console apps/web/src/app/(platform)/platform/policy-seeds/page.tsx." />
+        </div>
+      </RefSection>
+
+      {/* Staff Onboarding */}
+      <RefSection icon={ClipboardList} title="Staff Onboarding Flows (templates → tenant adoption)">
+        <p className="leading-relaxed text-neutral-mid">
+          Two layers, mirroring the training-template model. <strong>Platform templates</strong> (OnboardingFlow with
+          <code className="text-xs bg-gray-100 px-1 rounded">tenant_id = NULL</code>) are shared inductions for each role/specialism.
+          A tenant <strong>adopts</strong> one, which clones it into an editable tenant-owned copy and uses AI to map + tailor it to
+          that home&rsquo;s own policies. New starters are then auto-enrolled.
+        </p>
+        <div className="mt-3 space-y-2">
+          <RefTag color="teal">read_policy step</RefTag>
+          <RefTag color="blue">answer_question (MCQ, auto-marked)</RefTag>
+          <RefTag color="purple">primary = job role</RefTag>
+          <RefTag color="amber">secondary = specialism</RefTag>
+        </div>
+        <div className="mt-3 space-y-1">
+          <RefRow label="Template model"    value="OnboardingFlow: tenant_id NULL = template; flow_kind (primary|secondary); source_flow_id links a tenant copy to its template. OnboardingStep: policy_section (abstract area), question, options[] + correct_option (MCQ)." />
+          <RefRow label="Platform console"  value="/platform/onboarding-flows — 'Create role templates' seeds 13 primary roles + 8 specialisms (data/onboarding-roles.ts); 'AI draft' generates policy areas + an MCQ each; Activate when reviewed. Only ACTIVE templates are visible to tenants." />
+          <RefRow label="AI draft"          value="POST /admin/onboarding-templates/:id/ai-draft — Claude (editable prompt 'onboarding_flow_generation'), grounded in reviewed Policy Seeds. JSON parsed robustly (first { to last })." />
+          <RefRow label="Tenant adoption"   value="GET /onboarding/templates (available, not yet adopted) → POST /onboarding/templates/:id/adopt: clones to tenant copy + matchStepsToPolicies (Haiku, sets policy_id per step; deterministic section-match fallback) + tailorQuestionsToPolicies (Haiku, rewrites each MCQ to the matched policy's wording). Reports unmapped read steps." />
+          <RefRow label="New-starter enrol" value="Staff invite (users.ts) with new_starter=true auto-enrols into every ACTIVE tenant flow (adopted or custom) whose job_roles match — adopted flows are tenant-owned + active, so this is automatic." />
+          <RefRow label="Staff completion"  value="Portal (apps/web/(portal)/chat). MCQ graded deterministically (selected index vs correct_option) — wrong answer keeps the step incomplete so they retry. Free-text uses a Haiku yes/no verdict. GET /onboarding/my exposes options but NEVER correct_option." />
+          <RefRow label="Files"             value="apps/api/src/routes/onboarding.ts (tenant + adoption), routes/onboarding-templates.ts (platform), data/onboarding-roles.ts. Tenant UI: (admin)/onboarding/page.tsx." />
+        </div>
+      </RefSection>
     </div>
   )
 }

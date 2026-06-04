@@ -32,6 +32,7 @@ export default function OnboardingFlowsPage() {
   const [busy,    setBusy]    = useState<string | null>(null)   // flowId currently mutating
   const [openId,  setOpenId]  = useState<string | null>(null)
   const [seeding, setSeeding] = useState(false)
+  const [settingTab, setSettingTab] = useState('nursing_home')
 
   function load() {
     if (!token) return
@@ -50,7 +51,7 @@ export default function OnboardingFlowsPage() {
     if (!token) return
     setSeeding(true); setError('')
     try {
-      await createPlatformClient(token).onboardingTemplates.seedRoles()
+      await createPlatformClient(token).onboardingTemplates.seedRoles(settingTab || undefined)
       load()
     } catch (e: any) { setError(e.message) } finally { setSeeding(false) }
   }
@@ -91,8 +92,10 @@ export default function OnboardingFlowsPage() {
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
 
-  const primary   = flows.filter(f => f.flow_kind === 'primary')
-  const secondary = flows.filter(f => f.flow_kind === 'secondary')
+  const tabFlows  = flows.filter(f => (f.care_setting ?? '') === settingTab)
+  const primary   = tabFlows.filter(f => f.flow_kind === 'primary')
+  const secondary = tabFlows.filter(f => f.flow_kind === 'secondary')
+  const tabCount  = (v: string) => flows.filter(f => (f.care_setting ?? '') === v).length
 
   return (
     <PlatformShell>
@@ -106,19 +109,29 @@ export default function OnboardingFlowsPage() {
           </div>
           <button onClick={seedRoles} disabled={seeding}
             className="flex shrink-0 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
-            {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create role templates
+            {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create role templates{settingTab ? ` (${settingLabel(settingTab)})` : ''}
           </button>
         </div>
 
         {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
+        {/* Care-setting tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {SETTINGS.map(s => (
+            <button key={s.value} onClick={() => setSettingTab(s.value)}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${settingTab === s.value ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}>
+              {s.label} <span className="text-xs text-neutral-mid">({tabCount(s.value)})</span>
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin text-neutral-mid" /></div>
-        ) : flows.length === 0 ? (
+        ) : tabFlows.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-            <p className="text-sm text-neutral-mid">No onboarding templates yet.</p>
+            <p className="text-sm text-neutral-mid">No {settingLabel(settingTab).toLowerCase()} templates yet.</p>
             <button onClick={seedRoles} disabled={seeding} className="mt-3 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
-              Create the standard role templates
+              Create the standard role templates for {settingLabel(settingTab)}
             </button>
           </div>
         ) : (

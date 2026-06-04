@@ -162,22 +162,25 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   ok(res, { flow: updated })
 })
 
-// ─── POST /seed-roles — create the canonical role/specialism templates (empty) ─
-onboardingTemplatesRouter.post('/seed-roles', async (_req: Request, res: Response) => {
+// ─── POST /seed-roles?setting= — create the canonical role/specialism templates ─
+// for a given care setting (empty shells). De-dupes within that setting, so each
+// setting can have its own Care Assistant etc.
+onboardingTemplatesRouter.post('/seed-roles', async (req: Request, res: Response) => {
+  const setting = isCareSetting(req.query.setting) ? req.query.setting : null
   const existing = await (prisma as any).onboardingFlow.findMany({
-    where: { tenant_id: null }, select: { name: true },
+    where: { tenant_id: null, care_setting: setting }, select: { name: true },
   })
   const have = new Set((existing as any[]).map(f => (f.name as string).toLowerCase()))
 
   const toCreate: any[] = []
   for (const role of PRIMARY_ROLES) {
     if (!have.has(role.toLowerCase())) {
-      toCreate.push({ tenant_id: null, name: role, flow_kind: 'primary', job_roles: [role], is_active: false })
+      toCreate.push({ tenant_id: null, name: role, flow_kind: 'primary', job_roles: [role], care_setting: setting, is_active: false })
     }
   }
   for (const spec of SECONDARY_ROLES) {
     if (!have.has(spec.toLowerCase())) {
-      toCreate.push({ tenant_id: null, name: spec, flow_kind: 'secondary', job_roles: [spec], is_active: false })
+      toCreate.push({ tenant_id: null, name: spec, flow_kind: 'secondary', job_roles: [spec], care_setting: setting, is_active: false })
     }
   }
   if (toCreate.length > 0) {

@@ -644,8 +644,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
       aiDraft: (id: string) =>
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}/ai-draft`, token, { method: 'POST' }),
-      seedRoles: () =>
-        adminFetch<{ created: number }>('/onboarding-templates/seed-roles', token, { method: 'POST' }),
+      seedRoles: (setting?: string) =>
+        adminFetch<{ created: number }>(`/onboarding-templates/seed-roles${setting ? `?setting=${setting}` : ''}`, token, { method: 'POST' }),
     },
 
     policySeeds: {

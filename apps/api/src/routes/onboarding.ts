@@ -8,7 +8,7 @@ import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { facilityTypeToSetting } from '../lib/care-setting'
-import { translateQuestionCached, translateText } from '../lib/translate'
+import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
 export const onboardingRouter = Router()
@@ -290,23 +290,19 @@ onboardingRouter.get('/my', async (req, res) => {
 
     let result = baseline
     if (translate) {
-      try {
-        result = await Promise.all(baseline.map(async e => ({
-          ...e,
-          flow_name: await translateText(e.flow_name, langCode, langName),
-          steps: await Promise.all(e.steps.map(async s => {
-            const title = await translateText(s.title, langCode, langName)
-            if (s.type === 'answer_question' && s.question) {
-              const t = await translateQuestionCached({ text: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] }, langCode, langName)
-              return { ...s, title, question: t.text, options: t.options as any }
-            }
-            return { ...s, title }
-          })),
-        })))
-      } catch (transErr) {
-        console.error('[onboarding/my] translation failed, serving English:', transErr)
-        result = baseline
-      }
+      const translateAll = Promise.all(baseline.map(async e => ({
+        ...e,
+        flow_name: await translateText(e.flow_name, langCode, langName),
+        steps: await mapLimit(e.steps, 6, async (s: any) => {
+          const title = await translateText(s.title, langCode, langName)
+          if (s.type === 'answer_question' && s.question) {
+            const t = await translateQuestionCached({ text: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] }, langCode, langName)
+            return { ...s, title, question: t.text, options: t.options as any }
+          }
+          return { ...s, title }
+        }),
+      })))
+      result = await withTranslationBudget(translateAll, 18_000, baseline)
     }
 
     res.json({ success: true, data: { enrollments: result } })

@@ -8,9 +8,10 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, Users, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -417,6 +418,13 @@ export default function ChatPage() {
             <Brain size={15} />
             My Training
           </button>
+          <Link
+            href="/cqc"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <ShieldCheck size={15} />
+            CQC Prep
+          </Link>
           {view === 'chat' && (
             <button
               onClick={startNewChat}
@@ -518,16 +526,25 @@ export default function ChatPage() {
         {/* Active category badge */}
         {view === 'chat' && category !== null && (
           <div className="flex-shrink-0 border-b border-gray-100 bg-white px-4 py-2">
-            <div className="mx-auto flex max-w-3xl items-center gap-1.5">
-              {category === 'internal_policy' ? <BookOpen size={13} className="text-teal" />
-                : category === 'training_module' ? <Brain size={13} className="text-teal" />
-                : category === 'cqc_report' ? <ShieldCheck size={13} className="text-teal" />
-                : category === 'audit_report' ? <ClipboardCheck size={13} className="text-teal" />
-                : category === 'business_continuity' ? <LifeBuoy size={13} className="text-teal" />
-                : <Users size={13} className="text-teal" />}
-              <span className="text-xs font-medium text-teal">
-                {CATEGORY_LABELS[category].title}
-              </span>
+            <div className="mx-auto flex max-w-3xl items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5">
+                {category === 'internal_policy' ? <BookOpen size={13} className="text-teal" />
+                  : category === 'training_module' ? <Brain size={13} className="text-teal" />
+                  : category === 'cqc_report' ? <ShieldCheck size={13} className="text-teal" />
+                  : category === 'audit_report' ? <ClipboardCheck size={13} className="text-teal" />
+                  : category === 'business_continuity' ? <LifeBuoy size={13} className="text-teal" />
+                  : <Users size={13} className="text-teal" />}
+                <span className="text-xs font-medium text-teal">
+                  {CATEGORY_LABELS[category].title}
+                </span>
+              </div>
+              <button
+                onClick={startNewChat}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-teal"
+                title="Choose a different topic"
+              >
+                <ArrowLeft size={12} /> Change topic
+              </button>
             </div>
           </div>
         )}

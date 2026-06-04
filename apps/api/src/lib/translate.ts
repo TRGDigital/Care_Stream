@@ -126,3 +126,29 @@ export async function translateText(text: string, langCode: string, langName?: s
 function langName_internal(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
+
+// Run async work over items with a bounded concurrency (avoids firing dozens of
+// Anthropic calls at once, which stalls the request). Order is preserved.
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const i = next++
+      if (i >= items.length) break
+      results[i] = await fn(items[i], i)
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
+
+// Resolve `work` but never wait longer than `ms` — fall back to `fallback` so an
+// endpoint never hangs on translation. The in-flight work keeps populating the
+// in-memory cache, so the next load is faster / fully translated.
+export function withTranslationBudget<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    work.catch(() => fallback),
+    new Promise<T>(resolve => setTimeout(() => resolve(fallback), ms)),
+  ])
+}

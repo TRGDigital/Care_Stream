@@ -11,7 +11,7 @@ import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
-import { translateQuestionCached, translateText } from '../lib/translate'
+import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
 export const trainingRouter = Router()
@@ -371,19 +371,17 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
 
     let sanitised = baseline
     if (translate) {
-      try {
-        sanitised = await Promise.all(baseline.map(async (e: any) => {
-          const questions = await Promise.all((e.module.questions as any[]).map(async (q: any) => {
-            const t = await translateQuestionCached({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] }, langCode, langName)
-            return { ...q, text: t.text, options: t.options }
-          }))
-          const name = await translateText(e.module.name, langCode, langName)
-          return { ...e, module: { ...e.module, name, questions } }
-        }))
-      } catch (transErr) {
-        console.error('[my-enrollments] translation failed, serving English:', transErr)
-        sanitised = baseline
-      }
+      const translateAll = Promise.all(baseline.map(async (e: any) => {
+        const questions = await mapLimit(e.module.questions as any[], 6, async (q: any) => {
+          const t = await translateQuestionCached({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] }, langCode, langName)
+          return { ...q, text: t.text, options: t.options }
+        })
+        const name = await translateText(e.module.name, langCode, langName)
+        return { ...e, module: { ...e.module, name, questions } }
+      }))
+      // Never let translation hang the request — fall back to English after the
+      // budget; in-flight work still warms the cache for the next (fast) load.
+      sanitised = await withTranslationBudget(translateAll, 18_000, baseline)
     }
     ok(res, { enrollments: sanitised })
   } catch (e: any) {

@@ -2451,6 +2451,20 @@ function SystemReference() {
             <RefRow label="Flow"              value="Settings list → Staff form dropdowns → User.job_role + specialisms → New-starter enrolment into matching primary + secondary onboarding flows → setting-specific, role-specific questions." />
           </div>
         </div>
+
+        <div className="mt-4">
+          <p className="font-semibold text-neutral-dark mb-1">Question generation controls (per onboarding flow)</p>
+          <p className="text-neutral-mid mb-2">
+            How the platform owner controls AI question generation per role, in the Onboarding Flows editor.
+          </p>
+          <div className="space-y-1">
+            <RefRow label="Difficulty"      value="OnboardingFlow.difficulties (very_easy | easy | medium | hard, tickable, multiple). Fed into the prompt with descriptions (DIFFICULTY_GUIDE) so a Kitchen Porter gets very-easy awareness questions and a Nurse gets hard ones. Set in the editor; shown as a card badge. Order: Save → AI draft (draft reads the saved value)." />
+            <RefRow label="Role specificity" value="The user message names the role and instructs the model to write questions specific to that role's actual duties and NEVER another role's question (e.g. no clinical question for a kitchen porter). The default 'onboarding_flow_generation' prompt carries the same rule (editable in /prompts)." />
+            <RefRow label="Uniqueness"       value="Within a draft, duplicate questions are dropped (seenQuestions set). Cross-flow dedup isn't automatic (the model can't see other flows) — role + difficulty + the prompt drive distinctness." />
+            <RefRow label="Keep (lock)"      value="OnboardingStep.locked. Per-question 'Keep' toggle in the editor (locks the question + its paired read step). A kept question is preserved verbatim through a re-generate." />
+            <RefRow label="Re-generate"      value="POST /onboarding-templates/:id/ai-draft with body { keep: [locked steps] }. Keeps the locked steps verbatim, tells the model NOT to repeat them, generates fresh questions for the rest (skipping kept sections), and merges (kept first, then new). No keep = full re-draft. Editor 'Re-generate questions' button sends the currently-kept steps." />
+          </div>
+        </div>
       </RefSection>
     </div>
   )

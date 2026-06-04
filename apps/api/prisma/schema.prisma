@@ -552,6 +552,7 @@ model OnboardingStep {
   question       String?  // required when type = answer_question
   options        String[] @default([])   // MCQ options for answer_question
   correct_option Int?                     // index (0-based) of the correct option
+  locked         Boolean  @default(false) // "kept" — preserved when questions are re-generated
   created_at     DateTime @default(now())
   flow           OnboardingFlow @relation(fields: [flow_id], references: [id], onDelete: Cascade)
   policy         Policy?        @relation(fields: [policy_id], references: [id])

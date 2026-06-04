@@ -101,6 +101,13 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   const isSecond = flow.flow_kind === 'secondary'
   const sections = DEFAULT_POLICY_SECTIONS.join(', ')
 
+  // "Keep"d steps the caller wants preserved through a re-generate. We keep these
+  // verbatim (locked), tell the AI not to repeat them, and only regenerate the rest.
+  const keptSteps: any[] = (Array.isArray(req.body?.keep) ? req.body.keep : [])
+    .filter((s: any) => s && (s.type === 'read_policy' || s.type === 'answer_question'))
+  const keptSections  = new Set(keptSteps.map((s: any) => String(s.policy_section ?? '').toLowerCase()).filter(Boolean))
+  const keptQuestions = keptSteps.filter((s: any) => s.type === 'answer_question' && s.question).map((s: any) => String(s.question))
+
   // System prompt is editable in the platform /prompts page (usage: onboarding_flow_generation).
   const system = await getOnboardingPrompt()
 
@@ -134,11 +141,16 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
     ? `Pitch the questions at ${diffs.length > 1 ? 'a mix of these difficulty levels' : 'this difficulty level'}: ${diffs.map(d => DIFFICULTY_GUIDE[d] ?? d).join('; ')}.`
     : ''
 
+  const avoidLine = keptQuestions.length
+    ? `These questions are already kept — do NOT repeat or rephrase them, write DIFFERENT ones:\n${keptQuestions.map((q: string) => `- ${q}`).join('\n')}`
+    : ''
+
   const user = [
     `Role or specialism: "${role}" (${isSecond ? 'specialism' : 'job role'}).`,
     `Write questions that are specific to what a ${role} actually does day to day — not generic care-sector questions, and not questions that belong to a different role.`,
     diffLine,
     `Available policy areas: ${sections}.`,
+    avoidLine,
     refBlock ? `\nReference policy extracts — base your questions on the wording and procedures in these where relevant:\n${refBlock}` : '',
   ].filter(Boolean).join('\n')
 
@@ -151,19 +163,34 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   }
 
   const areas: any[] = Array.isArray(parsed?.areas) ? parsed.areas : []
-  if (areas.length === 0) return err(res, 'AI_EMPTY', 'The AI returned no usable steps — try again.', 502)
+  if (areas.length === 0 && keptSteps.length === 0) return err(res, 'AI_EMPTY', 'The AI returned no usable steps — try again.', 502)
+
+  // Start with the kept (locked) steps, then generated steps for the rest.
+  const steps: any[] = []
+  let order = 0
+  const seenQuestions = new Set<string>(keptQuestions.map((q: string) => q.trim().toLowerCase()))
+  for (const k of keptSteps) {
+    steps.push({
+      order:          order++,
+      title:          String(k.title ?? ''),
+      type:           k.type === 'answer_question' ? 'answer_question' : 'read_policy',
+      policy_section: k.policy_section ?? null,
+      question:       k.question ?? null,
+      options:        Array.isArray(k.options) ? k.options.map((o: any) => String(o)) : [],
+      correct_option: typeof k.correct_option === 'number' ? k.correct_option : null,
+      locked:         true,
+    })
+  }
 
   // Each area → a read_policy step then an answer_question MCQ step.
-  const steps: any[] = []
-  const seenQuestions = new Set<string>()
-  let order = 0
   for (const a of areas) {
     const section = typeof a.policy_section === 'string' ? a.policy_section : null
     if (!section) continue
+    if (keptSections.has(section.toLowerCase())) continue   // already covered by a kept step
     const qkey = typeof a.question === 'string' ? a.question.trim().toLowerCase() : ''
-    if (qkey && seenQuestions.has(qkey)) continue   // drop duplicate questions within this flow
+    if (qkey && seenQuestions.has(qkey)) continue           // drop duplicate questions
     if (qkey) seenQuestions.add(qkey)
-    steps.push({ order: order++, title: `Read the ${section} policy`, type: 'read_policy', policy_section: section })
+    steps.push({ order: order++, title: `Read the ${section} policy`, type: 'read_policy', policy_section: section, locked: false })
     if (a.question && Array.isArray(a.options) && a.options.length === 4) {
       steps.push({
         order:          order++,
@@ -173,6 +200,7 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
         question:       String(a.question),
         options:        (a.options as any[]).map(o => String(o)),
         correct_option: typeof a.correct_option === 'number' ? a.correct_option : 0,
+        locked:         false,
       })
     }
   }
@@ -265,6 +293,7 @@ function buildStepCreate(steps: any): any {
       question:       s.question ?? null,
       options:        Array.isArray(s.options) ? s.options.map((o: any) => String(o)) : [],
       correct_option: typeof s.correct_option === 'number' ? s.correct_option : null,
+      locked:         !!s.locked,
     })),
   }
 }

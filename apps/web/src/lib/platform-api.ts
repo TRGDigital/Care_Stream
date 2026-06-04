@@ -642,8 +642,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
-      aiDraft: (id: string) =>
-        adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}/ai-draft`, token, { method: 'POST' }),
+      aiDraft: (id: string, keep?: OnboardingTemplateStep[]) =>
+        adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}/ai-draft`, token, { method: 'POST', body: keep ? JSON.stringify({ keep }) : undefined }),
       seedRoles: (setting?: string) =>
         adminFetch<{ created: number }>(`/onboarding-templates/seed-roles${setting ? `?setting=${setting}` : ''}`, token, { method: 'POST' }),
     },
@@ -689,6 +689,7 @@ export interface OnboardingTemplateStep {
   question?:       string | null
   options?:        string[]
   correct_option?: number | null
+  locked?:         boolean
 }
 
 export interface OnboardingTemplate {

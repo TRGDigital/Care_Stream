@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type OnboardingTemplate, type OnboardingTemplateStep } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power } from 'lucide-react'
+import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen } from 'lucide-react'
 
 // Standard policy sections (mirrors api DEFAULT_POLICY_SECTIONS) for the step dropdowns.
 const SECTIONS = [
@@ -63,11 +63,11 @@ export default function OnboardingFlowsPage() {
     } catch (e: any) { setError(e.message) } finally { setSeeding(false) }
   }
 
-  async function aiDraft(f: OnboardingTemplate) {
+  async function aiDraft(f: OnboardingTemplate, keep?: OnboardingTemplateStep[]) {
     if (!token) return
     setBusy(f.id); setError('')
     try {
-      const { flow } = await createPlatformClient(token).onboardingTemplates.aiDraft(f.id)
+      const { flow } = await createPlatformClient(token).onboardingTemplates.aiDraft(f.id, keep)
       replaceFlow(flow); setOpenId(flow.id)
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
@@ -158,7 +158,7 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
   openId: string | null
   setOpenId: (id: string | null) => void
   busy: string | null
-  aiDraft: (f: OnboardingTemplate) => void
+  aiDraft: (f: OnboardingTemplate, keep?: OnboardingTemplateStep[]) => void
   toggleActive: (f: OnboardingTemplate) => void
   remove: (f: OnboardingTemplate) => void
   saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
@@ -170,19 +170,20 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
       <div className="space-y-2">
         {flows.map(f => (
           <FlowCard key={f.id} flow={f} open={openId === f.id} onToggleOpen={() => setOpenId(openId === f.id ? null : f.id)}
-            busy={busy === f.id} onAiDraft={() => aiDraft(f)} onToggleActive={() => toggleActive(f)} onRemove={() => remove(f)} onSave={saveSteps} />
+            busy={busy === f.id} onAiDraft={() => aiDraft(f)} onRegenerate={(keep) => aiDraft(f, keep)} onToggleActive={() => toggleActive(f)} onRemove={() => remove(f)} onSave={saveSteps} />
         ))}
       </div>
     </div>
   )
 }
 
-function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, onRemove, onSave }: {
+function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onToggleActive, onRemove, onSave }: {
   flow: OnboardingTemplate
   open: boolean
   onToggleOpen: () => void
   busy: boolean
   onAiDraft: () => void
+  onRegenerate: (keep: OnboardingTemplateStep[]) => void
   onToggleActive: () => void
   onRemove: () => void
   onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
@@ -223,15 +224,16 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
         </div>
       </div>
       {/* key on the step-set so the editor remounts (re-reads state) after an AI draft / save */}
-      {open && <StepEditor key={flow.steps.map(s => s.id ?? '').join('|') || 'empty'} flow={flow} busy={busy} onSave={onSave} />}
+      {open && <StepEditor key={flow.steps.map(s => s.id ?? '').join('|') || 'empty'} flow={flow} busy={busy} onSave={onSave} onRegenerate={onRegenerate} />}
     </div>
   )
 }
 
-function StepEditor({ flow, busy, onSave }: {
+function StepEditor({ flow, busy, onSave, onRegenerate }: {
   flow: OnboardingTemplate
   busy: boolean
   onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
+  onRegenerate: (keep: OnboardingTemplateStep[]) => void
 }) {
   const [name, setName]               = useState(flow.name)
   const [description, setDescription] = useState(flow.description ?? '')
@@ -242,6 +244,17 @@ function StepEditor({ flow, busy, onSave }: {
 
   function setStep(i: number, patch: Partial<OnboardingTemplateStep>) {
     setSteps(prev => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s))
+  }
+  // Keep/lock a question (and its preceding policy-read step) so it survives a re-generate.
+  function toggleKeep(i: number) {
+    setSteps(prev => prev.map((s, idx) => {
+      if (idx === i) return { ...s, locked: !s.locked }
+      if (idx === i - 1 && s.type === 'read_policy') return { ...s, locked: !prev[i].locked }
+      return s
+    }))
+  }
+  function regenerate() {
+    onRegenerate(steps.filter(s => s.locked).map((s, i) => ({ ...s, order: i })))
   }
   function addStep(type: 'read_policy' | 'answer_question') {
     setSteps(prev => [...prev, {
@@ -287,13 +300,22 @@ function StepEditor({ flow, busy, onSave }: {
       <div className="space-y-3">
         {steps.length === 0 && <p className="rounded-md bg-neutral-light px-3 py-2 text-xs text-neutral-mid">No steps yet — use “AI draft” above, or add steps below.</p>}
         {steps.map((s, i) => (
-          <div key={i} className="rounded-lg border border-gray-200 p-3">
+          <div key={i} className={`rounded-lg border p-3 ${s.locked ? 'border-teal/40 bg-teal-light/10' : 'border-gray-200'}`}>
             <div className="mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-xs font-semibold text-neutral-dark">
                 {s.type === 'read_policy' ? <BookOpen size={13} className="text-teal" /> : <HelpCircle size={13} className="text-amber-brand" />}
                 {s.type === 'read_policy' ? 'Read policy' : 'Question'} · step {i + 1}
+                {s.locked && <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-[9px] font-bold text-teal">KEPT</span>}
               </span>
-              <button onClick={() => removeStep(i)} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600"><Trash2 size={12} /></button>
+              <div className="flex items-center gap-1">
+                {s.type === 'answer_question' && (
+                  <button onClick={() => toggleKeep(i)} title={s.locked ? 'Kept — re-generate won’t change it' : 'Keep this question through re-generate'}
+                    className={`flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium ${s.locked ? 'bg-teal text-white' : 'text-neutral-mid hover:bg-gray-100'}`}>
+                    {s.locked ? <Lock size={11} /> : <LockOpen size={11} />}{s.locked ? 'Kept' : 'Keep'}
+                  </button>
+                )}
+                <button onClick={() => removeStep(i)} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600"><Trash2 size={12} /></button>
+              </div>
             </div>
             <div className="grid gap-2">
               <select value={s.policy_section ?? ''} onChange={e => setStep(i, { policy_section: e.target.value })} className={INPUT}>
@@ -327,11 +349,16 @@ function StepEditor({ flow, busy, onSave }: {
           <HelpCircle size={12} /> Add question
         </button>
         <div className="flex-1" />
+        <button onClick={regenerate} disabled={busy} title="Re-draft the questions you haven't kept"
+          className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
+          {busy ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />} Re-generate questions
+        </button>
         <button onClick={() => onSave(flow, steps.map((s, i) => ({ ...s, order: i })), name, description, careSetting, difficulties)} disabled={busy}
           className="flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
           {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
         </button>
       </div>
+      <p className="mt-2 text-[11px] text-neutral-mid">“Re-generate” re-draws only the questions you haven’t marked <strong>Keep</strong>. Use the difficulty + setting above to steer it.</p>
     </div>
   )
 }

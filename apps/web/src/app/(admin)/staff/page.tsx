@@ -791,6 +791,109 @@ function TrainingAssignStep({ token, userId, userName, onDone }: {
   )
 }
 
+// ─── Onboarding assign step ───────────────────────────────────────────────────
+
+function OnboardingAssignStep({ token, userId, userName, alreadyFlowIds, onDone }: {
+  token:          string
+  userId:         string
+  userName:       string
+  alreadyFlowIds: string[]
+  onDone:         () => void
+}) {
+  const [flows,    setFlows]    = useState<any[]>([])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [loading,  setLoading]  = useState(true)
+  const [saving,   setSaving]   = useState(false)
+  const already = new Set(alreadyFlowIds)
+
+  useEffect(() => {
+    createApiClient(token).onboarding.listFlows()
+      .then(d => setFlows((d.flows ?? []).filter((f: any) => f.is_active !== false)))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  function toggle(id: string) {
+    if (already.has(id)) return
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  async function assign() {
+    if (selected.size === 0) { onDone(); return }
+    setSaving(true)
+    try {
+      await Promise.all([...selected].map(flowId =>
+        createApiClient(token).onboarding.enroll(flowId, { user_ids: [userId] })
+      ))
+    } catch { /* silent */ } finally {
+      onDone()
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
+        <p className="text-sm font-medium text-indigo-700">Assign onboarding to {userName}</p>
+        <p className="mt-0.5 text-xs text-neutral-mid">
+          Tick the induction flows to enrol them on. They’ll be notified by email.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-neutral-mid" /></div>
+      ) : flows.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-gray-200 px-4 py-4 text-sm text-neutral-mid">
+          No active onboarding flows yet. Adopt or create one on the Onboarding page first.
+        </p>
+      ) : (
+        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+          {flows.map(f => {
+            const isEnrolled = already.has(f.id)
+            const checked    = selected.has(f.id)
+            const stepCount  = Array.isArray(f.steps) ? f.steps.length : 0
+            return (
+              <label
+                key={f.id}
+                className={`flex items-start gap-3 rounded-xl border-2 p-3.5 transition-colors ${
+                  isEnrolled ? 'cursor-default border-gray-100 bg-gray-50 opacity-60'
+                  : checked   ? 'cursor-pointer border-indigo-300 bg-indigo-50'
+                              : 'cursor-pointer border-gray-100 bg-gray-50 hover:border-gray-200'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked || isEnrolled}
+                  disabled={isEnrolled}
+                  onChange={() => toggle(f.id)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-indigo-500"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-neutral-dark">{f.name}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      f.flow_kind === 'secondary' ? 'bg-purple-50 text-purple-500' : 'bg-indigo-50 text-indigo-500'
+                    }`}>
+                      {f.flow_kind === 'secondary' ? 'Specialism' : 'Role'}
+                    </span>
+                    {isEnrolled && <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">Enrolled</span>}
+                  </div>
+                  <p className="mt-0.5 text-xs text-neutral-mid">{stepCount} step{stepCount !== 1 ? 's' : ''}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center justify-between">
+        <button onClick={onDone} className="text-sm text-neutral-mid hover:text-neutral-dark">Cancel</button>
+        <Button onClick={assign} disabled={saving || loading || selected.size === 0}>
+          {saving ? 'Enrolling…' : `Enrol on ${selected.size} flow${selected.size !== 1 ? 's' : ''}`}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Invite modal ─────────────────────────────────────────────────────────────
 
 type ModalStep = 'form' | 'credentials' | 'training'
@@ -1330,7 +1433,7 @@ function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
 }) {
   const [data,        setData]        = useState<{ user: any; training: any[]; onboarding: any[] } | null>(null)
   const [loading,     setLoading]     = useState(true)
-  const [view,        setView]        = useState<'detail' | 'assign'>('detail')
+  const [view,        setView]        = useState<'detail' | 'assign' | 'onboard'>('detail')
   const [savingComms, setSavingComms] = useState(false)
 
   function load() {
@@ -1381,6 +1484,14 @@ function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
             token={token}
             userId={userId}
             userName={user.name}
+            onDone={() => { setView('detail'); load() }}
+          />
+        ) : view === 'onboard' ? (
+          <OnboardingAssignStep
+            token={token}
+            userId={userId}
+            userName={user.name}
+            alreadyFlowIds={data!.onboarding.map(o => o.flow_id)}
             onDone={() => { setView('detail'); load() }}
           />
         ) : (
@@ -1461,7 +1572,12 @@ function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
 
             {/* Onboarding */}
             <div>
-              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Onboarding <span className="text-xs font-normal text-neutral-mid">({data!.onboarding.length})</span></p>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Onboarding <span className="text-xs font-normal text-neutral-mid">({data!.onboarding.length})</span></p>
+                <button onClick={() => setView('onboard')} className="flex items-center gap-1 rounded-md bg-indigo-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-600">
+                  <Plus size={12} /> Assign onboarding
+                </button>
+              </div>
               {data!.onboarding.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-xs text-neutral-mid">Not enrolled in any onboarding flow.</p>
               ) : (

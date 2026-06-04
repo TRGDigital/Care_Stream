@@ -657,6 +657,8 @@ export function createPlatformClient(token: string) {
       importBatch: (tenantId: string, limit = 4) =>
         adminFetch<{ imported: number; remaining: number; total: number; already: number }>(
           `/policy-seeds/import/${tenantId}?limit=${limit}`, token, { method: 'POST' }),
+      aiClean: (id: string) =>
+        adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}/ai-clean`, token, { method: 'POST' }),
     },
   }
 }
@@ -669,6 +671,7 @@ export interface PolicySeedMeta {
   reviewed:          boolean
   source_policy_id:  string | null
   updated_at:        string
+  char_count:        number
 }
 
 export interface PolicySeed extends PolicySeedMeta {

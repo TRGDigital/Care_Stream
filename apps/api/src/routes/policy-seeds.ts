@@ -10,14 +10,15 @@ export const policySeedsRouter = Router()
 policySeedsRouter.use(requirePlatformAdmin)
 
 const HAIKU = 'claude-haiku-4-5-20251001'
-const AI_INPUT_CAP = 12_000   // chars — above this we keep deterministic-only to avoid truncation
 
-// ─── GET / — list seeds (metadata only) ───────────────────────────────────────
+// ─── GET / — list seeds (metadata + char count, no content) ────────────────────
 policySeedsRouter.get('/', async (_req: Request, res: Response) => {
-  const seeds = await (prisma as any).policySeed.findMany({
-    orderBy: [{ section: 'asc' }, { title: 'asc' }],
-    select:  { id: true, section: true, title: true, document_category: true, reviewed: true, source_policy_id: true, updated_at: true },
-  })
+  const rows = await (prisma as any).$queryRaw`
+    SELECT id, section, title, document_category, reviewed, source_policy_id, updated_at,
+           length(content) AS char_count
+    FROM policy_seeds
+    ORDER BY section ASC NULLS FIRST, title ASC`
+  const seeds = (rows as any[]).map(r => ({ ...r, char_count: Number(r.char_count) }))
   ok(res, { seeds })
 })
 
@@ -42,6 +43,24 @@ policySeedsRouter.patch('/:id', async (req: Request, res: Response) => {
   if (reviewed !== undefined)          data.reviewed = !!reviewed
   const seed = await (prisma as any).policySeed.update({ where: { id }, data })
   ok(res, { seed })
+})
+
+// ─── POST /:id/ai-clean — re-anonymise a seed's current content with AI ────────
+// Chunked, so even long policies are fully processed. Resets reviewed (content changed).
+policySeedsRouter.post('/:id/ai-clean', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  const existing = await (prisma as any).policySeed.findUnique({ where: { id } })
+  if (!existing) return err(res, 'NOT_FOUND', 'Seed not found', 404)
+  try {
+    const cleaned = await aiAnonymise(existing.content as string)
+    const seed = await (prisma as any).policySeed.update({
+      where: { id },
+      data:  { content: cleaned, reviewed: false, updated_at: new Date() },
+    })
+    ok(res, { seed })
+  } catch (e: any) {
+    err(res, 'AI_FAILED', `Could not clean this seed: ${e.message}`, 502)
+  }
 })
 
 // ─── DELETE /:id ───────────────────────────────────────────────────────────────
@@ -94,13 +113,10 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
       const raw = await downloadExtractedText(tenantId, p.id).catch(() => '')
       if (!raw || !raw.trim()) continue
 
+      // Deterministic strip, then a chunked Haiku pass (no length cap — long
+      // policies are split so they're never skipped).
       let content = anonymise(raw)
-      if (content.length <= AI_INPUT_CAP) {
-        try {
-          const cleaned = await callClaude(aiPrompt, content, { model: HAIKU, maxTokens: 8000, temperature: 0 })
-          if (cleaned && cleaned.trim().length > 50) content = cleaned.trim()
-        } catch { /* keep deterministic-only on AI failure */ }
-      }
+      content = await aiAnonymise(content, aiPrompt)
 
       await (prisma as any).policySeed.create({
         data: {
@@ -172,4 +188,35 @@ async function getAnonymisePrompt(): Promise<string> {
     if (p?.content) return p.content
   } catch { /* fall through */ }
   return DEFAULT_POLICY_ANONYMISE_PROMPT
+}
+
+// Anonymise policy text with Haiku — chunked on paragraph boundaries so long
+// policies are processed fully (no length cap). Falls back to the input on failure.
+const CHUNK_SIZE = 9000
+async function aiAnonymise(content: string, prompt?: string): Promise<string> {
+  const sys = prompt ?? await getAnonymisePrompt()
+  const chunks = content.length <= CHUNK_SIZE ? [content] : chunkText(content, CHUNK_SIZE)
+  const out: string[] = []
+  for (const ch of chunks) {
+    try {
+      const cleaned = await callClaude(sys, ch, { model: HAIKU, maxTokens: 4000, temperature: 0 })
+      out.push(cleaned && cleaned.trim().length > 10 ? cleaned.trim() : ch)
+    } catch {
+      out.push(ch)   // keep the (deterministically-stripped) chunk on AI failure
+    }
+  }
+  return out.join('\n\n')
+}
+
+function chunkText(text: string, size: number): string[] {
+  const paras = text.split(/\n\n+/)
+  const chunks: string[] = []
+  let cur = ''
+  for (const p of paras) {
+    if (cur && cur.length + p.length + 2 > size) { chunks.push(cur); cur = '' }
+    cur = cur ? `${cur}\n\n${p}` : p
+    while (cur.length > size) { chunks.push(cur.slice(0, size)); cur = cur.slice(size) }
+  }
+  if (cur.trim()) chunks.push(cur)
+  return chunks
 }

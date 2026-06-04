@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type PolicySeedMeta, type PolicySeed, type TenantSummary } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Trash2, Check, Download, ChevronDown, ChevronUp, AlertCircle, Pencil, X } from 'lucide-react'
+import { Loader2, Trash2, Check, Download, ChevronDown, ChevronUp, AlertCircle, Pencil, X, Sparkles } from 'lucide-react'
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
@@ -18,6 +18,11 @@ export default function PolicySeedsPage() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [importing, setImporting] = useState(false)
   const [editing, setEditing] = useState<PolicySeed | null>(null)
+  const [cleaningId, setCleaningId] = useState<string | null>(null)
+  const [bulkCleaning, setBulkCleaning] = useState(false)
+  const [cleanProgress, setCleanProgress] = useState<{ done: number; total: number } | null>(null)
+
+  const LONG = 12000   // chars — policies above this skipped the AI pass at import
 
   function load() {
     if (!token) return
@@ -83,6 +88,37 @@ export default function PolicySeedsPage() {
     setSeeds(prev => prev.filter(x => x.id !== s.id))
   }
 
+  function applyCleaned(seed: PolicySeed) {
+    setSeeds(prev => prev.map(s => s.id === seed.id ? { ...s, reviewed: seed.reviewed, char_count: seed.content.length } : s))
+  }
+
+  async function aiCleanOne(s: PolicySeedMeta) {
+    if (!token) return
+    setCleaningId(s.id); setError('')
+    try { applyCleaned((await createPlatformClient(token).policySeeds.aiClean(s.id)).seed) }
+    catch (e: any) { setError(e.message) } finally { setCleaningId(null) }
+  }
+
+  async function reCleanLong() {
+    if (!token) return
+    const longOnes = seeds.filter(s => s.char_count > LONG)
+    if (longOnes.length === 0) return
+    setBulkCleaning(true); setError(''); setCleanProgress({ done: 0, total: longOnes.length })
+    const api = createPlatformClient(token)
+    let done = 0, fails = 0
+    for (const s of longOnes) {
+      try {
+        applyCleaned((await api.policySeeds.aiClean(s.id)).seed); fails = 0
+        done++; setCleanProgress({ done, total: longOnes.length })
+      } catch {
+        fails++
+        if (fails >= 3) { setError('Re-clean paused after a hiccup — click again to resume.'); break }
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    }
+    setBulkCleaning(false)
+  }
+
   const sections = Array.from(new Set(seeds.map(s => s.section ?? 'Uncategorised'))).sort()
   const reviewedCount = seeds.filter(s => s.reviewed).length
 
@@ -116,6 +152,18 @@ export default function PolicySeedsPage() {
           <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-mid">
             <AlertCircle size={12} /> Identifiers (home name, address, people, contacts) are stripped automatically — review each seed before relying on it.
           </p>
+          {seeds.filter(s => s.char_count > LONG).length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-3">
+              <span className="text-sm text-neutral-dark">
+                {seeds.filter(s => s.char_count > LONG).length} long policies skipped the AI pass at import
+              </span>
+              <button onClick={reCleanLong} disabled={bulkCleaning || importing}
+                className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
+                {bulkCleaning ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} AI-clean the long ones
+              </button>
+              {cleanProgress && <span className="text-sm text-neutral-mid">{cleanProgress.done} / {cleanProgress.total} cleaned</span>}
+            </div>
+          )}
         </div>
 
         {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -131,7 +179,7 @@ export default function PolicySeedsPage() {
             <p className="text-sm text-neutral-mid">{seeds.length} seeds · {reviewedCount} reviewed</p>
             {sections.map(sec => (
               <SectionGroup key={sec} title={sec} seeds={seeds.filter(s => (s.section ?? 'Uncategorised') === sec)}
-                onEdit={openEdit} onToggle={toggleReviewed} onRemove={remove} />
+                onEdit={openEdit} onToggle={toggleReviewed} onRemove={remove} onAiClean={aiCleanOne} cleaningId={cleaningId} longThreshold={LONG} />
             ))}
           </>
         )}
@@ -142,12 +190,15 @@ export default function PolicySeedsPage() {
   )
 }
 
-function SectionGroup({ title, seeds, onEdit, onToggle, onRemove }: {
+function SectionGroup({ title, seeds, onEdit, onToggle, onRemove, onAiClean, cleaningId, longThreshold }: {
   title: string
   seeds: PolicySeedMeta[]
   onEdit: (id: string) => void
   onToggle: (s: PolicySeedMeta) => void
   onRemove: (s: PolicySeedMeta) => void
+  onAiClean: (s: PolicySeedMeta) => void
+  cleaningId: string | null
+  longThreshold: number
 }) {
   const [open, setOpen] = useState(true)
   return (
@@ -161,10 +212,16 @@ function SectionGroup({ title, seeds, onEdit, onToggle, onRemove }: {
           {seeds.map(s => (
             <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-dark">{s.title}</span>
+              {s.char_count > longThreshold && (
+                <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700" title="Long policy — skipped the AI pass at import">long</span>
+              )}
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.reviewed ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
                 {s.reviewed ? 'Reviewed' : 'Needs review'}
               </span>
               <div className="flex shrink-0 items-center gap-1">
+                <button onClick={() => onAiClean(s)} disabled={cleaningId === s.id} title="Re-anonymise with AI" className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
+                  {cleaningId === s.id ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                </button>
                 <button onClick={() => onEdit(s.id)} title="Review / edit" className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-teal hover:text-teal"><Pencil size={13} /></button>
                 <button onClick={() => onToggle(s)} title={s.reviewed ? 'Mark needs review' : 'Mark reviewed'} className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-green-300 hover:text-green-600"><Check size={13} /></button>
                 <button onClick={() => onRemove(s)} title="Delete" className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-red-300 hover:text-red-600"><Trash2 size={13} /></button>

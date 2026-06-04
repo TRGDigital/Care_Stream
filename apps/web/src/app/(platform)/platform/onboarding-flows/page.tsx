@@ -197,7 +197,8 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
           </button>
         </div>
       </div>
-      {open && <StepEditor flow={flow} busy={busy} onSave={onSave} />}
+      {/* key on the step-set so the editor remounts (re-reads state) after an AI draft / save */}
+      {open && <StepEditor key={flow.steps.map(s => s.id ?? '').join('|') || 'empty'} flow={flow} busy={busy} onSave={onSave} />}
     </div>
   )
 }

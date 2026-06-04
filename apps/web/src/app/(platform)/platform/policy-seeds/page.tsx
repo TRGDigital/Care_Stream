@@ -33,18 +33,29 @@ export default function PolicySeedsPage() {
     if (!token || !source) return
     setImporting(true); setError(''); setProgress(null)
     const api = createPlatformClient(token)
-    try {
-      // Loop the batched import until nothing remains.
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const r = await api.policySeeds.importBatch(source, 6)
-        const total = r.already + r.imported + r.remaining
-        setProgress({ done: r.already + r.imported, total })
-        if (r.remaining <= 0 || r.imported === 0) break
+    let fails = 0
+    // Loop the batched import until nothing remains; retry transient hiccups.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      let r
+      try {
+        r = await api.policySeeds.importBatch(source, 4)
+        fails = 0
+      } catch {
+        fails++
+        if (fails >= 3) {
+          setError('Import paused after a network hiccup — click Import policies to resume (already-imported policies are skipped).')
+          break
+        }
+        await new Promise(res => setTimeout(res, 2500))
+        continue
       }
-      const s = await api.policySeeds.list()
-      setSeeds(s.seeds)
-    } catch (e: any) { setError(e.message) } finally { setImporting(false) }
+      const total = r.already + r.imported + r.remaining
+      setProgress({ done: r.already + r.imported, total })
+      if (r.remaining <= 0 || r.imported === 0) break
+    }
+    try { setSeeds((await api.policySeeds.list()).seeds) } catch { /* ignore */ }
+    setImporting(false)
   }
 
   async function openEdit(id: string) {

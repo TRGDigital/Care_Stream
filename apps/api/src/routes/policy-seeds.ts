@@ -79,13 +79,17 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
 
   const importedIds = new Set((done as any[]).map(d => d.source_policy_id))
   const pending = (policies as any[]).filter(p => !importedIds.has(p.id))
-  const batch = pending.slice(0, limit)
 
   const anonymise = buildDeterministicAnonymiser(tenant, users as any[])
   const aiPrompt = await getAnonymisePrompt()
 
+  // Self-limit by both count AND wall-clock so a batch of large policies can't
+  // blow the 60s function budget (which surfaces client-side as "Failed to fetch").
+  const startedAt = Date.now()
   let imported = 0
-  for (const p of batch) {
+  for (const p of pending) {
+    if (imported >= limit) break
+    if (Date.now() - startedAt > 45_000) break
     try {
       const raw = await downloadExtractedText(tenantId, p.id).catch(() => '')
       if (!raw || !raw.trim()) continue

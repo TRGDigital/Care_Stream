@@ -88,6 +88,8 @@ export default function PolicySeedsPage() {
 
   async function toggleReviewed(s: PolicySeedMeta) {
     if (!token) return
+    // Double-check before un-reviewing — a reviewed seed is live for question generation.
+    if (s.reviewed && !confirm(`"${s.title}" is reviewed and live for onboarding/training question generation.\n\nMove it back to “Needs review”? This removes it from grounding until re-reviewed.`)) return
     const { seed } = await createPlatformClient(token).policySeeds.update(s.id, { reviewed: !s.reviewed })
     setSeeds(prev => prev.map(x => x.id === seed.id ? { ...x, reviewed: seed.reviewed } : x))
   }

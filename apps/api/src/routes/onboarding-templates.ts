@@ -95,9 +95,8 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
 
   let parsed: any
   try {
-    const raw = await callClaude(system, user, { maxTokens: 2000, temperature: 0.4 })
-    const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
-    parsed = JSON.parse(clean)
+    const raw = await callClaude(system, user, { maxTokens: 3500, temperature: 0.4 })
+    parsed = extractJson(raw)
   } catch (e: any) {
     return err(res, 'AI_FAILED', `Could not generate a draft: ${e.message}`, 502)
   }
@@ -181,6 +180,17 @@ async function getOnboardingPrompt(): Promise<string> {
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
+
+// Robustly pull a JSON object out of an LLM response — tolerates code fences and
+// any prose the model adds before/after the JSON.
+function extractJson(raw: string): any {
+  const noFence = raw.replace(/```(?:json)?/gi, '').trim()
+  const start = noFence.indexOf('{')
+  const end   = noFence.lastIndexOf('}')
+  if (start === -1 || end === -1 || end <= start) throw new Error('No JSON object found in response')
+  return JSON.parse(noFence.slice(start, end + 1))
+}
+
 function buildStepCreate(steps: any): any {
   if (!Array.isArray(steps) || steps.length === 0) return undefined
   return {

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { recordUsage } from '../../lib/token-usage'
 
 // §4.3 — Claude API client.
 // Model: claude-sonnet-4-5 (configurable via CLAUDE_MODEL env var).
@@ -27,6 +28,8 @@ export async function callClaude(
     messages:   [{ role: 'user', content: userMessage }],
   })
 
+  recordUsage(MODEL, response.usage)
+
   const block = response.content[0]
   if (!block || block.type !== 'text') {
     throw new Error('Claude returned no text content')
@@ -49,6 +52,8 @@ export async function callClaudeWithHistory(
     system:     systemPrompt,
     messages,
   })
+
+  recordUsage(MODEL, response.usage)
 
   const block = response.content[0]
   if (!block || block.type !== 'text') {

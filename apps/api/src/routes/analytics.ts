@@ -460,7 +460,7 @@ analyticsRouter.get('/training', requireAdmin, async (req: Request, res: Respons
       },
     }),
     (prisma as any).trainingModule.findMany({
-      where:   { is_active: true },
+      where:   { tenant_id: tenantId, is_active: true },
       select:  { id: true, name: true, category: true, sort_order: true },
       orderBy: { sort_order: 'asc' },
     }),
@@ -529,7 +529,7 @@ analyticsRouter.get('/training-gaps', requireAdmin, async (req: Request, res: Re
 
   const [trainingModules, enrollments] = await Promise.all([
     (prisma as any).trainingModule.findMany({
-      where:   { is_active: true },
+      where:   { tenant_id: tenantId, is_active: true },
       orderBy: { sort_order: 'asc' },
     }),
     (prisma as any).trainingEnrollment.findMany({
@@ -725,9 +725,20 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
 
   const msPerDay = 86_400_000
 
+  // Reverse index: policy_id → queries that cited it. Built in a single pass over
+  // periodQueries so the per-policy summaries below are O(P + Q), not O(P × Q).
+  const citationsByPolicy = new Map<string, any[]>()
+  for (const q of periodQueries) {
+    for (const pid of (q.policy_ids_cited as string[])) {
+      const arr = citationsByPolicy.get(pid)
+      if (arr) arr.push(q)
+      else citationsByPolicy.set(pid, [q])
+    }
+  }
+
   // ── 1. Policy Access Summary ─────────────────────────────────────────────────
   const policyAccess = activePolicies.map((p: any) => {
-    const citing = periodQueries.filter((q: any) => (q.policy_ids_cited as string[]).includes(p.id))
+    const citing = citationsByPolicy.get(p.id) ?? []
     const lastQ  = citing.length > 0
       ? citing.reduce((a: any, b: any) => a.created_at > b.created_at ? a : b)
       : null
@@ -823,7 +834,7 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
   // ── 7. Handbook Access Summary ────────────────────────────────────────────────
   const handbookPolicies = activePolicies.filter((p: any) => p.document_category === 'staff_handbook')
   const handbookAccess   = handbookPolicies.map((p: any) => {
-    const citing = periodQueries.filter((q: any) => (q.policy_ids_cited as string[]).includes(p.id))
+    const citing = citationsByPolicy.get(p.id) ?? []
     const lastQ  = citing.length > 0
       ? citing.reduce((a: any, b: any) => a.created_at > b.created_at ? a : b)
       : null
@@ -863,7 +874,7 @@ analyticsRouter.get('/cqc-report', requireAdmin, async (req: Request, res: Respo
       },
     }),
     (prisma as any).trainingModule.findMany({
-      where:   { is_active: true },
+      where:   { tenant_id: tenantId, is_active: true },
       orderBy: { sort_order: 'asc' },
     }),
   ])

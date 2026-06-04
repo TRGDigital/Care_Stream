@@ -5,9 +5,21 @@ import Link from 'next/link'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { POSTS } from '@/lib/blog-data'
 
-const featured = POSTS.filter(p => p.featured)
+export type HomeBlogPost = {
+  slug: string
+  date: string
+  category: string
+  categoryColor: string
+  title: string
+  summary: string
+  readTime: string
+}
 
-export function HomeBlogSection() {
+const staticFeatured: HomeBlogPost[] = POSTS.filter(p => p.featured)
+
+export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
+  // DB-driven featured posts when available; fall back to the static list.
+  const featured = posts && posts.length > 0 ? posts : staticFeatured
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(true)

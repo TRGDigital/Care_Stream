@@ -609,7 +609,15 @@ export default function ClientDetailPage() {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between"><span className="text-neutral-mid">Pinecone (vectors)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.pinecone_usd)}</span></div>
                       <div className="flex justify-between"><span className="text-neutral-mid">S3 (storage)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.s3_usd)}</span></div>
-                      <div className="flex justify-between"><span className="text-neutral-mid">AI (queries, last 30d)</span><span className="text-neutral-dark">{fmtUsd(insights.costs.ai_usd)}</span></div>
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1.5 text-neutral-mid">
+                          AI (queries, last 30d)
+                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${insights.costs.ai_measured ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {insights.costs.ai_measured ? 'Measured' : 'Part-estimated'}
+                          </span>
+                        </span>
+                        <span className="text-neutral-dark">{fmtUsd(insights.costs.ai_usd)}</span>
+                      </div>
                       <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold text-neutral-dark"><span>Total / month</span><span>{fmtUsd(insights.costs.total_monthly_usd)}</span></div>
                     </div>
                     <p className="mt-2 text-[11px] leading-relaxed text-neutral-mid">

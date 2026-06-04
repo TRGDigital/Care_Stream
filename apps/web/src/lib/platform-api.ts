@@ -131,6 +131,11 @@ export interface TenantInsights {
     ai_usd: number
     embed_onetime: number
     total_monthly_usd: number
+    ai_measured?: boolean
+    ai_costed_queries?: number
+    ai_uncosted_queries?: number
+    ai_input_tokens?: number
+    ai_output_tokens?: number
     note: string
   }
 }

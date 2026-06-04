@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
-import { HomeBlogSection } from '@/components/marketing/home-blog-section'
+import { HomeBlogSection, type HomeBlogPost } from '@/components/marketing/home-blog-section'
 import { SiteImage } from '@/components/site-image'
 import { JsonLd } from '@/components/json-ld'
 import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
@@ -1683,6 +1683,44 @@ const DEFAULT_HOME_FAQS: Faq[] = [
   { question: 'How much does CareStream cost?', answer: 'Pricing is per home with unlimited staff users, so there are no per user fees. You can start with a free 14 day trial, and no card is needed to begin.' },
 ]
 
+async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+  const COLORS: Record<string, string> = {
+    'CQC & Compliance':     'bg-teal-light text-teal',
+    'Regulatory Knowledge': 'bg-amber-50 text-amber-brand',
+    'Workforce':            'bg-green-50 text-green-700',
+    'Technology':           'bg-purple-50 text-purple-700',
+    'Registered Manager':   'bg-neutral-light text-neutral-mid',
+  }
+  const fmtDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+  try {
+    const res = await fetch(`${API_URL}/public/blog/posts`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const body = await res.json()
+      const posts = (body?.data?.posts ?? []) as Array<{
+        slug: string; title: string; excerpt: string | null; category: string
+        publication_date: string | null; read_time_minutes: number; is_featured: boolean
+      }>
+      const mapped = posts
+        .filter(p => p.is_featured)
+        .map(p => ({
+          slug:          p.slug,
+          date:          fmtDate(p.publication_date),
+          category:      p.category,
+          categoryColor: COLORS[p.category] ?? 'bg-teal-light text-teal',
+          title:         p.title,
+          summary:       p.excerpt ?? '',
+          readTime:      `${p.read_time_minutes} min read`,
+        }))
+      if (mapped.length > 0) return mapped
+    }
+  } catch {
+    // fall back to the static featured list inside HomeBlogSection
+  }
+  return []
+}
+
 async function getHomeFaqs(): Promise<Faq[]> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
   try {
@@ -1699,7 +1737,7 @@ async function getHomeFaqs(): Promise<Faq[]> {
 }
 
 export default async function HomePage() {
-  const faqs = await getHomeFaqs()
+  const [faqs, featuredPosts] = await Promise.all([getHomeFaqs(), getFeaturedPosts()])
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />
@@ -1723,7 +1761,7 @@ export default async function HomePage() {
         <WhatsAppSection />
         <VoiceSection />
         <PolicyGapsSection />
-        <HomeBlogSection />
+        <HomeBlogSection posts={featuredPosts} />
         <PricingSnapshot />
         <HomeFaq faqs={faqs} />
         <Testimonials />

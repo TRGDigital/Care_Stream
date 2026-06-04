@@ -15,6 +15,7 @@
 //  11. Save QueryRecord, return response + citations
 
 import { prisma } from '../../db/client'
+import { withTokenTracking, getTrackedTotals } from '../../lib/token-usage'
 import { downloadExtractedText } from '../storage/s3'
 import { embedText } from './embedder'
 import {
@@ -338,7 +339,13 @@ async function loadPolicyMeta(
 
 // ─── Main pipeline ────────────────────────────────────────────────────────────
 
-export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
+export function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
+  // Open a per-request LLM token-tracking scope; saveQueryRecord reads the
+  // accumulated tokens + real cost at the end (§10.6).
+  return withTokenTracking(() => runQueryPipelineInner(input))
+}
+
+async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
   const { queryText, tenantId, userId, staffName, channel, responseStyle, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory } = input
   const verbosity = resolveVerbosity(channel, responseStyle)
@@ -453,7 +460,8 @@ export async function runQueryPipeline(input: QueryInput): Promise<QueryOutput> 
         orderBy: { training_type: 'asc' },
       }),
       (prisma as any).trainingModule.findMany({
-        where:   { is_active: true },
+        // Canonical catalog (shared templates) — descriptive context only, no enrollment join.
+        where:   { tenant_id: null, is_active: true },
         select:  { name: true, description: true, category: true },
         orderBy: { sort_order: 'asc' },
       }),
@@ -1170,6 +1178,7 @@ interface SaveQueryParams {
 
 async function saveQueryRecord(params: SaveQueryParams): Promise<string | null> {
   try {
+    const usage = getTrackedTotals()
     const record = await (prisma as any).queryRecord.create({
       data: {
         tenant_id:                params.tenantId,
@@ -1184,6 +1193,12 @@ async function saveQueryRecord(params: SaveQueryParams): Promise<string | null> 
         language_detected:        params.languageDetected,
         response_time_ms:         params.responseTimeMs,
         chat_session_id:          params.chatSessionId ?? null,
+        prompt_tokens:            usage?.promptTokens        ?? null,
+        completion_tokens:        usage?.completionTokens    ?? null,
+        cache_read_tokens:        usage?.cacheReadTokens     ?? null,
+        cache_creation_tokens:    usage?.cacheCreationTokens ?? null,
+        model_used:               usage?.modelUsed           ?? null,
+        ai_cost_usd:              usage?.aiCostUsd           ?? null,
       },
     })
     return record.id as string

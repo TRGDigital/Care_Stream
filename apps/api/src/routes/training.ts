@@ -13,11 +13,41 @@ import { blogImagePublicUrl } from '../lib/urls'
 
 export const trainingRouter = Router()
 
-// GET /training/modules — list all active modules
-trainingRouter.get('/modules', async (_req: Request, res: Response) => {
+// Per-tenant training catalog: modules with tenant_id = null are shared platform
+// templates; each tenant gets its own editable copies (cloned on first read) so
+// editing/locking/regenerating questions only ever affects that tenant — never the
+// shared seed or another tenant's bank.
+async function ensureTenantModules(tenantId: string): Promise<void> {
+  const count = await (prisma as any).trainingModule.count({ where: { tenant_id: tenantId } })
+  if (count > 0) return
+  const templates = await (prisma as any).trainingModule.findMany({ where: { tenant_id: null } })
+  if (templates.length === 0) return
+  await (prisma as any).trainingModule.createMany({
+    data: templates.map((m: any) => ({
+      tenant_id:           tenantId,
+      slug:                m.slug,
+      name:                m.name,
+      description:         m.description,
+      category:            m.category,
+      questions:           m.questions,
+      is_annual:           m.is_annual,
+      sort_order:          m.sort_order,
+      is_active:           m.is_active,
+      questions_locked:    m.questions_locked,
+      questions_locked_at: m.questions_locked_at,
+      questions_version:   m.questions_version,
+    })),
+    skipDuplicates: true,
+  })
+}
+
+// GET /training/modules — list this tenant's active modules (cloning from templates on first access)
+trainingRouter.get('/modules', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
   try {
+    await ensureTenantModules(tenantId)
     const modules = await (prisma as any).trainingModule.findMany({
-      where:   { is_active: true },
+      where:   { tenant_id: tenantId, is_active: true },
       orderBy: { sort_order: 'asc' },
     })
     ok(res, { modules })
@@ -77,35 +107,43 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     // Restrict to user_ids that actually belong to this tenant, and module_ids that
     // exist and are active — prevents injecting foreign/arbitrary UUIDs into this
     // tenant's enrollment table (and emailing strangers).
+    await ensureTenantModules(tenantId)
     const [members, modules] = await Promise.all([
       (prisma as any).user.findMany({ where: { id: { in: user_ids }, tenant_id: tenantId }, select: { id: true } }),
-      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true }, select: { id: true } }),
+      // Only this tenant's own module copies are valid enrollment targets.
+      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, tenant_id: tenantId, is_active: true }, select: { id: true } }),
     ])
     const validUserIds:   string[] = members.map((m: any) => m.id)
     const validModuleIds: string[] = modules.map((m: any) => m.id)
     if (validUserIds.length === 0)   { err(res, 'INVALID', 'No valid recipients for this organisation.', 400); return }
     if (validModuleIds.length === 0) { err(res, 'INVALID', 'No valid modules selected.', 400); return }
 
-    let created = 0
+    // Batch: fetch existing (non-expired) enrollments in one query, then createMany
+    // the missing (user × module) pairs — avoids an N×M findFirst/create loop.
+    const existing = await (prisma as any).trainingEnrollment.findMany({
+      where:  { tenant_id: tenantId, user_id: { in: validUserIds }, module_id: { in: validModuleIds }, status: { not: 'expired' } },
+      select: { user_id: true, module_id: true },
+    })
+    const existingKeys = new Set(existing.map((e: any) => `${e.user_id}:${e.module_id}`))
+
+    const toCreate: any[] = []
     for (const uid of validUserIds) {
       for (const mid of validModuleIds) {
-        const existing = await (prisma as any).trainingEnrollment.findFirst({
-          where: { tenant_id: tenantId, user_id: uid, module_id: mid, status: { not: 'expired' } },
+        if (existingKeys.has(`${uid}:${mid}`)) continue
+        toCreate.push({
+          tenant_id:   tenantId,
+          user_id:     uid,
+          module_id:   mid,
+          status:      'not_started',
+          due_date:    due_date ? new Date(due_date) : null,
+          assigned_by: userId,
         })
-        if (existing) continue
-        await (prisma as any).trainingEnrollment.create({
-          data: {
-            tenant_id:   tenantId,
-            user_id:     uid,
-            module_id:   mid,
-            status:      'not_started',
-            due_date:    due_date ? new Date(due_date) : null,
-            assigned_by: userId,
-          },
-        })
-        created++
       }
     }
+    if (toCreate.length > 0) {
+      await (prisma as any).trainingEnrollment.createMany({ data: toCreate, skipDuplicates: true })
+    }
+    const created = toCreate.length
     ok(res, { enrolled: created })
 
     // Notify admin and send proactive questions (both fire-and-forget)
@@ -345,8 +383,11 @@ trainingRouter.patch('/modules/:id/questions', async (req: Request, res: Respons
       options: Array.isArray(q.options) ? q.options : [],
       correct: typeof q.correct === 'number' ? q.correct : 0,
     }))
+  const tenantId = (req as any).user.tenant_id
   try {
-    const existing = await (prisma as any).trainingModule.findUnique({ where: { id: req.params.id } })
+    await ensureTenantModules(tenantId)
+    // Scope to this tenant's own copy — never the shared template or another tenant's bank.
+    const existing = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
     if (!existing) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
     const nextVersion = (existing.questions_version ?? 0) + 1
@@ -384,11 +425,14 @@ trainingRouter.post('/modules/:id/lock', async (req: Request, res: Response) => 
   if ((req as any).user.role !== 'admin') {
     err(res, 'FORBIDDEN', 'Admin access required', 403); return
   }
+  const tenantId = (req as any).user.tenant_id
   try {
-    const module = await (prisma as any).trainingModule.update({
-      where: { id: req.params.id },
+    const { count } = await (prisma as any).trainingModule.updateMany({
+      where: { id: req.params.id, tenant_id: tenantId },
       data:  { questions_locked: true, questions_locked_at: new Date() },
     })
+    if (count === 0) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    const module = await (prisma as any).trainingModule.findUnique({ where: { id: req.params.id } })
     ok(res, { module })
   } catch (e: any) {
     err(res, 'LOCK_FAILED', e.message, 500)
@@ -400,11 +444,14 @@ trainingRouter.post('/modules/:id/unlock', async (req: Request, res: Response) =
   if ((req as any).user.role !== 'admin') {
     err(res, 'FORBIDDEN', 'Admin access required', 403); return
   }
+  const tenantId = (req as any).user.tenant_id
   try {
-    const module = await (prisma as any).trainingModule.update({
-      where: { id: req.params.id },
+    const { count } = await (prisma as any).trainingModule.updateMany({
+      where: { id: req.params.id, tenant_id: tenantId },
       data:  { questions_locked: false, questions_locked_at: null },
     })
+    if (count === 0) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    const module = await (prisma as any).trainingModule.findUnique({ where: { id: req.params.id } })
     ok(res, { module })
   } catch (e: any) {
     err(res, 'UNLOCK_FAILED', e.message, 500)
@@ -416,7 +463,11 @@ trainingRouter.get('/modules/:id/versions', async (req: Request, res: Response) 
   if ((req as any).user.role !== 'admin') {
     err(res, 'FORBIDDEN', 'Admin access required', 403); return
   }
+  const tenantId = (req as any).user.tenant_id
   try {
+    // Only expose version history for this tenant's own module copy.
+    const owned = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, select: { id: true } })
+    if (!owned) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
     const versions = await (prisma as any).trainingQuestionVersion.findMany({
       where:   { module_id: req.params.id },
       orderBy: { version: 'desc' },
@@ -478,9 +529,10 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
     err(res, 'FORBIDDEN', 'Admin access required', 403); return
   }
   const count = Math.min(parseInt(req.body?.count ?? '8', 10) || 8, 20)
+  const tenantId = (req as any).user.tenant_id
 
   try {
-    const module = await (prisma as any).trainingModule.findUnique({ where: { id: req.params.id } })
+    const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
     if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
     const seed = await (prisma as any).trainingSeed.findUnique({ where: { slug: module.slug } })
@@ -522,9 +574,10 @@ trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: R
   if (!Array.isArray(questions) || questions.length === 0) {
     err(res, 'INVALID', 'questions array required', 400); return
   }
+  const tenantId = (req as any).user.tenant_id
 
   try {
-    const module = await (prisma as any).trainingModule.findUnique({ where: { id: req.params.id } })
+    const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
     if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
     const seed = await (prisma as any).trainingSeed.findUnique({ where: { slug: module.slug } })
@@ -713,7 +766,7 @@ trainingRouter.post('/delivery-rules/:id/trigger', async (req: Request, res: Res
 
     let questionIds: string[] = []
     if (rule.module_id) {
-      const mod = await (prisma as any).trainingModule.findUnique({ where: { id: rule.module_id } })
+      const mod = await (prisma as any).trainingModule.findFirst({ where: { id: rule.module_id, tenant_id: tenantId } })
       if (mod) questionIds = (mod.questions as any[]).slice(0, rule.questions_per_send).map((q: any) => q.id)
     }
 
@@ -754,7 +807,7 @@ trainingRouter.post('/manual-send', async (req: Request, res: Response) => {
     const staff = await (prisma as any).user.findMany({
       where: staffFilter, select: { id: true, name: true },
     })
-    const mod = await (prisma as any).trainingModule.findUnique({ where: { id: module_id } })
+    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
     const questionIds = mod
       ? (mod.questions as any[]).slice(0, Number(questions_per_send) || 3).map((q: any) => q.id)
       : []
@@ -792,7 +845,7 @@ trainingRouter.post('/return-to-work', async (req: Request, res: Response) => {
 
     let questionIds: string[] = []
     if (module_id) {
-      const mod = await (prisma as any).trainingModule.findUnique({ where: { id: module_id } })
+      const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
       if (mod) questionIds = (mod.questions as any[]).slice(0, 3).map((q: any) => q.id)
     }
 
@@ -831,7 +884,7 @@ trainingRouter.post('/post-incident', async (req: Request, res: Response) => {
     const staff = await (prisma as any).user.findMany({
       where: staffFilter, select: { id: true, name: true },
     })
-    const mod = await (prisma as any).trainingModule.findUnique({ where: { id: module_id } })
+    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
     const questionIds = mod
       ? (mod.questions as any[]).slice(0, 3).map((q: any) => q.id)
       : []

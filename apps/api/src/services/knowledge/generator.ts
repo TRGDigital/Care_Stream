@@ -125,8 +125,9 @@ export async function generateKnowledgeForPolicy(
 
   await upsertKnowledgeVectors(tenantId, vectors)
 
-  // Write vector_id back to each DB row
-  await Promise.all(
+  // Write vector_id back to each DB row — batched into a single transaction so the
+  // N updates pipeline in one round-trip rather than N independent ones.
+  await (prisma as any).$transaction(
     created.map((entry: any, i: number) =>
       (prisma as any).knowledgeEntry.update({
         where: { id: entry.id },

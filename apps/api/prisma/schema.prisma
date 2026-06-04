@@ -71,6 +71,7 @@ model Tenant {
   onboarding_enrollments OnboardingEnrollment[]
   training_settings       Json               @default("{}")
   training_enrollments    TrainingEnrollment[]
+  training_modules        TrainingModule[]
   cqc_staff_questions     CqcStaffQuestion[]
   cqc_staff_deliveries    CqcStaffDelivery[]
   audit_templates         AuditTemplate[]
@@ -168,6 +169,12 @@ model QueryRecord {
   chat_session_id          String?                            // groups multi-turn chat messages into one session
   chat_deleted_at          DateTime?                          // set when staff removes session from chat UI (records preserved)
   feedback                 String?                            // 'positive' | 'negative' — one-click staff rating
+  prompt_tokens            Int?                               // §10.6 — total LLM input tokens (incl. cache) for this query
+  completion_tokens        Int?                               // total LLM output tokens
+  cache_read_tokens        Int?                               // prompt-cache hits (billed cheaper)
+  cache_creation_tokens    Int?                               // prompt-cache writes
+  model_used               String?                            // primary (most expensive) model used
+  ai_cost_usd              Float?                             // real cost in USD, summed across every LLM call
   created_at               DateTime @default(now())
   tenant                   Tenant   @relation(fields: [tenant_id], references: [id])
   user                     User?    @relation(fields: [user_id], references: [id])
@@ -582,7 +589,8 @@ model OnboardingProgress {
 
 model TrainingModule {
   id                  String                    @id @default(uuid())
-  slug                String                    @unique
+  tenant_id           String?                                             // null = shared platform template; non-null = a tenant's editable copy
+  slug                String
   name                String
   description         String
   category            String                    // 'statutory' | 'specialist'
@@ -594,9 +602,13 @@ model TrainingModule {
   questions_locked_at DateTime?
   questions_version   Int                       @default(0)
   created_at          DateTime                  @default(now())
+  tenant              Tenant?                   @relation(fields: [tenant_id], references: [id])
   enrollments         TrainingEnrollment[]
   question_versions   TrainingQuestionVersion[]
 
+  // Partial uniques in DB: slug unique among templates; (tenant_id, slug) unique among copies.
+  @@unique([tenant_id, slug])
+  @@index([tenant_id])
   @@map("training_modules")
 }
 

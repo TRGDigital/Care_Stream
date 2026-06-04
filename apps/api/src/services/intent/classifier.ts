@@ -7,6 +7,7 @@
 //   3. 'unclear' fallback — triggers a clarification reply to the user
 
 import Anthropic from '@anthropic-ai/sdk'
+import { recordUsage } from '../../lib/token-usage'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -94,6 +95,8 @@ ${context}
 Classification:`,
       }],
     })
+
+    recordUsage('claude-haiku-4-5-20251001', response.usage)
 
     const text = (response.content[0] as any).text?.toLowerCase().trim() ?? ''
     if (text.includes('cqc'))      return 'cqc_report'

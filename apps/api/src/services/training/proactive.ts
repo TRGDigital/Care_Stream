@@ -87,19 +87,26 @@ export async function sendProactiveTrainingQuestions(
 
   const replyTo = `policies@${tenant.slug}.${INBOUND_DOMAIN}`
 
+  // Prefetch all users and all relevant not-started enrollments in two queries,
+  // then iterate the combinations in memory — avoids an N×M query fan-out.
+  const [users, enrollments] = await Promise.all([
+    (prisma as any).user.findMany({
+      where:  { id: { in: userIds } },
+      select: { id: true, name: true, email: true, phone_number: true, first_language: true },
+    }).catch(() => [] as any[]),
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId, user_id: { in: userIds }, module_id: { in: moduleIds }, status: 'not_started' },
+      include: { module: { select: { name: true, questions: true } } },
+    }).catch(() => [] as any[]),
+  ])
+  const userById = new Map<string, any>(users.map((u: any) => [u.id, u]))
+  const enrollmentByKey = new Map<string, any>(enrollments.map((e: any) => [`${e.user_id}:${e.module_id}`, e]))
+
   for (const userId of userIds) {
     for (const moduleId of moduleIds) {
       try {
-        const [user, enrollment] = await Promise.all([
-          (prisma as any).user.findUnique({
-            where:  { id: userId },
-            select: { id: true, name: true, email: true, phone_number: true, first_language: true },
-          }).catch(() => null as any),
-          (prisma as any).trainingEnrollment.findFirst({
-            where:   { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: 'not_started' },
-            include: { module: { select: { name: true, questions: true } } },
-          }),
-        ])
+        const user       = userById.get(userId)
+        const enrollment = enrollmentByKey.get(`${userId}:${moduleId}`)
 
         if (!user || !enrollment) continue
 

@@ -3,6 +3,7 @@
 // Returns original content unchanged if targetLang is 'eng' or unavailable.
 
 import Anthropic from '@anthropic-ai/sdk'
+import { recordUsage } from './token-usage'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -51,6 +52,8 @@ export async function translateTrainingQuestion(
       max_tokens: 500,
       messages:   [{ role: 'user', content: prompt }],
     })
+
+    recordUsage('claude-haiku-4-5-20251001', msg.usage)
 
     const raw   = (msg.content[0] as any).text as string
     const lines = raw.trim().split('\n').filter((l: string) => l.trim())

@@ -10,6 +10,7 @@ import { notifyAdmin } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
+import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
 
 export const trainingRouter = Router()
 
@@ -20,11 +21,17 @@ export const trainingRouter = Router()
 async function ensureTenantModules(tenantId: string): Promise<void> {
   const count = await (prisma as any).trainingModule.count({ where: { tenant_id: tenantId } })
   if (count > 0) return
-  const templates = await (prisma as any).trainingModule.findMany({ where: { tenant_id: null } })
+  // Only clone templates for this home's care setting (plus universal ones).
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+  const setting = facilityTypeToSetting(tenant?.facility_type)
+  const templates = await (prisma as any).trainingModule.findMany({
+    where: { tenant_id: null, OR: [{ care_setting: setting }, { care_setting: null }] },
+  })
   if (templates.length === 0) return
   await (prisma as any).trainingModule.createMany({
     data: templates.map((m: any) => ({
       tenant_id:           tenantId,
+      care_setting:        m.care_setting,
       slug:                m.slug,
       name:                m.name,
       description:         m.description,
@@ -508,6 +515,35 @@ function buildSeedContext(seed: any): string {
   ].filter(Boolean).join('\n\n')
 }
 
+// Ground training-question generation in the tenant's CARE-SETTING policy seeds.
+// Picks the reviewed seeds most relevant to the module topic (keyword match), so a
+// care home's training questions reference care-home policies, a nursing home's the
+// nursing policies. Returns '' if nothing relevant — generation falls back to the seed.
+async function settingSeedContextForModule(tenantId: string, moduleName: string): Promise<string> {
+  try {
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+    const setting = facilityTypeToSetting(tenant?.facility_type)
+    let metas: any[] = []
+    for (const s of settingFallbackOrder(setting)) {
+      metas = await (prisma as any).policySeed.findMany({ where: { reviewed: true, care_setting: s }, select: { id: true, section: true, title: true } })
+      if (metas.length) break
+    }
+    if (metas.length === 0) return ''
+    const words = moduleName.toLowerCase().split(/\s+/).filter(w => w.length > 3)
+    const scored = metas
+      .map(m => {
+        const hay = `${m.section ?? ''} ${m.title ?? ''}`.toLowerCase()
+        return { id: m.id as string, score: words.filter(w => hay.includes(w)).length }
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+    if (scored.length === 0) return ''
+    const full = await (prisma as any).policySeed.findMany({ where: { id: { in: scored.map(x => x.id) } }, select: { section: true, title: true, content: true } })
+    return (full as any[]).map(f => `## ${f.section ?? f.title}\n${String(f.content).slice(0, 800)}`).join('\n\n')
+  } catch { return '' }
+}
+
 function parseGeneratedQuestions(raw: string): Array<{ text: string; options: string[]; correct: number }> {
   const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
   try {
@@ -542,7 +578,8 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
     }
 
     const systemPrompt = await getTrainingPrompt()
-    const userMessage  = `${buildSeedContext(seed)}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.`
+    const policyContext = await settingSeedContextForModule(tenantId, module.name)
+    const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.`
 
     const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.6 })
     const generated = parseGeneratedQuestions(raw)

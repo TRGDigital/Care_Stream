@@ -26,6 +26,7 @@ export default function PolicySeedsPage() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [importing, setImporting] = useState(false)
   const [importSetting, setImportSetting] = useState('nursing_home')
+  const [settingTab, setSettingTab] = useState('nursing_home')
   const [editing, setEditing] = useState<PolicySeed | null>(null)
   const [cleaningId, setCleaningId] = useState<string | null>(null)
   const [bulkCleaning, setBulkCleaning] = useState(false)
@@ -128,8 +129,10 @@ export default function PolicySeedsPage() {
     setBulkCleaning(false)
   }
 
-  const sections = Array.from(new Set(seeds.map(s => s.section ?? 'Uncategorised'))).sort()
-  const reviewedCount = seeds.filter(s => s.reviewed).length
+  const tabSeeds = seeds.filter(s => (s.care_setting ?? 'other') === settingTab)
+  const sections = Array.from(new Set(tabSeeds.map(s => s.section ?? 'Uncategorised'))).sort()
+  const reviewedCount = tabSeeds.filter(s => s.reviewed).length
+  const settingCount = (v: string) => seeds.filter(s => (s.care_setting ?? 'other') === v).length
 
   return (
     <PlatformShell>
@@ -189,11 +192,27 @@ export default function PolicySeedsPage() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-neutral-mid">{seeds.length} seeds · {reviewedCount} reviewed</p>
-            {sections.map(sec => (
-              <SectionGroup key={sec} title={sec} seeds={seeds.filter(s => (s.section ?? 'Uncategorised') === sec)}
-                onEdit={openEdit} onToggle={toggleReviewed} onRemove={remove} onAiClean={aiCleanOne} cleaningId={cleaningId} longThreshold={LONG} />
-            ))}
+            {/* Care-setting tabs */}
+            <div className="flex gap-1 border-b border-gray-200">
+              {SETTINGS.map(s => (
+                <button key={s.value} onClick={() => setSettingTab(s.value)}
+                  className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${settingTab === s.value ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}>
+                  {s.label} <span className="text-xs text-neutral-mid">({settingCount(s.value)})</span>
+                </button>
+              ))}
+            </div>
+
+            {tabSeeds.length === 0 ? (
+              <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No {settingLabel(settingTab).toLowerCase()} seeds yet — import a home as “{settingLabel(settingTab)}” above.</p>
+            ) : (
+              <>
+                <p className="text-sm text-neutral-mid">{tabSeeds.length} seeds · {reviewedCount} reviewed</p>
+                {sections.map(sec => (
+                  <SectionGroup key={sec} title={sec} seeds={tabSeeds.filter(s => (s.section ?? 'Uncategorised') === sec)}
+                    onEdit={openEdit} onToggle={toggleReviewed} onRemove={remove} onAiClean={aiCleanOne} cleaningId={cleaningId} longThreshold={LONG} />
+                ))}
+              </>
+            )}
           </>
         )}
       </div>
@@ -225,7 +244,6 @@ function SectionGroup({ title, seeds, onEdit, onToggle, onRemove, onAiClean, cle
           {seeds.map(s => (
             <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-dark">{s.title}</span>
-              <span className="shrink-0 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal" title="Care setting">{settingLabel(s.care_setting)}</span>
               {s.char_count > longThreshold && (
                 <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700" title="Long policy — skipped the AI pass at import">long</span>
               )}

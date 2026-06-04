@@ -2398,6 +2398,19 @@ function SystemReference() {
             <RefRow label="Not codified"            value="One-off, source-specific bits handled manually during review (e.g. a named local supplier/pharmacy + town, a single home's bespoke governance/management section). Use the ✨ AI-clean or edit/delete the seed. Body uses of generic terms ('registered provider', a national body's public address) are intentionally kept." />
           </div>
         </div>
+
+        <div className="mt-4">
+          <p className="font-semibold text-neutral-dark mb-1">Care-setting dimension</p>
+          <p className="text-neutral-mid mb-2">
+            Seeds, onboarding flows and training modules are tagged by <strong>care setting</strong> so a tenant gets content built from policies for THEIR kind of home (Ferndale = nursing home, Crossways = care home, future: home care, …).
+          </p>
+          <div className="space-y-1">
+            <RefRow label="Taxonomy"      value="apps/api/src/lib/care-setting.ts — CARE_SETTINGS: nursing_home | care_home | home_care | other. facilityTypeToSetting() maps the tenant's facility_type (set at signup) to a setting. settingFallbackOrder() picks the nearest setting WITH seeds so generation never breaks for a setting that has no library yet." />
+            <RefRow label="Seeds"         value="policy_seeds.care_setting (319 Ferndale → nursing_home). Import is tagged via the 'as <setting>' selector (or derived from the source home). Policy Seeds console has Nursing / Care / Home care / Other TABS." />
+            <RefRow label="Templates"     value="onboarding_flows.care_setting + training_modules.care_setting (NULL = all settings). Set per template in the console. Tenants only see/adopt templates for their setting (or 'all'); adopted copies inherit it." />
+            <RefRow label="Grounding"     value="Onboarding AI-draft + training generate-questions ground in the tenant/template setting's reviewed seeds (training matches seeds to the module topic by keyword). Training module catalog (ensureTenantModules) only clones templates for the tenant's setting + universal ones." />
+          </div>
+        </div>
       </RefSection>
 
       {/* Staff Onboarding */}

@@ -52,7 +52,7 @@ policySeedsRouter.post('/:id/ai-clean', async (req: Request, res: Response) => {
   const existing = await (prisma as any).policySeed.findUnique({ where: { id } })
   if (!existing) return err(res, 'NOT_FOUND', 'Seed not found', 404)
   try {
-    const cleaned = await aiAnonymise(existing.content as string)
+    const cleaned = stripBoilerplate(await aiAnonymise(existing.content as string))
     const seed = await (prisma as any).policySeed.update({
       where: { id },
       data:  { content: cleaned, reviewed: false, updated_at: new Date() },
@@ -113,10 +113,10 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
       const raw = await downloadExtractedText(tenantId, p.id).catch(() => '')
       if (!raw || !raw.trim()) continue
 
-      // Deterministic strip, then a chunked Haiku pass (no length cap — long
-      // policies are split so they're never skipped).
+      // Deterministic strip → chunked Haiku pass → boilerplate-block removal.
       let content = anonymise(raw)
       content = await aiAnonymise(content, aiPrompt)
+      content = stripBoilerplate(content)
 
       await (prisma as any).policySeed.create({
         data: {
@@ -206,6 +206,36 @@ async function aiAnonymise(content: string, prompt?: string): Promise<string> {
     }
   }
   return out.join('\n\n')
+}
+
+// Remove standard boilerplate blocks from care-policy templates that the
+// deterministic strip + AI pass leave behind. These rules are documented in the
+// platform Dashboard → System Reference ("Policy Seed Genericisation Rules").
+// Applied after anonymisation so the home name is already "the Home" / placeholders.
+function stripBoilerplate(text: string): string {
+  let t = text
+
+  // 1. Word auto-caption noise from embedded images (logos).
+  t = t.replace(/[^\n]*\n?Description automatically generated[^\n]*/gi, '')
+
+  // 2. Letterhead header — "the Home / Registered Office: / [address] / Telephone: [..] / [..]".
+  //    Anchored on the run of [..] placeholder lines after "Registered Office:", so a
+  //    legitimate "registered provider/office" in body text is never touched.
+  t = t.replace(
+    /(\*\*the Home\*\*|the Home)?\s*(\*\*)?Registered Office:(\*\*)?(\s*(\*\*)?(Telephone:|Website:|Email:|Fax:)?(\*\*)?\s*(www\.)?\[[^\]]*\])+\s*(---\s*)?/gi,
+    '\n',
+  )
+
+  // 3. Signature footer — "Signed: … Date: … Policy review date: …".
+  t = t.replace(
+    /\s*(?:-{3,}\s*)?\*{0,2}Signed:\*{0,2}[\s\S]{0,200}?Policy\s*review\s*date:\*{0,2}[ \t]*\n?[ \t]*[^\n]*/gi,
+    '',
+  )
+
+  // 4. Copyright line — "Copyright © <year> the Home All rights reserved.".
+  t = t.replace(/\s*Copyright\s*©?\s*\d{0,4}[^\n]*?All rights reserved\.?/gi, '')
+
+  return t.trim()
 }
 
 function chunkText(text: string, size: number): string[] {

@@ -2377,12 +2377,26 @@ function SystemReference() {
         <div className="mt-3 space-y-1">
           <RefRow label="Table"            value="policy_seeds (platform-level): section, title, content (anonymised), document_category, source_tenant_id, source_policy_id (UNIQUE — dedupe), reviewed." />
           <RefRow label="Import"           value="POST /admin/policy-seeds/import/:tenantId?limit= — BATCHED. Per policy: downloadExtractedText (S3) → deterministic strip → Haiku anonymise pass → policy_seeds row (reviewed=false)." />
-          <RefRow label="Anonymisation"    value="Deterministic: strips tenant name/slug/email_domain/branding_signoff + every staff name/email/phone + generic email & UK-phone regex. Then a Haiku AI pass (capped at 12k chars) genericises residuals (address, town, named individuals)." />
           <RefRow label="Timeout safety"   value="Each import call self-limits to a 45s wall-clock budget (and a count cap) so a batch of large policies can't exceed the 60s function limit; client loops with retry. Resumable via source_policy_id dedupe." />
           <RefRow label="Review gate"      value="Seeds land as 'needs review'. The platform owner reviews/edits each (check no identifying detail remains) and marks Reviewed before it is used." />
+          <RefRow label="AI clean action"  value="Per-seed ✨ + bulk 'AI-clean the long ones' (POST /admin/policy-seeds/:id/ai-clean). Re-runs the full genericisation pipeline (chunked, no length cap) and resets Reviewed. Use during review to catch residual named individuals." />
           <RefRow label="Grounding"        value="Onboarding AI-draft injects REVIEWED seed excerpts (one per section, ≤1000 chars) so generated questions reflect real policy text. No effect until seeds are imported + reviewed." />
           <RefRow label="Editable prompt"  value="usage 'policy_anonymisation' ('Policy Seed Anonymisation') in /prompts — Haiku instructions for the anonymise pass." />
           <RefRow label="Files"            value="apps/api/src/routes/policy-seeds.ts; console apps/web/src/app/(platform)/platform/policy-seeds/page.tsx." />
+        </div>
+
+        <div className="mt-4">
+          <p className="font-semibold text-neutral-dark mb-1">Genericisation rules (applied to every imported policy)</p>
+          <p className="text-neutral-mid mb-2">
+            Same process is run on every policy at import and on every AI-clean, in this order. Codified in
+            <code className="text-xs bg-gray-100 px-1 rounded">policy-seeds.ts</code> so new policies are genericised identically.
+          </p>
+          <div className="space-y-1">
+            <RefRow label="1. Deterministic strip" value="buildDeterministicAnonymiser(): replace the home's name → 'the Home', slug → 'the-home', email_domain → example.com, branding_signoff → 'The Care Team', and every staff name → [Name], email → [email], phone → [phone]; plus generic email + UK-phone regex." />
+            <RefRow label="2. AI pass (Haiku)"     value="aiAnonymise(): chunked on paragraph boundaries (~9k chars, NO length cap) so long policies are fully processed. Genericises residual identifiers — address, town, named individuals (directors/managers), registration numbers — per the editable 'policy_anonymisation' prompt. Falls back to the deterministic text on failure." />
+            <RefRow label="3. Boilerplate removal" value="stripBoilerplate(): removes standard care-policy-template furniture — (a) Word image auto-captions ('… Description automatically generated …'); (b) the letterhead header ('the Home / Registered Office: / [address] / Telephone: […] / […]', incl. markdown-bold + #-title variants), anchored on the run of [..] placeholder lines so body uses of 'registered office/provider' are never touched; (c) the signature footer (Signed: / Date: / Policy review date:); (d) the 'Copyright © <year> the Home All rights reserved.' line." />
+            <RefRow label="Not codified"            value="One-off, source-specific bits handled manually during review (e.g. a named local supplier/pharmacy + town, a single home's bespoke governance/management section). Use the ✨ AI-clean or edit/delete the seed. Body uses of generic terms ('registered provider', a national body's public address) are intentionally kept." />
+          </div>
         </div>
       </RefSection>
 

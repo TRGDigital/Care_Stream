@@ -7,6 +7,7 @@ import { notifyUsers } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
+import { facilityTypeToSetting } from '../lib/care-setting'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
@@ -351,9 +352,12 @@ onboardingRouter.post('/enrollments/:enrollmentId/steps/:stepId/complete', async
 onboardingRouter.get('/templates', requireAdmin, async (_req, res) => {
   try {
     const tenantId = getTenantId()
+    // Only show templates for this home's care setting (or templates tagged for all).
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+    const setting = facilityTypeToSetting(tenant?.facility_type)
     const [templates, mine] = await Promise.all([
       (prisma as any).onboardingFlow.findMany({
-        where:   { tenant_id: null, is_active: true },
+        where:   { tenant_id: null, is_active: true, OR: [{ care_setting: setting }, { care_setting: null }] },
         include: { steps: { orderBy: { order: 'asc' } } },
         orderBy: [{ flow_kind: 'asc' }, { name: 'asc' }],
       }),
@@ -504,6 +508,7 @@ onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => 
         description:    template.description,
         job_roles:      template.job_roles,
         flow_kind:      template.flow_kind,
+        care_setting:   template.care_setting,
         source_flow_id: template.id,
         is_active:      true,
         steps: {

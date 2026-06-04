@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { callClaude } from '../services/ai/claude'
 import { DEFAULT_POLICY_SECTIONS } from '../lib/policy-sections'
 import { PRIMARY_ROLES, SECONDARY_ROLES } from '../data/onboarding-roles'
+import { isCareSetting, settingFallbackOrder } from '../lib/care-setting'
 
 // Platform-owner management of shared onboarding flow TEMPLATES (tenant_id = NULL).
 // Tenants adopt these (cloned into editable copies) on the tenant side.
@@ -25,17 +26,18 @@ onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
 
 // ─── POST / — create a template ───────────────────────────────────────────────
 onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
-  const { name, description, job_roles, flow_kind, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, steps } = req.body ?? {}
   if (!name || typeof name !== 'string') return err(res, 'MISSING_FIELD', 'name is required', 400)
 
   const flow = await (prisma as any).onboardingFlow.create({
     data: {
-      tenant_id:   null,
-      name:        name.trim(),
-      description: description ?? null,
-      job_roles:   Array.isArray(job_roles) ? job_roles : [],
-      flow_kind:   flow_kind === 'secondary' ? 'secondary' : 'primary',
-      steps:       buildStepCreate(steps),
+      tenant_id:    null,
+      name:         name.trim(),
+      description:  description ?? null,
+      job_roles:    Array.isArray(job_roles) ? job_roles : [],
+      flow_kind:    flow_kind === 'secondary' ? 'secondary' : 'primary',
+      care_setting: isCareSetting(care_setting) ? care_setting : null,
+      steps:        buildStepCreate(steps),
     },
     include: flowInclude,
   })
@@ -48,13 +50,14 @@ onboardingTemplatesRouter.patch('/:id', async (req: Request, res: Response) => {
   const existing = await (prisma as any).onboardingFlow.findFirst({ where: { id, tenant_id: null } })
   if (!existing) return err(res, 'NOT_FOUND', 'Template not found', 404)
 
-  const { name, description, job_roles, flow_kind, is_active, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, is_active, steps } = req.body ?? {}
   const data: Record<string, any> = {}
-  if (name !== undefined)        data.name = String(name).trim()
-  if (description !== undefined) data.description = description
-  if (job_roles !== undefined)   data.job_roles = Array.isArray(job_roles) ? job_roles : []
-  if (flow_kind !== undefined)   data.flow_kind = flow_kind === 'secondary' ? 'secondary' : 'primary'
-  if (is_active !== undefined)   data.is_active = !!is_active
+  if (name !== undefined)         data.name = String(name).trim()
+  if (description !== undefined)  data.description = description
+  if (job_roles !== undefined)    data.job_roles = Array.isArray(job_roles) ? job_roles : []
+  if (flow_kind !== undefined)    data.flow_kind = flow_kind === 'secondary' ? 'secondary' : 'primary'
+  if (care_setting !== undefined) data.care_setting = isCareSetting(care_setting) ? care_setting : null
+  if (is_active !== undefined)    data.is_active = !!is_active
 
   if (Array.isArray(steps)) {
     await (prisma as any).onboardingStep.deleteMany({ where: { flow_id: id } })
@@ -90,12 +93,25 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   const system = await getOnboardingPrompt()
 
   // Ground the questions in real (anonymised) policy text when reviewed seeds exist —
-  // one excerpt per section, truncated to keep the prompt bounded.
-  const seeds = await (prisma as any).policySeed.findMany({
-    where:   { reviewed: true, NOT: { section: null } },
-    select:  { section: true, content: true },
-    orderBy: { updated_at: 'desc' },
-  }).catch(() => [] as any[])
+  // one excerpt per section, from THIS template's care setting (falling back to the
+  // nearest setting that has seeds). Templates with no setting use any reviewed seed.
+  let seeds: any[] = []
+  if (flow.care_setting) {
+    for (const s of settingFallbackOrder(flow.care_setting)) {
+      seeds = await (prisma as any).policySeed.findMany({
+        where:   { reviewed: true, care_setting: s, NOT: { section: null } },
+        select:  { section: true, content: true },
+        orderBy: { updated_at: 'desc' },
+      }).catch(() => [] as any[])
+      if (seeds.length > 0) break
+    }
+  } else {
+    seeds = await (prisma as any).policySeed.findMany({
+      where:   { reviewed: true, NOT: { section: null } },
+      select:  { section: true, content: true },
+      orderBy: { updated_at: 'desc' },
+    }).catch(() => [] as any[])
+  }
   const bySection = new Map<string, string>()
   for (const s of seeds as any[]) if (s.section && !bySection.has(s.section)) bySection.set(s.section, s.content)
   const refBlock = [...bySection.entries()].map(([sec, content]) => `## ${sec}\n${String(content).slice(0, 1000)}`).join('\n\n')

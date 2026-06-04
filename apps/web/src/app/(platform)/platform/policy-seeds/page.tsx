@@ -8,6 +8,14 @@ import { Loader2, Trash2, Check, Download, ChevronDown, ChevronUp, AlertCircle, 
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
+const SETTINGS: { value: string; label: string }[] = [
+  { value: 'nursing_home', label: 'Nursing home' },
+  { value: 'care_home',    label: 'Care home' },
+  { value: 'home_care',    label: 'Home care' },
+  { value: 'other',        label: 'Other' },
+]
+const settingLabel = (v: string | null) => SETTINGS.find(s => s.value === v)?.label ?? (v ?? 'Unset')
+
 export default function PolicySeedsPage() {
   const token = usePlatformAuth()
   const [seeds,   setSeeds]   = useState<PolicySeedMeta[]>([])
@@ -17,6 +25,7 @@ export default function PolicySeedsPage() {
   const [error,   setError]   = useState('')
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [importing, setImporting] = useState(false)
+  const [importSetting, setImportSetting] = useState('nursing_home')
   const [editing, setEditing] = useState<PolicySeed | null>(null)
   const [cleaningId, setCleaningId] = useState<string | null>(null)
   const [bulkCleaning, setBulkCleaning] = useState(false)
@@ -44,7 +53,7 @@ export default function PolicySeedsPage() {
     while (true) {
       let r
       try {
-        r = await api.policySeeds.importBatch(source, 4)
+        r = await api.policySeeds.importBatch(source, 4, importSetting)
         fails = 0
       } catch {
         fails++
@@ -141,6 +150,10 @@ export default function PolicySeedsPage() {
             <select value={source} onChange={e => setSource(e.target.value)} disabled={importing} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
               {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
+            <span className="text-sm text-neutral-mid">as</span>
+            <select value={importSetting} onChange={e => setImportSetting(e.target.value)} disabled={importing} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+              {SETTINGS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
             <button onClick={runImport} disabled={importing || !source}
               className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
               {importing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Import policies
@@ -212,6 +225,7 @@ function SectionGroup({ title, seeds, onEdit, onToggle, onRemove, onAiClean, cle
           {seeds.map(s => (
             <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-dark">{s.title}</span>
+              <span className="shrink-0 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal" title="Care setting">{settingLabel(s.care_setting)}</span>
               {s.char_count > longThreshold && (
                 <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700" title="Long policy — skipped the AI pass at import">long</span>
               )}

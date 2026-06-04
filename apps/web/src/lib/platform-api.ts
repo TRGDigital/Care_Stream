@@ -636,9 +636,9 @@ export function createPlatformClient(token: string) {
 
     onboardingTemplates: {
       list: () => adminFetch<{ flows: OnboardingTemplate[] }>('/onboarding-templates', token),
-      create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string }) =>
+      create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string; care_setting?: string | null }) =>
         adminFetch<{ flow: OnboardingTemplate }>('/onboarding-templates', token, { method: 'POST', body: JSON.stringify(data) }),
-      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
+      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; care_setting: string | null; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
@@ -654,9 +654,9 @@ export function createPlatformClient(token: string) {
       update: (id: string, data: Partial<{ section: string | null; title: string; content: string; reviewed: boolean }>) =>
         adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) => adminFetch<{ deleted: boolean }>(`/policy-seeds/${id}`, token, { method: 'DELETE' }),
-      importBatch: (tenantId: string, limit = 4) =>
-        adminFetch<{ imported: number; remaining: number; total: number; already: number }>(
-          `/policy-seeds/import/${tenantId}?limit=${limit}`, token, { method: 'POST' }),
+      importBatch: (tenantId: string, limit = 4, setting?: string) =>
+        adminFetch<{ imported: number; remaining: number; total: number; already: number; setting: string }>(
+          `/policy-seeds/import/${tenantId}?limit=${limit}${setting ? `&setting=${setting}` : ''}`, token, { method: 'POST' }),
       aiClean: (id: string) =>
         adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}/ai-clean`, token, { method: 'POST' }),
     },
@@ -665,6 +665,7 @@ export function createPlatformClient(token: string) {
 
 export interface PolicySeedMeta {
   id:                string
+  care_setting:      string | null
   section:           string | null
   title:             string
   document_category: string
@@ -691,11 +692,12 @@ export interface OnboardingTemplateStep {
 }
 
 export interface OnboardingTemplate {
-  id:          string
-  name:        string
-  description: string | null
-  job_roles:   string[]
-  flow_kind:   'primary' | 'secondary'
-  is_active:   boolean
-  steps:       OnboardingTemplateStep[]
+  id:           string
+  name:         string
+  description:  string | null
+  job_roles:    string[]
+  flow_kind:    'primary' | 'secondary'
+  care_setting: string | null
+  is_active:    boolean
+  steps:        OnboardingTemplateStep[]
 }

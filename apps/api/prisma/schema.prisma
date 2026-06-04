@@ -525,6 +525,7 @@ model OnboardingFlow {
   description    String?
   job_roles      String[]             @default([])         // empty = applies to all roles
   flow_kind      String               @default("primary")  // primary (job role) | secondary (specialism)
+  care_setting   String?                                   // nursing_home | care_home | … ; NULL = all settings
   source_flow_id String?                                   // for a tenant copy: the platform template it was adopted from
   is_active      Boolean              @default(true)
   created_at     DateTime             @default(now())
@@ -597,6 +598,7 @@ model OnboardingProgress {
 // to match a tenant's uploaded policies to onboarding steps.
 model PolicySeed {
   id                String   @id @default(uuid())
+  care_setting      String?                              // nursing_home | care_home | home_care | other
   section           String?                              // policy section (e.g. "Infection control")
   title             String
   content           String                               // anonymised policy text
@@ -624,6 +626,7 @@ model TrainingModule {
   is_annual           Boolean                   @default(true)
   sort_order          Int                       @default(0)
   is_active           Boolean                   @default(true)
+  care_setting        String?                                             // nursing_home | care_home | … ; NULL = all settings
   questions_locked    Boolean                   @default(false)
   questions_locked_at DateTime?
   questions_version   Int                       @default(0)

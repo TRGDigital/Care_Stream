@@ -4,6 +4,7 @@ import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
+import { isCareSetting, facilityTypeToSetting } from '../lib/care-setting'
 
 // Platform-owner management of anonymised reference policies (Policy Seeds).
 export const policySeedsRouter = Router()
@@ -14,10 +15,10 @@ const HAIKU = 'claude-haiku-4-5-20251001'
 // ─── GET / — list seeds (metadata + char count, no content) ────────────────────
 policySeedsRouter.get('/', async (_req: Request, res: Response) => {
   const rows = await (prisma as any).$queryRaw`
-    SELECT id, section, title, document_category, reviewed, source_policy_id, updated_at,
+    SELECT id, care_setting, section, title, document_category, reviewed, source_policy_id, updated_at,
            length(content) AS char_count
     FROM policy_seeds
-    ORDER BY section ASC NULLS FIRST, title ASC`
+    ORDER BY care_setting ASC NULLS FIRST, section ASC NULLS FIRST, title ASC`
   const seeds = (rows as any[]).map(r => ({ ...r, char_count: Number(r.char_count) }))
   ok(res, { seeds })
 })
@@ -81,9 +82,12 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { id: true, name: true, slug: true, email_domain: true, branding_signoff: true },
+    select: { id: true, name: true, slug: true, email_domain: true, branding_signoff: true, facility_type: true },
   })
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
+
+  // Care setting for these seeds: explicit override, else derived from the home's type.
+  const careSetting = isCareSetting(req.query.setting) ? req.query.setting : facilityTypeToSetting(tenant.facility_type)
 
   // All active policies for the tenant, and which we've already imported.
   const [policies, done, users] = await Promise.all([
@@ -120,6 +124,7 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
 
       await (prisma as any).policySeed.create({
         data: {
+          care_setting:      careSetting,
           section:           p.section ?? null,
           title:             p.name,
           content,
@@ -134,7 +139,7 @@ policySeedsRouter.post('/import/:tenantId', async (req: Request, res: Response) 
   }
 
   const remaining = pending.length - imported
-  ok(res, { imported, remaining, total: (policies as any[]).length, already: importedIds.size })
+  ok(res, { imported, remaining, total: (policies as any[]).length, already: importedIds.size, setting: careSetting })
 })
 
 // ─── Anonymisation ─────────────────────────────────────────────────────────────

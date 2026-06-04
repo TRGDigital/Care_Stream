@@ -15,6 +15,15 @@ const SECTIONS = [
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
+const SETTINGS: { value: string; label: string }[] = [
+  { value: '',             label: 'All settings' },
+  { value: 'nursing_home', label: 'Nursing home' },
+  { value: 'care_home',    label: 'Care home' },
+  { value: 'home_care',    label: 'Home care' },
+  { value: 'other',        label: 'Other' },
+]
+const settingLabel = (v: string | null) => v ? (SETTINGS.find(s => s.value === v)?.label ?? v) : 'All settings'
+
 export default function OnboardingFlowsPage() {
   const token = usePlatformAuth()
   const [flows,   setFlows]   = useState<OnboardingTemplate[]>([])
@@ -73,11 +82,11 @@ export default function OnboardingFlowsPage() {
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
 
-  async function saveSteps(f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string) {
+  async function saveSteps(f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) {
     if (!token) return
     setBusy(f.id)
     try {
-      const { flow } = await createPlatformClient(token).onboardingTemplates.update(f.id, { name, description, steps })
+      const { flow } = await createPlatformClient(token).onboardingTemplates.update(f.id, { name, description, care_setting: careSetting || null, steps })
       replaceFlow(flow)
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
@@ -132,7 +141,7 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
   aiDraft: (f: OnboardingTemplate) => void
   toggleActive: (f: OnboardingTemplate) => void
   remove: (f: OnboardingTemplate) => void
-  saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string) => void
+  saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
 }) {
   if (flows.length === 0) return null
   return (
@@ -156,7 +165,7 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
   onAiDraft: () => void
   onToggleActive: () => void
   onRemove: () => void
-  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string) => void
+  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
 }) {
   const reads = flow.steps.filter(s => s.type === 'read_policy').length
   const ques  = flow.steps.filter(s => s.type === 'answer_question').length
@@ -170,6 +179,7 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${flow.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-neutral-mid'}`}>
             {flow.is_active ? 'Active' : 'Draft'}
           </span>
+          <span className="shrink-0 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal">{settingLabel(flow.care_setting)}</span>
           <span className="shrink-0 text-xs text-neutral-mid">{reads} read · {ques} questions</span>
         </button>
         <div className="flex shrink-0 items-center gap-1">
@@ -195,10 +205,11 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
 function StepEditor({ flow, busy, onSave }: {
   flow: OnboardingTemplate
   busy: boolean
-  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string) => void
+  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
 }) {
   const [name, setName]               = useState(flow.name)
   const [description, setDescription] = useState(flow.description ?? '')
+  const [careSetting, setCareSetting] = useState(flow.care_setting ?? '')
   const [steps, setSteps]             = useState<OnboardingTemplateStep[]>(flow.steps.map(s => ({ ...s })))
 
   function setStep(i: number, patch: Partial<OnboardingTemplateStep>) {
@@ -223,6 +234,13 @@ function StepEditor({ flow, busy, onSave }: {
         <div>
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Description (optional)</label>
           <input value={description} onChange={e => setDescription(e.target.value)} className={INPUT} />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Care setting</label>
+          <select value={careSetting} onChange={e => setCareSetting(e.target.value)} className={INPUT}>
+            {SETTINGS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <p className="mt-1 text-[11px] text-neutral-mid">AI draft grounds in this setting&rsquo;s policies; only tenants of this setting (or all) can adopt it.</p>
         </div>
       </div>
 
@@ -269,7 +287,7 @@ function StepEditor({ flow, busy, onSave }: {
           <HelpCircle size={12} /> Add question
         </button>
         <div className="flex-1" />
-        <button onClick={() => onSave(flow, steps.map((s, i) => ({ ...s, order: i })), name, description)} disabled={busy}
+        <button onClick={() => onSave(flow, steps.map((s, i) => ({ ...s, order: i })), name, description, careSetting)} disabled={busy}
           className="flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
           {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
         </button>

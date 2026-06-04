@@ -5,6 +5,7 @@ import { getTenantId } from '../db/tenant-context'
 import Anthropic from '@anthropic-ai/sdk'
 import { notifyUsers } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
+import { callClaude } from '../services/ai/claude'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
@@ -317,6 +318,141 @@ onboardingRouter.post('/enrollments/:enrollmentId/steps/:stepId/complete', async
     }
 
     res.json({ success: true, data: { progress, enrollment_complete: allDone } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})
+
+// ─── Phase 2: Platform template adoption ──────────────────────────────────────
+
+// GET /onboarding/templates — active platform templates available to adopt
+// (excludes ones this tenant has already adopted).
+onboardingRouter.get('/templates', requireAdmin, async (_req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const [templates, mine] = await Promise.all([
+      (prisma as any).onboardingFlow.findMany({
+        where:   { tenant_id: null, is_active: true },
+        include: { steps: { orderBy: { order: 'asc' } } },
+        orderBy: [{ flow_kind: 'asc' }, { name: 'asc' }],
+      }),
+      (prisma as any).onboardingFlow.findMany({
+        where:  { tenant_id: tenantId, NOT: { source_flow_id: null } },
+        select: { source_flow_id: true },
+      }),
+    ])
+    const adopted = new Set((mine as any[]).map(f => f.source_flow_id))
+    const available = (templates as any[]).map(t => ({
+      id: t.id, name: t.name, description: t.description, flow_kind: t.flow_kind,
+      job_roles: t.job_roles, step_count: t.steps.length,
+      read_count: t.steps.filter((s: any) => s.type === 'read_policy').length,
+      question_count: t.steps.filter((s: any) => s.type === 'answer_question').length,
+      already_adopted: adopted.has(t.id),
+    }))
+    res.json({ success: true, data: { templates: available } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})
+
+// AI-match each template step to the tenant's best-fitting policy (Haiku, cheap).
+// Returns a map of step index -> policy_id (or null). Falls back to deterministic
+// section matching if the AI call fails.
+async function matchStepsToPolicies(
+  steps: Array<{ policy_section: string | null; title: string; question: string | null }>,
+  policies: Array<{ id: string; name: string; section: string | null }>,
+): Promise<(string | null)[]> {
+  // Deterministic section match as the baseline / fallback.
+  const bySection = new Map<string, string[]>()
+  for (const p of policies) {
+    const key = (p.section ?? '').toLowerCase()
+    if (!key) continue
+    if (!bySection.has(key)) bySection.set(key, [])
+    bySection.get(key)!.push(p.id)
+  }
+  const deterministic = steps.map(s => {
+    const cands = bySection.get((s.policy_section ?? '').toLowerCase()) ?? []
+    return cands.length === 1 ? cands[0] : null
+  })
+
+  if (policies.length === 0) return steps.map(() => null)
+
+  try {
+    const system = `You map care-home onboarding steps to the home's existing policies. Output ONLY JSON.`
+    const user = [
+      `STEPS (each needs the single best-matching policy):`,
+      ...steps.map((s, i) => `${i}. [${s.policy_section ?? 'any'}] ${s.title}${s.question ? ` — ${s.question}` : ''}`),
+      ``,
+      `POLICIES available at this home:`,
+      ...policies.map(p => `${p.id} | ${p.section ?? '—'} | ${p.name}`),
+      ``,
+      `For each step index, choose the id of the single best-matching policy, or null if none is a reasonable fit.`,
+      `Output JSON: {"map":[{"i":<step index>,"policy_id":"<id or null>"}]}`,
+    ].join('\n')
+    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 1500, temperature: 0 })
+    const noFence = raw.replace(/```(?:json)?/gi, '').trim()
+    const parsed = JSON.parse(noFence.slice(noFence.indexOf('{'), noFence.lastIndexOf('}') + 1))
+    const valid = new Set(policies.map(p => p.id))
+    const result = steps.map((_, i) => deterministic[i])
+    for (const m of (parsed?.map ?? [])) {
+      if (typeof m?.i === 'number' && m.i >= 0 && m.i < result.length) {
+        result[m.i] = (typeof m.policy_id === 'string' && valid.has(m.policy_id)) ? m.policy_id : result[m.i]
+      }
+    }
+    return result
+  } catch {
+    return deterministic
+  }
+}
+
+// POST /onboarding/templates/:id/adopt — clone a platform template into an
+// editable tenant copy, mapping each step to the tenant's own policies.
+onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const id = String(req.params.id)
+    const template = await (prisma as any).onboardingFlow.findFirst({
+      where:   { id, tenant_id: null },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    })
+    if (!template) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Template not found' } })
+
+    const policies = await (prisma as any).policy.findMany({
+      where:  { tenant_id: tenantId, status: 'active' },
+      select: { id: true, name: true, section: true },
+    })
+    const mapped = await matchStepsToPolicies(
+      (template.steps as any[]).map(s => ({ policy_section: s.policy_section, title: s.title, question: s.question })),
+      policies as any[],
+    )
+
+    const flow = await (prisma as any).onboardingFlow.create({
+      data: {
+        tenant_id:      tenantId,
+        name:           template.name,
+        description:    template.description,
+        job_roles:      template.job_roles,
+        flow_kind:      template.flow_kind,
+        source_flow_id: template.id,
+        is_active:      true,
+        steps: {
+          create: (template.steps as any[]).map((s, i) => ({
+            order:          s.order,
+            title:          s.title,
+            type:           s.type,
+            policy_id:      mapped[i] ?? null,
+            policy_section: s.policy_section,
+            question:       s.question,
+            options:        s.options ?? [],
+            correct_option: s.correct_option,
+          })),
+        },
+      },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    })
+
+    const unmapped = (flow.steps as any[]).filter(s => s.type === 'read_policy' && !s.policy_id).length
+    res.json({ success: true, data: { flow, unmapped } })
   } catch (e: any) {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
   }

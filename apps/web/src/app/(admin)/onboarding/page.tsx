@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, X, GripVertical } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
 
 type Step = { title: string; type: 'read_policy' | 'answer_question'; policy_id?: string; question?: string }
 type Flow  = {
@@ -238,20 +238,41 @@ export default function OnboardingPage() {
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }>>([])
+  const [adoptingId, setAdoptingId] = useState<string | null>(null)
+  const [adoptNote, setAdoptNote] = useState('')
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
   async function load() {
     if (!api) return
     try {
-      const d = await api.onboarding.listFlows()
+      const [d, t] = await Promise.all([
+        api.onboarding.listFlows(),
+        api.onboarding.listTemplates().catch(() => ({ templates: [] })),
+      ])
       setFlows(d.flows)
+      setTemplates(t.templates)
       pageCache.set('admin-onboarding', d.flows)
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
     } finally {
       setLoading(false)
     }
+  }
+
+  async function adopt(templateId: string) {
+    if (!api) return
+    setAdoptingId(templateId); setError(''); setAdoptNote('')
+    try {
+      const { flow, unmapped } = await api.onboarding.adoptTemplate(templateId)
+      setAdoptNote(
+        unmapped > 0
+          ? `Added "${flow.name}". ${unmapped} step${unmapped === 1 ? '' : 's'} couldn't be matched to one of your policies — open the flow to map them.`
+          : `Added "${flow.name}" and matched every step to your policies.`
+      )
+      await load()
+    } catch (e: any) { setError(e.message ?? 'Could not adopt template') } finally { setAdoptingId(null) }
   }
 
   useEffect(() => { load() }, [session?.accessToken])
@@ -304,6 +325,38 @@ export default function OnboardingPage() {
 
       {error && (
         <div className="mb-4 rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+      {adoptNote && (
+        <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/30 px-4 py-3 text-sm text-neutral-dark">{adoptNote}</div>
+      )}
+
+      {/* Ready-made flows from CareStream */}
+      {templates.some(t => !t.already_adopted) && (
+        <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+          <div className="border-b border-gray-100 px-5 py-4">
+            <h2 className="text-sm font-semibold text-neutral-dark">Ready-made onboarding flows</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">Adopt a CareStream induction for a role — we&rsquo;ll map each step to your own policies. You can edit it afterwards.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.filter(t => !t.already_adopted).map(t => (
+              <div key={t.id} className="flex flex-col rounded-lg border border-gray-200 p-4">
+                <div className="mb-1 flex items-center gap-2">
+                  <p className="font-semibold text-neutral-dark">{t.name}</p>
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">{t.flow_kind === 'secondary' ? 'Specialism' : 'Role'}</span>
+                </div>
+                <p className="mb-3 flex-1 text-xs text-neutral-mid">{t.read_count} policies to read · {t.question_count} questions</p>
+                <button
+                  onClick={() => adopt(t.id)}
+                  disabled={adoptingId === t.id}
+                  className="flex items-center justify-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
+                >
+                  {adoptingId === t.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                  {adoptingId === t.id ? 'Adding & matching…' : 'Adopt'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {flows.length === 0 && !showForm && <DemoPreview />}

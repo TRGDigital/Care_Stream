@@ -246,6 +246,10 @@ export function createApiClient(token: string) {
     onboarding: {
       listFlows: () =>
         apiFetch<{ flows: any[] }>('/onboarding/flows', token),
+      listTemplates: () =>
+        apiFetch<{ templates: Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }> }>('/onboarding/templates', token),
+      adoptTemplate: (id: string) =>
+        apiFetch<{ flow: any; unmapped: number }>(`/onboarding/templates/${id}/adopt`, token, { method: 'POST' }),
       createFlow: (data: { name: string; description?: string; job_roles?: string[]; steps?: Array<{ title: string; type: string; policy_id?: string; question?: string }> }) =>
         apiFetch<{ flow: any }>('/onboarding/flows', token, { method: 'POST', body: JSON.stringify(data) }),
       updateFlow: (id: string, data: { name?: string; description?: string; job_roles?: string[]; is_active?: boolean; steps?: Array<{ title: string; type: string; policy_id?: string; question?: string }> }) =>

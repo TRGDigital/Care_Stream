@@ -127,8 +127,8 @@ export function createApiClient(token: string) {
 
     users: {
       list: () => apiFetch<any>('/users', token),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string }) =>
-        apiFetch<{ user: any; temp_password: string; contact: StaffContact }>('/users/invite', token, {
+      invite: (data: { email: string; name: string; role: string; job_role?: string; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; new_starter?: boolean }) =>
+        apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),

@@ -59,6 +59,7 @@ const InviteSchema = z.object({
   shift_type:      z.enum(['any', 'day', 'night']).default('any'),
   first_language:  z.string().length(3).default('eng'),
   second_language: z.string().length(3).optional(),
+  new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
 })
 
 usersRouter.post('/invite', async (req: Request, res: Response) => {
@@ -68,7 +69,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, phone_number, shift_type, first_language, second_language } = parsed.data
+  const { name, email, role, job_role, phone_number, shift_type, first_language, second_language, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
 
   try {
@@ -132,6 +133,43 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     }
   }
 
+  // Add the email to the tenant's approved-sender allowlist (so admins don't have
+  // to add it again in Settings). Stored lowercase to match Settings normalisation.
+  {
+    const lower = email.toLowerCase()
+    const tenant = await (prisma as any).tenant.findUnique({
+      where:  { id: tenantId },
+      select: { email_allowlist: true },
+    })
+    const allowlist: string[] = tenant?.email_allowlist ?? []
+    if (!allowlist.some(e => e.toLowerCase() === lower)) {
+      await (prisma as any).tenant.update({
+        where: { id: tenantId },
+        data:  { email_allowlist: [...allowlist, lower] },
+      })
+    }
+  }
+
+  // New starter → auto-enrol into active onboarding flows that match their job
+  // role (or flows that apply to all roles). Saves setting up enrolment manually.
+  let onboardingEnrolled = 0
+  if (new_starter) {
+    const flows = await (prisma as any).onboardingFlow.findMany({
+      where:  { tenant_id: tenantId, is_active: true },
+      select: { id: true, job_roles: true },
+    })
+    const matched = (flows as any[]).filter(f =>
+      !Array.isArray(f.job_roles) || f.job_roles.length === 0 || (job_role && f.job_roles.includes(job_role))
+    )
+    if (matched.length > 0) {
+      await (prisma as any).onboardingEnrollment.createMany({
+        data: matched.map(f => ({ tenant_id: tenantId, flow_id: f.id, user_id: user.id })),
+        skipDuplicates: true,
+      })
+      onboardingEnrolled = matched.length
+    }
+  }
+
   const contactTenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
     select: { slug: true, twilio_whatsapp_number: true },
@@ -139,8 +177,10 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
 
   ok(res, {
     user,
-    temp_password: tempPassword,
-    contact:       contactTenant ? tenantContact(contactTenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null },
+    temp_password:      tempPassword,
+    onboarding_enrolled: onboardingEnrolled,
+    new_starter:        !!new_starter,
+    contact:            contactTenant ? tenantContact(contactTenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null },
   }, 201)
 })
 

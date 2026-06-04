@@ -749,9 +749,10 @@ function InviteModal({
   const [step,      setStep]      = useState<ModalStep>('form')
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
-  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '' })
+  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
   const [error,     setError]     = useState('')
   const [loading,   setLoading]   = useState(false)
+  const [onboardingNote, setOnboardingNote] = useState('')
 
   function update(k: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -779,10 +780,20 @@ function InviteModal({
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
       second_language: form.second_language || undefined,
+      new_starter:     form.staff_type === 'new',
     }).catch((err: Error) => { setError(err.message); return null })
 
     setLoading(false)
     if (!res) return
+
+    // Feedback on onboarding auto-enrolment for new starters.
+    if (form.staff_type === 'new') {
+      setOnboardingNote(
+        (res.onboarding_enrolled ?? 0) > 0
+          ? `Enrolled in ${res.onboarding_enrolled} onboarding flow${res.onboarding_enrolled === 1 ? '' : 's'} for their role.`
+          : 'No onboarding flow matches this role yet — create one on the Onboarding page and they’ll auto-enrol next time.'
+      )
+    }
 
     // Refresh the list in the background, but keep modal open to show credentials
     onInvited()
@@ -817,6 +828,23 @@ function InviteModal({
                 />
               </div>
             ))}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Staff type</label>
+              <select
+                value={form.staff_type}
+                onChange={update('staff_type')}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              >
+                <option value="existing">Existing staff member</option>
+                <option value="new">New starter</option>
+              </select>
+              <p className="mt-1 text-xs text-neutral-mid">
+                {form.staff_type === 'new'
+                  ? 'Automatically enrols them in the onboarding flow(s) matching their job role.'
+                  : 'No onboarding is assigned automatically.'}
+              </p>
+            </div>
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
@@ -936,16 +964,23 @@ function InviteModal({
             </div>
           </form>
         ) : step === 'credentials' && creds ? (
-          <CredentialsPanel
-            title={`Login credentials created for ${creds.name}`}
-            subtitle="Share these details with them securely — this is the only time the password will be shown."
-            userId={creds.userId}
-            email={creds.email}
-            password={creds.password}
-            contact={creds.contact}
-            token={token}
-            onDone={() => setStep('training')}
-          />
+          <>
+            {onboardingNote && (
+              <div className="mb-4 rounded-md border border-teal/20 bg-teal-light/30 px-4 py-3 text-sm text-neutral-dark">
+                {onboardingNote}
+              </div>
+            )}
+            <CredentialsPanel
+              title={`Login credentials created for ${creds.name}`}
+              subtitle="Share these details with them securely — this is the only time the password will be shown."
+              userId={creds.userId}
+              email={creds.email}
+              password={creds.password}
+              contact={creds.contact}
+              token={token}
+              onDone={() => setStep('training')}
+            />
+          </>
         ) : step === 'training' ? (
           <TrainingAssignStep
             token={token}

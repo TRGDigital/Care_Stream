@@ -117,6 +117,21 @@ export default function SettingsPage() {
   const [switchingTo,    setSwitchingTo]    = useState<string | null>(null)
   const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>(cData?.response_style ?? 'standard')
   const [savingStyle,    setSavingStyle]    = useState(false)
+  const [staffDir,       setStaffDir]       = useState<Array<{ email: string; name: string; job_role: string | null; phone_number?: string | null }>>([])
+
+  // Staff directory — used to label approved-sender / WhatsApp entries with the
+  // staff member's name + role for quick admin reference.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).users.list()
+      .then((d: any) => setStaffDir(Array.isArray(d) ? d : (d?.users ?? [])))
+      .catch(() => {})
+  }, [session?.accessToken])
+
+  const userByEmail = new Map(staffDir.filter(u => u.email).map(u => [u.email.toLowerCase(), u]))
+  const userByPhone = new Map(staffDir.filter(u => u.phone_number).map(u => [u.phone_number as string, u]))
+  const staffSuffix = (u?: { name: string; job_role: string | null }) =>
+    u ? ` — ${u.name}${u.job_role ? ` (${u.job_role})` : ''}` : ''
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -560,12 +575,18 @@ export default function SettingsPage() {
             <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No approved addresses added yet — all registered staff can query via email.</p>
           ) : (
             <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
-              {allowlist.map(email => (
-                <li key={email} className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-neutral-dark">{email}</span>
-                  <button onClick={() => removeEmail(email)} disabled={saving} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600 disabled:opacity-40" title="Remove"><Trash2 size={14} /></button>
-                </li>
-              ))}
+              {allowlist.map(email => {
+                const u = userByEmail.get(email.toLowerCase())
+                return (
+                  <li key={email} className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-neutral-dark">
+                      {email}
+                      {u && <span className="text-neutral-mid">{staffSuffix(u)}</span>}
+                    </span>
+                    <button onClick={() => removeEmail(email)} disabled={saving} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600 disabled:opacity-40" title="Remove"><Trash2 size={14} /></button>
+                  </li>
+                )
+              })}
             </ul>
           )}
           {saving && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
@@ -588,15 +609,21 @@ export default function SettingsPage() {
             <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No numbers added yet — add staff mobile numbers above to enable WhatsApp access.</p>
           ) : (
             <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
-              {phoneAllowlist.map(phone => (
-                <li key={phone} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare size={13} className="shrink-0 text-neutral-mid" />
-                    <span className="text-sm text-neutral-dark">{phone}</span>
-                  </div>
-                  <button onClick={() => removePhone(phone)} disabled={savingPhone} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600 disabled:opacity-40" title="Remove"><Trash2 size={14} /></button>
-                </li>
-              ))}
+              {phoneAllowlist.map(phone => {
+                const u = userByPhone.get(phone)
+                return (
+                  <li key={phone} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare size={13} className="shrink-0 text-neutral-mid" />
+                      <span className="text-sm text-neutral-dark">
+                        {phone}
+                        {u && <span className="text-neutral-mid">{staffSuffix(u)}</span>}
+                      </span>
+                    </div>
+                    <button onClick={() => removePhone(phone)} disabled={savingPhone} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600 disabled:opacity-40" title="Remove"><Trash2 size={14} /></button>
+                  </li>
+                )
+              })}
             </ul>
           )}
           {savingPhone && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}

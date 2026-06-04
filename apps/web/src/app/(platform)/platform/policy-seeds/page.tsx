@@ -234,12 +234,19 @@ function SectionGroup({ title, seeds, onEdit, onToggle, onRemove, onAiClean, cle
   cleaningId: string | null
   longThreshold: number
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
+  const reviewed = seeds.filter(s => s.reviewed).length
+  const needs    = seeds.length - reviewed
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
-      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between px-4 py-3">
-        <span className="text-sm font-semibold text-neutral-dark">{title} <span className="text-neutral-mid">({seeds.length})</span></span>
-        {open ? <ChevronUp size={15} className="text-neutral-mid" /> : <ChevronDown size={15} className="text-neutral-mid" />}
+      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between gap-3 px-4 py-3">
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-neutral-dark">{title}</span>
+          <span className="text-xs text-neutral-mid">({seeds.length})</span>
+          {reviewed > 0 && <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">{reviewed} reviewed</span>}
+          {needs > 0 && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{needs} needs review</span>}
+        </span>
+        {open ? <ChevronUp size={15} className="shrink-0 text-neutral-mid" /> : <ChevronDown size={15} className="shrink-0 text-neutral-mid" />}
       </button>
       {open && (
         <ul className="divide-y divide-gray-100 border-t border-gray-100">

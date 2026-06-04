@@ -38,7 +38,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
   const users = await (prisma as any).user.findMany({
     where:   { tenant_id: tenantId },
     select:  {
-      id: true, name: true, email: true, role: true, job_role: true, phone_number: true,
+      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
       shift_type: true, first_language: true, second_language: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
@@ -55,6 +55,7 @@ const InviteSchema = z.object({
   email:           z.string().email(),
   role:            z.enum(['admin', 'staff']).default('staff'),
   job_role:        z.string().max(100).optional(),
+  specialisms:     z.array(z.string().max(100)).optional(),   // specialist roles
   phone_number:    z.string().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must be in E.164 format, e.g. +447911123456').optional(),
   shift_type:      z.enum(['any', 'day', 'night']).default('any'),
   first_language:  z.string().length(3).default('eng'),
@@ -69,7 +70,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, phone_number, shift_type, first_language, second_language, new_starter } = parsed.data
+  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
 
   try {
@@ -109,13 +110,14 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       email,
       role,
       job_role:        job_role ?? null,
+      specialisms:     Array.isArray(specialisms) ? specialisms : [],
       phone_number:    phone_number ?? null,
       shift_type:      shift_type ?? 'any',
       first_language:  first_language ?? 'eng',
       second_language: second_language ?? null,
       password_hash:   passwordHash,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, phone_number: true, shift_type: true, first_language: true, second_language: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -158,8 +160,11 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       where:  { tenant_id: tenantId, is_active: true },
       select: { id: true, job_roles: true },
     })
+    // A flow applies if it targets all roles, the staff member's position, OR any
+    // of their specialist roles — so they get the right primary + secondary flows.
+    const tags = [job_role, ...(specialisms ?? [])].filter(Boolean) as string[]
     const matched = (flows as any[]).filter(f =>
-      !Array.isArray(f.job_roles) || f.job_roles.length === 0 || (job_role && f.job_roles.includes(job_role))
+      !Array.isArray(f.job_roles) || f.job_roles.length === 0 || f.job_roles.some((r: string) => tags.includes(r))
     )
     if (matched.length > 0) {
       await (prisma as any).onboardingEnrollment.createMany({
@@ -189,6 +194,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
 const UpdateSchema = z.object({
   name:            z.string().min(1).max(100).optional(),
   job_role:        z.string().max(100).nullable().optional(),
+  specialisms:     z.array(z.string().max(100)).optional(),
   role:            z.enum(['admin', 'staff']).optional(),
   phone_number:    z.string().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must be in E.164 format, e.g. +447911123456').nullable().optional(),
   shift_type:      z.enum(['any', 'day', 'night']).optional(),
@@ -249,6 +255,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const updateData: Record<string, any> = {}
   if (parsed.data.name            !== undefined) updateData.name            = parsed.data.name
   if (parsed.data.job_role        !== undefined) updateData.job_role        = parsed.data.job_role
+  if (parsed.data.specialisms     !== undefined) updateData.specialisms     = parsed.data.specialisms
   if (parsed.data.role            !== undefined) updateData.role            = parsed.data.role
   if (parsed.data.phone_number    !== undefined) updateData.phone_number    = parsed.data.phone_number
   if (parsed.data.shift_type      !== undefined) updateData.shift_type      = parsed.data.shift_type
@@ -258,7 +265,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, phone_number: true, shift_type: true, first_language: true, second_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

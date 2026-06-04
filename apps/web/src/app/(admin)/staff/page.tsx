@@ -6,7 +6,7 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Check, ChevronDown, Copy, KeyRound, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, UserMinus, UserPlus, UserX } from 'lucide-react'
+import { Check, ChevronDown, Copy, KeyRound, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, UserMinus, UserPlus, UserX, X } from 'lucide-react'
 
 // ─── Language options ─────────────────────────────────────────────────────────
 
@@ -362,9 +362,10 @@ function ActionMenu({
 
 export default function StaffPage() {
   const { data: session }              = useSession()
-  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[] }>('admin-staff')
+  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[] }>('admin-staff')
   const [users,        setUsers]       = useState<any[]>(staffCache?.users ?? [])
   const [staffRoles,   setStaffRoles]  = useState<string[]>(staffCache?.staffRoles ?? [])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>(staffCache?.specialistRoles ?? [])
   const [loading,      setLoading]     = useState(!staffCache)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
@@ -378,8 +379,9 @@ export default function StaffPage() {
       .then(([userData, settings]) => {
         const list = Array.isArray(userData) ? userData : (userData?.users ?? [])
         const roles = (settings as any).staff_roles ?? []
-        setUsers(list); setStaffRoles(roles)
-        pageCache.set('admin-staff', { users: list, staffRoles: roles })
+        const specialists = (settings as any).specialist_roles ?? []
+        setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists)
+        pageCache.set('admin-staff', { users: list, staffRoles: roles, specialistRoles: specialists })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -426,6 +428,7 @@ export default function StaffPage() {
         <InviteModal
           token={session?.accessToken ?? ''}
           staffRoles={staffRoles}
+          specialistRoles={specialistRoles}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
         />
@@ -437,6 +440,7 @@ export default function StaffPage() {
           user={editUser}
           token={session?.accessToken ?? ''}
           staffRoles={staffRoles}
+          specialistRoles={specialistRoles}
           onClose={() => setEditUser(null)}
           onSaved={(updated: any) => {
             setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
@@ -738,18 +742,22 @@ type ModalStep = 'form' | 'credentials' | 'training'
 function InviteModal({
   token,
   staffRoles,
+  specialistRoles,
   onClose,
   onInvited,
 }: {
-  token:      string
-  staffRoles: string[]
-  onClose:    () => void
-  onInvited:  () => void
+  token:           string
+  staffRoles:      string[]
+  specialistRoles: string[]
+  onClose:         () => void
+  onInvited:       () => void
 }) {
   const [step,      setStep]      = useState<ModalStep>('form')
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
   const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
+  const [hasSpecialism, setHasSpecialism] = useState(false)
+  const [specialisms, setSpecialisms]     = useState<string[]>([])
   const [error,     setError]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [onboardingNote, setOnboardingNote] = useState('')
@@ -776,6 +784,7 @@ function InviteModal({
       email:           form.email,
       role:            form.role,
       job_role:        form.job_role || undefined,
+      specialisms:     hasSpecialism ? specialisms : [],
       phone_number:    form.phone_number || undefined,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
@@ -869,29 +878,49 @@ function InviteModal({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Job role</label>
-              {staffRoles.length > 0 ? (
-                <select
-                  value={form.job_role}
-                  onChange={update('job_role')}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                >
-                  <option value="">— select a role —</option>
-                  {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={form.job_role}
-                  onChange={update('job_role')}
-                  placeholder="e.g. Care Assistant (optional)"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                />
-              )}
-              {staffRoles.length === 0 && (
-                <p className="mt-1 text-xs text-neutral-mid">
-                  Add role types in Settings to select from a dropdown here.
-                </p>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
+              <select
+                value={form.job_role}
+                onChange={update('job_role')}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              >
+                <option value="">— select a position —</option>
+                {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-neutral-mid">Drives their onboarding &amp; training. Add more positions in Settings.</p>
+            </div>
+
+            {/* Specialist roles */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Does this person have a specialist role?</label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setHasSpecialism(true)}
+                  className={`rounded-md border px-3 py-1.5 text-sm ${hasSpecialism ? 'border-teal bg-teal-light/30 text-teal' : 'border-gray-300 text-neutral-dark'}`}>Yes</button>
+                <button type="button" onClick={() => { setHasSpecialism(false); setSpecialisms([]) }}
+                  className={`rounded-md border px-3 py-1.5 text-sm ${!hasSpecialism ? 'border-teal bg-teal-light/30 text-teal' : 'border-gray-300 text-neutral-dark'}`}>No</button>
+              </div>
+              {hasSpecialism && (
+                <div className="mt-2">
+                  {specialisms.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {specialisms.map(s => (
+                        <span key={s} className="flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-xs text-teal">
+                          {s}
+                          <button type="button" onClick={() => setSpecialisms(prev => prev.filter(x => x !== s))}><X size={10} /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <select
+                    value=""
+                    onChange={e => { if (e.target.value) setSpecialisms(prev => [...new Set([...prev, e.target.value])]) }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  >
+                    <option value="">— add a specialist role —</option>
+                    {specialistRoles.filter(r => !specialisms.includes(r)).map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <p className="mt-1 text-xs text-neutral-mid">Adds the matching specialist onboarding/training. Add more in Settings.</p>
+                </div>
               )}
             </div>
 
@@ -1000,14 +1029,16 @@ function EditModal({
   user,
   token,
   staffRoles,
+  specialistRoles,
   onClose,
   onSaved,
 }: {
-  user:       any
-  token:      string
-  staffRoles: string[]
-  onClose:    () => void
-  onSaved:    (updated: any) => void
+  user:            any
+  token:           string
+  staffRoles:      string[]
+  specialistRoles: string[]
+  onClose:         () => void
+  onSaved:         (updated: any) => void
 }) {
   const [form,    setForm]    = useState({
     name:            user.name            ?? '',
@@ -1018,6 +1049,8 @@ function EditModal({
     first_language:  user.first_language  ?? 'eng',
     second_language: user.second_language ?? '',
   })
+  const [specialisms, setSpecialisms]     = useState<string[]>(Array.isArray(user.specialisms) ? user.specialisms : [])
+  const [hasSpecialism, setHasSpecialism] = useState<boolean>(Array.isArray(user.specialisms) && user.specialisms.length > 0)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -1039,6 +1072,7 @@ function EditModal({
     const res = await createApiClient(token).users.update(user.id, {
       name:            form.name || undefined,
       job_role:        form.job_role || null,
+      specialisms:     hasSpecialism ? specialisms : [],
       role:            form.role,
       phone_number:    form.phone_number || null,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
@@ -1068,24 +1102,43 @@ function EditModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Job role</label>
-            {staffRoles.length > 0 ? (
-              <select
-                value={form.job_role}
-                onChange={update('job_role')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="">— select a role —</option>
-                {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={form.job_role}
-                onChange={update('job_role')}
-                placeholder="e.g. Care Assistant (optional)"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              />
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
+            <select
+              value={form.job_role}
+              onChange={update('job_role')}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            >
+              <option value="">— select a position —</option>
+              {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Specialist role?</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setHasSpecialism(true)}
+                className={`rounded-md border px-3 py-1.5 text-sm ${hasSpecialism ? 'border-teal bg-teal-light/30 text-teal' : 'border-gray-300 text-neutral-dark'}`}>Yes</button>
+              <button type="button" onClick={() => { setHasSpecialism(false); setSpecialisms([]) }}
+                className={`rounded-md border px-3 py-1.5 text-sm ${!hasSpecialism ? 'border-teal bg-teal-light/30 text-teal' : 'border-gray-300 text-neutral-dark'}`}>No</button>
+            </div>
+            {hasSpecialism && (
+              <div className="mt-2">
+                {specialisms.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {specialisms.map(s => (
+                      <span key={s} className="flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-xs text-teal">
+                        {s}
+                        <button type="button" onClick={() => setSpecialisms(prev => prev.filter(x => x !== s))}><X size={10} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <select value="" onChange={e => { if (e.target.value) setSpecialisms(prev => [...new Set([...prev, e.target.value])]) }}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20">
+                  <option value="">— add a specialist role —</option>
+                  {specialistRoles.filter(r => !specialisms.includes(r)).map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
             )}
           </div>
 

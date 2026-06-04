@@ -4,6 +4,7 @@ import sharp from 'sharp'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { effectiveSections } from '../lib/policy-sections'
+import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
 
 // Tenant settings: inbound email address, email allowlist, logo, email preferences.
 // Mounted at /settings in app.ts, behind requireAuth + tenantGuard.
@@ -63,7 +64,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, policy_sections: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -78,7 +79,8 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     response_style:     (tenant.response_style as string) ?? 'standard',
     logo_url:           tenant.logo_url as string | null,
     email_preferences:  mergePrefs(tenant.email_preferences),
-    staff_roles:        tenant.staff_roles as string[],
+    staff_roles:        effectiveStaffRoles(tenant.staff_roles as string[]),
+    specialist_roles:   effectiveSpecialistRoles(tenant.specialist_roles as string[]),
   })
 })
 
@@ -93,7 +95,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, policy_sections } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -165,6 +167,18 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.staff_roles = normalised
   }
 
+  if (specialist_roles !== undefined) {
+    if (!Array.isArray(specialist_roles)) {
+      return err(res, 'INVALID_INPUT', 'specialist_roles must be an array', 400)
+    }
+    updateData.specialist_roles = [...new Set(
+      (specialist_roles as unknown[])
+        .filter(r => typeof r === 'string')
+        .map(r => (r as string).trim())
+        .filter(r => r.length > 0 && r.length <= 100),
+    )]
+  }
+
   if (policy_sections !== undefined) {
     if (!Array.isArray(policy_sections)) {
       return err(res, 'INVALID_INPUT', 'policy_sections must be an array', 400)
@@ -195,7 +209,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, policy_sections: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true },
   })
 
   ok(res, {
@@ -203,7 +217,8 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     phone_allowlist:   updated.phone_allowlist ?? [],
     facility_type:     updated.facility_type,
     email_preferences: mergePrefs(updated.email_preferences),
-    staff_roles:       updated.staff_roles,
+    staff_roles:       effectiveStaffRoles(updated.staff_roles),
+    specialist_roles:  effectiveSpecialistRoles(updated.specialist_roles),
     policy_sections:   effectiveSections(updated.policy_sections),
   })
 })

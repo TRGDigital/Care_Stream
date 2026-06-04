@@ -94,6 +94,9 @@ export default function SettingsPage() {
   const [staffRoles,     setStaffRoles]     = useState<string[]>(cData?.staff_roles ?? [])
   const [newRole,        setNewRole]        = useState('')
   const [savingRoles,    setSavingRoles]    = useState(false)
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>(cData?.specialist_roles ?? [])
+  const [newSpecialist,   setNewSpecialist]   = useState('')
+  const [savingSpecialists, setSavingSpecialists] = useState(false)
   const [policySections, setPolicySections] = useState<string[]>(cData?.policy_sections ?? [])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
@@ -150,6 +153,7 @@ export default function SettingsPage() {
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
+        setSpecialistRoles((data as any).specialist_roles ?? [])
         setPolicySections((data as any).policy_sections ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
         setSites(sitesData.sites)
@@ -199,6 +203,29 @@ export default function SettingsPage() {
   function removeRole(role: string) {
     const updated = staffRoles.filter(r => r !== role)
     setStaffRoles(updated); saveStaffRoles(updated)
+  }
+
+  async function saveSpecialistRoles(updated: string[]) {
+    if (!session?.accessToken) return
+    setSavingSpecialists(true)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ specialist_roles: updated })
+      setSpecialistRoles(data.specialist_roles)
+    } catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingSpecialists(false) }
+  }
+  function addSpecialist() {
+    const r = newSpecialist.trim()
+    if (!r) return
+    if (specialistRoles.includes(r)) { setError('That specialist role already exists.'); return }
+    setError('')
+    const updated = [...specialistRoles, r]
+    setSpecialistRoles(updated); setNewSpecialist('')
+    saveSpecialistRoles(updated)
+  }
+  function removeSpecialist(r: string) {
+    const updated = specialistRoles.filter(x => x !== r)
+    setSpecialistRoles(updated); saveSpecialistRoles(updated)
   }
 
   async function saveSections(updated: string[]) {
@@ -501,10 +528,10 @@ export default function SettingsPage() {
           )}
         </SettingSection>
 
-        {/* ── Staff role types ──────────────────────────────────────────────── */}
-        <SettingSection icon={Plus} title="Staff role types" description="Define the job roles used when adding staff members.">
+        {/* ── Positions ─────────────────────────────────────────────────────── */}
+        <SettingSection icon={Plus} title="Positions" description="The staff positions you can choose when adding a staff member.">
           <p className="mb-4 text-sm text-neutral-mid">
-            These appear as options when adding a new staff member, helping you track which roles are using the system.
+            A staff member&rsquo;s position drives their onboarding and training. The standard care/nursing positions are provided — add any extras specific to your home.
           </p>
           <div className="mb-4 flex gap-2">
             <input type="text" value={newRole} onChange={e => { setNewRole(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addRole()} placeholder="e.g. Care Assistant" className={INPUT} />
@@ -527,6 +554,34 @@ export default function SettingsPage() {
             </div>
           )}
           {savingRoles && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── Specialist roles ──────────────────────────────────────────────── */}
+        <SettingSection icon={Plus} title="Specialist roles" description="Specialisms a staff member can hold in addition to their position.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            When adding staff you can flag specialist roles (e.g. Infection Control, Night Staff). These add the matching specialist onboarding &amp; training. Add any extras your home uses.
+          </p>
+          <div className="mb-4 flex gap-2">
+            <input type="text" value={newSpecialist} onChange={e => { setNewSpecialist(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addSpecialist()} placeholder="e.g. Infection Control" className={INPUT} />
+            <Button onClick={addSpecialist} disabled={savingSpecialists || !newSpecialist.trim()} size="md">
+              <Plus size={14} className="mr-1.5" />Add
+            </Button>
+          </div>
+          {specialistRoles.length === 0 ? (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No specialist roles yet.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {specialistRoles.map(r => (
+                <span key={r} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
+                  {r}
+                  <button onClick={() => removeSpecialist(r)} disabled={savingSpecialists} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {savingSpecialists && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
         {/* ── Policy sections ───────────────────────────────────────────────── */}

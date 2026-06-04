@@ -53,7 +53,8 @@ model Tenant {
   twilio_whatsapp_number String?                                               // tenant's dedicated Twilio WA number (production)
   logo_url               String?                                               // base64 data URL of tenant logo
   email_preferences      Json               @default("{}")                     // per-type opt-in/out flags
-  staff_roles            String[]           @default([])                       // configurable job role list
+  staff_roles            String[]           @default([])                       // configurable position list (default: PRIMARY_ROLES)
+  specialist_roles       String[]           @default([])                       // configurable specialist-role list (default: SECONDARY_ROLES)
   policy_sections        String[]           @default([])                       // configurable internal-policy sections (empty → API default set)
   parent_tenant_id       String?                                               // null = root/standalone; set = sub-tenant
   created_at             DateTime           @default(now())
@@ -89,7 +90,8 @@ model User {
   name                   String
   role                   String         @default("staff")   // admin|staff
   password_hash          String
-  job_role               String?                            // e.g. "Care Assistant", "Registered Nurse"
+  job_role               String?                            // position — drives onboarding/training
+  specialisms            String[]       @default([])         // specialist roles (e.g. Infection Control, Night Staff)
   phone_number           String?                            // E.164 format (+447...) — enables WhatsApp access
   is_active              Boolean        @default(true)      // false = deactivated (access revoked)
   email_verified                Boolean   @default(false)

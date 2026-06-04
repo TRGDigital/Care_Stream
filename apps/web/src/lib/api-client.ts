@@ -127,12 +127,12 @@ export function createApiClient(token: string) {
 
     users: {
       list: () => apiFetch<any>('/users', token),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; new_starter?: boolean }) =>
+      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; role?: string; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null }) =>
+      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),
@@ -174,9 +174,9 @@ export function createApiClient(token: string) {
     },
 
     settings: {
-      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; response_style: 'standard' | 'concise' }>('/settings', token),
-      update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; email_preferences?: Record<string, boolean>; staff_roles?: string[]; policy_sections?: string[]; response_style?: 'standard' | 'concise' }) =>
-        apiFetch<{ email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; email_preferences: Record<string, boolean>; staff_roles: string[]; policy_sections: string[]; response_style: 'standard' | 'concise' }>('/settings', token, {
+      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise' }>('/settings', token),
+      update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; email_preferences?: Record<string, boolean>; staff_roles?: string[]; specialist_roles?: string[]; policy_sections?: string[]; response_style?: 'standard' | 'concise' }) =>
+        apiFetch<{ email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; policy_sections: string[]; response_style: 'standard' | 'concise' }>('/settings', token, {
           method: 'PATCH',
           body:   JSON.stringify(data),
         }),

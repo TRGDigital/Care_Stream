@@ -86,19 +86,11 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   const isSecond = flow.flow_kind === 'secondary'
   const sections = DEFAULT_POLICY_SECTIONS.join(', ')
 
-  const system = `You design staff onboarding inductions for UK care and nursing homes. You output ONLY valid JSON — no markdown, no commentary.`
+  // System prompt is editable in the platform /prompts page (usage: onboarding_flow_generation).
+  const system = await getOnboardingPrompt()
   const user = [
-    isSecond
-      ? `Design an onboarding induction for the SPECIALISM "${role}" — the focused policies and checks a staff member needs when taking on this responsibility.`
-      : `Design a new-starter onboarding induction for the ROLE "${role}" in a UK care/nursing home.`,
-    ``,
-    `Choose the ${isSecond ? '2 to 4' : '4 to 7'} most relevant policy areas for this ${isSecond ? 'specialism' : 'role'} from this list (use these exact names):`,
-    sections,
-    ``,
-    `For EACH chosen area, write ONE multiple-choice question (exactly 4 options, one correct) that checks understanding of that policy area as it applies to this ${isSecond ? 'specialism' : 'role'}.`,
-    ``,
-    `Output JSON of this exact shape:`,
-    `{"areas":[{"policy_section":"<exact area name>","question":"<question text>","options":["A","B","C","D"],"correct_option":<0-3>}]}`,
+    `Role or specialism: "${role}" (${isSecond ? 'specialism' : 'job role'}).`,
+    `Available policy areas: ${sections}.`,
   ].join('\n')
 
   let parsed: any
@@ -165,6 +157,28 @@ onboardingTemplatesRouter.post('/seed-roles', async (_req: Request, res: Respons
   }
   ok(res, { created: toCreate.length })
 })
+
+// ─── AI prompt (editable in platform /prompts) ────────────────────────────────
+export const DEFAULT_ONBOARDING_FLOW_PROMPT = `You design staff onboarding inductions for UK care and nursing homes.
+
+You will be given a job role or a specialism, and the list of policy areas available in the home. Choose the policy areas most relevant to that role or specialism, and for each chosen area write a single multiple-choice question that checks the staff member's understanding of that policy as it applies to their work.
+
+Guidelines:
+- For a JOB ROLE, choose the 4 to 7 most relevant policy areas. For a SPECIALISM, choose the 2 to 4 most relevant.
+- Use ONLY the exact policy area names provided — do not invent new ones.
+- Each question must have exactly 4 options with exactly one correct answer. Make the incorrect options plausible but clearly wrong to someone who has read the policy.
+- Keep questions practical, specific, and grounded in day-to-day UK care/nursing home work.
+
+Output ONLY valid JSON in exactly this shape — no markdown, no commentary:
+{"areas":[{"policy_section":"<exact area name>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
+
+async function getOnboardingPrompt(): Promise<string> {
+  try {
+    const p = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'onboarding_flow_generation' } })
+    if (p?.content) return p.content
+  } catch { /* fall through to default */ }
+  return DEFAULT_ONBOARDING_FLOW_PROMPT
+}
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 function buildStepCreate(steps: any): any {

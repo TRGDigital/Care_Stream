@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp,
   FileText, Users, MessageSquare, Mail, Phone, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -145,8 +145,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Staff</strong> in the sidebar.</Step>
             <Step n={2}>Click <strong>Add staff member</strong> and enter their name, email address, and role.</Step>
-            <Step n={3}>Select the staff member's first language and, if applicable, their second language.</Step>
-            <Step n={4}>The staff member can now use the chat portal and send email queries using their registered email address.</Step>
+            <Step n={3}>Choose the <strong>Staff type</strong> — <em>Existing staff member</em> or <em>New starter</em>. Choosing <em>New starter</em> automatically enrols them in any onboarding flow that matches their job role (see <strong>Staff onboarding flows</strong> below).</Step>
+            <Step n={4}>Optionally add a WhatsApp number and select the staff member's first language (and an optional second language).</Step>
+            <Step n={5}>You'll be shown their login details to share securely. The staff member can then use the chat portal and send email queries from their registered address.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Language preferences">
@@ -162,13 +163,54 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Roles are used for personalisation and training tracking. CareStream uses the role to tailor responses. A carer receives different guidance than a nurse or manager.
           </p>
         </SectionBlock>
-        <SectionBlock title="Email allowlist">
+        <SectionBlock title="Approved senders & WhatsApp access (added automatically)">
           <p className="text-sm text-neutral-mid">
-            If you have set up a dedicated email address (in Settings), only registered staff email addresses will receive replies by default. Emails from unknown addresses are silently discarded.
-            You can add additional email addresses to an allowlist in Settings if you need to accept queries from shared or external addresses.
+            When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list, and their WhatsApp number (if provided) is automatically added to the <strong>WhatsApp access</strong> list — both in <em>Settings</em>. You don't need to add them in two places.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Both lists in Settings show each entry alongside the staff member it belongs to — for example <em>jane@example.com — Jane Smith (Care Assistant)</em> — so you can see at a glance who each address or number belongs to. Only addresses and numbers on these lists can query CareStream by email or WhatsApp; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
           </p>
         </SectionBlock>
-        <Tip>Staff members do not receive a login. The portal is open by default. If you want to restrict access, enable staff PIN or passcode in Settings.</Tip>
+        <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen — share them securely, and use <strong>Re-send login</strong> from the staff member's menu if they're ever needed again.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'onboarding',
+    icon:    UserPlus,
+    title:   'Staff onboarding flows',
+    summary: 'Guided inductions for new starters, assigned automatically',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What an onboarding flow is">
+          <p className="text-sm text-neutral-mid">
+            An onboarding flow is a guided induction for new staff — a checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong> (to check understanding). New starters complete their flow from the staff portal, and you can track who has finished.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Creating a flow">
+          <div className="space-y-3">
+            <Step n={1}>Go to <strong>Onboarding</strong> in the sidebar and click <strong>New flow</strong>.</Step>
+            <Step n={2}>Give it a name (e.g. &ldquo;Care Assistant induction&rdquo;) and choose which <strong>job roles</strong> it applies to. Leave roles empty to apply it to <em>every</em> new starter.</Step>
+            <Step n={3}>Add the steps — pick policies for staff to read and write questions for them to answer, in the order you want them completed.</Step>
+            <Step n={4}>Make sure the flow is <strong>active</strong>. Only active flows are assigned to new starters.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Automatic enrolment for new starters">
+          <p className="text-sm text-neutral-mid">
+            When you add a staff member and choose <strong>New starter</strong> on the Staff page, CareStream automatically enrols them in every active onboarding flow whose job roles match theirs (plus any flow set to apply to all roles). You don't need to enrol them by hand — set the flow up once and every new starter for that role is enrolled from day one. The confirmation screen tells you how many flows they joined.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Tracking progress">
+          <p className="text-sm text-neutral-mid">
+            On the Onboarding page you can see each flow's enrolled staff and how far through they are, so you have a clear, auditable record that every new starter completed their induction.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Ready-made onboarding flows">
+          <p className="text-sm text-neutral-mid">
+            CareStream is building a library of ready-made onboarding flows — covering common care-sector inductions — that any home can use as a starting point and tailor to their own policies. When these become available you'll be able to adopt one in a couple of clicks rather than building a flow from scratch.
+          </p>
+        </SectionBlock>
+        <Tip>If you add a new starter before creating a matching flow, no onboarding is assigned — create the flow on the Onboarding page and future new starters in that role will be enrolled automatically.</Tip>
       </div>
     ),
   },

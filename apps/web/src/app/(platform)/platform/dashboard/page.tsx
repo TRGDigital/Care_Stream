@@ -2436,6 +2436,21 @@ function SystemReference() {
           <RefRow label="Staff completion"  value="Portal (apps/web/(portal)/chat). MCQ graded deterministically (selected index vs correct_option) — wrong answer keeps the step incomplete so they retry. Free-text uses a Haiku yes/no verdict. GET /onboarding/my exposes options but NEVER correct_option." />
           <RefRow label="Files"             value="apps/api/src/routes/onboarding.ts (tenant + adoption), routes/onboarding-templates.ts (platform), data/onboarding-roles.ts. Tenant UI: (admin)/onboarding/page.tsx." />
         </div>
+
+        <div className="mt-4">
+          <p className="font-semibold text-neutral-dark mb-1">Positions & specialist roles (the link to staff)</p>
+          <p className="text-neutral-mid mb-2">
+            How a staff member's role drives which onboarding + training they get. ONE canonical list keeps positions, specialisms, onboarding flows and training modules aligned.
+          </p>
+          <div className="space-y-1">
+            <RefRow label="Source of truth"   value="apps/api/src/data/onboarding-roles.ts — PRIMARY_ROLES (14, incl. Nurse) = staff Positions; SECONDARY_ROLES (8) = Specialist roles. effectiveStaffRoles/effectiveSpecialistRoles fall back to these when a tenant hasn't customised. Same strings are used as the onboarding flows' job_roles and (where set) training modules." />
+            <RefRow label="Staff data"        value="User.job_role = position (single). User.specialisms = String[] (zero or more). Set on the Staff invite/edit form: Position dropdown + Yes/No specialist toggle → multi-select." />
+            <RefRow label="Tenant settings"   value="Tenant.staff_roles = configurable Positions list; Tenant.specialist_roles = configurable Specialist list. Managed in tenant Settings (Positions + Specialist roles cards). GET/PATCH /settings serve/accept both (effective = tenant's or defaults)." />
+            <RefRow label="Onboarding link"   value="New-starter invite (users.ts) enrols into every active onboarding flow whose job_roles is empty OR intersects ([position] ∪ specialisms). So a flow tagged 'Care Assistant' matches their position; a secondary flow tagged 'Infection Control' matches a specialism." />
+            <RefRow label="Training link"     value="Position drives the training module catalog (ensureTenantModules) + question grounding. Module question generation grounds in the tenant's care-setting policy seeds matched to the module topic. (Specialisms not yet factored into training question relevance — onboarding only.)" />
+            <RefRow label="Flow"              value="Settings list → Staff form dropdowns → User.job_role + specialisms → New-starter enrolment into matching primary + secondary onboarding flows → setting-specific, role-specific questions." />
+          </div>
+        </div>
       </RefSection>
     </div>
   )

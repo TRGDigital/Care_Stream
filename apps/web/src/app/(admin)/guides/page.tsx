@@ -143,12 +143,23 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="Adding staff members">
           <div className="space-y-3">
-            <Step n={1}>Go to <strong>Staff</strong> in the sidebar.</Step>
-            <Step n={2}>Click <strong>Add staff member</strong> and enter their name, email address, and role.</Step>
-            <Step n={3}>Choose the <strong>Staff type</strong> — <em>Existing staff member</em> or <em>New starter</em>. Choosing <em>New starter</em> automatically enrols them in any onboarding flow that matches their job role (see <strong>Staff onboarding flows</strong> below).</Step>
-            <Step n={4}>Optionally add a WhatsApp number and select the staff member's first language (and an optional second language).</Step>
-            <Step n={5}>You'll be shown their login details to share securely. The staff member can then use the chat portal and send email queries from their registered address.</Step>
+            <Step n={1}>Go to <strong>Staff</strong> in the sidebar and click <strong>Add staff member</strong>; enter their name and email address.</Step>
+            <Step n={2}>Choose their <strong>Position</strong> from the dropdown (Care Assistant, Nurse, Chef, etc.). This is the key field — it decides which onboarding and training they receive.</Step>
+            <Step n={3}>If they hold a <strong>specialist role</strong> (e.g. Infection Control, Night Staff), answer <em>Yes</em> and pick one or more from the list. These add extra, specialist onboarding and training on top of their position.</Step>
+            <Step n={4}>Choose the <strong>Staff type</strong> — <em>New starter</em> auto-enrols them in the onboarding for their position and specialisms; <em>Existing staff member</em> doesn't.</Step>
+            <Step n={5}>Optionally add a WhatsApp number and their first/second language, then share the login details shown on screen.</Step>
           </div>
+        </SectionBlock>
+        <SectionBlock title="Positions & specialist roles — how they drive onboarding & training">
+          <p className="text-sm text-neutral-mid">
+            A staff member's <strong>position</strong> is the single most important thing you set, because CareStream uses it to give them the <strong>right onboarding and the right training questions</strong> for their job — a Care Assistant's induction and quizzes are different from a Nurse's or a Chef's.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            <strong>Specialist roles</strong> work on top of the position. If someone is a Senior Care Assistant who is also your Infection Control lead, they get the Senior Care Assistant onboarding <em>plus</em> the Infection Control specialist onboarding — and their training is tailored to both.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Both lists are managed in <strong>Settings → Positions</strong> and <strong>Settings → Specialist roles</strong>. The standard care/nursing positions and specialisms are already there; add any extras specific to your home and they'll appear in the dropdowns straight away.
+          </p>
         </SectionBlock>
         <SectionBlock title="Language preferences">
           <p className="text-sm text-neutral-mid">
@@ -156,11 +167,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             You can update a staff member's language preferences at any time by clicking the edit icon next to their name on the Staff page. Over 25 languages are supported, covering the most common first languages across the UK care workforce.
-          </p>
-        </SectionBlock>
-        <SectionBlock title="Staff roles">
-          <p className="text-sm text-neutral-mid">
-            Roles are used for personalisation and training tracking. CareStream uses the role to tailor responses. A carer receives different guidance than a nurse or manager.
           </p>
         </SectionBlock>
         <SectionBlock title="Approved senders & WhatsApp access (added automatically)">
@@ -219,7 +225,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">
-            When you add a staff member and choose <strong>New starter</strong> on the Staff page, CareStream automatically enrols them in every active flow (adopted or your own) whose job roles match theirs. Set the flow up once and every new starter for that role is enrolled from day one — the confirmation screen tells you how many flows they joined.
+            When you add a staff member and choose <strong>New starter</strong>, CareStream automatically enrols them in every active flow (adopted or your own) that matches their <strong>position</strong> or any of their <strong>specialist roles</strong>. So a new Nurse who is also Night Staff joins both the Nurse induction and the Night Staff specialist flow. Set the flows up once and every new starter is enrolled from day one — the confirmation screen tells you how many they joined.
           </p>
         </SectionBlock>
         <SectionBlock title="Tracking progress">

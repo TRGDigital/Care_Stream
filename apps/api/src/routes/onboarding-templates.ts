@@ -135,28 +135,25 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   for (const s of seeds as any[]) if (s.section && !bySection.has(s.section)) bySection.set(s.section, s.content)
   const refBlock = [...bySection.entries()].map(([sec, content]) => `## ${sec}\n${String(content).slice(0, 1000)}`).join('\n\n')
 
-  // Difficulty levels selected for this flow (per-role) feed straight into the prompt.
+  // Variables available to the editable prompt as {{PLACEHOLDERS}}. Any not present
+  // in the prompt are appended to the user message instead, so generation always
+  // gets the data whether or not the prompt uses the placeholder.
   const diffs: string[] = Array.isArray(flow.difficulties) ? flow.difficulties : []
-  const diffLine = diffs.length
-    ? `Pitch the questions at ${diffs.length > 1 ? 'a mix of these difficulty levels' : 'this difficulty level'}: ${diffs.map(d => DIFFICULTY_GUIDE[d] ?? d).join('; ')}.`
-    : ''
-
-  const avoidLine = keptQuestions.length
-    ? `These questions are already kept — do NOT repeat or rephrase them, write DIFFERENT ones:\n${keptQuestions.map((q: string) => `- ${q}`).join('\n')}`
-    : ''
-
-  const user = [
-    `Role or specialism: "${role}" (${isSecond ? 'specialism' : 'job role'}).`,
-    `Write questions that are specific to what a ${role} actually does day to day — not generic care-sector questions, and not questions that belong to a different role.`,
-    diffLine,
-    `Available policy areas: ${sections}.`,
-    avoidLine,
-    refBlock ? `\nReference policy extracts — base your questions on the wording and procedures in these where relevant:\n${refBlock}` : '',
-  ].filter(Boolean).join('\n')
+  const vars: Record<string, string> = {
+    JOB_ROLE:           role,
+    CARE_SETTING:       settingLabelForPrompt(flow.care_setting),
+    POLICY_AREAS:       sections,
+    REFERENCE_POLICIES: refBlock || 'None provided — use general UK adult social care best practice.',
+    DIFFICULTY:         diffs.length ? diffs.map(d => DIFFICULTY_GUIDE[d] ?? d).join('; ') : 'a balanced mix, from easy to medium',
+    AVOID_QUESTIONS:    keptQuestions.length ? keptQuestions.map((q: string) => `- ${q}`).join('\n') : 'None.',
+  }
+  const filled = fillPrompt(system, vars)
+  const user = (filled.context.length ? `${filled.context.join('\n\n')}\n\n` : '') +
+    'Generate the questions now, in the required JSON format and nothing else.'
 
   let parsed: any
   try {
-    const raw = await callClaude(system, user, { maxTokens: 3500, temperature: 0.4 })
+    const raw = await callClaude(filled.system, user, { maxTokens: 3500, temperature: 0.4 })
     parsed = extractJson(raw)
   } catch (e: any) {
     return err(res, 'AI_FAILED', `Could not generate a draft: ${e.message}`, 502)
@@ -242,20 +239,87 @@ onboardingTemplatesRouter.post('/seed-roles', async (req: Request, res: Response
 })
 
 // ─── AI prompt (editable in platform /prompts) ────────────────────────────────
-export const DEFAULT_ONBOARDING_FLOW_PROMPT = `You design staff onboarding inductions for UK care and nursing homes.
+export const DEFAULT_ONBOARDING_FLOW_PROMPT = `You are an expert UK health and social care onboarding content creator.
 
-You will be given a job role or a specialism, and the list of policy areas available in the home. Choose the policy areas most relevant to that role or specialism, and for each chosen area write a single multiple-choice question that checks the staff member's understanding of that policy as it applies to their work.
+Your task is to generate multiple-choice induction questions for a specific staff role, tailored to their care setting and based on the home's own policies provided below.
 
-Guidelines:
-- For a JOB ROLE, choose the 4 to 7 most relevant policy areas. For a SPECIALISM, choose the 2 to 4 most relevant.
-- Use ONLY the exact policy area names provided — do not invent new ones.
-- Each question must have exactly 4 options with exactly one correct answer. Make the incorrect options plausible but clearly wrong to someone who has read the policy.
-- Keep questions practical, specific, and grounded in day-to-day UK care/nursing home work.
-- Make every question SPECIFIC TO THE ROLE given — what that person actually does. Do not write generic questions, and never ask one role a question that belongs to a different role (e.g. don't ask a kitchen porter a clinical nursing question).
-- If difficulty levels are given, pitch the questions to match them. "Very easy" means basic awareness only — non-care roles (kitchen porter, laundry, cleaning) should get simple, practical questions and never specialist clinical content.
+INPUT VARIABLES:
+
+ROLE:
+{{JOB_ROLE}}
+
+CARE_SETTING:
+{{CARE_SETTING}}
+
+QUESTION_DIFFICULTY:
+{{DIFFICULTY}}
+
+POLICY_AREAS (choose only from these exact names):
+{{POLICY_AREAS}}
+
+REFERENCE_POLICIES (the home's own, anonymised — base questions on this wording where relevant):
+{{REFERENCE_POLICIES}}
+
+ALREADY_KEPT_QUESTIONS (do NOT repeat or rephrase any of these):
+{{AVOID_QUESTIONS}}
+
+YOUR TASK:
+
+Choose the policy areas most relevant to a {{JOB_ROLE}} working in a {{CARE_SETTING}} — for a job role choose 4 to 7 areas, for a specialist role choose 2 to 4. For each chosen area write ONE multiple-choice question.
+
+CARE_SETTING will be one of: Care Home, Nursing Home, Home Care Agency. Tailor every question to it:
+- Care Home: residential care staff supporting residents — residents' rooms, communal areas, dining, activities, visitors, handovers, care plans, personal care, safeguarding, infection control, falls, fire safety, record keeping and person-centred support.
+- Nursing Home: staff supporting residents with higher clinical needs — registered nurses, care assistants, senior carers, medication support, pressure area and wound care, clinical observations, infection control, nutrition and hydration, end of life care, deteriorating residents, escalation, documentation and working within competence.
+- Home Care Agency: domiciliary staff in people's own homes — lone working, travel between visits, medication prompts, missed/late calls, access to homes, family members, home hazards, confidentiality, safeguarding, infection control, moving and handling in domestic settings, care plans, reporting concerns and professional boundaries.
+
+ROLE AND DIFFICULTY:
+- Every question must be specific to what a {{JOB_ROLE}} actually does day to day. Never ask a role a question that belongs to a different role (e.g. do not ask a kitchen porter a clinical nursing question).
+- Pitch the questions at this difficulty: {{DIFFICULTY}}. "Very easy" means basic awareness only — non-care roles (kitchen porter, laundry, cleaning) get simple, practical questions and never specialist clinical content.
+
+EACH QUESTION MUST:
+- Reflect UK adult social care standards, CQC expectations, legislation and best practice
+- Use UK English spelling and terminology
+- Be clear, practical and easy for care staff to understand; test understanding, not trick the learner
+- Include exactly 4 answer options with only ONE correct answer and plausible but clearly incorrect distractors
+- Randomise the position of the correct answer
+- Avoid "all of the above" / "none of the above" and duplicate or repetitive wording
+- Be scenario-based where appropriate
+
+AVOID: overly academic language, ambiguous answers, trick questions, unsafe advice, US terminology, any company names, any real personal names (state clearly if a character is fictional), references to AI or internal systems, and anything outside the JSON format below.
 
 Output ONLY valid JSON in exactly this shape — no markdown, no commentary:
-{"areas":[{"policy_section":"<exact area name>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
+{"areas":[{"policy_section":"<exact area name from POLICY_AREAS>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
+
+function settingLabelForPrompt(s: string | null): string {
+  switch (s) {
+    case 'nursing_home': return 'Nursing Home'
+    case 'care_home':    return 'Care Home'
+    case 'home_care':    return 'Home Care Agency'
+    default:             return 'Care Home'
+  }
+}
+
+const PROMPT_VAR_LABELS: Record<string, string> = {
+  JOB_ROLE:           'Role or specialism',
+  CARE_SETTING:       'Care setting',
+  POLICY_AREAS:       'Available policy areas',
+  REFERENCE_POLICIES: 'Reference policy extracts',
+  DIFFICULTY:         'Question difficulty',
+  AVOID_QUESTIONS:    'Do NOT repeat these questions',
+}
+
+// Substitute {{VAR}} placeholders in the prompt; any variable the prompt doesn't
+// reference is returned as a context line to append to the user message instead.
+function fillPrompt(template: string, vars: Record<string, string>): { system: string; context: string[] } {
+  let system = template
+  const context: string[] = []
+  for (const [k, v] of Object.entries(vars)) {
+    const ph = `{{${k}}}`
+    if (system.includes(ph)) system = system.split(ph).join(v)
+    else context.push(`${PROMPT_VAR_LABELS[k] ?? k}: ${v}`)
+  }
+  return { system, context }
+}
 
 async function getOnboardingPrompt(): Promise<string> {
   try {

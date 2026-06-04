@@ -359,17 +359,32 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
     const langName = languageNameForCode(langCode, tenant?.custom_languages)
     const translate = langCode !== 'eng'
 
-    const sanitised = await Promise.all((enrollments as any[]).map(async (e: any) => {
-      const baseQuestions = (e.module.questions as any[]).map(({ correct: _c, ...q }) => q)
-      const questions = translate
-        ? await Promise.all(baseQuestions.map(async (q: any) => {
-            const t = await translateQuestionCached({ text: q.text, options: (q.options as string[]) ?? [] }, langCode, langName)
+    // English baseline — always returned, even if translation fails.
+    const baseline = (enrollments as any[]).map((e: any) => ({
+      ...e,
+      module: {
+        ...e.module,
+        questions: (Array.isArray(e.module?.questions) ? e.module.questions : []).map(({ correct: _c, ...q }: any) => q),
+      },
+    }))
+    console.log(`[my-enrollments] user=${userId} lang=${langCode} translate=${translate} count=${baseline.length}`)
+
+    let sanitised = baseline
+    if (translate) {
+      try {
+        sanitised = await Promise.all(baseline.map(async (e: any) => {
+          const questions = await Promise.all((e.module.questions as any[]).map(async (q: any) => {
+            const t = await translateQuestionCached({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] }, langCode, langName)
             return { ...q, text: t.text, options: t.options }
           }))
-        : baseQuestions
-      const name = translate ? await translateText(e.module.name, langCode, langName) : e.module.name
-      return { ...e, module: { ...e.module, name, questions } }
-    }))
+          const name = await translateText(e.module.name, langCode, langName)
+          return { ...e, module: { ...e.module, name, questions } }
+        }))
+      } catch (transErr) {
+        console.error('[my-enrollments] translation failed, serving English:', transErr)
+        sanitised = baseline
+      }
+    }
     ok(res, { enrollments: sanitised })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)

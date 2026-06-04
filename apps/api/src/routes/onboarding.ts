@@ -267,37 +267,47 @@ onboardingRouter.get('/my', async (req, res) => {
     const langName = languageNameForCode(langCode, tenant?.custom_languages)
     const translate = langCode !== 'eng'
 
-    const result = await Promise.all(enrollments.map(async e => ({
+    // English baseline — always returned, even if translation fails.
+    const baseline = enrollments.map(e => ({
       enrollment_id: e.id,
       flow_id:       e.flow_id,
-      flow_name:     translate ? await translateText(e.flow.name, langCode, langName) : e.flow.name,
+      flow_name:     e.flow.name,
       enrolled_at:   e.enrolled_at,
       due_date:      e.due_date,
       completed_at:  e.completed_at,
-      steps:         await Promise.all(e.flow.steps.map(async s => {
-        let title    = s.title
-        let question = s.question
-        let options  = s.options
-        if (translate) {
-          title = await translateText(s.title, langCode, langName)
-          if (s.type === 'answer_question' && s.question) {
-            const t = await translateQuestionCached({ text: s.question, options: (s.options as string[]) ?? [] }, langCode, langName)
-            question = t.text
-            options  = t.options as any
-          }
-        }
-        return {
-          id:        s.id,
-          order:     s.order,
-          title,
-          type:      s.type,
-          policy_id: s.policy_id,
-          question,
-          options,                           // shown to staff for MCQ — correct_option is NOT exposed
-          progress:  e.progress.find(p => p.step_id === s.id) ?? null,
-        }
+      steps:         e.flow.steps.map(s => ({
+        id:        s.id,
+        order:     s.order,
+        title:     s.title,
+        type:      s.type,
+        policy_id: s.policy_id,
+        question:  s.question,
+        options:   s.options,                // shown to staff for MCQ — correct_option is NOT exposed
+        progress:  e.progress.find(p => p.step_id === s.id) ?? null,
       })),
-    })))
+    }))
+    console.log(`[onboarding/my] user=${userId} lang=${langCode} translate=${translate} count=${baseline.length}`)
+
+    let result = baseline
+    if (translate) {
+      try {
+        result = await Promise.all(baseline.map(async e => ({
+          ...e,
+          flow_name: await translateText(e.flow_name, langCode, langName),
+          steps: await Promise.all(e.steps.map(async s => {
+            const title = await translateText(s.title, langCode, langName)
+            if (s.type === 'answer_question' && s.question) {
+              const t = await translateQuestionCached({ text: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] }, langCode, langName)
+              return { ...s, title, question: t.text, options: t.options as any }
+            }
+            return { ...s, title }
+          })),
+        })))
+      } catch (transErr) {
+        console.error('[onboarding/my] translation failed, serving English:', transErr)
+        result = baseline
+      }
+    }
 
     res.json({ success: true, data: { enrollments: result } })
   } catch (e: any) {

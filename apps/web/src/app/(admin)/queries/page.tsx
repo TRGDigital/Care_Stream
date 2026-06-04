@@ -4,6 +4,7 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { pageCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { BookOpen, ChevronDown, ChevronUp, Info, MessageSquare, Users, X } from 'lucide-react'
 
@@ -52,10 +53,11 @@ interface ModalSession {
 
 export default function QueriesPage() {
   const { data: session }       = useSession()
-  const [queries,  setQueries]  = useState<any[]>([])
-  const [total,    setTotal]    = useState(0)
+  const queriesCache = pageCache.get<{ queries: any[]; total: number }>('admin-queries')
+  const [queries,  setQueries]  = useState<any[]>(queriesCache?.queries ?? [])
+  const [total,    setTotal]    = useState(queriesCache?.total ?? 0)
   const [page,     setPage]     = useState(1)
-  const [loading,  setLoading]  = useState(true)
+  const [loading,  setLoading]  = useState(!queriesCache)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [modal,    setModal]    = useState<ModalSession | null>(null)
   const [filter,   setFilter]   = useState({
@@ -68,14 +70,17 @@ export default function QueriesPage() {
 
   useEffect(() => {
     if (!session?.accessToken) return
-    setLoading(true)
     const params: Record<string, string> = { page: String(page), limit: String(LIMIT) }
     if (filter.language_detected) params.language_detected = filter.language_detected
     if (filter.no_match)          params.no_match          = filter.no_match
     if (filter.document_category) params.document_category = filter.document_category
 
     createApiClient(session.accessToken).query.list(params)
-      .then(data => { setQueries(data?.queries ?? []); setTotal(data?.total ?? 0) })
+      .then(data => {
+        const q = data?.queries ?? []; const t = data?.total ?? 0
+        setQueries(q); setTotal(t)
+        if (page === 1 && !filter.language_detected && !filter.no_match && !filter.document_category) pageCache.set('admin-queries', { queries: q, total: t })
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [session?.accessToken, page, filter])

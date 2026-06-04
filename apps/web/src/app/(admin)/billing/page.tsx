@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -43,9 +44,10 @@ function StatusBadge({ status }: { status: string }) {
 export default function BillingPage() {
   const { data: session } = useSession()
 
-  const [summary,  setSummary]  = useState<any>(null)
-  const [invoices, setInvoices] = useState<any[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const billingCache = pageCache.get<{ summary: any; invoices: any[] }>('admin-billing')
+  const [summary,  setSummary]  = useState<any>(billingCache?.summary ?? null)
+  const [invoices, setInvoices] = useState<any[]>(billingCache?.invoices ?? [])
+  const [loading,  setLoading]  = useState(!billingCache)
   const [portalLoading, setPortalLoading] = useState(false)
   const [error,    setError]    = useState('')
   const [portalError, setPortalError] = useState('')
@@ -54,7 +56,7 @@ export default function BillingPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.billing.summary(), api.billing.invoices()])
-      .then(([s, inv]) => { setSummary(s); setInvoices(inv.invoices) })
+      .then(([s, inv]) => { setSummary(s); setInvoices(inv.invoices); pageCache.set('admin-billing', { summary: s, invoices: inv.invoices }) })
       .catch((e: any) => setError(e.message ?? 'Failed to load billing information.'))
       .finally(() => setLoading(false))
   }, [session?.accessToken])

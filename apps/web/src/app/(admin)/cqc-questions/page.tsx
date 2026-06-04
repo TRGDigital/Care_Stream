@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight, ClipboardList,
   Info, Loader2, Plus, Send, Sparkles, Trash2, X,
@@ -659,10 +660,11 @@ export default function CqcQuestionsPage() {
   const token = (session as any)?.accessToken as string
 
   const [tab, setTab]               = useState<'bank' | 'performance'>('bank')
-  const [questions, setQuestions]   = useState<Question[]>([])
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [staff, setStaff]           = useState<StaffUser[]>([])
-  const [loading, setLoading]       = useState(true)
+  const cqcCache = pageCache.get<{ questions: Question[]; deliveries: Delivery[]; staff: StaffUser[] }>('admin-cqc-questions')
+  const [questions, setQuestions]   = useState<Question[]>(cqcCache?.questions ?? [])
+  const [deliveries, setDeliveries] = useState<Delivery[]>(cqcCache?.deliveries ?? [])
+  const [staff, setStaff]           = useState<StaffUser[]>(cqcCache?.staff ?? [])
+  const [loading, setLoading]       = useState(!cqcCache)
   const [error, setError]           = useState('')
 
   const load = useCallback(async () => {
@@ -674,9 +676,11 @@ export default function CqcQuestionsPage() {
         api.cqcQuestions.deliveries(),
         api.users.list(),
       ])
+      const staffList = (sRes.users ?? []).filter((u: any) => u.role === 'staff' && u.is_active)
       setQuestions(qRes.questions)
       setDeliveries(dRes.deliveries)
-      setStaff((sRes.users ?? []).filter((u: any) => u.role === 'staff' && u.is_active))
+      setStaff(staffList)
+      pageCache.set('admin-cqc-questions', { questions: qRes.questions, deliveries: dRes.deliveries, staff: staffList })
     } catch (e: any) {
       setError(e.message)
     } finally {

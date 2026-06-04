@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, ExternalLink, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, X,
@@ -1542,10 +1543,11 @@ function DeliveryTab({ api, modules, staff }: {
 export default function TrainingPage() {
   const { data: session } = useSession()
   const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery'>('compliance')
-  const [staff,       setStaff]       = useState<Staff[]>([])
-  const [modules,     setModules]     = useState<Module[]>([])
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
-  const [loading,     setLoading]     = useState(true)
+  const trainingCache = pageCache.get<{ staff: Staff[]; modules: Module[]; enrollments: Enrollment[] }>('admin-training')
+  const [staff,       setStaff]       = useState<Staff[]>(trainingCache?.staff ?? [])
+  const [modules,     setModules]     = useState<Module[]>(trainingCache?.modules ?? [])
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(trainingCache?.enrollments ?? [])
+  const [loading,     setLoading]     = useState(!trainingCache)
   const [error,       setError]       = useState('')
   const [showAssign,  setShowAssign]  = useState(false)
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null)
@@ -1562,6 +1564,11 @@ export default function TrainingPage() {
       setModules(modulesRes.modules as Module[])
       setStaff(complianceRes.users)
       setEnrollments(complianceRes.enrollments)
+      pageCache.set('admin-training', {
+        staff: complianceRes.users,
+        modules: modulesRes.modules as Module[],
+        enrollments: complianceRes.enrollments,
+      })
     } catch (e: any) {
       setError(e.message ?? 'Failed to load training data')
     } finally {

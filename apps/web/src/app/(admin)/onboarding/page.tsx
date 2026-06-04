@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, X, GripVertical } from 'lucide-react'
 
 type Step = { title: string; type: 'read_policy' | 'answer_question'; policy_id?: string; question?: string }
@@ -231,8 +232,9 @@ function DemoPreview() {
 
 export default function OnboardingPage() {
   const { data: session } = useSession()
-  const [flows,    setFlows]    = useState<Flow[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const flowsCache = pageCache.get<Flow[]>('admin-onboarding')
+  const [flows,    setFlows]    = useState<Flow[]>(flowsCache ?? [])
+  const [loading,  setLoading]  = useState(!flowsCache)
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -244,6 +246,7 @@ export default function OnboardingPage() {
     try {
       const d = await api.onboarding.listFlows()
       setFlows(d.flows)
+      pageCache.set('admin-onboarding', d.flows)
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
     } finally {

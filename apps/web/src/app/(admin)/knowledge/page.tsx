@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type KnowledgeEntry } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import {
   BookOpen, Plus, Sparkles, Trash2, Pencil, X, Check,
   Loader2, ChevronDown, ChevronRight, ShieldCheck, Clock,
@@ -93,9 +94,10 @@ function groupPlatformByCategory(entries: KnowledgeEntry[]): Map<string, Knowled
 
 export default function KnowledgePage() {
   const { data: session }           = useSession()
-  const [entries, setEntries]       = useState<KnowledgeEntry[]>([])
-  const [total, setTotal]           = useState(0)
-  const [loading, setLoading]       = useState(true)
+  const knowledgeCache = pageCache.get<{ entries: KnowledgeEntry[]; total: number }>('admin-knowledge')
+  const [entries, setEntries]       = useState<KnowledgeEntry[]>(knowledgeCache?.entries ?? [])
+  const [total, setTotal]           = useState(knowledgeCache?.total ?? 0)
+  const [loading, setLoading]       = useState(!knowledgeCache)
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
   const [editId, setEditId]         = useState<string | null>(null)
@@ -103,9 +105,8 @@ export default function KnowledgePage() {
 
   const load = useCallback(() => {
     if (!session?.accessToken) return
-    setLoading(true)
     createApiClient(session.accessToken).knowledge.list({ limit: '500' })
-      .then(data => { setEntries(data.entries); setTotal(data.total) })
+      .then(data => { setEntries(data.entries); setTotal(data.total); pageCache.set('admin-knowledge', { entries: data.entries, total: data.total }) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [session?.accessToken])

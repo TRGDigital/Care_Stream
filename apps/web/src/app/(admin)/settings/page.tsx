@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   Bell, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
@@ -79,40 +80,42 @@ function SettingSection({
 export default function SettingsPage() {
   const { data: session }           = useSession()
   const router                      = useRouter()
-  const [inboundEmail,   setInboundEmail]   = useState('')
-  const [accountNumber,  setAccountNumber]  = useState('')
-  const [allowlist,      setAllowlist]      = useState<string[]>([])
-  const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>([])
+  const settingsCache = pageCache.get<{ data: any; sites: any[]; training: any }>('admin-settings')
+  const cData = settingsCache?.data
+  const [inboundEmail,   setInboundEmail]   = useState(cData?.inbound_email ?? '')
+  const [accountNumber,  setAccountNumber]  = useState(cData?.account_number ?? '')
+  const [allowlist,      setAllowlist]      = useState<string[]>(cData?.email_allowlist ?? [])
+  const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>(cData?.phone_allowlist ?? [])
   const [newPhone,       setNewPhone]       = useState('')
   const [savingPhone,    setSavingPhone]    = useState(false)
-  const [facilityType,   setFacilityType]   = useState('')
-  const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
+  const [facilityType,   setFacilityType]   = useState(cData?.facility_type ?? '')
+  const [logoUrl,        setLogoUrl]        = useState<string | null>(cData?.logo_url ?? null)
   const [newEmail,       setNewEmail]       = useState('')
-  const [staffRoles,     setStaffRoles]     = useState<string[]>([])
+  const [staffRoles,     setStaffRoles]     = useState<string[]>(cData?.staff_roles ?? [])
   const [newRole,        setNewRole]        = useState('')
   const [savingRoles,    setSavingRoles]    = useState(false)
-  const [policySections, setPolicySections] = useState<string[]>([])
+  const [policySections, setPolicySections] = useState<string[]>(cData?.policy_sections ?? [])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
-  const [loading,        setLoading]        = useState(true)
+  const [loading,        setLoading]        = useState(!settingsCache)
   const [loadError,      setLoadError]      = useState('')
   const [saving,         setSaving]         = useState(false)
   const [savingFacility, setSavingFacility] = useState(false)
   const [logoUploading,  setLogoUploading]  = useState(false)
   const [logoError,      setLogoError]      = useState('')
-  const [emailPrefs,     setEmailPrefs]     = useState<Record<string, boolean>>({})
+  const [emailPrefs,     setEmailPrefs]     = useState<Record<string, boolean>>(cData?.email_preferences ?? {})
   const [savingPrefKey,  setSavingPrefKey]  = useState<string | null>(null)
   const [error,          setError]          = useState('')
   const [copied,         setCopied]         = useState(false)
-  const [trainingSettings,  setTrainingSettings]  = useState<TrainingSettings>({})
+  const [trainingSettings,  setTrainingSettings]  = useState<TrainingSettings>(settingsCache?.training?.settings ?? {})
   const [savingTraining,    setSavingTraining]    = useState<string | null>(null)
-  const [sites,          setSites]          = useState<any[]>([])
+  const [sites,          setSites]          = useState<any[]>(settingsCache?.sites ?? [])
   const [showAddSite,    setShowAddSite]    = useState(false)
   const [newSiteName,    setNewSiteName]    = useState('')
   const [addingSite,     setAddingSite]     = useState(false)
   const [siteError,      setSiteError]      = useState('')
   const [switchingTo,    setSwitchingTo]    = useState<string | null>(null)
-  const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>('standard')
+  const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>(cData?.response_style ?? 'standard')
   const [savingStyle,    setSavingStyle]    = useState(false)
 
   useEffect(() => {
@@ -136,6 +139,7 @@ export default function SettingsPage() {
         setResponseStyle((data as any).response_style ?? 'standard')
         setSites(sitesData.sites)
         setTrainingSettings(trainingData.settings ?? {})
+        pageCache.set('admin-settings', { data, sites: sitesData.sites, training: trainingData })
       })
       .catch((e: any) => setLoadError(e.message ?? 'Failed to load settings'))
       .finally(() => setLoading(false))

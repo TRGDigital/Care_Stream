@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Check, ChevronDown, Copy, KeyRound, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, UserMinus, UserPlus, UserX } from 'lucide-react'
@@ -361,9 +362,10 @@ function ActionMenu({
 
 export default function StaffPage() {
   const { data: session }              = useSession()
-  const [users,        setUsers]       = useState<any[]>([])
-  const [staffRoles,   setStaffRoles]  = useState<string[]>([])
-  const [loading,      setLoading]     = useState(true)
+  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[] }>('admin-staff')
+  const [users,        setUsers]       = useState<any[]>(staffCache?.users ?? [])
+  const [staffRoles,   setStaffRoles]  = useState<string[]>(staffCache?.staffRoles ?? [])
+  const [loading,      setLoading]     = useState(!staffCache)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
   const [editUser,     setEditUser]    = useState<any | null>(null)
@@ -374,8 +376,10 @@ export default function StaffPage() {
     const api = createApiClient(session.accessToken)
     Promise.all([api.users.list(), api.settings.get()])
       .then(([userData, settings]) => {
-        setUsers(Array.isArray(userData) ? userData : (userData?.users ?? []))
-        setStaffRoles((settings as any).staff_roles ?? [])
+        const list = Array.isArray(userData) ? userData : (userData?.users ?? [])
+        const roles = (settings as any).staff_roles ?? []
+        setUsers(list); setStaffRoles(roles)
+        pageCache.set('admin-staff', { users: list, staffRoles: roles })
       })
       .catch(() => {})
       .finally(() => setLoading(false))

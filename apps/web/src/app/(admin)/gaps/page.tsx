@@ -3,20 +3,21 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { AlertTriangle, CheckCircle2, FileQuestion, ShieldAlert, TrendingUp } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
 export default function GapsPage() {
   const { data: session } = useSession()
-  const [data,    setData]    = useState<GapsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data,    setData]    = useState<GapsData | null>(() => pageCache.get<GapsData>('admin-gaps') ?? null)
+  const [loading, setLoading] = useState(() => pageCache.get<GapsData>('admin-gaps') === undefined)
   const [error,   setError]   = useState('')
 
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).analytics.gaps()
-      .then(setData)
+      .then(d => { setData(d); pageCache.set('admin-gaps', d) })
       .catch((e: any) => setError(e.message ?? 'Failed to load gap analysis'))
       .finally(() => setLoading(false))
   }, [session?.accessToken])

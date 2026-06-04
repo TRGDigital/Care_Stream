@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
@@ -178,12 +179,13 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const [data,         setData]     = useState<any>(null)
-  const [trainingData, setTraining] = useState<any>(null)
-  const [gapsData,     setGaps]     = useState<any>(null)
-  const [cqcPrepData,  setCqcPrep]  = useState<any>(null)
-  const [auditData,    setAuditData] = useState<any>(null)
-  const [loading,      setLoading]  = useState(true)
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any }>('admin-analytics')
+  const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
+  const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
+  const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
+  const [cqcPrepData,  setCqcPrep]  = useState<any>(analyticsCache?.cqcPrep ?? null)
+  const [auditData,    setAuditData] = useState<any>(analyticsCache?.audits ?? null)
+  const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
   useEffect(() => {
@@ -196,7 +198,10 @@ export default function AnalyticsPage() {
       api.analytics.cqcPrep().catch((e: any) => { console.error('[CQC Prep analytics]', e?.message ?? e); return null }),
       api.audits.stats().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits]) => { setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits) })
+      .then(([main, training, gaps, cqcPrep, audits]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits })
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [session?.accessToken])

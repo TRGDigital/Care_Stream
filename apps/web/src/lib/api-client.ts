@@ -127,12 +127,18 @@ export function createApiClient(token: string) {
 
     users: {
       list: () => apiFetch<any>('/users', token),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; new_starter?: boolean }) =>
+      get: (id: string) =>
+        apiFetch<{
+          user: any
+          training: Array<{ id: string; status: string; completed_at: string | null; due_date: string | null; expires_at: string | null; module_id: string; module_name: string; category: string }>
+          onboarding: Array<{ id: string; completed_at: string | null; due_date: string | null; enrolled_at: string | null; flow_id: string; flow_name: string; flow_kind: string; care_setting: string | null; total_steps: number; completed_steps: number }>
+        }>(`/users/${id}`, token),
+      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null }) =>
+      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),

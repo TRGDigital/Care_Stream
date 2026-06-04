@@ -92,7 +92,7 @@ export async function sendProactiveTrainingQuestions(
   const [users, enrollments] = await Promise.all([
     (prisma as any).user.findMany({
       where:  { id: { in: userIds } },
-      select: { id: true, name: true, email: true, phone_number: true, first_language: true },
+      select: { id: true, name: true, email: true, phone_number: true, first_language: true, comms_always_first_language: true },
     }).catch(() => [] as any[]),
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: { in: userIds }, module_id: { in: moduleIds }, status: 'not_started' },
@@ -120,7 +120,9 @@ export async function sendProactiveTrainingQuestions(
         const firstName   = (user.name as string ?? '').split(' ')[0] || 'there'
         const total       = questions.length
         const name        = enrollment.module.name as string
-        const userLang    = (user.first_language as string) ?? 'eng'
+        // Honour the per-staff comms toggle: only translate into their first
+        // language when it's enabled (default). When off, send in English.
+        const userLang    = user.comms_always_first_language === false ? 'eng' : ((user.first_language as string) ?? 'eng')
 
         const translatedQ = await translateTrainingQuestion(
           { text: firstQ.text, options: (firstQ.options as string[]) ?? [] },

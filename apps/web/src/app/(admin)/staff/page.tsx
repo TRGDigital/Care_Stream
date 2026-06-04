@@ -6,7 +6,7 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Check, ChevronDown, Copy, KeyRound, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, UserMinus, UserPlus, UserX, X } from 'lucide-react'
+import { Check, ChevronDown, Copy, Globe, GraduationCap, KeyRound, ListChecks, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, Plus, UserMinus, UserPlus, UserX, X } from 'lucide-react'
 
 // ─── Language options ─────────────────────────────────────────────────────────
 
@@ -62,6 +62,42 @@ function LastSeen({ iso }: { iso: string | null | undefined }) {
   const daysSince = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
   const colour = daysSince <= 7 ? 'text-status-success' : daysSince <= 30 ? 'text-amber-500' : 'text-neutral-mid'
   return <span className={`text-xs ${colour}`}>{fmtDate(iso)}</span>
+}
+
+function langNameOf(code: string | null | undefined) {
+  return LANGUAGES.find(l => l.code === code)?.name ?? 'their first language'
+}
+
+// Per-staff toggle: when on, every outbound CareStream message is translated
+// into the staff member's first language; when off, messages are sent in English.
+function CommsLanguageToggle({ on, onChange, langCode, disabled }: {
+  on: boolean
+  onChange: (v: boolean) => void
+  langCode: string
+  disabled?: boolean
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-neutral-dark">Always communicate in their first language</p>
+        <p className="mt-0.5 text-xs text-neutral-mid">
+          {on
+            ? `All messages CareStream sends are translated into ${langNameOf(langCode)}.`
+            : 'Messages are sent in English.'}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        disabled={disabled}
+        onClick={() => onChange(!on)}
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-teal' : 'bg-gray-300'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : 'translate-x-0.5'}`} />
+      </button>
+    </div>
+  )
 }
 
 function InitialAvatar({ name, role }: { name: string; role: string }) {
@@ -370,6 +406,7 @@ export default function StaffPage() {
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
   const [editUser,     setEditUser]    = useState<any | null>(null)
+  const [detailUserId, setDetailUserId] = useState<string | null>(null)
   const [resetCreds,   setResetCreds]  = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
 
   function load() {
@@ -449,6 +486,19 @@ export default function StaffPage() {
         />
       )}
 
+      {/* Staff detail overlay */}
+      {detailUserId && (
+        <StaffDetailModal
+          userId={detailUserId}
+          token={session?.accessToken ?? ''}
+          onClose={() => setDetailUserId(null)}
+          onEdit={(u) => { setDetailUserId(null); setEditUser(u) }}
+          onChanged={(updated) => {
+            if (updated) setUsers(prev => prev.map(u => u.id === updated.id ? { ...u, ...updated } : u))
+          }}
+        />
+      )}
+
       {/* Reset-password credentials modal */}
       {resetCreds && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -504,7 +554,13 @@ export default function StaffPage() {
                       <div className="flex items-center gap-2.5">
                         <InitialAvatar name={u.name} role={u.role} />
                         <div>
-                          <span className="font-medium text-neutral-dark">{u.name}</span>
+                          <button
+                            onClick={() => setDetailUserId(u.id)}
+                            className="font-medium text-neutral-dark hover:text-teal hover:underline"
+                            title="View staff details"
+                          >
+                            {u.name}
+                          </button>
                           {u.is_active === false && (
                             <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                               Deactivated
@@ -758,6 +814,7 @@ function InviteModal({
   const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
+  const [commsFirstLang, setCommsFirstLang] = useState(true)
   const [error,     setError]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [onboardingNote, setOnboardingNote] = useState('')
@@ -789,6 +846,7 @@ function InviteModal({
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
       second_language: form.second_language || undefined,
+      comms_always_first_language: commsFirstLang,
       new_starter:     form.staff_type === 'new',
     }).catch((err: Error) => { setError(err.message); return null })
 
@@ -981,6 +1039,7 @@ function InviteModal({
                   </select>
                 </div>
               </div>
+              <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langCode={form.first_language} />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -1051,6 +1110,7 @@ function EditModal({
   })
   const [specialisms, setSpecialisms]     = useState<string[]>(Array.isArray(user.specialisms) ? user.specialisms : [])
   const [hasSpecialism, setHasSpecialism] = useState<boolean>(Array.isArray(user.specialisms) && user.specialisms.length > 0)
+  const [commsFirstLang, setCommsFirstLang] = useState<boolean>(user.comms_always_first_language !== false)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -1078,6 +1138,7 @@ function EditModal({
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
       second_language: form.second_language || null,
+      comms_always_first_language: commsFirstLang,
     }).catch((err: Error) => { setError(err.message); return null })
     setLoading(false)
     if (res) onSaved(res.user)
@@ -1221,6 +1282,7 @@ function EditModal({
                 </select>
               </div>
             </div>
+            <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langCode={form.first_language} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -1232,6 +1294,201 @@ function EditModal({
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ─── Staff detail overlay ─────────────────────────────────────────────────────
+
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    complete:    { label: 'Complete',    cls: 'bg-green-50 text-green-700' },
+    in_progress: { label: 'In progress', cls: 'bg-amber-50 text-amber-700' },
+    not_started: { label: 'Not started', cls: 'bg-gray-100 text-gray-500' },
+    expired:     { label: 'Expired',     cls: 'bg-red-50 text-red-600'   },
+  }
+  const s = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>{s.label}</span>
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-mid/70">{label}</p>
+      <div className="mt-0.5 text-sm text-neutral-dark">{children}</div>
+    </div>
+  )
+}
+
+function StaffDetailModal({ userId, token, onClose, onEdit, onChanged }: {
+  userId:    string
+  token:     string
+  onClose:   () => void
+  onEdit:    (user: any) => void
+  onChanged: (updated: any | null) => void
+}) {
+  const [data,        setData]        = useState<{ user: any; training: any[]; onboarding: any[] } | null>(null)
+  const [loading,     setLoading]     = useState(true)
+  const [view,        setView]        = useState<'detail' | 'assign'>('detail')
+  const [savingComms, setSavingComms] = useState(false)
+
+  function load() {
+    setLoading(true)
+    createApiClient(token).users.get(userId)
+      .then(d => setData(d as any))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [userId])
+
+  async function toggleComms(v: boolean) {
+    if (!data) return
+    setSavingComms(true)
+    setData(prev => prev ? { ...prev, user: { ...prev.user, comms_always_first_language: v } } : prev)
+    try {
+      const res = await createApiClient(token).users.update(userId, { comms_always_first_language: v })
+      onChanged(res.user)
+    } catch {
+      setData(prev => prev ? { ...prev, user: { ...prev.user, comms_always_first_language: !v } } : prev)
+    } finally { setSavingComms(false) }
+  }
+
+  const user = data?.user
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
+      <div className="w-full max-w-lg rounded-card bg-white p-6 shadow-xl">
+
+        {/* Header */}
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {user && <InitialAvatar name={user.name} role={user.role} />}
+            <div>
+              <h2 className="text-lg font-semibold text-neutral-dark">{user?.name ?? 'Staff member'}</h2>
+              {user && <p className="text-xs text-neutral-mid">{user.email}</p>}
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">
+            <X size={18} />
+          </button>
+        </div>
+
+        {loading || !user ? (
+          <div className="flex justify-center py-10"><Loader2 size={22} className="animate-spin text-neutral-mid" /></div>
+        ) : view === 'assign' ? (
+          <TrainingAssignStep
+            token={token}
+            userId={userId}
+            userName={user.name}
+            onDone={() => { setView('detail'); load() }}
+          />
+        ) : (
+          <div className="space-y-5">
+
+            {/* Status + edit */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant={user.role === 'admin' ? 'admin' : 'staff'}>{user.role === 'admin' ? 'Admin' : 'Staff'}</Badge>
+                {user.is_active === false
+                  ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">Deactivated</span>
+                  : <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>}
+              </div>
+              <button onClick={() => onEdit(user)} className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light">
+                <Pencil size={13} /> Edit details
+              </button>
+            </div>
+
+            {/* Profile grid */}
+            <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
+              <Field label="Position">{user.job_role || <span className="italic text-neutral-mid/60">Not set</span>}</Field>
+              <Field label="Shift">{user.shift_type === 'day' ? 'Day shift' : user.shift_type === 'night' ? 'Night shift' : 'Flexible'}</Field>
+              <Field label="WhatsApp">
+                {user.phone_number
+                  ? <span className="inline-flex items-center gap-1.5"><Phone size={12} className="text-green-600" />{user.phone_number}</span>
+                  : <span className="italic text-neutral-mid/60">Not set</span>}
+              </Field>
+              <Field label="Email questions">
+                <span className="inline-flex items-center gap-1.5"><Mail size={12} className="text-neutral-mid" />Enabled</span>
+              </Field>
+              <div className="col-span-2">
+                <Field label="Specialist roles">
+                  {Array.isArray(user.specialisms) && user.specialisms.length > 0
+                    ? <div className="flex flex-wrap gap-1.5">{user.specialisms.map((s: string) => (
+                        <span key={s} className="rounded-full bg-teal/10 px-2 py-0.5 text-xs text-teal">{s}</span>
+                      ))}</div>
+                    : <span className="italic text-neutral-mid/60">None</span>}
+                </Field>
+              </div>
+            </div>
+
+            {/* Languages + comms toggle */}
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Globe size={15} className="text-teal" /> Language</p>
+              <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 p-4">
+                <Field label="First language">{langNameOf(user.first_language)}</Field>
+                <Field label="Second language">{user.second_language ? langNameOf(user.second_language) : <span className="italic text-neutral-mid/60">None</span>}</Field>
+                <div className="col-span-2">
+                  <CommsLanguageToggle on={user.comms_always_first_language !== false} onChange={toggleComms} langCode={user.first_language} disabled={savingComms} />
+                </div>
+              </div>
+            </div>
+
+            {/* Training */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><GraduationCap size={15} className="text-teal" /> Training <span className="text-xs font-normal text-neutral-mid">({data!.training.length})</span></p>
+                <button onClick={() => setView('assign')} className="flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-xs font-medium text-white hover:bg-teal/90">
+                  <Plus size={12} /> Assign training
+                </button>
+              </div>
+              {data!.training.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-xs text-neutral-mid">No training assigned yet.</p>
+              ) : (
+                <ul className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                  {data!.training.map(t => (
+                    <li key={t.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-neutral-dark">{t.module_name}</p>
+                        <p className="text-[11px] text-neutral-mid">{t.category === 'statutory' ? 'Statutory' : 'Specialist'}{t.due_date ? ` · due ${fmtDate(t.due_date)?.split(' ')[0]}` : ''}</p>
+                      </div>
+                      <StatusPill status={t.status} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Onboarding */}
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Onboarding <span className="text-xs font-normal text-neutral-mid">({data!.onboarding.length})</span></p>
+              {data!.onboarding.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-xs text-neutral-mid">Not enrolled in any onboarding flow.</p>
+              ) : (
+                <ul className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                  {data!.onboarding.map(o => (
+                    <li key={o.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-neutral-dark">{o.flow_name}</p>
+                        <p className="text-[11px] text-neutral-mid">{o.flow_kind === 'secondary' ? 'Specialism' : 'Role'} · {o.completed_steps}/{o.total_steps} steps</p>
+                      </div>
+                      {o.completed_at
+                        ? <StatusPill status="complete" />
+                        : <StatusPill status={o.completed_steps > 0 ? 'in_progress' : 'not_started'} />}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4 text-xs">
+              <div><p className="text-neutral-mid/70">Added</p><p className="mt-0.5 text-neutral-dark">{user.created_at ? new Date(user.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</p></div>
+              <div><p className="text-neutral-mid/70">First login</p><p className="mt-0.5 text-neutral-dark">{user.first_login_at ? fmtDate(user.first_login_at) : 'Never'}</p></div>
+              <div><p className="text-neutral-mid/70">Last seen</p><p className="mt-0.5 text-neutral-dark">{user.last_login_at ? fmtDate(user.last_login_at) : '—'}</p></div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

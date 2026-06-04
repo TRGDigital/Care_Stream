@@ -39,13 +39,67 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     where:   { tenant_id: tenantId },
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
-      shift_type: true, first_language: true, second_language: true,
+      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
     orderBy: { created_at: 'asc' },
   })
 
   ok(res, { users, total: users.length })
+})
+
+// ─── GET /users/:id ───────────────────────────────────────────────────────────
+// Full detail for the staff overlay: profile + assigned training + onboarding.
+
+usersRouter.get('/:id', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const { id }   = req.params
+
+  const user = await (prisma as any).user.findUnique({
+    where:  { id },
+    select: {
+      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
+      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
+      is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
+    },
+  })
+  if (!user || user.tenant_id !== tenantId) {
+    err(res, 'NOT_FOUND', 'User not found.', 404)
+    return
+  }
+
+  const [training, onboarding] = await Promise.all([
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId, user_id: id },
+      select:  {
+        id: true, status: true, completed_at: true, due_date: true, expires_at: true,
+        module: { select: { id: true, name: true, category: true } },
+      },
+      orderBy: { created_at: 'asc' },
+    }).catch(() => [] as any[]),
+    (prisma as any).onboardingEnrollment.findMany({
+      where:   { tenant_id: tenantId, user_id: id },
+      select:  {
+        id: true, completed_at: true, due_date: true, enrolled_at: true,
+        flow: { select: { id: true, name: true, flow_kind: true, care_setting: true, _count: { select: { steps: true } } } },
+        _count: { select: { progress: true } },
+      },
+      orderBy: { enrolled_at: 'asc' },
+    }).catch(() => [] as any[]),
+  ])
+
+  const trainingOut = (training as any[]).map(t => ({
+    id: t.id, status: t.status, completed_at: t.completed_at, due_date: t.due_date, expires_at: t.expires_at,
+    module_id: t.module?.id, module_name: t.module?.name, category: t.module?.category,
+  }))
+  const onboardingOut = (onboarding as any[]).map(o => ({
+    id: o.id, completed_at: o.completed_at, due_date: o.due_date, enrolled_at: o.enrolled_at,
+    flow_id: o.flow?.id, flow_name: o.flow?.name, flow_kind: o.flow?.flow_kind, care_setting: o.flow?.care_setting,
+    total_steps: o.flow?._count?.steps ?? 0, completed_steps: o._count?.progress ?? 0,
+  }))
+
+  const { tenant_id, ...profile } = user
+  ok(res, { user: profile, training: trainingOut, onboarding: onboardingOut })
 })
 
 // ─── POST /users/invite ───────────────────────────────────────────────────────
@@ -60,6 +114,7 @@ const InviteSchema = z.object({
   shift_type:      z.enum(['any', 'day', 'night']).default('any'),
   first_language:  z.string().length(3).default('eng'),
   second_language: z.string().length(3).optional(),
+  comms_always_first_language: z.boolean().optional(),   // default true (DB) — translate outbound comms into first_language
   new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
 })
 
@@ -70,7 +125,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, new_starter } = parsed.data
+  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, comms_always_first_language, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
 
   try {
@@ -115,9 +170,10 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       shift_type:      shift_type ?? 'any',
       first_language:  first_language ?? 'eng',
       second_language: second_language ?? null,
+      comms_always_first_language: comms_always_first_language ?? true,
       password_hash:   passwordHash,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -200,6 +256,7 @@ const UpdateSchema = z.object({
   shift_type:      z.enum(['any', 'day', 'night']).optional(),
   first_language:  z.string().length(3).optional(),
   second_language: z.string().length(3).nullable().optional(),
+  comms_always_first_language: z.boolean().optional(),
 })
 
 usersRouter.patch('/:id', async (req: Request, res: Response) => {
@@ -261,11 +318,12 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.shift_type      !== undefined) updateData.shift_type      = parsed.data.shift_type
   if (parsed.data.first_language  !== undefined) updateData.first_language  = parsed.data.first_language
   if (parsed.data.second_language !== undefined) updateData.second_language = parsed.data.second_language
+  if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
 
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

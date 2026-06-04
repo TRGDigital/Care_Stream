@@ -84,9 +84,11 @@ export async function handleTrainingConversation({
   // ── Path 1: Single A/B/C/D ────────────────────────────────────────────────
   if (isTrainingAnswer(trimmed)) {
     const userRecord = await (prisma as any).user.findUnique({
-      where: { id: userId }, select: { first_language: true },
+      where: { id: userId }, select: { first_language: true, comms_always_first_language: true },
     }).catch(() => null)
-    const userLang: string = (userRecord?.first_language as string) ?? 'eng'
+    const userLang: string = userRecord?.comms_always_first_language === false
+      ? 'eng'
+      : ((userRecord?.first_language as string) ?? 'eng')
     const letter      = trimmed.toUpperCase()
     const selectedIdx = OPTION_MAP[letter]
 

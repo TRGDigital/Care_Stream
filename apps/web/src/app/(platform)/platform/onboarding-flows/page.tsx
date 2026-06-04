@@ -24,6 +24,13 @@ const SETTINGS: { value: string; label: string }[] = [
 ]
 const settingLabel = (v: string | null) => v ? (SETTINGS.find(s => s.value === v)?.label ?? v) : 'All settings'
 
+const DIFFICULTIES: { value: string; label: string }[] = [
+  { value: 'very_easy', label: 'Very easy' },
+  { value: 'easy',      label: 'Easy' },
+  { value: 'medium',    label: 'Medium' },
+  { value: 'hard',      label: 'Hard' },
+]
+
 export default function OnboardingFlowsPage() {
   const token = usePlatformAuth()
   const [flows,   setFlows]   = useState<OnboardingTemplate[]>([])
@@ -83,11 +90,11 @@ export default function OnboardingFlowsPage() {
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
 
-  async function saveSteps(f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) {
+  async function saveSteps(f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) {
     if (!token) return
     setBusy(f.id)
     try {
-      const { flow } = await createPlatformClient(token).onboardingTemplates.update(f.id, { name, description, care_setting: careSetting || null, steps })
+      const { flow } = await createPlatformClient(token).onboardingTemplates.update(f.id, { name, description, care_setting: careSetting || null, difficulties, steps })
       replaceFlow(flow)
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
@@ -154,7 +161,7 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
   aiDraft: (f: OnboardingTemplate) => void
   toggleActive: (f: OnboardingTemplate) => void
   remove: (f: OnboardingTemplate) => void
-  saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
+  saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
 }) {
   if (flows.length === 0) return null
   return (
@@ -178,7 +185,7 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
   onAiDraft: () => void
   onToggleActive: () => void
   onRemove: () => void
-  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
+  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
 }) {
   const reads = flow.steps.filter(s => s.type === 'read_policy').length
   const ques  = flow.steps.filter(s => s.type === 'answer_question').length
@@ -193,6 +200,11 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
             {flow.is_active ? 'Active' : 'Draft'}
           </span>
           <span className="shrink-0 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal">{settingLabel(flow.care_setting)}</span>
+          {flow.difficulties.length > 0 && (
+            <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              {flow.difficulties.map(d => DIFFICULTIES.find(x => x.value === d)?.label ?? d).join(', ')}
+            </span>
+          )}
           <span className="shrink-0 text-xs text-neutral-mid">{reads} read · {ques} questions</span>
         </button>
         <div className="flex shrink-0 items-center gap-1">
@@ -219,11 +231,13 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onToggleActive, o
 function StepEditor({ flow, busy, onSave }: {
   flow: OnboardingTemplate
   busy: boolean
-  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string) => void
+  onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
 }) {
   const [name, setName]               = useState(flow.name)
   const [description, setDescription] = useState(flow.description ?? '')
   const [careSetting, setCareSetting] = useState(flow.care_setting ?? '')
+  const [difficulties, setDifficulties] = useState<string[]>(flow.difficulties ?? [])
+  const toggleDifficulty = (v: string) => setDifficulties(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
   const [steps, setSteps]             = useState<OnboardingTemplateStep[]>(flow.steps.map(s => ({ ...s })))
 
   function setStep(i: number, patch: Partial<OnboardingTemplateStep>) {
@@ -255,6 +269,18 @@ function StepEditor({ flow, busy, onSave }: {
             {SETTINGS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
           <p className="mt-1 text-[11px] text-neutral-mid">AI draft grounds in this setting&rsquo;s policies; only tenants of this setting (or all) can adopt it.</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Question difficulty</label>
+          <div className="flex flex-wrap gap-3">
+            {DIFFICULTIES.map(d => (
+              <label key={d.value} className="flex items-center gap-1.5 text-sm text-neutral-dark">
+                <input type="checkbox" checked={difficulties.includes(d.value)} onChange={() => toggleDifficulty(d.value)} className="text-teal" />
+                {d.label}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-neutral-mid">Pitch AI-drafted questions to these levels — e.g. tick only <em>Very easy</em> for a Kitchen Porter, <em>Hard</em> for a Nurse. Leave blank for a balanced mix. <strong>Save, then AI draft, to apply.</strong></p>
         </div>
       </div>
 
@@ -301,7 +327,7 @@ function StepEditor({ flow, busy, onSave }: {
           <HelpCircle size={12} /> Add question
         </button>
         <div className="flex-1" />
-        <button onClick={() => onSave(flow, steps.map((s, i) => ({ ...s, order: i })), name, description, careSetting)} disabled={busy}
+        <button onClick={() => onSave(flow, steps.map((s, i) => ({ ...s, order: i })), name, description, careSetting, difficulties)} disabled={busy}
           className="flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
           {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
         </button>

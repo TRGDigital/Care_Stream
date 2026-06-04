@@ -636,9 +636,9 @@ export function createPlatformClient(token: string) {
 
     onboardingTemplates: {
       list: () => adminFetch<{ flows: OnboardingTemplate[] }>('/onboarding-templates', token),
-      create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string; care_setting?: string | null }) =>
+      create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string; care_setting?: string | null; difficulties?: string[] }) =>
         adminFetch<{ flow: OnboardingTemplate }>('/onboarding-templates', token, { method: 'POST', body: JSON.stringify(data) }),
-      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; care_setting: string | null; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
+      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; care_setting: string | null; difficulties: string[]; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
@@ -698,6 +698,7 @@ export interface OnboardingTemplate {
   job_roles:    string[]
   flow_kind:    'primary' | 'secondary'
   care_setting: string | null
+  difficulties: string[]
   is_active:    boolean
   steps:        OnboardingTemplateStep[]
 }

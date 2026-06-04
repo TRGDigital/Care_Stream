@@ -528,6 +528,7 @@ model OnboardingFlow {
   job_roles      String[]             @default([])         // empty = applies to all roles
   flow_kind      String               @default("primary")  // primary (job role) | secondary (specialism)
   care_setting   String?                                   // nursing_home | care_home | … ; NULL = all settings
+  difficulties   String[]             @default([])         // very_easy | easy | medium | hard — fed into AI question generation
   source_flow_id String?                                   // for a tenant copy: the platform template it was adopted from
   is_active      Boolean              @default(true)
   created_at     DateTime             @default(now())

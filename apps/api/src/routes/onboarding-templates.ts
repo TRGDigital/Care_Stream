@@ -14,6 +14,16 @@ onboardingTemplatesRouter.use(requirePlatformAdmin)
 
 const flowInclude = { steps: { orderBy: { order: 'asc' as const } } }
 
+// Difficulty levels (per flow) — descriptions fed into the AI prompt so questions
+// are pitched right: a kitchen porter gets very-easy awareness, a nurse gets hard.
+export const DIFFICULTY_LEVELS = ['very_easy', 'easy', 'medium', 'hard'] as const
+const DIFFICULTY_GUIDE: Record<string, string> = {
+  very_easy: 'very easy — basic awareness and simple everyday recognition only (suitable for non-care roles like kitchen porter, laundry, cleaning)',
+  easy:      'easy — straightforward day-to-day knowledge a new starter should know',
+  medium:    'medium — applied understanding of the home\'s procedures',
+  hard:      'hard — in-depth or specialist knowledge (for clinical/specialist roles such as nurses)',
+}
+
 // ─── GET / — list all platform templates ──────────────────────────────────────
 onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
   const flows = await (prisma as any).onboardingFlow.findMany({
@@ -26,7 +36,7 @@ onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
 
 // ─── POST / — create a template ───────────────────────────────────────────────
 onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
-  const { name, description, job_roles, flow_kind, care_setting, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, difficulties, steps } = req.body ?? {}
   if (!name || typeof name !== 'string') return err(res, 'MISSING_FIELD', 'name is required', 400)
 
   const flow = await (prisma as any).onboardingFlow.create({
@@ -37,6 +47,7 @@ onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
       job_roles:    Array.isArray(job_roles) ? job_roles : [],
       flow_kind:    flow_kind === 'secondary' ? 'secondary' : 'primary',
       care_setting: isCareSetting(care_setting) ? care_setting : null,
+      difficulties: cleanDifficulties(difficulties),
       steps:        buildStepCreate(steps),
     },
     include: flowInclude,
@@ -50,13 +61,14 @@ onboardingTemplatesRouter.patch('/:id', async (req: Request, res: Response) => {
   const existing = await (prisma as any).onboardingFlow.findFirst({ where: { id, tenant_id: null } })
   if (!existing) return err(res, 'NOT_FOUND', 'Template not found', 404)
 
-  const { name, description, job_roles, flow_kind, care_setting, is_active, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, difficulties, is_active, steps } = req.body ?? {}
   const data: Record<string, any> = {}
   if (name !== undefined)         data.name = String(name).trim()
   if (description !== undefined)  data.description = description
   if (job_roles !== undefined)    data.job_roles = Array.isArray(job_roles) ? job_roles : []
   if (flow_kind !== undefined)    data.flow_kind = flow_kind === 'secondary' ? 'secondary' : 'primary'
   if (care_setting !== undefined) data.care_setting = isCareSetting(care_setting) ? care_setting : null
+  if (difficulties !== undefined) data.difficulties = cleanDifficulties(difficulties)
   if (is_active !== undefined)    data.is_active = !!is_active
 
   if (Array.isArray(steps)) {
@@ -116,8 +128,16 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   for (const s of seeds as any[]) if (s.section && !bySection.has(s.section)) bySection.set(s.section, s.content)
   const refBlock = [...bySection.entries()].map(([sec, content]) => `## ${sec}\n${String(content).slice(0, 1000)}`).join('\n\n')
 
+  // Difficulty levels selected for this flow (per-role) feed straight into the prompt.
+  const diffs: string[] = Array.isArray(flow.difficulties) ? flow.difficulties : []
+  const diffLine = diffs.length
+    ? `Pitch the questions at ${diffs.length > 1 ? 'a mix of these difficulty levels' : 'this difficulty level'}: ${diffs.map(d => DIFFICULTY_GUIDE[d] ?? d).join('; ')}.`
+    : ''
+
   const user = [
     `Role or specialism: "${role}" (${isSecond ? 'specialism' : 'job role'}).`,
+    `Write questions that are specific to what a ${role} actually does day to day — not generic care-sector questions, and not questions that belong to a different role.`,
+    diffLine,
     `Available policy areas: ${sections}.`,
     refBlock ? `\nReference policy extracts — base your questions on the wording and procedures in these where relevant:\n${refBlock}` : '',
   ].filter(Boolean).join('\n')
@@ -135,10 +155,14 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
 
   // Each area → a read_policy step then an answer_question MCQ step.
   const steps: any[] = []
+  const seenQuestions = new Set<string>()
   let order = 0
   for (const a of areas) {
     const section = typeof a.policy_section === 'string' ? a.policy_section : null
     if (!section) continue
+    const qkey = typeof a.question === 'string' ? a.question.trim().toLowerCase() : ''
+    if (qkey && seenQuestions.has(qkey)) continue   // drop duplicate questions within this flow
+    if (qkey) seenQuestions.add(qkey)
     steps.push({ order: order++, title: `Read the ${section} policy`, type: 'read_policy', policy_section: section })
     if (a.question && Array.isArray(a.options) && a.options.length === 4) {
       steps.push({
@@ -199,6 +223,8 @@ Guidelines:
 - Use ONLY the exact policy area names provided — do not invent new ones.
 - Each question must have exactly 4 options with exactly one correct answer. Make the incorrect options plausible but clearly wrong to someone who has read the policy.
 - Keep questions practical, specific, and grounded in day-to-day UK care/nursing home work.
+- Make every question SPECIFIC TO THE ROLE given — what that person actually does. Do not write generic questions, and never ask one role a question that belongs to a different role (e.g. don't ask a kitchen porter a clinical nursing question).
+- If difficulty levels are given, pitch the questions to match them. "Very easy" means basic awareness only — non-care roles (kitchen porter, laundry, cleaning) should get simple, practical questions and never specialist clinical content.
 
 Output ONLY valid JSON in exactly this shape — no markdown, no commentary:
 {"areas":[{"policy_section":"<exact area name>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
@@ -221,6 +247,11 @@ function extractJson(raw: string): any {
   const end   = noFence.lastIndexOf('}')
   if (start === -1 || end === -1 || end <= start) throw new Error('No JSON object found in response')
   return JSON.parse(noFence.slice(start, end + 1))
+}
+
+function cleanDifficulties(v: any): string[] {
+  if (!Array.isArray(v)) return []
+  return [...new Set(v.filter((d: any) => (DIFFICULTY_LEVELS as readonly string[]).includes(d)))]
 }
 
 function buildStepCreate(steps: any): any {

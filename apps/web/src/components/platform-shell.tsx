@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus,
 } from 'lucide-react'
 
 const NAV = [
@@ -17,6 +17,7 @@ const NAV = [
   { href: '/platform/training-seeds',  label: 'Training Seeds',   Icon: ShieldCheck     },
   { href: '/platform/cqc-seeds',       label: 'CQC Seeds',        Icon: ClipboardCheck  },
   { href: '/platform/audit-seeds',     label: 'Audit Seeds',      Icon: ClipboardCheck  },
+  { href: '/platform/onboarding-flows', label: 'Onboarding Flows', Icon: UserPlus       },
   { href: '/platform/seeds',           label: 'Knowledge Seeds',  Icon: Sparkles        },
   { href: '/platform/prompts',         label: 'AI Prompts',       Icon: FileText        },
   { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },

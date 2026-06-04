@@ -633,5 +633,40 @@ export function createPlatformClient(token: string) {
           { method: 'POST' },
         ),
     },
+
+    onboardingTemplates: {
+      list: () => adminFetch<{ flows: OnboardingTemplate[] }>('/onboarding-templates', token),
+      create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string }) =>
+        adminFetch<{ flow: OnboardingTemplate }>('/onboarding-templates', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
+        adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      remove: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
+      aiDraft: (id: string) =>
+        adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}/ai-draft`, token, { method: 'POST' }),
+      seedRoles: () =>
+        adminFetch<{ created: number }>('/onboarding-templates/seed-roles', token, { method: 'POST' }),
+    },
   }
+}
+
+export interface OnboardingTemplateStep {
+  id?:             string
+  order:           number
+  title:           string
+  type:            'read_policy' | 'answer_question'
+  policy_section?: string | null
+  question?:       string | null
+  options?:        string[]
+  correct_option?: number | null
+}
+
+export interface OnboardingTemplate {
+  id:          string
+  name:        string
+  description: string | null
+  job_roles:   string[]
+  flow_kind:   'primary' | 'secondary'
+  is_active:   boolean
+  steps:       OnboardingTemplateStep[]
 }

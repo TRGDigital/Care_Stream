@@ -519,34 +519,39 @@ model AgentEvent {
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {
-  id          String               @id @default(uuid())
-  tenant_id   String
-  name        String               // "New Starter Induction"
-  description String?
-  job_roles   String[]             @default([]) // empty = applies to all roles
-  is_active   Boolean              @default(true)
-  created_at  DateTime             @default(now())
-  updated_at  DateTime             @updatedAt
-  tenant      Tenant               @relation(fields: [tenant_id], references: [id])
-  steps       OnboardingStep[]
-  enrollments OnboardingEnrollment[]
+  id             String               @id @default(uuid())
+  tenant_id      String?                                   // null = shared platform template; non-null = a tenant's editable copy
+  name           String               // "New Starter Induction"
+  description    String?
+  job_roles      String[]             @default([])         // empty = applies to all roles
+  flow_kind      String               @default("primary")  // primary (job role) | secondary (specialism)
+  source_flow_id String?                                   // for a tenant copy: the platform template it was adopted from
+  is_active      Boolean              @default(true)
+  created_at     DateTime             @default(now())
+  updated_at     DateTime             @updatedAt
+  tenant         Tenant?              @relation(fields: [tenant_id], references: [id])
+  steps          OnboardingStep[]
+  enrollments    OnboardingEnrollment[]
 
   @@index([tenant_id, is_active])
   @@map("onboarding_flows")
 }
 
 model OnboardingStep {
-  id        String   @id @default(uuid())
-  flow_id   String
-  order     Int
-  title     String
-  type      String   // read_policy | answer_question
-  policy_id String?  // required when type = read_policy or answer_question
-  question  String?  // required when type = answer_question
-  created_at DateTime @default(now())
-  flow      OnboardingFlow @relation(fields: [flow_id], references: [id], onDelete: Cascade)
-  policy    Policy?        @relation(fields: [policy_id], references: [id])
-  progress  OnboardingProgress[]
+  id             String   @id @default(uuid())
+  flow_id        String
+  order          Int
+  title          String
+  type           String   // read_policy | answer_question
+  policy_id      String?  // resolved tenant policy (null on templates / unmapped)
+  policy_section String?  // abstract policy area for templates + AI matching (e.g. "Infection control")
+  question       String?  // required when type = answer_question
+  options        String[] @default([])   // MCQ options for answer_question
+  correct_option Int?                     // index (0-based) of the correct option
+  created_at     DateTime @default(now())
+  flow           OnboardingFlow @relation(fields: [flow_id], references: [id], onDelete: Cascade)
+  policy         Policy?        @relation(fields: [policy_id], references: [id])
+  progress       OnboardingProgress[]
 
   @@index([flow_id, order])
   @@map("onboarding_steps")

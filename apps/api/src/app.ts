@@ -12,6 +12,7 @@ import { billingRouter, stripeWebhookHandler } from './routes/billing'
 import { regulationsRouter } from './routes/regulations'
 import { analyticsRouter } from './routes/analytics'
 import { adminRouter } from './routes/admin'
+import { onboardingTemplatesRouter } from './routes/onboarding-templates'
 import { settingsRouter } from './routes/settings'
 import { knowledgeRouter } from './routes/knowledge'
 import { sitesRouter } from './routes/sites'
@@ -73,6 +74,7 @@ app.use('/auth', authRouter)
 
 // §6.5 — Platform admin routes. Uses PLATFORM_ADMIN_TOKEN, not tenant JWTs.
 // Must be mounted BEFORE requireAuth so it isn't rejected as an unauthenticated request.
+app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled

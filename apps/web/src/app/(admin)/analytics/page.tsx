@@ -4,6 +4,7 @@
 // advanced metrics for Professional plan (has_advanced_analytics = true).
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -179,12 +180,13 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any }>('admin-analytics')
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
   const [cqcPrepData,  setCqcPrep]  = useState<any>(analyticsCache?.cqcPrep ?? null)
   const [auditData,    setAuditData] = useState<any>(analyticsCache?.audits ?? null)
+  const [riskData,     setRiskData]  = useState<any>(analyticsCache?.risk ?? null)
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -197,10 +199,11 @@ export default function AnalyticsPage() {
       api.analytics.trainingGaps().catch(() => null),
       api.analytics.cqcPrep().catch((e: any) => { console.error('[CQC Prep analytics]', e?.message ?? e); return null }),
       api.audits.stats().catch(() => null),
+      api.analytics.staffRisk().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits })
+      .then(([main, training, gaps, cqcPrep, audits, risk]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -221,6 +224,37 @@ export default function AnalyticsPage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
+
+      {/* ── Staff needing attention ─────────────────────────────────────────── */}
+      {riskData && riskData.staff.length > 0 && (
+        <div className="mb-6 rounded-card border border-amber-200 bg-amber-50/50 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertCircle size={16} className="text-amber-600" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Staff needing attention</h2>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+              {riskData.summary.total_flagged}{riskData.summary.high > 0 ? ` · ${riskData.summary.high} urgent` : ''}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {riskData.staff.slice(0, 9).map((s: any) => (
+              <Link key={s.id} href={`/staff/${s.id}`}
+                className="flex items-start justify-between gap-2 rounded-lg border border-amber-100 bg-white px-3 py-2.5 transition-colors hover:border-amber-300">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-dark">{s.name}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {s.flags.slice(0, 2).map((f: any, i: number) => (
+                      <span key={i} className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${f.level === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{f.label}</span>
+                    ))}
+                    {s.flags.length > 2 && <span className="text-[10px] text-neutral-mid">+{s.flags.length - 2}</span>}
+                  </div>
+                </div>
+                {s.severity === 2 && <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-red-500" title="Urgent" />}
+              </Link>
+            ))}
+          </div>
+          {riskData.staff.length > 9 && <p className="mt-2 text-xs text-neutral-mid">+{riskData.staff.length - 9} more — open the Staff page to review.</p>}
+        </div>
+      )}
 
       {/* ── Stat cards ──────────────────────────────────────────────────────── */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

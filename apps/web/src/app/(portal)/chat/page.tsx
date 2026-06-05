@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -199,6 +199,12 @@ export default function ChatPage() {
       try { const v = localStorage.getItem(`cs_reply_lang_${userId}`); if (v) setReplyLang(v) } catch { /* ignore */ }
     }
   }, [userId])
+
+  // Honour ?view=induction|training (e.g. links from My Progress)
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get('view')
+    if (v === 'induction' || v === 'training') setView(v)
+  }, [])
 
   // Fetch the tenant's available languages (defaults + admin-added) for the
   // reply-language picker. Settings reads are open to all authenticated staff.
@@ -424,6 +430,13 @@ export default function ChatPage() {
           >
             <ShieldCheck size={15} />
             CQC Prep
+          </Link>
+          <Link
+            href="/progress"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <TrendingUp size={15} />
+            My Progress
           </Link>
           {view === 'chat' && (
             <button

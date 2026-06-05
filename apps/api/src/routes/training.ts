@@ -320,6 +320,24 @@ trainingRouter.post('/enrollments/:id/upload-certificate', imageUploadMiddleware
   }
 })
 
+// POST /training/enrollments/:id/reset — admin: clear progress so it can be retaken
+trainingRouter.post('/enrollments/:id/reset', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if ((req as any).user.role !== 'admin') { err(res, 'FORBIDDEN', 'Admins only', 403); return }
+  try {
+    const enrollment = await (prisma as any).trainingEnrollment.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+    if (!enrollment) { err(res, 'NOT_FOUND', 'Enrollment not found', 404); return }
+    await (prisma as any).trainingAnswer.deleteMany({ where: { enrollment_id: req.params.id } })
+    const updated = await (prisma as any).trainingEnrollment.update({
+      where: { id: req.params.id },
+      data:  { status: 'not_started', completed_at: null, expires_at: null, certificate_url: null, updated_at: new Date() },
+    })
+    ok(res, { enrollment: updated })
+  } catch (e: any) {
+    err(res, 'RESET_FAILED', e.message, 500)
+  }
+})
+
 // DELETE /training/enrollments/:id — remove enrollment
 trainingRouter.delete('/enrollments/:id', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

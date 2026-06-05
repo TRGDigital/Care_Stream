@@ -76,6 +76,7 @@ export async function sendProactiveTrainingQuestions(
   tenantId:  string,
   userIds:   string[],
   moduleIds: string[],
+  force = false,   // bypass the auto-trigger gate (e.g. a manual "send reminder")
 ): Promise<void> {
   // Load tenant settings + slug
   const tenant = await (prisma as any).tenant.findUnique({
@@ -84,7 +85,7 @@ export async function sendProactiveTrainingQuestions(
   })
 
   const settings = (tenant?.training_settings as any) ?? {}
-  if (settings.question_trigger !== 'auto') return
+  if (!force && settings.question_trigger !== 'auto') return
 
   const replyTo = `policies@${tenant.slug}.${INBOUND_DOMAIN}`
 

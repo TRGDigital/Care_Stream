@@ -8,6 +8,8 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { sendStaffWelcomeEmail } from '../services/email/outbound'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
+import { buildStaffRecord } from '../lib/staff-record'
+import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import crypto from 'crypto'
 
 export const usersRouter = Router()
@@ -100,6 +102,43 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
 
   const { tenant_id, ...profile } = user
   ok(res, { user: profile, training: trainingOut, onboarding: onboardingOut })
+})
+
+// ─── GET /users/:id/record ────────────────────────────────────────────────────
+// Full staff analytics record: progress, scores, engagement, flags, benchmarks,
+// trends and an activity timeline. Powers the /staff/:id record page.
+
+usersRouter.get('/:id/record', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const record = await buildStaffRecord(tenantId, String(req.params.id), { includeTeam: true })
+  if (!record) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  ok(res, record)
+})
+
+// ─── POST /users/:id/remind ──────────────────────────────────────────────────
+// Sends the staff member their outstanding training questions now (WhatsApp or
+// email), bypassing the tenant's auto-trigger setting.
+
+usersRouter.post('/:id/remind', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const { id }   = req.params
+
+  const target = await (prisma as any).user.findFirst({ where: { id, tenant_id: tenantId }, select: { id: true } })
+  if (!target) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+
+  const enrollments = await (prisma as any).trainingEnrollment.findMany({
+    where:  { tenant_id: tenantId, user_id: id, status: { in: ['not_started', 'in_progress'] } },
+    select: { module_id: true },
+  })
+  const moduleIds = [...new Set((enrollments as any[]).map(e => e.module_id))]
+  if (moduleIds.length === 0) { ok(res, { reminded: false, modules: 0 }); return }
+
+  try {
+    await sendProactiveTrainingQuestions(tenantId, [String(id)], moduleIds as string[], true)
+    ok(res, { reminded: true, modules: moduleIds.length })
+  } catch (e: any) {
+    err(res, 'REMIND_FAILED', e.message ?? 'Failed to send reminder.', 500)
+  }
 })
 
 // ─── POST /users/invite ───────────────────────────────────────────────────────

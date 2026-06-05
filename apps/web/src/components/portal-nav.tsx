@@ -32,6 +32,9 @@ export function PortalNav({ userName, userRole }: Props) {
         <Link href="/chat" className="text-sm font-medium text-neutral-mid hover:text-teal">
           Chat
         </Link>
+        <Link href="/progress" className="text-sm font-medium text-neutral-mid hover:text-teal">
+          My Progress
+        </Link>
         <Link href="/cqc" className="flex items-center gap-1.5 text-sm font-medium text-neutral-mid hover:text-teal">
           CQC Prep
           {pendingCqc > 0 && (

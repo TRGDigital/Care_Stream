@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -1482,9 +1483,14 @@ function StaffDetailModal({ userId, token, languages, onClose, onEdit, onChanged
               {user && <p className="text-xs text-neutral-mid">{user.email}</p>}
             </div>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link href={`/staff/${userId}`} className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-teal hover:bg-teal-light/40">
+              View full record →
+            </Link>
+            <button onClick={onClose} className="rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {loading || !user ? (

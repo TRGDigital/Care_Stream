@@ -1080,3 +1080,54 @@ analyticsRouter.get('/cqc-prep', requireAdmin, async (req: Request, res: Respons
     err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
+
+// ─── GET /analytics/staff-risk ────────────────────────────────────────────────
+// Staff who need attention: overdue/expired training, overdue or stalled
+// induction, or never logged in. Powers the "Staff needing attention" panel.
+
+analyticsRouter.get('/staff-risk', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const now  = new Date()
+  const soon = new Date(now.getTime() + 30 * 86_400_000)
+  const weekAgo = new Date(now.getTime() - 7 * 86_400_000)
+  try {
+    const [users, tEnr, oEnr] = await Promise.all([
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, job_role: true, first_login_at: true } }),
+      (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, status: true, due_date: true, expires_at: true } }),
+      (prisma as any).onboardingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, completed_at: true, due_date: true, enrolled_at: true } }),
+    ])
+
+    const tByUser = new Map<string, any[]>()
+    for (const e of tEnr as any[]) { const a = tByUser.get(e.user_id) ?? []; a.push(e); tByUser.set(e.user_id, a) }
+    const oByUser = new Map<string, any[]>()
+    for (const e of oEnr as any[]) { const a = oByUser.get(e.user_id) ?? []; a.push(e); oByUser.set(e.user_id, a) }
+
+    const staff = (users as any[]).map(u => {
+      const ts = tByUser.get(u.id) ?? []
+      const os = oByUser.get(u.id) ?? []
+      const flags: Array<{ level: 'high' | 'medium'; kind: string; label: string }> = []
+      const expired = ts.filter(e => e.expires_at && new Date(e.expires_at) < now && e.status === 'complete').length
+      const overdue = ts.filter(e => e.due_date && new Date(e.due_date) < now && e.status !== 'complete').length
+      const dueSoon = ts.filter(e => e.due_date && new Date(e.due_date) >= now && new Date(e.due_date) <= soon && e.status !== 'complete').length
+      const oOverdue = os.filter(e => e.due_date && new Date(e.due_date) < now && !e.completed_at).length
+      const oStalled = os.filter(e => !e.completed_at && e.enrolled_at && new Date(e.enrolled_at) < weekAgo).length
+      if (expired > 0)  flags.push({ level: 'high',   kind: 'training_expired', label: `${expired} expired` })
+      if (overdue > 0)  flags.push({ level: 'high',   kind: 'training_overdue', label: `${overdue} overdue training` })
+      if (oOverdue > 0) flags.push({ level: 'high',   kind: 'onboarding_overdue', label: 'Induction overdue' })
+      if (!u.first_login_at) flags.push({ level: 'medium', kind: 'never_logged_in', label: 'Never logged in' })
+      if (dueSoon > 0)  flags.push({ level: 'medium', kind: 'training_due_soon', label: `${dueSoon} due soon` })
+      if (oStalled > 0) flags.push({ level: 'medium', kind: 'onboarding_stalled', label: 'Induction stalled' })
+      return { id: u.id, name: u.name, job_role: u.job_role, flags, severity: flags.some(f => f.level === 'high') ? 2 : flags.length ? 1 : 0 }
+    }).filter(s => s.flags.length > 0).sort((a, b) => b.severity - a.severity)
+
+    ok(res, {
+      staff,
+      summary: {
+        total_flagged: staff.length,
+        high:          staff.filter(s => s.severity === 2).length,
+      },
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})

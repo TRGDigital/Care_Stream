@@ -6,6 +6,7 @@ import { feedbackRouter } from './routes/feedback'
 import { policiesRouter } from './routes/policies'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
+import { meRouter } from './routes/me'
 import { emailRouter } from './routes/email'
 import { whatsappRouter } from './routes/whatsapp'
 import { billingRouter, stripeWebhookHandler } from './routes/billing'
@@ -116,6 +117,7 @@ app.use(tenantGuard)
 app.use('/policies', policiesRouter)
 app.use('/query', queryRouter)
 app.use('/users', usersRouter)
+app.use('/me', meRouter)
 app.use('/billing', billingRouter)
 app.use('/analytics', analyticsRouter)
 app.use('/regulations', regulationsRouter)

@@ -127,6 +127,40 @@ function langName_internal(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// Translate a full policy document into the target language, chunk by chunk so
+// long policies don't blow the token budget. Preserves structure; falls back to
+// the original text on any chunk failure. Caller is responsible for caching the
+// result (it's expensive — see policy_translations).
+export async function translatePolicyText(text: string, langCode: string, langName?: string): Promise<string> {
+  if (!text || !langCode || langCode === 'eng') return text
+  const name = langName ?? langName_internal(langCode)
+
+  const chunks: string[] = []
+  let cur = ''
+  for (const para of text.split(/\n\n+/)) {
+    if (cur && (cur.length + para.length + 2) > 3500) { chunks.push(cur); cur = para }
+    else cur = cur ? `${cur}\n\n${para}` : para
+  }
+  if (cur) chunks.push(cur)
+
+  const translated = await mapLimit(chunks, 4, async (chunk) => {
+    try {
+      const msg = await anthropic.messages.create({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        messages:   [{ role: 'user', content:
+          `Translate this UK care-home policy text into ${name}. Preserve all headings, structure, lists and line breaks, and keep the exact meaning. Do not summarise, add, or remove anything. Return ONLY the translation, no preamble.\n\n${chunk}` }],
+      })
+      recordUsage('claude-haiku-4-5-20251001', msg.usage)
+      return ((msg.content[0] as any).text as string).trim()
+    } catch (e) {
+      console.error('[translate] policy chunk failed, keeping English:', e)
+      return chunk
+    }
+  })
+  return translated.join('\n\n')
+}
+
 // Translate every VALUE of a flat string→string object in a single call, keeping
 // keys and any {placeholders} intact. Used for whole-UI bundles (e.g. the staff
 // "My Progress" page). Cached per language so it's translated once per process.

@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -166,6 +166,122 @@ function groupSessions(sessions: StoredSession[]): { label: string; items: Store
     .map(([label, items]) => ({ label, items }))
 }
 
+// ─── Policy reader (induction + saved policies) ───────────────────────────────
+// Shows the full policy text (translated into the staff member's first language
+// when their comms toggle is on) and tracks how long and how far they read.
+
+function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarkedRead }: {
+  token:         string
+  policyId:      string
+  stepId?:       string
+  enrollmentId?: string
+  onClose:       () => void
+  onMarkedRead?: () => Promise<void> | void
+}) {
+  const [data,     setData]     = useState<{ title: string; content: string; lang: string; processing?: boolean; translation_pending?: boolean } | null>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [saved,    setSaved]    = useState(false)
+  const [busy,     setBusy]     = useState(false)
+  const [scrollPct, setScrollPct] = useState(0)
+  const scrollRef    = useRef<HTMLDivElement>(null)
+  const secondsRef   = useRef(0)
+  const maxScrollRef = useRef(0)
+  const finishedRef  = useRef(false)
+
+  useEffect(() => {
+    let active = true
+    createApiClient(token).me.policy(policyId)
+      .then(d => { if (active) setData(d) })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [policyId, token])
+
+  // Accumulate active reading time (paused when the tab is hidden).
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') secondsRef.current += 1
+    }, 1000)
+    return () => clearInterval(iv)
+  }, [])
+
+  function handleScroll() {
+    const el = scrollRef.current
+    if (!el) return
+    const pct = el.scrollHeight <= el.clientHeight ? 100 : Math.min(100, Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100))
+    if (pct > maxScrollRef.current) { maxScrollRef.current = pct; setScrollPct(pct) }
+  }
+
+  // If the whole policy fits on screen without scrolling, count it as fully seen.
+  useEffect(() => {
+    if (!loading && data) {
+      const el = scrollRef.current
+      if (el && el.scrollHeight <= el.clientHeight + 4) { maxScrollRef.current = 100; setScrollPct(100) }
+    }
+  }, [loading, data])
+
+  function record(marked: boolean) {
+    if (finishedRef.current) return
+    finishedRef.current = true
+    createApiClient(token).me.recordRead({
+      policy_id: policyId, step_id: stepId, enrollment_id: enrollmentId,
+      seconds_spent: secondsRef.current, max_scroll_pct: maxScrollRef.current,
+      reached_end: maxScrollRef.current >= 98, marked_read: marked, lang: data?.lang ?? 'eng',
+    }).catch(() => {})
+  }
+
+  async function markRead() {
+    setBusy(true)
+    record(true)
+    try { if (onMarkedRead) await onMarkedRead() } finally { onClose() }
+  }
+  function closeViewer() { record(false); onClose() }
+
+  async function toggleSave() {
+    if (saved) return
+    setSaved(true)
+    try { await createApiClient(token).me.savePolicy(policyId) } catch { setSaved(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeViewer}>
+      <div className="flex h-[85vh] w-full max-w-3xl flex-col rounded-xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-neutral-dark">{data?.title ?? 'Policy'}</p>
+            {data && data.lang !== 'eng' && <p className="flex items-center gap-1 text-xs text-teal"><Globe size={11} /> Shown in your language</p>}
+            {data?.translation_pending && <p className="text-xs text-amber-600">Still translating — showing English for now</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button onClick={toggleSave} title="Save to read later" className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${saved ? 'text-teal' : 'text-neutral-mid hover:bg-neutral-light'}`}>
+              {saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />} {saved ? 'Saved' : 'Save'}
+            </button>
+            <button onClick={closeViewer} className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
+          </div>
+        </div>
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-5">
+          {loading
+            ? <div className="flex justify-center py-10"><Spinner /></div>
+            : data?.content
+              ? <div className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-dark">{data.content}</div>
+              : data?.processing
+                ? <p className="text-sm text-neutral-mid">This policy is still being processed — please try again shortly.</p>
+                : <p className="text-sm text-neutral-mid">The policy text isn’t available to display.</p>}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-3">
+          <div className="flex items-center gap-2 text-xs text-neutral-mid">
+            <div className="h-1.5 w-24 rounded-full bg-gray-100"><div className="h-1.5 rounded-full bg-teal transition-all" style={{ width: `${scrollPct}%` }} /></div>
+            {scrollPct}% read
+          </div>
+          <button onClick={markRead} disabled={busy || loading} className="rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+            {busy ? 'Saving…' : (stepId ? 'Mark as read' : 'Done')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Sidebar notification badge — colour passed per nav item.
 function NavBadge({ count, className }: { count: number; className: string }) {
   return (
@@ -198,6 +314,8 @@ export default function ChatPage() {
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
   const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number }>({ induction: 0, training: 0, cqc: 0 })
+  const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
+  const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
@@ -230,14 +348,19 @@ export default function ChatPage() {
     try { localStorage.setItem(`cs_reply_lang_${userId}`, code) } catch { /* ignore */ }
   }
 
-  // Outstanding-item counts for the sidebar notification badges. Refetched on
-  // view changes so completing an item updates the badge.
+  // Outstanding-item counts for the sidebar notification badges + saved policies.
+  // Refetched on view changes so they stay fresh.
   useEffect(() => {
     if (!session?.accessToken) return
-    createApiClient(session.accessToken).me.counts()
-      .then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc }))
-      .catch(() => {})
-  }, [session?.accessToken, view])
+    const api = createApiClient(session.accessToken)
+    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc })).catch(() => {})
+    api.me.savedPolicies().then(d => setSavedPolicies(d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })))).catch(() => {})
+  }, [session?.accessToken, view, sidebarPolicy])
+
+  async function removeSaved(policyId: string) {
+    setSavedPolicies(prev => prev.filter(p => p.policy_id !== policyId))
+    try { await createApiClient(session?.accessToken ?? '').me.unsavePolicy(policyId) } catch { /* ignore */ }
+  }
 
   // Code → name map for the detected-language chip (static + tenant languages).
   const langNameMap: Record<string, string> = { ...LANG_NAMES, ...Object.fromEntries(langList.map(l => [l.code, l.name])) }
@@ -470,6 +593,28 @@ export default function ChatPage() {
             </button>
           )}
         </div>
+
+        {/* Saved policies */}
+        {savedPolicies.length > 0 && (
+          <div className="border-t border-gray-100 px-3 py-3">
+            <p className="mb-1.5 flex items-center gap-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
+              <Bookmark size={11} /> Saved policies
+            </p>
+            <div className="space-y-0.5">
+              {savedPolicies.map(p => (
+                <div key={p.policy_id} className="group flex items-center gap-1 rounded-md hover:bg-neutral-light">
+                  <button onClick={() => setSidebarPolicy(p.policy_id)} className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-sm text-neutral-dark">
+                    <FileText size={13} className="shrink-0 text-neutral-mid" />
+                    <span className="truncate">{p.title}</span>
+                  </button>
+                  <button onClick={() => removeSaved(p.policy_id)} aria-label="Remove" className="mr-1 shrink-0 rounded p-1 text-neutral-mid opacity-0 hover:text-red-500 group-hover:opacity-100">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Session history */}
         <div className="flex-1 overflow-y-auto px-2 pb-4">
@@ -705,6 +850,11 @@ export default function ChatPage() {
         </div>}
 
       </div>
+
+      {/* Saved-policy reader (opened from the sidebar) */}
+      {sidebarPolicy && session?.accessToken && (
+        <PolicyViewer token={session.accessToken} policyId={sidebarPolicy} onClose={() => setSidebarPolicy(null)} />
+      )}
     </div>
   )
 }
@@ -1306,6 +1456,13 @@ function InductionView({ token }: { token: string }) {
   const [loading,     setLoading]     = useState(true)
   const [completing,  setCompleting]  = useState<string | null>(null)
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
+  const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
+  const [savedSet,    setSavedSet]    = useState<Set<string>>(new Set())
+
+  async function savePolicy(policyId: string) {
+    setSavedSet(prev => new Set(prev).add(policyId))
+    try { await api.me.savePolicy(policyId) } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     api.onboarding.myEnrollments()
@@ -1393,13 +1550,31 @@ function InductionView({ token }: { token: string }) {
                             </p>
 
                             {!isCompleted && !isLocked && step.type === 'read_policy' && (
-                              <button
-                                onClick={() => completeStep(e.enrollment_id, step.id)}
-                                disabled={completing === step.id}
-                                className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
-                              >
-                                {completing === step.id ? 'Marking done…' : 'Mark as read'}
-                              </button>
+                              step.policy_id ? (
+                                <div className="mt-3 flex items-center gap-2">
+                                  <button
+                                    onClick={() => setViewer({ policyId: step.policy_id, stepId: step.id, enrollmentId: e.enrollment_id })}
+                                    className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90"
+                                  >
+                                    <BookOpen size={13} /> Read policy
+                                  </button>
+                                  <button
+                                    onClick={() => savePolicy(step.policy_id)}
+                                    disabled={savedSet.has(step.policy_id)}
+                                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light disabled:text-teal disabled:opacity-100"
+                                  >
+                                    {savedSet.has(step.policy_id) ? <><BookmarkCheck size={13} /> Saved</> : <><Bookmark size={13} /> Save for later</>}
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => completeStep(e.enrollment_id, step.id)}
+                                  disabled={completing === step.id}
+                                  className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
+                                >
+                                  {completing === step.id ? 'Marking done…' : 'Mark as read'}
+                                </button>
+                              )
                             )}
 
                             {!isCompleted && !isLocked && step.type === 'answer_question' && Array.isArray(step.options) && step.options.length > 0 && (
@@ -1479,6 +1654,17 @@ function InductionView({ token }: { token: string }) {
           })}
         </div>
       </div>
+
+      {viewer && (
+        <PolicyViewer
+          token={token}
+          policyId={viewer.policyId}
+          stepId={viewer.stepId}
+          enrollmentId={viewer.enrollmentId}
+          onClose={() => setViewer(null)}
+          onMarkedRead={async () => { await completeStep(viewer.enrollmentId, viewer.stepId) }}
+        />
+      )}
     </div>
   )
 }

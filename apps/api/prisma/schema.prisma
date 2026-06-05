@@ -12,6 +12,52 @@ datasource db {
   directUrl = env("DATABASE_DIRECT_URL")
 }
 
+// ─── Policy reading (induction) ─────────────────────────────────────────────────
+
+model PolicyTranslation {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  policy_id  String
+  lang       String
+  content    String
+  created_at DateTime @default(now())
+
+  @@unique([policy_id, lang])
+  @@map("policy_translations")
+}
+
+model PolicyReadSession {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  user_id        String
+  policy_id      String
+  step_id        String?
+  enrollment_id  String?
+  seconds_spent  Int      @default(0)
+  max_scroll_pct Int      @default(0)
+  reached_end    Boolean  @default(false)
+  marked_read    Boolean  @default(false)
+  lang           String   @default("eng")
+  created_at     DateTime @default(now())
+
+  @@index([tenant_id, user_id])
+  @@index([tenant_id, policy_id])
+  @@index([step_id])
+  @@map("policy_read_sessions")
+}
+
+model SavedPolicy {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  policy_id  String
+  created_at DateTime @default(now())
+
+  @@unique([user_id, policy_id])
+  @@index([tenant_id, user_id])
+  @@map("saved_policies")
+}
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 model Plan {

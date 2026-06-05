@@ -108,6 +108,10 @@ app.use('/public/image-alts', publicImageAltsRouter)
 // Must be mounted BEFORE requireAuth.
 app.use('/public/marketing', marketingPublicRouter)
 
+// Vercel Cron jobs — self-authorise via x-vercel-cron header / CRON_SECRET.
+// Must be mounted BEFORE requireAuth.
+app.use('/cron', cronRouter)
+
 // §11.1 — All routes below require a valid JWT + tenant context.
 // apiLimiter: 100 req/min per user.
 // tenantGuard: rejects requests where any supplied tenant_id ≠ JWT claim.
@@ -130,7 +134,6 @@ app.use('/training', trainingRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/agent-actions', agentActionsRouter)
-app.use('/cron', cronRouter)
 
 seedTrainingModulesIfEmpty()
 

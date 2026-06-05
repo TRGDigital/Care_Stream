@@ -865,11 +865,17 @@ auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response)
       },
       orderBy: [{ tenant_id: 'asc' }, { name: 'asc' }],
     }),
-    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true, room_count: true } }),
   ])
 
+  // Room picker options: rooms 1..room_count, plus any custom-named rooms.
+  const count   = Math.max(0, Math.min(500, Number(tenant?.room_count) || 0))
+  const numbered = Array.from({ length: count }, (_, i) => String(i + 1))
+  const custom   = (Array.isArray(tenant?.rooms) ? tenant.rooms : []).filter((r: string) => !numbered.includes(r))
+  const rooms    = [...numbered, ...custom]
+
   const withFlags = (templates as any[]).map(t => ({ ...t, room_based: isRoomBasedAudit(t.name) }))
-  ok(res, { templates: withFlags, rooms: (tenant?.rooms ?? []) })
+  ok(res, { templates: withFlags, rooms })
 })
 
 // ─── POST /audits/rooms ───────────────────────────────────────────────────────

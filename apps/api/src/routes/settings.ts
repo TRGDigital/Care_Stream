@@ -66,7 +66,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -85,6 +85,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     specialist_roles:   effectiveSpecialistRoles(tenant.specialist_roles as string[]),
     languages:          effectiveLanguages(tenant.custom_languages),
     default_language_codes: DEFAULT_LANGUAGES.map(l => l.code),
+    room_count:         (tenant.room_count as number) ?? 0,
   })
 })
 
@@ -99,7 +100,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language, room_count } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -246,10 +247,19 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.custom_languages = customList
   }
 
+  // ── Room count (for the per-room audit picker) ──────────────────────────────
+  if (room_count !== undefined) {
+    const n = Number(room_count)
+    if (!Number.isInteger(n) || n < 0 || n > 500) {
+      return err(res, 'INVALID_INPUT', 'room_count must be a whole number between 0 and 500', 400)
+    }
+    updateData.room_count = n
+  }
+
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
   })
 
   ok(res, {
@@ -262,6 +272,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     policy_sections:   effectiveSections(updated.policy_sections),
     languages:         effectiveLanguages(updated.custom_languages),
     added_language:    addedLanguage,
+    room_count:        (updated.room_count as number) ?? 0,
   })
 })
 

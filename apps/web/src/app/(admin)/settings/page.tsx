@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
-  Bell, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
+  Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
   Mail, MessageSquare, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
 
@@ -89,6 +89,9 @@ export default function SettingsPage() {
   const [newPhone,       setNewPhone]       = useState('')
   const [savingPhone,    setSavingPhone]    = useState(false)
   const [facilityType,   setFacilityType]   = useState(cData?.facility_type ?? '')
+  const [roomCount,      setRoomCount]      = useState<number>((cData as any)?.room_count ?? 0)
+  const [savingRooms,    setSavingRooms]    = useState(false)
+  const [roomsSaved,     setRoomsSaved]     = useState(false)
   const [logoUrl,        setLogoUrl]        = useState<string | null>(cData?.logo_url ?? null)
   const [newEmail,       setNewEmail]       = useState('')
   const [staffRoles,     setStaffRoles]     = useState<string[]>(cData?.staff_roles ?? [])
@@ -155,6 +158,7 @@ export default function SettingsPage() {
         setAllowlist(data.email_allowlist)
         setPhoneAllowlist((data as any).phone_allowlist ?? [])
         setFacilityType((data as any).facility_type ?? 'care home')
+        setRoomCount((data as any).room_count ?? 0)
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
@@ -177,6 +181,15 @@ export default function SettingsPage() {
     try { await createApiClient(session.accessToken).settings.update({ facility_type: facilityType.trim() } as any) }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingFacility(false) }
+  }
+
+  async function saveRoomCount() {
+    if (!session?.accessToken) return
+    const n = Math.max(0, Math.min(500, Math.floor(Number(roomCount) || 0)))
+    setSavingRooms(true); setRoomsSaved(false)
+    try { await createApiClient(session.accessToken).settings.update({ room_count: n } as any); setRoomCount(n); setRoomsSaved(true); setTimeout(() => setRoomsSaved(false), 2500) }
+    catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingRooms(false) }
   }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
@@ -495,6 +508,26 @@ export default function SettingsPage() {
             <Button onClick={saveFacilityType} disabled={savingFacility || !facilityType.trim()} size="md">
               {savingFacility ? 'Saving…' : 'Save'}
             </Button>
+          </div>
+        </SettingSection>
+
+        {/* ── Rooms ─────────────────────────────────────────────────────────── */}
+        <SettingSection icon={BedDouble} title="Rooms" description="The number of rooms/beds in your home — used for per-room audits (e.g. bedroom checks).">
+          <p className="mb-4 text-sm text-neutral-mid">
+            When you start a room-based audit in the hub or here, you&apos;ll pick a room from <strong>1</strong> to this number. Any custom room names you type while auditing are remembered too.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number" min={0} max={500}
+              value={roomCount}
+              onChange={e => setRoomCount(Number(e.target.value))}
+              onKeyDown={e => e.key === 'Enter' && saveRoomCount()}
+              className={`${INPUT} w-32`}
+            />
+            <Button onClick={saveRoomCount} disabled={savingRooms} size="md">
+              {savingRooms ? 'Saving…' : 'Save'}
+            </Button>
+            {roomsSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
           </div>
         </SettingSection>
 

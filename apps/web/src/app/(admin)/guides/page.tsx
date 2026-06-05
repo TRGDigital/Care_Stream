@@ -808,12 +808,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'monthly-audits',
     icon:    ClipboardCheck,
     title:   'Monthly Audits',
-    summary: 'Complete, store, and review care quality audit reports with AI-generated recommendations',
+    summary: 'Complete, store, and review care quality audits — on the web, in the hub, or via WhatsApp — with AI recommendations',
     content: (
       <div className="space-y-5">
-        <SectionBlock title="What monthly audits do">
+        <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Monthly Audits module provides 12 pre-built audit templates covering the key governance areas of a care setting. Templates span Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, and more. Complete audits on the web or via WhatsApp, and generate CQC-linked AI recommendations on completion.
+            The Audits module provides pre-built audit templates covering the key governance areas of a care setting — Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web, in the <strong>Chat Hub</strong>, or via WhatsApp, and generate CQC-linked AI recommendations on completion.
           </p>
         </SectionBlock>
 
@@ -827,7 +827,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
               ['Monthly',   'Medicines Management'],
               ['Monthly',   'Kitchen Audit'],
               ['Monthly',   'Accident &amp; Incident Book Audit'],
-              ['Monthly',   'Accident &amp; Incident Book Analysis'],
               ['Quarterly', 'Infection Control'],
               ['Quarterly', 'Fire Drill Record Form'],
               ['Periodic',  'Quality Assurance'],
@@ -861,6 +860,33 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={5}>To pause at any time, send <strong>stop</strong> or <strong>pause</strong>. Your progress is saved and you can ask other questions as normal. To resume, send "audit" again and select the same template — the system continues from where you left off.</Step>
           </div>
           <Tip>You can start an audit on WhatsApp and finish it on the web (or vice versa) — answers are stored in real time regardless of channel.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Doing audits in the Chat Hub">
+          <p className="text-sm text-neutral-mid">
+            Staff whose role is <strong>Admin</strong> get an <strong>Audits</strong> item in the Chat Hub sidebar — handy for completing checks on a phone or tablet while walking the home.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Open the hub and choose <strong>Audits</strong>. Templates are grouped by frequency (Daily, Weekly, Monthly…), with anything in progress shown at the top to resume.</Step>
+            <Step n={2}>Tap <strong>Start</strong> to begin a run, answer each question (Yes/No/N-A, findings or free-text — saved automatically), then <strong>Complete audit</strong> to generate the AI recommendations.</Step>
+            <Step n={3}>Audits done in the hub are the same records as on the web — they appear in your <strong>Audit section</strong> (and repository) automatically. Nothing is duplicated.</Step>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="Per-room audits (bedrooms)">
+          <p className="text-sm text-neutral-mid">
+            Bedroom audits are completed <strong>one room at a time</strong>. When you start one, you pick a room number first, and each room is tracked as its own record (a daily bedroom audit resets per room, per day).
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>Set how many rooms your home has in <strong>Settings → Rooms</strong>. The room picker then offers <strong>1</strong> to that number.</li>
+            <li>Need a named room (e.g. "Lavender")? Just type it into the room box when starting — it&apos;s remembered for next time.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Daily reminders">
+          <p className="text-sm text-neutral-mid">
+            Each morning CareStream emails admins a reminder to finish any in-progress audits and start recurring ones (e.g. daily bedroom checks) not yet done. Turn these on/off with the <strong>Audit updates</strong> switch in <strong>Settings → Email communications</strong>.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="AI recommendations">

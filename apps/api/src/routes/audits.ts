@@ -743,58 +743,6 @@ const PLATFORM_TEMPLATES: TSeed[] = [
     ],
   },
 
-  // 12 — Accident & Incident Book Analysis Monthly
-  {
-    name: 'Accident & Incident Book Analysis',
-    description: 'Monthly analysis of accident and incident data including trend analysis by time and location, and dementia-specific incident review.',
-    frequency: 'monthly',
-    sections: [
-      {
-        title: 'Section 1: Monthly Summary (Incident Counts)',
-        defaultType: 'findings',
-        questions: [
-          'Total incidents — number this month, number last month, % change.',
-          'Falls (witnessed) — number this month vs last month.',
-          'Falls (unwitnessed) — number this month vs last month.',
-          'Challenging/distressed behaviour incidents — this month vs last month.',
-          'Medication errors — this month vs last month.',
-          'Skin tears/bruising incidents — this month vs last month.',
-          'Choking/near miss incidents — this month vs last month.',
-          'Environmental accidents (slips/trips) — this month vs last month.',
-          'Hospital admissions — this month vs last month.',
-          'Safeguarding alerts — this month vs last month.',
-          'Equipment-related incidents (hoists, bedrails, flooring, lighting) — this month vs last month.',
-        ],
-      },
-      {
-        title: 'Section 2: Trend Analysis',
-        defaultType: 'findings',
-        questions: [
-          'Morning incidents — count and comments.',
-          'Afternoon incidents — count and comments.',
-          'Evening incidents — count and comments.',
-          'Night incidents — count and comments.',
-          'Bedroom hotspot — count and comments.',
-          'Lounge hotspot — count and comments.',
-          'Dining room hotspot — count and comments.',
-          'Corridor hotspot — count and comments.',
-          'Garden/outdoors hotspot — count and comments.',
-          'Residents with repeated incidents this month (list names/room numbers and frequency).',
-        ],
-      },
-      {
-        title: 'Section 3: Dementia-Specific Analysis',
-        defaultType: 'yes_no_na',
-        questions: [
-          'Incident linked to confusion, wandering, or exit-seeking.',
-          'Behavioural triggers identified (pain, noise, overstimulation).',
-          'ABC or behaviour chart completed (if applicable).',
-          'Environmental adjustments made (lighting, signs, clutter).',
-          'Staff used dementia-appropriate communication.',
-        ],
-      },
-    ],
-  },
 ]
 
 export const DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT = `You are a senior care quality consultant with deep expertise in UK care home regulation, CQC inspection frameworks, and best-practice governance for registered care settings.
@@ -896,23 +844,48 @@ async function ensurePlatformTemplatesSeeded() {
 
 // ─── GET /audits/templates ────────────────────────────────────────────────────
 
+// Templates audited one room/bed at a time (a room must be chosen on Start).
+export function isRoomBasedAudit(name: string): boolean {
+  return /bedroom/i.test(name ?? '')
+}
+
 auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response) => {
   await ensurePlatformTemplatesSeeded()
   const tenantId = req.user!.tenant_id
 
-  const templates = await (prisma as any).auditTemplate.findMany({
-    where: {
-      is_active: true,
-      OR: [{ tenant_id: null }, { tenant_id: tenantId }],
-    },
-    include: {
-      _count: { select: { sections: true } },
-      runs:   { where: { tenant_id: tenantId }, orderBy: { audit_month: 'desc' }, take: 1 },
-    },
-    orderBy: [{ tenant_id: 'asc' }, { name: 'asc' }],
-  })
+  const [templates, tenant] = await Promise.all([
+    (prisma as any).auditTemplate.findMany({
+      where: {
+        is_active: true,
+        OR: [{ tenant_id: null }, { tenant_id: tenantId }],
+      },
+      include: {
+        _count: { select: { sections: true } },
+        runs:   { where: { tenant_id: tenantId }, orderBy: { audit_month: 'desc' }, take: 1 },
+      },
+      orderBy: [{ tenant_id: 'asc' }, { name: 'asc' }],
+    }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true } }),
+  ])
 
-  ok(res, { templates })
+  const withFlags = (templates as any[]).map(t => ({ ...t, room_based: isRoomBasedAudit(t.name) }))
+  ok(res, { templates: withFlags, rooms: (tenant?.rooms ?? []) })
+})
+
+// ─── POST /audits/rooms ───────────────────────────────────────────────────────
+// Add a room/bed number to the tenant's list (for the audit room picker).
+
+auditsRouter.post('/rooms', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const room = String(req.body?.room ?? '').trim().slice(0, 40)
+  if (!room) return err(res, 'MISSING_ROOM', 'room is required', 400)
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true } })
+  const rooms: string[] = Array.isArray(tenant?.rooms) ? tenant.rooms : []
+  if (!rooms.includes(room)) {
+    rooms.push(room)
+    await (prisma as any).tenant.update({ where: { id: tenantId }, data: { rooms } })
+  }
+  ok(res, { rooms })
 })
 
 // ─── POST /audits/templates ───────────────────────────────────────────────────
@@ -1014,7 +987,7 @@ auditsRouter.get('/runs', requireAdmin, async (req: Request, res: Response) => {
 
 auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => {
   const tenantId                                    = req.user!.tenant_id
-  const { template_id, audit_month, auditor_name, auditor_role } = req.body
+  const { template_id, audit_month, auditor_name, auditor_role, room_number } = req.body
 
   if (!template_id)  return err(res, 'MISSING_TEMPLATE', 'template_id is required', 400)
   if (!audit_month)  return err(res, 'MISSING_MONTH',    'audit_month is required', 400)
@@ -1024,6 +997,11 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
   })
   if (!template) return err(res, 'NOT_FOUND', 'Audit template not found', 404)
 
+  // Room-based audits (e.g. bedrooms) are tracked one room at a time.
+  const roomBased = isRoomBasedAudit(template.name)
+  const room = roomBased ? String(room_number ?? '').trim().slice(0, 40) : null
+  if (roomBased && !room) return err(res, 'MISSING_ROOM', 'A room must be selected for this audit', 400)
+
   // Daily audits are tracked per calendar day (one run per day); all other
   // frequencies are tracked per month. The audit_month column stores the run's
   // period start — today for daily, the first of the month otherwise.
@@ -1032,7 +1010,7 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
   periodDate.setHours(0, 0, 0, 0)
 
   const existing = await (prisma as any).auditRun.findFirst({
-    where: { tenant_id: tenantId, template_id, audit_month: periodDate },
+    where: { tenant_id: tenantId, template_id, audit_month: periodDate, ...(roomBased ? { room_number: room } : {}) },
   })
   if (existing) return ok(res, { run: existing })
 
@@ -1043,8 +1021,16 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
       audit_month:  periodDate,
       auditor_name: auditor_name?.trim() ?? null,
       auditor_role: auditor_role?.trim() ?? null,
+      room_number:  room,
     },
   })
+
+  // Remember new rooms for the picker.
+  if (room) {
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true } })
+    const rooms: string[] = Array.isArray(t?.rooms) ? t.rooms : []
+    if (!rooms.includes(room)) await (prisma as any).tenant.update({ where: { id: tenantId }, data: { rooms: [...rooms, room] } }).catch(() => {})
+  }
 
   ok(res, { run }, 201)
 })

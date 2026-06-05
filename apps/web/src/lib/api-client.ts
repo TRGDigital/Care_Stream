@@ -404,15 +404,16 @@ export function createApiClient(token: string) {
     },
 
     audits: {
-      templates: () => apiFetch<{ templates: any[] }>('/audits/templates', token),
+      templates: () => apiFetch<{ templates: any[]; rooms: string[] }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),
+      addRoom: (room: string) => apiFetch<{ rooms: string[] }>('/audits/rooms', token, { method: 'POST', body: JSON.stringify({ room }) }),
       runs: (params?: { status?: string; template_id?: string }) => {
         const qs = new URLSearchParams()
         if (params?.status)      qs.set('status',      params.status)
         if (params?.template_id) qs.set('template_id', params.template_id)
         return apiFetch<{ runs: any[] }>(`/audits/runs${qs.toString() ? '?' + qs : ''}`, token)
       },
-      createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string }) =>
+      createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string }) =>
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
       getRun: (id: string) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),

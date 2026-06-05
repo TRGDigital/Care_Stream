@@ -180,6 +180,7 @@ model Tenant {
   onboarding_enrollments OnboardingEnrollment[]
   training_settings       Json               @default("{}")
   custom_languages        Json               @default("[]")                     // admin-added staff languages: [{ code, name }]
+  rooms                   String[]           @default([])                       // room/bed numbers for per-room audits
   training_enrollments    TrainingEnrollment[]
   training_modules        TrainingModule[]
   cqc_staff_questions     CqcStaffQuestion[]

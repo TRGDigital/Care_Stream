@@ -72,23 +72,28 @@ export default function AuditsPage() {
   })
   const [auditorName, setAuditorName] = useState('')
   const [auditorRole, setAuditorRole] = useState('')
+  const [rooms,       setRooms]       = useState<string[]>([])
+  const [room,        setRoom]        = useState('')
 
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); pageCache.set('admin-audits', { templates: t.templates, runs: r.runs }) })
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); pageCache.set('admin-audits', { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [session?.accessToken])
 
+  const selTpl = templates.find(t => t.id === selTemplate)
+  const needsRoom = !!selTpl?.room_based
+
   function requestConfirm() {
-    if (!selTemplate) return
+    if (!selTemplate || (needsRoom && !room.trim())) return
     setConfirming(true)
   }
 
   async function startAudit() {
-    if (!session?.accessToken || !selTemplate) return
+    if (!session?.accessToken || !selTemplate || (needsRoom && !room.trim())) return
     setStarting(true)
     try {
       const api  = createApiClient(session.accessToken)
@@ -98,6 +103,7 @@ export default function AuditsPage() {
         audit_month:  date.toISOString(),
         auditor_name: auditorName || undefined,
         auditor_role: auditorRole || undefined,
+        ...(needsRoom ? { room_number: room.trim() } : {}),
       })
       router.push(`/audits/${run.id}`)
     } catch {
@@ -153,6 +159,19 @@ export default function AuditsPage() {
                     className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                   />
                 </div>
+                {needsRoom && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-neutral-mid">Room / bed no.</label>
+                    <input
+                      list="admin-audit-rooms"
+                      value={room}
+                      onChange={e => setRoom(e.target.value)}
+                      placeholder="Select or type a room"
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
+                    />
+                    <datalist id="admin-audit-rooms">{rooms.map(r => <option key={r} value={r} />)}</datalist>
+                  </div>
+                )}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Auditor name</label>
                   <input
@@ -177,7 +196,7 @@ export default function AuditsPage() {
               <div className="mt-4 flex gap-3">
                 <button
                   onClick={requestConfirm}
-                  disabled={!selTemplate}
+                  disabled={!selTemplate || (needsRoom && !room.trim())}
                   className="flex items-center gap-2 rounded-btn bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                 >
                   <ClipboardCheck size={14} />
@@ -199,6 +218,9 @@ export default function AuditsPage() {
                 <p className="text-xs text-neutral-mid">
                   Month: <span className="font-medium text-neutral-dark">{monthLabel(auditMonth + '-01')}</span>
                 </p>
+                {needsRoom && room.trim() && (
+                  <p className="text-xs text-neutral-mid">Room: <span className="font-medium text-neutral-dark">{room.trim()}</span></p>
+                )}
                 {auditorName && (
                   <p className="text-xs text-neutral-mid">
                     Auditor: <span className="font-medium text-neutral-dark">{auditorName}{auditorRole ? ` — ${auditorRole}` : ''}</span>

@@ -375,38 +375,6 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── Policy ages ──────────────────────────────────────────────────────── */}
-      {basic.policy_ages.length > 0 && (
-        <div className="mb-6">
-          <Card title="Policy library — last updated" info="All active policies and when they were last updated. Policies older than 180 days are flagged in amber as a prompt to review whether they remain current.">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-left">
-                  <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Policy</th>
-                  <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Version</th>
-                  <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Last updated</th>
-                  <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Age</th>
-                </tr>
-              </thead>
-              <tbody>
-                {basic.policy_ages.map((p: any) => (
-                  <tr key={p.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2 pr-4 font-medium text-neutral-dark">{p.name}</td>
-                    <td className="py-2 pr-4 text-neutral-mid">v{p.version}</td>
-                    <td className="py-2 pr-4 text-neutral-mid">
-                      {new Date(p.updated_at).toLocaleDateString('en-GB')}
-                    </td>
-                    <td className={clsx('py-2 text-right text-xs font-medium', p.days_since_update > 180 ? 'text-status-warning' : 'text-neutral-mid')}>
-                      {p.days_since_update}d ago
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        </div>
-      )}
-
       {/* ── Policy reading engagement ───────────────────────────────────────── */}
       {readingData && readingData.summary.total_sessions > 0 && (
         <>

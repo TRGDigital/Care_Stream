@@ -401,7 +401,7 @@ export default function ChatPage() {
     <div className="flex h-full overflow-hidden">
 
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
-      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
+      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
         <div className="p-3 space-y-0.5">
           <button
             onClick={() => setView('chat')}
@@ -539,7 +539,7 @@ export default function ChatPage() {
         {/* Active category badge */}
         {view === 'chat' && category !== null && (
           <div className="flex-shrink-0 border-b border-gray-100 bg-white px-4 py-2">
-            <div className="mx-auto flex max-w-3xl items-center justify-between gap-1.5">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-1.5">
               <div className="flex items-center gap-1.5">
                 {category === 'internal_policy' ? <BookOpen size={13} className="text-teal" />
                   : category === 'training_module' ? <Brain size={13} className="text-teal" />
@@ -569,7 +569,7 @@ export default function ChatPage() {
           ) : isEmpty ? (
             <EmptyState category={category} onSelect={sendMessage} />
           ) : (
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto max-w-5xl space-y-6">
               {messages.map(msg => (
                 <MessageBubble
                   key={msg.id}
@@ -598,7 +598,7 @@ export default function ChatPage() {
         {view === 'chat' && <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4">
           <form
             onSubmit={handleSubmit}
-            className="mx-auto flex max-w-3xl items-center gap-3"
+            className="mx-auto flex max-w-5xl items-center gap-3"
           >
             <div className="relative flex-1">
               <input
@@ -654,7 +654,7 @@ export default function ChatPage() {
           </form>
 
           {/* Reply-language picker — forces responses into the chosen language */}
-          <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end gap-1.5">
+          <div className="mx-auto mt-2 flex max-w-5xl items-center justify-end gap-1.5">
             <Globe size={13} className="text-neutral-mid" />
             <label htmlFor="reply-lang" className="text-xs text-neutral-mid">Reply in</label>
             <select
@@ -696,7 +696,7 @@ function CategorySelect({ onSelect }: { onSelect: (c: DocumentCategory) => void 
         <h2 className="text-2xl font-semibold text-neutral-dark">What would you like to ask about?</h2>
         <p className="mt-2 text-sm text-neutral-mid">Choose a knowledge area to get started</p>
       </div>
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <button
           onClick={() => onSelect('internal_policy')}
           className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
@@ -1056,7 +1056,7 @@ function TrainingView({ token }: { token: string }) {
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
         <h2 className="mb-5 text-xl font-bold text-neutral-dark">My Training</h2>
         <div className="space-y-6">
           {enrollments.map(enrollment => {
@@ -1324,7 +1324,7 @@ function InductionView({ token }: { token: string }) {
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
         <h2 className="mb-5 text-xl font-bold text-neutral-dark">My Induction</h2>
         <div className="space-y-6">
           {enrollments.map(e => {

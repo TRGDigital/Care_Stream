@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateBundle, translateText, translateQuestionCached, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { prisma } from '../db/client'
@@ -58,15 +58,75 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const now = new Date()
-  const [training, induction, cqc] = await Promise.all([
+  const [training, induction, cqc, tWrong, oWrong] = await Promise.all([
     (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, OR: [
       { status: { in: ['not_started', 'in_progress'] } },
       { status: 'complete', expires_at: { lt: now } },
     ] } }).catch(() => 0),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
     (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
+    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { answers: { where: { is_correct: false }, select: { id: true } } } }).catch(() => []),
+    (prisma as any).onboardingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { progress: { where: { answer_correct: false }, select: { id: true } } } }).catch(() => []),
   ])
-  ok(res, { training, induction, cqc })
+  const followup = (tWrong as any[]).reduce((a, e) => a + (e.answers?.length ?? 0), 0) + (oWrong as any[]).reduce((a, e) => a + (e.progress?.length ?? 0), 0)
+  ok(res, { training, induction, cqc, followup })
+})
+
+// ─── GET /me/follow-up ────────────────────────────────────────────────────────
+// The exact questions the staff member currently has wrong (training + induction
+// MCQs), so they can re-answer just those. Questions translated to their language.
+
+meRouter.get('/follow-up', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+
+  const [tEnr, oEnr, user, tenant] = await Promise.all([
+    (prisma as any).trainingEnrollment.findMany({
+      where:  { tenant_id: tenantId, user_id: userId },
+      select: { id: true, module: { select: { name: true, questions: true } }, answers: { where: { is_correct: false }, select: { question_id: true } } },
+    }),
+    (prisma as any).onboardingEnrollment.findMany({
+      where:  { tenant_id: tenantId, user_id: userId },
+      select: { id: true, flow: { select: { name: true, steps: { select: { id: true, type: true, question: true, options: true } } } }, progress: { where: { answer_correct: false }, select: { step_id: true } } },
+    }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+
+  const items: any[] = []
+  for (const e of tEnr as any[]) {
+    const wrong = new Set((e.answers ?? []).map((a: any) => a.question_id))
+    for (const q of (e.module?.questions ?? [])) {
+      if (!wrong.has(q.id)) continue
+      const options = Array.isArray(q.options) ? q.options : []
+      if (options.length === 0) continue
+      items.push({ source: 'training', enrollment_id: e.id, ref: q.id, topic: e.module?.name, text: q.text, options })
+    }
+  }
+  for (const e of oEnr as any[]) {
+    const wrong = new Set((e.progress ?? []).map((p: any) => p.step_id))
+    for (const s of (e.flow?.steps ?? [])) {
+      if (s.type !== 'answer_question' || !wrong.has(s.id)) continue
+      const options = Array.isArray(s.options) ? s.options : []
+      if (options.length === 0) continue
+      items.push({ source: 'induction', enrollment_id: e.id, ref: s.id, topic: e.flow?.name, text: s.question, options })
+    }
+  }
+
+  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  if (lang !== 'eng' && items.length > 0) {
+    const langName = languageNameForCode(lang, tenant?.custom_languages)
+    const translated = await withTranslationBudget(
+      mapLimit(items, 6, async (it: any) => {
+        const t = await translateQuestionCached({ text: it.text ?? '', options: it.options }, lang, langName)
+        return { ...it, text: t.text, options: t.options }
+      }),
+      18_000, items,
+    )
+    ok(res, { items: translated })
+  } else {
+    ok(res, { items })
+  }
 })
 
 // ─── GET /me/policy/:policyId ─────────────────────────────────────────────────

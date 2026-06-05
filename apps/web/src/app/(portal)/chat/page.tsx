@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -308,7 +308,7 @@ export default function ChatPage() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup'>('chat')
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
@@ -324,7 +324,7 @@ export default function ChatPage() {
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
-  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number }>({ induction: 0, training: 0, cqc: 0 })
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number }>({ induction: 0, training: 0, cqc: 0, followup: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
@@ -366,7 +366,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc })).catch(() => {})
+    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup })).catch(() => {})
     api.me.savedPolicies().then(d => setSavedPolicies(d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })))).catch(() => {})
   }, [session?.accessToken, view, sidebarPolicy])
 
@@ -609,6 +609,16 @@ export default function ChatPage() {
             My Training
             {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
+          {navCounts.followup > 0 && (
+            <button
+              onClick={() => setView('followup')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'followup' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <RefreshCw size={15} />
+              Follow-up
+              <NavBadge count={navCounts.followup} className="bg-red-500" />
+            </button>
+          )}
           <Link
             href="/cqc"
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
@@ -742,6 +752,13 @@ export default function ChatPage() {
         {/* Training view */}
         {view === 'training' && session?.accessToken && (
           <TrainingView token={session.accessToken} />
+        )}
+
+        {/* Follow-up view */}
+        {view === 'followup' && session?.accessToken && (
+          <FollowUpView token={session.accessToken} onChange={() => {
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup })).catch(() => {})
+          }} />
         )}
 
         {/* Active category badge */}
@@ -1208,6 +1225,97 @@ function MessageBubble({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─── FollowUpView ─────────────────────────────────────────────────────────────
+// The specific questions the staff member got wrong (training + induction), to
+// re-answer. Getting one right clears it.
+
+function FollowUpView({ token, onChange }: { token: string; onChange?: () => void }) {
+  const api = createApiClient(token)
+  const [items,      setItems]      = useState<any[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [selected,   setSelected]   = useState<Record<string, number>>({})
+  const [feedback,   setFeedback]   = useState<Record<string, 'correct' | 'wrong'>>({})
+  const [submitting, setSubmitting] = useState<string | null>(null)
+
+  function load() {
+    setLoading(true)
+    api.me.followUp().then(d => setItems(d.items)).catch(() => {}).finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const keyOf = (it: any) => `${it.source}:${it.enrollment_id}:${it.ref}`
+
+  async function submit(it: any) {
+    const k = keyOf(it)
+    const oi = selected[k]
+    if (oi == null || submitting) return
+    setSubmitting(k)
+    try {
+      let correct = false
+      if (it.source === 'training') {
+        const r = await api.training.saveAnswer(it.enrollment_id, { question_id: it.ref, answer_text: OPTION_LETTERS[oi] })
+        correct = !!r.is_correct
+      } else {
+        const r: any = await api.onboarding.completeStep(it.enrollment_id, it.ref, { answer_text: String(oi) })
+        correct = r?.progress?.answer_correct === true || r?.enrollment_complete === true
+      }
+      setFeedback(prev => ({ ...prev, [k]: correct ? 'correct' : 'wrong' }))
+      if (correct) setTimeout(() => { load(); onChange?.() }, 900)
+    } catch { /* ignore */ } finally { setSubmitting(null) }
+  }
+
+  if (loading) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-36 animate-pulse rounded-xl bg-gray-100" />)}</div>
+
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+        <CheckCircle2 size={36} className="text-green-300" />
+        <p className="font-medium text-neutral-dark">Nothing to revisit</p>
+        <p className="text-sm text-neutral-mid">You&apos;ve answered all your training and induction questions correctly. 🎉</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl">
+        <h2 className="mb-1 text-xl font-bold text-neutral-dark">Follow-up</h2>
+        <p className="mb-5 text-sm text-neutral-mid">Questions to revisit. Answer one correctly and it disappears from here.</p>
+        <div className="space-y-4">
+          {items.map(it => {
+            const k  = keyOf(it)
+            const fb = feedback[k]
+            return (
+              <div key={k} className={`rounded-xl border bg-white p-5 shadow-sm ${fb === 'wrong' ? 'border-red-200' : 'border-gray-200'}`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${it.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{it.source === 'training' ? 'Training' : 'Induction'}</span>
+                  <span className="text-xs text-neutral-mid">{it.topic}</span>
+                </div>
+                <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+                <div className="space-y-1.5">
+                  {it.options.map((opt: string, oi: number) => (
+                    <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${selected[k] === oi ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
+                      <input type="radio" name={`fu-${k}`} checked={selected[k] === oi} onChange={() => setSelected(prev => ({ ...prev, [k]: oi }))} className="accent-teal" />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <button onClick={() => submit(it)} disabled={selected[k] == null || submitting === k} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                    {submitting === k ? 'Checking…' : 'Submit answer'}
+                  </button>
+                  {fb === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Correct!</span>}
+                  {fb === 'wrong'   && <span className="flex items-center gap-1 text-xs font-medium text-amber-600"><XCircle size={13} /> Not quite — try again</span>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

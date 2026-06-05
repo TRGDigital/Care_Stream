@@ -432,7 +432,8 @@ export function createApiClient(token: string) {
 
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
-      counts: () => apiFetch<{ training: number; induction: number; cqc: number }>('/me/counts', token),
+      counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number }>('/me/counts', token),
+      followUp: () => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>('/me/follow-up', token),
       policy: (policyId: string) => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}`, token),
       policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>

@@ -153,6 +153,14 @@ function PlanUsageBar({ used, limit, percent }: { used: number; limit: number; p
   )
 }
 
+function EmptyTab({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-card border border-dashed border-gray-200 bg-white p-10 text-center">
+      <p className="mx-auto max-w-md text-sm text-neutral-mid">{children}</p>
+    </div>
+  )
+}
+
 function SectionDivider({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-4 mt-8 flex items-start gap-3 border-b border-gray-100 pb-3">
@@ -215,6 +223,17 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
+type TabId = 'overview' | 'staff' | 'gaps' | 'training' | 'compliance' | 'advanced'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'overview',   label: 'Overview' },
+  { id: 'staff',      label: 'Staff' },
+  { id: 'gaps',       label: 'Knowledge gaps' },
+  { id: 'training',   label: 'Training' },
+  { id: 'compliance', label: 'Audits & CQC' },
+  { id: 'advanced',   label: 'Advanced' },
+]
+
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
   const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any }>('admin-analytics')
@@ -228,6 +247,7 @@ export default function AnalyticsPage() {
   const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
   const [kgaps,        setKgaps]    = useState<any>(analyticsCache?.kgaps ?? null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -277,10 +297,25 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
+
+      {/* ── Tabs ────────────────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-20 -mx-6 mb-6 border-b border-gray-200 bg-neutral-light/95 px-6 pt-1 backdrop-blur-sm">
+        <div className="flex gap-1 overflow-x-auto">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${tab === t.id ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Staff needing attention ─────────────────────────────────────────── */}
-      {riskData && riskData.staff.length > 0 && (
+      {tab === 'staff' && riskData && riskData.staff.length > 0 && (
         <div className="mb-6 rounded-card border border-amber-200 bg-amber-50/50 p-5">
           <div className="mb-3 flex items-center gap-2">
             <AlertCircle size={16} className="text-amber-600" />
@@ -310,6 +345,7 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {tab === 'overview' && (<>
       {/* ── Stat cards ──────────────────────────────────────────────────────── */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -418,9 +454,10 @@ export default function AnalyticsPage() {
           </Card>
         </div>
       )}
+      </>)}
 
       {/* ── Policy reading engagement ───────────────────────────────────────── */}
-      {readingData && readingData.summary.total_sessions > 0 && (
+      {tab === 'staff' && readingData && readingData.summary.total_sessions > 0 && (
         <>
           <SectionDivider
             title="Policy reading engagement"
@@ -436,7 +473,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── Induction question performance ───────────────────────────────────── */}
-      {inductionPerf && inductionPerf.summary.total_answered > 0 && (
+      {tab === 'gaps' && inductionPerf && inductionPerf.summary.total_answered > 0 && (
         <>
           <SectionDivider
             title="Induction question performance"
@@ -452,7 +489,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── Knowledge gaps (training + induction, team-wide) ─────────────────── */}
-      {kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0) && (
+      {tab === 'gaps' && kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0) && (
         <>
           <SectionDivider
             title="Knowledge gaps"
@@ -568,7 +605,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── Training compliance ─────────────────────────────────────────────── */}
-      {trainingData && (
+      {tab === 'training' && trainingData && (
         <>
           <SectionDivider
             title="Training compliance"
@@ -662,7 +699,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── Training knowledge gaps ──────────────────────────────────────────── */}
-      {gapsData && (gapsData.question_gaps.length > 0 || gapsData.module_summary.length > 0) && (
+      {tab === 'gaps' && gapsData && (gapsData.question_gaps.length > 0 || gapsData.module_summary.length > 0) && (
         <>
           <SectionDivider
             title="Training knowledge gaps"
@@ -734,6 +771,7 @@ export default function AnalyticsPage() {
         </>
       )}
 
+      {tab === 'compliance' && (<>
       {/* ── Monthly Audits ──────────────────────────────────────────────────── */}
       <SectionDivider
         title="Monthly Audits"
@@ -891,9 +929,10 @@ export default function AnalyticsPage() {
           )}
         </>
       )}
+      </>)}
 
       {/* ── Advanced section ─────────────────────────────────────────────────── */}
-      {!advanced ? (
+      {tab === 'advanced' && (!advanced ? (
         <div className="rounded-card border-2 border-dashed border-gray-200 p-8 text-center">
           <TrendingUp size={32} className="mx-auto mb-3 text-neutral-mid" />
           <h3 className="mb-1 text-base font-semibold text-neutral-dark">Advanced analytics</h3>
@@ -1064,6 +1103,17 @@ export default function AnalyticsPage() {
             </Card>
           </div>
         </>
+      ))}
+
+      {/* ── Per-tab empty states ─────────────────────────────────────────────── */}
+      {tab === 'staff' && !(riskData?.staff?.length || readingData?.summary?.total_sessions) && (
+        <EmptyTab>No staff alerts or policy-reading activity yet. Flags appear here when training is overdue, induction stalls, or someone hasn&apos;t logged in.</EmptyTab>
+      )}
+      {tab === 'gaps' && !((inductionPerf?.summary?.total_answered) || (kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0)) || (gapsData && (gapsData.question_gaps.length > 0 || gapsData.module_summary.length > 0))) && (
+        <EmptyTab>No knowledge gaps yet. Once staff start answering training and induction questions, missed questions and remediation will show here.</EmptyTab>
+      )}
+      {tab === 'training' && !trainingData && (
+        <EmptyTab>No training data yet. Assign modules from the Staff page to start tracking completion and compliance.</EmptyTab>
       )}
     </div>
   )

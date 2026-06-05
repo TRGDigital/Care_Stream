@@ -585,6 +585,16 @@ export default function ChatPage() {
 
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
+        {/* New chat — pinned, always visible */}
+        <div className="flex-shrink-0 border-b border-gray-100 p-3">
+          <button
+            onClick={() => { setView('chat'); startNewChat() }}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal/90"
+          >
+            <Plus size={15} />
+            New chat
+          </button>
+        </div>
         <div className="p-3 space-y-0.5">
           <button
             onClick={() => setView('chat')}
@@ -632,15 +642,6 @@ export default function ChatPage() {
             <TrendingUp size={15} />
             My Progress
           </Link>
-          {view === 'chat' && (
-            <button
-              onClick={startNewChat}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
-            >
-              <Plus size={15} />
-              New chat
-            </button>
-          )}
         </div>
 
         {/* Saved policies */}

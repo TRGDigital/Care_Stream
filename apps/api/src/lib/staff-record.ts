@@ -39,7 +39,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       where:   { tenant_id: tenantId, user_id: userId },
       include: {
         module:  { select: { id: true, name: true, category: true, questions: true } },
-        answers: { select: { is_correct: true, answered_at: true } },
+        answers: { select: { is_correct: true, answered_at: true, question_text: true } },
       },
       orderBy: { created_at: 'asc' },
     }),
@@ -262,6 +262,38 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }
   }
 
+  // ── Knowledge-gap follow-up (admin record only) ─────────────────────────────
+  let followUp: any = null
+  if (opts.includeReading) {
+    const gaps: any[] = []
+    // Training gaps — questions currently answered incorrectly.
+    for (const e of tEnr as any[]) {
+      for (const a of (e.answers ?? [])) {
+        if (a.is_correct === false) {
+          gaps.push({ source: 'training', topic: e.module?.name, enrollment_id: e.id, question: a.question_text ?? null, when: a.answered_at })
+        }
+      }
+    }
+    // Induction gaps — question steps currently answered incorrectly.
+    for (const q of (inductionQuestions?.items ?? [])) {
+      if (!q.is_correct) gaps.push({ source: 'induction', topic: q.flow_name, question: q.question, their_answer: q.selected, correct_answer: q.correct_answer, when: q.answered_at })
+    }
+
+    const lastReview = await (prisma as any).knowledgeGapReview.findFirst({
+      where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' },
+    }).catch(() => null)
+    const reviewedAt = lastReview ? new Date(lastReview.created_at).getTime() : 0
+    const unreviewed = gaps.filter(g => !g.when || new Date(g.when).getTime() > reviewedAt)
+
+    followUp = {
+      gaps,
+      open_count:       gaps.length,
+      unreviewed_count: unreviewed.length,
+      needs_follow_up:  unreviewed.length > 0,
+      last_review:      lastReview ? { at: lastReview.created_at, by: lastReview.reviewed_by_name ?? null, note: lastReview.note ?? null } : null,
+    }
+  }
+
   return {
     user: {
       id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role,
@@ -274,5 +306,6 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     onboarding: { items: onboarding, summary: onboardingSummary },
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,
+    follow_up: followUp,
   }
 }

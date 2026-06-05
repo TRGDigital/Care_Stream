@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import {
   ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe,
-  ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp, XCircle,
+  Lightbulb, ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -18,6 +18,7 @@ const TIP = {
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
   questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
+  followup:   "Questions this person has currently answered incorrectly across training and induction — the knowledge to reinforce. Re-send their outstanding questions, reset a module below so they can retake it, or assign targeted training. 'Mark as reviewed' records that you've actioned it (supervision evidence) and clears it until a new wrong answer appears.",
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
@@ -149,6 +150,11 @@ export default function StaffRecordPage() {
     try { await createApiClient(token).training.reset(enrollmentId); load() }
     catch { setNote('Could not reset module.') } finally { setBusy(null) }
   }
+  async function markReviewed() {
+    setBusy('review'); setNote('')
+    try { const r = await createApiClient(token).users.markFollowedUp(id); setNote(`Marked as reviewed${r.by ? ` by ${r.by}` : ''}.`); load() }
+    catch { setNote('Could not save review.') } finally { setBusy(null) }
+  }
   // Use the browser's native print-to-PDF for full-fidelity rendering (rings,
   // pills and fonts render exactly as on screen). Print CSS (globals.css) shows
   // only the record + the branded header and preserves colours.
@@ -248,6 +254,45 @@ export default function StaffRecordPage() {
                 <span key={i} className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium leading-none ${f.level === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{f.label}</span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Recommended follow-up */}
+        {rec.follow_up && rec.follow_up.gaps.length > 0 && (
+          <div className={`pdf-card rounded-card border p-5 shadow-card ${rec.follow_up.needs_follow_up ? 'border-amber-200 bg-amber-50/40' : 'border-gray-100 bg-white'}`}>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
+                <Lightbulb size={15} className={rec.follow_up.needs_follow_up ? 'text-amber-500' : 'text-teal'} /> Recommended follow-up <InfoTip text={TIP.followup} />
+              </p>
+              <div className="flex items-center gap-2 print:hidden">
+                <button onClick={sendReminder} disabled={busy === 'remind'} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
+                  {busy === 'remind' ? <Loader2 size={13} className="animate-spin" /> : <Bell size={13} />} Re-send questions
+                </button>
+                <button onClick={markReviewed} disabled={busy === 'review' || !rec.follow_up.needs_follow_up} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                  {busy === 'review' ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />} {rec.follow_up.needs_follow_up ? 'Mark as reviewed' : 'Reviewed'}
+                </button>
+              </div>
+            </div>
+            <p className="mb-3 text-xs text-neutral-mid">
+              {rec.follow_up.gaps.length} question{rec.follow_up.gaps.length === 1 ? '' : 's'} answered incorrectly across training &amp; induction.
+              {rec.follow_up.last_review && <> Last reviewed {fmtDate(rec.follow_up.last_review.at)}{rec.follow_up.last_review.by ? ` by ${rec.follow_up.last_review.by}` : ''}.</>}
+            </p>
+            <ul className="divide-y divide-gray-100 rounded-lg border border-gray-100 bg-white">
+              {rec.follow_up.gaps.map((g: any, i: number) => (
+                <li key={i} className="flex items-start gap-2 px-3 py-2.5">
+                  <XCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-neutral-dark">{g.question || g.topic}</p>
+                    <p className="mt-0.5 text-xs text-neutral-mid">
+                      <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${g.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{g.source === 'training' ? 'Training' : 'Induction'}</span>
+                      {g.topic}
+                      {g.source === 'induction' && g.correct_answer && <> · their answer: <span className="text-red-600">{g.their_answer}</span> · correct: <span className="text-green-700">{g.correct_answer}</span></>}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-neutral-mid print:hidden">Tip: reset a training module below to let them retake it, or assign targeted training from the staff list.</p>
           </div>
         )}
 

@@ -1245,3 +1245,38 @@ analyticsRouter.get('/induction-performance', requireAdmin, async (_req: Request
     err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
+
+// ─── GET /analytics/follow-up ─────────────────────────────────────────────────
+// Staff with unreviewed knowledge gaps (wrong training/induction answers since
+// their last review). Powers the admin hub "Needs follow-up" card.
+
+analyticsRouter.get('/follow-up', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const [users, tEnr, oEnr, reviews] = await Promise.all([
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, job_role: true } }),
+      (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, answers: { where: { is_correct: false }, select: { answered_at: true } } } }),
+      (prisma as any).onboardingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, progress: { where: { answer_correct: false }, select: { completed_at: true } } } }),
+      (prisma as any).knowledgeGapReview.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { user_id: true, created_at: true } }),
+    ])
+
+    const trainByUser = new Map<string, any[]>()
+    for (const e of tEnr as any[]) { const a = trainByUser.get(e.user_id) ?? []; for (const ans of (e.answers ?? [])) a.push(ans.answered_at); trainByUser.set(e.user_id, a) }
+    const indByUser = new Map<string, any[]>()
+    for (const e of oEnr as any[]) { const a = indByUser.get(e.user_id) ?? []; for (const p of (e.progress ?? [])) a.push(p.completed_at); indByUser.set(e.user_id, a) }
+    const reviewedAt = new Map<string, number>()
+    for (const r of reviews as any[]) { if (!reviewedAt.has(r.user_id)) reviewedAt.set(r.user_id, new Date(r.created_at).getTime()) }
+
+    const staff = (users as any[]).map(u => {
+      const t = trainByUser.get(u.id) ?? []
+      const i = indByUser.get(u.id) ?? []
+      const rv = reviewedAt.get(u.id) ?? 0
+      const unreviewed = [...t, ...i].filter(when => !when || new Date(when).getTime() > rv).length
+      return { id: u.id, name: u.name, job_role: u.job_role, training_gaps: t.length, induction_gaps: i.length, total_gaps: t.length + i.length, unreviewed }
+    }).filter(s => s.unreviewed > 0).sort((a, b) => b.unreviewed - a.unreviewed)
+
+    ok(res, { staff, summary: { total: staff.length, total_gaps: staff.reduce((a, s) => a + s.total_gaps, 0) } })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})

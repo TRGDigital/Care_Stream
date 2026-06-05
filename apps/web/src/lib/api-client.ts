@@ -135,6 +135,7 @@ export function createApiClient(token: string) {
         }>(`/users/${id}`, token),
       record: (id: string) => apiFetch<any>(`/users/${id}/record`, token),
       remind: (id: string) => apiFetch<{ reminded: boolean; modules: number }>(`/users/${id}/remind`, token, { method: 'POST' }),
+      markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
       invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
@@ -453,6 +454,10 @@ export function createApiClient(token: string) {
         summary: { total_answered: number; correct: number; pct_correct: number | null; staff_answered: number }
         weak_questions: Array<{ question: string; answered: number; incorrect: number; incorrect_rate: number }>
       }>('/analytics/induction-performance', token),
+      followUp: () => apiFetch<{
+        staff: Array<{ id: string; name: string; job_role: string | null; training_gaps: number; induction_gaps: number; total_gaps: number; unreviewed: number }>
+        summary: { total: number; total_gaps: number }
+      }>('/analytics/follow-up', token),
       dailyActivity: (days = 30) =>
         apiFetch<{ series: Array<{ date: string; chat: number; email: number; whatsapp: number }>; days: number }>(
           `/analytics/daily-activity?days=${days}`, token

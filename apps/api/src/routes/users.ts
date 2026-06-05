@@ -142,6 +142,28 @@ usersRouter.post('/:id/remind', async (req: Request, res: Response) => {
   }
 })
 
+// ─── POST /users/:id/follow-up/review ─────────────────────────────────────────
+// Admin marks a staff member's current knowledge gaps as reviewed/actioned
+// (supervision evidence). Clears them from the "needs follow-up" list until a
+// new wrong answer appears.
+
+usersRouter.post('/:id/follow-up/review', async (req: Request, res: Response) => {
+  const tenantId   = req.user!.tenant_id
+  const reviewerId = req.user!.sub
+  const { id }     = req.params
+
+  const target = await (prisma as any).user.findFirst({ where: { id, tenant_id: tenantId }, select: { id: true } })
+  if (!target) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+
+  const reviewer = await (prisma as any).user.findUnique({ where: { id: reviewerId }, select: { name: true } })
+  const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 500) : null
+
+  await (prisma as any).knowledgeGapReview.create({
+    data: { tenant_id: tenantId, user_id: String(id), reviewed_by: reviewerId, reviewed_by_name: reviewer?.name ?? null, note },
+  })
+  ok(res, { reviewed: true, at: new Date().toISOString(), by: reviewer?.name ?? null })
+})
+
 // ─── POST /users/invite ───────────────────────────────────────────────────────
 
 const InviteSchema = z.object({

@@ -12,6 +12,21 @@ datasource db {
   directUrl = env("DATABASE_DIRECT_URL")
 }
 
+// ─── Knowledge-gap follow-up ────────────────────────────────────────────────────
+
+model KnowledgeGapReview {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  user_id          String
+  reviewed_by      String
+  reviewed_by_name String?
+  note             String?
+  created_at       DateTime @default(now())
+
+  @@index([tenant_id, user_id])
+  @@map("knowledge_gap_reviews")
+}
+
 // ─── Policy reading (induction) ─────────────────────────────────────────────────
 
 model PolicyTranslation {

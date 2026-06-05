@@ -1273,7 +1273,7 @@ function FollowUpView({ token, onChange, onTalkToPolicy }: { token: string; onCh
               it={it}
               token={token}
               onTalkToPolicy={onTalkToPolicy}
-              onResolved={() => { setTimeout(() => { load(); onChange?.() }, 1100) }}
+              onResolved={() => { setTimeout(() => { load(); onChange?.() }, 2200) }}
             />
           ))}
         </div>
@@ -1379,13 +1379,13 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
         <>
           <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
           <div className="space-y-1.5">{it.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
-          <div className="mt-3 flex items-center gap-3">
-            <button onClick={submitRetry} disabled={sel == null || submitting || result === 'correct'} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-              {submitting ? 'Checking…' : 'Submit answer'}
+          {result !== 'correct' && (
+            <button onClick={submitRetry} disabled={sel == null || submitting} className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+              {submitting ? 'Checking…' : result === 'wrong' ? 'Try again' : 'Submit answer'}
             </button>
-            {result === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Correct! Clearing…</span>}
-            {result === 'wrong'   && <button onClick={openLesson} className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline"><Lightbulb size={13} /> Not quite — learn the point</button>}
-          </div>
+          )}
+          {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
+          {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite. <button onClick={openLesson} className="inline-flex items-center gap-1 font-semibold underline"><Lightbulb size={13} /> Learn the point</button></div>}
         </>
       )}
 
@@ -1445,13 +1445,13 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
                   <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Sparkles size={13} /> Check your understanding</p>
                   <p className="mb-3 text-sm font-medium text-neutral-dark">{lesson.check.question}</p>
                   <div className="space-y-1.5">{lesson.check.options.map((opt: string, oi: number) => optionRow(opt, oi, `check-${it.ref}`))}</div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <button onClick={submitCheck} disabled={sel == null || submitting || result === 'correct'} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-                      {submitting ? 'Checking…' : 'Submit answer'}
+                  {result !== 'correct' && (
+                    <button onClick={submitCheck} disabled={sel == null || submitting} className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                      {submitting ? 'Checking…' : result === 'wrong' ? 'Try again' : 'Submit answer'}
                     </button>
-                    {result === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Nailed it! Clearing…</span>}
-                    {result === 'wrong'   && <span className="flex items-center gap-1 text-xs font-medium text-amber-600"><XCircle size={13} /> Not quite — the right answer is highlighted</span>}
-                  </div>
+                  )}
+                  {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
+                  {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite — the correct answer is highlighted in green. Have another go.</div>}
                 </div>
               )}
             </div>

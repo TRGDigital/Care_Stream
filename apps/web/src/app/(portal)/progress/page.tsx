@@ -4,7 +4,22 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { InfoTip } from '@/components/info-tip'
 import { Award, Brain, CheckCircle2, ListChecks, Loader2, Sparkles, TrendingUp } from 'lucide-react'
+
+// English fallback so the page always renders even if the localised bundle is missing.
+const EN: Record<string, string> = {
+  title: 'My Progress', subtitle: 'Your training and induction at a glance.',
+  ring_training: 'Training', ring_induction: 'Induction', ring_score: 'Avg score',
+  outstanding_title: 'You have {n} item(s) to finish', outstanding_caught: "You're all caught up — everything assigned is complete.",
+  btn_training: 'Training', btn_induction: 'Induction',
+  compare_title: 'How you compare', compare_team: 'team',
+  training_title: 'My training', induction_title: 'My induction', open: 'Open',
+  none_training: 'Nothing assigned yet.', none_induction: 'No induction assigned.', steps: '{done}/{total} steps',
+  activity_title: 'Recent activity',
+  status_complete: 'Done', status_in_progress: 'In progress', status_not_started: 'To do', status_expired: 'Renew',
+  info_rings: '', info_outstanding: '', info_compare: '', info_training: '', info_induction: '', info_activity: '',
+}
 
 function Ring({ pct, label }: { pct: number | null; label: string }) {
   const v = pct ?? 0
@@ -18,20 +33,17 @@ function Ring({ pct, label }: { pct: number | null; label: string }) {
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-neutral-dark">{pct == null ? '—' : `${v}%`}</span>
       </div>
-      <span className="mt-1.5 text-xs text-neutral-mid">{label}</span>
+      <span className="mt-1.5 text-center text-xs text-neutral-mid">{label}</span>
     </div>
   )
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    complete:    { label: 'Done',        cls: 'bg-green-50 text-green-700' },
-    in_progress: { label: 'In progress', cls: 'bg-amber-50 text-amber-700' },
-    not_started: { label: 'To do',       cls: 'bg-gray-100 text-gray-500' },
-    expired:     { label: 'Renew',       cls: 'bg-red-50 text-red-600'   },
+function StatusPill({ status, ui }: { status: string; ui: Record<string, string> }) {
+  const cls: Record<string, string> = {
+    complete: 'bg-green-50 text-green-700', in_progress: 'bg-amber-50 text-amber-700',
+    not_started: 'bg-gray-100 text-gray-500', expired: 'bg-red-50 text-red-600',
   }
-  const s = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
-  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>{s.label}</span>
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cls[status] ?? 'bg-gray-100 text-gray-500'}`}>{ui[`status_${status}`] ?? status}</span>
 }
 
 export default function MyProgressPage() {
@@ -48,66 +60,66 @@ export default function MyProgressPage() {
   if (loading) return <div className="flex flex-1 items-center justify-center"><Loader2 className="animate-spin text-neutral-mid" /></div>
   if (!rec)    return <div className="flex flex-1 items-center justify-center text-sm text-neutral-mid">Couldn’t load your progress.</div>
 
-  const t = rec.training.summary
-  const o = rec.onboarding.summary
-  const outstanding = (t.assigned - t.completed) + (o.assigned - o.completed)
+  const ui = { ...EN, ...(rec.ui ?? {}) }
+  const t  = rec.training.summary
+  const o  = rec.onboarding.summary
+  const outstanding   = (t.assigned - t.completed) + (o.assigned - o.completed)
+  const outTraining   = t.assigned - t.completed
+  const outInduction  = o.assigned - o.completed
   const b = rec.benchmarks
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-3xl space-y-5">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-dark">My Progress</h1>
-          <p className="mt-1 text-sm text-neutral-mid">Your training and induction at a glance.</p>
+          <h1 className="text-2xl font-bold text-neutral-dark">{ui.title}</h1>
+          <p className="mt-1 text-sm text-neutral-mid">{ui.subtitle}</p>
         </div>
 
         {/* Rings */}
         <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+          <div className="mb-1 flex justify-end">{ui.info_rings && <InfoTip text={ui.info_rings} align="right" />}</div>
           <div className="flex items-center justify-around">
-            <Ring pct={t.completion_pct} label="Training" />
-            <Ring pct={o.completion_pct} label="Induction" />
-            <Ring pct={t.avg_score} label="Avg score" />
+            <Ring pct={t.completion_pct} label={ui.ring_training} />
+            <Ring pct={o.completion_pct} label={ui.ring_induction} />
+            <Ring pct={t.avg_score} label={ui.ring_score} />
           </div>
         </div>
 
-        {/* Outstanding callout */}
+        {/* Outstanding */}
         {outstanding > 0 ? (
           <div className="flex items-center justify-between gap-3 rounded-card border border-teal/20 bg-teal-light/30 px-5 py-4">
-            <div>
-              <p className="text-sm font-semibold text-neutral-dark">You have {outstanding} item{outstanding === 1 ? '' : 's'} to finish</p>
-              <p className="mt-0.5 text-xs text-neutral-mid">
-                {t.assigned - t.completed > 0 && `${t.assigned - t.completed} training`}{(t.assigned - t.completed > 0 && o.assigned - o.completed > 0) ? ' · ' : ''}{o.assigned - o.completed > 0 && `${o.assigned - o.completed} induction`}
-              </p>
+            <div className="flex items-start gap-1.5">
+              <p className="text-sm font-semibold text-neutral-dark">{ui.outstanding_title.replace('{n}', String(outstanding)).replace('(s)', outstanding === 1 ? '' : 's')}</p>
+              {ui.info_outstanding && <InfoTip text={ui.info_outstanding} />}
             </div>
-            <div className="flex gap-2">
-              {o.assigned - o.completed > 0 && <Link href="/chat?view=induction" className="rounded-lg border border-teal px-3 py-2 text-xs font-medium text-teal hover:bg-teal-light/50">Induction</Link>}
-              {t.assigned - t.completed > 0 && <Link href="/chat?view=training" className="rounded-lg bg-teal px-3 py-2 text-xs font-medium text-white hover:bg-teal/90">Training</Link>}
+            <div className="flex shrink-0 gap-2">
+              {outInduction > 0 && <Link href="/chat?view=induction" className="rounded-lg border border-teal px-3 py-2 text-xs font-medium text-teal hover:bg-teal-light/50">{ui.btn_induction}</Link>}
+              {outTraining > 0 && <Link href="/chat?view=training" className="rounded-lg bg-teal px-3 py-2 text-xs font-medium text-white hover:bg-teal/90">{ui.btn_training}</Link>}
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-card border border-green-200 bg-green-50/60 px-5 py-4">
-            <CheckCircle2 size={18} className="text-green-600" />
-            <p className="text-sm font-medium text-green-700">You’re all caught up — everything assigned is complete. 🎉</p>
+            <CheckCircle2 size={18} className="shrink-0 text-green-600" />
+            <p className="text-sm font-medium text-green-700">{ui.outstanding_caught} 🎉</p>
           </div>
         )}
 
         {/* Benchmark */}
         {b && (b.training_completion.team != null || b.avg_score.team != null) && (
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> How you compare</p>
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> {ui.compare_title} {ui.info_compare && <InfoTip text={ui.info_compare} />}</p>
             <div className="grid grid-cols-3 gap-4 text-center text-sm">
               {[
-                { label: 'Training', self: b.training_completion.self, team: b.training_completion.team },
-                { label: 'Avg score', self: b.avg_score.self, team: b.avg_score.team },
-                { label: 'Induction', self: b.onboarding_completion.self, team: b.onboarding_completion.team },
-              ].map(x => (
-                <div key={x.label}>
+                { label: ui.ring_training, self: b.training_completion.self, team: b.training_completion.team },
+                { label: ui.ring_score,    self: b.avg_score.self,           team: b.avg_score.team },
+                { label: ui.ring_induction, self: b.onboarding_completion.self, team: b.onboarding_completion.team },
+              ].map((x, i) => (
+                <div key={i}>
                   <p className="text-xs text-neutral-mid">{x.label}</p>
                   <p className="text-lg font-bold text-neutral-dark">{x.self ?? '—'}%</p>
-                  <p className="text-[11px] text-neutral-mid">team {x.team ?? '—'}%
-                    {x.self != null && x.team != null && (
-                      <span className={x.self >= x.team ? 'text-green-600' : 'text-amber-600'}> {x.self >= x.team ? '▲' : '▼'}</span>
-                    )}
+                  <p className="text-[11px] text-neutral-mid">{ui.compare_team} {x.team ?? '—'}%
+                    {x.self != null && x.team != null && <span className={x.self >= x.team ? 'text-green-600' : 'text-amber-600'}> {x.self >= x.team ? '▲' : '▼'}</span>}
                   </p>
                 </div>
               ))}
@@ -118,17 +130,17 @@ export default function MyProgressPage() {
         {/* Training list */}
         <div className="rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> My training</p>
-            <Link href="/chat?view=training" className="text-xs font-medium text-teal hover:underline">Open →</Link>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> {ui.training_title} {ui.info_training && <InfoTip text={ui.info_training} />}</p>
+            <Link href="/chat?view=training" className="text-xs font-medium text-teal hover:underline">{ui.open} →</Link>
           </div>
-          {rec.training.items.length === 0 ? <p className="px-5 py-4 text-sm text-neutral-mid">Nothing assigned yet.</p> : (
+          {rec.training.items.length === 0 ? <p className="px-5 py-4 text-sm text-neutral-mid">{ui.none_training}</p> : (
             <ul className="divide-y divide-gray-50">
               {rec.training.items.map((m: any) => (
                 <li key={m.enrollment_id} className="flex items-center justify-between gap-3 px-5 py-2.5">
                   <span className="truncate text-sm text-neutral-dark">{m.module_name}</span>
                   <div className="flex items-center gap-2">
                     {m.score && <span className="text-xs text-neutral-mid">{m.score.pct}%</span>}
-                    <StatusPill status={m.status} />
+                    <StatusPill status={m.status} ui={ui} />
                   </div>
                 </li>
               ))}
@@ -139,16 +151,16 @@ export default function MyProgressPage() {
         {/* Induction list */}
         <div className="rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> My induction</p>
-            <Link href="/chat?view=induction" className="text-xs font-medium text-teal hover:underline">Open →</Link>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> {ui.induction_title} {ui.info_induction && <InfoTip text={ui.info_induction} />}</p>
+            <Link href="/chat?view=induction" className="text-xs font-medium text-teal hover:underline">{ui.open} →</Link>
           </div>
-          {rec.onboarding.items.length === 0 ? <p className="px-5 py-4 text-sm text-neutral-mid">No induction assigned.</p> : (
+          {rec.onboarding.items.length === 0 ? <p className="px-5 py-4 text-sm text-neutral-mid">{ui.none_induction}</p> : (
             <div className="divide-y divide-gray-50">
               {rec.onboarding.items.map((f: any) => (
                 <div key={f.enrollment_id} className="px-5 py-3">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-sm text-neutral-dark">{f.flow_name}</span>
-                    <span className="text-xs text-neutral-mid">{f.completed_steps}/{f.total_steps} steps</span>
+                    <span className="text-xs text-neutral-mid">{ui.steps.replace('{done}', String(f.completed_steps)).replace('{total}', String(f.total_steps))}</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-gray-100"><div className="h-1.5 rounded-full bg-teal" style={{ width: `${f.pct}%` }} /></div>
                 </div>
@@ -160,7 +172,7 @@ export default function MyProgressPage() {
         {/* Recent activity */}
         {rec.timeline.length > 0 && (
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><TrendingUp size={15} className="text-teal" /> Recent activity</p>
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><TrendingUp size={15} className="text-teal" /> {ui.activity_title} {ui.info_activity && <InfoTip text={ui.info_activity} />}</p>
             <ul className="space-y-2">
               {rec.timeline.slice(0, 6).map((e: any, i: number) => (
                 <li key={i} className="flex items-center gap-2 text-sm">

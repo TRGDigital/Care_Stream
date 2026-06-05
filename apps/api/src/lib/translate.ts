@@ -127,6 +127,39 @@ function langName_internal(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// Translate every VALUE of a flat string→string object in a single call, keeping
+// keys and any {placeholders} intact. Used for whole-UI bundles (e.g. the staff
+// "My Progress" page). Cached per language so it's translated once per process.
+const _bundleCache = new Map<string, Record<string, string>>()
+
+export async function translateBundle(strings: Record<string, string>, langCode: string, langName?: string): Promise<Record<string, string>> {
+  if (!langCode || langCode === 'eng') return strings
+  const name = langName ?? langName_internal(langCode)
+  const keys = Object.keys(strings)
+  const cacheKey = `${langCode}::${keys.join(',')}::${Object.values(strings).join('|').length}`
+  const hit = _bundleCache.get(cacheKey)
+  if (hit) return hit
+  try {
+    const msg = await anthropic.messages.create({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 1800,
+      messages:   [{ role: 'user', content:
+        `Translate the VALUES of this JSON object into ${name}. Keep every key exactly the same. Keep anything inside curly braces like {n} or {total} unchanged. Use warm, simple language a care worker would understand. Return ONLY valid minified JSON and nothing else.\n\n${JSON.stringify(strings)}` }],
+    })
+    recordUsage('claude-haiku-4-5-20251001', msg.usage)
+    const raw   = ((msg.content[0] as any).text as string)
+    const start = raw.indexOf('{'), end = raw.lastIndexOf('}')
+    const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>
+    const out: Record<string, string> = {}
+    for (const k of keys) out[k] = typeof parsed[k] === 'string' ? (parsed[k] as string) : strings[k]
+    _bundleCache.set(cacheKey, out)
+    return out
+  } catch (e) {
+    console.error('[translate] bundle failed, serving English:', e)
+    return strings
+  }
+}
+
 // Run async work over items with a bounded concurrency (avoids firing dozens of
 // Anthropic calls at once, which stalls the request). Order is preserved.
 export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {

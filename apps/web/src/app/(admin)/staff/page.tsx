@@ -7,7 +7,7 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Check, ChevronDown, Copy, Globe, GraduationCap, KeyRound, ListChecks, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, Plus, UserMinus, UserPlus, UserX, X } from 'lucide-react'
+import { Check, ChevronDown, Copy, Globe, GraduationCap, KeyRound, LineChart, ListChecks, Loader2, Mail, MessageSquare, MoreVertical, Pencil, Phone, Plus, UserMinus, UserPlus, UserX, X } from 'lucide-react'
 
 // ─── Language options ─────────────────────────────────────────────────────────
 
@@ -560,18 +560,27 @@ export default function StaffPage() {
                       <div className="flex items-center gap-2.5">
                         <InitialAvatar name={u.name} role={u.role} />
                         <div>
-                          <button
-                            onClick={() => setDetailUserId(u.id)}
-                            className="font-medium text-neutral-dark hover:text-teal hover:underline"
-                            title="View staff details"
-                          >
-                            {u.name}
-                          </button>
-                          {u.is_active === false && (
-                            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                              Deactivated
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => setDetailUserId(u.id)}
+                              className="font-medium text-neutral-dark hover:text-teal hover:underline"
+                              title="Quick view"
+                            >
+                              {u.name}
+                            </button>
+                            <Link
+                              href={`/staff/${u.id}`}
+                              title="View full record"
+                              className="text-neutral-mid/60 transition-colors hover:text-teal"
+                            >
+                              <LineChart size={13} />
+                            </Link>
+                            {u.is_active === false && (
+                              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                Deactivated
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>

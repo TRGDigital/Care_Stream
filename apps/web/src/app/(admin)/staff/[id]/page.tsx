@@ -4,10 +4,22 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { InfoTip } from '@/components/info-tip'
 import {
   ArrowLeft, Award, Bell, Brain, Clock, Download, Globe,
   ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp,
 } from 'lucide-react'
+
+// Admin-facing explanations for each section of the record.
+const TIP = {
+  completion: "Each ring is the share of assigned items completed — training modules and induction flows — plus the average quiz score across completed modules. A low average score can signal a knowledge gap worth following up.",
+  benchmark:  "Compares this person to your home's average. The teal bar is their figure; the dark tick is the team average. Bars sitting below the tick are below average and may be worth a conversation.",
+  training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
+  induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
+  engagement: "How actively they use CareStream: questions asked in the chat portal, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
+  trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
+  timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -212,7 +224,7 @@ export default function StaffRecordPage() {
         {/* Overview rings + benchmarks */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
-            <p className="mb-3 text-sm font-semibold text-neutral-dark">Completion</p>
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">Completion <InfoTip text={TIP.completion} /></p>
             <div className="flex items-center justify-around">
               <Ring pct={t.completion_pct} label="Training" />
               <Ring pct={o.completion_pct} label="Induction" />
@@ -220,7 +232,7 @@ export default function StaffRecordPage() {
             </div>
           </div>
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card lg:col-span-2">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> How they compare to the team</p>
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> How they compare to the team <InfoTip text={TIP.benchmark} /></p>
             {rec.benchmarks ? (
               <div className="space-y-3">
                 <BenchBar label="Training completion" self={rec.benchmarks.training_completion.self} team={rec.benchmarks.training_completion.team} />
@@ -234,7 +246,7 @@ export default function StaffRecordPage() {
         {/* Training record */}
         <div className="rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> Training record</p>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> Training record <InfoTip text={TIP.training} /></p>
             <p className="text-xs text-neutral-mid">{t.completed}/{t.assigned} complete · {t.overdue} overdue · {t.due_soon} due soon</p>
           </div>
           {rec.training.items.length === 0 ? (
@@ -279,7 +291,7 @@ export default function StaffRecordPage() {
         {/* Induction record */}
         <div className="rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Induction record</p>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Induction record <InfoTip text={TIP.induction} /></p>
             <p className="text-xs text-neutral-mid">{o.completed}/{o.assigned} complete</p>
           </div>
           {rec.onboarding.items.length === 0 ? (
@@ -309,7 +321,7 @@ export default function StaffRecordPage() {
         {/* Engagement + Trends */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><MessageSquare size={15} className="text-teal" /> Engagement</p>
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><MessageSquare size={15} className="text-teal" /> Engagement <InfoTip text={TIP.engagement} /></p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><p className="text-xs text-neutral-mid">Questions asked</p><p className="font-semibold text-neutral-dark">{rec.engagement.queries_total} <span className="text-xs font-normal text-neutral-mid">({rec.engagement.queries_30d} in 30d)</span></p></div>
               <div><p className="text-xs text-neutral-mid">Last question</p><p className="font-semibold text-neutral-dark">{fmtDate(rec.engagement.last_query_at)}</p></div>
@@ -326,7 +338,7 @@ export default function StaffRecordPage() {
           </div>
           <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between">
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><TrendingUp size={15} className="text-teal" /> Completions (6 months)</p>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><TrendingUp size={15} className="text-teal" /> Completions (6 months) <InfoTip text={TIP.trends} /></p>
               <div className="flex items-center gap-3 text-[10px] text-neutral-mid">
                 <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal" /> Training</span>
                 <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-indigo-400" /> Induction</span>
@@ -338,7 +350,7 @@ export default function StaffRecordPage() {
 
         {/* Timeline */}
         <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
-          <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Clock size={15} className="text-teal" /> Activity timeline</p>
+          <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Clock size={15} className="text-teal" /> Activity timeline <InfoTip text={TIP.timeline} /></p>
           {rec.timeline.length === 0 ? <p className="text-sm text-neutral-mid">No activity yet.</p> : (
             <ol className="relative space-y-3 border-l border-gray-100 pl-4">
               {rec.timeline.map((e: any, i: number) => (

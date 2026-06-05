@@ -243,6 +243,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
         </SectionBlock>
 
+        <SectionBlock title="Policy reading engagement">
+          <p className="text-sm text-neutral-mid">
+            When staff read policies during their induction, CareStream records how they read them. You can see this two ways:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>On the staff record</strong> — a <strong>Policy reading</strong> table per person: the time they spent on each policy, the furthest they scrolled, and a label — <strong>Thorough</strong> (scrolled to the end), <strong>Skimmed</strong> (marked read without scrolling far) or <strong>Partial</strong>. This is included in the CQC evidence PDF.</li>
+            <li><strong>On the Analytics page</strong> — a <strong>Policy reading engagement</strong> section with team-wide figures (sessions, average time, average scroll depth, % read to the end) and a per-policy breakdown. A policy that's opened a lot but barely scrolled may be too long or hard to read.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            This data is for managers only — staff don't see their own reading stats on My Progress.
+          </p>
+        </SectionBlock>
+
         <SectionBlock title="What staff see — “My Progress”">
           <p className="text-sm text-neutral-mid">
             Staff have their own read-only <strong>My Progress</strong> page in the portal (top menu and chat sidebar). It shows their completion rings, what's left to finish with quick links to do it, how they compare to the team, and their training &amp; induction lists.
@@ -304,6 +317,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="Tracking progress">
           <p className="text-sm text-neutral-mid">
             Each flow shows its enrolled staff and how far through they are, giving you a clear, auditable record that every new starter completed their induction — useful CQC evidence.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Reading policies during induction">
+          <p className="text-sm text-neutral-mid">
+            When an induction step asks staff to read a policy, they tap <strong>Read policy</strong> to open the full document in a clean, readable view (letterhead and contact details are stripped out and it's laid out with headings and bullet points). If the staff member's <strong>first language</strong> is set and their communication toggle is on, the policy is shown <strong>in their language</strong>. They can also <strong>Save for later</strong>, which pins the policy to a <em>Saved policies</em> list in their Chat Hub sidebar.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            CareStream quietly records <strong>how they read each policy</strong> — the time they spent and how far they scrolled — so you can tell the difference between someone who read it properly and someone who opened it and marked it done. They can mark a policy as read at any point; we simply record what they actually did.
           </p>
         </SectionBlock>
         <Tip>If you add a new starter before a matching flow exists, no onboarding is assigned — adopt or create a flow for that role and future new starters will be enrolled automatically.</Tip>

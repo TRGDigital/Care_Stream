@@ -125,4 +125,7 @@ a, button { transition: all 0.18s ease; }
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  /* Drop the card shadows in the PDF — they print as an ugly grey halo. Keep
+     the thin borders so sections stay visually separated. */
+  body.print-staff-record #staff-record-print [class*="shadow"] { box-shadow: none !important; }
 }

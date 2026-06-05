@@ -302,7 +302,7 @@ export default function AnalyticsPage() {
 
       {/* ── Tabs ────────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 -mx-6 mb-6 border-b border-gray-200 bg-neutral-light/95 px-6 pt-1 backdrop-blur-sm">
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="no-scrollbar flex gap-1 overflow-x-auto">
           {TABS.map(t => (
             <button
               key={t.id}

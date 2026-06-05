@@ -16,6 +16,14 @@ type Answer = { answer_yn: boolean | null; answer_na: boolean; outcome_text: str
 const FREQ_ORDER = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic']
 const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
 
+// Monthly/weekly runs are dated the 1st; daily runs are a specific day.
+function periodLabel(audit_month: string | Date) {
+  const d = new Date(audit_month)
+  return d.getDate() === 1
+    ? d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+    : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
 function isYN(t: string) { return t === 'yes_no' || t === 'yes_no_na' }
 function isAnswered(q: any, a?: Answer) {
   if (q.question_type === 'findings' || q.question_type === 'free_text') return true
@@ -64,12 +72,11 @@ function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; o
 
   const inProgress = runs.filter(r => r.status === 'in_progress')
   const completed  = runs.filter(r => r.status === 'completed').slice(0, 6)
-  const runByTemplateThisMonth = new Map<string, any>()
-  const thisMonth = new Date(); thisMonth.setDate(1)
-  for (const r of runs) {
-    const d = new Date(r.audit_month)
-    if (d.getMonth() === thisMonth.getMonth() && d.getFullYear() === thisMonth.getFullYear()) runByTemplateThisMonth.set(r.template_id, r)
-  }
+  // The current period's run for a template — today for daily audits, this month otherwise.
+  const now = new Date()
+  const sameMonth = (d: Date) => d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  const sameDay   = (d: Date) => sameMonth(d) && d.getDate() === now.getDate()
+  const currentRunFor = (t: any) => runs.find(r => r.template_id === t.id && ((t.frequency ?? 'monthly') === 'daily' ? sameDay(new Date(r.audit_month)) : sameMonth(new Date(r.audit_month))))
   const byFreq = FREQ_ORDER.map(f => ({ freq: f, items: templates.filter(t => (t.frequency ?? 'monthly') === f) })).filter(g => g.items.length)
 
   return (
@@ -87,7 +94,7 @@ function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; o
                   <Play size={16} className="shrink-0 text-amber-500" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-neutral-dark">{r.template?.name ?? 'Audit'}</p>
-                    <p className="text-xs text-neutral-mid">{new Date(r.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} · Resume</p>
+                    <p className="text-xs text-neutral-mid">{periodLabel(r.audit_month)} · Resume</p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-neutral-mid" />
                 </button>
@@ -101,7 +108,7 @@ function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; o
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">{FREQ_LABEL[group.freq] ?? group.freq}</p>
             <div className="space-y-2">
               {group.items.map(t => {
-                const existing = runByTemplateThisMonth.get(t.id)
+                const existing = currentRunFor(t)
                 const done = existing?.status === 'completed'
                 return (
                   <div key={t.id} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
@@ -217,7 +224,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-neutral-dark">{run.template?.name}</h2>
-            <p className="text-xs text-neutral-mid">{new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}{isCompleted ? ' · Completed' : ''}</p>
+            <p className="text-xs text-neutral-mid">{periodLabel(run.audit_month)}{isCompleted ? ' · Completed' : ''}</p>
           </div>
           {saving && <span className="shrink-0 text-xs text-neutral-mid">Saving…</span>}
         </div>

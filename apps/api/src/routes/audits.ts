@@ -1024,12 +1024,15 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
   })
   if (!template) return err(res, 'NOT_FOUND', 'Audit template not found', 404)
 
-  const monthDate = new Date(audit_month)
-  monthDate.setDate(1)
-  monthDate.setHours(0, 0, 0, 0)
+  // Daily audits are tracked per calendar day (one run per day); all other
+  // frequencies are tracked per month. The audit_month column stores the run's
+  // period start — today for daily, the first of the month otherwise.
+  const periodDate = template.frequency === 'daily' ? new Date() : new Date(audit_month)
+  if (template.frequency !== 'daily') periodDate.setDate(1)
+  periodDate.setHours(0, 0, 0, 0)
 
   const existing = await (prisma as any).auditRun.findFirst({
-    where: { tenant_id: tenantId, template_id, audit_month: monthDate },
+    where: { tenant_id: tenantId, template_id, audit_month: periodDate },
   })
   if (existing) return ok(res, { run: existing })
 
@@ -1037,7 +1040,7 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
     data: {
       tenant_id:    tenantId,
       template_id,
-      audit_month:  monthDate,
+      audit_month:  periodDate,
       auditor_name: auditor_name?.trim() ?? null,
       auditor_role: auditor_role?.trim() ?? null,
     },

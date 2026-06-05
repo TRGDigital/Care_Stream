@@ -44,11 +44,17 @@ export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent
         (prisma as any).auditRun.findMany({ where: { tenant_id: t.id }, select: { template_id: true, status: true, audit_month: true } }),
       ])
       const now = new Date()
-      const ranThisMonth = new Set(
-        (runs as any[]).filter(r => { const d = new Date(r.audit_month); return d.getUTCMonth() === now.getUTCMonth() && d.getUTCFullYear() === now.getUTCFullYear() }).map(r => r.template_id),
-      )
+      const sameMonth = (d: Date) => d.getUTCMonth() === now.getUTCMonth() && d.getUTCFullYear() === now.getUTCFullYear()
+      const sameDay   = (d: Date) => sameMonth(d) && d.getUTCDate() === now.getUTCDate()
+      const ranThisMonth = new Set((runs as any[]).filter(r => sameMonth(new Date(r.audit_month))).map(r => r.template_id))
+      const ranToday     = new Set((runs as any[]).filter(r => sameDay(new Date(r.audit_month))).map(r => r.template_id))
       const inProgress = (runs as any[]).filter(r => r.status === 'in_progress').length
-      const due = (templates as any[]).filter(tp => ['daily', 'weekly'].includes(tp.frequency) && !ranThisMonth.has(tp.id)).map(tp => tp.name)
+      // Daily audits are due if not started today; weekly if not started this month.
+      const due = (templates as any[]).filter(tp =>
+        tp.frequency === 'daily' ? !ranToday.has(tp.id)
+        : tp.frequency === 'weekly' ? !ranThisMonth.has(tp.id)
+        : false,
+      ).map(tp => tp.name)
       if (!due.length && !inProgress) continue
 
       const admins = await (prisma as any).user.findMany({ where: { tenant_id: t.id, role: { in: ['admin', 'manager'] }, is_active: true }, select: { id: true } })

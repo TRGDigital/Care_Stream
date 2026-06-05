@@ -45,7 +45,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }),
     (prisma as any).onboardingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
-      include: { flow: { include: { steps: { select: { id: true, type: true } } } }, progress: true },
+      include: { flow: { include: { steps: { select: { id: true, type: true, question: true, options: true, correct_option: true } } } }, progress: true },
       orderBy: { enrolled_at: 'asc' },
     }),
     (prisma as any).queryRecord.count({ where: { tenant_id: tenantId, user_id: userId } }),
@@ -191,6 +191,37 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }
   }
 
+  // ── Induction question performance (admin record only) ──────────────────────
+  let inductionQuestions: any = null
+  if (opts.includeReading) {
+    const items: any[] = []
+    for (const e of oEnr as any[]) {
+      const progByStep = new Map<string, any>((e.progress ?? []).map((p: any) => [p.step_id, p]))
+      for (const s of (e.flow?.steps ?? [])) {
+        if (s.type !== 'answer_question') continue
+        const prog = progByStep.get(s.id)
+        if (!prog || prog.answer_text == null) continue   // not answered yet
+        const opts2  = Array.isArray(s.options) ? s.options : []
+        const isMcq  = opts2.length > 0 && s.correct_option != null
+        const selIdx = isMcq ? parseInt(String(prog.answer_text), 10) : null
+        items.push({
+          flow_name:      e.flow?.name,
+          question:       s.question,
+          selected:       isMcq ? (opts2[selIdx as number] ?? String(prog.answer_text)) : prog.answer_text,
+          correct_answer: isMcq ? (opts2[s.correct_option] ?? null) : null,
+          is_correct:     prog.answer_correct === true,
+          answered_at:    prog.completed_at,
+        })
+      }
+    }
+    const answered = items.length
+    const correct  = items.filter(i => i.is_correct).length
+    inductionQuestions = {
+      items,
+      summary: { answered, correct, incorrect: answered - correct, pct: answered ? Math.round((correct / answered) * 100) : null },
+    }
+  }
+
   // ── Policy reading engagement (admin record only) ───────────────────────────
   let reading: any = null
   if (opts.includeReading) {
@@ -242,5 +273,6 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     training: { items: training, summary: trainingSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
     engagement, flags, trends, timeline, benchmarks, reading,
+    induction_questions: inductionQuestions,
   }
 }

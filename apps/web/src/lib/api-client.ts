@@ -449,6 +449,10 @@ export function createApiClient(token: string) {
         summary: { total_sessions: number; staff_count: number; avg_seconds: number | null; avg_scroll_pct: number | null; pct_reached_end: number | null }
         by_policy: Array<{ policy_id: string; title: string; sessions: number; avg_seconds: number; avg_scroll_pct: number; pct_reached_end: number }>
       }>('/analytics/policy-reading', token),
+      inductionPerformance: () => apiFetch<{
+        summary: { total_answered: number; correct: number; pct_correct: number | null; staff_answered: number }
+        weak_questions: Array<{ question: string; answered: number; incorrect: number; incorrect_rate: number }>
+      }>('/analytics/induction-performance', token),
       dailyActivity: (days = 30) =>
         apiFetch<{ series: Array<{ date: string; chat: number; email: number; whatsapp: number }>; days: number }>(
           `/analytics/daily-activity?days=${days}`, token

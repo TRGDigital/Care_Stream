@@ -1186,3 +1186,50 @@ analyticsRouter.get('/policy-reading', requireAdmin, async (_req: Request, res: 
     err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
+
+// ─── GET /analytics/induction-performance ─────────────────────────────────────
+// Overall induction question performance + the questions most often answered
+// incorrectly (knowledge gaps).
+
+analyticsRouter.get('/induction-performance', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const progress = await (prisma as any).onboardingProgress.findMany({
+      where:  { answer_text: { not: null }, enrollment: { tenant_id: tenantId }, step: { type: 'answer_question' } },
+      select: { answer_correct: true, step: { select: { id: true, question: true } }, enrollment: { select: { user_id: true } } },
+    })
+
+    const total = (progress as any[]).length
+    if (total === 0) {
+      ok(res, { summary: { total_answered: 0, correct: 0, pct_correct: null, staff_answered: 0 }, weak_questions: [] })
+      return
+    }
+
+    const correct = (progress as any[]).filter(p => p.answer_correct === true).length
+    const summary = {
+      total_answered: total,
+      correct,
+      pct_correct:    Math.round((correct / total) * 100),
+      staff_answered: new Set((progress as any[]).map(p => p.enrollment?.user_id)).size,
+    }
+
+    const byQ = new Map<string, any>()
+    for (const p of progress as any[]) {
+      const qid = p.step?.id
+      if (!qid) continue
+      const g = byQ.get(qid) ?? { question: p.step?.question, answered: 0, incorrect: 0 }
+      g.answered += 1
+      if (p.answer_correct !== true) g.incorrect += 1
+      byQ.set(qid, g)
+    }
+    const weak_questions = [...byQ.values()]
+      .filter(g => g.incorrect > 0)
+      .map(g => ({ question: g.question, answered: g.answered, incorrect: g.incorrect, incorrect_rate: Math.round((g.incorrect / g.answered) * 100) }))
+      .sort((a, b) => b.incorrect_rate - a.incorrect_rate || b.incorrect - a.incorrect)
+      .slice(0, 10)
+
+    ok(res, { summary, weak_questions })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})

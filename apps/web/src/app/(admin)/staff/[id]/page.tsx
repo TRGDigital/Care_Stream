@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import {
-  ArrowLeft, Award, Bell, BookOpen, Brain, Clock, Download, Globe,
-  ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp,
+  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe,
+  ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -17,6 +17,7 @@ const TIP = {
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
+  questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
@@ -346,6 +347,34 @@ export default function StaffRecordPage() {
             </div>
           )}
         </div>
+
+        {/* Induction questions */}
+        {rec.induction_questions && rec.induction_questions.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> Induction questions <InfoTip text={TIP.questions} /></p>
+              <p className="text-xs text-neutral-mid">{rec.induction_questions.summary.correct}/{rec.induction_questions.summary.answered} correct{rec.induction_questions.summary.incorrect > 0 ? ` · ${rec.induction_questions.summary.incorrect} to review` : ''}</p>
+            </div>
+            <ul className="divide-y divide-gray-50">
+              {rec.induction_questions.items.map((q: any, i: number) => (
+                <li key={i} className="px-5 py-3">
+                  <div className="flex items-start gap-2">
+                    {q.is_correct
+                      ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-green-500" />
+                      : <XCircle size={15} className="mt-0.5 shrink-0 text-red-500" />}
+                    <div className="min-w-0">
+                      <p className="text-sm text-neutral-dark">{q.question}</p>
+                      <p className="mt-0.5 text-xs text-neutral-mid">
+                        Answered: <span className={q.is_correct ? 'text-green-700' : 'text-red-600'}>{q.selected}</span>
+                        {!q.is_correct && q.correct_answer && <> · Correct: <span className="text-green-700">{q.correct_answer}</span></>}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Policy reading */}
         {rec.reading && rec.reading.items.length > 0 && (

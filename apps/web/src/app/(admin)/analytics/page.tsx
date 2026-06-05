@@ -186,7 +186,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any }>('admin-analytics')
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
@@ -194,6 +194,7 @@ export default function AnalyticsPage() {
   const [auditData,    setAuditData] = useState<any>(analyticsCache?.audits ?? null)
   const [riskData,     setRiskData]  = useState<any>(analyticsCache?.risk ?? null)
   const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
+  const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -208,10 +209,11 @@ export default function AnalyticsPage() {
       api.audits.stats().catch(() => null),
       api.analytics.staffRisk().catch(() => null),
       api.analytics.policyReading().catch(() => null),
+      api.analytics.inductionPerformance().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -418,30 +420,36 @@ export default function AnalyticsPage() {
             <StatCard label="Avg scrolled" value={readingData.summary.avg_scroll_pct ?? 0} suffix="%" info="How far down the policy staff scroll on average — a proxy for how much they actually read." Icon={Activity} iconBg="bg-amber-50" iconColor="text-amber-500" />
             <StatCard label="Read to the end" value={readingData.summary.pct_reached_end ?? 0} suffix="%" info="Share of reading sessions where the staff member scrolled (almost) to the end of the policy." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
           </div>
-          <Card title="By policy" info="Per-policy reading engagement. Low average scroll with many opens can mean a policy is hard to read or too long.">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b border-gray-100 text-left text-xs text-neutral-mid">
-                  <th className="px-3 py-2 font-medium">Policy</th>
-                  <th className="px-3 py-2 font-medium">Opens</th>
-                  <th className="px-3 py-2 font-medium">Avg time</th>
-                  <th className="px-3 py-2 font-medium">Avg scrolled</th>
-                  <th className="px-3 py-2 font-medium">Read to end</th>
-                </tr></thead>
-                <tbody>
-                  {readingData.by_policy.map((p: any) => (
-                    <tr key={p.policy_id} className="border-b border-gray-50 last:border-0">
-                      <td className="px-3 py-2 text-neutral-dark">{p.title}</td>
-                      <td className="px-3 py-2 text-neutral-mid">{p.sessions}</td>
-                      <td className="px-3 py-2 text-neutral-mid">{fmtSecs(p.avg_seconds)}</td>
-                      <td className={`px-3 py-2 font-medium ${scoreColor(p.avg_scroll_pct)}`}>{p.avg_scroll_pct}%</td>
-                      <td className="px-3 py-2 text-neutral-mid">{p.pct_reached_end}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+        </>
+      )}
+
+      {/* ── Induction question performance ───────────────────────────────────── */}
+      {inductionPerf && inductionPerf.summary.total_answered > 0 && (
+        <>
+          <SectionDivider
+            title="Induction question performance"
+            subtitle="How well staff answer induction questions — and where the knowledge gaps are"
+          />
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Questions answered" value={inductionPerf.summary.total_answered} info="Total induction questions answered across your team." Icon={GraduationCap} iconBg="bg-teal-light" iconColor="text-teal" />
+            <StatCard label="Answered correctly" value={inductionPerf.summary.pct_correct ?? 0} suffix="%" info="Share of induction answers that were correct. Multiple-choice is graded automatically; written answers are AI-checked." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+            <StatCard label="Staff answering" value={inductionPerf.summary.staff_answered} info="Number of staff who have answered at least one induction question." Icon={Users} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
+            <StatCard label="Questions to watch" value={inductionPerf.weak_questions.length} info="Distinct questions that have been answered incorrectly at least once." Icon={AlertCircle} iconBg="bg-amber-50" iconColor="text-amber-500" />
+          </div>
+          {inductionPerf.weak_questions.length > 0 && (
+            <Card title="Most-missed induction questions" info="Questions most often answered incorrectly — a signal of where staff knowledge needs reinforcing.">
+              <ul className="divide-y divide-gray-50">
+                {inductionPerf.weak_questions.map((q: any, i: number) => (
+                  <li key={i} className="flex items-start justify-between gap-3 py-2.5">
+                    <p className="text-sm text-neutral-dark">{q.question}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium leading-none ${q.incorrect_rate >= 50 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+                      {q.incorrect}/{q.answered} wrong
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </>
       )}
 

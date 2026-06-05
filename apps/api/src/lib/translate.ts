@@ -127,6 +127,40 @@ function langName_internal(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// Translate already-formatted policy HTML into another language, chunk by chunk,
+// preserving all HTML tags. Used after the English formatting pass so the two
+// stages each stay within budget.
+export async function translateHtmlPreservingTags(html: string, langCode: string, langName?: string): Promise<string> {
+  if (!html || !langCode || langCode === 'eng') return html
+  const name = langName ?? langName_internal(langCode)
+
+  const parts = html.split(/(?<=<\/(?:p|li|h2|h3|h4|ul|ol|div)>)/i)
+  const chunks: string[] = []
+  let cur = ''
+  for (const part of parts) {
+    if (cur && (cur.length + part.length) > 3000) { chunks.push(cur); cur = part }
+    else cur += part
+  }
+  if (cur) chunks.push(cur)
+
+  const out = await mapLimit(chunks, 4, async (chunk) => {
+    try {
+      const msg = await anthropic.messages.create({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        messages:   [{ role: 'user', content:
+          `Translate the human-readable text in this HTML fragment into ${name}. Keep EVERY HTML tag and attribute exactly as-is — only translate the text between tags. Do not add, remove, summarise or reformat anything. Return ONLY the HTML.\n\n${chunk}` }],
+      })
+      recordUsage('claude-haiku-4-5-20251001', msg.usage)
+      return ((msg.content[0] as any).text as string).replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim()
+    } catch (e) {
+      console.error('[translate] html chunk failed, keeping English:', e)
+      return chunk
+    }
+  })
+  return out.join('')
+}
+
 // Clean a raw extracted policy and format it as readable HTML for staff. Strips
 // letterhead/contact details and Word image-descriptions, structures it with
 // headings + lists, and translates into `langCode` when it isn't English.

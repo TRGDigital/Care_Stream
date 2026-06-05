@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, formatPolicyHtml, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateBundle, translateText, formatPolicyHtml, translateHtmlPreservingTags, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { prisma } from '../db/client'
@@ -88,22 +88,43 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   const title = policyTitle(policy.filename)
   const lang  = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
 
-  // Cached formatted HTML for this policy + language?
-  const cached = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang } } }).catch(() => null)
-  if (cached?.content) { ok(res, { policy_id: policyId, title, content: cached.content, lang, html: true }); return }
+  // If the staff member's language version is already cached, serve it.
+  const cachedTarget = lang === 'eng' ? null
+    : await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang } } }).catch(() => null)
+  if (cachedTarget?.content) { ok(res, { policy_id: policyId, title, content: cachedTarget.content, lang, html: true }); return }
 
-  const english = await downloadExtractedText(tenantId, policyId).catch(() => null)
-  if (!english) { ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return }
+  // ── Stage 1: clean + format English HTML (cached) ───────────────────────────
+  const cachedEng = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } } }).catch(() => null)
+  let englishHtml: string | null = cachedEng?.content ?? null
+  const engWasCached = !!englishHtml
 
-  // Clean + format (and translate when not English), budgeted, then cache.
-  const langName = languageNameForCode(lang, tenant?.custom_languages)
-  const html = await withTranslationBudget(formatPolicyHtml(english, lang, langName), 50_000, null)
-  if (html) {
-    await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang, content: html } }).catch(() => {})
-    ok(res, { policy_id: policyId, title, content: html, lang, html: true })
+  if (!englishHtml) {
+    const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+    if (!raw) { ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return }
+    englishHtml = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 45_000, null)
+    if (englishHtml) {
+      await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: englishHtml } }).catch(() => {})
+    } else {
+      console.error(`[me/policy] format failed for ${policyId} — serving raw text`)
+      ok(res, { policy_id: policyId, title, content: raw, lang: 'eng', html: false }); return
+    }
+  }
+
+  if (lang === 'eng') { ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true }); return }
+
+  // ── Stage 2: translate the formatted HTML ───────────────────────────────────
+  // Only attempt in this request if English was already cached (so there's time
+  // budget). Otherwise serve the clean English now; the next open translates it.
+  if (!engWasCached) {
+    ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true, translation_pending: true }); return
+  }
+  const langName   = languageNameForCode(lang, tenant?.custom_languages)
+  const translated = await withTranslationBudget(translateHtmlPreservingTags(englishHtml, lang, langName), 50_000, null)
+  if (translated && translated !== englishHtml) {
+    await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang, content: translated } }).catch(() => {})
+    ok(res, { policy_id: policyId, title, content: translated, lang, html: true })
   } else {
-    // Formatting/translation didn't finish in time — serve raw text so they can still read it.
-    ok(res, { policy_id: policyId, title, content: english, lang: 'eng', html: false, translation_pending: lang !== 'eng' })
+    ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true, translation_pending: true })
   }
 })
 

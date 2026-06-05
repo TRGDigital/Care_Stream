@@ -326,6 +326,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             CareStream quietly records <strong>how they read each policy</strong> — the time they spent and how far they scrolled — so you can tell the difference between someone who read it properly and someone who opened it and marked it done. They can mark a policy as read at any point; we simply record what they actually did.
           </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Inside the reader there's also a <strong>“Talk to this Policy”</strong> button. It opens a focused chat where every answer comes straight from that one policy, and it suggests a few practical questions about it (in the staff member's language) to get them started — so if anything in the policy isn't clear, they can ask about it there and then.
+          </p>
         </SectionBlock>
         <Tip>If you add a new starter before a matching flow exists, no onboarding is assigned — adopt or create a flow for that role and future new starters will be enrolled automatically.</Tip>
       </div>

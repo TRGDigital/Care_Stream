@@ -1617,7 +1617,7 @@ function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string
                           </div>
                           <div className="flex-1">
                             <p className={`font-medium text-sm ${isCompleted ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>
-                              {step.title}
+                              {step.type === 'answer_question' && step.question ? step.question : step.title}
                             </p>
                             <p className="text-xs text-neutral-mid mt-0.5">
                               {step.type === 'read_policy' ? 'Read policy' : 'Answer question'}
@@ -1653,7 +1653,6 @@ function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string
 
                             {!isCompleted && !isLocked && step.type === 'answer_question' && Array.isArray(step.options) && step.options.length > 0 && (
                               <div className="mt-3 space-y-2">
-                                <p className="text-sm italic text-neutral-dark">&ldquo;{step.question}&rdquo;</p>
                                 <div className="space-y-1.5">
                                   {step.options.map((opt: string, oi: number) => (
                                     <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm
@@ -1684,7 +1683,6 @@ function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string
 
                             {!isCompleted && !isLocked && step.type === 'answer_question' && (!Array.isArray(step.options) || step.options.length === 0) && (
                               <div className="mt-3 space-y-2">
-                                <p className="text-sm italic text-neutral-dark">&ldquo;{step.question}&rdquo;</p>
                                 <textarea
                                   value={answers[step.id] ?? ''}
                                   onChange={e => setAnswers(prev => ({ ...prev, [step.id]: e.target.value }))}

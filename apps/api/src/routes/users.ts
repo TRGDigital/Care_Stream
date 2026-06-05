@@ -110,7 +110,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
 
 usersRouter.get('/:id/record', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
-  const record = await buildStaffRecord(tenantId, String(req.params.id), { includeTeam: true })
+  const record = await buildStaffRecord(tenantId, String(req.params.id), { includeTeam: true, includeReading: true })
   if (!record) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
   const org = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } })
   ok(res, { ...record, org: { name: org?.name ?? '', logo_url: org?.logo_url ?? null } })

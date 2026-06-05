@@ -42,6 +42,12 @@ function scoreColor(score: number | null) {
   return 'text-status-error'
 }
 
+function fmtSecs(secs: number | null | undefined) {
+  if (!secs) return '—'
+  const m = Math.floor(secs / 60), s = secs % 60
+  return m ? `${m}m${s ? ` ${s}s` : ''}` : `${s}s`
+}
+
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 function InfoTooltip({ text }: { text: string }) {
@@ -180,13 +186,14 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any }>('admin-analytics')
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
   const [cqcPrepData,  setCqcPrep]  = useState<any>(analyticsCache?.cqcPrep ?? null)
   const [auditData,    setAuditData] = useState<any>(analyticsCache?.audits ?? null)
   const [riskData,     setRiskData]  = useState<any>(analyticsCache?.risk ?? null)
+  const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -200,10 +207,11 @@ export default function AnalyticsPage() {
       api.analytics.cqcPrep().catch((e: any) => { console.error('[CQC Prep analytics]', e?.message ?? e); return null }),
       api.audits.stats().catch(() => null),
       api.analytics.staffRisk().catch(() => null),
+      api.analytics.policyReading().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -395,6 +403,46 @@ export default function AnalyticsPage() {
             </table>
           </Card>
         </div>
+      )}
+
+      {/* ── Policy reading engagement ───────────────────────────────────────── */}
+      {readingData && readingData.summary.total_sessions > 0 && (
+        <>
+          <SectionDivider
+            title="Policy reading engagement"
+            subtitle="How thoroughly staff read induction policies — time, scroll depth and completion"
+          />
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Reading sessions" value={readingData.summary.total_sessions} info="Total times staff have opened an induction policy to read it." Icon={Activity} iconBg="bg-teal-light" iconColor="text-teal" />
+            <StatCard label="Avg time per read" value={fmtSecs(readingData.summary.avg_seconds)} info="Average active time spent reading a policy (paused when the tab is hidden)." Icon={Clock} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
+            <StatCard label="Avg scrolled" value={readingData.summary.avg_scroll_pct ?? 0} suffix="%" info="How far down the policy staff scroll on average — a proxy for how much they actually read." Icon={Activity} iconBg="bg-amber-50" iconColor="text-amber-500" />
+            <StatCard label="Read to the end" value={readingData.summary.pct_reached_end ?? 0} suffix="%" info="Share of reading sessions where the staff member scrolled (almost) to the end of the policy." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+          </div>
+          <Card title="By policy" info="Per-policy reading engagement. Low average scroll with many opens can mean a policy is hard to read or too long.">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left text-xs text-neutral-mid">
+                  <th className="px-3 py-2 font-medium">Policy</th>
+                  <th className="px-3 py-2 font-medium">Opens</th>
+                  <th className="px-3 py-2 font-medium">Avg time</th>
+                  <th className="px-3 py-2 font-medium">Avg scrolled</th>
+                  <th className="px-3 py-2 font-medium">Read to end</th>
+                </tr></thead>
+                <tbody>
+                  {readingData.by_policy.map((p: any) => (
+                    <tr key={p.policy_id} className="border-b border-gray-50 last:border-0">
+                      <td className="px-3 py-2 text-neutral-dark">{p.title}</td>
+                      <td className="px-3 py-2 text-neutral-mid">{p.sessions}</td>
+                      <td className="px-3 py-2 text-neutral-mid">{fmtSecs(p.avg_seconds)}</td>
+                      <td className={`px-3 py-2 font-medium ${scoreColor(p.avg_scroll_pct)}`}>{p.avg_scroll_pct}%</td>
+                      <td className="px-3 py-2 text-neutral-mid">{p.pct_reached_end}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
       )}
 
       {/* ── Training compliance ─────────────────────────────────────────────── */}

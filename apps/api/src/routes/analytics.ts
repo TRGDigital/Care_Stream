@@ -1131,3 +1131,58 @@ analyticsRouter.get('/staff-risk', requireAdmin, async (_req: Request, res: Resp
     err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
+
+// ─── GET /analytics/policy-reading ────────────────────────────────────────────
+// Aggregate policy-reading engagement: how thoroughly staff read induction
+// policies (time, scroll depth, completion) overall and per policy.
+
+analyticsRouter.get('/policy-reading', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const sessions = await (prisma as any).policyReadSession.findMany({
+      where:  { tenant_id: tenantId },
+      select: { user_id: true, policy_id: true, seconds_spent: true, max_scroll_pct: true, reached_end: true, marked_read: true },
+    })
+
+    const total = (sessions as any[]).length
+    if (total === 0) {
+      ok(res, { summary: { total_sessions: 0, staff_count: 0, avg_seconds: null, avg_scroll_pct: null, pct_reached_end: null }, by_policy: [] })
+      return
+    }
+
+    const avg = (sel: (s: any) => number) => Math.round((sessions as any[]).reduce((a, s) => a + sel(s), 0) / total)
+    const summary = {
+      total_sessions:  total,
+      staff_count:     new Set((sessions as any[]).map(s => s.user_id)).size,
+      avg_seconds:     avg(s => s.seconds_spent ?? 0),
+      avg_scroll_pct:  avg(s => s.max_scroll_pct ?? 0),
+      pct_reached_end: Math.round(((sessions as any[]).filter(s => s.reached_end).length / total) * 100),
+    }
+
+    const byPolicy = new Map<string, any>()
+    for (const s of sessions as any[]) {
+      const g = byPolicy.get(s.policy_id) ?? { policy_id: s.policy_id, sessions: 0, secs: 0, scroll: 0, reached: 0 }
+      g.sessions += 1; g.secs += s.seconds_spent ?? 0; g.scroll += s.max_scroll_pct ?? 0; g.reached += s.reached_end ? 1 : 0
+      byPolicy.set(s.policy_id, g)
+    }
+    const ids = [...byPolicy.keys()]
+    const policies = await (prisma as any).policy.findMany({ where: { id: { in: ids }, tenant_id: tenantId }, select: { id: true, filename: true } })
+    const titleById = new Map((policies as any[]).map(p => [p.id, (p.filename || 'Policy').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim()]))
+
+    const by_policy = [...byPolicy.values()]
+      .filter(g => titleById.has(g.policy_id))
+      .map(g => ({
+        policy_id:       g.policy_id,
+        title:           titleById.get(g.policy_id),
+        sessions:        g.sessions,
+        avg_seconds:     Math.round(g.secs / g.sessions),
+        avg_scroll_pct:  Math.round(g.scroll / g.sessions),
+        pct_reached_end: Math.round((g.reached / g.sessions) * 100),
+      }))
+      .sort((a, b) => b.sessions - a.sessions)
+
+    ok(res, { summary, by_policy })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})

@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import {
-  ArrowLeft, Award, Bell, Brain, Clock, Download, Globe,
+  ArrowLeft, Award, Bell, BookOpen, Brain, Clock, Download, Globe,
   ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp,
 } from 'lucide-react'
 
@@ -16,6 +16,7 @@ const TIP = {
   benchmark:  "Compares this person to your home's average. The teal bar is their figure; the dark tick is the team average. Bars sitting below the tick are below average and may be worth a conversation.",
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
+  reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
@@ -32,6 +33,11 @@ function fmtDateTime(iso: string | null | undefined) {
   const d = new Date(iso)
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
     d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+function fmtDuration(secs: number | null | undefined) {
+  if (!secs) return '—'
+  const m = Math.floor(secs / 60), s = secs % 60
+  return m ? `${m}m${s ? ` ${s}s` : ''}` : `${s}s`
 }
 function scoreColour(pct: number | null | undefined) {
   if (pct == null) return 'text-neutral-mid'
@@ -340,6 +346,41 @@ export default function StaffRecordPage() {
             </div>
           )}
         </div>
+
+        {/* Policy reading */}
+        {rec.reading && rec.reading.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><BookOpen size={15} className="text-teal" /> Policy reading <InfoTip text={TIP.reading} /></p>
+              <p className="text-xs text-neutral-mid">{rec.reading.summary.thorough} read thoroughly · {rec.reading.summary.skimmed} skimmed</p>
+            </div>
+            <table className="w-full text-sm">
+              <thead><tr className="border-b border-gray-50 text-left text-xs text-neutral-mid">
+                <th className="px-5 py-2 font-medium">Policy</th>
+                <th className="px-3 py-2 font-medium">Time</th>
+                <th className="px-3 py-2 font-medium">Scrolled</th>
+                <th className="px-3 py-2 font-medium">How</th>
+                <th className="px-3 py-2 font-medium">Last read</th>
+              </tr></thead>
+              <tbody>
+                {rec.reading.items.map((p: any) => {
+                  const how = p.best_scroll_pct >= 90 ? { label: 'Thorough', cls: 'bg-green-50 text-green-700' }
+                    : p.marked_read && p.best_scroll_pct < 70 ? { label: 'Skimmed', cls: 'bg-amber-50 text-amber-700' }
+                    : { label: 'Partial', cls: 'bg-gray-100 text-gray-500' }
+                  return (
+                    <tr key={p.policy_id} className="border-b border-gray-50 last:border-0">
+                      <td className="px-5 py-2.5"><span className="text-neutral-dark">{p.title}</span>{p.sessions > 1 && <span className="ml-2 text-[10px] text-neutral-mid">{p.sessions} opens</span>}</td>
+                      <td className="px-3 py-2.5 text-neutral-mid">{fmtDuration(p.total_seconds)}</td>
+                      <td className="px-3 py-2.5 font-medium text-neutral-dark">{p.best_scroll_pct}%</td>
+                      <td className="px-3 py-2.5"><span className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium leading-none ${how.cls}`}>{how.label}</span></td>
+                      <td className="px-3 py-2.5 text-xs text-neutral-mid">{p.last_read_at ? fmtDate(p.last_read_at) : '—'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Engagement + Trends */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

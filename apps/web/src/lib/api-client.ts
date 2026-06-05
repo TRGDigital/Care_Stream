@@ -444,6 +444,10 @@ export function createApiClient(token: string) {
       get: () => apiFetch<any>('/analytics', token),
       training: () => apiFetch<any>('/analytics/training', token),
       staffRisk: () => apiFetch<{ staff: Array<{ id: string; name: string; job_role: string | null; flags: Array<{ level: 'high' | 'medium'; kind: string; label: string }>; severity: number }>; summary: { total_flagged: number; high: number } }>('/analytics/staff-risk', token),
+      policyReading: () => apiFetch<{
+        summary: { total_sessions: number; staff_count: number; avg_seconds: number | null; avg_scroll_pct: number | null; pct_reached_end: number | null }
+        by_policy: Array<{ policy_id: string; title: string; sessions: number; avg_seconds: number; avg_scroll_pct: number; pct_reached_end: number }>
+      }>('/analytics/policy-reading', token),
       dailyActivity: (days = 30) =>
         apiFetch<{ series: Array<{ date: string; chat: number; email: number; whatsapp: number }>; days: number }>(
           `/analytics/daily-activity?days=${days}`, token

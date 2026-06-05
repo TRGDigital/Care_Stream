@@ -12,7 +12,12 @@ function monthLabel(year: number, month0: number): string {
 }
 
 export interface StaffRecordOptions {
-  includeTeam?: boolean   // compute tenant-wide benchmarks
+  includeTeam?: boolean      // compute tenant-wide benchmarks
+  includeReading?: boolean   // include per-policy reading engagement (admin only)
+}
+
+function policyTitleFromFilename(filename: string): string {
+  return (filename || 'Policy').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim()
 }
 
 export async function buildStaffRecord(tenantId: string, userId: string, opts: StaffRecordOptions = {}) {
@@ -186,6 +191,46 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }
   }
 
+  // ── Policy reading engagement (admin record only) ───────────────────────────
+  let reading: any = null
+  if (opts.includeReading) {
+    const sessions = await (prisma as any).policyReadSession.findMany({
+      where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' },
+    }).catch(() => [] as any[])
+    const policyIds = [...new Set((sessions as any[]).map(s => s.policy_id))]
+    const policies = policyIds.length
+      ? await (prisma as any).policy.findMany({ where: { id: { in: policyIds }, tenant_id: tenantId }, select: { id: true, filename: true } }).catch(() => [])
+      : []
+    const titleById = new Map((policies as any[]).map(p => [p.id, policyTitleFromFilename(p.filename)]))
+
+    const byPolicy = new Map<string, any>()
+    for (const s of sessions as any[]) {
+      const g = byPolicy.get(s.policy_id) ?? {
+        policy_id: s.policy_id, title: titleById.get(s.policy_id) ?? 'Policy',
+        sessions: 0, total_seconds: 0, best_scroll_pct: 0, reached_end: false, marked_read: false, last_read_at: null,
+      }
+      g.sessions       += 1
+      g.total_seconds  += s.seconds_spent ?? 0
+      g.best_scroll_pct = Math.max(g.best_scroll_pct, s.max_scroll_pct ?? 0)
+      g.reached_end     = g.reached_end || !!s.reached_end
+      g.marked_read     = g.marked_read || !!s.marked_read
+      if (!g.last_read_at) g.last_read_at = s.created_at   // sessions are newest-first
+      byPolicy.set(s.policy_id, g)
+    }
+    const items = [...byPolicy.values()].filter(i => titleById.has(i.policy_id))
+    const scrolls = items.map(i => i.best_scroll_pct)
+    reading = {
+      items,
+      summary: {
+        policies_read:  items.length,
+        avg_scroll_pct: scrolls.length ? Math.round(scrolls.reduce((a, b) => a + b, 0) / scrolls.length) : null,
+        total_seconds:  items.reduce((a, i) => a + i.total_seconds, 0),
+        thorough:       items.filter(i => i.best_scroll_pct >= 90).length,
+        skimmed:        items.filter(i => i.marked_read && i.best_scroll_pct < 70).length,
+      },
+    }
+  }
+
   return {
     user: {
       id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role,
@@ -196,6 +241,6 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     },
     training: { items: training, summary: trainingSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
-    engagement, flags, trends, timeline, benchmarks,
+    engagement, flags, trends, timeline, benchmarks, reading,
   }
 }

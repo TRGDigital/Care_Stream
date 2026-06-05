@@ -48,7 +48,7 @@ function StatusPill({ status }: { status: string }) {
     expired:     { label: 'Expired',     cls: 'bg-red-50 text-red-600'   },
   }
   const s = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
-  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>{s.label}</span>
+  return <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[11px] font-medium leading-none ${s.cls}`}>{s.label}</span>
 }
 
 function Ring({ pct, label }: { pct: number | null; label: string }) {
@@ -57,10 +57,12 @@ function Ring({ pct, label }: { pct: number | null; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div className="relative h-20 w-20">
-        <svg className="h-20 w-20 -rotate-90" viewBox="0 0 36 36">
+        {/* Explicit px size + rotation baked into the SVG (no CSS transform/class
+            sizing) so html2canvas renders the rings correctly in the PDF. */}
+        <svg width="80" height="80" viewBox="0 0 36 36">
           <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f1f1f1" strokeWidth="3.5" />
           <circle cx="18" cy="18" r="15.9" fill="none" stroke={colour} strokeWidth="3.5"
-            strokeDasharray={`${v} 100`} strokeLinecap="round" />
+            strokeDasharray={`${v} 100`} strokeLinecap="round" transform="rotate(-90 18 18)" />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-neutral-dark">
           {pct == null ? '—' : `${v}%`}
@@ -187,7 +189,7 @@ export default function StaffRecordPage() {
       </div>
       {note && <div className="mb-4 rounded-lg border border-teal/20 bg-teal-light/30 px-4 py-2.5 text-sm text-neutral-dark print:hidden">{note}</div>}
 
-      <div id="staff-record-print" className="space-y-5 bg-white">
+      <div id="staff-record-print" className="space-y-5">
         {/* Branded document header — rendered ONLY during PDF export, not on screen */}
         {printing && (
           <div className="pdf-card">
@@ -231,7 +233,7 @@ export default function StaffRecordPage() {
             </div>
             {Array.isArray(u.specialisms) && u.specialisms.length > 0 && (
               <div className="hidden flex-wrap justify-end gap-1 sm:flex">
-                {u.specialisms.map((s: string) => <span key={s} className="rounded-full bg-teal/10 px-2 py-0.5 text-xs text-teal">{s}</span>)}
+                {u.specialisms.map((s: string) => <span key={s} className="inline-flex items-center rounded-full bg-teal/10 px-2 py-1 text-xs leading-none text-teal">{s}</span>)}
               </div>
             )}
           </div>
@@ -243,7 +245,7 @@ export default function StaffRecordPage() {
             <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-800"><ShieldAlert size={15} /> Needs attention</p>
             <div className="flex flex-wrap gap-2">
               {rec.flags.map((f: any, i: number) => (
-                <span key={i} className={`rounded-full px-2.5 py-1 text-xs font-medium ${f.level === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{f.label}</span>
+                <span key={i} className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium leading-none ${f.level === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{f.label}</span>
               ))}
             </div>
           </div>
@@ -294,7 +296,7 @@ export default function StaffRecordPage() {
                     <td className="px-5 py-2.5">
                       <span className="text-neutral-dark">{m.module_name}</span>
                       <span className="ml-2 text-[10px] uppercase text-neutral-mid">{m.category === 'statutory' ? 'Statutory' : 'Specialist'}</span>
-                      {m.overdue && <span className="ml-2 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">Overdue</span>}
+                      {m.overdue && <span className="ml-2 inline-flex items-center rounded-full bg-red-50 px-1.5 py-1 text-[10px] font-medium leading-none text-red-600">Overdue</span>}
                     </td>
                     <td className="px-3 py-2.5"><StatusPill status={m.status} /></td>
                     <td className={`px-3 py-2.5 font-medium ${scoreColour(m.score?.pct)}`}>{m.score ? `${m.score.pct}%` : '—'}</td>
@@ -332,7 +334,7 @@ export default function StaffRecordPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-neutral-dark">{f.flow_name}</span>
                       <span className="text-[10px] uppercase text-neutral-mid">{f.flow_kind === 'secondary' ? 'Specialism' : 'Role'}</span>
-                      {f.overdue && <span className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">Overdue</span>}
+                      {f.overdue && <span className="inline-flex items-center rounded-full bg-red-50 px-1.5 py-1 text-[10px] font-medium leading-none text-red-600">Overdue</span>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-neutral-mid">{f.completed_steps}/{f.total_steps} steps{f.question_steps > 0 ? ` · ${f.correct_answers}/${f.question_steps} correct` : ''}</span>
@@ -359,7 +361,7 @@ export default function StaffRecordPage() {
             {rec.engagement.top_topics.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {rec.engagement.top_topics.map((tp: any) => (
-                  <span key={tp.category} className="rounded-full bg-neutral-light px-2 py-0.5 text-xs text-neutral-mid">{TOPIC_LABELS[tp.category] ?? tp.category}: {tp.count}</span>
+                  <span key={tp.category} className="inline-flex items-center rounded-full bg-neutral-light px-2 py-1 text-xs leading-none text-neutral-mid">{TOPIC_LABELS[tp.category] ?? tp.category}: {tp.count}</span>
                 ))}
               </div>
             )}

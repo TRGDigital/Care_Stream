@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
-import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
 
@@ -46,6 +46,11 @@ function fmtSecs(secs: number | null | undefined) {
   if (!secs) return '—'
   const m = Math.floor(secs / 60), s = secs % 60
   return m ? `${m}m${s ? ` ${s}s` : ''}` : `${s}s`
+}
+
+function fmtWhen(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -186,7 +191,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any }>('admin-analytics')
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
@@ -195,6 +200,7 @@ export default function AnalyticsPage() {
   const [riskData,     setRiskData]  = useState<any>(analyticsCache?.risk ?? null)
   const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
   const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
+  const [kgaps,        setKgaps]    = useState<any>(analyticsCache?.kgaps ?? null)
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -210,10 +216,11 @@ export default function AnalyticsPage() {
       api.analytics.staffRisk().catch(() => null),
       api.analytics.policyReading().catch(() => null),
       api.analytics.inductionPerformance().catch(() => null),
+      api.analytics.knowledgeGaps().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -404,18 +411,99 @@ export default function AnalyticsPage() {
             <StatCard label="Staff answering" value={inductionPerf.summary.staff_answered} info="Number of staff who have answered at least one induction question." Icon={Users} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
             <StatCard label="Questions to watch" value={inductionPerf.weak_questions.length} info="Distinct questions that have been answered incorrectly at least once." Icon={AlertCircle} iconBg="bg-amber-50" iconColor="text-amber-500" />
           </div>
-          {inductionPerf.weak_questions.length > 0 && (
-            <Card title="Most-missed induction questions" info="Questions most often answered incorrectly — a signal of where staff knowledge needs reinforcing.">
-              <ul className="divide-y divide-gray-50">
-                {inductionPerf.weak_questions.map((q: any, i: number) => (
-                  <li key={i} className="flex items-start justify-between gap-3 py-2.5">
-                    <p className="text-sm text-neutral-dark">{q.question}</p>
-                    <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium leading-none ${q.incorrect_rate >= 50 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                      {q.incorrect}/{q.answered} wrong
-                    </span>
-                  </li>
-                ))}
-              </ul>
+        </>
+      )}
+
+      {/* ── Knowledge gaps (training + induction, team-wide) ─────────────────── */}
+      {kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0) && (
+        <>
+          <SectionDivider
+            title="Knowledge gaps"
+            subtitle="Where your team is getting questions wrong — across training and induction — and how those gaps are being closed"
+          />
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Open gaps" value={kgaps.summary.open_gaps} info="Questions currently answered incorrectly across training and induction. These are the gaps still to close." Icon={AlertCircle} iconBg="bg-amber-50" iconColor="text-amber-500" />
+            <StatCard label="Staff affected" value={kgaps.summary.staff_with_gaps} info="Number of staff with at least one open knowledge gap right now." Icon={Users} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
+            <StatCard label="Closed (30 days)" value={kgaps.summary.resolved_30d} info="Gaps a staff member has put right in the last 30 days, via the hub Follow-up." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+            <StatCard label="Engaged with learning" value={kgaps.summary.engaged_pct ?? 0} suffix="%" info="Of gaps closed, the share where staff worked through the policy-grounded micro-lesson ('Learn & retry') rather than just re-answering ('Just retry')." Icon={GraduationCap} iconBg="bg-teal-light" iconColor="text-teal" />
+          </div>
+
+          <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Most-missed questions (combined) */}
+            <Card title="Most-missed questions" info="Questions most often answered incorrectly across the team — training and induction combined. The strongest signal of where to reinforce knowledge.">
+              {kgaps.top_missed.length === 0 ? <p className="py-2 text-sm text-neutral-mid">No gaps right now. 🎉</p> : (
+                <ul className="divide-y divide-gray-50">
+                  {kgaps.top_missed.map((q: any, i: number) => (
+                    <li key={i} className="flex items-start justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-sm text-neutral-dark">{q.question || q.topic}</p>
+                        <p className="mt-0.5 text-xs text-neutral-mid">
+                          <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${q.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{q.source === 'training' ? 'Training' : 'Induction'}</span>
+                          {q.topic} · {q.staff_count} staff
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-red-50 px-2 py-1 text-[11px] font-medium leading-none text-red-600">{q.miss_count} wrong</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+
+            {/* Weakest topics */}
+            <Card title="Weakest topics" info="Training modules and induction flows with the most open gaps — the areas to prioritise for refresher training.">
+              {kgaps.weak_topics.length === 0 ? <p className="py-2 text-sm text-neutral-mid">No gaps right now. 🎉</p> : (
+                <ul className="space-y-2.5">
+                  {kgaps.weak_topics.map((t: any, i: number) => {
+                    const max = kgaps.weak_topics[0].gaps || 1
+                    return (
+                      <li key={i}>
+                        <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                          <span className="flex min-w-0 items-center gap-1.5 text-neutral-dark">
+                            {t.source === 'training' ? <Brain size={12} className="shrink-0 text-teal" /> : <GraduationCap size={12} className="shrink-0 text-indigo-500" />}
+                            <span className="truncate">{t.topic}</span>
+                          </span>
+                          <span className="shrink-0 text-neutral-mid">{t.gaps} gap{t.gaps === 1 ? '' : 's'} · {t.staff} staff</span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100"><div className={t.source === 'training' ? 'h-full bg-teal' : 'h-full bg-indigo-400'} style={{ width: `${Math.round((t.gaps / max) * 100)}%` }} /></div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </Card>
+          </div>
+
+          {/* Remediation effectiveness */}
+          {(kgaps.summary.learn + kgaps.summary.retry > 0) && (
+            <Card title="How gaps are being closed" info="When staff get a follow-up question wrong, do they work through the micro-lesson ('Learn & retry') or just re-answer ('Just retry')? A healthy lean towards learning means the reinforcement is landing.">
+              <div className="mb-3 flex items-end gap-6">
+                <div><p className="text-2xl font-bold text-teal">{kgaps.summary.learn}</p><p className="text-xs text-neutral-mid">Learn &amp; retry</p></div>
+                <div><p className="text-2xl font-bold text-neutral-dark">{kgaps.summary.retry}</p><p className="text-xs text-neutral-mid">Just retry</p></div>
+                <div className="ml-auto text-right"><p className="text-lg font-semibold text-neutral-dark">{kgaps.summary.engaged_pct ?? 0}%</p><p className="text-xs text-neutral-mid">engaged with learning</p></div>
+              </div>
+              <div className="mb-4 flex h-2 overflow-hidden rounded-full bg-gray-100">
+                <div className="bg-teal" style={{ width: `${kgaps.summary.engaged_pct ?? 0}%` }} />
+                <div className="bg-amber-300" style={{ width: `${100 - (kgaps.summary.engaged_pct ?? 0)}%` }} />
+              </div>
+              {kgaps.recent_resolutions.length > 0 && (
+                <>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Recently closed</p>
+                  <ul className="divide-y divide-gray-50">
+                    {kgaps.recent_resolutions.map((r: any, i: number) => (
+                      <li key={i} className="flex items-start gap-2 py-2">
+                        {r.method === 'learn' ? <Lightbulb size={13} className="mt-0.5 shrink-0 text-teal" /> : <RefreshCw size={13} className="mt-0.5 shrink-0 text-neutral-mid" />}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs text-neutral-dark"><span className="font-medium">{r.user}</span> — {r.label || (r.source === 'training' ? 'Training question' : 'Induction question')}</p>
+                          <p className="mt-0.5 text-[11px] text-neutral-mid">
+                            <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${r.method === 'learn' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-neutral-mid'}`}>{r.method === 'learn' ? 'Learn & retry' : 'Just retry'}</span>
+                            {fmtWhen(r.when)}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </Card>
           )}
         </>

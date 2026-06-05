@@ -200,6 +200,61 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ),
   },
   {
+    id:      'staff-records',
+    icon:    BarChart2,
+    title:   'Staff records & analytics',
+    summary: 'The individual staff record, attention flags, and how to read it',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="Opening a staff record">
+          <p className="text-sm text-neutral-mid">
+            Every staff member has a full <strong>record page</strong> — a single view of what they've been assigned, what they've completed, how they're scoring, and how engaged they are. Open it two ways from the <strong>Staff</strong> page:
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Click the small <strong>chart icon</strong> next to a name to jump straight to their record.</Step>
+            <Step n={2}>Or click the <strong>name</strong> to open the quick overlay (where you assign training/onboarding), then use <strong>View full record →</strong>.</Step>
+          </div>
+          <div className="mt-3"><Tip>Every section of the record has an <strong>ⓘ</strong> icon — hover or tap it for a plain-English explanation of what you're looking at. The notes below are the same guidance in one place.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="Reading the record">
+          <div className="space-y-2 text-sm text-neutral-mid">
+            <p><strong className="text-neutral-dark">Completion rings</strong> — the share of assigned items finished: training modules, induction flows, and the average quiz score across completed modules. Aim for 100%; a low average score is an early sign someone may not have understood the material.</p>
+            <p><strong className="text-neutral-dark">Needs attention</strong> — a coloured banner listing anything outstanding (overdue or expired training, overdue/stalled induction, never logged in). Red = urgent.</p>
+            <p><strong className="text-neutral-dark">How they compare to the team</strong> — the teal bar is this person's figure; the dark tick is your home's average. A bar sitting left of the tick is below average and may be worth a conversation.</p>
+            <p><strong className="text-neutral-dark">Training record</strong> — every module with its status and <strong>score</strong> (the % of quiz questions answered correctly). "Expires" applies to annual modules due for renewal; "Overdue" means past the due date and not complete. <strong>Reset</strong> clears a module so they can retake it.</p>
+            <p><strong className="text-neutral-dark">Induction record</strong> — their onboarding flows, with a bar showing steps completed and an "X/Y correct" count for the question steps.</p>
+            <p><strong className="text-neutral-dark">Engagement</strong> — how actively they use CareStream: questions asked in the portal, the topics they ask about, CQC prep answered, and logins. Low engagement alongside overdue training is a useful early warning.</p>
+            <p><strong className="text-neutral-dark">Completions (6 months) &amp; Activity timeline</strong> — momentum over time and a dated history of everything they've done. The timeline is good evidence of ongoing development.</p>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="Actions on the record">
+          <div className="space-y-2 text-sm text-neutral-mid">
+            <p><strong className="text-neutral-dark">Send reminder</strong> — immediately sends the staff member their outstanding training questions by WhatsApp or email (it doesn't wait for the scheduled send).</p>
+            <p><strong className="text-neutral-dark">CQC evidence (PDF)</strong> — downloads the whole record as a PDF: training matrix, scores, induction sign-off and dates. Hand this to an inspector as proof a staff member is trained and inducted.</p>
+            <p><strong className="text-neutral-dark">Reset</strong> (per module) — clears someone's answers and completion so they can take a module again.</p>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="Spotting problems across the whole team">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Analytics</strong> page has a <strong>“Staff needing attention”</strong> panel at the top. It surfaces everyone with a flag — overdue or expired training, overdue/stalled induction, or never logged in — so you can triage without opening each record. Each card links straight to that person's record, and urgent cases are dotted red.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="What staff see — “My Progress”">
+          <p className="text-sm text-neutral-mid">
+            Staff have their own read-only <strong>My Progress</strong> page in the portal (top menu and chat sidebar). It shows their completion rings, what's left to finish with quick links to do it, how they compare to the team, and their training &amp; induction lists.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            If a staff member's <strong>“always communicate in their first language”</strong> setting is on, their entire My Progress page — including the ⓘ help bubbles — is shown <strong>in that language</strong>, so non-English speakers can follow their own progress without help.
+          </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
     id:      'onboarding',
     icon:    UserPlus,
     title:   'Staff onboarding flows',

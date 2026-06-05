@@ -363,6 +363,12 @@ export default function ChatPage() {
     setSavedPolicies(prev => prev.filter(p => p.policy_id !== policyId))
     try { await createApiClient(session?.accessToken ?? '').me.unsavePolicy(policyId) } catch { /* ignore */ }
   }
+  function refreshSavedPolicies() {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.savedPolicies()
+      .then(d => setSavedPolicies(d.saved.map(s => ({ policy_id: s.policy_id, title: s.title }))))
+      .catch(() => {})
+  }
 
   // Code → name map for the detected-language chip (static + tenant languages).
   const langNameMap: Record<string, string> = { ...LANG_NAMES, ...Object.fromEntries(langList.map(l => [l.code, l.name])) }
@@ -697,7 +703,7 @@ export default function ChatPage() {
 
         {/* Induction view */}
         {view === 'induction' && session?.accessToken && (
-          <InductionView token={session.accessToken} />
+          <InductionView token={session.accessToken} onSavedChange={refreshSavedPolicies} />
         )}
 
         {/* Training view */}
@@ -1452,7 +1458,7 @@ function TrainingView({ token }: { token: string }) {
 
 // ─── InductionView ────────────────────────────────────────────────────────────
 
-function InductionView({ token }: { token: string }) {
+function InductionView({ token, onSavedChange }: { token: string; onSavedChange?: () => void }) {
   const api = createApiClient(token)
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [loading,     setLoading]     = useState(true)
@@ -1463,13 +1469,17 @@ function InductionView({ token }: { token: string }) {
 
   async function savePolicy(policyId: string) {
     setSavedSet(prev => new Set(prev).add(policyId))
-    try { await api.me.savePolicy(policyId) } catch { /* ignore */ }
+    try { await api.me.savePolicy(policyId); onSavedChange?.() } catch { /* ignore */ }
   }
 
   useEffect(() => {
     api.onboarding.myEnrollments()
       .then(d => setEnrollments(d.enrollments))
       .finally(() => setLoading(false))
+    // Reflect already-saved policies so the Save button persists across refresh.
+    api.me.savedPolicies()
+      .then(d => setSavedSet(new Set(d.saved.map(s => s.policy_id))))
+      .catch(() => {})
   }, [])
 
   async function completeStep(enrollmentId: string, stepId: string, answerText?: string) {

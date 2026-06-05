@@ -5,6 +5,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
+import { sendDailyAuditReminders } from '../services/audits/reminders'
 
 export const cronRouter = Router()
 
@@ -24,6 +25,18 @@ cronRouter.get('/knowledge-gaps', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/knowledge-gaps] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Daily: remind admins to finish in-progress audits and start recurring ones.
+cronRouter.get('/audit-reminders', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await sendDailyAuditReminders()
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/audit-reminders] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

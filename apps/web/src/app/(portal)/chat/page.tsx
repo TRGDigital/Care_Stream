@@ -8,6 +8,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { AuditsView } from '@/components/hub/audits-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
@@ -308,7 +309,8 @@ export default function ChatPage() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits'>('chat')
+  const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
@@ -627,6 +629,15 @@ export default function ChatPage() {
             Follow-up
             {navCounts.followup > 0 && <NavBadge count={navCounts.followup} className="bg-red-500" />}
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => setView('audits')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audits' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <ClipboardCheck size={15} />
+              Audits
+            </button>
+          )}
           <Link
             href="/cqc"
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
@@ -751,6 +762,11 @@ export default function ChatPage() {
         {/* Training view */}
         {view === 'training' && session?.accessToken && (
           <TrainingView token={session.accessToken} />
+        )}
+
+        {/* Audits view (admin-role staff only) */}
+        {view === 'audits' && isAdmin && session?.accessToken && (
+          <AuditsView token={session.accessToken} />
         )}
 
         {/* Follow-up view */}

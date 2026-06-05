@@ -12,6 +12,7 @@
   ],
   "crons": [
     { "path": "/health", "schedule": "*/2 * * * *" },
-    { "path": "/cron/knowledge-gaps", "schedule": "0 7 * * *" }
+    { "path": "/cron/knowledge-gaps", "schedule": "0 7 * * *" },
+    { "path": "/cron/audit-reminders", "schedule": "0 8 * * *" }
   ]
 }

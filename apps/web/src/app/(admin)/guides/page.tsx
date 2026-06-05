@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp,
   FileText, Users, MessageSquare, Mail, Phone, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info, UserPlus,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -273,6 +273,69 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             If a staff member's <strong>“always communicate in their first language”</strong> setting is on, their entire My Progress page — including the ⓘ help bubbles — is shown <strong>in that language</strong>, so non-English speakers can follow their own progress without help.
           </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'knowledge-gaps',
+    icon:    RefreshCw,
+    title:   'Knowledge gaps & follow-up',
+    summary: 'How wrong answers turn into reinforced learning — and how you track it',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="The idea">
+          <p className="text-sm text-neutral-mid">
+            When a staff member gets a training or induction question wrong, that&rsquo;s a <strong>knowledge gap</strong>. Rather than letting it sit,
+            CareStream turns it into a short piece of learning and then checks they&rsquo;ve got it — so the gap actually closes. The whole loop is automatic;
+            this section explains what your team sees and what you can track.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="What staff see — “Follow-up” in the Chat Hub">
+          <p className="text-sm text-neutral-mid">
+            Anyone with an unanswered or incorrectly-answered question gets a <strong>Follow-up</strong> item in their hub (with a red badge). Opening it, they choose:
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}><strong>Learn &amp; retry</strong> — a short, plain-language micro-lesson built from <em>your own policies</em>: why the right answer matters, the key points to remember, a real-life scenario to think through, an optional &ldquo;ask about this policy&rdquo; chat, and then a <strong>fresh</strong> question to confirm they&rsquo;ve understood (never the identical one).</Step>
+            <Step n={2}><strong>Just retry</strong> — simply re-answer the original question. If they get it wrong, there&rsquo;s a nudge to learn the point instead.</Step>
+          </div>
+          <p className="mt-2 text-sm text-neutral-mid">
+            The lesson is shown in the staff member&rsquo;s <strong>first language</strong> if their &ldquo;always communicate in first language&rdquo; setting is on. Answering correctly clears the item from their Follow-up immediately.
+          </p>
+          <Tip>The micro-lessons are grounded only in your home&rsquo;s policies (and anonymised reference policies for general training topics) — they won&rsquo;t invent rules. They&rsquo;re generated once and reused, so they appear quickly.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="On the staff record — “How gaps get resolved”">
+          <p className="text-sm text-neutral-mid">
+            Each person&rsquo;s record (<strong>Staff → record</strong>) shows two things about gaps:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Recommended follow-up</strong> — the questions they currently have wrong, with actions to re-send the questions or mark the gap as reviewed (supervision evidence).</li>
+            <li><strong>How gaps get resolved</strong> — a count of <strong>Learn &amp; retry</strong> vs <strong>Just retry</strong>, an &ldquo;engaged with learning&rdquo; percentage, and a recent list. A healthy lean towards <em>Learn &amp; retry</em> means the person is genuinely engaging, not just clicking through. Both are included in the CQC evidence PDF.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Across the team — the “Knowledge gaps” analytics">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Analytics</strong> page has a <strong>Knowledge gaps</strong> section pulling training and induction together:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Summary</strong> — open gaps, staff affected, gaps closed in the last 30 days, and the team&rsquo;s &ldquo;engaged with learning&rdquo; percentage.</li>
+            <li><strong>Most-missed questions</strong> &amp; <strong>Weakest topics</strong> — exactly where to aim a refresher or supervision.</li>
+            <li><strong>Knowledge gaps over time</strong> — a trend chart showing whether open gaps are rising or falling (it builds up from a daily snapshot).</li>
+            <li><strong>How gaps are being closed</strong> — the team-wide Learn-vs-retry split and a recent feed.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Weekly digest &amp; staff reminders">
+          <p className="text-sm text-neutral-mid">
+            Every <strong>Monday</strong>, CareStream emails admins a <strong>knowledge-gap digest</strong> (open gaps with a week-on-week change, most-missed questions and weakest topics), and sends staff with open gaps a gentle reminder to complete their Follow-up.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>Both honour the <strong>Knowledge-gap digest</strong> switch in <strong>Settings → Email preferences</strong> — turn it off to stop all of it.</li>
+            <li>Use <strong>Send digest now</strong> on the Analytics page to email yourself the current digest at any time (handy before a supervision or inspection).</li>
+          </ul>
         </SectionBlock>
       </div>
     ),

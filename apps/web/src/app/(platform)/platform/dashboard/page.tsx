@@ -1924,6 +1924,60 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Knowledge Gaps & Learn-and-Retry */}
+      <RefSection icon={GraduationCap} title="Knowledge Gaps & Learn-and-Retry">
+        <p className="leading-relaxed text-neutral-mid">
+          A closed loop that turns wrong answers into reinforced learning: a staff member misses a training or
+          induction question → it surfaces in their hub <strong>Follow-up</strong> → they either re-answer
+          (<RefTag color="amber">Just retry</RefTag>) or work through a policy-grounded micro-lesson
+          (<RefTag color="teal">Learn &amp; retry</RefTag>) → resolving it clears the gap everywhere and is tracked →
+          admins see it on the staff record and the team-wide <strong>Knowledge gaps</strong> analytics → a weekly
+          digest + auto-refresher keep it moving.
+        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">What counts as a gap</p>
+          <RefRow label="Training gap"   value="TrainingAnswer.is_correct = false for a module question" />
+          <RefRow label="Induction gap"  value="OnboardingProgress.answer_correct = false for an answer_question step" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Staff side (hub Follow-up)</p>
+          <RefRow label="List gaps"      value="GET /me/follow-up — exact wrong MCQs (training + induction), translated to first_language; correct answer withheld" />
+          <RefRow label="Micro-lesson"   value="GET /me/follow-up/lesson?source&ref&enrollment_id — corrective 'why' + key points + scenario + a FRESH check question" />
+          <RefRow label="Grade check"    value="POST /me/follow-up/lesson/answer — graded server-side; correct → resolves the original gap (sets is_correct / answer_correct = true)" />
+          <RefRow label="Log method"     value="POST /me/follow-up/resolved — records method ('learn' | 'retry') + question label snapshot" />
+          <RefRow label="Just retry"     value="Re-answers the original question via the normal training/onboarding grading paths" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Lesson generation (grounded + cached)</p>
+          <RefRow label="Lib"            value="apps/api/src/lib/remediation.ts — buildGapContext + generateLesson + getOrCreateLesson" />
+          <RefRow label="Grounding"      value="Induction → the step's linked policy text (downloadExtractedText); Training → matching tenant policy (filename keyword) + PolicySeed reference policies for the topic" />
+          <RefRow label="Model"          value="Claude Sonnet (callClaude), temp 0.5 — returns strict JSON (why, key_points, scenario, check{question,options,correct_option})" />
+          <RefRow label="Cache"          value="remediation_lessons (ref_key '<source>:<ref>' + lang, payload JSONB) — one generation per gap concept per language" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Admin side (analytics)</p>
+          <RefRow label="Staff record"   value="/staff/[id] — 'Recommended follow-up' (open gaps) + 'How gaps get resolved' (Learn vs Just retry counts, %, recent list) — both in the CQC PDF" />
+          <RefRow label="Team-wide"      value="GET /analytics/knowledge-gaps — summary, most-missed (training+induction), weakest topics, recent resolutions, + trend[]" />
+          <RefRow label="Shared lib"     value="apps/api/src/lib/knowledge-gaps.ts — getKnowledgeGapData(tenantId), used by the endpoint AND the scheduled jobs" />
+          <RefRow label="Page section"   value="/analytics 'Knowledge gaps' — stat cards, trend area chart, most-missed, weakest topics, remediation effectiveness, 'Send digest now'" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Scheduled jobs (Phase C)</p>
+          <RefRow label="Service"        value="apps/api/src/services/knowledge-gaps/digest.ts — snapshotTenant, sendTenantDigest, sendTenantRefreshers, runKnowledgeGapDailyJob" />
+          <RefRow label="Cron"           value="vercel.json → GET /cron/knowledge-gaps, daily 07:00 UTC. Mounted BEFORE requireAuth; auth via x-vercel-cron header or CRON_SECRET bearer" />
+          <RefRow label="Daily"          value="Snapshot open-gap counts → knowledge_gap_snapshots (tenant_id, date unique) — powers the trend chart" />
+          <RefRow label="Weekly (Mon)"   value="Admin digest email (week-over-week delta) + staff auto-refresher nudge — both gated on the knowledge_gap_digest email preference" />
+          <RefRow label="Manual"         value="POST /settings/knowledge-gap-digest/send (admin) — snapshot + digest + refreshers for that tenant on demand" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Tables</p>
+          <RefRow label="remediation_lessons"      value="cached lessons — ref_key + lang (unique), payload JSONB" />
+          <RefRow label="remediation_attempts"     value="one per closed gap — source, ref, method, label, lang, created_at" />
+          <RefRow label="knowledge_gap_snapshots"  value="daily counts — open_gaps/training/induction, staff_with_gaps, resolved_7d (tenant_id+date unique)" />
+          <RefRow label="Note"                     value="All use TEXT ids (existing-table convention) — never uuid columns" />
+        </div>
+      </RefSection>
+
       {/* CQC Staff Prep */}
       <RefSection icon={ClipboardList} title="CQC Staff Prep">
         <p className="leading-relaxed text-neutral-mid">

@@ -466,23 +466,25 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Trend over time + weekly digest control */}
-          <Card
-            title="Knowledge gaps over time"
-            info="Open gaps recorded once a day. The weekly digest emails admins a summary every Monday, and nudges staff with open gaps to complete their Follow-up — both honour the 'knowledge_gap_digest' email preference."
-            action={
-              <div className="flex items-center gap-2">
-                {digestState === 'sent'  && <span className="text-xs font-medium text-green-600">Sent ✓</span>}
-                {digestState === 'error' && <span className="text-xs font-medium text-status-error">Failed</span>}
-                <button onClick={sendDigest} disabled={digestState === 'sending'} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
-                  {digestState === 'sending' ? 'Sending…' : 'Send digest now'}
-                </button>
-              </div>
-            }
-          >
-            {kgaps.trend && kgaps.trend.length >= 2
-              ? <GapTrendChart points={kgaps.trend} />
-              : <p className="py-6 text-center text-sm text-neutral-mid">No history yet — a snapshot is recorded daily. Use <span className="font-medium">Send digest now</span> to record the first point and email yourself this week&apos;s digest.</p>}
-          </Card>
+          <div className="mb-4">
+            <Card
+              title="Knowledge gaps over time"
+              info="Open gaps recorded once a day. The weekly digest emails admins a summary every Monday, and nudges staff with open gaps to complete their Follow-up — both honour the 'knowledge_gap_digest' email preference."
+              action={
+                <div className="flex items-center gap-2">
+                  {digestState === 'sent'  && <span className="text-xs font-medium text-green-600">Sent ✓</span>}
+                  {digestState === 'error' && <span className="text-xs font-medium text-status-error">Failed</span>}
+                  <button onClick={sendDigest} disabled={digestState === 'sending'} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                    {digestState === 'sending' ? 'Sending…' : 'Send digest now'}
+                  </button>
+                </div>
+              }
+            >
+              {kgaps.trend && kgaps.trend.length >= 2
+                ? <GapTrendChart points={kgaps.trend} />
+                : <p className="py-6 text-center text-sm text-neutral-mid">No history yet — a snapshot is recorded daily. Use <span className="font-medium">Send digest now</span> to record the first point and email yourself this week&apos;s digest.</p>}
+            </Card>
+          </div>
 
           <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Most-missed questions (combined) */}

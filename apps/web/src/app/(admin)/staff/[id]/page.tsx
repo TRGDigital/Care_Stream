@@ -116,10 +116,11 @@ export default function StaffRecordPage() {
   const { data: session } = useSession()
   const token       = session?.accessToken ?? ''
 
-  const [rec,     setRec]     = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [note,    setNote]    = useState('')
-  const [busy,    setBusy]    = useState<string | null>(null)
+  const [rec,      setRec]      = useState<any>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [note,     setNote]     = useState('')
+  const [busy,     setBusy]     = useState<string | null>(null)
+  const [printing, setPrinting] = useState(false)   // shows the branded header only during PDF export
 
   const load = useCallback(() => {
     if (!token) return
@@ -141,21 +142,24 @@ export default function StaffRecordPage() {
     catch { setNote('Could not reset module.') } finally { setBusy(null) }
   }
   async function downloadPdf() {
-    setBusy('pdf')
+    setBusy('pdf'); setPrinting(true)
+    // Let the branded header render before we capture.
+    await new Promise(r => setTimeout(r, 80))
     try {
       const html2pdf = (await import('html2pdf.js')).default
       const el = document.getElementById('staff-record-print')
-      if (!el) { setBusy(null); return }
+      if (!el) return
       await html2pdf().set({
         margin: [10, 10, 12, 10],
         filename: `${(rec?.user?.name ?? 'staff').replace(/\s+/g, '-').toLowerCase()}-training-record.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        // Keep each card whole so sections never split/overlap across pages.
-        pagebreak: { mode: ['css', 'legacy'], avoid: '.pdf-card' },
+        // avoid-all paginates BETWEEN blocks and never splits one — stops the
+        // section overlap. 'avoid: .pdf-card' keeps each card whole as a backup.
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: '.pdf-card' },
       } as any).from(el).save()
-    } catch { setNote('Could not generate PDF.') } finally { setBusy(null) }
+    } catch { setNote('Could not generate PDF.') } finally { setPrinting(false); setBusy(null) }
   }
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-neutral-mid" /></div>
@@ -184,25 +188,27 @@ export default function StaffRecordPage() {
       {note && <div className="mb-4 rounded-lg border border-teal/20 bg-teal-light/30 px-4 py-2.5 text-sm text-neutral-dark print:hidden">{note}</div>}
 
       <div id="staff-record-print" className="space-y-5 bg-white">
-        {/* Branded document header (logos + downloaded date) */}
-        <div className="pdf-card">
-          <div className="flex items-center justify-between gap-4 border-b-4 border-teal pb-4">
-            <div className="flex h-12 w-44 items-center">
-              {rec.org?.logo_url
-                ? <img src={rec.org.logo_url} alt={rec.org?.name ?? ''} className="max-h-full max-w-full object-contain" />
-                : <span className="text-sm font-semibold text-neutral-dark">{rec.org?.name}</span>}
+        {/* Branded document header — rendered ONLY during PDF export, not on screen */}
+        {printing && (
+          <div className="pdf-card">
+            <div className="flex items-center justify-between gap-4 border-b-4 border-teal pb-4">
+              <div className="flex h-12 w-44 items-center">
+                {rec.org?.logo_url
+                  ? <img src={rec.org.logo_url} alt={rec.org?.name ?? ''} className="max-h-full max-w-full object-contain" />
+                  : <span className="text-sm font-semibold text-neutral-dark">{rec.org?.name}</span>}
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-teal">Powered by</p>
+                <img src="/logo-color.png" alt="CareStream" className="ml-auto h-8 w-auto" crossOrigin="anonymous" />
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-teal">Powered by</p>
-              <img src="/logo-color.png" alt="CareStream" className="ml-auto h-8 w-auto" crossOrigin="anonymous" />
+            <div className="mt-3">
+              <h1 className="text-lg font-bold text-neutral-dark">Training &amp; Induction Record</h1>
+              <p className="text-sm text-neutral-mid">{u.name}{u.job_role ? ` · ${u.job_role}` : ''}{rec.org?.name ? ` · ${rec.org.name}` : ''}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">Downloaded {fmtDate(new Date().toISOString())}</p>
             </div>
           </div>
-          <div className="mt-3">
-            <h1 className="text-lg font-bold text-neutral-dark">Training &amp; Induction Record</h1>
-            <p className="text-sm text-neutral-mid">{u.name}{u.job_role ? ` · ${u.job_role}` : ''}{rec.org?.name ? ` · ${rec.org.name}` : ''}</p>
-            <p className="mt-0.5 text-xs text-neutral-mid">Downloaded {fmtDate(new Date().toISOString())}</p>
-          </div>
-        </div>
+        )}
 
         {/* Header */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">

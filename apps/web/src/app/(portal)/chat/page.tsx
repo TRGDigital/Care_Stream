@@ -609,16 +609,14 @@ export default function ChatPage() {
             My Training
             {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
-          {navCounts.followup > 0 && (
-            <button
-              onClick={() => setView('followup')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'followup' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
-            >
-              <RefreshCw size={15} />
-              Follow-up
-              <NavBadge count={navCounts.followup} className="bg-red-500" />
-            </button>
-          )}
+          <button
+            onClick={() => setView('followup')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'followup' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <RefreshCw size={15} />
+            Follow-up
+            {navCounts.followup > 0 && <NavBadge count={navCounts.followup} className="bg-red-500" />}
+          </button>
           <Link
             href="/cqc"
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"

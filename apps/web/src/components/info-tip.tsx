@@ -7,7 +7,7 @@ import { Info } from 'lucide-react'
 export function InfoTip({ text, size = 13, align = 'center' }: { text: string; size?: number; align?: 'center' | 'right' }) {
   const [open, setOpen] = useState(false)
   return (
-    <span className="relative inline-flex align-middle">
+    <span className="info-tip relative inline-flex align-middle">
       <button
         type="button"
         aria-label="More information"

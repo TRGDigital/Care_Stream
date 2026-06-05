@@ -128,4 +128,6 @@ a, button { transition: all 0.18s ease; }
   /* Drop the card shadows in the PDF — they print as an ugly grey halo. Keep
      the thin borders so sections stay visually separated. */
   body.print-staff-record #staff-record-print [class*="shadow"] { box-shadow: none !important; }
+  /* Hide the ⓘ info icons — they're hover-only, redundant in a static PDF. */
+  body.print-staff-record #staff-record-print .info-tip { display: none !important; }
 }

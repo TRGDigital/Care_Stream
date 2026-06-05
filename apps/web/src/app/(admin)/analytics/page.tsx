@@ -223,14 +223,15 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'staff' | 'gaps' | 'training' | 'compliance' | 'advanced'
+type TabId = 'overview' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview',   label: 'Overview' },
   { id: 'staff',      label: 'Staff' },
   { id: 'gaps',       label: 'Knowledge gaps' },
   { id: 'training',   label: 'Training' },
-  { id: 'compliance', label: 'Audits & CQC' },
+  { id: 'compliance', label: 'Audits' },
+  { id: 'cqc',        label: 'CQC Staff Prep' },
   { id: 'advanced',   label: 'Advanced' },
 ]
 
@@ -820,7 +821,9 @@ export default function AnalyticsPage() {
           <p className="text-sm text-neutral-mid">No audit data yet. Start your first audit from the Monthly Audits page.</p>
         </div>
       )}
+      </>)}
 
+      {tab === 'cqc' && (<>
       {/* ── CQC Staff Prep ──────────────────────────────────────────────────── */}
       <SectionDivider
         title="CQC Staff Prep performance"

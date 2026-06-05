@@ -105,3 +105,6 @@ a, button { transition: all 0.18s ease; }
   .cqc-print-break { page-break-before: always; break-before: page; }
   .cqc-report-section { page-break-inside: avoid; break-inside: avoid; }
 }
+
+/* Keep cards whole when exporting the staff record to PDF (html2pdf). */
+.pdf-card { page-break-inside: avoid; break-inside: avoid; }

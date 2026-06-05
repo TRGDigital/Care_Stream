@@ -147,12 +147,14 @@ export default function StaffRecordPage() {
       const el = document.getElementById('staff-record-print')
       if (!el) { setBusy(null); return }
       await html2pdf().set({
-        margin: 8,
+        margin: [10, 10, 12, 10],
         filename: `${(rec?.user?.name ?? 'staff').replace(/\s+/g, '-').toLowerCase()}-training-record.pdf`,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      }).from(el).save()
+        // Keep each card whole so sections never split/overlap across pages.
+        pagebreak: { mode: ['css', 'legacy'], avoid: '.pdf-card' },
+      } as any).from(el).save()
     } catch { setNote('Could not generate PDF.') } finally { setBusy(null) }
   }
 
@@ -181,9 +183,29 @@ export default function StaffRecordPage() {
       </div>
       {note && <div className="mb-4 rounded-lg border border-teal/20 bg-teal-light/30 px-4 py-2.5 text-sm text-neutral-dark print:hidden">{note}</div>}
 
-      <div id="staff-record-print" className="space-y-5">
+      <div id="staff-record-print" className="space-y-5 bg-white">
+        {/* Branded document header (logos + downloaded date) */}
+        <div className="pdf-card">
+          <div className="flex items-center justify-between gap-4 border-b-4 border-teal pb-4">
+            <div className="flex h-12 w-44 items-center">
+              {rec.org?.logo_url
+                ? <img src={rec.org.logo_url} alt={rec.org?.name ?? ''} className="max-h-full max-w-full object-contain" />
+                : <span className="text-sm font-semibold text-neutral-dark">{rec.org?.name}</span>}
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-teal">Powered by</p>
+              <img src="/logo-color.png" alt="CareStream" className="ml-auto h-8 w-auto" crossOrigin="anonymous" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h1 className="text-lg font-bold text-neutral-dark">Training &amp; Induction Record</h1>
+            <p className="text-sm text-neutral-mid">{u.name}{u.job_role ? ` · ${u.job_role}` : ''}{rec.org?.name ? ` · ${rec.org.name}` : ''}</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">Downloaded {fmtDate(new Date().toISOString())}</p>
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+        <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white ${u.role === 'admin' ? 'bg-teal' : 'bg-purple-500'}`}>
@@ -211,7 +233,7 @@ export default function StaffRecordPage() {
 
         {/* Flags */}
         {rec.flags.length > 0 && (
-          <div className="rounded-card border border-amber-200 bg-amber-50/60 p-4">
+          <div className="pdf-card rounded-card border border-amber-200 bg-amber-50/60 p-4">
             <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-800"><ShieldAlert size={15} /> Needs attention</p>
             <div className="flex flex-wrap gap-2">
               {rec.flags.map((f: any, i: number) => (
@@ -223,7 +245,7 @@ export default function StaffRecordPage() {
 
         {/* Overview rings + benchmarks */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
             <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">Completion <InfoTip text={TIP.completion} /></p>
             <div className="flex items-center justify-around">
               <Ring pct={t.completion_pct} label="Training" />
@@ -231,7 +253,7 @@ export default function StaffRecordPage() {
               <Ring pct={t.avg_score} label="Avg score" />
             </div>
           </div>
-          <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card lg:col-span-2">
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card lg:col-span-2">
             <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> How they compare to the team <InfoTip text={TIP.benchmark} /></p>
             {rec.benchmarks ? (
               <div className="space-y-3">
@@ -244,7 +266,7 @@ export default function StaffRecordPage() {
         </div>
 
         {/* Training record */}
-        <div className="rounded-card border border-gray-100 bg-white shadow-card">
+        <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Brain size={15} className="text-teal" /> Training record <InfoTip text={TIP.training} /></p>
             <p className="text-xs text-neutral-mid">{t.completed}/{t.assigned} complete · {t.overdue} overdue · {t.due_soon} due soon</p>
@@ -289,7 +311,7 @@ export default function StaffRecordPage() {
         </div>
 
         {/* Induction record */}
-        <div className="rounded-card border border-gray-100 bg-white shadow-card">
+        <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Induction record <InfoTip text={TIP.induction} /></p>
             <p className="text-xs text-neutral-mid">{o.completed}/{o.assigned} complete</p>
@@ -320,7 +342,7 @@ export default function StaffRecordPage() {
 
         {/* Engagement + Trends */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
             <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><MessageSquare size={15} className="text-teal" /> Engagement <InfoTip text={TIP.engagement} /></p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><p className="text-xs text-neutral-mid">Questions asked</p><p className="font-semibold text-neutral-dark">{rec.engagement.queries_total} <span className="text-xs font-normal text-neutral-mid">({rec.engagement.queries_30d} in 30d)</span></p></div>
@@ -336,7 +358,7 @@ export default function StaffRecordPage() {
               </div>
             )}
           </div>
-          <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><TrendingUp size={15} className="text-teal" /> Completions (6 months) <InfoTip text={TIP.trends} /></p>
               <div className="flex items-center gap-3 text-[10px] text-neutral-mid">
@@ -349,7 +371,7 @@ export default function StaffRecordPage() {
         </div>
 
         {/* Timeline */}
-        <div className="rounded-card border border-gray-100 bg-white p-5 shadow-card">
+        <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
           <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Clock size={15} className="text-teal" /> Activity timeline <InfoTip text={TIP.timeline} /></p>
           {rec.timeline.length === 0 ? <p className="text-sm text-neutral-mid">No activity yet.</p> : (
             <ol className="relative space-y-3 border-l border-gray-100 pl-4">

@@ -537,6 +537,7 @@ export default function StaffPage() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50 text-left">
                   <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Name</th>
+                  <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Record</th>
                   <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Username (email)</th>
                   <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Role</th>
                   <th className="px-6 py-3 text-xs font-medium text-neutral-mid">Job role</th>
@@ -560,29 +561,29 @@ export default function StaffPage() {
                       <div className="flex items-center gap-2.5">
                         <InitialAvatar name={u.name} role={u.role} />
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => setDetailUserId(u.id)}
-                              className="font-medium text-neutral-dark hover:text-teal hover:underline"
-                              title="Quick view"
-                            >
-                              {u.name}
-                            </button>
-                            <Link
-                              href={`/staff/${u.id}`}
-                              title="View full record"
-                              className="text-neutral-mid/60 transition-colors hover:text-teal"
-                            >
-                              <LineChart size={13} />
-                            </Link>
-                            {u.is_active === false && (
-                              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                                Deactivated
-                              </span>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => setDetailUserId(u.id)}
+                            className="font-medium text-neutral-dark hover:text-teal hover:underline"
+                            title="Quick view"
+                          >
+                            {u.name}
+                          </button>
+                          {u.is_active === false && (
+                            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                              Deactivated
+                            </span>
+                          )}
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      <Link
+                        href={`/staff/${u.id}`}
+                        title="Open this staff member's full training & induction record"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-teal transition-colors hover:bg-teal-light/40"
+                      >
+                        <LineChart size={13} /> View
+                      </Link>
                     </td>
                     <td className="px-6 py-3 text-neutral-mid">{u.email}</td>
                     <td className="px-6 py-3">

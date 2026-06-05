@@ -9,6 +9,7 @@ import { buildStaffRecord } from '../lib/staff-record'
 import { translateBundle, translateText, translateQuestionCached, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
+import { getOrCreateLesson } from '../lib/remediation'
 import { prisma } from '../db/client'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -127,6 +128,79 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
   } else {
     ok(res, { items })
   }
+})
+
+// ─── GET /me/follow-up/lesson ─────────────────────────────────────────────────
+// "Learn & retry": a policy-grounded micro-lesson for one gap (corrective why →
+// key points → scenario → a fresh check question). The check's correct answer is
+// withheld from the client and graded server-side via the POST below.
+
+meRouter.get('/follow-up/lesson', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const source   = String(req.query.source ?? '')
+  const ref      = String(req.query.ref ?? '')
+  const enrollmentId = String(req.query.enrollment_id ?? '')
+  if (!['training', 'induction'].includes(source) || !ref || !enrollmentId) {
+    err(res, 'VALIDATION_ERROR', 'source, ref and enrollment_id are required.'); return
+  }
+
+  const [user, tenant] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const langName = languageNameForCode(lang, tenant?.custom_languages)
+
+  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch((e: any) => {
+    console.error('[me/follow-up/lesson] generate failed:', e?.message ?? e); return null
+  })
+  if (!lesson) { err(res, 'NOT_FOUND', 'Could not build a lesson for this gap.', 404); return }
+
+  const { check, ...rest } = lesson
+  ok(res, { lesson: { ...rest, check: { question: check.question, options: check.options } }, lang })
+})
+
+// ─── POST /me/follow-up/lesson/answer ─────────────────────────────────────────
+// Grade the fresh check question. A correct answer resolves the original gap
+// (training answer / induction step) and logs a remediation attempt.
+
+meRouter.post('/follow-up/lesson/answer', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const b = req.body ?? {}
+  const source = String(b.source ?? '')
+  const ref    = String(b.ref ?? '')
+  const enrollmentId = String(b.enrollment_id ?? '')
+  const selected = Number(b.selected)
+  if (!['training', 'induction'].includes(source) || !ref || !enrollmentId || !Number.isInteger(selected)) {
+    err(res, 'VALIDATION_ERROR', 'source, ref, enrollment_id and selected are required.'); return
+  }
+
+  const [user, tenant] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const langName = languageNameForCode(lang, tenant?.custom_languages)
+
+  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch(() => null)
+  if (!lesson) { err(res, 'NOT_FOUND', 'Lesson not found.', 404); return }
+
+  const correct = selected === lesson.check.correct_option
+  if (!correct) { ok(res, { correct: false, correct_option: lesson.check.correct_option }); return }
+
+  // Verify the enrollment belongs to this user, then resolve the original gap.
+  if (source === 'training') {
+    const enr = await (prisma as any).trainingEnrollment.findFirst({ where: { id: enrollmentId, tenant_id: tenantId, user_id: userId }, select: { id: true } })
+    if (enr) await (prisma as any).trainingAnswer.updateMany({ where: { enrollment_id: enrollmentId, question_id: ref }, data: { is_correct: true, answered_at: new Date() } }).catch(() => {})
+  } else {
+    const enr = await (prisma as any).onboardingEnrollment.findFirst({ where: { id: enrollmentId, tenant_id: tenantId, user_id: userId }, select: { id: true } })
+    if (enr) await (prisma as any).onboardingProgress.updateMany({ where: { enrollment_id: enrollmentId, step_id: ref }, data: { answer_correct: true, completed_at: new Date() } }).catch(() => {})
+  }
+  await (prisma as any).remediationAttempt.create({ data: { tenant_id: tenantId, user_id: userId, source, ref, lang } }).catch(() => {})
+
+  ok(res, { correct: true, resolved: true, correct_option: lesson.check.correct_option })
 })
 
 // ─── GET /me/policy/:policyId ─────────────────────────────────────────────────

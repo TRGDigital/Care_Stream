@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -756,7 +756,7 @@ export default function ChatPage() {
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
-          <FollowUpView token={session.accessToken} onChange={() => {
+          <FollowUpView token={session.accessToken} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup })).catch(() => {})
           }} />
         )}
@@ -1231,16 +1231,15 @@ function MessageBubble({
 }
 
 // ─── FollowUpView ─────────────────────────────────────────────────────────────
-// The specific questions the staff member got wrong (training + induction), to
-// re-answer. Getting one right clears it.
+// The specific questions the staff member got wrong (training + induction). Each
+// gap can be closed two ways: "Just retry" (re-answer the same question) or
+// "Learn & retry" (a short, policy-grounded micro-lesson then a fresh check
+// question). Closing a gap either way clears it from here.
 
-function FollowUpView({ token, onChange }: { token: string; onChange?: () => void }) {
+function FollowUpView({ token, onChange, onTalkToPolicy }: { token: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
-  const [items,      setItems]      = useState<any[]>([])
-  const [loading,    setLoading]    = useState(true)
-  const [selected,   setSelected]   = useState<Record<string, number>>({})
-  const [feedback,   setFeedback]   = useState<Record<string, 'correct' | 'wrong'>>({})
-  const [submitting, setSubmitting] = useState<string | null>(null)
+  const [items,   setItems]   = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   function load() {
     setLoading(true)
@@ -1249,25 +1248,6 @@ function FollowUpView({ token, onChange }: { token: string; onChange?: () => voi
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const keyOf = (it: any) => `${it.source}:${it.enrollment_id}:${it.ref}`
-
-  async function submit(it: any) {
-    const k = keyOf(it)
-    const oi = selected[k]
-    if (oi == null || submitting) return
-    setSubmitting(k)
-    try {
-      let correct = false
-      if (it.source === 'training') {
-        const r = await api.training.saveAnswer(it.enrollment_id, { question_id: it.ref, answer_text: OPTION_LETTERS[oi] })
-        correct = !!r.is_correct
-      } else {
-        const r: any = await api.onboarding.completeStep(it.enrollment_id, it.ref, { answer_text: String(oi) })
-        correct = r?.progress?.answer_correct === true || r?.enrollment_complete === true
-      }
-      setFeedback(prev => ({ ...prev, [k]: correct ? 'correct' : 'wrong' }))
-      if (correct) setTimeout(() => { load(); onChange?.() }, 900)
-    } catch { /* ignore */ } finally { setSubmitting(null) }
-  }
 
   if (loading) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-36 animate-pulse rounded-xl bg-gray-100" />)}</div>
 
@@ -1285,38 +1265,199 @@ function FollowUpView({ token, onChange }: { token: string; onChange?: () => voi
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-1 text-xl font-bold text-neutral-dark">Follow-up</h2>
-        <p className="mb-5 text-sm text-neutral-mid">Questions to revisit. Answer one correctly and it disappears from here.</p>
+        <p className="mb-5 text-sm text-neutral-mid">A few things to revisit. Learn the point, then answer — or just retry. Either way it clears from here.</p>
         <div className="space-y-4">
-          {items.map(it => {
-            const k  = keyOf(it)
-            const fb = feedback[k]
-            return (
-              <div key={k} className={`rounded-xl border bg-white p-5 shadow-sm ${fb === 'wrong' ? 'border-red-200' : 'border-gray-200'}`}>
-                <div className="mb-2 flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${it.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{it.source === 'training' ? 'Training' : 'Induction'}</span>
-                  <span className="text-xs text-neutral-mid">{it.topic}</span>
-                </div>
-                <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
-                <div className="space-y-1.5">
-                  {it.options.map((opt: string, oi: number) => (
-                    <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${selected[k] === oi ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
-                      <input type="radio" name={`fu-${k}`} checked={selected[k] === oi} onChange={() => setSelected(prev => ({ ...prev, [k]: oi }))} className="accent-teal" />
-                      {opt}
-                    </label>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center gap-3">
-                  <button onClick={() => submit(it)} disabled={selected[k] == null || submitting === k} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-                    {submitting === k ? 'Checking…' : 'Submit answer'}
-                  </button>
-                  {fb === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Correct!</span>}
-                  {fb === 'wrong'   && <span className="flex items-center gap-1 text-xs font-medium text-amber-600"><XCircle size={13} /> Not quite — try again</span>}
-                </div>
-              </div>
-            )
-          })}
+          {items.map(it => (
+            <GapCard
+              key={keyOf(it)}
+              it={it}
+              token={token}
+              onTalkToPolicy={onTalkToPolicy}
+              onResolved={() => { setTimeout(() => { load(); onChange?.() }, 1100) }}
+            />
+          ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// One knowledge gap: choose "Learn & retry" or "Just retry".
+function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+  const api = createApiClient(token)
+  const [mode,        setMode]        = useState<'choose' | 'retry' | 'learn'>('choose')
+  const [lesson,      setLesson]      = useState<any>(null)
+  const [lessonState, setLessonState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [showAnswer,  setShowAnswer]  = useState(false)
+  const [sel,         setSel]         = useState<number | null>(null)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [result,      setResult]      = useState<'correct' | 'wrong' | null>(null)
+  const [correctOpt,  setCorrectOpt]  = useState<number | null>(null)
+
+  const badge = it.source === 'training'
+    ? <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal">Training</span>
+    : <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-500">Induction</span>
+
+  async function openLesson() {
+    setMode('learn')
+    if (lesson || lessonState === 'loading') return
+    setLessonState('loading')
+    try {
+      const d = await api.me.followUpLesson({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id })
+      setLesson(d.lesson); setLessonState('idle')
+    } catch { setLessonState('error') }
+  }
+
+  // "Just retry" — re-answer the original question (existing grading path).
+  async function submitRetry() {
+    if (sel == null || submitting) return
+    setSubmitting(true)
+    try {
+      let correct = false
+      if (it.source === 'training') {
+        const r = await api.training.saveAnswer(it.enrollment_id, { question_id: it.ref, answer_text: OPTION_LETTERS[sel] })
+        correct = !!r.is_correct
+      } else {
+        const r: any = await api.onboarding.completeStep(it.enrollment_id, it.ref, { answer_text: String(sel) })
+        correct = r?.progress?.answer_correct === true || r?.enrollment_complete === true
+      }
+      setResult(correct ? 'correct' : 'wrong')
+      if (correct) onResolved()
+    } catch { /* ignore */ } finally { setSubmitting(false) }
+  }
+
+  // "Learn & retry" — grade the fresh check question server-side.
+  async function submitCheck() {
+    if (sel == null || submitting) return
+    setSubmitting(true)
+    try {
+      const r = await api.me.followUpLessonAnswer({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id, selected: sel })
+      setCorrectOpt(typeof r.correct_option === 'number' ? r.correct_option : null)
+      setResult(r.correct ? 'correct' : 'wrong')
+      if (r.correct) onResolved()
+    } catch { /* ignore */ } finally { setSubmitting(false) }
+  }
+
+  const optionRow = (opt: string, oi: number, name: string) => {
+    const isSel = sel === oi
+    const isAnsweredCorrect = result === 'correct'
+    const showRight = result === 'wrong' && correctOpt === oi
+    return (
+      <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition
+        ${showRight ? 'border-green-300 bg-green-50 text-green-800'
+          : isSel && result === 'wrong' ? 'border-red-300 bg-red-50 text-red-700'
+          : isSel ? 'border-teal bg-teal-light/30 text-neutral-dark'
+          : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
+        <input type="radio" name={name} checked={isSel} disabled={isAnsweredCorrect} onChange={() => { setSel(oi); setResult(null) }} className="accent-teal" />
+        {opt}
+        {showRight && <CheckCircle2 size={13} className="ml-auto text-green-500" />}
+      </label>
+    )
+  }
+
+  return (
+    <div className={`rounded-xl border bg-white p-5 shadow-sm ${result === 'wrong' ? 'border-red-200' : result === 'correct' ? 'border-green-200' : 'border-gray-200'}`}>
+      <div className="mb-2 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+
+      {/* ── Choose how to tackle it ── */}
+      {mode === 'choose' && (
+        <>
+          <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={openLesson} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+              <GraduationCap size={14} /> Learn &amp; retry
+            </button>
+            <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+              Just retry
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── Just retry: original question ── */}
+      {mode === 'retry' && (
+        <>
+          <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+          <div className="space-y-1.5">{it.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
+          <div className="mt-3 flex items-center gap-3">
+            <button onClick={submitRetry} disabled={sel == null || submitting || result === 'correct'} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+              {submitting ? 'Checking…' : 'Submit answer'}
+            </button>
+            {result === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Correct! Clearing…</span>}
+            {result === 'wrong'   && <button onClick={openLesson} className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline"><Lightbulb size={13} /> Not quite — learn the point</button>}
+          </div>
+        </>
+      )}
+
+      {/* ── Learn & retry: micro-lesson then a fresh check ── */}
+      {mode === 'learn' && (
+        <>
+          {lessonState === 'loading' && (
+            <div className="flex items-center gap-2 py-6 text-sm text-neutral-mid"><Sparkles size={15} className="animate-pulse text-teal" /> Preparing your lesson…</div>
+          )}
+          {lessonState === 'error' && (
+            <div className="py-4 text-sm text-neutral-mid">Couldn&apos;t build a lesson right now. <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="font-medium text-teal hover:underline">Just retry instead</button>.</div>
+          )}
+          {lesson && lessonState !== 'loading' && (
+            <div className="space-y-4">
+              {/* Why */}
+              {lesson.why && (
+                <div className="flex gap-2.5 rounded-lg bg-amber-50 p-3.5">
+                  <Lightbulb size={16} className="mt-0.5 shrink-0 text-amber-500" />
+                  <div>
+                    <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-amber-600">Why this matters</p>
+                    <p className="text-sm text-neutral-dark">{lesson.why}</p>
+                  </div>
+                </div>
+              )}
+              {/* Key points */}
+              {Array.isArray(lesson.key_points) && lesson.key_points.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Remember</p>
+                  <ul className="space-y-1.5">
+                    {lesson.key_points.map((p: string, i: number) => (
+                      <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {/* Scenario */}
+              {lesson.scenario?.situation && (
+                <div className="rounded-lg border border-gray-200 p-3.5">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Picture this</p>
+                  <p className="text-sm text-neutral-dark">{lesson.scenario.situation}</p>
+                  {lesson.scenario.prompt && <p className="mt-2 text-sm font-medium text-neutral-dark">{lesson.scenario.prompt}</p>}
+                  {!showAnswer
+                    ? <button onClick={() => setShowAnswer(true)} className="mt-2 flex items-center gap-1 text-xs font-medium text-teal hover:underline"><ChevronDown size={13} /> Show the right approach</button>
+                    : lesson.scenario.answer && <p className="mt-2 rounded-md bg-teal-light/30 p-2.5 text-sm text-neutral-dark">{lesson.scenario.answer}</p>}
+                </div>
+              )}
+              {/* Ask about this policy */}
+              {lesson.policy_id && onTalkToPolicy && (
+                <button onClick={() => onTalkToPolicy(lesson.policy_id, lesson.policy_title || 'this policy')} className="flex items-center gap-1.5 text-xs font-medium text-teal hover:underline">
+                  <MessageSquare size={13} /> Ask about {lesson.policy_title || 'this policy'}
+                </button>
+              )}
+
+              {/* Fresh check question */}
+              {lesson.check?.question && (
+                <div className="rounded-lg border border-teal/30 bg-teal-light/10 p-4">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Sparkles size={13} /> Check your understanding</p>
+                  <p className="mb-3 text-sm font-medium text-neutral-dark">{lesson.check.question}</p>
+                  <div className="space-y-1.5">{lesson.check.options.map((opt: string, oi: number) => optionRow(opt, oi, `check-${it.ref}`))}</div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button onClick={submitCheck} disabled={sel == null || submitting || result === 'correct'} className="rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                      {submitting ? 'Checking…' : 'Submit answer'}
+                    </button>
+                    {result === 'correct' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Nailed it! Clearing…</span>}
+                    {result === 'wrong'   && <span className="flex items-center gap-1 text-xs font-medium text-amber-600"><XCircle size={13} /> Not quite — the right answer is highlighted</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

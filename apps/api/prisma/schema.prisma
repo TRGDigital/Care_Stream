@@ -27,6 +27,34 @@ model KnowledgeGapReview {
   @@map("knowledge_gap_reviews")
 }
 
+// Cached "Learn & retry" remediation lesson, one per gap concept + language.
+model RemediationLesson {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  ref_key    String   // '<source>:<ref>'
+  lang       String
+  payload    Json
+  created_at DateTime @default(now())
+
+  @@unique([ref_key, lang])
+  @@map("remediation_lessons")
+}
+
+// A staff member completing a lesson and passing the fresh check question.
+model RemediationAttempt {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  source     String   // 'training' | 'induction'
+  ref        String
+  lang       String   @default("eng")
+  created_at DateTime @default(now())
+
+  @@index([tenant_id])
+  @@index([tenant_id, user_id])
+  @@map("remediation_attempts")
+}
+
 // ─── Policy reading (induction) ─────────────────────────────────────────────────
 
 model PolicyTranslation {

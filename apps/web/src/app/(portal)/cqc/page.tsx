@@ -200,7 +200,7 @@ export default function CqcPortalPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>

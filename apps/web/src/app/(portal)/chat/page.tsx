@@ -1322,7 +1322,10 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
         correct = r?.progress?.answer_correct === true || r?.enrollment_complete === true
       }
       setResult(correct ? 'correct' : 'wrong')
-      if (correct) onResolved()
+      if (correct) {
+        api.me.followUpResolved({ source: it.source, ref: it.ref, method: 'retry', label: it.text }).catch(() => {})
+        onResolved()
+      }
     } catch { /* ignore */ } finally { setSubmitting(false) }
   }
 
@@ -1334,7 +1337,10 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
       const r = await api.me.followUpLessonAnswer({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id, selected: sel })
       setCorrectOpt(typeof r.correct_option === 'number' ? r.correct_option : null)
       setResult(r.correct ? 'correct' : 'wrong')
-      if (r.correct) onResolved()
+      if (r.correct) {
+        api.me.followUpResolved({ source: it.source, ref: it.ref, method: 'learn', label: it.text }).catch(() => {})
+        onResolved()
+      }
     } catch { /* ignore */ } finally { setSubmitting(false) }
   }
 

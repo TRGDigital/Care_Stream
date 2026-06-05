@@ -438,6 +438,8 @@ export function createApiClient(token: string) {
         apiFetch<{ lesson: { why: string; key_points: string[]; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[] }; policy_id?: string | null; policy_title?: string | null }; lang: string }>(`/me/follow-up/lesson?source=${encodeURIComponent(p.source)}&ref=${encodeURIComponent(p.ref)}&enrollment_id=${encodeURIComponent(p.enrollment_id)}`, token),
       followUpLessonAnswer: (data: { source: string; ref: string; enrollment_id: string; selected: number }) =>
         apiFetch<{ correct: boolean; resolved?: boolean; correct_option: number }>('/me/follow-up/lesson/answer', token, { method: 'POST', body: JSON.stringify(data) }),
+      followUpResolved: (data: { source: string; ref: string; method: 'learn' | 'retry'; label?: string }) =>
+        apiFetch<{ logged: boolean }>('/me/follow-up/resolved', token, { method: 'POST', body: JSON.stringify(data) }),
       policy: (policyId: string) => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}`, token),
       policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>

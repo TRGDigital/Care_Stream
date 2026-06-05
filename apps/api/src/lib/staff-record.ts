@@ -285,12 +285,27 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     const reviewedAt = lastReview ? new Date(lastReview.created_at).getTime() : 0
     const unreviewed = gaps.filter(g => !g.when || new Date(g.when).getTime() > reviewedAt)
 
+    // How this person has closed gaps: engaged with the lesson ("Learn & retry")
+    // vs simply re-answered ("Just retry").
+    const attempts = await (prisma as any).remediationAttempt.findMany({
+      where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' }, take: 50,
+    }).catch(() => [])
+    const learnCount = (attempts as any[]).filter(a => a.method !== 'retry').length
+    const retryCount = (attempts as any[]).filter(a => a.method === 'retry').length
+    const remediation = {
+      learn:  learnCount,
+      retry:  retryCount,
+      total:  attempts.length,
+      recent: (attempts as any[]).slice(0, 10).map(a => ({ source: a.source, method: a.method === 'retry' ? 'retry' : 'learn', label: a.label ?? null, when: a.created_at })),
+    }
+
     followUp = {
       gaps,
       open_count:       gaps.length,
       unreviewed_count: unreviewed.length,
       needs_follow_up:  unreviewed.length > 0,
       last_review:      lastReview ? { at: lastReview.created_at, by: lastReview.reviewed_by_name ?? null, note: lastReview.note ?? null } : null,
+      remediation,
     }
   }
 

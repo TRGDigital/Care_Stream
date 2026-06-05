@@ -47,6 +47,8 @@ model RemediationAttempt {
   user_id    String
   source     String   // 'training' | 'induction'
   ref        String
+  method     String   @default("learn") // 'learn' (engaged with the lesson) | 'retry'
+  label      String?  // snapshot of the question text
   lang       String   @default("eng")
   created_at DateTime @default(now())
 

@@ -198,9 +198,25 @@ meRouter.post('/follow-up/lesson/answer', async (req: Request, res: Response) =>
     const enr = await (prisma as any).onboardingEnrollment.findFirst({ where: { id: enrollmentId, tenant_id: tenantId, user_id: userId }, select: { id: true } })
     if (enr) await (prisma as any).onboardingProgress.updateMany({ where: { enrollment_id: enrollmentId, step_id: ref }, data: { answer_correct: true, completed_at: new Date() } }).catch(() => {})
   }
-  await (prisma as any).remediationAttempt.create({ data: { tenant_id: tenantId, user_id: userId, source, ref, lang } }).catch(() => {})
 
   ok(res, { correct: true, resolved: true, correct_option: lesson.check.correct_option })
+})
+
+// ─── POST /me/follow-up/resolved ──────────────────────────────────────────────
+// Log how a gap was closed — 'learn' (engaged with the micro-lesson) or 'retry'
+// (re-answered the original question) — for the staff record breakdown.
+
+meRouter.post('/follow-up/resolved', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const b = req.body ?? {}
+  const source = String(b.source ?? '')
+  const ref    = String(b.ref ?? '')
+  const method = b.method === 'retry' ? 'retry' : 'learn'
+  if (!['training', 'induction'].includes(source) || !ref) { err(res, 'VALIDATION_ERROR', 'source and ref are required.'); return }
+  const label = typeof b.label === 'string' ? b.label.slice(0, 280) : null
+  await (prisma as any).remediationAttempt.create({ data: { tenant_id: tenantId, user_id: userId, source, ref, method, label, lang: typeof b.lang === 'string' ? b.lang : 'eng' } }).catch(() => {})
+  ok(res, { logged: true })
 })
 
 // ─── GET /me/policy/:policyId ─────────────────────────────────────────────────

@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import {
-  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe,
-  Lightbulb, ListChecks, Loader2, MessageSquare, Phone, RotateCcw, ShieldAlert, TrendingUp, XCircle,
+  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe, GraduationCap,
+  Lightbulb, ListChecks, Loader2, MessageSquare, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -19,6 +19,7 @@ const TIP = {
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
   questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
   followup:   "Questions this person has currently answered incorrectly across training and induction — the knowledge to reinforce. Re-send their outstanding questions, reset a module below so they can retake it, or assign targeted training. 'Mark as reviewed' records that you've actioned it (supervision evidence) and clears it until a new wrong answer appears.",
+  remediation: "When this person gets a follow-up question wrong, how do they put it right? 'Learn & retry' means they worked through the policy-grounded micro-lesson before answering; 'Just retry' means they re-answered the same question without it. A healthy lean towards 'Learn & retry' suggests they're genuinely engaging with the learning, not just clicking through.",
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
@@ -295,6 +296,49 @@ export default function StaffRecordPage() {
             <p className="mt-2 text-xs text-neutral-mid print:hidden">Tip: reset a training module below to let them retake it, or assign targeted training from the staff list.</p>
           </div>
         )}
+
+        {/* How gaps get resolved — Learn & retry vs Just retry */}
+        {rec.follow_up?.remediation && rec.follow_up.remediation.total > 0 && (() => {
+          const r = rec.follow_up.remediation
+          const denom = (r.learn + r.retry) || 1
+          const learnPct = Math.round((r.learn / denom) * 100)
+          return (
+            <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
+                <GraduationCap size={15} className="text-teal" /> How gaps get resolved <InfoTip text={TIP.remediation} />
+              </p>
+              <p className="mb-3 text-xs text-neutral-mid">When a follow-up is answered wrong, did they work through the micro-lesson or just re-answer?</p>
+              <div className="mb-2 flex gap-6">
+                <div><p className="text-2xl font-bold text-teal">{r.learn}</p><p className="text-xs text-neutral-mid">Learn &amp; retry</p></div>
+                <div><p className="text-2xl font-bold text-neutral-dark">{r.retry}</p><p className="text-xs text-neutral-mid">Just retry</p></div>
+                <div className="ml-auto self-center text-right"><p className="text-lg font-semibold text-neutral-dark">{learnPct}%</p><p className="text-xs text-neutral-mid">engaged with learning</p></div>
+              </div>
+              <div className="mb-4 flex h-2 overflow-hidden rounded-full bg-gray-100" title={`${learnPct}% Learn & retry`}>
+                <div className="bg-teal" style={{ width: `${learnPct}%` }} />
+                <div className="bg-amber-300" style={{ width: `${100 - learnPct}%` }} />
+              </div>
+              {r.recent.length > 0 && (
+                <ul className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                  {r.recent.map((a: any, i: number) => (
+                    <li key={i} className="flex items-start gap-2 px-3 py-2">
+                      {a.method === 'learn'
+                        ? <GraduationCap size={13} className="mt-0.5 shrink-0 text-teal" />
+                        : <RefreshCw size={13} className="mt-0.5 shrink-0 text-neutral-mid" />}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs text-neutral-dark">{a.label || (a.source === 'training' ? 'Training question' : 'Induction question')}</p>
+                        <p className="mt-0.5 text-[11px] text-neutral-mid">
+                          <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${a.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{a.source === 'training' ? 'Training' : 'Induction'}</span>
+                          <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${a.method === 'learn' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-neutral-mid'}`}>{a.method === 'learn' ? 'Learn & retry' : 'Just retry'}</span>
+                          {fmtDate(a.when)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Overview rings + benchmarks */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

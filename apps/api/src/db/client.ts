@@ -18,7 +18,19 @@ import { getTenantIdOrNull } from './tenant-context'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function buildClient() {
+  // Cap the per-instance connection pool. On Vercel each warm serverless
+  // instance keeps its own Prisma pool; the default size (num_cpus*2+1) times
+  // many concurrent instances exhausts Postgres' connection slots ("too many
+  // clients"). A small fixed limit keeps total connections well under the cap.
+  // (The robust fix is to point DATABASE_URL at the Supabase transaction pooler
+  // on port 6543; this guard protects us regardless.)
+  const baseUrl = process.env.DATABASE_URL
+  const url = baseUrl && !/[?&]connection_limit=/.test(baseUrl)
+    ? baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'connection_limit=3&pool_timeout=20'
+    : baseUrl
+
   const client = new PrismaClient({
+    ...(url ? { datasources: { db: { url } } } : {}),
     log: process.env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
   })
 
@@ -69,9 +81,9 @@ function buildClient() {
 
 export const prisma = globalForPrisma.prisma ?? buildClient()
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
+// Always reuse a single client per process (serverless instance) — prevents a
+// second pool being created if this module is ever evaluated twice.
+globalForPrisma.prisma = prisma
 
 // ─── Tenant-scoped transaction helper ────────────────────────────────────────
 //

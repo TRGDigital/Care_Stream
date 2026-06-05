@@ -161,7 +161,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     if (o.enrolled_at)  events.push({ at: o.enrolled_at,  type: 'onboarding_enrolled',  label: `Enrolled on induction: ${o.flow_name}` })
     if (o.completed_at) events.push({ at: o.completed_at, type: 'onboarding_completed', label: `Completed induction: ${o.flow_name}` })
   }
-  for (const q of recentQueries as any[]) events.push({ at: q.created_at, type: 'query', label: 'Asked a question in the chat portal' })
+  for (const q of recentQueries as any[]) events.push({ at: q.created_at, type: 'query', label: 'Asked a question in the Chat Hub' })
   if (user.first_login_at) events.push({ at: user.first_login_at, type: 'login', label: 'First logged in' })
   const timeline = events
     .filter(e => e.at)

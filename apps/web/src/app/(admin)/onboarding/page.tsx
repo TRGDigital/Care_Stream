@@ -317,7 +317,7 @@ export default function OnboardingPage() {
       </div>
 
       <HelpAccordion title="How Onboarding & Induction works">
-        <p><strong className="text-neutral-dark">What is an onboarding flow?</strong> — A flow is a structured sequence of steps you assign to new starters. Each step is either a policy to read or a question to answer. Staff complete steps in order through the chat portal, WhatsApp, or email — no separate app or login needed.</p>
+        <p><strong className="text-neutral-dark">What is an onboarding flow?</strong> — A flow is a structured sequence of steps you assign to new starters. Each step is either a policy to read or a question to answer. Staff complete steps in order through Chat Hub, WhatsApp, or email — no separate app or login needed.</p>
         <p><strong className="text-neutral-dark">Creating steps</strong> — when building a flow you can add two types of step: <em>Read policy</em> links a staff member to one of your uploaded documents; <em>Answer question</em> asks them to write a short free-text response that is saved against their record as evidence.</p>
         <p><strong className="text-neutral-dark">Job roles & assignment</strong> — each flow can be targeted at specific job roles (e.g. Care Assistant, Senior Carer). When you activate a flow, staff in those roles are automatically enrolled and receive a notification to start.</p>
         <p><strong className="text-neutral-dark">Tracking progress</strong> — the progress panel inside each flow shows every enrolled staff member, how many steps they have completed, whether they are overdue, and a percentage completion bar. Use this as CQC evidence of structured induction.</p>

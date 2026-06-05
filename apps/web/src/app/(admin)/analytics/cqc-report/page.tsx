@@ -439,7 +439,7 @@ export default function CQCReportPage() {
                   {
                     label: 'MCQ answers submitted',
                     value: report.training_compliance.total_answers.toLocaleString('en-GB'),
-                    sub:   'Training questions answered by staff via WhatsApp, email, or chat portal',
+                    sub:   'Training questions answered by staff via WhatsApp, email, or Chat Hub',
                   },
                   {
                     label: 'Correct answer rate',

@@ -177,7 +177,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white"
           >
             <MessageSquare size={16} className="text-white/50" />
-            Chat portal
+            Chat Hub
           </Link>
         </div>
       </aside>

@@ -111,7 +111,7 @@ function SidebarGuide() {
       summary: 'Staff management',
       content: (
         <>
-          <p><strong className="text-neutral-dark">Staff</strong> — add and manage your team members. Each staff member gets access to CareStreamAI through their preferred channel (Chat portal, WhatsApp, Email, or Voice). You can assign job roles, grant or remove admin access, and reset passwords from this section. Staff only see information drawn from your own uploaded policies — they cannot access another organisation's data.</p>
+          <p><strong className="text-neutral-dark">Staff</strong> — add and manage your team members. Each staff member gets access to CareStreamAI through their preferred channel (Chat Hub, WhatsApp, Email, or Voice). You can assign job roles, grant or remove admin access, and reset passwords from this section. Staff only see information drawn from your own uploaded policies — they cannot access another organisation's data.</p>
         </>
       ),
     },
@@ -122,7 +122,7 @@ function SidebarGuide() {
         <>
           <p><strong className="text-neutral-dark">Compliance tab</strong> — assign statutory and specialist training modules to individual staff or your whole team. The compliance grid shows every staff member against every assigned module so you can see at a glance who is complete, in progress, overdue, or expiring soon. Click any cell to open the full training record including answers given and a manual completion option.</p>
           <p><strong className="text-neutral-dark">Modules &amp; Questions tab</strong> — build and manage the multiple-choice question sets used to assess staff. Each question has four options (A–D) with one correct answer. Use <strong className="text-neutral-dark">Generate questions</strong> to create a full set using CareStreamAI's care sector expertise and your <strong className="text-neutral-dark">Knowledge seed</strong> — information specific to your setting — or write your own and use <strong className="text-neutral-dark">Generate answer options</strong> to fill in the choices. Once all questions are complete, <strong className="text-neutral-dark">lock the question set</strong> to create a dated audit record. Locked questions cannot be edited until unlocked — this ensures the integrity of your training evidence over time.</p>
-          <p><strong className="text-neutral-dark">Conversational training</strong> — once assigned, CareStreamAI delivers training questions directly to staff via WhatsApp, email, or the chat portal. Staff answer with a single letter (A, B, C, D). Every answer is recorded against the exact question text used at that time, and the compliance record updates instantly. No app, no login, no separate system.</p>
+          <p><strong className="text-neutral-dark">Conversational training</strong> — once assigned, CareStreamAI delivers training questions directly to staff via WhatsApp, email, or Chat Hub. Staff answer with a single letter (A, B, C, D). Every answer is recorded against the exact question text used at that time, and the compliance record updates instantly. No app, no login, no separate system.</p>
           <p><strong className="text-neutral-dark">Question History tab</strong> — every saved question set is version-stamped and stored here. You can see exactly which questions were in use on any given date, filter by date range, and expand any version to review the full question set with correct answers. This gives you a complete, traceable audit trail for CQC inspections.</p>
           <p><strong className="text-neutral-dark">Renewal reminders</strong> — automatic reminders are sent to staff at 90, 30, and 7 days before their renewal date. Managers receive a digest email listing all upcoming renewals so nothing falls through the cracks.</p>
           <p><strong className="text-neutral-dark">CQC evidence</strong> — training compliance data, answer records, and knowledge gap analysis are all included in the CQC Inspection Evidence Report. The Analytics page highlights questions with a high incorrect-answer rate across your team, identifying where training needs reinforcing.</p>
@@ -426,7 +426,7 @@ export default function DashboardPage() {
         {loading ? (
           <p className="px-6 py-6 text-sm text-neutral-mid">Loading…</p>
         ) : queries.length === 0 ? (
-          <p className="px-6 py-6 text-sm text-neutral-mid">No queries yet — staff can start asking questions from the chat portal.</p>
+          <p className="px-6 py-6 text-sm text-neutral-mid">No queries yet — staff can start asking questions from Chat Hub.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

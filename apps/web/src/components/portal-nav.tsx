@@ -30,7 +30,7 @@ export function PortalNav({ userName, userRole }: Props) {
       </Link>
       <div className="flex items-center gap-5">
         <Link href="/chat" className="text-sm font-medium text-neutral-mid hover:text-teal">
-          Chat
+          Chat Hub
         </Link>
         <Link href="/progress" className="text-sm font-medium text-neutral-mid hover:text-teal">
           My Progress

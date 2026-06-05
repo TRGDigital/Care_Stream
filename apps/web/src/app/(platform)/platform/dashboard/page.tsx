@@ -3017,7 +3017,7 @@ const QA_TESTS: TestItem[] = [
   {
     id: 'bc-chat-card-visible',
     category: 'Business Continuity',
-    name: 'Business Continuity card visible in staff chat portal',
+    name: 'Business Continuity card visible in staff Chat Hub',
     steps: 'Open the staff portal chat. Look at the category selection screen.',
     expected: 'A Business Continuity card with a LifeBuoy icon is visible alongside the other category cards.',
   },

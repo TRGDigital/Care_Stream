@@ -16,7 +16,7 @@ const TIP = {
   benchmark:  "Compares this person to your home's average. The teal bar is their figure; the dark tick is the team average. Bars sitting below the tick are below average and may be worth a conversation.",
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
-  engagement: "How actively they use CareStream: questions asked in the chat portal, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
+  engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
 }

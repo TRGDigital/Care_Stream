@@ -79,7 +79,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <strong>Upload your CQC report.</strong> Go to <em>Policies</em>, select category <em>CQC Report</em>, and upload your most recent inspection report. This enables the CQC Report Chat feature.
           </Step>
         </div>
-        <Tip>You can complete steps 1 to 3 in any order, but you must add at least one policy document before staff can use the chat portal.</Tip>
+        <Tip>You can complete steps 1 to 3 in any order, but you must add at least one policy document before staff can use the Chat Hub.</Tip>
       </div>
     ),
   },
@@ -313,13 +313,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id:      'chat-portal',
     icon:    MessageSquare,
-    title:   'Chat portal',
+    title:   'Chat Hub',
     summary: 'Web-based chat interface for staff to ask policy questions',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it does">
           <p className="text-sm text-neutral-mid">
-            The chat portal is a web page your staff can open on any device to ask questions about your policies. CareStream reads your uploaded documents and responds with a referenced answer, including the exact policy it drew from.
+            The Chat Hub is a web page your staff can open on any device to ask questions about your policies. CareStream reads your uploaded documents and responds with a referenced answer, including the exact policy it drew from.
           </p>
         </SectionBlock>
         <SectionBlock title="How staff access it">
@@ -350,7 +350,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             After each response, CareStream shows three suggested follow-up questions. Staff can tap these to continue the conversation without typing.
           </p>
         </SectionBlock>
-        <Tip>The chat portal works best on mobile. Encourage staff to bookmark the portal URL on their phones for quick access during shifts.</Tip>
+        <Tip>The Chat Hub works best on mobile. Encourage staff to bookmark the portal URL on their phones for quick access during shifts.</Tip>
       </div>
     ),
   },
@@ -480,7 +480,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Asking questions about training topics">
           <p className="text-sm text-neutral-mid">
-            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the chat portal, email, or WhatsApp. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Lines of Enquiry or inspection framework so staff understand the regulatory context behind what they are learning.
+            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or WhatsApp. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Lines of Enquiry or inspection framework so staff understand the regulatory context behind what they are learning.
           </p>
           <p className="text-sm text-neutral-mid">
             For example, a staff member asking about moving and handling will receive guidance drawing from your internal manual handling policy, any relevant training module you have uploaded, the applicable health and safety regulations, and any CQC Safe domain guidance that relates to that topic.
@@ -575,7 +575,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'business-continuity',
     icon:    LifeBuoy,
     title:   'Business Continuity',
-    summary: 'Give staff instant access to emergency procedures and contingency plans via the chat portal',
+    summary: 'Give staff instant access to emergency procedures and contingency plans via the Chat Hub',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it does">
@@ -793,12 +793,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
             {[
               ['Dedicated email address', 'Your inbound email address for staff queries. Copy this to share with your team.'],
               ['WhatsApp',                'Enable WhatsApp queries and view your CareStream WhatsApp number.'],
-              ['Portal access',           'Restrict who can access the staff chat portal. Options: open, PIN protected, or staff-only.'],
+              ['Portal access',           'Restrict who can access the staff Chat Hub. Options: open, PIN protected, or staff-only.'],
               ['Email allowlist',         'Limit which email addresses can receive AI replies. Leave empty to allow all registered staff.'],
               ['AI behaviour',            'Adjust the tone and verbosity of AI responses across all channels.'],
               ['Notifications',           'Configure which events trigger email notifications to managers.'],
               ['Data retention',          'Set how long query history and session data is kept.'],
-              ['Branding',                'Add your care setting name and logo to the chat portal and email replies.'],
+              ['Branding',                'Add your care setting name and logo to the Chat Hub and email replies.'],
             ].map(([setting, desc]) => (
               <div key={setting} className="grid grid-cols-[11rem_1fr] gap-3 px-4 py-3">
                 <span className="font-medium text-neutral-dark">{setting}</span>

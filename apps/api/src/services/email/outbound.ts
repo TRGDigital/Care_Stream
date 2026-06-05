@@ -358,7 +358,7 @@ export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Prom
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
       Your account on <strong>CareStreamAI</strong> has been set up by ${opts.orgName}.
-      You can now log in to the staff chat portal to get instant answers to policy and procedure questions.
+      You can now log in to the staff Chat Hub to get instant answers to policy and procedure questions.
     </p>
 
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:20px 24px;margin:0 0 24px">

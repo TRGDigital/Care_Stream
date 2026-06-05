@@ -408,7 +408,7 @@ export default function ChatPage() {
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <MessageSquare size={15} />
-            Policy chat
+            Chat
           </button>
           <button
             onClick={() => setView('induction')}

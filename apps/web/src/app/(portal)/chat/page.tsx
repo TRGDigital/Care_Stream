@@ -170,13 +170,14 @@ function groupSessions(sessions: StoredSession[]): { label: string; items: Store
 // Shows the full policy text (translated into the staff member's first language
 // when their comms toggle is on) and tracks how long and how far they read.
 
-function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarkedRead }: {
+function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarkedRead, onTalk }: {
   token:         string
   policyId:      string
   stepId?:       string
   enrollmentId?: string
   onClose:       () => void
   onMarkedRead?: () => Promise<void> | void
+  onTalk?:       (policyId: string, title: string) => void
 }) {
   const [data,     setData]     = useState<{ title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean } | null>(null)
   const [loading,  setLoading]  = useState(true)
@@ -236,6 +237,7 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
     try { if (onMarkedRead) await onMarkedRead() } finally { onClose() }
   }
   function closeViewer() { record(false); onClose() }
+  function talkAbout() { record(false); onTalk?.(policyId, data?.title ?? 'this policy') }
 
   async function toggleSave() {
     if (saved) return
@@ -275,9 +277,16 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
             <div className="h-1.5 w-24 rounded-full bg-gray-100"><div className="h-1.5 rounded-full bg-teal transition-all" style={{ width: `${scrollPct}%` }} /></div>
             {scrollPct}% read
           </div>
-          <button onClick={markRead} disabled={busy || loading} className="rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-            {busy ? 'Saving…' : (stepId ? 'Mark as read' : 'Done')}
-          </button>
+          <div className="flex items-center gap-2">
+            {onTalk && (
+              <button onClick={talkAbout} disabled={loading} className="flex items-center gap-1.5 rounded-lg border border-teal px-3 py-2 text-sm font-medium text-teal hover:bg-teal-light/40 disabled:opacity-50">
+                <MessageSquare size={14} /> Talk to this Policy
+              </button>
+            )}
+            <button onClick={markRead} disabled={busy || loading} className="rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+              {busy ? 'Saving…' : (stepId ? 'Mark as read' : 'Done')}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -318,6 +327,8 @@ export default function ChatPage() {
   const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number }>({ induction: 0, training: 0, cqc: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
+  const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
+  const [policyQuestions, setPolicyQuestions]           = useState<string[] | null>(null)
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
@@ -406,8 +417,29 @@ export default function ChatPage() {
     setExpandedCitations(new Set())
     setFullPolicyRequestedIds(new Set())
     setCategory(null)
+    setPinnedPolicy(null)
+    setPolicyQuestions(null)
     setSessionId(crypto.randomUUID())
     setInput('')
+  }
+
+  // Open a fresh chat focused on one policy, seeded with questions about it.
+  function talkToPolicy(policyId: string, title: string) {
+    setSidebarPolicy(null)
+    setMessages([])
+    setExpandedCitations(new Set())
+    setFullPolicyRequestedIds(new Set())
+    setSessionId(crypto.randomUUID())
+    setInput('')
+    setView('chat')
+    setCategory('internal_policy')
+    setPinnedPolicy({ id: policyId, title })
+    setPolicyQuestions(null)
+    if (session?.accessToken) {
+      createApiClient(session.accessToken).me.policyQuestions(policyId)
+        .then(d => setPolicyQuestions(d.questions ?? []))
+        .catch(() => setPolicyQuestions([]))
+    }
   }
 
   function loadSession(s: StoredSession) {
@@ -498,6 +530,7 @@ export default function ChatPage() {
         query_text:           trimmed,
         staff_name:           session.user?.name ?? undefined,
         document_category:    category ?? undefined,
+        policy_id:            pinnedPolicy?.id,
         chat_session_id:      sessionId,
         language:             replyLang || undefined,
         conversation_history: history.length > 0 ? history : undefined,
@@ -703,7 +736,7 @@ export default function ChatPage() {
 
         {/* Induction view */}
         {view === 'induction' && session?.accessToken && (
-          <InductionView token={session.accessToken} onSavedChange={refreshSavedPolicies} />
+          <InductionView token={session.accessToken} onSavedChange={refreshSavedPolicies} onTalkToPolicy={talkToPolicy} />
         )}
 
         {/* Training view */}
@@ -715,15 +748,16 @@ export default function ChatPage() {
         {view === 'chat' && category !== null && (
           <div className="flex-shrink-0 border-b border-gray-100 bg-white px-4 py-2">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5">
-                {category === 'internal_policy' ? <BookOpen size={13} className="text-teal" />
+              <div className="flex min-w-0 items-center gap-1.5">
+                {pinnedPolicy ? <FileText size={13} className="shrink-0 text-teal" />
+                  : category === 'internal_policy' ? <BookOpen size={13} className="text-teal" />
                   : category === 'training_module' ? <Brain size={13} className="text-teal" />
                   : category === 'cqc_report' ? <ShieldCheck size={13} className="text-teal" />
                   : category === 'audit_report' ? <ClipboardCheck size={13} className="text-teal" />
                   : category === 'business_continuity' ? <LifeBuoy size={13} className="text-teal" />
                   : <Users size={13} className="text-teal" />}
-                <span className="text-xs font-medium text-teal">
-                  {CATEGORY_LABELS[category].title}
+                <span className="truncate text-xs font-medium text-teal">
+                  {pinnedPolicy ? `Talking about: ${pinnedPolicy.title}` : CATEGORY_LABELS[category].title}
                 </span>
               </div>
               <button
@@ -741,6 +775,8 @@ export default function ChatPage() {
         {view === 'chat' && <div className="flex-1 overflow-y-auto px-4 py-6">
           {category === null ? (
             <CategorySelect onSelect={setCategory} />
+          ) : pinnedPolicy && isEmpty ? (
+            <PolicyChatIntro title={pinnedPolicy.title} questions={policyQuestions} onSelect={sendMessage} />
           ) : isEmpty ? (
             <EmptyState category={category} onSelect={sendMessage} />
           ) : (
@@ -861,13 +897,39 @@ export default function ChatPage() {
 
       {/* Saved-policy reader (opened from the sidebar) */}
       {sidebarPolicy && session?.accessToken && (
-        <PolicyViewer token={session.accessToken} policyId={sidebarPolicy} onClose={() => setSidebarPolicy(null)} />
+        <PolicyViewer token={session.accessToken} policyId={sidebarPolicy} onClose={() => setSidebarPolicy(null)} onTalk={talkToPolicy} />
       )}
     </div>
   )
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function PolicyChatIntro({ title, questions, onSelect }: { title: string; questions: string[] | null; onSelect: (q: string) => void }) {
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
+          <FileText className="text-teal" size={26} />
+        </div>
+        <h2 className="text-xl font-semibold text-neutral-dark">Ask about this policy</h2>
+        <p className="mt-1 text-sm font-medium text-neutral-dark">{title}</p>
+        <p className="mt-2 text-xs text-neutral-mid">Answers come straight from this policy. Tap a question to start, or type your own below.</p>
+      </div>
+      {questions === null ? (
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-neutral-mid"><Spinner /> Preparing questions about this policy…</div>
+      ) : questions.length > 0 ? (
+        <div className="mt-6 flex flex-col gap-2">
+          {questions.map((q, i) => (
+            <button key={i} onClick={() => onSelect(q)} className="rounded-full border border-teal px-4 py-2.5 text-left text-sm text-teal transition-colors hover:bg-teal-light focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-1">
+              {q}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
 function CategorySelect({ onSelect }: { onSelect: (c: DocumentCategory) => void }) {
   return (
@@ -1458,7 +1520,7 @@ function TrainingView({ token }: { token: string }) {
 
 // ─── InductionView ────────────────────────────────────────────────────────────
 
-function InductionView({ token, onSavedChange }: { token: string; onSavedChange?: () => void }) {
+function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [loading,     setLoading]     = useState(true)
@@ -1675,6 +1737,7 @@ function InductionView({ token, onSavedChange }: { token: string; onSavedChange?
           enrollmentId={viewer.enrollmentId}
           onClose={() => setViewer(null)}
           onMarkedRead={async () => { await completeStep(viewer.enrollmentId, viewer.stepId) }}
+          onTalk={onTalkToPolicy ? (id, t) => { setViewer(null); onTalkToPolicy(id, t) } : undefined}
         />
       )}
     </div>

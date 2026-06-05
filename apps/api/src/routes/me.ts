@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, formatPolicyHtml, translateHtmlPreservingTags, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateBundle, translateText, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { prisma } from '../db/client'
@@ -126,6 +126,31 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   } else {
     ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true, translation_pending: true })
   }
+})
+
+// ─── GET /me/policy/:policyId/questions ───────────────────────────────────────
+// Suggested questions about a policy, in the staff member's language, to seed a
+// "Talk to this policy" chat.
+
+meRouter.get('/policy/:policyId/questions', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const policyId = String(req.params.policyId)
+
+  const [policy, user, tenant] = await Promise.all([
+    (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  if (!policy) { err(res, 'NOT_FOUND', 'Policy not found.', 404); return }
+
+  const english = await downloadExtractedText(tenantId, policyId).catch(() => null)
+  if (!english) { ok(res, { questions: [] }); return }
+
+  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const langName = languageNameForCode(lang, tenant?.custom_languages)
+  const questions = await withTranslationBudget(generatePolicyQuestions(english, lang, langName), 20_000, [] as string[])
+  ok(res, { questions })
 })
 
 // ─── POST /me/policy/read ─────────────────────────────────────────────────────

@@ -161,6 +161,32 @@ export async function translateHtmlPreservingTags(html: string, langCode: string
   return out.join('')
 }
 
+// Generate a few short, practical questions a care worker might ask about a
+// specific policy — used to seed a "Talk to this policy" chat. In the staff
+// member's language when requested.
+export async function generatePolicyQuestions(policyText: string, langCode: string, langName?: string): Promise<string[]> {
+  const name = (langCode && langCode !== 'eng') ? (langName ?? langName_internal(langCode)) : null
+  const trimmed = (policyText || '').slice(0, 6000)
+  if (!trimmed.trim()) return []
+  const langLine = name ? `Write the questions in ${name}.` : ''
+  try {
+    const msg = await anthropic.messages.create({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages:   [{ role: 'user', content:
+        `Below is a UK care-home policy. Write 4 short, practical questions a care worker might genuinely ask about it — about real situations the policy covers, not "what is this policy". Keep each under 12 words. ${langLine} Return ONLY a JSON array of 4 strings and nothing else.\n\n${trimmed}` }],
+    })
+    recordUsage('claude-haiku-4-5-20251001', msg.usage)
+    const raw   = ((msg.content[0] as any).text as string).trim()
+    const start = raw.indexOf('['), end = raw.lastIndexOf(']')
+    const arr   = JSON.parse(raw.slice(start, end + 1))
+    return Array.isArray(arr) ? arr.filter((q: any) => typeof q === 'string' && q.trim()).slice(0, 4) : []
+  } catch (e) {
+    console.error('[policy] question generation failed:', e)
+    return []
+  }
+}
+
 // Clean a raw extracted policy and format it as readable HTML for staff. Strips
 // letterhead/contact details and Word image-descriptions, structures it with
 // headings + lists, and translates into `langCode` when it isn't English.

@@ -433,6 +433,7 @@ export function createApiClient(token: string) {
       progress: () => apiFetch<any>('/me/progress', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number }>('/me/counts', token),
       policy: (policyId: string) => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}`, token),
+      policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>
         apiFetch<{ recorded: boolean }>('/me/policy/read', token, { method: 'POST', body: JSON.stringify(data) }),
       savedPolicies: () => apiFetch<{ saved: Array<{ policy_id: string; title: string; saved_at: string }> }>('/me/saved-policies', token),

@@ -109,6 +109,19 @@ a, button { transition: all 0.18s ease; }
 /* Keep cards whole when the staff record is printed / saved as PDF. */
 .pdf-card { page-break-inside: avoid; break-inside: avoid; }
 
+/* Formatted policy text in the induction reader */
+.policy-content { color: #374151; }
+.policy-content h2 { font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0 0 0.85rem; line-height: 1.3; }
+.policy-content h3 { font-size: 1rem; font-weight: 600; color: #1f2937; margin: 1.4rem 0 0.5rem; }
+.policy-content h4 { font-size: 0.9rem; font-weight: 600; color: #374151; margin: 1rem 0 0.4rem; }
+.policy-content p  { font-size: 0.9rem; line-height: 1.7; margin: 0 0 0.8rem; }
+.policy-content ul, .policy-content ol { margin: 0 0 0.85rem 1.4rem; font-size: 0.9rem; line-height: 1.7; }
+.policy-content ul { list-style: disc; }
+.policy-content ol { list-style: decimal; }
+.policy-content li { margin: 0.3rem 0; }
+.policy-content strong { font-weight: 600; color: #1f2937; }
+.policy-content a { color: #0f7a5a; text-decoration: underline; }
+
 /* Staff record → native print-to-PDF: print ONLY the record, full width,
    with background colours preserved. Toggled by adding 'print-staff-record'
    to <body> just before window.print(). */

@@ -127,6 +127,52 @@ function langName_internal(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// Clean a raw extracted policy and format it as readable HTML for staff. Strips
+// letterhead/contact details and Word image-descriptions, structures it with
+// headings + lists, and translates into `langCode` when it isn't English.
+// Output is HTML (h2/h3/p/ul/ol/li/strong only). Caller caches the result.
+export async function formatPolicyHtml(rawText: string, langCode: string, langName?: string): Promise<string | null> {
+  const name = (langCode && langCode !== 'eng') ? (langName ?? langName_internal(langCode)) : null
+
+  // Light deterministic pre-clean: drop Word auto image-description lines
+  // (the rest of the letterhead is removed by the formatting pass below).
+  const pre = rawText
+    .split('\n')
+    .filter(l => !/description automatically generated/i.test(l))
+    .join('\n')
+    .trim()
+
+  const translateLine = name ? `Translate every piece of text into ${name}.` : ''
+  const prompt = [
+    'You are formatting a UK care-home policy so staff can read it easily on screen.',
+    'First, REMOVE any letterhead or contact details: the organisation-name banner, "Registered Office", postal address, telephone number, website URL, email address, and any image descriptions (e.g. "A green house with a fence", "Description automatically generated").',
+    'Then format the remaining content as clean HTML: the policy title as a single <h2>; section/sub-section headings as <h3>; lists of items or steps as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels.',
+    'Preserve ALL policy content, meaning, headings and wording exactly — do NOT summarise, shorten, reword, or omit anything substantive. Only restructure and tidy.',
+    translateLine,
+    'Return ONLY the HTML body — no <html>, <head> or <body> tags, and no markdown code fences.',
+    '',
+    'POLICY TEXT:',
+    pre,
+  ].filter(Boolean).join('\n')
+
+  try {
+    const msg = await anthropic.messages.create({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 8000,
+      messages:   [{ role: 'user', content: prompt }],
+    })
+    recordUsage('claude-haiku-4-5-20251001', msg.usage)
+    let html = ((msg.content[0] as any).text as string).trim()
+    html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+    // Safety: strip script/style blocks and inline event handlers.
+    html = html.replace(/<\/?(script|style)[^>]*>/gi, '').replace(/\son\w+\s*=\s*"[^"]*"/gi, '').replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    return html || null
+  } catch (e) {
+    console.error('[policy] format failed:', e)
+    return null
+  }
+}
+
 // Translate a full policy document into the target language, chunk by chunk so
 // long policies don't blow the token budget. Preserves structure; falls back to
 // the original text on any chunk failure. Caller is responsible for caching the

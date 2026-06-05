@@ -178,7 +178,7 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
   onClose:       () => void
   onMarkedRead?: () => Promise<void> | void
 }) {
-  const [data,     setData]     = useState<{ title: string; content: string; lang: string; processing?: boolean; translation_pending?: boolean } | null>(null)
+  const [data,     setData]     = useState<{ title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean } | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [saved,    setSaved]    = useState(false)
   const [busy,     setBusy]     = useState(false)
@@ -261,9 +261,11 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
         </div>
         <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-5">
           {loading
-            ? <div className="flex justify-center py-10"><Spinner /></div>
+            ? <div className="flex flex-col items-center gap-3 py-10"><Spinner /><p className="text-xs text-neutral-mid">Preparing the policy…</p></div>
             : data?.content
-              ? <div className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-dark">{data.content}</div>
+              ? (data.html
+                  ? <div className="policy-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+                  : <div className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-dark">{data.content}</div>)
               : data?.processing
                 ? <p className="text-sm text-neutral-mid">This policy is still being processed — please try again shortly.</p>
                 : <p className="text-sm text-neutral-mid">The policy text isn’t available to display.</p>}

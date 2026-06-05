@@ -249,11 +249,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
             <li><strong>On the staff record</strong> — a <strong>Policy reading</strong> table per person: the time they spent on each policy, the furthest they scrolled, and a label — <strong>Thorough</strong> (scrolled to the end), <strong>Skimmed</strong> (marked read without scrolling far) or <strong>Partial</strong>. This is included in the CQC evidence PDF.</li>
-            <li><strong>On the Analytics page</strong> — a <strong>Policy reading engagement</strong> section with team-wide figures (sessions, average time, average scroll depth, % read to the end) and a per-policy breakdown. A policy that's opened a lot but barely scrolled may be too long or hard to read.</li>
+            <li><strong>On the Analytics page</strong> — a <strong>Policy reading engagement</strong> section with team-wide figures (sessions, average time, average scroll depth, and % who read to the end).</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">
             This data is for managers only — staff don't see their own reading stats on My Progress.
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Induction question performance">
+          <p className="text-sm text-neutral-mid">
+            Induction flows include questions, and CareStream marks each answer automatically — multiple-choice is graded instantly, and written answers are checked by AI. (If someone gets a multiple-choice question wrong, they're asked to try again before the step completes.) You can see how staff are doing in two places:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>On the staff record</strong> — an <strong>Induction questions</strong> section listing every question that person has answered, with a ✓ or ✗, their answer, and the correct answer where they got it wrong. A quick way to spot exactly where an individual needs support. Included in the CQC evidence PDF.</li>
+            <li><strong>On the Analytics page</strong> — an <strong>Induction question performance</strong> section: the percentage answered correctly across the team, plus a <strong>“Most-missed induction questions”</strong> list that highlights the topics where knowledge is weakest, so you know what to reinforce in supervision or training.</li>
+          </ul>
         </SectionBlock>
 
         <SectionBlock title="What staff see — “My Progress”">

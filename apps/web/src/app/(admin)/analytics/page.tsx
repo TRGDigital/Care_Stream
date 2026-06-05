@@ -165,6 +165,32 @@ function SectionDivider({ title, subtitle }: { title: string; subtitle?: string 
   )
 }
 
+// Lightweight area chart for the open-gap trend over time.
+function GapTrendChart({ points }: { points: Array<{ date: string; open_gaps: number }> }) {
+  const W = 560, H = 120, P = 8
+  const max = Math.max(1, ...points.map(p => p.open_gaps))
+  const n   = points.length
+  const x   = (i: number) => P + (n <= 1 ? 0 : (i / (n - 1)) * (W - 2 * P))
+  const y   = (v: number) => H - P - (v / max) * (H - 2 * P)
+  const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p.open_gaps).toFixed(1)}`).join(' ')
+  const area = `${line} L ${x(n - 1).toFixed(1)} ${H - P} L ${x(0).toFixed(1)} ${H - P} Z`
+  const first = points[0], last = points[n - 1]
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-32 w-full" preserveAspectRatio="none">
+        <defs><linearGradient id="gapgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" /><stop offset="100%" stopColor="#f59e0b" stopOpacity="0" /></linearGradient></defs>
+        <path d={area} fill="url(#gapgrad)" />
+        <path d={line} fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.open_gaps)} r={n <= 30 ? 2 : 0} fill="#f59e0b" />)}
+      </svg>
+      <div className="mt-1 flex justify-between text-[11px] text-neutral-mid">
+        <span>{new Date(first.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+        <span>{new Date(last.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+      </div>
+    </div>
+  )
+}
+
 // ─── CSV export helper ─────────────────────────────────────────────────────────
 
 function exportLanguageCsv(langRows: Array<{ language: string; month: string; count: number }>) {
@@ -201,6 +227,7 @@ export default function AnalyticsPage() {
   const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
   const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
   const [kgaps,        setKgaps]    = useState<any>(analyticsCache?.kgaps ?? null)
+  const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [loading,      setLoading]  = useState(!analyticsCache)
   const [error,        setError]    = useState(false)
 
@@ -228,6 +255,16 @@ export default function AnalyticsPage() {
 
   const now       = new Date()
   const monthName = now.toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+
+  async function sendDigest() {
+    if (!session?.accessToken || digestState === 'sending') return
+    setDigestState('sending')
+    try {
+      await createApiClient(session.accessToken).settings.sendKnowledgeGapDigest()
+      setDigestState('sent')
+      createApiClient(session.accessToken).analytics.knowledgeGaps().then(setKgaps).catch(() => {})
+    } catch { setDigestState('error') }
+  }
 
   if (loading) return <p className="text-sm text-neutral-mid">Loading analytics…</p>
   if (error || !data) return <p className="text-sm text-status-error">Failed to load analytics.</p>
@@ -427,6 +464,25 @@ export default function AnalyticsPage() {
             <StatCard label="Closed (30 days)" value={kgaps.summary.resolved_30d} info="Gaps a staff member has put right in the last 30 days, via the hub Follow-up." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
             <StatCard label="Engaged with learning" value={kgaps.summary.engaged_pct ?? 0} suffix="%" info="Of gaps closed, the share where staff worked through the policy-grounded micro-lesson ('Learn & retry') rather than just re-answering ('Just retry')." Icon={GraduationCap} iconBg="bg-teal-light" iconColor="text-teal" />
           </div>
+
+          {/* Trend over time + weekly digest control */}
+          <Card
+            title="Knowledge gaps over time"
+            info="Open gaps recorded once a day. The weekly digest emails admins a summary every Monday, and nudges staff with open gaps to complete their Follow-up — both honour the 'knowledge_gap_digest' email preference."
+            action={
+              <div className="flex items-center gap-2">
+                {digestState === 'sent'  && <span className="text-xs font-medium text-green-600">Sent ✓</span>}
+                {digestState === 'error' && <span className="text-xs font-medium text-status-error">Failed</span>}
+                <button onClick={sendDigest} disabled={digestState === 'sending'} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                  {digestState === 'sending' ? 'Sending…' : 'Send digest now'}
+                </button>
+              </div>
+            }
+          >
+            {kgaps.trend && kgaps.trend.length >= 2
+              ? <GapTrendChart points={kgaps.trend} />
+              : <p className="py-6 text-center text-sm text-neutral-mid">No history yet — a snapshot is recorded daily. Use <span className="font-medium">Send digest now</span> to record the first point and email yourself this week&apos;s digest.</p>}
+          </Card>
 
           <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Most-missed questions (combined) */}

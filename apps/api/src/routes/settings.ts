@@ -6,6 +6,7 @@ import { ok, err } from '../lib/response'
 import { effectiveSections } from '../lib/policy-sections'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES } from '../data/languages'
+import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
 
 // Tenant settings: inbound email address, email allowlist, logo, email preferences.
 // Mounted at /settings in app.ts, behind requireAuth + tenantGuard.
@@ -262,6 +263,21 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     languages:         effectiveLanguages(updated.custom_languages),
     added_language:    addedLanguage,
   })
+})
+
+// ─── POST /settings/knowledge-gap-digest/send ─────────────────────────────────
+// Admin "send now": snapshot today's gaps, then send the weekly digest to admins
+// and the auto-refresher nudge to staff with open gaps (for this tenant only).
+
+settingsRouter.post('/knowledge-gap-digest/send', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') { return err(res, 'FORBIDDEN', 'Only admins can send the digest', 403) }
+  try {
+    const result = await runKnowledgeGapJobForTenant(user.tenant_id, { weekly: true })
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'SEND_FAILED', e.message, 500)
+  }
 })
 
 // ─── POST /settings/logo ──────────────────────────────────────────────────────

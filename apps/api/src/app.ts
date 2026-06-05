@@ -27,6 +27,7 @@ import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
 import { agentActionsRouter } from './routes/agent-actions'
+import { cronRouter } from './routes/cron'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -129,6 +130,7 @@ app.use('/training', trainingRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/agent-actions', agentActionsRouter)
+app.use('/cron', cronRouter)
 
 seedTrainingModulesIfEmpty()
 

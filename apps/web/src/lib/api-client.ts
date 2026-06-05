@@ -189,6 +189,8 @@ export function createApiClient(token: string) {
           method: 'PATCH',
           body:   JSON.stringify(data),
         }),
+      sendKnowledgeGapDigest: () =>
+        apiFetch<{ digest_sent: boolean; refreshers: number }>('/settings/knowledge-gap-digest/send', token, { method: 'POST' }),
       uploadLogo: (file: File) => {
         const form = new FormData()
         form.append('logo', file)
@@ -466,10 +468,11 @@ export function createApiClient(token: string) {
         summary: { total: number; total_gaps: number }
       }>('/analytics/follow-up', token),
       knowledgeGaps: () => apiFetch<{
-        summary: { open_gaps: number; open_training: number; open_induction: number; staff_with_gaps: number; resolved_30d: number; learn: number; retry: number; engaged_pct: number | null }
+        summary: { open_gaps: number; open_training: number; open_induction: number; staff_with_gaps: number; resolved_30d: number; resolved_7d: number; learn: number; retry: number; engaged_pct: number | null }
         top_missed: Array<{ source: 'training' | 'induction'; topic: string; question: string; miss_count: number; staff_count: number }>
         weak_topics: Array<{ source: 'training' | 'induction'; topic: string; gaps: number; staff: number }>
         recent_resolutions: Array<{ user: string; source: 'training' | 'induction'; method: 'learn' | 'retry'; label: string | null; when: string }>
+        trend: Array<{ date: string; open_gaps: number; open_training: number; open_induction: number; resolved_7d: number }>
       }>('/analytics/knowledge-gaps', token),
       dailyActivity: (days = 30) =>
         apiFetch<{ series: Array<{ date: string; chat: number; email: number; whatsapp: number }>; days: number }>(

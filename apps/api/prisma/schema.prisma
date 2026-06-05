@@ -57,6 +57,23 @@ model RemediationAttempt {
   @@map("remediation_attempts")
 }
 
+// Daily point-in-time counts of open knowledge gaps, for the trend chart.
+model KnowledgeGapSnapshot {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  date            DateTime @db.Date
+  open_gaps       Int      @default(0)
+  open_training   Int      @default(0)
+  open_induction  Int      @default(0)
+  staff_with_gaps Int      @default(0)
+  resolved_7d     Int      @default(0)
+  created_at      DateTime @default(now())
+
+  @@unique([tenant_id, date])
+  @@index([tenant_id, date])
+  @@map("knowledge_gap_snapshots")
+}
+
 // ─── Policy reading (induction) ─────────────────────────────────────────────────
 
 model PolicyTranslation {

@@ -11,6 +11,7 @@
     { "src": "/(.*)", "dest": "/src/app.ts" }
   ],
   "crons": [
-    { "path": "/health", "schedule": "*/2 * * * *" }
+    { "path": "/health", "schedule": "*/2 * * * *" },
+    { "path": "/cron/knowledge-gaps", "schedule": "0 7 * * *" }
   ]
 }

@@ -3,7 +3,7 @@
 
 import { prisma } from '../db/client'
 
-async function isEmailEnabled(tenantId: string, prefKey: string): Promise<boolean> {
+export async function isEmailEnabled(tenantId: string, prefKey: string): Promise<boolean> {
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
     select: { email_preferences: true },

@@ -106,5 +106,23 @@ a, button { transition: all 0.18s ease; }
   .cqc-report-section { page-break-inside: avoid; break-inside: avoid; }
 }
 
-/* Keep cards whole when exporting the staff record to PDF (html2pdf). */
+/* Keep cards whole when the staff record is printed / saved as PDF. */
 .pdf-card { page-break-inside: avoid; break-inside: avoid; }
+
+/* Staff record → native print-to-PDF: print ONLY the record, full width,
+   with background colours preserved. Toggled by adding 'print-staff-record'
+   to <body> just before window.print(). */
+@media print {
+  body.print-staff-record, html:has(body.print-staff-record) { height: auto !important; overflow: visible !important; }
+  body.print-staff-record * { visibility: hidden !important; }
+  body.print-staff-record #staff-record-print,
+  body.print-staff-record #staff-record-print * { visibility: visible !important; }
+  body.print-staff-record #staff-record-print {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+  }
+  body.print-staff-record #staff-record-print,
+  body.print-staff-record #staff-record-print * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

@@ -166,6 +166,15 @@ function groupSessions(sessions: StoredSession[]): { label: string; items: Store
     .map(([label, items]) => ({ label, items }))
 }
 
+// Sidebar notification badge — colour passed per nav item.
+function NavBadge({ count, className }: { count: number; className: string }) {
+  return (
+    <span className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white ${className}`}>
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ChatPage() {
@@ -188,6 +197,7 @@ export default function ChatPage() {
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number }>({ induction: 0, training: 0, cqc: 0 })
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
@@ -219,6 +229,15 @@ export default function ChatPage() {
     setReplyLang(code)
     try { localStorage.setItem(`cs_reply_lang_${userId}`, code) } catch { /* ignore */ }
   }
+
+  // Outstanding-item counts for the sidebar notification badges. Refetched on
+  // view changes so completing an item updates the badge.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.counts()
+      .then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc }))
+      .catch(() => {})
+  }, [session?.accessToken, view])
 
   // Code → name map for the detected-language chip (static + tenant languages).
   const langNameMap: Record<string, string> = { ...LANG_NAMES, ...Object.fromEntries(langList.map(l => [l.code, l.name])) }
@@ -416,6 +435,7 @@ export default function ChatPage() {
           >
             <GraduationCap size={15} />
             My Induction
+            {navCounts.induction > 0 && <NavBadge count={navCounts.induction} className="bg-indigo-500" />}
           </button>
           <button
             onClick={() => setView('training')}
@@ -423,6 +443,7 @@ export default function ChatPage() {
           >
             <Brain size={15} />
             My Training
+            {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
           <Link
             href="/cqc"
@@ -430,6 +451,7 @@ export default function ChatPage() {
           >
             <ShieldCheck size={15} />
             CQC Prep
+            {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </Link>
           <Link
             href="/progress"

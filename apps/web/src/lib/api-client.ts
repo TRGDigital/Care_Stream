@@ -431,6 +431,7 @@ export function createApiClient(token: string) {
 
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
+      counts: () => apiFetch<{ training: number; induction: number; cqc: number }>('/me/counts', token),
     },
 
     analytics: {

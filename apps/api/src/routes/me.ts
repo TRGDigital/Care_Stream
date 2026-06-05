@@ -46,6 +46,23 @@ const UI_STRINGS: Record<string, string> = {
   info_activity: 'The most recent things you have completed.',
 }
 
+// Lightweight outstanding-item counts for the Chat Hub sidebar badges.
+// Counts only — no heavy data or translation.
+meRouter.get('/counts', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const now = new Date()
+  const [training, induction, cqc] = await Promise.all([
+    (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, OR: [
+      { status: { in: ['not_started', 'in_progress'] } },
+      { status: 'complete', expires_at: { lt: now } },
+    ] } }).catch(() => 0),
+    (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
+    (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
+  ])
+  ok(res, { training, induction, cqc })
+})
+
 meRouter.get('/progress', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub

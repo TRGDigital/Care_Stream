@@ -38,7 +38,7 @@ export function PortalNav({ userName, userRole }: Props) {
         <Link href="/cqc" className="flex items-center gap-1.5 text-sm font-medium text-neutral-mid hover:text-teal">
           CQC Prep
           {pendingCqc > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-teal px-1.5 text-[10px] font-bold text-white">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
               {pendingCqc}
             </span>
           )}

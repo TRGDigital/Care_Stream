@@ -8,7 +8,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
-import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
+import { generateAnnualModuleDraft, normaliseQuestion } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
@@ -16,8 +16,32 @@ import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 export const standardTrainingRouter = Router()
 standardTrainingRouter.use(requirePlatformAdmin)
 
+// Modules whose questions were last set more than this long ago are flagged for review.
+const REGEN_INTERVAL_MONTHS = 6
+
 function kebab(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
+}
+
+function questionTexts(questions: any): string[] {
+  return (Array.isArray(questions) ? questions : []).map((q: any) => String(q?.text ?? '')).filter(Boolean)
+}
+
+// Every distinct question text ever used by a module: current bank + all snapshots.
+async function gatherUsedQuestions(moduleId: string, currentQuestions: any): Promise<{ texts: string[]; versions: Array<{ version: number; count: number; created_at: Date }> }> {
+  const versions = await (prisma as any).trainingQuestionVersion.findMany({
+    where: { module_id: moduleId }, orderBy: { version: 'desc' },
+    select: { version: true, questions: true, created_at: true },
+  }).catch(() => [])
+  const seen = new Set<string>()
+  const texts: string[] = []
+  const push = (t: string) => { const k = normaliseQuestion(t); if (k && !seen.has(k)) { seen.add(k); texts.push(t) } }
+  for (const t of questionTexts(currentQuestions)) push(t)
+  for (const v of (versions as any[])) for (const t of questionTexts(v.questions)) push(t)
+  return {
+    texts,
+    versions: (versions as any[]).map(v => ({ version: v.version, count: questionTexts(v.questions).length, created_at: v.created_at })),
+  }
 }
 
 // GET /admin/standard-training — catalogue topics + their standard module
@@ -28,7 +52,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true },
+        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true },
       }),
     ])
     const byTopic = new Map<string, any>()
@@ -78,11 +102,75 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
   }
 })
 
-// GET /admin/standard-training/modules/:id/full
+// GET /admin/standard-training/modules/:id/full — module + question-history summary
 standardTrainingRouter.get('/modules/:id/full', async (req: Request, res: Response) => {
   const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null } })
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
-  ok(res, { module: { ...module, illustration_url: illustrationUrl(module.illustration_key) } })
+
+  const { texts, versions } = await gatherUsedQuestions(module.id, module.questions)
+  const lastRegen = versions.length ? versions[0].created_at : null
+  // "Questions current since" = the most recent regeneration, else when the module was created.
+  const since = lastRegen ?? module.created_at
+  const dueAt = since ? new Date(new Date(since).setMonth(new Date(since).getMonth() + REGEN_INTERVAL_MONTHS)) : null
+  const reviewDue = !!dueAt && dueAt.getTime() <= Date.now()
+
+  ok(res, {
+    module: { ...module, illustration_url: illustrationUrl(module.illustration_key) },
+    question_history: {
+      used_count:         texts.length,
+      prior_versions:     versions.length,
+      last_regenerated_at: lastRegen,
+      review_due:         reviewDue,
+      review_due_at:      dueAt,
+      interval_months:    REGEN_INTERVAL_MONTHS,
+    },
+  })
+})
+
+// POST /admin/standard-training/modules/:id/regenerate-questions — fresh question
+// bank that avoids every question ever used (snapshots the old bank first).
+standardTrainingRouter.post('/modules/:id/regenerate-questions', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  try {
+    const topic = module.topic_id
+      ? await (prisma as any).trainingTopic.findFirst({ where: { id: module.topic_id } }).catch(() => null)
+      : null
+    const topicArg = {
+      title: topic?.title ?? module.name,
+      aliases: topic?.aliases ?? [],
+      requires_practical: !!(topic?.requires_practical ?? module.requires_practical),
+    }
+
+    const { texts } = await gatherUsedQuestions(module.id, module.questions)
+
+    // Snapshot the current bank into history BEFORE replacing it.
+    const currentQs = questionTexts(module.questions)
+    if (currentQs.length) {
+      const maxV = await (prisma as any).trainingQuestionVersion.aggregate({ where: { module_id: module.id }, _max: { version: true } }).catch(() => ({ _max: { version: 0 } }))
+      const nextV = ((maxV?._max?.version as number) ?? 0) + 1
+      await (prisma as any).trainingQuestionVersion.create({
+        data: { module_id: module.id, version: nextV, questions: module.questions, created_by: 'Platform' },
+      }).catch((e: any) => console.error('[std-training/regen] snapshot failed:', e?.message ?? e))
+    }
+
+    const draft = await generateAnnualModuleDraft(null, topicArg, { excludeQuestions: texts })
+    if (!draft.questions.length) { err(res, 'GENERATION_FAILED', 'No new questions were generated — try again.', 502); return }
+
+    // Back to draft so the new bank is reviewed before publishing to all tenants.
+    const updated = await (prisma as any).trainingModule.update({
+      where: { id: module.id },
+      data:  {
+        questions: draft.questions,
+        questions_version: { increment: 1 },
+        approved: false, approved_at: null, approved_by: null,
+      },
+    })
+    ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) }, generated: draft.questions.length, avoided: texts.length })
+  } catch (e: any) {
+    console.error('[std-training/regenerate-questions] failed:', e?.message ?? e)
+    err(res, 'GENERATION_FAILED', e.message, 500)
+  }
 })
 
 // POST /admin/standard-training/modules/:id/generate-image — generate a cover illustration (free, platform-side)

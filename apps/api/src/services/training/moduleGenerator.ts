@@ -99,9 +99,15 @@ function parseJson(raw: string): any {
   return JSON.parse(s)
 }
 
+// Normalise a question text for duplicate comparison (case/space/punctuation-insensitive).
+export function normaliseQuestion(text: string): string {
+  return String(text ?? '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 export async function generateAnnualModuleDraft(
   tenantId: string | null,
   topic: { title: string; aliases?: string[]; requires_practical?: boolean },
+  opts: { excludeQuestions?: string[] } = {},
 ): Promise<GeneratedModule> {
   const { text, refs } = await buildGrounding(tenantId, topic)
   const promptTpl = await getPrompt()
@@ -110,16 +116,31 @@ export async function generateAnnualModuleDraft(
     : ''
   const grounding = text || 'No specific policy extract was found — base the module on standard UK care-sector good practice for this topic.'
 
-  const system = promptTpl
+  let system = promptTpl
     .replace('{{topic}}', topic.title)
     .replace('{{practical_note}}', practicalNote)
     .replace('{{grounding}}', grounding)
     .replace('{{lang_note}}', '')
 
-  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 4096, temperature: 0.4 })
+  // Avoid repeating questions used in previous versions of this module. Appended
+  // after the (editable) template so it always applies on a regeneration.
+  const exclude = (opts.excludeQuestions ?? []).map(q => String(q).trim()).filter(Boolean)
+  if (exclude.length) {
+    const list = exclude.slice(-150).map(q => `- ${q.slice(0, 180)}`).join('\n')
+    system += `\n\nIMPORTANT — QUESTION HISTORY: the following ${exclude.length} question(s) have ALREADY been used in previous versions of this module. Do NOT repeat, copy, or lightly reword any of them. Produce genuinely NEW questions that test different scenarios, angles, or details of the same topic:\n${list}`
+  }
+
+  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 4096, temperature: exclude.length ? 0.6 : 0.4 })
   const p = parseJson(raw)
 
-  const rawQs = Array.isArray(p?.questions) ? p.questions : []
+  // Drop any generated question that still matches a previously-used one.
+  const seen = new Set(exclude.map(normaliseQuestion))
+  const rawQs = (Array.isArray(p?.questions) ? p.questions : []).filter((q: any) => {
+    const key = normaliseQuestion(q?.text ?? '')
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
   const questions = rawQs.map((q: any, i: number) => {
     const options = (Array.isArray(q?.options) ? q.options : []).map((o: any) => String(o)).slice(0, 4)
     while (options.length < 4) options.push('—')

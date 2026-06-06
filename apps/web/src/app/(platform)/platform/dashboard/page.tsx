@@ -2012,6 +2012,7 @@ function SystemReference() {
           <RefRow label="Catalogue" value="GET /training/catalogue (topics → module + standard_module) · POST /training/catalogue/generate (tailor, 1 credit)" />
           <RefRow label="Review"    value="GET /training/modules/:id/full · PATCH /training/modules/:id · POST /training/modules/:id/approve · POST /training/modules/:id/generate-image (1 credit)" />
           <RefRow label="Standard"  value="Console (requirePlatformAdmin) /admin/standard-training: GET / · POST /generate · GET|PATCH /modules/:id · POST /modules/:id/approve · POST /modules/:id/generate-image (free)" />
+          <RefRow label="Q-history" value="POST /admin/standard-training/modules/:id/regenerate-questions — snapshots current bank → TrainingQuestionVersion, gathers ALL prior question texts (current + every version), passes as excludeQuestions to generateAnnualModuleDraft (prompt 'do not repeat' + normalised-text dedup filter), sets module back to draft. Full view returns question_history {used_count, prior_versions, last_regenerated_at, review_due (>6mo), review_due_at}. Console shows Created/Published dates + 6-monthly 'Review due' flag." />
           <RefRow label="Assign"    value="POST /training/enroll (existing) — role-based assignment resolves to user_ids in the UI" />
           <RefRow label="Practical" value="POST /users/:id/annual-training/:enrollmentId/practical (sign-off)" />
         </div>

@@ -406,13 +406,14 @@ export function createPlatformClient(token: string) {
     standardTraining: {
       catalogue: () => adminFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
       }>('/standard-training', token),
       generate: (topicId: string) => adminFetch<{ module: any }>('/standard-training/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
-      moduleFull: (id: string) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/full`, token),
+      moduleFull: (id: string) => adminFetch<{ module: any; question_history: { used_count: number; prior_versions: number; last_regenerated_at: string | null; review_due: boolean; review_due_at: string | null; interval_months: number } }>(`/standard-training/modules/${id}/full`, token),
       updateModule: (id: string, data: any) => adminFetch<{ module: any }>(`/standard-training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       approveModule: (id: string, approved = true) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved }) }),
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
+      regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
     },
 
     tenants: {

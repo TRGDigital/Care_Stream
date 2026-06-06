@@ -237,7 +237,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any }>('admin-analytics')
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
@@ -247,6 +247,7 @@ export default function AnalyticsPage() {
   const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
   const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
   const [kgaps,        setKgaps]    = useState<any>(analyticsCache?.kgaps ?? null)
+  const [annual,       setAnnual]   = useState<any>(analyticsCache?.annual ?? null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(!analyticsCache)
@@ -265,10 +266,11 @@ export default function AnalyticsPage() {
       api.analytics.policyReading().catch(() => null),
       api.analytics.inductionPerformance().catch(() => null),
       api.analytics.knowledgeGaps().catch(() => null),
+      api.analytics.annualTraining().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -695,6 +697,46 @@ export default function AnalyticsPage() {
                 </table>
               </Card>
             </div>
+          )}
+        </>
+      )}
+
+      {/* ── Annual training (AI modules) ─────────────────────────────────────── */}
+      {tab === 'training' && annual && annual.summary.assigned > 0 && (
+        <>
+          <SectionDivider
+            title="Annual training"
+            subtitle="AI-generated, policy-grounded annual modules — completion, renewals and certificates across your team"
+          />
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Completion" value={annual.summary.completion_pct ?? 0} suffix="%" info="Share of assigned annual-training enrolments completed (a certificate is issued on pass)." Icon={GraduationCap} iconBg="bg-teal-light" iconColor="text-teal" />
+            <StatCard label="Certificates issued" value={annual.summary.completed} info="Annual training modules completed (passed) across your team — each has a printable certificate on the staff record." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+            <StatCard label="Renewals due" value={annual.summary.renewal_due} info="Completed modules that are overdue or due for renewal within 30 days." Icon={Clock} iconBg="bg-amber-50" iconColor="text-amber-500" />
+            <StatCard label="Practicals to record" value={annual.summary.practical_due} info="Modules that also need a practical/observed assessment recorded against a completed knowledge module." Icon={AlertCircle} iconBg="bg-orange-50" iconColor="text-orange-400" />
+          </div>
+          {annual.by_module.length > 0 && (
+            <Card title="By module" info="Completion and average assessment score for each published annual module.">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left">
+                  <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Module</th>
+                  <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Assigned</th>
+                  <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Completed</th>
+                  <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Avg score</th>
+                  <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Rate</th>
+                </tr></thead>
+                <tbody>
+                  {annual.by_module.map((m: any) => (
+                    <tr key={m.id} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2 pr-4 font-medium text-neutral-dark">{m.name}{m.requires_practical && <span className="ml-2 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">+ practical</span>}</td>
+                      <td className="py-2 pr-3 text-center text-neutral-mid">{m.assigned}</td>
+                      <td className="py-2 pr-3 text-center font-medium text-status-success">{m.completed}</td>
+                      <td className="py-2 pr-3 text-center text-neutral-dark">{m.avg_score !== null ? `${m.avg_score}%` : '—'}</td>
+                      <td className="py-2 text-right"><span className={clsx('font-semibold', m.completion_pct >= 80 ? 'text-status-success' : m.completion_pct >= 50 ? 'text-status-warning' : 'text-status-error')}>{m.completion_pct}%</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
           )}
         </>
       )}

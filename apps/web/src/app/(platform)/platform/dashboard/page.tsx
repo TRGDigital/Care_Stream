@@ -1979,6 +1979,47 @@ function SystemReference() {
       </RefSection>
 
       {/* CQC Staff Prep */}
+      {/* Annual Training (AI modules) */}
+      <RefSection icon={GraduationCap} title="Annual Training (AI modules)">
+        <p className="leading-relaxed text-neutral-mid">
+          AI-generated, policy-grounded annual training. Teach-then-assess modules are drafted from the tenant&apos;s own
+          policies (RAG) + reference seeds, reviewed/approved by an admin, assigned by role/individual, and completed by
+          staff in the hub in their first language. Passing issues a knowledge-assessment certificate; renewals reuse the
+          existing training expiry engine. Extends <code className="rounded bg-gray-100 px-1 text-xs">TrainingModule</code>/<code className="rounded bg-gray-100 px-1 text-xs">TrainingEnrollment</code> — not a separate silo.
+        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Data model</p>
+          <RefRow label="TrainingTopic"   value="catalogue of ~44 platform topics (group, default_frequency, requires_practical, aliases) — seeded on first GET /training/catalogue" />
+          <RefRow label="TrainingModule+"  value="AI fields: source='ai_generated', approved (draft until true), learning_content {summary,key_points}, questions bank, frequency, renewal_months, pass_mark, image_key, policy_refs, topic_id, group_key" />
+          <RefRow label="TrainingEnrollment+" value="practical_signed/_by/_at/_note (observed-competency sign-off for requires_practical topics)" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Generation</p>
+          <RefRow label="Service"   value="services/training/moduleGenerator.ts — embedText + queryVectors(getTenantNamespace) for policy chunks + matching PolicySeeds → Claude → draft (title, learning, 20-question bank, policy_refs)" />
+          <RefRow label="Prompt"    value="ai_prompts: training_module_generation — editable in Platform → AI Prompts ('Annual Training — Module Generation')" />
+          <RefRow label="Honesty"   value="requires_practical topics flagged as knowledge-component-only; certificates worded as non-accredited knowledge assessments" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Admin endpoints (requireAdmin)</p>
+          <RefRow label="Catalogue" value="GET /training/catalogue · POST /training/catalogue/generate" />
+          <RefRow label="Review"    value="GET /training/modules/:id/full · PATCH /training/modules/:id · POST /training/modules/:id/approve" />
+          <RefRow label="Assign"    value="POST /training/enroll (existing) — role-based assignment resolves to user_ids in the UI" />
+          <RefRow label="Practical" value="POST /users/:id/annual-training/:enrollmentId/practical (sign-off)" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Staff endpoints (/me)</p>
+          <RefRow label="List/take"  value="GET /me/annual-training · GET /me/annual-training/:id (learning+questions translated, correct stripped, linked policies)" />
+          <RefRow label="Submit"     value="POST /me/annual-training/:id/submit — grade vs pass_mark → complete + set renewal expiry + issue certificate" />
+          <RefRow label="Certificate" value="GET /me/annual-training/:id/certificate — data for the printable cert" />
+          <RefRow label="My Training" value="AI modules are filtered out of /training/my-enrollments; /me/counts splits training vs annual for the hub badge" />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Where it surfaces</p>
+          <RefRow label="Staff record" value="buildStaffRecord.annual_training (items + summary) + risk flags (overdue/renewal-due/practical-due); printable certificate; in the CQC PDF" />
+          <RefRow label="Analytics"     value="GET /analytics/annual-training → Analytics 'Training' tab section (completion, certs, renewals, practicals, per-module)" />
+        </div>
+      </RefSection>
+
       <RefSection icon={ClipboardList} title="CQC Staff Prep">
         <p className="leading-relaxed text-neutral-mid">
           Inspector-style practice questions sent to staff, evaluated by AI against a model answer. Free-text answers only — no multiple choice.

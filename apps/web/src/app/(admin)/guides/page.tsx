@@ -556,6 +556,51 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ),
   },
   {
+    id:      'annual-training',
+    icon:    GraduationCap,
+    title:   'Annual training (AI)',
+    summary: 'Generate policy-grounded annual training, review & assign, certificates and renewals',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is">
+          <p className="text-sm text-neutral-mid">
+            CareStream generates annual training modules tailored to <strong>your own policies</strong> using AI. Each module <strong>teaches</strong> the topic (a short, policy-grounded lesson) then <strong>assesses</strong> it (a multiple-choice test). Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual Training (AI)</strong>.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Generating &amp; approving modules">
+          <div className="space-y-3">
+            <Step n={1}>Open <strong>Annual Training (AI)</strong>. You&apos;ll see a catalogue of ~44 UK care topics grouped by area, each with a default frequency and a <em>practical-also-required</em> flag where relevant.</Step>
+            <Step n={2}>Click <strong>Generate</strong> on a topic. The AI retrieves your relevant policies (and anonymised reference policies) and drafts a lesson + a 20-question bank, citing the policies it used.</Step>
+            <Step n={3}>It&apos;s created as a <strong>draft</strong>. Click <strong>Review</strong> to read and edit the lesson and every question (mark the correct answer), set the <strong>pass mark</strong> and <strong>frequency</strong>, then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
+            <Step n={4}><strong>Assign</strong> a published module to staff — individually or tap a <strong>role</strong> to select everyone in it — with an optional due date.</Step>
+          </div>
+          <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training — Module Generation&rdquo;.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="What staff see">
+          <p className="text-sm text-neutral-mid">
+            Staff get an <strong>Annual Training</strong> item in the hub (separate from My Training). They read the lesson, then take the assessment (answers save as they go). Pass and they get a <strong>certificate</strong>; fail and they can review and retry. A prominent <strong>&ldquo;Ask about the policies behind this training&rdquo;</strong> panel lets them open any source policy and ask questions about it — all in their own language.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Certificates, renewals &amp; practical sign-off">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Certificates</strong> are honest <em>knowledge-assessment</em> records (not accredited qualifications) — viewable and printable on the staff record and included in the CQC evidence PDF.</li>
+            <li><strong>Renewals</strong> follow the module&apos;s frequency (annual = +12 months, etc.) and resurface automatically when due — admins are reminded, and it shows as &ldquo;due for renewal&rdquo; on the record.</li>
+            <li><strong>Practical-required topics</strong> (e.g. Moving &amp; Handling, Medication, First Aid) show a banner that the module is the knowledge component only. On the staff record, use <strong>&ldquo;Record practical&rdquo;</strong> to log the observed assessment (with your name + date).</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Where it shows up">
+          <p className="text-sm text-neutral-mid">
+            Per person: the <strong>Annual training</strong> section on their staff record (status, score, renews, certificate, practical). Team-wide: the <strong>Annual training</strong> section on the <strong>Analytics → Training</strong> tab (completion, certificates issued, renewals due, practicals to record, and a per-module breakdown).
+          </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
     id:      'training',
     icon:    GraduationCap,
     title:   'Training system',

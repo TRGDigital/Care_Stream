@@ -489,6 +489,10 @@ export function createApiClient(token: string) {
         staff: Array<{ id: string; name: string; job_role: string | null; training_gaps: number; induction_gaps: number; total_gaps: number; unreviewed: number }>
         summary: { total: number; total_gaps: number }
       }>('/analytics/follow-up', token),
+      annualTraining: () => apiFetch<{
+        summary: { modules_published: number; staff: number; assigned: number; completed: number; renewal_due: number; practical_due: number; completion_pct: number | null }
+        by_module: Array<{ id: string; name: string; requires_practical: boolean; assigned: number; completed: number; avg_score: number | null; completion_pct: number }>
+      }>('/analytics/annual-training', token),
       knowledgeGaps: () => apiFetch<{
         summary: { open_gaps: number; open_training: number; open_induction: number; staff_with_gaps: number; resolved_30d: number; resolved_7d: number; learn: number; retry: number; engaged_pct: number | null }
         top_missed: Array<{ source: 'training' | 'induction'; topic: string; question: string; miss_count: number; staff_count: number }>

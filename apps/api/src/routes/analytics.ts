@@ -1305,3 +1305,70 @@ analyticsRouter.get('/knowledge-gaps', requireAdmin, async (_req: Request, res: 
     err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
+
+// ─── GET /analytics/annual-training ───────────────────────────────────────────
+// Team-wide annual (AI) training: completion, renewals due, certificates,
+// practical assessments outstanding, and a per-module breakdown.
+
+analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const now = new Date()
+    const soon = new Date(now.getTime() + 30 * 86_400_000)
+    const enrollments = await (prisma as any).trainingEnrollment.findMany({
+      where:  { tenant_id: tenantId },
+      select: {
+        user_id: true, status: true, expires_at: true, practical_signed: true,
+        module:  { select: { id: true, name: true, source: true, requires_practical: true, questions: true } },
+        answers: { select: { is_correct: true } },
+      },
+    })
+    const ai = (enrollments as any[]).filter(e => e.module?.source === 'ai_generated')
+
+    const staff = new Set<string>()
+    let completed = 0, overdue = 0, renewalDue = 0, practicalDue = 0
+    const byModule = new Map<string, any>()
+    for (const e of ai) {
+      staff.add(e.user_id)
+      const expired = e.expires_at && new Date(e.expires_at) < now && e.status === 'complete'
+      const isComplete = e.status === 'complete' && !expired
+      if (isComplete) completed += 1
+      if (expired) renewalDue += 1
+      else if (e.status === 'complete' && e.expires_at && new Date(e.expires_at) <= soon) renewalDue += 1
+      if (e.status !== 'complete' && !e.expires_at && false) {} // (no due_date selected here)
+      if (e.module?.requires_practical && e.status === 'complete' && !e.practical_signed) practicalDue += 1
+
+      const total = Array.isArray(e.module?.questions) ? e.module.questions.length : 0
+      const correct = (e.answers ?? []).filter((a: any) => a.is_correct).length
+      const mk = e.module.id
+      const g = byModule.get(mk) ?? { id: mk, name: e.module.name, requires_practical: e.module.requires_practical, assigned: 0, completed: 0, scores: [] as number[] }
+      g.assigned += 1
+      if (isComplete) { g.completed += 1; if (total) g.scores.push(Math.round((correct / total) * 100)) }
+      byModule.set(mk, g)
+    }
+
+    const modulesPublished = await (prisma as any).trainingModule.count({ where: { tenant_id: tenantId, source: 'ai_generated', approved: true } })
+
+    const by_module = [...byModule.values()].map(m => ({
+      id: m.id, name: m.name, requires_practical: m.requires_practical,
+      assigned: m.assigned, completed: m.completed,
+      avg_score: m.scores.length ? Math.round(m.scores.reduce((a: number, b: number) => a + b, 0) / m.scores.length) : null,
+      completion_pct: m.assigned ? Math.round((m.completed / m.assigned) * 100) : 0,
+    })).sort((a, b) => a.completion_pct - b.completion_pct)
+
+    ok(res, {
+      summary: {
+        modules_published: modulesPublished,
+        staff: staff.size,
+        assigned: ai.length,
+        completed,
+        renewal_due: renewalDue,
+        practical_due: practicalDue,
+        completion_pct: ai.length ? Math.round((completed / ai.length) * 100) : null,
+      },
+      by_module,
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})

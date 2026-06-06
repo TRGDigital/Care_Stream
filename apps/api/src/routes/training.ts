@@ -15,7 +15,7 @@ import { translateQuestionCached, translateText, mapLimit, withTranslationBudget
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
-import { checkTrainingGenerationLimit, logTrainingGeneration, getTrainingGenerationUsage, PlanLimitError } from '../lib/plan-limits'
+import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, PlanLimitError } from '../lib/plan-limits'
 
 export const trainingRouter = Router()
 
@@ -67,10 +67,13 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
   }
 })
 
-// GET /training/generation-usage — tailored generations used vs the plan limit
-trainingRouter.get('/generation-usage', requireAdmin, async (req: Request, res: Response) => {
-  try { ok(res, await getTrainingGenerationUsage((req as any).user.tenant_id)) }
-  catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+// GET /training/ai-usage — AI credits + queries used this month vs plan limits
+trainingRouter.get('/ai-usage', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).user.tenant_id
+    const [credits, queries] = await Promise.all([getAiCreditUsage(tenantId), getQueryUsage(tenantId)])
+    ok(res, { credits, queries })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 
 // POST /training/catalogue/generate — generate (or regenerate) a draft module from a topic
@@ -82,8 +85,8 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
     const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
     if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
 
-    // Tailored generation is metered against the plan's monthly quota.
-    try { await checkTrainingGenerationLimit(tenantId) }
+    // Tailored generation consumes an AI credit.
+    try { await checkAiCreditLimit(tenantId) }
     catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
 
     const draft = await generateAnnualModuleDraft(tenantId, { title: topic.title, aliases: topic.aliases, requires_practical: topic.requires_practical })
@@ -113,7 +116,7 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
       ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
       : await (prisma as any).trainingModule.create({ data: { tenant_id: tenantId, slug, ...data } })
 
-    await logTrainingGeneration(tenantId, topic.id)
+    await logAiCredit(tenantId, 'training', topic.id)
     ok(res, { module })
   } catch (e: any) {
     console.error('[training/generate] failed:', e?.message ?? e)
@@ -775,6 +778,9 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
       return
     }
 
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
     const systemPrompt = await getTrainingPrompt()
     const policyContext = await settingSeedContextForModule(tenantId, module.name)
     const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.`
@@ -794,6 +800,7 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
       correct: q.correct,
     }))
 
+    await logAiCredit(tenantId, 'training_questions')
     ok(res, { questions })
   } catch (e: any) {
     err(res, 'GENERATION_FAILED', e.message, 500)

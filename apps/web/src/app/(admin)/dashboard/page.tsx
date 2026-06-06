@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
+import { AiUsageCards } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -253,6 +254,14 @@ export default function DashboardPage() {
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
 
       <SidebarGuide />
+
+      {/* AI usage this month */}
+      {session?.accessToken && (
+        <div className="mb-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-mid">AI usage this month</h2>
+          <AiUsageCards token={session.accessToken} />
+        </div>
+      )}
 
       {/* Top stat cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

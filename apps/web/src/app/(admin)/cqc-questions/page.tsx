@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { AiCreditsBar } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight, ClipboardList,
@@ -708,6 +709,8 @@ export default function CqcQuestionsPage() {
           </p>
         </div>
       </div>
+
+      {session?.accessToken && <AiCreditsBar token={session.accessToken} />}
 
       {/* Tab switcher */}
       <div className="mb-6 flex gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1 w-fit">

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-limits'
 import { callClaude } from '../services/ai/claude'
 import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
@@ -243,7 +244,11 @@ cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Res
     safe: 'Safe', effective: 'Effective', caring: 'Caring',
     responsive: 'Responsive', well_led: 'Well-led',
   }
+  const tenantId = (req as any).user.tenant_id
   try {
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
     const promptTemplate = await getPrompt('cqc_question_generation', DEFAULT_QUESTION_GENERATION_PROMPT)
     const userMessage = promptTemplate
       .replace('{{domain}}', domainLabel[domain] ?? domain)
@@ -256,6 +261,7 @@ cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Res
     } catch {
       return err(res, 'PARSE_FAILED', 'AI returned invalid JSON', 500)
     }
+    await logAiCredit(tenantId, 'cqc_questions')
     ok(res, { question: parsed.question, model_answer: parsed.model_answer, domain })
   } catch (e: any) {
     err(res, 'GENERATE_FAILED', e.message, 500)

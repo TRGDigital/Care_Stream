@@ -69,32 +69,46 @@ function assertNotCancelled(status: string): void {
 
 // ─── Public check functions ───────────────────────────────────────────────────
 
-// Tailored annual-training module generations used this month vs the plan limit.
-export async function getTrainingGenerationUsage(tenantId: string): Promise<{ used: number; limit: number | null; remaining: number | null; resets_at: string }> {
-  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { monthly_ai_training_limit: true } } } })
-  const limit = (tenant?.plan?.monthly_ai_training_limit ?? null) as number | null
+type Usage = { used: number; limit: number | null; remaining: number | null; resets_at: string }
+
+function monthWindow() {
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const nextMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  const used = await (prisma as any).trainingGenerationLog.count({ where: { tenant_id: tenantId, created_at: { gte: monthStart } } })
-  return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: nextMonth.toISOString() }
+  return { start: new Date(now.getFullYear(), now.getMonth(), 1), next: new Date(now.getFullYear(), now.getMonth() + 1, 1) }
 }
 
-// Throw if the tenant has no remaining tailored generations this month.
-export async function checkTrainingGenerationLimit(tenantId: string): Promise<void> {
+// AI generation credits used this month vs the plan limit (training, CQC, onboarding…).
+export async function getAiCreditUsage(tenantId: string): Promise<Usage> {
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { monthly_ai_credit_limit: true } } } })
+  const limit = (tenant?.plan?.monthly_ai_credit_limit ?? null) as number | null
+  const { start, next } = monthWindow()
+  const used = await (prisma as any).aiCreditLog.count({ where: { tenant_id: tenantId, created_at: { gte: start } } })
+  return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
+}
+
+// Everyday Q&A queries used this month vs the plan limit (separate from credits).
+export async function getQueryUsage(tenantId: string): Promise<Usage> {
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { monthly_query_limit: true } } } })
+  const limit = (tenant?.plan?.monthly_query_limit ?? null) as number | null
+  const { start, next } = monthWindow()
+  const used = await (prisma as any).queryRecord.count({ where: { tenant_id: tenantId, created_at: { gte: start } } })
+  return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
+}
+
+// Throw if the tenant has no remaining AI credits this month.
+export async function checkAiCreditLimit(tenantId: string): Promise<void> {
   const { subscription_status } = await loadTenantPlan(tenantId)
   assertNotCancelled(subscription_status)
-  const { used, limit } = await getTrainingGenerationUsage(tenantId)
+  const { used, limit } = await getAiCreditUsage(tenantId)
   if (limit !== null && used >= limit) {
     throw new PlanLimitError(
-      'TRAINING_GENERATION_LIMIT_REACHED',
-      `You've used all ${limit} tailored training generations this month. Assign a standard module (free), wait until the limit resets next month, or upgrade your plan.`,
+      'AI_CREDIT_LIMIT_REACHED',
+      `You've used all ${limit} AI credits this month. Wait until the limit resets next month, or upgrade your plan. (Everyday questions aren't affected.)`,
     )
   }
 }
 
-export async function logTrainingGeneration(tenantId: string, topicId: string | null): Promise<void> {
-  await (prisma as any).trainingGenerationLog.create({ data: { tenant_id: tenantId, topic_id: topicId } }).catch(() => {})
+export async function logAiCredit(tenantId: string, action: string, refId?: string | null): Promise<void> {
+  await (prisma as any).aiCreditLog.create({ data: { tenant_id: tenantId, action, ref_id: refId ?? null } }).catch(() => {})
 }
 
 // Check whether the tenant has capacity for another query this month.

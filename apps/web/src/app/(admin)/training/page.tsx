@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { AiCreditsBar } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, ExternalLink, GraduationCap, History,
@@ -1644,6 +1645,8 @@ export default function TrainingPage() {
           )}
         </div>
       </div>
+
+      {session?.accessToken && tab === 'modules' && <AiCreditsBar token={session.accessToken} />}
 
       {/* Tab switcher */}
       <div className="mb-6 flex gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1 w-fit">

@@ -308,7 +308,7 @@ export function createApiClient(token: string) {
       }>('/training/catalogue', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
-      generationUsage: () => apiFetch<{ used: number; limit: number | null; remaining: number | null; resets_at: string }>('/training/generation-usage', token),
+      aiUsage: () => apiFetch<{ credits: { used: number; limit: number | null; remaining: number | null; resets_at: string }; queries: { used: number; limit: number | null; remaining: number | null; resets_at: string } }>('/training/ai-usage', token),
       moduleFull: (id: string) => apiFetch<{ module: any }>(`/training/modules/${id}/full`, token),
       updateModule: (id: string, data: any) =>
         apiFetch<{ module: any }>(`/training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),

@@ -30,7 +30,7 @@ export default function AnnualTrainingPage() {
     if (!api) return
     setLoading(true); setError('')
     api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
-    api.training.generationUsage().then(setUsage).catch(() => {})
+    api.training.aiUsage().then(d => setUsage(d.credits)).catch(() => {})
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -63,7 +63,7 @@ export default function AnnualTrainingPage() {
       {usage && usage.limit !== null && (
         <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${outOfCredits ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-neutral-mid'}`}>
           <Sparkles size={14} className={outOfCredits ? 'text-amber-500' : 'text-teal'} />
-          <span><strong className="text-neutral-dark">{usage.used}</strong> of <strong className="text-neutral-dark">{usage.limit}</strong> tailored generations used this month{usage.remaining !== null ? ` · ${usage.remaining} left` : ''}.</span>
+          <span><strong className="text-neutral-dark">{usage.used}</strong> of <strong className="text-neutral-dark">{usage.limit}</strong> AI credits used this month{usage.remaining !== null ? ` · ${usage.remaining} left` : ''}.</span>
           <span className="text-xs">Resets {new Date(usage.resets_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</span>
           {outOfCredits && <span className="text-xs font-medium">Assign standard modules (free) or upgrade your plan.</span>}
         </div>

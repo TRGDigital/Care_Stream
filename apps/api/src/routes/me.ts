@@ -271,7 +271,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   const [enr, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
+      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
@@ -279,6 +279,15 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   if (!enr || enr.module?.source !== 'ai_generated') { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
   const m = enr.module
+
+  // Linked source policies (validated as still present) so staff can ask about them.
+  const refs = Array.isArray(m.policy_refs) ? m.policy_refs : []
+  const refIds = [...new Set(refs.map((r: any) => r?.policy_id).filter(Boolean))]
+  let policies: Array<{ policy_id: string; title: string }> = []
+  if (refIds.length) {
+    const found = await (prisma as any).policy.findMany({ where: { id: { in: refIds }, tenant_id: tenantId }, select: { id: true, filename: true } }).catch(() => [])
+    policies = (found as any[]).map(p => ({ policy_id: p.id, title: policyTitle(p.filename) }))
+  }
   const learn = (m.learning_content ?? {}) as any
   let summary = String(learn.summary ?? '')
   let keyPoints: string[] = Array.isArray(learn.key_points) ? learn.key_points.map((x: any) => String(x)) : []
@@ -302,6 +311,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
     learning: { summary, key_points: keyPoints },
     questions,
+    policies,
     answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),
     status: enr.status,
   })

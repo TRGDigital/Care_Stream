@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, Award, ShieldAlert,
-  Clock, AlertTriangle, BookOpen, Printer, RefreshCw,
+  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText,
 } from 'lucide-react'
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D']
@@ -23,9 +23,9 @@ const STATE_META: Record<string, { label: string; cls: string }> = {
 
 function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 
-export function AnnualTrainingView({ token, onChange }: { token: string; onChange?: () => void }) {
+export function AnnualTrainingView({ token, onChange, onTalkToPolicy }: { token: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string }>({ mode: 'list' })
-  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
+  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
   return <AnnualList token={token} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
 }
@@ -98,7 +98,7 @@ function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: str
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-function TakeModule({ token, id, name, onExit }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void }) {
+function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -173,6 +173,21 @@ function TakeModule({ token, id, name, onExit }: { token: string; id: string; na
           <div className="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">
             <ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-500" />
             <span>This is the <strong>knowledge</strong> part. This topic also needs a practical/observed assessment with your manager.</span>
+          </div>
+        )}
+
+        {/* Related policies — ask specific questions */}
+        {onTalkToPolicy && Array.isArray(data.policies) && data.policies.length > 0 && (
+          <div className="mt-3 rounded-xl border border-teal/20 bg-teal-light/10 p-3.5">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><FileText size={13} /> Related policies — ask a question</p>
+            <div className="flex flex-wrap gap-2">
+              {data.policies.map((p: any) => (
+                <button key={p.policy_id} onClick={() => onTalkToPolicy(p.policy_id, p.title)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                  <MessageSquare size={12} /> {p.title}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-neutral-mid">Tap a policy to ask CareStream specific questions about it in your own language.</p>
           </div>
         )}
 

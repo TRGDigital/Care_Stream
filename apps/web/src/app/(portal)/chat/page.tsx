@@ -780,7 +780,7 @@ export default function ChatPage() {
 
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
-          <AnnualTrainingView token={session.accessToken} onChange={() => {
+          <AnnualTrainingView token={session.accessToken} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
         )}

@@ -1319,6 +1319,7 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
       where:  { tenant_id: tenantId },
       select: {
         user_id: true, status: true, expires_at: true, practical_signed: true, learn_seconds: true,
+        eval_confidence: true, eval_usefulness: true,
         module:  { select: { id: true, name: true, source: true, requires_practical: true, questions: true, duration_minutes: true } },
         answers: { select: { is_correct: true } },
       },
@@ -1341,14 +1342,19 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
       const total = Array.isArray(e.module?.questions) ? e.module.questions.length : 0
       const correct = (e.answers ?? []).filter((a: any) => a.is_correct).length
       const mk = e.module.id
-      const g = byModule.get(mk) ?? { id: mk, name: e.module.name, requires_practical: e.module.requires_practical, claimed_minutes: e.module.duration_minutes ?? null, assigned: 0, completed: 0, scores: [] as number[], learn_secs: [] as number[] }
+      const g = byModule.get(mk) ?? { id: mk, name: e.module.name, requires_practical: e.module.requires_practical, claimed_minutes: e.module.duration_minutes ?? null, assigned: 0, completed: 0, scores: [] as number[], learn_secs: [] as number[], conf: [] as number[], use: [] as number[] }
       g.assigned += 1
       if (isComplete) { g.completed += 1; if (total) g.scores.push(Math.round((correct / total) * 100)) }
       if (e.learn_seconds > 0) g.learn_secs.push(e.learn_seconds)
+      if (e.eval_confidence) g.conf.push(e.eval_confidence)
+      if (e.eval_usefulness) g.use.push(e.eval_usefulness)
       byModule.set(mk, g)
     }
     const allLearnSecs = ai.filter(e => e.learn_seconds > 0).map(e => e.learn_seconds)
     const avgActualMinutes = allLearnSecs.length ? Math.round(allLearnSecs.reduce((a: number, b: number) => a + b, 0) / allLearnSecs.length / 60) : null
+    const mean1dp = (arr: number[]) => arr.length ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10 : null
+    const allConf = ai.filter(e => e.eval_confidence).map(e => e.eval_confidence as number)
+    const allUse  = ai.filter(e => e.eval_usefulness).map(e => e.eval_usefulness as number)
 
     const modulesPublished = await (prisma as any).trainingModule.count({ where: { tenant_id: tenantId, source: 'ai_generated', approved: true } })
 
@@ -1359,6 +1365,9 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
       completion_pct: m.assigned ? Math.round((m.completed / m.assigned) * 100) : 0,
       claimed_minutes: m.claimed_minutes,
       avg_actual_minutes: m.learn_secs.length ? Math.round(m.learn_secs.reduce((a: number, b: number) => a + b, 0) / m.learn_secs.length / 60) : null,
+      avg_confidence: mean1dp(m.conf),
+      avg_usefulness: mean1dp(m.use),
+      eval_count: m.conf.length || m.use.length,
     })).sort((a, b) => a.completion_pct - b.completion_pct)
 
     ok(res, {
@@ -1371,6 +1380,9 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
         practical_due: practicalDue,
         completion_pct: ai.length ? Math.round((completed / ai.length) * 100) : null,
         avg_actual_minutes: avgActualMinutes,
+        avg_confidence: mean1dp(allConf),
+        avg_usefulness: mean1dp(allUse),
+        eval_count: Math.max(allConf.length, allUse.length),
       },
       by_module,
     })

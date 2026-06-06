@@ -467,6 +467,7 @@ export function createApiClient(token: string) {
         submit: (id: string) => apiFetch<{ passed: boolean; score: number; correct: number; total: number; pass_mark: number }>(`/me/annual-training/${id}/submit`, token, { method: 'POST' }),
         certificate: (id: string) => apiFetch<{ staff_name: string; module_name: string; org_name: string; logo_url: string | null; completed_at: string; expires_at: string | null; frequency: string; requires_practical: boolean; score: number }>(`/me/annual-training/${id}/certificate`, token),
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),
+        evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
       },
       followUp: () => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>('/me/follow-up', token),
       followUpLesson: (p: { source: string; ref: string; enrollment_id: string }) =>

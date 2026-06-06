@@ -98,6 +98,21 @@ function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: str
   )
 }
 
+// 1–5 rating scale used by the post-completion evaluation.
+function Scale({ label, low, high, value, onChange }: { label: string; low: string; high: string; value: number | null; onChange: (v: number) => void }) {
+  return (
+    <div className="mb-3">
+      <p className="mb-1.5 text-xs font-medium text-neutral-dark">{label}</p>
+      <div className="flex gap-1.5">
+        {[1, 2, 3, 4, 5].map(n => (
+          <button key={n} onClick={() => onChange(n)} className={`h-9 flex-1 rounded-lg border text-sm font-semibold transition-colors ${value === n ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-mid hover:border-teal/50'}`}>{n}</button>
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-neutral-mid"><span>{low}</span><span>{high}</span></div>
+    </div>
+  )
+}
+
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
 function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
@@ -111,6 +126,10 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})  // scenario answers revealed
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const [evalConfidence, setEvalConfidence] = useState<number | null>(null)
+  const [evalUsefulness, setEvalUsefulness] = useState<number | null>(null)
+  const [evalComment, setEvalComment] = useState('')
+  const [evalDone, setEvalDone] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const learnSecondsRef = useRef(0)
   const phaseRef = useRef<'learn' | 'assess'>('learn')
@@ -132,6 +151,10 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   function flushLearnTime() {
     const secs = learnSecondsRef.current
     if (secs > 0) { learnSecondsRef.current = 0; api.me.annualTraining.recordLearnTime(id, secs).catch(() => {}) }
+  }
+  function submitEval() {
+    setEvalDone(true)
+    api.me.annualTraining.evaluate(id, { confidence: evalConfidence, usefulness: evalUsefulness, comment: evalComment.trim() || undefined }).catch(() => {})
   }
 
   useEffect(() => {
@@ -170,6 +193,23 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
               <h2 className="text-xl font-bold text-neutral-dark">Passed — {result.score}%</h2>
               <p className="mt-1 text-sm text-neutral-mid">You scored {result.correct}/{result.total}. Your certificate is ready.</p>
               {data.requires_practical && <p className="mx-auto mt-3 max-w-sm rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">Remember: this topic also needs a practical/observed assessment with your manager.</p>}
+
+              {/* Post-completion evaluation */}
+              {!evalDone ? (
+                <div className="mx-auto mt-5 max-w-sm rounded-xl border border-gray-200 bg-white p-4 text-left">
+                  <p className="mb-3 text-center text-sm font-semibold text-neutral-dark">Quick feedback (optional)</p>
+                  <Scale label="How confident do you feel using this in your work?" low="Not at all" high="Very confident" value={evalConfidence} onChange={setEvalConfidence} />
+                  <Scale label="How useful was this training for your role?" low="Not useful" high="Very useful" value={evalUsefulness} onChange={setEvalUsefulness} />
+                  <textarea value={evalComment} onChange={e => setEvalComment(e.target.value)} rows={2} placeholder="Anything unclear or that you'd change? (optional)" className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+                  <div className="mt-3 flex justify-center gap-2">
+                    <button onClick={submitEval} disabled={evalConfidence == null && evalUsefulness == null && !evalComment.trim()} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">Submit feedback</button>
+                    <button onClick={() => setEvalDone(true)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Skip</button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mx-auto mt-4 max-w-sm text-xs text-neutral-mid">Thanks for your feedback.</p>
+              )}
+
               <div className="mt-5 flex justify-center gap-2">
                 <button onClick={() => onExit(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Award size={14} /> View certificate</button>
                 <button onClick={() => onExit(false)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Done</button>

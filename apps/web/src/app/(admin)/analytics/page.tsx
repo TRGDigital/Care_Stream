@@ -743,6 +743,21 @@ export default function AnalyticsPage() {
               </table>
             </Card>
           )}
+          {annual.summary.eval_count > 0 && (
+            <Card title="Learner feedback" info="Post-completion learner evaluation (1–5): how confident staff feel applying the training and how useful/relevant they found it. Evidence of learning value for CPD.">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3 text-center">
+                  <p className="text-2xl font-bold text-teal">{annual.summary.avg_confidence ?? '—'}<span className="text-sm font-medium text-neutral-mid">/5</span></p>
+                  <p className="mt-0.5 text-xs text-neutral-mid">Avg confidence applying it</p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3 text-center">
+                  <p className="text-2xl font-bold text-teal">{annual.summary.avg_usefulness ?? '—'}<span className="text-sm font-medium text-neutral-mid">/5</span></p>
+                  <p className="mt-0.5 text-xs text-neutral-mid">Avg usefulness / relevance</p>
+                </div>
+              </div>
+              <p className="mt-2 text-center text-[11px] text-neutral-mid">Based on {annual.summary.eval_count} response{annual.summary.eval_count === 1 ? '' : 's'}.</p>
+            </Card>
+          )}
         </>
       )}
 

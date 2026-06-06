@@ -390,6 +390,22 @@ meRouter.post('/annual-training/:enrollmentId/learn-time', async (req: Request, 
   ok(res, { recorded: secs })
 })
 
+// POST /me/annual-training/:enrollmentId/evaluate — short post-completion learner
+// evaluation (confidence + usefulness, 1–5, optional comment). CPD evidence of value.
+meRouter.post('/annual-training/:enrollmentId/evaluate', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const clamp = (v: any) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= 1 && n <= 5 ? n : null }
+  const confidence = clamp(req.body?.confidence)
+  const usefulness = clamp(req.body?.usefulness)
+  const comment    = typeof req.body?.comment === 'string' ? req.body.comment.slice(0, 1000) : null
+  await (prisma as any).trainingEnrollment.updateMany({
+    where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    data:  { eval_confidence: confidence, eval_usefulness: usefulness, eval_comment: comment, eval_at: new Date() },
+  }).catch((e: any) => console.error('[me/annual-training/evaluate] failed:', e?.message ?? e))
+  ok(res, { saved: true })
+})
+
 // GET /me/annual-training/:enrollmentId/certificate — certificate data for a passed module
 meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

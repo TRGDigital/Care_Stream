@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
+import { getAiCreditUsage, getQueryUsage } from '../lib/plan-limits'
 import { DEFAULT_ONBOARDING_FLOW_PROMPT } from './onboarding-templates'
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
@@ -460,6 +461,41 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
 
 // ─── GET /admin/tenants/:id/staff ────────────────────────────────────────────
 // Full staff list for a tenant, including login tracking fields.
+
+// GET /admin/tenants/:id/ai-usage — AI credits (by action) + queries + annual
+// training modules this tenant uses (tailored vs standard) and completion.
+adminRouter.get('/tenants/:id/ai-usage', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  try {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const [credits, queries, byAction, enrollments] = await Promise.all([
+      getAiCreditUsage(tenantId),
+      getQueryUsage(tenantId),
+      (prisma as any).aiCreditLog.groupBy({ by: ['action'], where: { tenant_id: tenantId, created_at: { gte: monthStart } }, _count: { _all: true } }).catch(() => []),
+      (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { status: true, module: { select: { id: true, name: true, source: true, tenant_id: true } } } }).catch(() => []),
+    ])
+    const ai = (enrollments as any[]).filter(e => e.module?.source === 'ai_generated')
+    const byModule = new Map<string, any>()
+    for (const e of ai) {
+      const m = e.module
+      const g = byModule.get(m.id) ?? { id: m.id, name: m.name, tailored: m.tenant_id === tenantId, assigned: 0, completed: 0 }
+      g.assigned += 1
+      if (e.status === 'complete') g.completed += 1
+      byModule.set(m.id, g)
+    }
+    const modules = [...byModule.values()].sort((a, b) => b.assigned - a.assigned)
+    const actionCounts: Record<string, number> = {}
+    for (const a of (byAction as any[])) actionCounts[a.action ?? 'other'] = a._count._all
+    ok(res, {
+      credits:  { ...credits, by_action: actionCounts },
+      queries,
+      annual_training: { modules, tailored: modules.filter(m => m.tailored).length, standard: modules.filter(m => !m.tailored).length },
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
 
 adminRouter.get('/tenants/:id/staff', async (req: Request, res: Response) => {
   const tenant = await (prisma as any).tenant.findUnique({

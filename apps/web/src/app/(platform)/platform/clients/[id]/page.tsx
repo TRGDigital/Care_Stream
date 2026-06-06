@@ -532,6 +532,9 @@ export default function ClientDetailPage() {
               ))}
             </div>
 
+            {/* AI usage & training */}
+            {token && <TenantAiUsage token={token} id={id} />}
+
             {/* Document storage (S3) — match a client to its bucket location */}
             {detail.storage && (
               <div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -1054,5 +1057,58 @@ export default function ClientDetailPage() {
         )}
       </div>
     </PlatformShell>
+  )
+}
+
+// ─── AI usage & training (per tenant) ─────────────────────────────────────────
+
+function TenantAiUsage({ token, id }: { token: string; id: string }) {
+  const [d, setD] = useState<any>(null)
+  useEffect(() => { createPlatformClient(token).tenants.aiUsage(id).then(setD).catch(() => {}) }, [token, id])
+  if (!d) return null
+  const ACTION_LABEL: Record<string, string> = { training: 'Annual training', cqc_questions: 'CQC questions', training_questions: 'Training questions', other: 'Other' }
+  const c = d.credits, q = d.queries
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Sparkles size={15} className="text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">AI usage &amp; training — this month</h2>
+      </div>
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
+          <p className="text-xs font-medium text-neutral-mid">AI credits (generation)</p>
+          <p className="mt-0.5 text-xl font-bold text-neutral-dark">{c.used}<span className="text-sm font-medium text-neutral-mid"> / {c.limit ?? '∞'}</span></p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {Object.entries(c.by_action).length === 0
+              ? <span className="text-xs text-neutral-mid">No generations yet this month.</span>
+              : Object.entries(c.by_action).map(([k, v]: any) => <span key={k} className="rounded-full bg-teal/10 px-2 py-0.5 text-[11px] font-medium text-teal">{ACTION_LABEL[k] ?? k}: {v}</span>)}
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
+          <p className="text-xs font-medium text-neutral-mid">Queries (everyday Q&amp;A)</p>
+          <p className="mt-0.5 text-xl font-bold text-neutral-dark">{q.used}<span className="text-sm font-medium text-neutral-mid"> / {q.limit ?? '∞'}</span></p>
+          <p className="mt-1.5 text-xs text-neutral-mid">Separate from credits · resets {new Date(c.resets_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</p>
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-neutral-mid">Annual training modules in use — {d.annual_training.tailored} tailored · {d.annual_training.standard} standard</p>
+        {d.annual_training.modules.length === 0 ? (
+          <p className="text-xs text-neutral-mid">No annual training assigned yet.</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-gray-100">
+            {d.annual_training.modules.map((m: any, i: number) => (
+              <div key={m.id} className={`flex items-center gap-3 px-3 py-2 text-sm ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${m.tailored ? 'bg-indigo-50 text-indigo-500' : 'bg-teal/10 text-teal'}`}>{m.tailored ? 'Tailored' : 'Standard'}</span>
+                <span className="min-w-0 flex-1 truncate text-neutral-dark">{m.name}</span>
+                <span className="shrink-0 text-xs text-neutral-mid">{m.completed}/{m.assigned} complete</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

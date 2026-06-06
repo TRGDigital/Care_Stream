@@ -23,6 +23,7 @@ import { trainingRouter } from './routes/training'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { publicBlogRouter } from './routes/blog-public'
+import { publicTrainingRouter } from './routes/training-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
@@ -99,6 +100,9 @@ app.use('/feedback', feedbackRouter)
 
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)
+
+// Public training-module illustrations (no tenant data), no auth. Must be mounted BEFORE requireAuth.
+app.use('/public/training', publicTrainingRouter)
 
 // Public marketing page SEO metadata — published pages only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/site-pages', publicPagesRouter)

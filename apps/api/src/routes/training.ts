@@ -14,6 +14,7 @@ import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting
 import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
+import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, PlanLimitError } from '../lib/plan-limits'
 
@@ -46,14 +47,14 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
   const tenantId = (req as any).user.tenant_id
   try {
     await ensureTrainingTopicsSeeded()
-    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, created_at: true }
+    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true, created_at: true }
     const [topics, modules, standard] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { OR: [{ tenant_id: null }, { tenant_id: tenantId }], is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
       // Platform standard library — published modules shared to all tenants.
       (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true }, select: sel }),
     ])
-    const slim = (m: any) => ({ ...m, question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
+    const slim = (m: any) => ({ ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
     const moduleByTopic = new Map<string, any>()
     for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, slim(m)) }
     const standardByTopic = new Map<string, any>()
@@ -129,7 +130,24 @@ trainingRouter.get('/modules/:id/full', requireAdmin, async (req: Request, res: 
   const tenantId = (req as any).user.tenant_id
   const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
-  ok(res, { module })
+  ok(res, { module: { ...module, illustration_url: illustrationUrl(module.illustration_key) } })
+})
+
+// POST /training/modules/:id/generate-image — generate a cover illustration (uses 1 AI credit)
+trainingRouter.post('/modules/:id/generate-image', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  try {
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+    const key = await generateModuleIllustration(module.id)
+    await logAiCredit(tenantId, 'training_image', module.id)
+    ok(res, { illustration_url: illustrationUrl(key) })
+  } catch (e: any) {
+    console.error('[training/generate-image] failed:', e?.message ?? e)
+    err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
+  }
 })
 
 // PATCH /training/modules/:id — edit a draft (name, learning, questions, settings)

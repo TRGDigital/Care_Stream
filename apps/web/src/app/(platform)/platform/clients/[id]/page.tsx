@@ -1066,7 +1066,7 @@ function TenantAiUsage({ token, id }: { token: string; id: string }) {
   const [d, setD] = useState<any>(null)
   useEffect(() => { createPlatformClient(token).tenants.aiUsage(id).then(setD).catch(() => {}) }, [token, id])
   if (!d) return null
-  const ACTION_LABEL: Record<string, string> = { training: 'Annual training', cqc_questions: 'CQC questions', training_questions: 'Training questions', translation: 'Translations', policy_format: 'Policy formatting', audit_recs: 'Audit recommendations', remediation: 'Learn & retry lessons', other: 'Other' }
+  const ACTION_LABEL: Record<string, string> = { training: 'Annual training', training_image: 'Training images', cqc_questions: 'CQC questions', training_questions: 'Training questions', translation: 'Translations', policy_format: 'Policy formatting', audit_recs: 'Audit recommendations', remediation: 'Learn & retry lessons', other: 'Other' }
   const c = d.credits, q = d.queries
   const otherAi: Array<[string, number]> = Object.entries(d.other_ai ?? {})
 

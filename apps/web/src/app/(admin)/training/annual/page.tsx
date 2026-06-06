@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users,
-  Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info,
+  Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
@@ -172,6 +172,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [imgBusy, setImgBusy] = useState(false)
   const [savedNote, setSavedNote] = useState('')
 
   function load() { setLoading(true); api.training.moduleFull(id).then(d => setM(d.module)).catch(() => {}).finally(() => setLoading(false)) }
@@ -202,6 +203,12 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
     setRegenerating(true)
     try { await api.training.generateModule(m.topic_id); load() } catch (e: any) { alert(e?.message ?? 'Regeneration failed') } finally { setRegenerating(false) }
   }
+  async function generateImage() {
+    if (!m.illustration_url && !confirm('Generating a cover image uses 1 AI credit. Continue?')) return
+    setImgBusy(true)
+    try { const { illustration_url } = await api.training.generateModuleImage(id); setM((prev: any) => ({ ...prev, illustration_url })) }
+    catch (e: any) { alert(e?.message ?? 'Image generation failed') } finally { setImgBusy(false) }
+  }
 
   if (loading || !m) return <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>
   const kp: string[] = m.learning_content?.key_points ?? []
@@ -224,7 +231,19 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
       )}
 
       <label className="mb-1 block text-xs font-medium text-neutral-mid">Module title</label>
-      <input value={m.name} onChange={e => setField('name', e.target.value)} className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium focus:border-teal focus:outline-none" />
+      <input value={m.name} onChange={e => setField('name', e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium focus:border-teal focus:outline-none" />
+
+      <div className="mb-4 overflow-hidden rounded-card border border-gray-200 bg-white">
+        {m.illustration_url
+          ? <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
+          : <div className="flex aspect-[16/9] w-full items-center justify-center bg-neutral-light/60"><ImageIcon size={28} className="text-gray-300" /></div>}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+          <p className="text-xs text-neutral-mid">Cover image <span className="text-gray-400">· uses 1 AI credit</span></p>
+          <button onClick={generateImage} disabled={imgBusy} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+            {imgBusy ? <><Loader2 size={12} className="animate-spin" /> Generating…</> : <><Sparkles size={12} /> {m.illustration_url ? 'Regenerate image' : 'Generate image'}</>}
+          </button>
+        </div>
+      </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3">
         <div>

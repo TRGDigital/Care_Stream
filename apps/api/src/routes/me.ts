@@ -11,6 +11,7 @@ import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
 import { trackAiAction } from '../lib/plan-limits'
+import { illustrationUrl } from '../services/training/moduleImage'
 import { prisma } from '../db/client'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -242,7 +243,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const [enrollments, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true } } },
+      include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
@@ -253,6 +254,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
       enrollment_id: e.id, module_id: e.module.id, name: e.module.name,
       frequency: e.module.frequency, requires_practical: e.module.requires_practical,
       group_key: e.module.group_key, image_key: e.module.image_key,
+      illustration_url: illustrationUrl(e.module.illustration_key),
       status: e.status, completed_at: e.completed_at, expires_at: e.expires_at, due_date: e.due_date,
       state: annualState(e, now),
     }))
@@ -272,7 +274,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   const [enr, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
+      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true, illustration_key: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
@@ -310,6 +312,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
 
   ok(res, {
     name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
+    illustration_url: illustrationUrl(m.illustration_key),
     learning: { summary, key_points: keyPoints },
     questions,
     policies,

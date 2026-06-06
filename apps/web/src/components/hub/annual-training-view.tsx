@@ -5,7 +5,7 @@
 // assessment. Passing issues a certificate. Modules stay separate from My Training.
 
 import { useEffect, useState } from 'react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
   Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText,
@@ -58,6 +58,7 @@ function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: str
     const isDone = it.status === 'complete'
     return (
       <div key={it.enrollment_id} className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+        {it.illustration_url && <img src={apiAssetUrl(it.illustration_url) ?? ''} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />}
         {isDone && it.state === 'completed' ? <CheckCircle2 size={18} className="shrink-0 text-green-500" />
           : it.state === 'overdue' ? <AlertTriangle size={18} className="shrink-0 text-red-500" />
           : it.state === 'in_progress' ? <Clock size={18} className="shrink-0 text-amber-500" />
@@ -169,6 +170,10 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
       <div className="mx-auto max-w-2xl">
         <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
         <h2 className="text-lg font-bold text-neutral-dark">{data.name || name}</h2>
+
+        {data.illustration_url && (
+          <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="mt-3 aspect-[16/9] w-full rounded-xl border border-gray-200 object-cover" />
+        )}
 
         {data.requires_practical && (
           <div className="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">

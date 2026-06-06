@@ -9,6 +9,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
+import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 
@@ -27,11 +28,11 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true },
+        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true },
       }),
     ])
     const byTopic = new Map<string, any>()
-    for (const m of (modules as any[])) { if (m.topic_id) byTopic.set(m.topic_id, { ...m, question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined }) }
+    for (const m of (modules as any[])) { if (m.topic_id) byTopic.set(m.topic_id, { ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined }) }
     ok(res, { groups: TOPIC_GROUP_LABELS, topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })) })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -81,7 +82,20 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
 standardTrainingRouter.get('/modules/:id/full', async (req: Request, res: Response) => {
   const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null } })
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
-  ok(res, { module })
+  ok(res, { module: { ...module, illustration_url: illustrationUrl(module.illustration_key) } })
+})
+
+// POST /admin/standard-training/modules/:id/generate-image — generate a cover illustration (free, platform-side)
+standardTrainingRouter.post('/modules/:id/generate-image', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  try {
+    const key = await generateModuleIllustration(module.id)
+    ok(res, { illustration_url: illustrationUrl(key) })
+  } catch (e: any) {
+    console.error('[standard-training/generate-image] failed:', e?.message ?? e)
+    err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
+  }
 })
 
 // PATCH /admin/standard-training/modules/:id

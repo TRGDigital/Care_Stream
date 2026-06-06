@@ -4,6 +4,13 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+// Turn a relative API asset path (e.g. /public/training/image/uuid.webp) into a
+// fully-qualified URL the browser can load. Passes through absolute URLs.
+export function apiAssetUrl(path?: string | null): string | null {
+  if (!path) return null
+  return /^https?:\/\//.test(path) ? path : `${API_URL}${path}`
+}
+
 export interface StaffContact {
   login_url:       string
   inbound_email:   string | null
@@ -304,7 +311,7 @@ export function createApiClient(token: string) {
       // ── Annual training (AI catalogue) ──
       catalogue: () => apiFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number }; standard_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null }; standard_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
       }>('/training/catalogue', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
@@ -314,6 +321,8 @@ export function createApiClient(token: string) {
         apiFetch<{ module: any }>(`/training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       approveModule: (id: string, approved = true) =>
         apiFetch<{ module: any }>(`/training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved }) }),
+      generateModuleImage: (id: string) =>
+        apiFetch<{ illustration_url: string | null }>(`/training/modules/${id}/generate-image`, token, { method: 'POST' }),
 
       getEnrollment: (id: string) =>
         apiFetch<{ enrollment: any }>(`/training/enrollments/${id}`, token),

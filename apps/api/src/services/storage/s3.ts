@@ -327,6 +327,35 @@ export async function uploadBlogImage(params: {
   return key
 }
 
+// Stores a training-module illustration privately and returns its S3 KEY
+// (e.g. training/images/uuid.webp). Source bytes are re-encoded to WebP (q82,
+// max 1024px) to keep them small. Falls back to the original bytes on failure.
+export async function uploadTrainingImage(buffer: Buffer): Promise<string> {
+  let body: Buffer = buffer
+  let ext = 'webp'
+  let contentType = 'image/webp'
+  try {
+    body = await sharp(buffer)
+      .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer()
+  } catch (e) {
+    console.warn('[s3] training image optimise failed, storing original:', String(e))
+    ext = 'png'; contentType = 'image/png'
+  }
+
+  const key = `training/images/${randomUUID()}.${ext}`
+  if (USE_LOCAL) { localWrite(key, body); return key }
+  await getS3().send(new PutObjectCommand({
+    Bucket:               BUCKET,
+    Key:                  key,
+    Body:                 body,
+    ContentType:          contentType,
+    ServerSideEncryption: 'AES256',
+  }))
+  return key
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function streamToBuffer(stream: Readable): Promise<Buffer> {

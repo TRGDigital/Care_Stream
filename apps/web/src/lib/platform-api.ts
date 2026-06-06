@@ -3,6 +3,12 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+// Fully-qualify a relative API asset path (e.g. /public/training/image/uuid.webp).
+export function platformAssetUrl(path?: string | null): string | null {
+  if (!path) return null
+  return /^https?:\/\//.test(path) ? path : `${API_URL}${path}`
+}
+
 const TOKEN_KEY = 'platform_admin_token'
 
 export function getPlatformToken(): string | null {
@@ -400,12 +406,13 @@ export function createPlatformClient(token: string) {
     standardTraining: {
       catalogue: () => adminFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
       }>('/standard-training', token),
       generate: (topicId: string) => adminFetch<{ module: any }>('/standard-training/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       moduleFull: (id: string) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/full`, token),
       updateModule: (id: string, data: any) => adminFetch<{ module: any }>(`/standard-training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       approveModule: (id: string, approved = true) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved }) }),
+      generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
     },
 
     tenants: {

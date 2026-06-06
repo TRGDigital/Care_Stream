@@ -789,7 +789,8 @@ model TrainingModule {
   frequency           String                    @default("annual")  // annual|biennial|triennial|once|adhoc
   renewal_months      Int?
   pass_mark           Int                       @default(80)
-  image_key           String?
+  image_key           String?                                       // category/group icon key (NOT a stored image)
+  illustration_key    String?                                       // S3 key of the AI-generated cover illustration
   policy_refs         Json?                                         // [{ policy_id, title, section }]
   topic_id            String?
   group_key           String?

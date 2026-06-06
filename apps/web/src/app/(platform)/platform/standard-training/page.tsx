@@ -5,9 +5,9 @@
 
 import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient } from '@/lib/platform-api'
+import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -94,6 +94,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [imgBusy, setImgBusy] = useState(false)
   const [savedNote, setSavedNote] = useState('')
 
   function load() { setLoading(true); api.standardTraining.moduleFull(id).then(d => setM(d.module)).catch(() => {}).finally(() => setLoading(false)) }
@@ -119,6 +120,11 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     setRegenerating(true)
     try { await api.standardTraining.generate(m.topic_id); load() } catch { /* ignore */ } finally { setRegenerating(false) }
   }
+  async function generateImage() {
+    setImgBusy(true)
+    try { const { illustration_url } = await api.standardTraining.generateImage(id); setM((p: any) => ({ ...p, illustration_url })) }
+    catch { /* ignore */ } finally { setImgBusy(false) }
+  }
 
   if (loading || !m) return <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />)}</div>
   const kp: string[] = m.learning_content?.key_points ?? []
@@ -139,7 +145,20 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
       )}
 
       <label className="mb-1 block text-xs font-medium text-neutral-mid">Module title</label>
-      <input value={m.name} onChange={e => setField('name', e.target.value)} className={`${INPUT} mb-4 font-medium`} />
+      <input value={m.name} onChange={e => setField('name', e.target.value)} className={`${INPUT} mb-3 font-medium`} />
+
+      <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        {m.illustration_url
+          ? <img src={platformAssetUrl(m.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
+          : <div className="flex aspect-[16/9] w-full items-center justify-center bg-neutral-light/60"><ImageIcon size={28} className="text-gray-300" /></div>}
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="text-xs text-neutral-mid">Cover illustration <span className="text-gray-400">· free for standard library</span></p>
+          <button onClick={generateImage} disabled={imgBusy} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+            {imgBusy ? <><Loader2 size={12} className="animate-spin" /> Generating…</> : <><Sparkles size={12} /> {m.illustration_url ? 'Regenerate image' : 'Generate image'}</>}
+          </button>
+        </div>
+      </div>
+
       <div className="mb-4 grid grid-cols-2 gap-3">
         <div><label className="mb-1 block text-xs font-medium text-neutral-mid">Frequency</label><select value={m.frequency} onChange={e => setField('frequency', e.target.value)} className={INPUT}>{FREQS.map(f => <option key={f} value={f}>{FREQ_LABEL[f]}</option>)}</select></div>
         <div><label className="mb-1 block text-xs font-medium text-neutral-mid">Pass mark (%)</label><input type="number" min={0} max={100} value={m.pass_mark} onChange={e => setField('pass_mark', Number(e.target.value))} className={INPUT} /></div>

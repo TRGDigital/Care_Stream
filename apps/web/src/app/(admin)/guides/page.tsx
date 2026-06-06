@@ -558,24 +558,44 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id:      'annual-training',
     icon:    GraduationCap,
-    title:   'Annual training (AI)',
-    summary: 'Generate policy-grounded annual training, review & assign, certificates and renewals',
+    title:   'Annual training modules',
+    summary: 'Standard or policy-tailored annual training, AI credits, cover images, certificates & renewals',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it is">
           <p className="text-sm text-neutral-mid">
-            CareStream generates annual training modules tailored to <strong>your own policies</strong> using AI. Each module <strong>teaches</strong> the topic (a short, policy-grounded lesson) then <strong>assesses</strong> it (a multiple-choice test). Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual Training (AI)</strong>.
+            Annual training modules <strong>teach</strong> a topic (a short, policy-grounded lesson) then <strong>assess</strong> it (a multiple-choice test). Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual training modules</strong>.
           </p>
         </SectionBlock>
 
-        <SectionBlock title="Generating &amp; approving modules">
+        <SectionBlock title="Two ways to get a module">
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Assign standard</strong> — a ready-made module from the CareStream <strong>standard library</strong>, written against good-practice care-sector guidance. These are <strong>free</strong> to assign and don&apos;t use any AI credits. Quickest way to get started.</li>
+            <li><strong>Tailor to our policies</strong> — the AI reads <strong>your own uploaded policies</strong> (plus anonymised reference policies) and writes a module specific to how <em>your</em> home works, citing the policies it used. Tailoring a module uses <strong>1 AI credit</strong>.</li>
+          </ul>
+          <Tip>Both kinds work identically for staff — the difference is only how the content was created. Start with standard modules and tailor the ones where your policies differ from the norm.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="AI credits">
+          <p className="text-sm text-neutral-mid">
+            Tailoring modules, generating cover images and a few other AI features draw on your plan&apos;s <strong>monthly AI credits</strong> (Starter 5, Professional 25). The remaining balance is shown at the top of the Annual training page and on your dashboard. Credits are <strong>separate</strong> from everyday <em>queries</em> (the questions staff ask in the hub) — running low on one never affects the other. The balance resets at the start of each month. When you&apos;re out, you can still assign standard modules for free, or upgrade your plan.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Reviewing &amp; approving">
           <div className="space-y-3">
-            <Step n={1}>Open <strong>Annual Training (AI)</strong>. You&apos;ll see a catalogue of ~44 UK care topics grouped by area, each with a default frequency and a <em>practical-also-required</em> flag where relevant.</Step>
-            <Step n={2}>Click <strong>Generate</strong> on a topic. The AI retrieves your relevant policies (and anonymised reference policies) and drafts a lesson + a 20-question bank, citing the policies it used.</Step>
-            <Step n={3}>It&apos;s created as a <strong>draft</strong>. Click <strong>Review</strong> to read and edit the lesson and every question (mark the correct answer), set the <strong>pass mark</strong> and <strong>frequency</strong>, then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
+            <Step n={1}>Open <strong>Annual training modules</strong>. You&apos;ll see a catalogue of UK care topics grouped by area, each with a default frequency and a <em>practical-also-required</em> flag where relevant.</Step>
+            <Step n={2}>Use <strong>Assign standard</strong> (free) or <strong>Tailor to our policies</strong> (1 credit) on a topic. Tailored modules arrive as a <strong>draft</strong> with a lesson + question bank, citing the policies used.</Step>
+            <Step n={3}>Click <strong>Review</strong> to read and edit the lesson and every question (mark the correct answer), set the <strong>pass mark</strong> and <strong>frequency</strong>, optionally <strong>generate a cover image</strong> (see below), then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
             <Step n={4}><strong>Assign</strong> a published module to staff — individually or tap a <strong>role</strong> to select everyone in it — with an optional due date.</Step>
           </div>
           <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training — Module Generation&rdquo;.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Cover images (optional)">
+          <p className="text-sm text-neutral-mid">
+            In the review screen you can <strong>Generate image</strong> to create a friendly cover illustration for the module — it appears below the title in the hub and helps staff recognise it. Generating an image uses <strong>1 AI credit</strong>; you can regenerate it if you&apos;d like a different one. It&apos;s entirely optional and modules work fine without one. Standard-library modules already come with images at no cost.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="What staff see">

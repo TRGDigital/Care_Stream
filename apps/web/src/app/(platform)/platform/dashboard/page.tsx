@@ -1982,27 +1982,36 @@ function SystemReference() {
       {/* Annual Training (AI modules) */}
       <RefSection icon={GraduationCap} title="Annual Training (AI modules)">
         <p className="leading-relaxed text-neutral-mid">
-          AI-generated, policy-grounded annual training. Teach-then-assess modules are drafted from the tenant&apos;s own
-          policies (RAG) + reference seeds, reviewed/approved by an admin, assigned by role/individual, and completed by
-          staff in the hub in their first language. Passing issues a knowledge-assessment certificate; renewals reuse the
-          existing training expiry engine. Extends <code className="rounded bg-gray-100 px-1 text-xs">TrainingModule</code>/<code className="rounded bg-gray-100 px-1 text-xs">TrainingEnrollment</code> — not a separate silo.
+          AI-generated, policy-grounded annual training. Teach-then-assess modules come two ways: <strong>standard</strong>
+          (platform-controlled library, tenant_id=null, seed-grounded, free to assign) or <strong>tailored</strong> (RAG over the
+          tenant&apos;s own policies + seeds, costs 1 AI credit). Both are source=&apos;ai_generated&apos;; admins review/approve,
+          assign by role/individual, and staff complete them in the hub in their first language. Passing issues a
+          knowledge-assessment certificate; renewals reuse the existing training expiry engine. Extends <code className="rounded bg-gray-100 px-1 text-xs">TrainingModule</code>/<code className="rounded bg-gray-100 px-1 text-xs">TrainingEnrollment</code> — not a separate silo.
         </p>
         <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Data model</p>
           <RefRow label="TrainingTopic"   value="catalogue of ~44 platform topics (group, default_frequency, requires_practical, aliases) — seeded on first GET /training/catalogue" />
-          <RefRow label="TrainingModule+"  value="AI fields: source='ai_generated', approved (draft until true), learning_content {summary,key_points}, questions bank, frequency, renewal_months, pass_mark, image_key, policy_refs, topic_id, group_key" />
+          <RefRow label="TrainingModule+"  value="AI fields: source='ai_generated', tenant_id (null=standard library), approved (draft until true), learning_content {summary,key_points}, questions bank, frequency, renewal_months, pass_mark, image_key (category icon), illustration_key (S3 AI cover), policy_refs, topic_id, group_key" />
           <RefRow label="TrainingEnrollment+" value="practical_signed/_by/_at/_note (observed-competency sign-off for requires_practical topics)" />
         </div>
         <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Generation</p>
-          <RefRow label="Service"   value="services/training/moduleGenerator.ts — embedText + queryVectors(getTenantNamespace) for policy chunks + matching PolicySeeds → Claude → draft (title, learning, 20-question bank, policy_refs)" />
+          <RefRow label="Service"   value="services/training/moduleGenerator.ts — generateAnnualModuleDraft(tenantId|null): null=seed-only (standard); set=embedText + queryVectors(getTenantNamespace) policy chunks + PolicySeeds → Claude → draft (title, learning, 20-question bank, policy_refs)" />
+          <RefRow label="Images"    value="services/training/moduleImage.ts — generateModuleIllustration() OpenAI gpt-image-1 (flat illustration, no text/faces) → sharp WebP → uploadTrainingImage() S3 training/images/. Served public via GET /public/training/image/:file" />
           <RefRow label="Prompt"    value="ai_prompts: training_module_generation — editable in Platform → AI Prompts ('Annual Training — Module Generation')" />
           <RefRow label="Honesty"   value="requires_practical topics flagged as knowledge-component-only; certificates worded as non-accredited knowledge assessments" />
         </div>
         <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI credits (lib/plan-limits.ts)</p>
+          <RefRow label="Limit"     value="Plan.monthly_ai_credit_limit (Starter 5, Professional 25, null=unlimited). Separate meter from monthly_query_limit. ai_credit_logs (one row per action)." />
+          <RefRow label="Billable"  value="logAiCredit() billable=true — training (tailor), training_image, cqc_questions, training_questions. checkAiCreditLimit() throws AI_CREDIT_LIMIT_REACHED (402)." />
+          <RefRow label="Tracked"   value="trackAiAction() billable=false (cost visibility only, no limit) — translation, policy_format, audit_recs, remediation." />
+        </div>
+        <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Admin endpoints (requireAdmin)</p>
-          <RefRow label="Catalogue" value="GET /training/catalogue · POST /training/catalogue/generate" />
-          <RefRow label="Review"    value="GET /training/modules/:id/full · PATCH /training/modules/:id · POST /training/modules/:id/approve" />
+          <RefRow label="Catalogue" value="GET /training/catalogue (topics → module + standard_module) · POST /training/catalogue/generate (tailor, 1 credit)" />
+          <RefRow label="Review"    value="GET /training/modules/:id/full · PATCH /training/modules/:id · POST /training/modules/:id/approve · POST /training/modules/:id/generate-image (1 credit)" />
+          <RefRow label="Standard"  value="Console (requirePlatformAdmin) /admin/standard-training: GET / · POST /generate · GET|PATCH /modules/:id · POST /modules/:id/approve · POST /modules/:id/generate-image (free)" />
           <RefRow label="Assign"    value="POST /training/enroll (existing) — role-based assignment resolves to user_ids in the UI" />
           <RefRow label="Practical" value="POST /users/:id/annual-training/:enrollmentId/practical (sign-off)" />
         </div>

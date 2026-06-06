@@ -191,20 +191,9 @@ export const TRAINING_MODULES: TrainingModuleData[] = [
       { id: 'dem5', text: 'A resident with dementia is becoming increasingly distressed and agitated in the late afternoon. What approaches would you use and why?' },
     ],
   },
-  {
-    slug: 'learning-disability-autism',
-    name: 'Learning Disability & Autism (Oliver McGowan)',
-    description: 'Oliver McGowan Mandatory Training — a legal requirement under the Health and Care Act 2022 for all CQC-registered providers.',
-    category: 'specialist',
-    sort_order: 14,
-    questions: [
-      { id: 'ola1', text: 'What is the Oliver McGowan Mandatory Training and why was it introduced as a legal requirement?' },
-      { id: 'ola2', text: 'What are the key differences between learning disability and autism? Can a person have both?' },
-      { id: 'ola3', text: 'What is the reasonable adjustment duty and give two specific examples relevant to supporting someone with a learning disability or autism in a care setting.' },
-      { id: 'ola4', text: 'How should you adapt your communication style when supporting someone who is non-verbal or who uses augmentative and alternative communication (AAC)?' },
-      { id: 'ola5', text: 'What is the STOMP programme and what does it aim to reduce in care settings?' },
-    ],
-  },
+  // Oliver McGowan Mandatory Training is intentionally NOT offered as a CareStream
+  // module — it is tightly regulated (accredited Tier 1/2 delivery with lived-
+  // experience trainers) and must be delivered through the official programme.
   {
     slug: 'end-of-life-care',
     name: 'End of Life & Palliative Care',

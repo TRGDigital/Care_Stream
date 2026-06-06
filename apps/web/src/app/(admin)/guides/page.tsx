@@ -663,7 +663,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Go to <strong>Training</strong> in the sidebar to see individual staff completion rates, correct and incorrect responses, and which modules have been covered.
           </p>
         </SectionBlock>
-        <Tip>Oliver McGowan Mandatory Training is a legal requirement since 2024. Tier 1 applies to all staff, and Tier 2 applies to those working with people with learning disabilities or autism. Upload the relevant training documents to track compliance across your team.</Tip>
       </div>
     ),
   },

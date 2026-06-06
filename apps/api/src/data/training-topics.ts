@@ -25,7 +25,9 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Equality, Diversity and Inclusion', group_key: 'core_mandatory', default_frequency: 'triennial', aliases: ['EDI', 'equality'] },
   { title: 'Food Hygiene', group_key: 'core_mandatory', default_frequency: 'triennial', aliases: ['food safety', 'level 2 food hygiene'] },
   { title: 'GDPR / Data Protection', group_key: 'core_mandatory', default_frequency: 'annual', aliases: ['data protection', 'information governance'] },
-  { title: 'Oliver McGowan Training on Learning Disability and Autism', group_key: 'core_mandatory', default_frequency: 'once', aliases: ['learning disability', 'autism', 'oliver mcgowan'] },
+  // Oliver McGowan Mandatory Training is intentionally NOT offered here — it is
+  // tightly regulated (accredited Tier 1/2 delivery with lived-experience trainers)
+  // and not appropriate to AI-generate or self-certify.
 
   // ── Health & safety / statutory ──
   { title: 'General Health & Safety Awareness', group_key: 'health_safety', default_frequency: 'annual', aliases: ['health and safety'] },

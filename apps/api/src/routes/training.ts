@@ -489,7 +489,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       (prisma as any).trainingEnrollment.findMany({
         where:   { tenant_id: tenantId, user_id: userId },
         include: {
-          module:  { select: { id: true, name: true, category: true, description: true, questions: true } },
+          module:  { select: { id: true, name: true, category: true, description: true, questions: true, source: true } },
           answers: { orderBy: { answered_at: 'asc' } },
         },
         orderBy: { created_at: 'asc' },
@@ -507,13 +507,15 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
     const translate = langCode !== 'eng'
 
     // English baseline — always returned, even if translation fails.
-    const baseline = (enrollments as any[]).map((e: any) => ({
-      ...e,
-      module: {
-        ...e.module,
-        questions: (Array.isArray(e.module?.questions) ? e.module.questions : []).map(({ correct: _c, ...q }: any) => q),
-      },
-    }))
+    const baseline = (enrollments as any[])
+      .filter((e: any) => e.module?.source !== 'ai_generated') // AI annual modules live in Annual Training
+      .map((e: any) => ({
+        ...e,
+        module: {
+          ...e.module,
+          questions: (Array.isArray(e.module?.questions) ? e.module.questions : []).map(({ correct: _c, ...q }: any) => q),
+        },
+      }))
     console.log(`[my-enrollments] user=${userId} lang=${langCode} translate=${translate} count=${baseline.length}`)
 
     let sanitised = baseline

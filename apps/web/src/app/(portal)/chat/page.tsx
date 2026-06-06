@@ -9,6 +9,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
+import { AnnualTrainingView } from '@/components/hub/annual-training-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { Spinner } from '@/components/ui/spinner'
@@ -309,7 +310,7 @@ export default function ChatPage() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
@@ -326,7 +327,7 @@ export default function ChatPage() {
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
-  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number }>({ induction: 0, training: 0, cqc: 0, followup: 0 })
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
@@ -368,7 +369,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup })).catch(() => {})
+    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
     api.me.savedPolicies().then(d => setSavedPolicies(d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })))).catch(() => {})
   }, [session?.accessToken, view, sidebarPolicy])
 
@@ -622,6 +623,14 @@ export default function ChatPage() {
             {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
           <button
+            onClick={() => setView('annual')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'annual' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <GraduationCap size={15} />
+            Annual Training
+            {navCounts.annual > 0 && <NavBadge count={navCounts.annual} className="bg-teal" />}
+          </button>
+          <button
             onClick={() => setView('followup')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'followup' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
@@ -769,10 +778,17 @@ export default function ChatPage() {
           <AuditsView token={session.accessToken} />
         )}
 
+        {/* Annual Training view */}
+        {view === 'annual' && session?.accessToken && (
+          <AnnualTrainingView token={session.accessToken} onChange={() => {
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
+          }} />
+        )}
+
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
           <FollowUpView token={session.accessToken} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
         )}
 

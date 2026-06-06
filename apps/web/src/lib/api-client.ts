@@ -448,7 +448,13 @@ export function createApiClient(token: string) {
 
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
-      counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number }>('/me/counts', token),
+      counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number }>('/me/counts', token),
+      annualTraining: {
+        list: () => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>('/me/annual-training', token),
+        get: (id: string) => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; learning: { summary: string; key_points: string[] }; questions: Array<{ id: string; text: string; options: string[] }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string }>(`/me/annual-training/${id}`, token),
+        submit: (id: string) => apiFetch<{ passed: boolean; score: number; correct: number; total: number; pass_mark: number }>(`/me/annual-training/${id}/submit`, token, { method: 'POST' }),
+        certificate: (id: string) => apiFetch<{ staff_name: string; module_name: string; org_name: string; logo_url: string | null; completed_at: string; expires_at: string | null; frequency: string; requires_practical: boolean; score: number }>(`/me/annual-training/${id}/certificate`, token),
+      },
       followUp: () => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>('/me/follow-up', token),
       followUpLesson: (p: { source: string; ref: string; enrollment_id: string }) =>
         apiFetch<{ lesson: { why: string; key_points: string[]; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[] }; policy_id?: string | null; policy_title?: string | null }; lang: string }>(`/me/follow-up/lesson?source=${encodeURIComponent(p.source)}&ref=${encodeURIComponent(p.ref)}&enrollment_id=${encodeURIComponent(p.enrollment_id)}`, token),

@@ -59,18 +59,19 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const now = new Date()
-  const [training, induction, cqc, tWrong, oWrong] = await Promise.all([
-    (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, OR: [
-      { status: { in: ['not_started', 'in_progress'] } },
-      { status: 'complete', expires_at: { lt: now } },
-    ] } }).catch(() => 0),
+  const [tEnr, induction, cqc, tWrong, oWrong] = await Promise.all([
+    // Split into My Training (manual modules) vs Annual Training (AI modules).
+    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
     (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
     (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { answers: { where: { is_correct: false }, select: { id: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { progress: { where: { answer_correct: false }, select: { id: true } } } }).catch(() => []),
   ])
+  const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
+  const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
+  const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && outstanding(e)).length
   const followup = (tWrong as any[]).reduce((a, e) => a + (e.answers?.length ?? 0), 0) + (oWrong as any[]).reduce((a, e) => a + (e.progress?.length ?? 0), 0)
-  ok(res, { training, induction, cqc, followup })
+  ok(res, { training, induction, cqc, followup, annual })
 })
 
 // ─── GET /me/follow-up ────────────────────────────────────────────────────────
@@ -217,6 +218,146 @@ meRouter.post('/follow-up/resolved', async (req: Request, res: Response) => {
   const label = typeof b.label === 'string' ? b.label.slice(0, 280) : null
   await (prisma as any).remediationAttempt.create({ data: { tenant_id: tenantId, user_id: userId, source, ref, method, label, lang: typeof b.lang === 'string' ? b.lang : 'eng' } }).catch(() => {})
   ok(res, { logged: true })
+})
+
+// ─── Annual training (AI modules) ─────────────────────────────────────────────
+
+function annualState(e: any, now: Date): string {
+  if (e.status === 'complete') {
+    if (e.expires_at && new Date(e.expires_at) < now) return 'overdue'
+    if (e.expires_at && new Date(e.expires_at).getTime() - now.getTime() < 30 * 86_400_000) return 'due_soon'
+    return 'completed'
+  }
+  if (e.status === 'in_progress') return 'in_progress'
+  if (e.due_date && new Date(e.due_date) < now) return 'overdue'
+  return 'todo'
+}
+
+// GET /me/annual-training — the staff member's assigned annual (AI) modules.
+meRouter.get('/annual-training', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const now = new Date()
+  const [enrollments, user, tenant] = await Promise.all([
+    (prisma as any).trainingEnrollment.findMany({
+      where:   { tenant_id: tenantId, user_id: userId },
+      include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true } } },
+    }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  let items = (enrollments as any[])
+    .filter(e => e.module?.source === 'ai_generated' && e.module?.approved)
+    .map(e => ({
+      enrollment_id: e.id, module_id: e.module.id, name: e.module.name,
+      frequency: e.module.frequency, requires_practical: e.module.requires_practical,
+      group_key: e.module.group_key, image_key: e.module.image_key,
+      status: e.status, completed_at: e.completed_at, expires_at: e.expires_at, due_date: e.due_date,
+      state: annualState(e, now),
+    }))
+
+  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  if (lang !== 'eng' && items.length) {
+    const langName = languageNameForCode(lang, tenant?.custom_languages)
+    items = await withTranslationBudget(mapLimit(items, 6, async (it: any) => ({ ...it, name: await translateText(it.name, lang, langName) })), 12_000, items)
+  }
+  ok(res, { items })
+})
+
+// GET /me/annual-training/:enrollmentId — learning section + assessment (translated)
+meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const [enr, user, tenant] = await Promise.all([
+    (prisma as any).trainingEnrollment.findFirst({
+      where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
+    }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  if (!enr || enr.module?.source !== 'ai_generated') { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+
+  const m = enr.module
+  const learn = (m.learning_content ?? {}) as any
+  let summary = String(learn.summary ?? '')
+  let keyPoints: string[] = Array.isArray(learn.key_points) ? learn.key_points.map((x: any) => String(x)) : []
+  let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
+
+  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  if (lang !== 'eng') {
+    const langName = languageNameForCode(lang, tenant?.custom_languages)
+    const translated = await withTranslationBudget((async () => {
+      const [s, kp, qs] = await Promise.all([
+        translateText(summary, lang, langName),
+        mapLimit(keyPoints, 6, (p: string) => translateText(p, lang, langName)),
+        mapLimit(questions, 6, async (q: any) => { const t = await translateQuestionCached({ text: q.text ?? '', options: q.options }, lang, langName); return { ...q, text: t.text, options: t.options } }),
+      ])
+      return { summary: s, keyPoints: kp, questions: qs }
+    })(), 18_000, null)
+    if (translated) { summary = translated.summary; keyPoints = translated.keyPoints; questions = translated.questions }
+  }
+
+  ok(res, {
+    name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
+    learning: { summary, key_points: keyPoints },
+    questions,
+    answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),
+    status: enr.status,
+  })
+})
+
+// POST /me/annual-training/:enrollmentId/submit — grade against pass mark, issue cert on pass
+meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const enr = await (prisma as any).trainingEnrollment.findFirst({
+    where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    include: { module: { select: { source: true, questions: true, pass_mark: true, renewal_months: true } }, answers: { select: { question_id: true, is_correct: true } } },
+  })
+  if (!enr || enr.module?.source !== 'ai_generated') { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+
+  const bank = Array.isArray(enr.module.questions) ? enr.module.questions : []
+  const bankIds = new Set(bank.map((q: any) => q.id))
+  const total = bank.length
+  const correct = (enr.answers ?? []).filter((a: any) => bankIds.has(a.question_id) && a.is_correct).length
+  const score = total ? Math.round((correct / total) * 100) : 0
+  const passMark = enr.module.pass_mark ?? 80
+  const passed = score >= passMark
+
+  if (passed) {
+    const now = new Date()
+    const months = enr.module.renewal_months
+    const expiresAt = months ? new Date(now.getFullYear(), now.getMonth() + months, now.getDate()) : null
+    await (prisma as any).trainingEnrollment.update({
+      where: { id: enr.id },
+      data:  { status: 'complete', completed_at: now, expires_at: expiresAt, certificate_url: 'issued', updated_at: now },
+    })
+  }
+  ok(res, { passed, score, correct, total, pass_mark: passMark })
+})
+
+// GET /me/annual-training/:enrollmentId/certificate — certificate data for a passed module
+meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const [enr, tenant, user] = await Promise.all([
+    (prisma as any).trainingEnrollment.findFirst({
+      where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+      include: { module: { select: { name: true, requires_practical: true, frequency: true, questions: true } }, answers: { select: { question_id: true, is_correct: true } } },
+    }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }),
+  ])
+  if (!enr || enr.status !== 'complete') { err(res, 'NOT_FOUND', 'No certificate yet.', 404); return }
+  const bank = Array.isArray(enr.module.questions) ? enr.module.questions : []
+  const total = bank.length
+  const correct = (enr.answers ?? []).filter((a: any) => a.is_correct).length
+  ok(res, {
+    staff_name: user?.name ?? '', module_name: enr.module.name, org_name: tenant?.name ?? '', logo_url: tenant?.logo_url ?? null,
+    completed_at: enr.completed_at, expires_at: enr.expires_at, frequency: enr.module.frequency,
+    requires_practical: enr.module.requires_practical, score: total ? Math.round((correct / total) * 100) : 0,
+  })
 })
 
 // ─── GET /me/policy/:policyId ─────────────────────────────────────────────────

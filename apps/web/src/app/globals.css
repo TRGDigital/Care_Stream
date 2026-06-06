@@ -144,3 +144,14 @@ a, button { transition: all 0.18s ease; }
   /* Hide the ⓘ info icons — they're hover-only, redundant in a static PDF. */
   body.print-staff-record #staff-record-print .info-tip { display: none !important; }
 }
+
+/* Annual-training certificate: print only the certificate sheet. */
+@media print {
+  body.printing-cert, html:has(body.printing-cert) { height: auto !important; overflow: visible !important; }
+  body.printing-cert * { visibility: hidden !important; }
+  body.printing-cert .cert-sheet, body.printing-cert .cert-sheet * { visibility: visible !important; }
+  body.printing-cert .cert-sheet {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-shadow: none !important;
+  }
+}

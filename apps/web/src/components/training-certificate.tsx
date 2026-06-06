@@ -27,10 +27,10 @@ export function TrainingCertificate({
   return (
     <div className="cert-sheet relative overflow-hidden rounded-2xl border border-teal/20 bg-white shadow-card">
       {/* Brand header band */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-4">
+      <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-white.png" alt="CareStream" className="h-7 w-auto object-contain" />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/85">Annual Training</span>
+        <img src="/logo-white.png" alt="CareStream" className="h-11 w-auto object-contain" />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">Annual Training</span>
       </div>
 
       {/* Decorative corner flourishes */}
@@ -55,12 +55,12 @@ export function TrainingCertificate({
         <p className="mt-5 text-sm text-neutral-mid">has successfully completed the annual training module</p>
         <p className="mt-1 text-xl font-semibold text-teal-dark">{moduleName}</p>
         {orgName && (
-          <div className="mt-2 flex items-center justify-center gap-2 text-sm text-neutral-mid">
-            <span>for {orgName}</span>
+          <div className="mt-3 flex flex-col items-center gap-1.5">
             {orgLogoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={orgLogoUrl} alt="" className="h-6 w-auto object-contain" />
+              <img src={orgLogoUrl} alt={orgName} className="h-14 w-auto object-contain" />
             )}
+            <span className="text-sm text-neutral-mid">for {orgName}</span>
           </div>
         )}
 
@@ -90,7 +90,7 @@ export function TrainingCertificate({
         <div className="mt-8 flex items-center justify-center gap-2 border-t border-gray-100 pt-5">
           <span className="text-[10px] uppercase tracking-wide text-neutral-mid">Issued &amp; assessed by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.png" alt="CareStream" className="h-4 w-auto object-contain" />
+          <img src="/logo-color.png" alt="CareStream" className="h-6 w-auto object-contain" />
         </div>
         <p className="mx-auto mt-3 max-w-lg text-[9.5px] leading-relaxed text-neutral-mid">
           Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. This records completion of a knowledge

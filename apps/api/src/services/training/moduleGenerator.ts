@@ -56,15 +56,18 @@ async function getPrompt(): Promise<string> {
 }
 
 // Gather grounding: tenant policy chunks (RAG) + matching reference seeds.
-async function buildGrounding(tenantId: string, topic: { title: string; aliases?: string[] }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
+// tenantId null → platform/standard module: ground in reference seeds only.
+async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[] }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
   const query = `${topic.title} ${(topic.aliases ?? []).join(' ')}`.trim()
   let chunks: any[] = []
-  try {
-    const vector = await embedText(query)
-    const matches = await queryVectors(getTenantNamespace(tenantId), vector, 10)
-    chunks = matches.filter(m => (m.score ?? 0) > 0.18).map(m => m.metadata)
-  } catch (e: any) {
-    console.error('[module-gen] retrieval failed:', e?.message ?? e)
+  if (tenantId) {
+    try {
+      const vector = await embedText(query)
+      const matches = await queryVectors(getTenantNamespace(tenantId), vector, 10)
+      chunks = matches.filter(m => (m.score ?? 0) > 0.18).map(m => m.metadata)
+    } catch (e: any) {
+      console.error('[module-gen] retrieval failed:', e?.message ?? e)
+    }
   }
 
   const parts: string[] = []
@@ -97,7 +100,7 @@ function parseJson(raw: string): any {
 }
 
 export async function generateAnnualModuleDraft(
-  tenantId: string,
+  tenantId: string | null,
   topic: { title: string; aliases?: string[]; requires_practical?: boolean },
 ): Promise<GeneratedModule> {
   const { text, refs } = await buildGrounding(tenantId, topic)

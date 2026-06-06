@@ -28,6 +28,7 @@ import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
+import { standardTrainingRouter } from './routes/standard-training'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -78,6 +79,7 @@ app.use('/auth', authRouter)
 // §6.5 — Platform admin routes. Uses PLATFORM_ADMIN_TOKEN, not tenant JWTs.
 // Must be mounted BEFORE requireAuth so it isn't rejected as an unauthenticated request.
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
+app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
 app.use('/admin', adminRouter)
 

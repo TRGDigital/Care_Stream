@@ -24,7 +24,7 @@ function kebab(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
 }
 
-async function ensureTrainingTopicsSeeded(): Promise<void> {
+export async function ensureTrainingTopicsSeeded(): Promise<void> {
   const existing = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null }, select: { title: true } })
   const have = new Set((existing as any[]).map(t => t.title))
   const toCreate = TRAINING_TOPICS
@@ -45,18 +45,21 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
   const tenantId = (req as any).user.tenant_id
   try {
     await ensureTrainingTopicsSeeded()
-    const [topics, modules] = await Promise.all([
+    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, created_at: true }
+    const [topics, modules, standard] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { OR: [{ tenant_id: null }, { tenant_id: tenantId }], is_active: true }, orderBy: { sort_order: 'asc' } }),
-      (prisma as any).trainingModule.findMany({
-        where:  { tenant_id: tenantId, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, created_at: true },
-      }),
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
+      // Platform standard library — published modules shared to all tenants.
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true }, select: sel }),
     ])
+    const slim = (m: any) => ({ ...m, question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
     const moduleByTopic = new Map<string, any>()
-    for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, { ...m, question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined }) }
+    for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, slim(m)) }
+    const standardByTopic = new Map<string, any>()
+    for (const m of (standard as any[])) { if (m.topic_id) standardByTopic.set(m.topic_id, slim(m)) }
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
-      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null })),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -156,7 +159,9 @@ async function ensureTenantModules(tenantId: string): Promise<void> {
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
   const setting = facilityTypeToSetting(tenant?.facility_type)
   const templates = await (prisma as any).trainingModule.findMany({
-    where: { tenant_id: null, OR: [{ care_setting: setting }, { care_setting: null }] },
+    // Exclude AI annual modules — those are assigned directly, not cloned as
+    // editable per-tenant copies (and they belong in Annual Training, not My Training).
+    where: { tenant_id: null, source: { not: 'ai_generated' }, OR: [{ care_setting: setting }, { care_setting: null }] },
   })
   if (templates.length === 0) return
   await (prisma as any).trainingModule.createMany({
@@ -249,7 +254,8 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     const [members, modules] = await Promise.all([
       (prisma as any).user.findMany({ where: { id: { in: user_ids }, tenant_id: tenantId }, select: { id: true } }),
       // Only this tenant's own module copies are valid enrollment targets.
-      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, tenant_id: tenantId, is_active: true }, select: { id: true } }),
+      // Valid targets: the tenant's own modules, OR a published platform standard module (tenant_id null).
+      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true } }),
     ])
     const validUserIds:   string[] = members.map((m: any) => m.id)
     const validModuleIds: string[] = modules.map((m: any) => m.id)

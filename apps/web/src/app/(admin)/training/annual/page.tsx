@@ -88,13 +88,21 @@ export default function AnnualTrainingPage() {
                           {t.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">Practical also required</span>}
                           {m && <span className={`rounded-full px-1.5 py-0.5 font-medium ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>}
                           {m && <span>· {m.question_count} questions</span>}
+                          {!m && t.standard_module && <span className="rounded-full bg-teal/10 px-1.5 py-0.5 font-medium text-teal">Standard available — free</span>}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {!m && (
-                          <Button size="sm" onClick={() => generate(t.id)} disabled={busy === t.id}>
-                            {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> Generate</>}
-                          </Button>
+                          <>
+                            {t.standard_module && (
+                              <button onClick={() => setView({ mode: 'assign', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                                <Users size={12} /> Assign standard
+                              </button>
+                            )}
+                            <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id}>
+                              {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
+                            </Button>
+                          </>
                         )}
                         {m && (
                           <>

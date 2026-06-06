@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
 import {
-  AlertCircle, CheckCircle2, ChevronDown, Clock, ExternalLink, History,
+  AlertCircle, CheckCircle2, ChevronDown, Clock, ExternalLink, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, X,
 } from 'lucide-react'
 
@@ -26,7 +26,7 @@ type Enrollment = {
   completed_at: string | null; expires_at: string | null
   certificate_url: string | null; due_date: string | null
   daysUntilExpiry: number | null
-  module: { id: string; slug: string; name: string; category: string; sort_order: number }
+  module: { id: string; slug: string; name: string; category: string; sort_order: number; source?: string; requires_practical?: boolean }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1591,6 +1591,15 @@ export default function TrainingPage() {
     enrollmentMap[e.user_id][e.module_id] = e
   }
 
+  // Annual training (AI modules) — derived from the enrolments themselves, since
+  // these modules aren't in the manual `modules` list.
+  const annualEnrollments = enrollments.filter(e => e.module?.source === 'ai_generated')
+  const annualModuleMap = new Map<string, { id: string; name: string; requires_practical?: boolean }>()
+  for (const e of annualEnrollments) if (e.module && !annualModuleMap.has(e.module.id)) annualModuleMap.set(e.module.id, { id: e.module.id, name: e.module.name, requires_practical: e.module.requires_practical })
+  const annualModules = [...annualModuleMap.values()].sort((a, b) => a.name.localeCompare(b.name))
+  const annualStaffIds = new Set(annualEnrollments.map(e => e.user_id))
+  const annualStaff = staff.filter(s => annualStaffIds.has(s.id))
+
   // Summary stats
   const now = new Date()
   const statutoryModules = modules.filter(m => m.category === 'statutory')
@@ -1770,6 +1779,62 @@ export default function TrainingPage() {
               <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">S</span> Statutory &nbsp;
               <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-500">Sp</span> Specialist
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Annual training compliance grid */}
+      {annualModules.length > 0 && (
+        <div className="mt-6">
+          <div className="mb-2 flex items-center gap-2">
+            <GraduationCap size={16} className="text-teal" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Annual training</h2>
+            <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">{annualStaff.length} staff · {annualModules.length} module{annualModules.length === 1 ? '' : 's'}</span>
+          </div>
+          <div className="overflow-x-auto rounded-card border border-gray-100 bg-white shadow-card">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left text-xs font-medium text-neutral-mid min-w-[180px]">Staff member</th>
+                  {annualModules.map(m => (
+                    <th key={m.id} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[120px]">
+                      <div className="flex flex-col items-center gap-1">
+                        {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">+ prac</span>}
+                        <span className="leading-tight">{m.name.length > 16 ? m.name.slice(0, 14) + '…' : m.name}</span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {annualStaff.map(s => (
+                  <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
+                    <td className="sticky left-0 z-10 bg-white px-5 py-3">
+                      <p className="font-medium text-neutral-dark">{s.name}</p>
+                      <p className="text-xs text-neutral-mid">{s.job_role ?? s.email}</p>
+                    </td>
+                    {annualModules.map(m => {
+                      const enrollment = enrollmentMap[s.id]?.[m.id]
+                      return (
+                        <td key={m.id} className="px-3 py-3 text-center">
+                          <button onClick={() => enrollment && setSelectedEnrollmentId(enrollment.id)} className={enrollment ? 'cursor-pointer' : 'cursor-default'} title={enrollment ? `${m.name} — ${enrollment.status.replace('_', ' ')}` : `${m.name} — not assigned`}>
+                            <StatusCell enrollment={enrollment} />
+                          </button>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex flex-wrap items-center gap-4 border-t border-gray-100 px-5 py-3 text-xs text-neutral-mid">
+              <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={11} /></span> Passed</span>
+              <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-600"><AlertCircle size={11} /></span> Renewal due</span>
+              <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-500"><AlertCircle size={11} /></span> Overdue / expired</span>
+              <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-teal bg-teal/10 text-teal"><Clock size={10} /></span> In progress</span>
+              <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={10} /></span> Not started</span>
+              <span className="ml-auto">Tap a cell for detail · scores &amp; certificates on the staff record</span>
+            </div>
           </div>
         </div>
       )}

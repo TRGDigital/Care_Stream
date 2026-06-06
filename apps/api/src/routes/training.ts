@@ -211,7 +211,7 @@ trainingRouter.get('/compliance', async (req: Request, res: Response) => {
       }),
       (prisma as any).trainingEnrollment.findMany({
         where:   { tenant_id: tenantId },
-        include: { module: { select: { id: true, slug: true, name: true, category: true, sort_order: true } } },
+        include: { module: { select: { id: true, slug: true, name: true, category: true, sort_order: true, source: true, requires_practical: true } } },
         orderBy: { created_at: 'asc' },
       }),
     ])

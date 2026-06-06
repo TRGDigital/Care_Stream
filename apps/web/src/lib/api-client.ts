@@ -294,7 +294,7 @@ export function createApiClient(token: string) {
             completed_at: string | null; expires_at: string | null
             certificate_url: string | null; due_date: string | null
             daysUntilExpiry: number | null
-            module: { id: string; slug: string; name: string; category: string; sort_order: number }
+            module: { id: string; slug: string; name: string; category: string; sort_order: number; source?: string; requires_practical?: boolean }
           }>
         }>('/training/compliance', token),
 

@@ -836,6 +836,7 @@ model TrainingEnrollment {
   practical_signed_by String?
   practical_signed_at DateTime?
   practical_note      String?
+  learn_seconds       Int         @default(0)     // active time on the lesson (substantiates the CPD duration)
   created_at      DateTime        @default(now())
   updated_at      DateTime        @updatedAt
   tenant          Tenant          @relation(fields: [tenant_id], references: [id])

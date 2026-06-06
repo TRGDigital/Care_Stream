@@ -1318,8 +1318,8 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
     const enrollments = await (prisma as any).trainingEnrollment.findMany({
       where:  { tenant_id: tenantId },
       select: {
-        user_id: true, status: true, expires_at: true, practical_signed: true,
-        module:  { select: { id: true, name: true, source: true, requires_practical: true, questions: true } },
+        user_id: true, status: true, expires_at: true, practical_signed: true, learn_seconds: true,
+        module:  { select: { id: true, name: true, source: true, requires_practical: true, questions: true, duration_minutes: true } },
         answers: { select: { is_correct: true } },
       },
     })
@@ -1341,11 +1341,14 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
       const total = Array.isArray(e.module?.questions) ? e.module.questions.length : 0
       const correct = (e.answers ?? []).filter((a: any) => a.is_correct).length
       const mk = e.module.id
-      const g = byModule.get(mk) ?? { id: mk, name: e.module.name, requires_practical: e.module.requires_practical, assigned: 0, completed: 0, scores: [] as number[] }
+      const g = byModule.get(mk) ?? { id: mk, name: e.module.name, requires_practical: e.module.requires_practical, claimed_minutes: e.module.duration_minutes ?? null, assigned: 0, completed: 0, scores: [] as number[], learn_secs: [] as number[] }
       g.assigned += 1
       if (isComplete) { g.completed += 1; if (total) g.scores.push(Math.round((correct / total) * 100)) }
+      if (e.learn_seconds > 0) g.learn_secs.push(e.learn_seconds)
       byModule.set(mk, g)
     }
+    const allLearnSecs = ai.filter(e => e.learn_seconds > 0).map(e => e.learn_seconds)
+    const avgActualMinutes = allLearnSecs.length ? Math.round(allLearnSecs.reduce((a: number, b: number) => a + b, 0) / allLearnSecs.length / 60) : null
 
     const modulesPublished = await (prisma as any).trainingModule.count({ where: { tenant_id: tenantId, source: 'ai_generated', approved: true } })
 
@@ -1354,6 +1357,8 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
       assigned: m.assigned, completed: m.completed,
       avg_score: m.scores.length ? Math.round(m.scores.reduce((a: number, b: number) => a + b, 0) / m.scores.length) : null,
       completion_pct: m.assigned ? Math.round((m.completed / m.assigned) * 100) : 0,
+      claimed_minutes: m.claimed_minutes,
+      avg_actual_minutes: m.learn_secs.length ? Math.round(m.learn_secs.reduce((a: number, b: number) => a + b, 0) / m.learn_secs.length / 60) : null,
     })).sort((a, b) => a.completion_pct - b.completion_pct)
 
     ok(res, {
@@ -1365,6 +1370,7 @@ analyticsRouter.get('/annual-training', requireAdmin, async (_req: Request, res:
         renewal_due: renewalDue,
         practical_due: practicalDue,
         completion_pct: ai.length ? Math.round((completed / ai.length) * 100) : null,
+        avg_actual_minutes: avgActualMinutes,
       },
       by_module,
     })

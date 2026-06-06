@@ -39,7 +39,7 @@ export default function StandardTrainingPage() {
     if (!api || busy) return
     setBusy(topicId)
     try { const { module } = await api.standardTraining.generate(topicId); load(); setReviewId(module.id) }
-    catch { /* ignore */ } finally { setBusy(null) }
+    catch (e: any) { alert(e?.message ?? 'Generation failed — the AI may have timed out. Please try again.') } finally { setBusy(null) }
   }
 
   if (reviewId && token) return (
@@ -130,9 +130,11 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch { /* ignore */ } finally { setSaving(false) }
   }
   async function regenerate() {
-    if (!confirm('Regenerate from the policy seeds? Current edits will be replaced and it returns to draft.')) return
+    if (!confirm('Rebuild the whole module from the policy seeds? The lesson (sections, scenarios, outcomes) and questions are regenerated, current edits are replaced, and it returns to draft.')) return
     setRegenerating(true)
-    try { await api.standardTraining.generate(m.topic_id); load() } catch { /* ignore */ } finally { setRegenerating(false) }
+    try { await api.standardTraining.generate(m.topic_id); load() }
+    catch (e: any) { alert(e?.message ?? 'Rebuild failed — the AI generation may have timed out. Please try again.') }
+    finally { setRegenerating(false) }
   }
   async function generateImage() {
     setImgBusy(true)

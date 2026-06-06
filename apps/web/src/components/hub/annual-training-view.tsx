@@ -112,10 +112,27 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const learnSecondsRef = useRef(0)
+  const phaseRef = useRef<'learn' | 'assess'>('learn')
 
   // Jump back to the top whenever the phase (learn ⇄ assess) or result changes,
   // so the assessment opens at question 1 rather than keeping the lesson scroll.
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [phase, result])
+
+  // Accumulate active time on the LESSON (paused when the tab is hidden) to
+  // substantiate the module's claimed CPD duration. Flushed on leaving the lesson.
+  useEffect(() => { phaseRef.current = phase }, [phase])
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (phaseRef.current === 'learn' && (typeof document === 'undefined' || document.visibilityState === 'visible')) learnSecondsRef.current += 1
+    }, 1000)
+    return () => { clearInterval(iv); flushLearnTime() }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function flushLearnTime() {
+    const secs = learnSecondsRef.current
+    if (secs > 0) { learnSecondsRef.current = 0; api.me.annualTraining.recordLearnTime(id, secs).catch(() => {}) }
+  }
 
   useEffect(() => {
     api.me.annualTraining.get(id).then(d => {
@@ -293,7 +310,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
               )
             )}
 
-            <button onClick={() => setPhase('assess')} className="w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
+            <button onClick={() => { flushLearnTime(); setPhase('assess') }} className="w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
           </div>
         )}
 

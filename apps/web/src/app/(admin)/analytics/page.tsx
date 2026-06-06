@@ -718,13 +718,14 @@ export default function AnalyticsPage() {
             <StatCard label="Practicals to record" value={annual.summary.practical_due} info="Modules that also need a practical/observed assessment recorded against a completed knowledge module." Icon={AlertCircle} iconBg="bg-orange-50" iconColor="text-orange-400" />
           </div>
           {annual.by_module.length > 0 && (
-            <Card title="By module" info="Completion and average assessment score for each published annual module.">
+            <Card title="By module" info="Completion, average assessment score, and lesson time (claimed CPD duration vs the average active time staff actually spend on the lesson) for each published annual module.">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-gray-100 text-left">
                   <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Module</th>
                   <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Assigned</th>
                   <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Completed</th>
                   <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Avg score</th>
+                  <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Lesson time<br/><span className="font-normal text-[10px]">claimed · actual</span></th>
                   <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Rate</th>
                 </tr></thead>
                 <tbody>
@@ -734,6 +735,7 @@ export default function AnalyticsPage() {
                       <td className="py-2 pr-3 text-center text-neutral-mid">{m.assigned}</td>
                       <td className="py-2 pr-3 text-center font-medium text-status-success">{m.completed}</td>
                       <td className="py-2 pr-3 text-center text-neutral-dark">{m.avg_score !== null ? `${m.avg_score}%` : '—'}</td>
+                      <td className="py-2 pr-3 text-center text-xs text-neutral-mid">{m.claimed_minutes ? `${m.claimed_minutes}m` : '—'} · {m.avg_actual_minutes != null ? `${m.avg_actual_minutes}m` : '—'}</td>
                       <td className="py-2 text-right"><span className={clsx('font-semibold', m.completion_pct >= 80 ? 'text-status-success' : m.completion_pct >= 50 ? 'text-status-warning' : 'text-status-error')}>{m.completion_pct}%</span></td>
                     </tr>
                   ))}

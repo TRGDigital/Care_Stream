@@ -374,6 +374,22 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
   ok(res, { passed, score, correct, total, pass_mark: passMark })
 })
 
+// POST /me/annual-training/:enrollmentId/learn-time — accumulate active lesson time
+// (substantiates the module's claimed CPD duration). Per-call capped to guard against
+// runaway values; a normal lesson is a few minutes.
+meRouter.post('/annual-training/:enrollmentId/learn-time', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const secs = Math.max(0, Math.min(3600, Math.round(Number(req.body?.seconds) || 0)))
+  if (secs > 0) {
+    await (prisma as any).trainingEnrollment.updateMany({
+      where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+      data:  { learn_seconds: { increment: secs } },
+    }).catch((e: any) => console.error('[me/annual-training/learn-time] failed:', e?.message ?? e))
+  }
+  ok(res, { recorded: secs })
+})
+
 // GET /me/annual-training/:enrollmentId/certificate — certificate data for a passed module
 meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

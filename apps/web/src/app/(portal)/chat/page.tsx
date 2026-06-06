@@ -99,6 +99,10 @@ function sessionRef(id: string): string {
   return 'REF-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
+const RETURN_LABEL: Record<'induction' | 'training' | 'followup' | 'annual' | 'audits', string> = {
+  induction: 'My Induction', training: 'My Training', followup: 'Follow-up', annual: 'Annual Training', audits: 'Audits',
+}
+
 const CATEGORY_LABELS: Record<DocumentCategory, { title: string; subtitle: string }> = {
   internal_policy: { title: 'Policies & Procedures', subtitle: 'Care, clinical & operational policies' },
   staff_handbook:  { title: 'Staff Handbook',         subtitle: 'HR, employment & staff guidance' },
@@ -331,6 +335,7 @@ export default function ChatPage() {
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
+  const [returnTo,      setReturnTo]                    = useState<'induction' | 'training' | 'followup' | 'annual' | 'audits' | null>(null)
   const [policyQuestions, setPolicyQuestions]           = useState<string[] | null>(null)
   const bottomRef          = useRef<HTMLDivElement>(null)
   const inputRef           = useRef<HTMLInputElement>(null)
@@ -416,6 +421,7 @@ export default function ChatPage() {
   // ─── Session management ───────────────────────────────────────────────────────
 
   function startNewChat() {
+    setReturnTo(null)
     setMessages([])
     setExpandedCitations(new Set())
     setFullPolicyRequestedIds(new Set())
@@ -428,6 +434,7 @@ export default function ChatPage() {
 
   // Open a fresh chat focused on one policy, seeded with questions about it.
   function talkToPolicy(policyId: string, title: string) {
+    setReturnTo((['induction', 'training', 'followup', 'annual', 'audits'] as const).includes(view as any) ? (view as any) : null)
     setSidebarPolicy(null)
     setMessages([])
     setExpandedCitations(new Set())
@@ -808,13 +815,23 @@ export default function ChatPage() {
                   {pinnedPolicy ? `Talking about: ${pinnedPolicy.title}` : CATEGORY_LABELS[category].title}
                 </span>
               </div>
-              <button
-                onClick={startNewChat}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-teal"
-                title="Choose a different topic"
-              >
-                <ArrowLeft size={12} /> Change topic
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                {returnTo && (
+                  <button
+                    onClick={() => { const r = returnTo; setReturnTo(null); setPinnedPolicy(null); setView(r) }}
+                    className="flex items-center gap-1 rounded-md bg-teal/10 px-2 py-1 text-xs font-semibold text-teal transition-colors hover:bg-teal/20"
+                  >
+                    <ArrowLeft size={12} /> Back to {RETURN_LABEL[returnTo]}
+                  </button>
+                )}
+                <button
+                  onClick={startNewChat}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-teal"
+                  title="Choose a different topic"
+                >
+                  <ArrowLeft size={12} /> Change topic
+                </button>
+              </div>
             </div>
           </div>
         )}

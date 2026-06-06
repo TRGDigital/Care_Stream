@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import {
-  GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, Award, ShieldAlert,
+  GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
   Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText,
 } from 'lucide-react'
 
@@ -103,6 +103,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState<'learn' | 'assess'>('learn')
+  const [policiesOpen, setPoliciesOpen] = useState(false)
   const [sel, setSel] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -176,18 +177,28 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
           </div>
         )}
 
-        {/* Related policies — ask specific questions */}
+        {/* Related policies — ask specific questions (accordion) */}
         {onTalkToPolicy && Array.isArray(data.policies) && data.policies.length > 0 && (
-          <div className="mt-3 rounded-xl border border-teal/20 bg-teal-light/10 p-3.5">
-            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><FileText size={13} /> Related policies — ask a question</p>
-            <div className="flex flex-wrap gap-2">
-              {data.policies.map((p: any) => (
-                <button key={p.policy_id} onClick={() => onTalkToPolicy(p.policy_id, p.title)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
-                  <MessageSquare size={12} /> {p.title}
-                </button>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-neutral-mid">Tap a policy to ask CareStream specific questions about it in your own language.</p>
+          <div className="mt-3 overflow-hidden rounded-xl border-2 border-teal/40 bg-gradient-to-br from-teal-light/40 to-white shadow-sm">
+            <button onClick={() => setPoliciesOpen(o => !o)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-teal-light/20">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal/15"><MessageSquare size={17} className="text-teal" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-neutral-dark">Ask about the policies behind this training</span>
+                <span className="block text-xs text-neutral-mid">{data.policies.length} related polic{data.policies.length === 1 ? 'y' : 'ies'} · tap to ask questions in your language</span>
+              </span>
+              <span className="flex h-7 shrink-0 items-center gap-1 rounded-full bg-teal px-2.5 text-xs font-semibold text-white">{data.policies.length} {policiesOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+            </button>
+            {policiesOpen && (
+              <div className="border-t border-teal/20 px-4 py-3">
+                <div className="flex flex-wrap gap-2">
+                  {data.policies.map((p: any) => (
+                    <button key={p.policy_id} onClick={() => onTalkToPolicy(p.policy_id, p.title)} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-white px-3 py-1.5 text-xs font-medium text-teal transition-colors hover:bg-teal hover:text-white">
+                      <FileText size={12} /> {p.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

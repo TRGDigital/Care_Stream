@@ -23,23 +23,27 @@ export default function AnnualTrainingPage() {
   const [error,   setError]   = useState('')
   const [busy,    setBusy]    = useState<string | null>(null)   // topic id being generated
   const [helpOpen, setHelpOpen] = useState(false)
+  const [usage,   setUsage]   = useState<{ used: number; limit: number | null; remaining: number | null; resets_at: string } | null>(null)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string }>({ mode: 'list' })
 
   function load() {
     if (!api) return
     setLoading(true); setError('')
     api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
+    api.training.generationUsage().then(setUsage).catch(() => {})
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const outOfCredits = !!usage && usage.limit !== null && (usage.remaining ?? 0) <= 0
+
   async function generate(topicId: string) {
     if (!api || busy) return
-    setBusy(topicId)
+    setBusy(topicId); setError('')
     try {
       const { module } = await api.training.generateModule(topicId)
       load()
       setView({ mode: 'review', id: module.id })
-    } catch { /* ignore */ } finally { setBusy(null) }
+    } catch (e: any) { setError(e?.message ?? 'Generation failed'); load() } finally { setBusy(null) }
   }
 
   if (view.mode === 'review' && api) return <ReviewModule api={api} id={view.id} onBack={() => { load(); setView({ mode: 'list' }) }} onAssign={(id, name) => setView({ mode: 'assign', id, name })} />
@@ -55,6 +59,15 @@ export default function AnnualTrainingPage() {
       <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
         Annual training your staff complete in the hub, in their first language. Assign a ready-made <strong>standard</strong> module, or generate one <strong>tailored to your own policies</strong>.
       </p>
+
+      {usage && usage.limit !== null && (
+        <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${outOfCredits ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-neutral-mid'}`}>
+          <Sparkles size={14} className={outOfCredits ? 'text-amber-500' : 'text-teal'} />
+          <span><strong className="text-neutral-dark">{usage.used}</strong> of <strong className="text-neutral-dark">{usage.limit}</strong> tailored generations used this month{usage.remaining !== null ? ` · ${usage.remaining} left` : ''}.</span>
+          <span className="text-xs">Resets {new Date(usage.resets_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</span>
+          {outOfCredits && <span className="text-xs font-medium">Assign standard modules (free) or upgrade your plan.</span>}
+        </div>
+      )}
 
       {/* How this works — explainer accordion */}
       <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-teal-light/10">
@@ -122,7 +135,7 @@ export default function AnnualTrainingPage() {
                                 <Users size={12} /> Assign standard
                               </button>
                             )}
-                            <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id}>
+                            <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
                               {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
                             </Button>
                           </>
@@ -187,7 +200,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
   async function regenerate() {
     if (!confirm('Regenerate this module from your policies? Your current edits will be replaced and it will return to draft.')) return
     setRegenerating(true)
-    try { await api.training.generateModule(m.topic_id); load() } catch { /* ignore */ } finally { setRegenerating(false) }
+    try { await api.training.generateModule(m.topic_id); load() } catch (e: any) { alert(e?.message ?? 'Regeneration failed') } finally { setRegenerating(false) }
   }
 
   if (loading || !m) return <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>

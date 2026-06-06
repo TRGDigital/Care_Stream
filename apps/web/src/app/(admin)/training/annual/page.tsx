@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users,
-  Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, BookOpen,
+  Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info,
 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
@@ -22,6 +22,7 @@ export default function AnnualTrainingPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [busy,    setBusy]    = useState<string | null>(null)   // topic id being generated
+  const [helpOpen, setHelpOpen] = useState(false)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string }>({ mode: 'list' })
 
   function load() {
@@ -50,11 +51,33 @@ export default function AnnualTrainingPage() {
   return (
     <div>
       <Link href="/training" className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ArrowLeft size={14} /> Training</Link>
-      <h1 className="text-2xl font-bold text-neutral-dark">Annual Training</h1>
-      <p className="mb-6 mt-1 max-w-3xl text-sm text-neutral-mid">
-        Generate annual training modules tailored to <strong>your own policies</strong> with AI. Each module teaches the topic then assesses it.
-        Generated modules are <strong>drafts</strong> — review and approve before assigning to staff. Staff complete them in the hub in their first language.
+      <h1 className="text-2xl font-bold text-neutral-dark">Annual training modules</h1>
+      <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
+        Annual training your staff complete in the hub, in their first language. Assign a ready-made <strong>standard</strong> module, or generate one <strong>tailored to your own policies</strong>.
       </p>
+
+      {/* How this works — explainer accordion */}
+      <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-teal-light/10">
+        <button onClick={() => setHelpOpen(o => !o)} className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-teal-light/20">
+          <Info size={16} className="shrink-0 text-teal" />
+          <span className="flex-1 text-sm font-semibold text-neutral-dark">How annual training modules work</span>
+          {helpOpen ? <ChevronUp size={16} className="text-teal" /> : <ChevronDown size={16} className="text-teal" />}
+        </button>
+        {helpOpen && (
+          <div className="space-y-3 border-t border-teal/20 px-4 py-3 text-sm text-neutral-mid">
+            <p>Each module <strong>teaches</strong> the topic (a short lesson) then <strong>assesses</strong> it (multiple-choice). Staff take it in the hub in their first language, and <strong>pass = a certificate</strong> on their record (and in your CQC evidence). Renewals resurface automatically based on the module&apos;s frequency.</p>
+            <div>
+              <p className="font-medium text-neutral-dark">Two ways to add a module to a topic:</p>
+              <ul className="mt-1 space-y-1.5">
+                <li className="flex gap-2"><Users size={14} className="mt-0.5 shrink-0 text-teal" /><span><strong>Assign standard</strong> — a ready-made module we maintain for you, <strong>free</strong> (no AI generation). Just assign it to staff. Best for getting going quickly.</span></li>
+                <li className="flex gap-2"><Sparkles size={14} className="mt-0.5 shrink-0 text-teal" /><span><strong>Tailor to our policies</strong> — generate a version built from <strong>your own policy documents</strong> for content specific to your home. You review and approve it before staff see it.</span></li>
+              </ul>
+            </div>
+            <p>A topic shows <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-xs font-medium text-teal">Standard available — free</span> when a ready-made module exists. If you tailor your own, your version is used instead.</p>
+            <p className="flex items-start gap-2 text-xs"><ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-500" /><span>Topics marked <strong>&ldquo;practical also required&rdquo;</strong> (e.g. Moving &amp; Handling, Medication) — the module is the knowledge part only; record the observed/practical assessment on the staff record.</span></p>
+          </div>
+        )}
+      </div>
 
       {error && (
         <div className="mb-4 rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">

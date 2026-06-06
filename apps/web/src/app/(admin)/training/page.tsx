@@ -1623,7 +1623,7 @@ export default function TrainingPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
-            <Sparkles size={15} /> Annual Training (AI)
+            <Sparkles size={15} /> Annual training modules
           </Link>
           {tab === 'compliance' && (
             <button

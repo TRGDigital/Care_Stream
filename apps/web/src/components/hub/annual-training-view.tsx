@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
+import { TrainingCertificate } from '@/components/training-certificate'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
   Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText,
@@ -282,29 +283,16 @@ function CertView({ token, id, onExit }: { token: string; id: string; onExit: ()
           <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-dark hover:border-teal/40 hover:text-teal"><Printer size={14} /> Print / save PDF</button>
         </div>
 
-        <div className="cert-sheet rounded-xl border-2 border-teal/30 bg-white p-8 text-center shadow-card">
-          <div className="mb-4 flex items-center justify-center gap-3">
-            {c.logo_url ? <img src={c.logo_url} alt="" className="h-12 w-auto object-contain" /> : null}
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal">Certificate of Completion</p>
-          <p className="mt-1 text-xs text-neutral-mid">Knowledge Assessment</p>
-          <p className="mt-6 text-sm text-neutral-mid">This certifies that</p>
-          <p className="mt-1 text-2xl font-bold text-neutral-dark">{c.staff_name}</p>
-          <p className="mt-4 text-sm text-neutral-mid">has completed the annual training module</p>
-          <p className="mt-1 text-lg font-semibold text-neutral-dark">{c.module_name}</p>
-          <p className="mt-1 text-sm text-neutral-mid">for {c.org_name}</p>
-
-          <div className="mx-auto mt-6 grid max-w-sm grid-cols-3 gap-3 text-xs">
-            <div><p className="font-semibold text-neutral-dark">{c.score}%</p><p className="text-neutral-mid">Score</p></div>
-            <div><p className="font-semibold text-neutral-dark">{fmt(c.completed_at)}</p><p className="text-neutral-mid">Completed</p></div>
-            <div><p className="font-semibold text-neutral-dark">{c.expires_at ? fmt(c.expires_at) : '—'}</p><p className="text-neutral-mid">Renews</p></div>
-          </div>
-
-          {c.requires_practical && <p className="mx-auto mt-5 max-w-md rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">This is the knowledge component. A practical/observed competency assessment is also required for this topic.</p>}
-
-          <p className="mt-6 text-[10px] leading-relaxed text-neutral-mid">Tailored to {c.org_name}&apos;s own policies and assessed by CareStream. This records completion of a knowledge assessment and is not an accredited qualification; the provider remains responsible for ensuring training meets regulatory requirements.</p>
-          <p className="mt-2 text-[10px] font-medium text-teal">CareStream</p>
-        </div>
+        <TrainingCertificate
+          staffName={c.staff_name}
+          moduleName={c.module_name}
+          orgName={c.org_name}
+          orgLogoUrl={c.logo_url}
+          score={c.score}
+          completedAt={c.completed_at}
+          expiresAt={c.expires_at}
+          requiresPractical={c.requires_practical}
+        />
       </div>
     </div>
   )

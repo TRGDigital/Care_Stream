@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
+import { TrainingCertificate } from '@/components/training-certificate'
 import {
   ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
@@ -657,28 +658,19 @@ export default function StaffRecordPage() {
               <button onClick={() => setCertItem(null)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light">Close</button>
               <button onClick={printCert} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal/90"><Download size={14} /> Print / save PDF</button>
             </div>
-            <div className="cert-sheet rounded-xl border-2 border-teal/30 bg-white p-8 text-center shadow-card">
-              {rec.org?.logo_url && <div className="mb-4 flex justify-center"><img src={rec.org.logo_url} alt="" className="h-12 w-auto object-contain" /></div>}
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal">Certificate of Completion</p>
-              <p className="mt-1 text-xs text-neutral-mid">Knowledge Assessment</p>
-              <p className="mt-6 text-sm text-neutral-mid">This certifies that</p>
-              <p className="mt-1 text-2xl font-bold text-neutral-dark">{u.name}</p>
-              <p className="mt-4 text-sm text-neutral-mid">has completed the annual training module</p>
-              <p className="mt-1 text-lg font-semibold text-neutral-dark">{certItem.module_name}</p>
-              {rec.org?.name && <p className="mt-1 text-sm text-neutral-mid">for {rec.org.name}</p>}
-              <div className="mx-auto mt-6 grid max-w-sm grid-cols-3 gap-3 text-xs">
-                <div><p className="font-semibold text-neutral-dark">{certItem.score?.pct ?? '—'}%</p><p className="text-neutral-mid">Score</p></div>
-                <div><p className="font-semibold text-neutral-dark">{certItem.completed_at ? fmtDate(certItem.completed_at) : '—'}</p><p className="text-neutral-mid">Completed</p></div>
-                <div><p className="font-semibold text-neutral-dark">{certItem.expires_at ? fmtDate(certItem.expires_at) : '—'}</p><p className="text-neutral-mid">Renews</p></div>
-              </div>
-              {certItem.requires_practical && (
-                <p className="mx-auto mt-5 max-w-md rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">
-                  Knowledge component. {certItem.practical_signed ? `Practical assessment recorded${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.` : 'A practical/observed competency assessment is also required.'}
-                </p>
-              )}
-              <p className="mt-6 text-[10px] leading-relaxed text-neutral-mid">Tailored to {rec.org?.name ?? 'the home'}&apos;s own policies and assessed by CareStream. This records completion of a knowledge assessment and is not an accredited qualification; the provider remains responsible for ensuring training meets regulatory requirements.</p>
-              <p className="mt-2 text-[10px] font-medium text-teal">CareStream</p>
-            </div>
+            <TrainingCertificate
+              staffName={u.name}
+              moduleName={certItem.module_name}
+              orgName={rec.org?.name}
+              orgLogoUrl={rec.org?.logo_url}
+              score={certItem.score?.pct}
+              completedAt={certItem.completed_at}
+              expiresAt={certItem.expires_at}
+              requiresPractical={certItem.requires_practical}
+              practicalNote={certItem.practical_signed
+                ? `Knowledge component. Practical assessment recorded${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.`
+                : 'This is the knowledge component. A practical / observed competency assessment is also required.'}
+            />
           </div>
         </div>
       )}

@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
       <h1 className="mb-4 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
 
       {/* ── Tabs ────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 -mx-6 mb-6 border-b border-gray-200 bg-neutral-light/95 px-6 pt-1 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 -mx-6 mb-6 border-b border-gray-200 bg-neutral-light px-6 pt-1 shadow-sm">
         <div className="no-scrollbar flex gap-1 overflow-x-auto">
           {TABS.map(t => (
             <button

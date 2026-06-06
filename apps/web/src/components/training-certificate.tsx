@@ -33,13 +33,14 @@ export function TrainingCertificate({
         <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">Annual Training</span>
       </div>
 
-      {/* Decorative corner flourishes */}
-      <span className="pointer-events-none absolute left-3 top-[68px] h-8 w-8 rounded-tl-lg border-l-2 border-t-2 border-teal/25" />
-      <span className="pointer-events-none absolute right-3 top-[68px] h-8 w-8 rounded-tr-lg border-r-2 border-t-2 border-teal/25" />
-      <span className="pointer-events-none absolute bottom-3 left-3 h-8 w-8 rounded-bl-lg border-b-2 border-l-2 border-teal/25" />
-      <span className="pointer-events-none absolute bottom-3 right-3 h-8 w-8 rounded-br-lg border-b-2 border-r-2 border-teal/25" />
+      <div className="relative px-10 pb-9 pt-7 text-center">
+        {/* Decorative corner flourishes — framed inside the white body so they
+            never cross into the brand header band. */}
+        <span className="pointer-events-none absolute left-3 top-3 h-8 w-8 rounded-tl-lg border-l-2 border-t-2 border-teal/25" />
+        <span className="pointer-events-none absolute right-3 top-3 h-8 w-8 rounded-tr-lg border-r-2 border-t-2 border-teal/25" />
+        <span className="pointer-events-none absolute bottom-3 left-3 h-8 w-8 rounded-bl-lg border-b-2 border-l-2 border-teal/25" />
+        <span className="pointer-events-none absolute bottom-3 right-3 h-8 w-8 rounded-br-lg border-b-2 border-r-2 border-teal/25" />
 
-      <div className="px-10 pb-9 pt-7 text-center">
         {/* Seal */}
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-light/50 ring-4 ring-teal/10">
           <Award size={30} className="text-teal" />

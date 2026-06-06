@@ -300,11 +300,14 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
-
-      {/* ── Tabs ────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 -mx-6 mb-6 border-b border-gray-200 bg-neutral-light px-6 pt-1 shadow-sm">
-        <div className="no-scrollbar flex gap-1 overflow-x-auto">
+      {/* ── Sticky header (title + tabs) ─────────────────────────────────────
+          Full-bleed and pinned flush to the very top of the scroll area. The
+          -mt-6/-mx-6 cancel <main>'s p-6 padding and -top-6 offsets the sticky
+          pin past that padding so the bar locks to the top rather than floating
+          24px down (which read as the tabs "following" the scroll). */}
+      <div className="sticky -top-6 z-30 -mx-6 -mt-6 mb-6 bg-neutral-light px-6 pt-6 shadow-sm">
+        <h1 className="mb-3 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
+        <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-gray-200">
           {TABS.map(t => (
             <button
               key={t.id}

@@ -4,6 +4,7 @@ import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { DEFAULT_ONBOARDING_FLOW_PROMPT } from './onboarding-templates'
+import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats } from '../services/storage/s3'
@@ -1606,6 +1607,7 @@ const USAGE_LABELS: Record<string, string> = {
   audit_recommendations:          'Monthly Audit — AI Recommendations',
   onboarding_flow_generation:     'Onboarding Flow Generation',
   policy_anonymisation:           'Policy Seed Anonymisation',
+  training_module_generation:     'Annual Training — Module Generation',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -1630,6 +1632,7 @@ async function ensurePromptsSeeded() {
     audit_recommendations:    DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT,
     onboarding_flow_generation: DEFAULT_ONBOARDING_FLOW_PROMPT,
     policy_anonymisation:       DEFAULT_POLICY_ANONYMISE_PROMPT,
+    training_module_generation: DEFAULT_TRAINING_MODULE_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

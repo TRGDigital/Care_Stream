@@ -398,6 +398,24 @@ model AiPrompt {
 
 // Platform-level training knowledge base used as RAG source for generating
 // training module questions. No tenant_id — shared read-only across all tenants.
+// Catalogue of training topics admins can generate AI modules from.
+model TrainingTopic {
+  id                 String   @id @default(uuid())
+  tenant_id          String?                          // null = platform seed catalogue
+  title              String
+  group_key          String                           // core_mandatory|health_safety|care_clinical|conduct_governance|role_specific
+  default_frequency  String   @default("annual")      // annual|biennial|triennial|once|adhoc
+  requires_practical Boolean  @default(false)
+  image_key          String?
+  aliases            String[] @default([])
+  is_active          Boolean  @default(true)
+  sort_order         Int      @default(0)
+  created_at         DateTime @default(now())
+
+  @@index([tenant_id])
+  @@map("training_topics")
+}
+
 model TrainingSeed {
   id                       String    @id @default(uuid())
   slug                     String    @unique               // e.g. 'safeguarding-adults'
@@ -746,6 +764,20 @@ model TrainingModule {
   questions_locked    Boolean                   @default(false)
   questions_locked_at DateTime?
   questions_version   Int                       @default(0)
+  // ── AI-generated annual modules (teach-then-assess) ──
+  source              String                    @default("manual")  // 'manual' | 'ai_generated'
+  approved            Boolean                   @default(true)       // draft (false) until reviewed
+  approved_at         DateTime?
+  approved_by         String?
+  learning_content    Json?                                         // { summary, key_points[], html }
+  requires_practical  Boolean                   @default(false)
+  frequency           String                    @default("annual")  // annual|biennial|triennial|once|adhoc
+  renewal_months      Int?
+  pass_mark           Int                       @default(80)
+  image_key           String?
+  policy_refs         Json?                                         // [{ policy_id, title, section }]
+  topic_id            String?
+  group_key           String?
   created_at          DateTime                  @default(now())
   tenant              Tenant?                   @relation(fields: [tenant_id], references: [id])
   enrollments         TrainingEnrollment[]

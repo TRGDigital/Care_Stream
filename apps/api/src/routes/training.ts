@@ -13,8 +13,138 @@ import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
 import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
+import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
+import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 
 export const trainingRouter = Router()
+
+// ─── Annual training: catalogue, AI generation, review/approve ────────────────
+
+function kebab(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
+}
+
+async function ensureTrainingTopicsSeeded(): Promise<void> {
+  const existing = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null }, select: { title: true } })
+  const have = new Set((existing as any[]).map(t => t.title))
+  let order = 0
+  for (const t of TRAINING_TOPICS) {
+    order += 1
+    if (have.has(t.title)) continue
+    await (prisma as any).trainingTopic.create({
+      data: {
+        tenant_id: null, title: t.title, group_key: t.group_key,
+        default_frequency: t.default_frequency, requires_practical: !!t.requires_practical,
+        image_key: t.group_key, aliases: t.aliases ?? [], sort_order: order,
+      },
+    }).catch(() => {})
+  }
+}
+
+// GET /training/catalogue — topics to generate AI modules from + this tenant's modules
+trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    await ensureTrainingTopicsSeeded()
+    const [topics, modules] = await Promise.all([
+      (prisma as any).trainingTopic.findMany({ where: { OR: [{ tenant_id: null }, { tenant_id: tenantId }], is_active: true }, orderBy: { sort_order: 'asc' } }),
+      (prisma as any).trainingModule.findMany({
+        where:  { tenant_id: tenantId, source: 'ai_generated' },
+        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, updated_at: true, created_at: true },
+      }),
+    ])
+    const moduleByTopic = new Map<string, any>()
+    for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, { ...m, question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined }) }
+    ok(res, {
+      groups: TOPIC_GROUP_LABELS,
+      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null })),
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// POST /training/catalogue/generate — generate (or regenerate) a draft module from a topic
+trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const topicId  = String(req.body?.topic_id ?? '')
+  if (!topicId) { err(res, 'VALIDATION_ERROR', 'topic_id is required'); return }
+  try {
+    const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
+    if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
+
+    const draft = await generateAnnualModuleDraft(tenantId, { title: topic.title, aliases: topic.aliases, requires_practical: topic.requires_practical })
+    if (!draft.questions.length) { err(res, 'GENERATION_FAILED', 'No questions were generated — try again.', 502); return }
+
+    const category = topic.group_key === 'role_specific' ? 'specialist' : 'statutory'
+    const data = {
+      name: draft.title,
+      description: (draft.learning_content.summary || topic.title).slice(0, 500),
+      category,
+      questions: draft.questions,
+      is_annual: !['once', 'adhoc'].includes(topic.default_frequency),
+      source: 'ai_generated', approved: false, approved_at: null, approved_by: null,
+      learning_content: draft.learning_content,
+      requires_practical: !!topic.requires_practical,
+      frequency: topic.default_frequency,
+      renewal_months: renewalMonthsFor(topic.default_frequency),
+      pass_mark: 80,
+      image_key: topic.image_key ?? topic.group_key,
+      policy_refs: draft.policy_refs,
+      topic_id: topic.id,
+      group_key: topic.group_key,
+    }
+    const slug = `ai-${kebab(topic.title)}`
+    const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: tenantId, topic_id: topic.id } })
+    const module = existing
+      ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
+      : await (prisma as any).trainingModule.create({ data: { tenant_id: tenantId, slug, ...data } })
+
+    ok(res, { module })
+  } catch (e: any) {
+    console.error('[training/generate] failed:', e?.message ?? e)
+    err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
+// GET /training/modules/:id/full — full module (learning + questions) for review
+trainingRouter.get('/modules/:id/full', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  ok(res, { module })
+})
+
+// PATCH /training/modules/:id — edit a draft (name, learning, questions, settings)
+trainingRouter.patch('/modules/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const b = req.body ?? {}
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const data: any = {}
+  if (typeof b.name === 'string') data.name = b.name.slice(0, 160)
+  if (b.learning_content !== undefined) data.learning_content = b.learning_content
+  if (Array.isArray(b.questions)) data.questions = b.questions
+  if (typeof b.pass_mark === 'number') data.pass_mark = Math.max(0, Math.min(100, Math.round(b.pass_mark)))
+  if (typeof b.frequency === 'string') { data.frequency = b.frequency; data.renewal_months = renewalMonthsFor(b.frequency); data.is_annual = !['once', 'adhoc'].includes(b.frequency) }
+  if (typeof b.requires_practical === 'boolean') data.requires_practical = b.requires_practical
+  const updated = await (prisma as any).trainingModule.update({ where: { id: module.id }, data })
+  ok(res, { module: updated })
+})
+
+// POST /training/modules/:id/approve — publish a reviewed module
+trainingRouter.post('/modules/:id/approve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userName = (req as any).user.name ?? (req as any).user.email ?? null
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const approve = req.body?.approved !== false
+  const updated = await (prisma as any).trainingModule.update({
+    where: { id: module.id },
+    data:  approve ? { approved: true, approved_at: new Date(), approved_by: userName } : { approved: false, approved_at: null, approved_by: null },
+  })
+  ok(res, { module: updated })
+})
 
 // Per-tenant training catalog: modules with tenant_id = null are shared platform
 // templates; each tenant gets its own editable copies (cloned on first read) so

@@ -26,7 +26,7 @@ function buildClient() {
   // on port 6543; this guard protects us regardless.)
   const baseUrl = process.env.DATABASE_URL
   const url = baseUrl && !/[?&]connection_limit=/.test(baseUrl)
-    ? baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'connection_limit=8&pool_timeout=30'
+    ? baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'connection_limit=5&pool_timeout=30'
     : baseUrl
 
   const client = new PrismaClient({

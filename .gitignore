@@ -12,3 +12,4 @@ coverage/
 
 # Local working notes (may contain secrets) — never commit
 memory/
+.vercel

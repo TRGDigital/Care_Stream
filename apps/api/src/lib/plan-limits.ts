@@ -81,7 +81,7 @@ export async function getAiCreditUsage(tenantId: string): Promise<Usage> {
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { monthly_ai_credit_limit: true } } } })
   const limit = (tenant?.plan?.monthly_ai_credit_limit ?? null) as number | null
   const { start, next } = monthWindow()
-  const used = await (prisma as any).aiCreditLog.count({ where: { tenant_id: tenantId, created_at: { gte: start } } })
+  const used = await (prisma as any).aiCreditLog.count({ where: { tenant_id: tenantId, billable: true, created_at: { gte: start } } })
   return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
 }
 
@@ -108,7 +108,13 @@ export async function checkAiCreditLimit(tenantId: string): Promise<void> {
 }
 
 export async function logAiCredit(tenantId: string, action: string, refId?: string | null): Promise<void> {
-  await (prisma as any).aiCreditLog.create({ data: { tenant_id: tenantId, action, ref_id: refId ?? null } }).catch(() => {})
+  await (prisma as any).aiCreditLog.create({ data: { tenant_id: tenantId, action, ref_id: refId ?? null, billable: true } }).catch(() => {})
+}
+
+// Track an AI action for per-tenant cost visibility WITHOUT counting toward the
+// limit (translations, audit recommendations, remediation lessons, …).
+export async function trackAiAction(tenantId: string, action: string, refId?: string | null): Promise<void> {
+  await (prisma as any).aiCreditLog.create({ data: { tenant_id: tenantId, action, ref_id: refId ?? null, billable: false } }).catch(() => {})
 }
 
 // Check whether the tenant has capacity for another query this month.

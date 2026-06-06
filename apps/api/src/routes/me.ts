@@ -10,6 +10,7 @@ import { translateBundle, translateText, translateQuestionCached, formatPolicyHt
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
+import { trackAiAction } from '../lib/plan-limits'
 import { prisma } from '../db/client'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -405,6 +406,7 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
     englishHtml = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 45_000, null)
     if (englishHtml) {
       await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: englishHtml } }).catch(() => {})
+      trackAiAction(tenantId, 'policy_format', policyId)
     } else {
       console.error(`[me/policy] format failed for ${policyId} — serving raw text`)
       ok(res, { policy_id: policyId, title, content: raw, lang: 'eng', html: false }); return
@@ -423,6 +425,7 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   const translated = await withTranslationBudget(translateHtmlPreservingTags(englishHtml, lang, langName), 50_000, null)
   if (translated && translated !== englishHtml) {
     await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang, content: translated } }).catch(() => {})
+    trackAiAction(tenantId, 'translation', policyId)
     ok(res, { policy_id: policyId, title, content: translated, lang, html: true })
   } else {
     ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true, translation_pending: true })

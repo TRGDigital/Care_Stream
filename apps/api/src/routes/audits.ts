@@ -3,6 +3,7 @@ import { prisma } from '../db/client'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
+import { trackAiAction } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 
@@ -1221,6 +1222,7 @@ auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: 
       completed_at:       new Date(),
     },
   })
+  trackAiAction(tenantId, 'audit_recs', run.id)
 
   ok(res, { run: completed, recommendations })
 

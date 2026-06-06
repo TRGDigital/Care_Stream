@@ -1066,8 +1066,9 @@ function TenantAiUsage({ token, id }: { token: string; id: string }) {
   const [d, setD] = useState<any>(null)
   useEffect(() => { createPlatformClient(token).tenants.aiUsage(id).then(setD).catch(() => {}) }, [token, id])
   if (!d) return null
-  const ACTION_LABEL: Record<string, string> = { training: 'Annual training', cqc_questions: 'CQC questions', training_questions: 'Training questions', other: 'Other' }
+  const ACTION_LABEL: Record<string, string> = { training: 'Annual training', cqc_questions: 'CQC questions', training_questions: 'Training questions', translation: 'Translations', policy_format: 'Policy formatting', audit_recs: 'Audit recommendations', remediation: 'Learn & retry lessons', other: 'Other' }
   const c = d.credits, q = d.queries
+  const otherAi: Array<[string, number]> = Object.entries(d.other_ai ?? {})
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -1092,6 +1093,15 @@ function TenantAiUsage({ token, id }: { token: string; id: string }) {
           <p className="mt-1.5 text-xs text-neutral-mid">Separate from credits · resets {new Date(c.resets_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</p>
         </div>
       </div>
+
+      {otherAi.length > 0 && (
+        <div className="mb-4 rounded-lg border border-dashed border-gray-200 p-3">
+          <p className="mb-1.5 text-xs font-medium text-neutral-mid">Other AI activity this month — <span className="text-neutral-dark">not billed as credits</span> (cost visibility)</p>
+          <div className="flex flex-wrap gap-1.5">
+            {otherAi.map(([k, v]) => <span key={k} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{ACTION_LABEL[k] ?? k}: {v}</span>)}
+          </div>
+        </div>
+      )}
 
       <div>
         <p className="mb-1.5 text-xs font-medium text-neutral-mid">Annual training modules in use — {d.annual_training.tailored} tailored · {d.annual_training.standard} standard</p>

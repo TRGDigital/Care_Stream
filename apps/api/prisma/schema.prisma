@@ -404,8 +404,9 @@ model AiPrompt {
 model AiCreditLog {
   id         String   @id @default(uuid())
   tenant_id  String
-  action     String?  // 'training' | 'cqc_questions' | 'onboarding_questions' | 'training_questions'
+  action     String?  // billable: 'training'|'cqc_questions'|'training_questions' · tracked-only: 'translation'|'audit_recs'|'remediation'
   ref_id     String?
+  billable   Boolean  @default(true)  // false = tracked for cost visibility only, doesn't count toward the limit
   created_at DateTime @default(now())
 
   @@index([tenant_id, created_at])

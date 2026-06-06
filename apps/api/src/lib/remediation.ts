@@ -5,6 +5,7 @@
 
 import { prisma } from '../db/client'
 import { callClaude } from '../services/ai/claude'
+import { trackAiAction } from './plan-limits'
 import { downloadExtractedText } from '../services/storage/s3'
 
 export type LessonPayload = {
@@ -199,5 +200,6 @@ export async function getOrCreateLesson(
   await (prisma as any).remediationLesson.create({
     data: { tenant_id: tenantId, ref_key: refKey, lang, payload: lesson as any },
   }).catch(() => {}) // unique race — fine, next read serves the winner
+  trackAiAction(tenantId, 'remediation', refKey)
   return lesson
 }

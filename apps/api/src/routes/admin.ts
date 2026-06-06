@@ -472,7 +472,7 @@ adminRouter.get('/tenants/:id/ai-usage', async (req: Request, res: Response) => 
     const [credits, queries, byAction, enrollments] = await Promise.all([
       getAiCreditUsage(tenantId),
       getQueryUsage(tenantId),
-      (prisma as any).aiCreditLog.groupBy({ by: ['action'], where: { tenant_id: tenantId, created_at: { gte: monthStart } }, _count: { _all: true } }).catch(() => []),
+      (prisma as any).aiCreditLog.groupBy({ by: ['action', 'billable'], where: { tenant_id: tenantId, created_at: { gte: monthStart } }, _count: { _all: true } }).catch(() => []),
       (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { status: true, module: { select: { id: true, name: true, source: true, tenant_id: true } } } }).catch(() => []),
     ])
     const ai = (enrollments as any[]).filter(e => e.module?.source === 'ai_generated')
@@ -485,10 +485,15 @@ adminRouter.get('/tenants/:id/ai-usage', async (req: Request, res: Response) => 
       byModule.set(m.id, g)
     }
     const modules = [...byModule.values()].sort((a, b) => b.assigned - a.assigned)
-    const actionCounts: Record<string, number> = {}
-    for (const a of (byAction as any[])) actionCounts[a.action ?? 'other'] = a._count._all
+    const billedByAction: Record<string, number> = {}
+    const trackedByAction: Record<string, number> = {}
+    for (const a of (byAction as any[])) {
+      const target = a.billable ? billedByAction : trackedByAction
+      target[a.action ?? 'other'] = (target[a.action ?? 'other'] ?? 0) + a._count._all
+    }
     ok(res, {
-      credits:  { ...credits, by_action: actionCounts },
+      credits:  { ...credits, by_action: billedByAction },
+      other_ai: trackedByAction,
       queries,
       annual_training: { modules, tailored: modules.filter(m => m.tailored).length, standard: modules.filter(m => !m.tailored).length },
     })

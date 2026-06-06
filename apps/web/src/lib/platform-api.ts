@@ -415,6 +415,7 @@ export function createPlatformClient(token: string) {
         adminFetch<TenantDetail>(`/tenants/${id}`, token),
       aiUsage: (id: string) => adminFetch<{
         credits: { used: number; limit: number | null; remaining: number | null; resets_at: string; by_action: Record<string, number> }
+        other_ai: Record<string, number>
         queries: { used: number; limit: number | null; remaining: number | null; resets_at: string }
         annual_training: { modules: Array<{ id: string; name: string; tailored: boolean; assigned: number; completed: number }>; tailored: number; standard: number }
       }>(`/tenants/${id}/ai-usage`, token),

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -1620,14 +1621,19 @@ export default function TrainingPage() {
           <h1 className="text-2xl font-bold text-neutral-dark">Training &amp; Compliance</h1>
           <p className="mt-1 text-sm text-neutral-mid">Track statutory and specialist training across your team.</p>
         </div>
-        {tab === 'compliance' && (
-          <button
-            onClick={() => setShowAssign(true)}
-            className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90"
-          >
-            <Plus size={15} /> Assign training
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
+            <Sparkles size={15} /> Annual Training (AI)
+          </Link>
+          {tab === 'compliance' && (
+            <button
+              onClick={() => setShowAssign(true)}
+              className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90"
+            >
+              <Plus size={15} /> Assign training
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab switcher */}

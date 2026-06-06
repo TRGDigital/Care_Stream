@@ -815,6 +815,10 @@ model TrainingEnrollment {
   renewal_count   Int             @default(0)
   assigned_by     String?
   due_date        DateTime?
+  practical_signed    Boolean     @default(false) // observed/practical assessment recorded (for requires_practical modules)
+  practical_signed_by String?
+  practical_signed_at DateTime?
+  practical_note      String?
   created_at      DateTime        @default(now())
   updated_at      DateTime        @updatedAt
   tenant          Tenant          @relation(fields: [tenant_id], references: [id])

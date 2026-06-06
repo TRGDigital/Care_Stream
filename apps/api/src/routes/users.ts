@@ -164,6 +164,27 @@ usersRouter.post('/:id/follow-up/review', async (req: Request, res: Response) =>
   ok(res, { reviewed: true, at: new Date().toISOString(), by: reviewer?.name ?? null })
 })
 
+// ─── POST /users/:id/annual-training/:enrollmentId/practical ──────────────────
+// Record (or clear) the practical/observed competency assessment for a module.
+usersRouter.post('/:id/annual-training/:enrollmentId/practical', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const reviewer = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } })
+  const signed = req.body?.signed !== false
+  const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 300) : null
+
+  const enr = await (prisma as any).trainingEnrollment.findFirst({ where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: req.params.id }, select: { id: true } })
+  if (!enr) { err(res, 'NOT_FOUND', 'Enrolment not found.', 404); return }
+
+  const updated = await (prisma as any).trainingEnrollment.update({
+    where: { id: enr.id },
+    data:  signed
+      ? { practical_signed: true, practical_signed_by: reviewer?.name ?? null, practical_signed_at: new Date(), practical_note: note }
+      : { practical_signed: false, practical_signed_by: null, practical_signed_at: null, practical_note: null },
+    select: { practical_signed: true, practical_signed_by: true, practical_signed_at: true, practical_note: true },
+  })
+  ok(res, { practical: updated })
+})
+
 // ─── POST /users/invite ───────────────────────────────────────────────────────
 
 const InviteSchema = z.object({

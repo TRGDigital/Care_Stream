@@ -136,6 +136,8 @@ export function createApiClient(token: string) {
       record: (id: string) => apiFetch<any>(`/users/${id}/record`, token),
       remind: (id: string) => apiFetch<{ reminded: boolean; modules: number }>(`/users/${id}/remind`, token, { method: 'POST' }),
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
+      markPractical: (id: string, enrollmentId: string, data: { signed: boolean; note?: string }) =>
+        apiFetch<{ practical: { practical_signed: boolean; practical_signed_by: string | null; practical_signed_at: string | null; practical_note: string | null } }>(`/users/${id}/annual-training/${enrollmentId}/practical`, token, { method: 'POST', body: JSON.stringify(data) }),
       invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',

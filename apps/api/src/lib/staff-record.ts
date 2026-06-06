@@ -38,7 +38,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
       include: {
-        module:  { select: { id: true, name: true, category: true, questions: true } },
+        module:  { select: { id: true, name: true, category: true, questions: true, source: true, requires_practical: true, frequency: true, pass_mark: true } },
         answers: { select: { is_correct: true, answered_at: true, question_text: true } },
       },
       orderBy: { created_at: 'asc' },
@@ -56,7 +56,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
   ])
 
   // ── Training items ──────────────────────────────────────────────────────────
-  const training = (tEnr as any[]).map(e => {
+  const allTrainingItems = (tEnr as any[]).map(e => {
     const answers = e.answers ?? []
     const correct = answers.filter((a: any) => a.is_correct).length
     const total   = answers.length
@@ -67,12 +67,16 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     const dueSoon = !!e.due_date && new Date(e.due_date) >= now && new Date(e.due_date) <= soon && status !== 'complete'
     return {
       enrollment_id: e.id, module_id: e.module?.id, module_name: e.module?.name, category: e.module?.category,
+      source: e.module?.source ?? 'manual', requires_practical: !!e.module?.requires_practical, frequency: e.module?.frequency ?? null,
       status, score: total > 0 ? { correct, total, pct: Math.round((correct / total) * 100) } : null,
       question_count: qCount, renewal_count: e.renewal_count ?? 0,
       assigned_at: e.created_at, completed_at: e.completed_at, due_date: e.due_date, expires_at: e.expires_at,
       certificate_url: e.certificate_url ?? null, overdue, due_soon: dueSoon,
+      practical_signed: !!e.practical_signed, practical_signed_by: e.practical_signed_by ?? null, practical_signed_at: e.practical_signed_at ?? null,
     }
   })
+  const training       = allTrainingItems.filter(t => t.source !== 'ai_generated')
+  const annualTraining = allTrainingItems.filter(t => t.source === 'ai_generated')
 
   const tCompleted = training.filter(t => t.status === 'complete').length
   const tScores    = training.map(t => t.score?.pct).filter((p): p is number => typeof p === 'number')
@@ -86,6 +90,17 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     expired:     training.filter(t => t.status === 'expired').length,
     avg_score:   tScores.length ? Math.round(tScores.reduce((a, b) => a + b, 0) / tScores.length) : null,
     completion_pct: training.length ? Math.round((tCompleted / training.length) * 100) : null,
+  }
+
+  // ── Annual training (AI modules) summary ────────────────────────────────────
+  const aCompleted = annualTraining.filter(t => t.status === 'complete').length
+  const annualSummary = {
+    assigned:       annualTraining.length,
+    completed:      aCompleted,
+    overdue:        annualTraining.filter(t => t.overdue).length,
+    expired:        annualTraining.filter(t => t.status === 'expired').length,
+    practical_due:  annualTraining.filter(t => t.requires_practical && t.status === 'complete' && !t.practical_signed).length,
+    completion_pct: annualTraining.length ? Math.round((aCompleted / annualTraining.length) * 100) : null,
   }
 
   // ── Onboarding items ─────────────────────────────────────────────────────────
@@ -136,6 +151,9 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
   if (onboardingSummary.overdue > 0) flags.push({ level: 'high',  kind: 'onboarding_overdue', label: `Induction overdue` })
   if (!user.first_login_at)         flags.push({ level: 'medium', kind: 'never_logged_in', label: 'Has never logged in' })
   if (trainingSummary.due_soon > 0) flags.push({ level: 'medium', kind: 'training_due_soon', label: `${trainingSummary.due_soon} module${trainingSummary.due_soon > 1 ? 's' : ''} due within 30 days` })
+  if (annualSummary.expired > 0)    flags.push({ level: 'high',   kind: 'annual_expired', label: `${annualSummary.expired} annual training module${annualSummary.expired > 1 ? 's' : ''} due for renewal` })
+  if (annualSummary.overdue > 0)    flags.push({ level: 'high',   kind: 'annual_overdue', label: `${annualSummary.overdue} annual training module${annualSummary.overdue > 1 ? 's' : ''} overdue` })
+  if (annualSummary.practical_due > 0) flags.push({ level: 'medium', kind: 'practical_due', label: `${annualSummary.practical_due} practical assessment${annualSummary.practical_due > 1 ? 's' : ''} to record` })
   const stalled = onboarding.filter(o => o.status === 'not_started' && o.enrolled_at && new Date(o.enrolled_at) < new Date(now.getTime() - 7 * DAY))
   if (stalled.length > 0)           flags.push({ level: 'medium', kind: 'onboarding_stalled', label: 'Induction not started after 7+ days' })
   if (trainingSummary.avg_score !== null && trainingSummary.avg_score < 60 && tScores.length >= 2)
@@ -318,6 +336,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       created_at: user.created_at, first_login_at: user.first_login_at, last_login_at: user.last_login_at,
     },
     training: { items: training, summary: trainingSummary },
+    annual_training: { items: annualTraining, summary: annualSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,

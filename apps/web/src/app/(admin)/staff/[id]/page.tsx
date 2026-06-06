@@ -15,6 +15,7 @@ const TIP = {
   completion: "Each ring is the share of assigned items completed — training modules and induction flows — plus the average quiz score across completed modules. A low average score can signal a knowledge gap worth following up.",
   benchmark:  "Compares this person to your home's average. The teal bar is their figure; the dark tick is the team average. Bars sitting below the tick are below average and may be worth a conversation.",
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
+  annual:     "AI-generated annual training built from your policies. 'Score' is the assessment result; 'Renews' is when it's next due. For topics that also need a practical/observed assessment, use 'Record practical' to log that it's been done (with your name + date). View or print each certificate as evidence.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
   questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
@@ -131,6 +132,7 @@ export default function StaffRecordPage() {
   const [loading,  setLoading]  = useState(true)
   const [note,     setNote]     = useState('')
   const [busy,     setBusy]     = useState<string | null>(null)
+  const [certItem, setCertItem] = useState<any>(null)
 
   const load = useCallback(() => {
     if (!token) return
@@ -156,6 +158,12 @@ export default function StaffRecordPage() {
     try { const r = await createApiClient(token).users.markFollowedUp(id); setNote(`Marked as reviewed${r.by ? ` by ${r.by}` : ''}.`); load() }
     catch { setNote('Could not save review.') } finally { setBusy(null) }
   }
+  async function togglePractical(enrollmentId: string, signed: boolean) {
+    setBusy(enrollmentId)
+    try { await createApiClient(token).users.markPractical(id, enrollmentId, { signed }); load() }
+    catch { setNote('Could not save practical sign-off.') } finally { setBusy(null) }
+  }
+  function printCert() { document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 600) }
   // Use the browser's native print-to-PDF for full-fidelity rendering (rings,
   // pills and fonts render exactly as on screen). Print CSS (globals.css) shows
   // only the record + the branded header and preserves colours.
@@ -407,6 +415,57 @@ export default function StaffRecordPage() {
           )}
         </div>
 
+        {/* Annual training (AI modules) */}
+        {rec.annual_training && rec.annual_training.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><GraduationCap size={15} className="text-teal" /> Annual training <InfoTip text={TIP.annual} /></p>
+              <p className="text-xs text-neutral-mid">{rec.annual_training.summary.completed}/{rec.annual_training.summary.assigned} complete{rec.annual_training.summary.practical_due > 0 ? ` · ${rec.annual_training.summary.practical_due} practical to record` : ''}</p>
+            </div>
+            <table className="w-full text-sm">
+              <thead><tr className="border-b border-gray-50 text-left text-xs text-neutral-mid">
+                <th className="px-5 py-2 font-medium">Module</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 font-medium">Score</th>
+                <th className="px-3 py-2 font-medium">Renews</th>
+                <th className="px-3 py-2 font-medium">Practical</th>
+                <th className="px-3 py-2 font-medium print:hidden" />
+              </tr></thead>
+              <tbody>
+                {rec.annual_training.items.map((m: any) => (
+                  <tr key={m.enrollment_id} className="border-b border-gray-50 last:border-0 align-top">
+                    <td className="px-5 py-2.5">
+                      <span className="text-neutral-dark">{m.module_name}</span>
+                      {m.overdue && <span className="ml-2 inline-flex items-center rounded-full bg-red-50 px-1.5 py-1 text-[10px] font-medium leading-none text-red-600">Overdue</span>}
+                    </td>
+                    <td className="px-3 py-2.5"><StatusPill status={m.status} /></td>
+                    <td className={`px-3 py-2.5 font-medium ${scoreColour(m.score?.pct)}`}>{m.score ? `${m.score.pct}%` : '—'}</td>
+                    <td className="px-3 py-2.5 text-xs text-neutral-mid">{m.expires_at ? fmtDate(m.expires_at) : '—'}</td>
+                    <td className="px-3 py-2.5 text-xs">
+                      {!m.requires_practical ? <span className="text-neutral-mid">N/A</span>
+                        : m.practical_signed ? <span className="text-green-600">✓ {m.practical_signed_by ?? 'Recorded'}{m.practical_signed_at ? ` · ${fmtDate(m.practical_signed_at)}` : ''}</span>
+                        : <span className="text-amber-600">Not recorded</span>}
+                    </td>
+                    <td className="px-3 py-2.5 print:hidden">
+                      <div className="flex items-center gap-1.5">
+                        {m.status === 'complete' && (
+                          <button onClick={() => setCertItem(m)} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-teal hover:bg-teal-light/40"><Award size={12} /> Certificate</button>
+                        )}
+                        {m.requires_practical && (
+                          <button onClick={() => togglePractical(m.enrollment_id, !m.practical_signed)} disabled={busy === m.enrollment_id}
+                            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${m.practical_signed ? 'text-neutral-mid hover:bg-neutral-light' : 'text-amber-600 hover:bg-amber-50'} disabled:opacity-50`}>
+                            {busy === m.enrollment_id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} {m.practical_signed ? 'Undo' : 'Record practical'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {/* Induction record */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
@@ -552,6 +611,40 @@ export default function StaffRecordPage() {
           Generated by CareStream · {fmtDateTime(new Date().toISOString())} · Training & induction record for {u.name}
         </p>
       </div>
+
+      {/* Certificate overlay */}
+      {certItem && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 print:bg-white print:p-0">
+          <div className="my-6 w-full max-w-2xl">
+            <div className="mb-3 flex items-center justify-between print:hidden">
+              <button onClick={() => setCertItem(null)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light">Close</button>
+              <button onClick={printCert} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal/90"><Download size={14} /> Print / save PDF</button>
+            </div>
+            <div className="cert-sheet rounded-xl border-2 border-teal/30 bg-white p-8 text-center shadow-card">
+              {rec.org?.logo_url && <div className="mb-4 flex justify-center"><img src={rec.org.logo_url} alt="" className="h-12 w-auto object-contain" /></div>}
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal">Certificate of Completion</p>
+              <p className="mt-1 text-xs text-neutral-mid">Knowledge Assessment</p>
+              <p className="mt-6 text-sm text-neutral-mid">This certifies that</p>
+              <p className="mt-1 text-2xl font-bold text-neutral-dark">{u.name}</p>
+              <p className="mt-4 text-sm text-neutral-mid">has completed the annual training module</p>
+              <p className="mt-1 text-lg font-semibold text-neutral-dark">{certItem.module_name}</p>
+              {rec.org?.name && <p className="mt-1 text-sm text-neutral-mid">for {rec.org.name}</p>}
+              <div className="mx-auto mt-6 grid max-w-sm grid-cols-3 gap-3 text-xs">
+                <div><p className="font-semibold text-neutral-dark">{certItem.score?.pct ?? '—'}%</p><p className="text-neutral-mid">Score</p></div>
+                <div><p className="font-semibold text-neutral-dark">{certItem.completed_at ? fmtDate(certItem.completed_at) : '—'}</p><p className="text-neutral-mid">Completed</p></div>
+                <div><p className="font-semibold text-neutral-dark">{certItem.expires_at ? fmtDate(certItem.expires_at) : '—'}</p><p className="text-neutral-mid">Renews</p></div>
+              </div>
+              {certItem.requires_practical && (
+                <p className="mx-auto mt-5 max-w-md rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">
+                  Knowledge component. {certItem.practical_signed ? `Practical assessment recorded${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.` : 'A practical/observed competency assessment is also required.'}
+                </p>
+              )}
+              <p className="mt-6 text-[10px] leading-relaxed text-neutral-mid">Tailored to {rec.org?.name ?? 'the home'}&apos;s own policies and assessed by CareStream. This records completion of a knowledge assessment and is not an accredited qualification; the provider remains responsible for ensuring training meets regulatory requirements.</p>
+              <p className="mt-2 text-[10px] font-medium text-teal">CareStream</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

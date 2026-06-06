@@ -221,8 +221,19 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
                 <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
               )}
               <div className="p-5">
-                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
+                  {data.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {data.duration_minutes} min</span> : null}
+                </div>
                 {data.learning?.summary && <p className="text-sm text-neutral-dark">{data.learning.summary}</p>}
+                {Array.isArray(data.learning?.outcomes) && data.learning.outcomes.length > 0 && (
+                  <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
+                    <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
+                    <ul className="space-y-1">
+                      {data.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 

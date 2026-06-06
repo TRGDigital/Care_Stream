@@ -106,6 +106,7 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
       frequency: topic.default_frequency,
       renewal_months: renewalMonthsFor(topic.default_frequency),
       pass_mark: 80,
+      duration_minutes: draft.estimated_minutes,
       image_key: topic.image_key ?? topic.group_key,
       policy_refs: draft.policy_refs,
       topic_id: topic.id,
@@ -161,6 +162,7 @@ trainingRouter.patch('/modules/:id', requireAdmin, async (req: Request, res: Res
   if (b.learning_content !== undefined) data.learning_content = b.learning_content
   if (Array.isArray(b.questions)) data.questions = b.questions
   if (typeof b.pass_mark === 'number') data.pass_mark = Math.max(0, Math.min(100, Math.round(b.pass_mark)))
+  if (b.duration_minutes !== undefined && b.duration_minutes !== null) data.duration_minutes = Math.max(0, Math.min(600, Math.round(Number(b.duration_minutes) || 0)))
   if (typeof b.frequency === 'string') { data.frequency = b.frequency; data.renewal_months = renewalMonthsFor(b.frequency); data.is_annual = !['once', 'adhoc'].includes(b.frequency) }
   if (typeof b.requires_practical === 'boolean') data.requires_practical = b.requires_practical
   const updated = await (prisma as any).trainingModule.update({ where: { id: module.id }, data })

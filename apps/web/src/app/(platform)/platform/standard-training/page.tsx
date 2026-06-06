@@ -77,6 +77,7 @@ export default function StandardTrainingPage() {
                           {t.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">Practical also required</span>}
                           {m && <span className={`rounded-full px-1.5 py-0.5 font-medium ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>}
                           {m && <span>· {m.question_count} questions</span>}
+                          {m?.duration_minutes ? <span>· {m.duration_minutes} min ({(m.duration_minutes / 60).toFixed(1)} CPD h)</span> : null}
                         </p>
                         {m && (
                           <p className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-400">
@@ -120,12 +121,12 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
 
   async function save() {
     setSaving(true); setSavedNote('')
-    try { await api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency }); setSavedNote('Saved'); setTimeout(() => setSavedNote(''), 2000) }
+    try { await api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes }); setSavedNote('Saved'); setTimeout(() => setSavedNote(''), 2000) }
     catch { /* ignore */ } finally { setSaving(false) }
   }
   async function approve(val: boolean) {
     setSaving(true)
-    try { await api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency }); const { module } = await api.standardTraining.approveModule(id, val); setM(module) }
+    try { await api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes }); const { module } = await api.standardTraining.approveModule(id, val); setM(module) }
     catch { /* ignore */ } finally { setSaving(false) }
   }
   async function regenerate() {
@@ -139,7 +140,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch { /* ignore */ } finally { setImgBusy(false) }
   }
   async function regenerateQuestions() {
-    if (!confirm('Generate a fresh question bank that AVOIDS every question used before? The current questions are saved to history, and the module returns to draft for review before re-publishing.')) return
+    if (!confirm('Generate a fresh ASSESSMENT question bank that AVOIDS every question used before?\n\nThis refreshes the assessment questions ONLY — your lesson (sections & scenarios) is left unchanged. To regenerate the lesson too, use "Rebuild whole module".\n\nThe current questions are saved to history, and the module returns to draft for review before re-publishing.')) return
     setRegenQ(true)
     try { const r = await api.standardTraining.regenerateQuestions(id); load(); alert(`Generated ${r.generated} new questions, avoiding ${r.avoided} previously-used. Review and re-publish.`) }
     catch (e: any) { alert(e?.message ?? 'Regeneration failed') } finally { setRegenQ(false) }
@@ -170,7 +171,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
             <button onClick={regenerateQuestions} disabled={regenQ} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal hover:text-white disabled:opacity-50">
               {regenQ ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><RefreshCw size={13} /> Regenerate questions</>}
             </button>
-            <span className="text-[10px] text-gray-400">avoids repeats · {hist?.interval_months ?? 6}-monthly</span>
+            <span className="text-[10px] text-gray-400">assessment only · avoids repeats · {hist?.interval_months ?? 6}-monthly</span>
           </div>
         </div>
       </div>
@@ -197,9 +198,10 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
+      <div className="mb-4 grid grid-cols-3 gap-3">
         <div><label className="mb-1 block text-xs font-medium text-neutral-mid">Frequency</label><select value={m.frequency} onChange={e => setField('frequency', e.target.value)} className={INPUT}>{FREQS.map(f => <option key={f} value={f}>{FREQ_LABEL[f]}</option>)}</select></div>
         <div><label className="mb-1 block text-xs font-medium text-neutral-mid">Pass mark (%)</label><input type="number" min={0} max={100} value={m.pass_mark} onChange={e => setField('pass_mark', Number(e.target.value))} className={INPUT} /></div>
+        <div><label className="mb-1 block text-xs font-medium text-neutral-mid">Duration (min)</label><input type="number" min={0} max={600} value={m.duration_minutes ?? ''} onChange={e => setField('duration_minutes', e.target.value === '' ? null : Number(e.target.value))} className={INPUT} /><p className="mt-1 text-[11px] text-neutral-mid">{m.duration_minutes ? `≈ ${(m.duration_minutes / 60).toFixed(1)} CPD hours` : 'estimated learning time'}</p></div>
       </div>
 
       <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4">
@@ -207,6 +209,17 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Summary</label>
         <textarea value={m.learning_content?.summary ?? ''} onChange={e => setLearning('summary', e.target.value)} rows={3} className={`${INPUT} mb-1`} />
         <p className="mb-3 text-xs text-neutral-mid">A short intro shown above the lesson sections.</p>
+
+        <label className="mb-1 block text-xs font-medium text-neutral-mid">Learning outcomes — &ldquo;by the end you will be able to…&rdquo;</label>
+        <div className="mb-3 space-y-2">
+          {(m.learning_content?.outcomes ?? []).map((o: string, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              <input value={o} onChange={e => setLearning('outcomes', (m.learning_content?.outcomes ?? []).map((x: string, j: number) => j === i ? e.target.value : x))} className={INPUT} />
+              <button onClick={() => setLearning('outcomes', (m.learning_content?.outcomes ?? []).filter((_: string, j: number) => j !== i))} className="shrink-0 rounded p-1 text-neutral-mid hover:text-red-500"><Trash2 size={14} /></button>
+            </div>
+          ))}
+          <button onClick={() => setLearning('outcomes', [...(m.learning_content?.outcomes ?? []), ''])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add outcome</button>
+        </div>
 
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
         <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} />

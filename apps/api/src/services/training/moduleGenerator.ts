@@ -30,6 +30,8 @@ Return ONLY a JSON object, no prose or markdown fences, exactly:
 {
   "title": "Clear module title (you may keep the topic name)",
   "summary": "2-3 sentence plain-language overview of what this training covers and why it matters here.",
+  "outcomes": ["3 to 5 measurable learning outcomes, each completing the sentence 'By the end of this module you will be able to…' — start each with an action verb (describe, identify, explain, apply, recognise…). Concrete and assessable."],
+  "estimated_minutes": 30,
   "sections": [
     {
       "heading": "Short section title",
@@ -55,6 +57,8 @@ Rules:
 - Produce 4 to 6 SECTIONS. EVERY section MUST include both a "scenario" and a "check" — these are required, never omit them.
 - Each "check" and each assessment question has exactly 4 options; "correct" is the 0-based index of the single best answer. Make wrong options plausible but clearly wrong against the policy/best practice.
 - Produce EXACTLY 20 assessment "questions" (a bank — staff are served a random subset). These are SEPARATE from and should not duplicate the in-section checks.
+- "outcomes": 3 to 5 measurable learning outcomes (action-verb led, assessable). The assessment questions must collectively test these outcomes.
+- "estimated_minutes": a realistic estimate of total active learning time (reading the sections + scenarios + checks + the assessment), typically 20–45 minutes for an annual refresher.
 - Vary difficulty; prefer realistic care-scenario phrasing.{{lang_note}}`
 
 type GeneratedSection = {
@@ -66,7 +70,8 @@ type GeneratedSection = {
 
 type GeneratedModule = {
   title: string
-  learning_content: { summary: string; key_points: string[]; sections: GeneratedSection[] }
+  estimated_minutes: number
+  learning_content: { summary: string; outcomes: string[]; key_points: string[]; sections: GeneratedSection[] }
   questions: Array<{ id: string; text: string; options: string[]; correct: number }>
   policy_refs: Array<{ policy_id: string; title: string; section: string | null }>
 }
@@ -200,10 +205,15 @@ export async function generateAnnualModuleDraft(
     }
   }).filter((s: GeneratedSection) => s.body || s.heading)
 
+  const estMin = Math.round(Number(p?.estimated_minutes))
+  const estimated_minutes = Number.isFinite(estMin) ? Math.max(10, Math.min(180, estMin)) : 30
+
   return {
     title: String(p?.title ?? topic.title).slice(0, 160),
+    estimated_minutes,
     learning_content: {
       summary:    String(p?.summary ?? ''),
+      outcomes:   Array.isArray(p?.outcomes) ? p.outcomes.map((x: any) => String(x)).slice(0, 6) : [],
       key_points: Array.isArray(p?.key_points) ? p.key_points.map((x: any) => String(x)).slice(0, 6) : [],
       sections,
     },

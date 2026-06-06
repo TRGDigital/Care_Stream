@@ -187,14 +187,14 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
   async function save() {
     setSaving(true); setSavedNote('')
     try {
-      await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency })
+      await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes })
       setSavedNote('Saved'); setTimeout(() => setSavedNote(''), 2000)
     } catch { /* ignore */ } finally { setSaving(false) }
   }
   async function approve(val: boolean) {
     setSaving(true)
     try {
-      await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency })
+      await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes })
       const { module } = await api.training.approveModule(id, val)
       setM(module)
     } catch { /* ignore */ } finally { setSaving(false) }
@@ -246,7 +246,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
+      <div className="mb-4 grid grid-cols-3 gap-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Frequency</label>
           <select value={m.frequency} onChange={e => setField('frequency', e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
@@ -256,6 +256,11 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
         <div>
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Pass mark (%)</label>
           <input type="number" min={0} max={100} value={m.pass_mark} onChange={e => setField('pass_mark', Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Duration (min)</label>
+          <input type="number" min={0} max={600} value={m.duration_minutes ?? ''} onChange={e => setField('duration_minutes', e.target.value === '' ? null : Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          <p className="mt-1 text-[11px] text-neutral-mid">{m.duration_minutes ? `≈ ${(m.duration_minutes / 60).toFixed(1)} CPD hours` : 'estimated learning time'}</p>
         </div>
       </div>
 
@@ -271,6 +276,17 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Summary</label>
         <textarea value={m.learning_content?.summary ?? ''} onChange={e => setLearning('summary', e.target.value)} rows={3} className="mb-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
         <p className="mb-3 text-xs text-neutral-mid">A short intro shown above the lesson sections.</p>
+
+        <label className="mb-1 block text-xs font-medium text-neutral-mid">Learning outcomes — &ldquo;by the end you will be able to…&rdquo;</label>
+        <div className="mb-3 space-y-2">
+          {(m.learning_content?.outcomes ?? []).map((o: string, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              <input value={o} onChange={e => setLearning('outcomes', (m.learning_content?.outcomes ?? []).map((x: string, j: number) => j === i ? e.target.value : x))} className="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
+              <button onClick={() => setLearning('outcomes', (m.learning_content?.outcomes ?? []).filter((_: string, j: number) => j !== i))} className="shrink-0 rounded p-1 text-neutral-mid hover:text-red-500"><Trash2 size={14} /></button>
+            </div>
+          ))}
+          <button onClick={() => setLearning('outcomes', [...(m.learning_content?.outcomes ?? []), ''])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add outcome</button>
+        </div>
 
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
         <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} />

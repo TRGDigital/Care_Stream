@@ -274,7 +274,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   const [enr, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true, illustration_key: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
+      include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true, illustration_key: true, duration_minutes: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
@@ -293,6 +293,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   }
   const learn = (m.learning_content ?? {}) as any
   let summary = String(learn.summary ?? '')
+  let outcomes: string[] = Array.isArray(learn.outcomes) ? learn.outcomes.map((x: any) => String(x)) : []
   let keyPoints: string[] = Array.isArray(learn.key_points) ? learn.key_points.map((x: any) => String(x)) : []
   // Interactive sections (heading, body, scenario, in-lesson check). Older modules
   // have none — the hub falls back to summary + key_points.
@@ -309,8 +310,9 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   if (lang !== 'eng') {
     const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget((async () => {
-      const [s, kp, qs, secs] = await Promise.all([
+      const [s, oc, kp, qs, secs] = await Promise.all([
         translateText(summary, lang, langName),
+        mapLimit(outcomes, 6, (p: string) => translateText(p, lang, langName)),
         mapLimit(keyPoints, 6, (p: string) => translateText(p, lang, langName)),
         mapLimit(questions, 6, async (q: any) => { const t = await translateQuestionCached({ text: q.text ?? '', options: q.options }, lang, langName); return { ...q, text: t.text, options: t.options } }),
         mapLimit(sections, 4, async (sec: any) => {
@@ -325,15 +327,16 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
           return { ...sec, heading, body, scenario: { situation, prompt, answer }, check: { ...sec.check, question: chk.text, options: chk.options } }
         }),
       ])
-      return { summary: s, keyPoints: kp, questions: qs, sections: secs }
+      return { summary: s, outcomes: oc, keyPoints: kp, questions: qs, sections: secs }
     })(), 25_000, null)
-    if (translated) { summary = translated.summary; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
+    if (translated) { summary = translated.summary; outcomes = translated.outcomes; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
   }
 
   ok(res, {
     name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
+    duration_minutes: m.duration_minutes ?? null,
     illustration_url: illustrationUrl(m.illustration_key),
-    learning: { summary, key_points: keyPoints, sections },
+    learning: { summary, outcomes, key_points: keyPoints, sections },
     questions,
     policies,
     answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),

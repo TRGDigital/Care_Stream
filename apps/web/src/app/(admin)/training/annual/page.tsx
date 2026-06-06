@@ -250,7 +250,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
       </div>
 
       {/* Actions */}
-      <div className="sticky bottom-0 -mx-6 mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 bg-neutral-light/95 px-6 py-3 backdrop-blur">
+      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
         <Button onClick={save} disabled={saving} variant="secondary" size="md">{saving ? 'Saving…' : 'Save draft'}</Button>
         {!m.approved
           ? <Button onClick={() => approve(true)} disabled={saving} size="md"><CheckCircle2 size={14} /> Approve &amp; publish</Button>

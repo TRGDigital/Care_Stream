@@ -183,7 +183,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
         <button onClick={() => setM((p: any) => ({ ...p, questions: [...p.questions, { id: `q${p.questions.length + 1}`, text: '', options: ['', '', '', ''], correct: 0 }] }))} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add question</button>
       </div>
 
-      <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 bg-white py-3">
+      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
         <button onClick={save} disabled={saving} className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{saving ? 'Saving…' : 'Save draft'}</button>
         {!m.approved
           ? <button onClick={() => approve(true)} disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><CheckCircle2 size={14} /> Approve &amp; publish</button>

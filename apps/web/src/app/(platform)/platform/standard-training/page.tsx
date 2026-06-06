@@ -132,7 +132,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   async function regenerate() {
     if (!confirm('Rebuild the whole module from the policy seeds? The lesson (sections, scenarios, outcomes) and questions are regenerated, current edits are replaced, and it returns to draft.')) return
     setRegenerating(true)
-    try { await api.standardTraining.generate(m.topic_id); load() }
+    try { const { module } = await api.standardTraining.generate(m.topic_id); load(); alert(`Rebuilt — ${Array.isArray(module.learning_content?.sections) ? module.learning_content.sections.length : 0} lesson sections and ${Array.isArray(module.questions) ? module.questions.length : 0} questions generated. It's now a draft (note: the AI may have updated the title) — review and Approve & publish.`) }
     catch (e: any) { alert(e?.message ?? 'Rebuild failed — the AI generation may have timed out. Please try again.') }
     finally { setRegenerating(false) }
   }

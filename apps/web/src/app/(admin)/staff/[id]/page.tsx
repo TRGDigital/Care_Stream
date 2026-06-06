@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import {
   ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe, GraduationCap,
-  Lightbulb, ListChecks, Loader2, MessageSquare, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
+  Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -133,6 +133,7 @@ export default function StaffRecordPage() {
   const [note,     setNote]     = useState('')
   const [busy,     setBusy]     = useState<string | null>(null)
   const [certItem, setCertItem] = useState<any>(null)
+  const [practicalModal, setPracticalModal] = useState<{ enrollmentId: string; moduleName: string; note: string } | null>(null)
 
   const load = useCallback(() => {
     if (!token) return
@@ -158,9 +159,9 @@ export default function StaffRecordPage() {
     try { const r = await createApiClient(token).users.markFollowedUp(id); setNote(`Marked as reviewed${r.by ? ` by ${r.by}` : ''}.`); load() }
     catch { setNote('Could not save review.') } finally { setBusy(null) }
   }
-  async function togglePractical(enrollmentId: string, signed: boolean) {
+  async function savePractical(enrollmentId: string, signed: boolean, practicalNote?: string) {
     setBusy(enrollmentId)
-    try { await createApiClient(token).users.markPractical(id, enrollmentId, { signed }); load() }
+    try { await createApiClient(token).users.markPractical(id, enrollmentId, { signed, note: practicalNote }); setPracticalModal(null); load() }
     catch { setNote('Could not save practical sign-off.') } finally { setBusy(null) }
   }
   function printCert() { document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 600) }
@@ -443,8 +444,12 @@ export default function StaffRecordPage() {
                     <td className="px-3 py-2.5 text-xs text-neutral-mid">{m.expires_at ? fmtDate(m.expires_at) : '—'}</td>
                     <td className="px-3 py-2.5 text-xs">
                       {!m.requires_practical ? <span className="text-neutral-mid">N/A</span>
-                        : m.practical_signed ? <span className="text-green-600">✓ {m.practical_signed_by ?? 'Recorded'}{m.practical_signed_at ? ` · ${fmtDate(m.practical_signed_at)}` : ''}</span>
-                        : <span className="text-amber-600">Not recorded</span>}
+                        : m.practical_signed ? (
+                          <div>
+                            <span className="text-green-600">✓ {m.practical_signed_by ?? 'Recorded'}{m.practical_signed_at ? ` · ${fmtDate(m.practical_signed_at)}` : ''}</span>
+                            {m.practical_note && <p className="mt-0.5 max-w-[18rem] whitespace-pre-wrap italic text-neutral-mid">{m.practical_note}</p>}
+                          </div>
+                        ) : <span className="text-amber-600">Not recorded</span>}
                     </td>
                     <td className="px-3 py-2.5 print:hidden">
                       <div className="flex items-center gap-1.5">
@@ -452,10 +457,17 @@ export default function StaffRecordPage() {
                           <button onClick={() => setCertItem(m)} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-teal hover:bg-teal-light/40"><Award size={12} /> Certificate</button>
                         )}
                         {m.requires_practical && (
-                          <button onClick={() => togglePractical(m.enrollment_id, !m.practical_signed)} disabled={busy === m.enrollment_id}
-                            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${m.practical_signed ? 'text-neutral-mid hover:bg-neutral-light' : 'text-amber-600 hover:bg-amber-50'} disabled:opacity-50`}>
-                            {busy === m.enrollment_id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} {m.practical_signed ? 'Undo' : 'Record practical'}
-                          </button>
+                          m.practical_signed ? (
+                            <>
+                              <button onClick={() => setPracticalModal({ enrollmentId: m.enrollment_id, moduleName: m.module_name, note: m.practical_note ?? '' })} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-neutral-mid hover:bg-neutral-light"><Pencil size={12} /> Edit</button>
+                              <button onClick={() => savePractical(m.enrollment_id, false)} disabled={busy === m.enrollment_id} className="rounded px-2 py-1 text-xs text-neutral-mid hover:bg-neutral-light disabled:opacity-50">Undo</button>
+                            </>
+                          ) : (
+                            <button onClick={() => setPracticalModal({ enrollmentId: m.enrollment_id, moduleName: m.module_name, note: '' })}
+                              className="flex items-center gap-1 rounded px-2 py-1 text-xs text-amber-600 hover:bg-amber-50">
+                              <CheckCircle2 size={12} /> Record practical
+                            </button>
+                          )
                         )}
                       </div>
                     </td>
@@ -611,6 +623,31 @@ export default function StaffRecordPage() {
           Generated by CareStream · {fmtDateTime(new Date().toISOString())} · Training & induction record for {u.name}
         </p>
       </div>
+
+      {/* Record practical assessment */}
+      {practicalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-card bg-white p-5 shadow-card">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><CheckCircle2 size={15} className="text-teal" /> Record practical assessment</p>
+            <p className="mt-1 text-xs text-neutral-mid">{practicalModal.moduleName} — logs that the observed/practical competency was assessed, with your name and today&apos;s date.</p>
+            <label className="mt-3 block text-xs font-medium text-neutral-mid">Assessment notes (optional)</label>
+            <textarea
+              value={practicalModal.note}
+              onChange={e => setPracticalModal(p => p ? { ...p, note: e.target.value } : p)}
+              rows={4}
+              placeholder="e.g. Observed safe transfer using hoist on 3 occasions; competent. Reviewed MAR chart handling — confident."
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none"
+            />
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setPracticalModal(null)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-mid hover:bg-neutral-light">Cancel</button>
+              <button onClick={() => savePractical(practicalModal.enrollmentId, true, practicalModal.note.trim() || undefined)} disabled={busy === practicalModal.enrollmentId}
+                className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                {busy === practicalModal.enrollmentId ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />} Record practical
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Certificate overlay */}
       {certItem && (

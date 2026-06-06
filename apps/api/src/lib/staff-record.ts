@@ -72,7 +72,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       question_count: qCount, renewal_count: e.renewal_count ?? 0,
       assigned_at: e.created_at, completed_at: e.completed_at, due_date: e.due_date, expires_at: e.expires_at,
       certificate_url: e.certificate_url ?? null, overdue, due_soon: dueSoon,
-      practical_signed: !!e.practical_signed, practical_signed_by: e.practical_signed_by ?? null, practical_signed_at: e.practical_signed_at ?? null,
+      practical_signed: !!e.practical_signed, practical_signed_by: e.practical_signed_by ?? null, practical_signed_at: e.practical_signed_at ?? null, practical_note: e.practical_note ?? null,
     }
   })
   const training       = allTrainingItems.filter(t => t.source !== 'ai_generated')

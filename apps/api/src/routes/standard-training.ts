@@ -10,6 +10,8 @@ import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { generateAnnualModuleDraft, normaliseQuestion } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
+import { runModuleQa } from '../services/training/moduleQa'
+import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 
@@ -52,11 +54,23 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true },
+        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true },
       }),
     ])
     const byTopic = new Map<string, any>()
-    for (const m of (modules as any[])) { if (m.topic_id) byTopic.set(m.topic_id, { ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined }) }
+    for (const m of (modules as any[])) {
+      if (!m.topic_id) continue
+      const qa = runModuleQa(m)
+      byTopic.set(m.topic_id, {
+        id: m.id, name: m.name, topic_id: m.topic_id, approved: m.approved, approved_at: m.approved_at, created_at: m.created_at,
+        frequency: m.frequency, requires_practical: m.requires_practical, pass_mark: m.pass_mark, duration_minutes: m.duration_minutes,
+        group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key),
+        question_count: Array.isArray(m.questions) ? m.questions.length : 0,
+        standards_count: Array.isArray(m.standards) ? m.standards.length : 0,
+        attested_by_name: m.attested_by_name, attested_at: m.attested_at,
+        qa_hard_fails: qa.hard_fails, qa_warnings: qa.warnings,
+      })
+    }
     ok(res, { groups: TOPIC_GROUP_LABELS, topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })) })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -81,6 +95,7 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
       questions: draft.questions,
       is_annual: !['once', 'adhoc'].includes(topic.default_frequency),
       source: 'ai_generated', approved: false, approved_at: null, approved_by: null,
+      attested_by_name: null, attested_by_role: null, attested_at: null,
       learning_content: draft.learning_content,
       requires_practical: !!topic.requires_practical,
       frequency: topic.default_frequency,
@@ -125,6 +140,8 @@ standardTrainingRouter.get('/modules/:id/full', async (req: Request, res: Respon
       review_due_at:      dueAt,
       interval_months:    REGEN_INTERVAL_MONTHS,
     },
+    qa: runModuleQa(module),
+    standards_catalogue: STANDARDS_CATALOGUE,
   })
 })
 
@@ -165,6 +182,7 @@ standardTrainingRouter.post('/modules/:id/regenerate-questions', async (req: Req
         questions: draft.questions,
         questions_version: { increment: 1 },
         approved: false, approved_at: null, approved_by: null,
+        attested_by_name: null, attested_by_role: null, attested_at: null,
       },
     })
     ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) }, generated: draft.questions.length, avoided: texts.length })
@@ -198,20 +216,46 @@ standardTrainingRouter.patch('/modules/:id', async (req: Request, res: Response)
   if (Array.isArray(b.questions)) data.questions = b.questions
   if (typeof b.pass_mark === 'number') data.pass_mark = Math.max(0, Math.min(100, Math.round(b.pass_mark)))
   if (b.duration_minutes !== undefined && b.duration_minutes !== null) data.duration_minutes = Math.max(0, Math.min(600, Math.round(Number(b.duration_minutes) || 0)))
+  if (b.standards !== undefined) data.standards = normaliseStandards(b.standards)
   if (typeof b.frequency === 'string') { data.frequency = b.frequency; data.renewal_months = renewalMonthsFor(b.frequency); data.is_annual = !['once', 'adhoc'].includes(b.frequency) }
   if (typeof b.requires_practical === 'boolean') data.requires_practical = b.requires_practical
   const updated = await (prisma as any).trainingModule.update({ where: { id: module.id }, data })
   ok(res, { module: updated })
 })
 
-// POST /admin/standard-training/modules/:id/approve
+// POST /admin/standard-training/modules/:id/approve — publish with a NAMED reviewer
+// attestation (CPD governance). Blocks if automated QA hard-checks fail.
 standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Response) => {
   const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null } })
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
   const approve = req.body?.approved !== false
+
+  if (!approve) {
+    const updated = await (prisma as any).trainingModule.update({
+      where: { id: module.id },
+      data:  { approved: false, approved_at: null, approved_by: null, attested_by_name: null, attested_by_role: null, attested_at: null },
+    })
+    ok(res, { module: updated }); return
+  }
+
+  // Quality gate — hard checks must pass before a module can be published.
+  const qa = runModuleQa(module)
+  if (!qa.ok_to_approve) {
+    err(res, 'QA_FAILED', `Cannot publish — ${qa.hard_fails} quality check(s) failed: ${qa.checks.filter(c => c.status === 'fail').map(c => c.label).join(', ')}.`, 422)
+    return
+  }
+
+  // Named attestation is required.
+  const name = String(req.body?.reviewer_name ?? '').trim()
+  const role = String(req.body?.reviewer_role ?? '').trim()
+  if (!name || !role) { err(res, 'ATTESTATION_REQUIRED', 'A reviewer name and role are required to attest and publish.', 422); return }
+
   const updated = await (prisma as any).trainingModule.update({
     where: { id: module.id },
-    data:  approve ? { approved: true, approved_at: new Date(), approved_by: 'Platform' } : { approved: false, approved_at: null, approved_by: null },
+    data:  {
+      approved: true, approved_at: new Date(), approved_by: name,
+      attested_by_name: name, attested_by_role: role, attested_at: new Date(),
+    },
   })
   ok(res, { module: updated })
 })

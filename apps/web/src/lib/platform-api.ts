@@ -406,12 +406,17 @@ export function createPlatformClient(token: string) {
     standardTraining: {
       catalogue: () => adminFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; duration_minutes: number | null; question_count: number; illustration_url: string | null } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; duration_minutes: number | null; question_count: number; illustration_url: string | null; standards_count: number; attested_by_name: string | null; attested_at: string | null; qa_hard_fails: number; qa_warnings: number } }>
       }>('/standard-training', token),
       generate: (topicId: string) => adminFetch<{ module: any }>('/standard-training/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
-      moduleFull: (id: string) => adminFetch<{ module: any; question_history: { used_count: number; prior_versions: number; last_regenerated_at: string | null; review_due: boolean; review_due_at: string | null; interval_months: number } }>(`/standard-training/modules/${id}/full`, token),
+      moduleFull: (id: string) => adminFetch<{
+        module: any
+        question_history: { used_count: number; prior_versions: number; last_regenerated_at: string | null; review_due: boolean; review_due_at: string | null; interval_months: number }
+        qa: { checks: Array<{ key: string; label: string; status: 'pass' | 'warn' | 'fail'; detail: string }>; hard_fails: number; warnings: number; ok_to_approve: boolean }
+        standards_catalogue: Array<{ framework: string; label: string; items: Array<{ code: string; label: string }> }>
+      }>(`/standard-training/modules/${id}/full`, token),
       updateModule: (id: string, data: any) => adminFetch<{ module: any }>(`/standard-training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
-      approveModule: (id: string, approved = true) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved }) }),
+      approveModule: (id: string, opts: { approved?: boolean; reviewer_name?: string; reviewer_role?: string } = {}) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved: opts.approved !== false, reviewer_name: opts.reviewer_name, reviewer_role: opts.reviewer_role }) }),
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
     },

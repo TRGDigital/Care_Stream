@@ -792,9 +792,14 @@ model TrainingModule {
   duration_minutes    Int?                                          // estimated learning time → CPD hours (minutes/60)
   image_key           String?                                       // category/group icon key (NOT a stored image)
   illustration_key    String?                                       // S3 key of the AI-generated cover illustration
-  policy_refs         Json?                                         // [{ policy_id, title, section }]
+  policy_refs         Json?                                         // [{ policy_id, title, section }] — provenance / evidence base
   topic_id            String?
   group_key           String?
+  // ── CPD governance (standard library) ──
+  attested_by_name    String?                                       // named reviewer who attested this version at approval
+  attested_by_role    String?
+  attested_at         DateTime?
+  standards           Json?                                         // mapped external standards [{ framework, code, label }]
   created_at          DateTime                  @default(now())
   tenant              Tenant?                   @relation(fields: [tenant_id], references: [id])
   enrollments         TrainingEnrollment[]

@@ -122,14 +122,19 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
     }
   }
 
-  // Reference seeds for the topic (anonymised best-practice policies).
+  // Reference seeds for the topic (anonymised best-practice policies). These are the
+  // evidence base/provenance for standard (platform) modules — record them as refs.
   const kw = topic.title.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4)
   if (kw.length) {
     const seeds = await (prisma as any).policySeed.findMany({
       where:  { OR: kw.map(k => ({ OR: [{ section: { contains: k, mode: 'insensitive' } }, { title: { contains: k, mode: 'insensitive' } }] })) },
-      select: { title: true, content: true }, orderBy: { reviewed: 'desc' }, take: 2,
+      select: { id: true, title: true, section: true, content: true }, orderBy: { reviewed: 'desc' }, take: 3,
     }).catch(() => [])
-    for (const s of (seeds as any[])) parts.push(`${s.title}\n${s.content}`)
+    for (const s of (seeds as any[])) {
+      parts.push(`${s.title}\n${s.content}`)
+      const key = `seed:${s.id}`
+      if (!refMap.has(key)) refMap.set(key, { policy_id: key, title: policyTitle(s.title), section: s.section ?? null })
+    }
   }
 
   return { text: parts.join('\n\n').slice(0, 9000), refs: [...refMap.values()].slice(0, 8) }

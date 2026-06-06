@@ -217,6 +217,7 @@ standardTrainingRouter.patch('/modules/:id', async (req: Request, res: Response)
   if (typeof b.pass_mark === 'number') data.pass_mark = Math.max(0, Math.min(100, Math.round(b.pass_mark)))
   if (b.duration_minutes !== undefined && b.duration_minutes !== null) data.duration_minutes = Math.max(0, Math.min(600, Math.round(Number(b.duration_minutes) || 0)))
   if (b.standards !== undefined) data.standards = normaliseStandards(b.standards)
+  if (typeof b.cpd_accredited === 'boolean') data.cpd_accredited = b.cpd_accredited
   if (typeof b.frequency === 'string') { data.frequency = b.frequency; data.renewal_months = renewalMonthsFor(b.frequency); data.is_annual = !['once', 'adhoc'].includes(b.frequency) }
   if (typeof b.requires_practical === 'boolean') data.requires_practical = b.requires_practical
   const updated = await (prisma as any).trainingModule.update({ where: { id: module.id }, data })

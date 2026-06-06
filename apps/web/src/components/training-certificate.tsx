@@ -19,10 +19,14 @@ export type TrainingCertificateProps = {
   expiresAt?:        string | null
   requiresPractical?: boolean
   practicalNote?:    string | null  // overrides the default practical line when provided
+  cpdAccredited?:    boolean
+  cpdHours?:         number | null
+  cpdProviderNumber?: string | null
 }
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
+  cpdAccredited, cpdHours, cpdProviderNumber,
 }: TrainingCertificateProps) {
   return (
     <div className="cert-sheet relative overflow-hidden rounded-2xl border border-teal/20 bg-white shadow-card">
@@ -80,6 +84,16 @@ export function TrainingCertificate({
             <p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-mid">Renews</p>
           </div>
         </div>
+
+        {cpdAccredited && (
+          <div className="mx-auto mt-5 flex max-w-md items-center justify-center gap-3 rounded-lg border border-teal/30 bg-teal-light/30 px-4 py-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-teal text-[9px] font-bold leading-tight text-teal">CPD</span>
+            <div className="text-left">
+              <p className="text-xs font-semibold text-teal-dark">CPD Certified{cpdHours != null ? ` · ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}</p>
+              <p className="text-[10px] text-neutral-mid">{cpdProviderNumber ? `The CPD Certification Service — Provider ${cpdProviderNumber}` : 'Accredited continuing professional development'}</p>
+            </div>
+          </div>
+        )}
 
         {requiresPractical && (
           <p className="mx-auto mt-5 max-w-md rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">

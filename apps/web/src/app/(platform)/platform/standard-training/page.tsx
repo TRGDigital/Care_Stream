@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
+import { CourseSpecification } from '@/components/course-specification'
 import { PlatformShell } from '@/components/platform-shell'
 import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck } from 'lucide-react'
 
@@ -116,6 +117,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [imgBusy, setImgBusy] = useState(false)
   const [savedNote, setSavedNote] = useState('')
   const [attestOpen, setAttestOpen] = useState(false)
+  const [specOpen, setSpecOpen] = useState(false)
   const [revName, setRevName] = useState('')
   const [revRole, setRevRole] = useState('')
   const [attest1, setAttest1] = useState(false)
@@ -135,7 +137,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch { /* ignore */ } finally { setSaving(false) }
   }
   function saveEdits() {
-    return api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes, standards: m.standards ?? [] })
+    return api.standardTraining.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes, standards: m.standards ?? [], cpd_accredited: !!m.cpd_accredited })
   }
   async function unpublish() {
     setSaving(true)
@@ -347,6 +349,15 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
             <ShieldCheck size={13} className="mr-1 inline" /> Attested by <strong>{m.attested_by_name}</strong>{m.attested_by_role ? `, ${m.attested_by_role}` : ''}{m.attested_at ? ` on ${fmtDate(m.attested_at)}` : ''}.
           </div>
         )}
+
+        {/* CPD accreditation flag */}
+        <label className="mt-4 flex items-start gap-2 rounded-lg border border-gray-200 p-2.5 text-xs">
+          <input type="checkbox" checked={!!m.cpd_accredited} onChange={e => setField('cpd_accredited', e.target.checked)} className="mt-0.5 accent-teal" />
+          <span>
+            <span className="font-medium text-neutral-dark">CPD accredited</span> — when on, certificates for this module show the <strong>CPD Certified</strong> mark + CPD hours.
+            <span className="mt-0.5 block text-gray-400">Only enable once The CPD Certification Service has formally accredited this module. Set the provider number via the <code className="rounded bg-gray-100 px-1">CPD_PROVIDER_NUMBER</code> env var.</span>
+          </span>
+        </label>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
@@ -355,8 +366,11 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
           ? <button onClick={openAttest} disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><ShieldCheck size={14} /> Attest &amp; publish</button>
           : <button onClick={unpublish} disabled={saving} className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-amber-300 hover:text-amber-600">Unpublish</button>}
         <button onClick={regenerate} disabled={regenerating} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">{regenerating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Rebuild whole module</button>
+        <button onClick={() => setSpecOpen(true)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal"><FileText size={13} /> Course spec</button>
         {savedNote && <span className="text-sm font-medium text-green-600">{savedNote}</span>}
       </div>
+
+      {specOpen && <CourseSpecification m={m} qa={qa} onClose={() => setSpecOpen(false)} />}
 
       {/* Attestation modal */}
       {attestOpen && (

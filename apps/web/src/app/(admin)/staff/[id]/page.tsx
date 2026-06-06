@@ -670,6 +670,9 @@ export default function StaffRecordPage() {
               practicalNote={certItem.practical_signed
                 ? `Knowledge component. Practical assessment recorded${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.`
                 : 'This is the knowledge component. A practical / observed competency assessment is also required.'}
+              cpdAccredited={certItem.cpd_accredited}
+              cpdHours={certItem.cpd_hours}
+              cpdProviderNumber={rec.cpd_provider_number}
             />
           </div>
         </div>

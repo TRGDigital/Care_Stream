@@ -171,10 +171,6 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
         <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
         <h2 className="text-lg font-bold text-neutral-dark">{data.name || name}</h2>
 
-        {data.illustration_url && (
-          <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="mt-3 aspect-[16/9] w-full rounded-xl border border-gray-200 object-cover" />
-        )}
-
         {data.requires_practical && (
           <div className="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-800">
             <ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-500" />
@@ -210,7 +206,11 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
         {/* Learn */}
         {phase === 'learn' && (
           <div className="mt-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              {data.illustration_url && (
+                <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
+              )}
+              <div className="p-5">
               <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
               {data.learning?.summary && <p className="mb-3 text-sm text-neutral-dark">{data.learning.summary}</p>}
               {Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
@@ -218,6 +218,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
                   {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
                 </ul>
               )}
+              </div>
             </div>
             <button onClick={() => setPhase('assess')} className="mt-4 w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
           </div>

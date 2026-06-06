@@ -20,13 +20,14 @@ export default function AnnualTrainingPage() {
   const [groups,  setGroups]  = useState<Record<string, string>>({})
   const [topics,  setTopics]  = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState('')
   const [busy,    setBusy]    = useState<string | null>(null)   // topic id being generated
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string }>({ mode: 'list' })
 
   function load() {
     if (!api) return
-    setLoading(true)
-    api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(() => {}).finally(() => setLoading(false))
+    setLoading(true); setError('')
+    api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -44,6 +45,7 @@ export default function AnnualTrainingPage() {
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
 
   const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g) })).filter(g => g.items.length)
+  const byGroupEmpty = byGroup.length === 0
 
   return (
     <div>
@@ -54,6 +56,16 @@ export default function AnnualTrainingPage() {
         Generated modules are <strong>drafts</strong> — review and approve before assigning to staff. Staff complete them in the hub in their first language.
       </p>
 
+      {error && (
+        <div className="mb-4 rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <p className="font-medium">Couldn&apos;t load the catalogue.</p>
+          <p className="mt-1 text-xs">{error}</p>
+          <button onClick={load} className="mt-2 rounded-lg border border-red-300 px-3 py-1 text-xs font-medium hover:bg-red-100">Retry</button>
+        </div>
+      )}
+      {!loading && !error && byGroupEmpty && (
+        <div className="rounded-card border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-neutral-mid">No training topics found.</div>
+      )}
       {loading ? (
         <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-card bg-gray-100" />)}</div>
       ) : (

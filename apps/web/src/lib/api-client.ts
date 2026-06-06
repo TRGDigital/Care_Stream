@@ -302,7 +302,7 @@ export function createApiClient(token: string) {
       // ── Annual training (AI catalogue) ──
       catalogue: () => apiFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; updated_at: string } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number } }>
       }>('/training/catalogue', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),

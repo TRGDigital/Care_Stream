@@ -27,17 +27,16 @@ function kebab(s: string): string {
 async function ensureTrainingTopicsSeeded(): Promise<void> {
   const existing = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null }, select: { title: true } })
   const have = new Set((existing as any[]).map(t => t.title))
-  let order = 0
-  for (const t of TRAINING_TOPICS) {
-    order += 1
-    if (have.has(t.title)) continue
-    await (prisma as any).trainingTopic.create({
-      data: {
-        tenant_id: null, title: t.title, group_key: t.group_key,
-        default_frequency: t.default_frequency, requires_practical: !!t.requires_practical,
-        image_key: t.group_key, aliases: t.aliases ?? [], sort_order: order,
-      },
-    }).catch(() => {})
+  const toCreate = TRAINING_TOPICS
+    .map((t, i) => ({ ...t, sort_order: i + 1 }))
+    .filter(t => !have.has(t.title))
+    .map(t => ({
+      tenant_id: null, title: t.title, group_key: t.group_key,
+      default_frequency: t.default_frequency, requires_practical: !!t.requires_practical,
+      image_key: t.group_key, aliases: t.aliases ?? [], sort_order: t.sort_order,
+    }))
+  if (toCreate.length) {
+    await (prisma as any).trainingTopic.createMany({ data: toCreate }).catch((e: any) => console.error('[training-topics] seed failed:', e?.message ?? e))
   }
 }
 
@@ -50,7 +49,7 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
       (prisma as any).trainingTopic.findMany({ where: { OR: [{ tenant_id: null }, { tenant_id: tenantId }], is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: tenantId, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, updated_at: true, created_at: true },
+        select: { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, questions: true, created_at: true },
       }),
     ])
     const moduleByTopic = new Map<string, any>()

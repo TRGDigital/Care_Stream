@@ -6,6 +6,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { getAiCreditUsage, getQueryUsage } from '../lib/plan-limits'
 import { DEFAULT_ONBOARDING_FLOW_PROMPT } from './onboarding-templates'
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
+import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats } from '../services/storage/s3'
@@ -1649,6 +1650,7 @@ const USAGE_LABELS: Record<string, string> = {
   onboarding_flow_generation:     'Onboarding Flow Generation',
   policy_anonymisation:           'Policy Seed Anonymisation',
   training_module_generation:     'Annual Training — Module Generation',
+  training_image_generation:       'Annual Training — Cover Image',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -1674,6 +1676,7 @@ async function ensurePromptsSeeded() {
     onboarding_flow_generation: DEFAULT_ONBOARDING_FLOW_PROMPT,
     policy_anonymisation:       DEFAULT_POLICY_ANONYMISE_PROMPT,
     training_module_generation: DEFAULT_TRAINING_MODULE_PROMPT,
+    training_image_generation:  DEFAULT_TRAINING_IMAGE_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

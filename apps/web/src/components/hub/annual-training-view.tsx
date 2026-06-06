@@ -4,7 +4,7 @@
 // modules in their first language: read the learning section, then the
 // assessment. Passing issues a certificate. Modules stay separate from My Training.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
@@ -108,6 +108,11 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [sel, setSel] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Jump back to the top whenever the phase (learn ⇄ assess) or result changes,
+  // so the assessment opens at question 1 rather than keeping the lesson scroll.
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [phase, result])
 
   useEffect(() => {
     api.me.annualTraining.get(id).then(d => {
@@ -166,7 +171,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-2xl">
         <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
         <h2 className="text-lg font-bold text-neutral-dark">{data.name || name}</h2>

@@ -14,18 +14,31 @@ import { uploadTrainingImage } from '../storage/s3'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
-const STYLE =
-  'Flat modern vector illustration, soft rounded shapes, warm and friendly, ' +
-  'gentle teal and warm-neutral palette, plenty of clean negative space. ' +
-  'A calm UK care-home setting. Do NOT include any text, words, letters or logos. ' +
-  'Do NOT show realistic human faces — keep any people stylised, simple and abstract. ' +
-  'Professional, reassuring, suitable for staff training.'
+// Editable in the Platform Console → AI Prompts ("Annual Training — Cover Image").
+// {{topic}} and {{summary}} are substituted per module before the image is generated.
+export const TRAINING_IMAGE_PROMPT_USAGE = 'training_image_generation'
+export const DEFAULT_TRAINING_IMAGE_PROMPT = `Create a cover illustration for a UK care-home staff training module.
+Topic: "{{topic}}".
+Context: {{summary}}
 
-function buildPrompt(name: string, summary?: string | null): string {
-  const subject = (summary && summary.trim().length > 10)
-    ? `Topic: "${name}". Context: ${summary.trim().slice(0, 300)}`
-    : `Topic: "${name}" — annual care-home staff training.`
-  return `Create a cover illustration for a care-home staff training module. ${subject}\n\n${STYLE}`
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette, plenty of clean negative space. A calm UK care-home setting.
+Do NOT include any text, words, letters or logos.
+Do NOT show realistic human faces — keep any people stylised, simple and abstract.
+Professional, reassuring, suitable for staff training.`
+
+async function getImagePrompt(): Promise<string> {
+  try {
+    const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: TRAINING_IMAGE_PROMPT_USAGE } })
+    if (row?.content) return row.content
+  } catch { /* fall through */ }
+  return DEFAULT_TRAINING_IMAGE_PROMPT
+}
+
+function buildPrompt(template: string, name: string, summary?: string | null): string {
+  const ctx = (summary && summary.trim().length > 10)
+    ? summary.trim().slice(0, 300)
+    : `An annual refresher training module on ${name} for care-home staff.`
+  return template.replace(/\{\{\s*topic\s*\}\}/g, name).replace(/\{\{\s*summary\s*\}\}/g, ctx)
 }
 
 // Generate an illustration for a module and persist its S3 key on the module.
@@ -41,9 +54,10 @@ export async function generateModuleIllustration(moduleId: string): Promise<stri
     ? (module.learning_content.summary as string | undefined)
     : undefined
 
+  const template = await getImagePrompt()
   const result = await openai.images.generate({
     model:  'gpt-image-1',
-    prompt: buildPrompt(module.name, summary),
+    prompt: buildPrompt(template, module.name, summary),
     size:   '1024x1024',
   })
 

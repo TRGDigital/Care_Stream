@@ -1895,6 +1895,7 @@ function SystemReference() {
         <p className="leading-relaxed text-neutral-mid">
           Multi-choice training questions delivered proactively via WhatsApp or email. Staff reply A/B/C/D and get instant feedback.
           Training is always a separate flow — questions are never injected into policy or CQC conversations.
+          <span className="mt-1 block text-xs italic text-neutral-mid">Distinct from <strong>Annual Training (AI modules)</strong> below — that&apos;s the teach-then-assess, certificate-issuing annual refresher system. This section is the lightweight proactive quiz delivery.</span>
         </p>
         <div className="mt-2 space-y-1">
           <RefRow label="Training seeds"      value="Per-topic knowledge entries at /platform/training-seeds — framework area, description, key points, source URLs" />
@@ -1988,6 +1989,20 @@ function SystemReference() {
           assign by role/individual, and staff complete them in the hub in their first language. Passing issues a
           knowledge-assessment certificate; renewals reuse the existing training expiry engine. Extends <code className="rounded bg-gray-100 px-1 text-xs">TrainingModule</code>/<code className="rounded bg-gray-100 px-1 text-xs">TrainingEnrollment</code> — not a separate silo.
         </p>
+        <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-teal">How it works — end to end</p>
+          <ol className="list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-neutral-mid marker:font-semibold marker:text-teal">
+            <li><strong>Catalogue.</strong> ~44 UK care topics at <em>Training → Annual training modules</em>. Each topic offers a <strong>standard</strong> module (platform library, free) and/or a <strong>tailored</strong> one.</li>
+            <li><strong>Get a module.</strong> <em>Assign standard</em> (ready-made, no credit) or <em>Tailor to our policies</em> (AI reads the home&apos;s own policies via RAG — <strong>1 AI credit</strong>). Tailored arrives as a draft.</li>
+            <li><strong>Review &amp; approve.</strong> Edit the lesson + every question, set pass mark &amp; frequency, optionally generate an AI cover image (1 credit for tenants; free for standard), then <em>Approve &amp; publish</em>. Nothing reaches staff until approved.</li>
+            <li><strong>Assign.</strong> To individuals or a whole role, with an optional due date.</li>
+            <li><strong>Staff take it (hub).</strong> Read the lesson (with cover image, in their first language) → assessment (random subset of the bank, pass mark) → <strong>pass = certificate</strong>; fail → review &amp; retry. They can ask questions about the source policies inline.</li>
+            <li><strong>Certificate &amp; practical.</strong> CareStream-branded, printable; shows on the hub, the staff record and in the CQC PDF. Practical-required topics also need a <em>Record practical</em> sign-off (knowledge component only).</li>
+            <li><strong>Renewals.</strong> The module&apos;s frequency sets an expiry; it resurfaces automatically when due (admin reminders + &apos;due for renewal&apos;).</li>
+            <li><strong>Standard-library upkeep (Console).</strong> Each module shows <strong>Created</strong> + <strong>Published</strong> dates. Every ~6 months a <strong>Review due</strong> flag appears → <em>Regenerate questions</em> snapshots the old bank and generates a fresh one that <strong>avoids every question ever used</strong> → review → re-publish to all tenants.</li>
+            <li><strong>Credits.</strong> Tailoring, cover images and question generation draw the plan&apos;s monthly <strong>AI credits</strong> (separate from everyday <em>queries</em>); translations &amp; some other AI are tracked for cost only and don&apos;t count.</li>
+          </ol>
+        </div>
         <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Data model</p>
           <RefRow label="TrainingTopic"   value="catalogue of ~44 platform topics (group, default_frequency, requires_practical, aliases) — seeded on first GET /training/catalogue" />

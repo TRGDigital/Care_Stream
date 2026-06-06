@@ -9,7 +9,7 @@ import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
-  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText,
+  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText, Lightbulb,
 } from 'lucide-react'
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D']
@@ -107,6 +107,8 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [phase, setPhase] = useState<'learn' | 'assess'>('learn')
   const [policiesOpen, setPoliciesOpen] = useState(false)
   const [sel, setSel] = useState<Record<string, number>>({})
+  const [checkSel, setCheckSel] = useState<Record<string, number>>({})  // in-lesson knowledge checks
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})  // scenario answers revealed
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -138,6 +140,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
 
   const qs: any[] = data.questions ?? []
   const answered = qs.filter(q => sel[q.id] != null).length
+  const sections: any[] = Array.isArray(data.learning?.sections) ? data.learning.sections : []
 
   // Result
   if (result) {
@@ -211,22 +214,75 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
 
         {/* Learn */}
         {phase === 'learn' && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
+            {/* Intro card: cover image + summary */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
               {data.illustration_url && (
                 <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
               )}
               <div className="p-5">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
-              {data.learning?.summary && <p className="mb-3 text-sm text-neutral-dark">{data.learning.summary}</p>}
-              {Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
-                <ul className="space-y-1.5">
-                  {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
-                </ul>
-              )}
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
+                {data.learning?.summary && <p className="text-sm text-neutral-dark">{data.learning.summary}</p>}
               </div>
             </div>
-            <button onClick={() => setPhase('assess')} className="mt-4 w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
+
+            {/* Interactive sections — teach → scenario → quick check */}
+            {sections.length > 0 ? sections.map((sec: any, si: number) => {
+              const picked = checkSel[sec.id]
+              const isRight = picked === sec.check?.correct
+              return (
+                <div key={sec.id} className="rounded-xl border border-gray-200 bg-white p-5">
+                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Step {si + 1} of {sections.length}</p>
+                  {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
+                  {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
+
+                  {/* Scenario */}
+                  {sec.scenario?.situation && (
+                    <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
+                      <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
+                      <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
+                      {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
+                      {revealed[sec.id]
+                        ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
+                        : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
+                    </div>
+                  )}
+
+                  {/* In-lesson knowledge check (formative, not graded) */}
+                  {sec.check?.question && Array.isArray(sec.check.options) && sec.check.options.length > 0 && (
+                    <div className="mt-3">
+                      <p className="mb-1.5 text-sm font-medium text-neutral-dark">Quick check: {sec.check.question}</p>
+                      <div className="space-y-1.5">
+                        {sec.check.options.map((opt: string, oi: number) => {
+                          const chosen = picked === oi
+                          const showState = picked != null && (oi === sec.check.correct || chosen)
+                          const good = oi === sec.check.correct
+                          return (
+                            <button key={oi} onClick={() => picked == null && setCheckSel(c => ({ ...c, [sec.id]: oi }))} disabled={picked != null}
+                              className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${showState ? (good ? 'border-green-300 bg-green-50 text-neutral-dark' : 'border-red-300 bg-red-50 text-neutral-dark') : 'border-gray-200 text-neutral-dark hover:border-teal/50'} ${picked != null ? 'cursor-default' : ''}`}>
+                              {showState ? (good ? <CheckCircle2 size={14} className="shrink-0 text-green-500" /> : chosen ? <AlertTriangle size={14} className="shrink-0 text-red-500" /> : <Circle size={14} className="shrink-0 text-gray-300" />) : <Circle size={14} className="shrink-0 text-gray-300" />}
+                              {opt}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
+                    </div>
+                  )}
+                </div>
+              )
+            }) : (
+              // Fallback for older modules with no sections — key points list.
+              Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
+                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                  <ul className="space-y-1.5">
+                    {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
+                  </ul>
+                </div>
+              )
+            )}
+
+            <button onClick={() => setPhase('assess')} className="w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
           </div>
         )}
 

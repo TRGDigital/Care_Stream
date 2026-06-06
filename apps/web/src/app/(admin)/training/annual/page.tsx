@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
+import { SectionsEditor } from '@/components/training-sections-editor'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users,
@@ -268,16 +269,23 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
       <div className="mb-5 rounded-card border border-gray-100 bg-white p-4 shadow-card">
         <p className="mb-2 text-sm font-semibold text-neutral-dark">Learning — what staff read first</p>
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Summary</label>
-        <textarea value={m.learning_content?.summary ?? ''} onChange={e => setLearning('summary', e.target.value)} rows={3} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
-        <label className="mb-1 block text-xs font-medium text-neutral-mid">Key points</label>
-        <div className="space-y-2">
-          {kp.map((p, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input value={p} onChange={e => setLearning('key_points', kp.map((x, j) => j === i ? e.target.value : x))} className="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
-              <button onClick={() => setLearning('key_points', kp.filter((_, j) => j !== i))} className="shrink-0 rounded p-1 text-neutral-mid hover:text-red-500"><Trash2 size={14} /></button>
-            </div>
-          ))}
-          <button onClick={() => setLearning('key_points', [...kp, ''])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add key point</button>
+        <textarea value={m.learning_content?.summary ?? ''} onChange={e => setLearning('summary', e.target.value)} rows={3} className="mb-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+        <p className="mb-3 text-xs text-neutral-mid">A short intro shown above the lesson sections.</p>
+
+        <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
+        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} />
+
+        <div className="mt-4">
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Key points (recap)</label>
+          <div className="space-y-2">
+            {kp.map((p, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input value={p} onChange={e => setLearning('key_points', kp.map((x, j) => j === i ? e.target.value : x))} className="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                <button onClick={() => setLearning('key_points', kp.filter((_, j) => j !== i))} className="shrink-0 rounded p-1 text-neutral-mid hover:text-red-500"><Trash2 size={14} /></button>
+              </div>
+            ))}
+            <button onClick={() => setLearning('key_points', [...kp, ''])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add key point</button>
+          </div>
         </div>
       </div>
 

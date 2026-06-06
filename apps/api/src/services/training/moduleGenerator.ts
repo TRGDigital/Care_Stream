@@ -22,24 +22,62 @@ The home's relevant policy material:
 """
 Ground the module in this policy material wherever possible — teach THIS home's procedures, not just generic content. Where the policies don't cover something, use standard UK care-sector good practice (CQC fundamental standards). Never invent rules that contradict the policies. Keep clinical content safe and accurate.
 
-Produce a module with two parts: a short LEARNING section that teaches the topic, then an ASSESSMENT bank of multiple-choice questions.
+Build a STRUCTURED, INTERACTIVE lesson made of SECTIONS, then an ASSESSMENT bank of multiple-choice questions. Each section TEACHES one part of the topic, then makes the learner APPLY it through a real care-home scenario and a quick knowledge check.
+
+LANGUAGE: write in clear, simple, concrete language with short sentences. Staff read this in their own first language via translation, so plain wording that translates cleanly matters more than sophisticated English. Avoid jargon; explain any necessary term.
 
 Return ONLY a JSON object, no prose or markdown fences, exactly:
 {
   "title": "Clear module title (you may keep the topic name)",
   "summary": "2-3 sentence plain-language overview of what this training covers and why it matters here.",
-  "key_points": ["6 to 9 short, concrete things a worker must know — grounded in the policy where possible"],
+  "sections": [
+    {
+      "heading": "Short section title",
+      "body": "2-4 short sentences teaching this part of the topic, grounded in the policy where possible.",
+      "scenario": {
+        "situation": "A short, realistic care-home situation (2-4 sentences) where this applies. Use a resident first name.",
+        "prompt": "One sentence asking what the worker should do.",
+        "answer": "2-3 sentences giving the correct action and WHY, grounded in the policy/good practice."
+      },
+      "check": {
+        "question": "A quick single-best-answer question checking THIS section's point (different from the scenario).",
+        "options": ["four plausible options"],
+        "correct": 0
+      }
+    }
+  ],
+  "key_points": ["4 to 6 short recap points a worker must remember"],
   "questions": [
     { "text": "A clear single-best-answer question", "options": ["four plausible options"], "correct": 0 }
   ]
 }
-Rules: produce EXACTLY 20 questions (a bank — staff will be served a random subset). Each question has exactly 4 options; "correct" is the 0-based index of the single best answer. Make wrong options plausible but clearly wrong against the policy/best practice. Vary difficulty; prefer realistic care-scenario phrasing. Plain English suitable for staff with English as a second language.{{lang_note}}`
+Rules:
+- Produce 4 to 6 SECTIONS. EVERY section MUST include both a "scenario" and a "check" — these are required, never omit them.
+- Each "check" and each assessment question has exactly 4 options; "correct" is the 0-based index of the single best answer. Make wrong options plausible but clearly wrong against the policy/best practice.
+- Produce EXACTLY 20 assessment "questions" (a bank — staff are served a random subset). These are SEPARATE from and should not duplicate the in-section checks.
+- Vary difficulty; prefer realistic care-scenario phrasing.{{lang_note}}`
+
+type GeneratedSection = {
+  heading: string
+  body: string
+  scenario: { situation: string; prompt: string; answer: string }
+  check: { question: string; options: string[]; correct: number }
+}
 
 type GeneratedModule = {
   title: string
-  learning_content: { summary: string; key_points: string[] }
+  learning_content: { summary: string; key_points: string[]; sections: GeneratedSection[] }
   questions: Array<{ id: string; text: string; options: string[]; correct: number }>
   policy_refs: Array<{ policy_id: string; title: string; section: string | null }>
+}
+
+// Normalise a 4-option MCQ {question/text, options, correct}. Pads options to 4, clamps correct.
+function normaliseMcq(raw: any, key: 'question' | 'text'): { options: string[]; correct: number } & Record<string, any> {
+  const options = (Array.isArray(raw?.options) ? raw.options : []).map((o: any) => String(o)).slice(0, 4)
+  while (options.length < 4) options.push('—')
+  let correct = Number(raw?.correct)
+  if (!Number.isInteger(correct) || correct < 0 || correct > 3) correct = 0
+  return { [key]: String(raw?.[key] ?? ''), options, correct }
 }
 
 function policyTitle(filename?: string | null): string {
@@ -130,7 +168,7 @@ export async function generateAnnualModuleDraft(
     system += `\n\nIMPORTANT — QUESTION HISTORY: the following ${exclude.length} question(s) have ALREADY been used in previous versions of this module. Do NOT repeat, copy, or lightly reword any of them. Produce genuinely NEW questions that test different scenarios, angles, or details of the same topic:\n${list}`
   }
 
-  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 4096, temperature: exclude.length ? 0.6 : 0.4 })
+  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 8000, temperature: exclude.length ? 0.6 : 0.4 })
   const p = parseJson(raw)
 
   // Drop any generated question that still matches a previously-used one.
@@ -142,18 +180,32 @@ export async function generateAnnualModuleDraft(
     return true
   })
   const questions = rawQs.map((q: any, i: number) => {
-    const options = (Array.isArray(q?.options) ? q.options : []).map((o: any) => String(o)).slice(0, 4)
-    while (options.length < 4) options.push('—')
-    let correct = Number(q?.correct)
-    if (!Number.isInteger(correct) || correct < 0 || correct > 3) correct = 0
-    return { id: `q${i + 1}`, text: String(q?.text ?? ''), options, correct }
+    const m = normaliseMcq(q, 'text')
+    return { id: `q${i + 1}`, text: m.text, options: m.options, correct: m.correct }
   }).filter((q: any) => q.text)
+
+  // Build the interactive sections — every section keeps its scenario + check.
+  const sections: GeneratedSection[] = (Array.isArray(p?.sections) ? p.sections : []).map((s: any, i: number) => {
+    const sc = s?.scenario ?? {}
+    const chk = normaliseMcq(s?.check ?? {}, 'question')
+    return {
+      heading: String(s?.heading ?? `Section ${i + 1}`).slice(0, 160),
+      body:    String(s?.body ?? ''),
+      scenario: {
+        situation: String(sc.situation ?? ''),
+        prompt:    String(sc.prompt ?? ''),
+        answer:    String(sc.answer ?? ''),
+      },
+      check: { question: (chk as any).question, options: chk.options, correct: chk.correct },
+    }
+  }).filter((s: GeneratedSection) => s.body || s.heading)
 
   return {
     title: String(p?.title ?? topic.title).slice(0, 160),
     learning_content: {
       summary:    String(p?.summary ?? ''),
-      key_points: Array.isArray(p?.key_points) ? p.key_points.map((x: any) => String(x)).slice(0, 9) : [],
+      key_points: Array.isArray(p?.key_points) ? p.key_points.map((x: any) => String(x)).slice(0, 6) : [],
+      sections,
     },
     questions,
     policy_refs: refs,

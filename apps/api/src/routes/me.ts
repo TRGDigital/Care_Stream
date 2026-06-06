@@ -294,26 +294,46 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   const learn = (m.learning_content ?? {}) as any
   let summary = String(learn.summary ?? '')
   let keyPoints: string[] = Array.isArray(learn.key_points) ? learn.key_points.map((x: any) => String(x)) : []
+  // Interactive sections (heading, body, scenario, in-lesson check). Older modules
+  // have none — the hub falls back to summary + key_points.
+  let sections = (Array.isArray(learn.sections) ? learn.sections : []).map((s: any, i: number) => ({
+    id: `s${i + 1}`,
+    heading: String(s?.heading ?? ''),
+    body: String(s?.body ?? ''),
+    scenario: { situation: String(s?.scenario?.situation ?? ''), prompt: String(s?.scenario?.prompt ?? ''), answer: String(s?.scenario?.answer ?? '') },
+    check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
+  })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
 
   const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
   if (lang !== 'eng') {
     const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget((async () => {
-      const [s, kp, qs] = await Promise.all([
+      const [s, kp, qs, secs] = await Promise.all([
         translateText(summary, lang, langName),
         mapLimit(keyPoints, 6, (p: string) => translateText(p, lang, langName)),
         mapLimit(questions, 6, async (q: any) => { const t = await translateQuestionCached({ text: q.text ?? '', options: q.options }, lang, langName); return { ...q, text: t.text, options: t.options } }),
+        mapLimit(sections, 4, async (sec: any) => {
+          const [heading, body, situation, prompt, answer, chk] = await Promise.all([
+            translateText(sec.heading, lang, langName),
+            translateText(sec.body, lang, langName),
+            translateText(sec.scenario.situation, lang, langName),
+            translateText(sec.scenario.prompt, lang, langName),
+            translateText(sec.scenario.answer, lang, langName),
+            translateQuestionCached({ text: sec.check.question ?? '', options: sec.check.options }, lang, langName),
+          ])
+          return { ...sec, heading, body, scenario: { situation, prompt, answer }, check: { ...sec.check, question: chk.text, options: chk.options } }
+        }),
       ])
-      return { summary: s, keyPoints: kp, questions: qs }
-    })(), 18_000, null)
-    if (translated) { summary = translated.summary; keyPoints = translated.keyPoints; questions = translated.questions }
+      return { summary: s, keyPoints: kp, questions: qs, sections: secs }
+    })(), 25_000, null)
+    if (translated) { summary = translated.summary; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
   }
 
   ok(res, {
     name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
     illustration_url: illustrationUrl(m.illustration_key),
-    learning: { summary, key_points: keyPoints },
+    learning: { summary, key_points: keyPoints, sections },
     questions,
     policies,
     answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),

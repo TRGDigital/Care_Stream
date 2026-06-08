@@ -52,7 +52,11 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     (prisma as any).queryRecord.count({ where: { tenant_id: tenantId, user_id: userId, created_at: { gte: new Date(now.getTime() - 30 * DAY) } } }),
     (prisma as any).queryRecord.findMany({ where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' }, take: 5, select: { created_at: true, document_category_queried: true } }),
     (prisma as any).queryRecord.groupBy({ by: ['document_category_queried'], where: { tenant_id: tenantId, user_id: userId }, _count: { _all: true } }),
-    (prisma as any).cqcStaffDelivery.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, answered_at: true } }),
+    (prisma as any).cqcStaffDelivery.findMany({
+      where:   { tenant_id: tenantId, user_id: userId },
+      include: { question: { select: { domain: true, question: true } } },
+      orderBy: { sent_at: 'desc' },
+    }),
   ])
 
   // ── Training items ──────────────────────────────────────────────────────────
@@ -145,6 +149,29 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     last_query_at: (recentQueries as any[])[0]?.created_at ?? null,
     first_login_at: user.first_login_at, last_login_at: user.last_login_at,
     cqc_assigned: cqcAssigned, cqc_answered: cqcAnswered, top_topics: topTopics,
+  }
+
+  // ── CQC Staff Prep ───────────────────────────────────────────────────────────
+  const cqcEvaluated = (cqcAll as any[]).filter(d => d.status === 'evaluated')
+  const cqcAvg = cqcEvaluated.length ? Math.round(cqcEvaluated.reduce((s, d) => s + (d.score ?? 0), 0) / cqcEvaluated.length) : null
+  const cqcRetried = cqcEvaluated.filter(d => (d.attempts ?? 1) > 1 && d.first_score != null)
+  const cqcImprovement = cqcRetried.length ? Math.round(cqcRetried.reduce((s, d) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / cqcRetried.length) : null
+  const cqcPrep = {
+    assigned:    cqcAssigned,
+    answered:    cqcEvaluated.length,
+    pending:     cqcAssigned - cqcAnswered,
+    avg_score:   cqcAvg,
+    retried:     cqcRetried.length,
+    improvement: cqcImprovement,
+    questions: (cqcAll as any[]).map(d => ({
+      domain:      d.question?.domain ?? null,
+      question:    d.rephrased_q || d.question?.question || '',
+      status:      d.status,
+      score:       d.status === 'evaluated' ? (d.score ?? null) : null,
+      first_score: d.first_score ?? null,
+      attempts:    d.attempts ?? 1,
+      answered_at: d.answered_at,
+    })),
   }
 
   // ── Risk flags ─────────────────────────────────────────────────────────────────
@@ -343,6 +370,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     onboarding: { items: onboarding, summary: onboardingSummary },
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,
+    cqc_prep: cqcPrep,
     follow_up: followUp,
     cpd_provider_number: process.env.CPD_PROVIDER_NUMBER ?? null,
   }

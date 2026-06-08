@@ -923,6 +923,16 @@ export default function AnalyticsPage() {
             />
           </div>
 
+          {cqcPrepData.summary.retried > 0 && (
+            <div className="mb-6 rounded-card border border-teal/20 bg-teal-light/20 px-5 py-4">
+              <p className="text-sm font-semibold text-neutral-dark">Review &amp; retry — evidence staff are learning</p>
+              <p className="mt-0.5 text-sm text-neutral-mid">
+                <strong className="text-neutral-dark">{cqcPrepData.summary.retried}</strong> answer{cqcPrepData.summary.retried !== 1 ? 's were' : ' was'} reviewed against the model answer and re-attempted
+                {cqcPrepData.summary.avg_improvement !== null && <>, improving the score by an average of <strong className="text-status-success">+{cqcPrepData.summary.avg_improvement} points</strong></>}.
+              </p>
+            </div>
+          )}
+
           {cqcPrepData.by_domain.length > 0 && (
             <div className="mb-6">
               <Card title="Performance by CQC domain" info="Average score per CQC inspection domain. Domains scoring below 60 indicate areas where staff may need additional preparation.">
@@ -969,7 +979,7 @@ export default function AnalyticsPage() {
                         <th className="pb-2 pr-3 text-xs font-medium text-neutral-mid">Role</th>
                         <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Answered</th>
                         <th className="pb-2 pr-3 text-center text-xs font-medium text-neutral-mid">Avg score</th>
-                        <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Scoring 80+</th>
+                        <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Reviewed &amp; retried</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -981,8 +991,10 @@ export default function AnalyticsPage() {
                           <td className={clsx('py-2 pr-3 text-center font-semibold', scoreColor(s.avg_score))}>
                             {s.avg_score !== null ? s.avg_score : '—'}
                           </td>
-                          <td className={clsx('py-2 text-right font-semibold', s.pct_80_plus !== null && s.pct_80_plus >= 80 ? 'text-status-success' : s.pct_80_plus !== null ? 'text-status-warning' : 'text-neutral-mid')}>
-                            {s.pct_80_plus !== null ? `${s.pct_80_plus}%` : '—'}
+                          <td className="py-2 text-right text-neutral-mid">
+                            {s.retried > 0
+                              ? <>{s.retried} retried{s.improvement != null && <span className="ml-1 font-semibold text-status-success">+{s.improvement}</span>}</>
+                              : '—'}
                           </td>
                         </tr>
                       ))}

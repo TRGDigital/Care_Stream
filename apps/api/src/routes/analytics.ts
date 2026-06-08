@@ -1036,6 +1036,14 @@ analyticsRouter.get('/cqc-prep', requireAdmin, async (req: Request, res: Respons
       ? Math.round(evaluated.filter((d: any) => (d.score ?? 0) >= 80).length / evaluated.length * 100)
       : null
 
+    // Review & retry: how many answers were re-attempted after reviewing the model
+    // answer, and the average score improvement — direct evidence staff are learning.
+    const retriedItems = evaluated.filter((d: any) => (d.attempts ?? 1) > 1 && d.first_score != null)
+    const retried = retriedItems.length
+    const avgImprovement = retried
+      ? Math.round(retriedItems.reduce((s: number, d: any) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / retried)
+      : null
+
     // Per-domain breakdown
     const DOMAINS = ['safe', 'effective', 'caring', 'responsive', 'well_led']
     const by_domain = DOMAINS.map(domain => {
@@ -1063,16 +1071,22 @@ analyticsRouter.get('/cqc-prep', requireAdmin, async (req: Request, res: Respons
           : null
         return acc
       }, {} as Record<string, number | null>)
-      return { user_id, name: u.name, job_role: u.job_role, total_answered: u.answers.length, avg_score: overall, by_domain }
+      const userRetried = u.answers.filter((d: any) => (d.attempts ?? 1) > 1 && d.first_score != null)
+      const improvement = userRetried.length
+        ? Math.round(userRetried.reduce((s: number, d: any) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / userRetried.length)
+        : null
+      return { user_id, name: u.name, job_role: u.job_role, total_answered: u.answers.length, avg_score: overall, retried: userRetried.length, improvement, by_domain }
     }).sort((a, b) => b.avg_score - a.avg_score)
 
     ok(res, {
       summary: {
-        total_sent:     deliveries.length,
-        total_answered: evaluated.length,
-        pending:        pending.length,
-        avg_score:      avgScore,
-        pct_80_plus:    pct80Plus,
+        total_sent:      deliveries.length,
+        total_answered:  evaluated.length,
+        pending:         pending.length,
+        avg_score:       avgScore,
+        pct_80_plus:     pct80Plus,
+        retried,
+        avg_improvement: avgImprovement,
       },
       by_domain,
       staff_performance,

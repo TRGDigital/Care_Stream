@@ -547,6 +547,8 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
       data: {
         answer_text,
         score,
+        // Record the first-ever score once, so retries can show genuine improvement.
+        ...(delivery.first_score == null ? { first_score: score } : {}),
         feedback,
         status:       'evaluated',
         answered_at:  new Date(),

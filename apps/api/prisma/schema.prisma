@@ -983,7 +983,8 @@ model CqcStaffDelivery {
   rephrased_q  String           // AI-rephrased version sent to staff
   channel      String           @default("whatsapp")  // 'whatsapp' | 'email' | 'portal'
   answer_text  String?
-  score        Int?             // 0–100 AI evaluation score
+  score        Int?             // 0–100 AI evaluation score (latest attempt)
+  first_score  Int?             // score on the very first attempt — kept so we can show improvement after retry
   feedback     String?          // AI constructive feedback
   status       String           @default("pending")  // 'pending' | 'answered' | 'evaluated'
   attempts     Int              @default(1)           // bumped each time staff re-attempt after a low score

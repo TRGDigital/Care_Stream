@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
-  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, Clock, Download, Globe, GraduationCap,
+  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
@@ -19,6 +19,7 @@ const TIP = {
   annual:     "AI-generated annual training built from your policies. 'Score' is the assessment result; 'Renews' is when it's next due. For topics that also need a practical/observed assessment, use 'Record practical' to log that it's been done (with your name + date). View or print each certificate as evidence.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
+  cqc:        "This person's CQC inspector-prep practice: each question assigned, their AI score out of 100, and — where they reviewed the model answer and tried again — how much they improved. Useful evidence of inspection readiness.",
   questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
   followup:   "Questions this person has currently answered incorrectly across training and induction — the knowledge to reinforce. Re-send their outstanding questions, reset a module below so they can retake it, or assign targeted training. 'Mark as reviewed' records that you've actioned it (supervision evidence) and clears it until a new wrong answer appears.",
   remediation: "When this person gets a follow-up question wrong, how do they put it right? 'Learn & retry' means they worked through the policy-grounded micro-lesson before answering; 'Just retry' means they re-answered the same question without it. A healthy lean towards 'Learn & retry' suggests they're genuinely engaging with the learning, not just clicking through.",
@@ -119,6 +120,10 @@ function Trends({ trends }: { trends: { months: string[]; training: number[]; on
 const TOPIC_LABELS: Record<string, string> = {
   internal_policy: 'Policies', staff_handbook: 'Handbook', training_module: 'Training',
   cqc_report: 'CQC', audit_report: 'Audits', business_continuity: 'Continuity',
+}
+
+const CQC_DOMAINS: Record<string, string> = {
+  safe: 'Safe', effective: 'Effective', caring: 'Caring', responsive: 'Responsive', well_led: 'Well-led',
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -533,6 +538,40 @@ export default function StaffRecordPage() {
                   </div>
                 </li>
               ))}
+            </ul>
+          </div>
+        )}
+
+        {/* CQC Staff Prep */}
+        {rec.cqc_prep && rec.cqc_prep.assigned > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ClipboardList size={15} className="text-teal" /> CQC Staff Prep <InfoTip text={TIP.cqc} /></p>
+              <p className="text-xs text-neutral-mid">
+                {rec.cqc_prep.answered}/{rec.cqc_prep.assigned} answered{rec.cqc_prep.avg_score !== null ? ` · avg ${rec.cqc_prep.avg_score}/100` : ''}{rec.cqc_prep.retried > 0 ? ` · ${rec.cqc_prep.retried} retried` : ''}{rec.cqc_prep.improvement != null ? ` (+${rec.cqc_prep.improvement})` : ''}
+              </p>
+            </div>
+            <ul className="divide-y divide-gray-50">
+              {rec.cqc_prep.questions.map((q: any, i: number) => {
+                const sc = q.score as number | null
+                const band = sc == null ? 'bg-gray-100 text-gray-400' : sc >= 80 ? 'bg-green-100 text-green-700' : sc >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'
+                return (
+                  <li key={i} className="flex items-start gap-3 px-5 py-3">
+                    <span className={`mt-0.5 inline-flex h-9 w-11 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${band}`}>
+                      {sc == null ? '—' : sc}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-neutral-dark">{q.question}</p>
+                      <p className="mt-0.5 text-xs text-neutral-mid">
+                        {CQC_DOMAINS[q.domain] ?? q.domain ?? ''}
+                        {q.status === 'pending' && <> · <span className="text-amber-600">awaiting answer</span></>}
+                        {q.attempts > 1 && q.first_score != null && sc != null && <> · improved from <span className="text-neutral-dark">{q.first_score}</span> to <span className="font-semibold text-green-700">{sc}</span> over {q.attempts} attempts</>}
+                        {q.attempts > 1 && (q.first_score == null || sc == null) && <> · {q.attempts} attempts</>}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}

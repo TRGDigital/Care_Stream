@@ -263,6 +263,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
             <li><strong>On the staff record</strong> — an <strong>Induction questions</strong> section listing every question that person has answered, with a ✓ or ✗, their answer, and the correct answer where they got it wrong. A quick way to spot exactly where an individual needs support. Included in the CQC evidence PDF.</li>
             <li><strong>On the Analytics page</strong> — an <strong>Induction question performance</strong> section: the percentage answered correctly across the team, plus a <strong>“Most-missed induction questions”</strong> list that highlights the topics where knowledge is weakest, so you know what to reinforce in supervision or training.</li>
+            <li><strong>CQC Staff Prep</strong> — each staff record also has a <strong>CQC Staff Prep</strong> section showing every prep question that person was assigned, their AI score, and any improvement after reviewing the model answer and retrying. The team-wide view (including the review-and-retry improvement) is in <strong>Analytics → CQC Staff Prep</strong>. Both feed the CQC evidence PDF.</li>
           </ul>
         </SectionBlock>
 
@@ -856,6 +857,24 @@ const GUIDE_SECTIONS: GuideSection[] = [
                 <span className="text-neutral-mid">{desc}</span>
               </div>
             ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Learn &amp; retry">
+          <p className="text-sm text-neutral-mid">
+            After answering, staff see the model answer. If they score below 60 they get a <strong>Review &amp; try again</strong> option: they read the model answer and feedback, then re-answer in their own words. The new attempt is re-scored and replaces the old one, and we keep their first score so the <strong>improvement</strong> is recorded — built-in follow-up, with no manual re-sending.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Tracking &amp; evidence">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              In the <strong>Question Bank</strong>, each question shows how many staff it&apos;s been assigned to, how many answered, and the average score.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              In <strong>Analytics → CQC Staff Prep</strong>, you get the whole-team picture: scores by inspection domain, a per-staff table, and a <strong>Review &amp; retry</strong> summary showing how many answers were re-attempted and the average score improvement — direct evidence staff are learning.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              On each <strong>staff record</strong>, a <strong>CQC Staff Prep</strong> section lists every question that person was assigned, their score, and any improvement after retrying. It&apos;s included in the CQC evidence PDF.
+            </p>
           </div>
         </SectionBlock>
         <Tip>Focus sending questions to the domains where your team's scores are lowest. Running CQC Staff Prep regularly in the weeks before an inspection significantly builds staff confidence and reduces inspection anxiety.</Tip>

@@ -1207,7 +1207,7 @@ export default function HelpPage() {
           <GuideAccordion
             key={section.id}
             section={section}
-            isOpen={q ? true : openId === section.id}
+            isOpen={openId === section.id}
             onToggle={() => setOpenId(prev => prev === section.id ? null : section.id)}
           />
         ))}

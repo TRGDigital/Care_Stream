@@ -1119,6 +1119,76 @@ analyticsRouter.get('/cqc-prep', requireAdmin, async (req: Request, res: Respons
   }
 })
 
+// ─── GET /analytics/engagement ────────────────────────────────────────────────
+// The WhatsApp → Hub migration scoreboard: weekly active staff %, an 8-week trend,
+// and the channel mix (hub vs WhatsApp vs email vs voice) so you can watch the hub
+// take over as WhatsApp ramps down. "Active" = opened the hub (login) OR asked a
+// question OR read a policy in the window.
+analyticsRouter.get('/engagement', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const DAY  = 86_400_000
+  const WEEK = 7 * DAY
+  const WEEKS = 8
+  try {
+    const now   = Date.now()
+    const since = new Date(now - WEEKS * WEEK)
+
+    const [users, allQ, reads] = await Promise.all([
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, last_login_at: true } }),
+      (prisma as any).queryRecord.findMany({ where: { tenant_id: tenantId, created_at: { gte: since } }, select: { user_id: true, created_at: true, channel: true } }),
+      (prisma as any).policyReadSession.findMany({ where: { tenant_id: tenantId, created_at: { gte: since } }, select: { user_id: true, created_at: true } }),
+    ])
+
+    const totalStaff = (users as any[]).length
+    const loggedIn7d = new Set((users as any[]).filter(u => u.last_login_at && (now - new Date(u.last_login_at).getTime()) <= WEEK).map(u => u.id))
+
+    // User-attributed activity events (have history; logins are a snapshot only).
+    const events: Array<{ user_id: string; t: number }> = [
+      ...(allQ as any[]).filter(q => q.user_id).map(q => ({ user_id: q.user_id as string, t: new Date(q.created_at).getTime() })),
+      ...(reads as any[]).map(r => ({ user_id: r.user_id as string, t: new Date(r.created_at).getTime() })),
+    ]
+
+    // Headline weekly-active: activity in last 7d ∪ logged in last 7d.
+    const active7d = new Set(events.filter(e => (now - e.t) <= WEEK).map(e => e.user_id))
+    for (const id of loggedIn7d) active7d.add(id)
+    const wauPct = totalStaff ? Math.round((active7d.size / totalStaff) * 100) : null
+
+    // 8-week trend (activity-based — login has no history). Oldest → newest.
+    const CHANNELS = ['chat', 'whatsapp', 'email', 'voice'] as const
+    const trend = Array.from({ length: WEEKS }, (_, i) => {
+      const end = now - i * WEEK, start = end - WEEK
+      const set = new Set(events.filter(e => e.t >= start && e.t < end).map(e => e.user_id))
+      const ch: Record<string, number> = { chat: 0, whatsapp: 0, email: 0, voice: 0 }
+      for (const q of allQ as any[]) {
+        const t = new Date(q.created_at).getTime()
+        if (t >= start && t < end && ch[q.channel] !== undefined) ch[q.channel]++
+      }
+      return {
+        week_start: new Date(start).toISOString(),
+        active: set.size,
+        pct: totalStaff ? Math.round((set.size / totalStaff) * 100) : 0,
+        channels: ch,
+      }
+    }).reverse()
+
+    // Channel mix over the last 30 days.
+    const ch30: Record<string, number> = { chat: 0, whatsapp: 0, email: 0, voice: 0 }
+    for (const q of allQ as any[]) {
+      if ((now - new Date(q.created_at).getTime()) <= 30 * DAY && ch30[q.channel] !== undefined) ch30[q.channel]++
+    }
+    const ch30Total = CHANNELS.reduce((s, c) => s + ch30[c], 0)
+
+    ok(res, {
+      wau: { active: active7d.size, total_staff: totalStaff, pct: wauPct },
+      logged_in_7d: loggedIn7d.size,
+      trend,
+      channels: { ...ch30, total: ch30Total, hub_pct: ch30Total ? Math.round((ch30.chat / ch30Total) * 100) : null },
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
 // ─── GET /analytics/staff-risk ────────────────────────────────────────────────
 // Staff who need attention: overdue/expired training, overdue or stalled
 // induction, or never logged in. Powers the "Staff needing attention" panel.

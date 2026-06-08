@@ -692,6 +692,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Go to <strong>Analytics</strong> to see a summary of activity: total queries, most frequently asked topics, channel breakdown, and top staff users. This helps you identify gaps in your policies. If the same question is asked repeatedly, your policy on that topic may need to be clearer.
           </p>
         </SectionBlock>
+        <SectionBlock title="Engagement (weekly active staff)">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              Go to <strong>Analytics → Engagement</strong> for the single most important number as you move your team onto the staff hub: <strong>weekly active staff %</strong>. A staff member counts as active in a week if they opened the hub, asked a question, or read a policy. The tab also shows how many were active, your team size, and an <strong>8-week trend</strong> so you can see the direction of travel.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              The <strong>channel mix</strong> shows where questions are coming in — hub vs WhatsApp vs email vs voice — over the last 30 days, with the <strong>hub&apos;s share</strong> called out. As you encourage staff onto the hub, you want weekly active % to hold steady (or rise) and the hub&apos;s share of questions to grow.
+            </p>
+          </div>
+        </SectionBlock>
         <SectionBlock title="CQC report analytics">
           <p className="text-sm text-neutral-mid">
             Go to <strong>Analytics</strong> and select <strong>CQC Report</strong> to see queries specifically about your inspection report. This shows which CQC domains your staff are most focused on.

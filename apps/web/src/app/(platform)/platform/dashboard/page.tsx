@@ -2262,6 +2262,21 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      <RefSection icon={TrendingUp} title="Engagement Scoreboard (WhatsApp → Hub)">
+        <p className="leading-relaxed text-neutral-mid">
+          The leading indicator for the WhatsApp → Hub migration: <strong>weekly active staff %</strong>, an 8-week
+          trend, and the <strong>channel mix</strong> so you can watch the hub take over as WhatsApp ramps down.
+          Surfaced in <code className="text-xs bg-gray-100 px-1 rounded">Analytics → Engagement</code> (admin).
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Endpoint"       value="GET /analytics/engagement (apps/api/src/routes/analytics.ts) — requireAdmin, tenant-scoped." />
+          <RefRow label="'Active' def"   value="A staff member is active in a window if they opened the hub (last_login_at), asked a question (QueryRecord) OR read a policy (PolicyReadSession) in it. Denominator = count(User where is_active)." />
+          <RefRow label="Weekly active %" value="active in last 7d ÷ active team size. Headline counts logins too; the 8-week TREND is activity-based (QueryRecord + PolicyReadSession) because last_login_at has no history." />
+          <RefRow label="Channel mix"    value="QueryRecord.channel over 30d: chat (hub) | whatsapp | email | voice, plus hub_pct (chat share). Email questions with null user_id aren't user-attributed." />
+          <RefRow label="UI"             value="apps/web .../analytics/page.tsx — new 'Engagement' tab: WAU% + active/team/hub-share stat cards, 8-week trend bars, channel-mix bars." />
+        </div>
+      </RefSection>
+
       <RefSection icon={Shield} title="Multi-tenancy & Security">
         <p className="leading-relaxed text-neutral-mid">
           Every data model (except platform-level shared tables) has a <code className="text-xs bg-gray-100 px-1 rounded">tenant_id</code>.

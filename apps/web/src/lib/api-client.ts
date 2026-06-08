@@ -548,6 +548,12 @@ export function createApiClient(token: string) {
         meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }
       }>('/analytics/gaps', token),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
+      engagement: () => apiFetch<{
+        wau: { active: number; total_staff: number; pct: number | null }
+        logged_in_7d: number
+        trend: Array<{ week_start: string; active: number; pct: number; channels: { chat: number; whatsapp: number; email: number; voice: number } }>
+        channels: { chat: number; whatsapp: number; email: number; voice: number; total: number; hub_pct: number | null }
+      }>('/analytics/engagement', token),
     },
   }
 }

@@ -223,10 +223,11 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced'
+type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview',   label: 'Overview' },
+  { id: 'engagement', label: 'Engagement' },
   { id: 'staff',      label: 'Staff' },
   { id: 'gaps',       label: 'Knowledge gaps' },
   { id: 'training',   label: 'Training' },
@@ -237,7 +238,8 @@ const TABS: { id: TabId; label: string }[] = [
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any }>('admin-analytics')
+  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any }>('admin-analytics')
+  const [engagementData, setEngagement] = useState<any>(analyticsCache?.engagement ?? null)
   const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
   const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
   const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
@@ -267,10 +269,11 @@ export default function AnalyticsPage() {
       api.analytics.inductionPerformance().catch(() => null),
       api.analytics.knowledgeGaps().catch(() => null),
       api.analytics.annualTraining().catch(() => null),
+      api.analytics.engagement().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement)
+        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -350,6 +353,81 @@ export default function AnalyticsPage() {
           {riskData.staff.length > 9 && <p className="mt-2 text-xs text-neutral-mid">+{riskData.staff.length - 9} more — open the Staff page to review.</p>}
         </div>
       )}
+
+      {tab === 'engagement' && (<>
+      {/* ── WhatsApp → Hub migration scoreboard ─────────────────────────────── */}
+      <SectionDivider
+        title="Staff engagement"
+        subtitle="The scoreboard for moving staff onto the hub — weekly active staff, the trend, and the channel mix"
+      />
+      {!engagementData ? (
+        <div className="mb-6 rounded-card border border-gray-100 bg-white p-6 shadow-card">
+          <p className="text-sm text-neutral-mid">No engagement data yet. Once staff use the hub, weekly active % and the channel mix appear here.</p>
+        </div>
+      ) : (
+        <>
+          <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard
+              label="Weekly active staff"
+              value={engagementData.wau.pct == null ? '—' : `${engagementData.wau.pct}`}
+              suffix={engagementData.wau.pct == null ? '' : '%'}
+              info="Share of active staff who opened the hub, asked a question, or read a policy in the last 7 days. This is the leading indicator for the WhatsApp→hub migration — watch it hold as WhatsApp ramps down."
+            />
+            <StatCard label="Active this week" value={engagementData.wau.active} info="Distinct staff active in the hub in the last 7 days." />
+            <StatCard label="Team size" value={engagementData.wau.total_staff} info="Active staff accounts — the denominator for weekly active %." />
+            <StatCard
+              label="Hub share of questions"
+              value={engagementData.channels.hub_pct == null ? '—' : `${engagementData.channels.hub_pct}`}
+              suffix={engagementData.channels.hub_pct == null ? '' : '%'}
+              info="Share of all questions in the last 30 days that came through the hub vs WhatsApp/email/voice. Should rise toward 100% as you move off WhatsApp."
+            />
+          </div>
+
+          <div className="mb-6">
+            <Card title="Weekly active staff — 8-week trend" info="Distinct staff who asked a question or read a policy each week, as a % of the team. (The headline figure also counts logins; the weekly history is activity-based, as logins aren't time-stamped historically.)">
+              <div className="flex items-end gap-2" style={{ height: 160 }}>
+                {engagementData.trend.map((w: any, i: number) => (
+                  <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
+                    <span className="text-[10px] font-semibold text-neutral-mid">{w.pct}%</span>
+                    <div className="w-full rounded-t bg-teal" style={{ height: Math.max(3, (w.pct / 100) * 120) }} title={`${w.active} active staff`} />
+                    <span className="text-[9px] leading-tight text-neutral-mid">{new Date(w.week_start).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <div className="mb-6">
+            <Card title="Channel mix (last 30 days)" info="Where staff questions are coming in. Watch WhatsApp shrink and the hub grow as you migrate. Email questions from unknown addresses aren't attributed to a staff member.">
+              {engagementData.channels.total === 0 ? (
+                <p className="text-sm text-neutral-mid">No questions in the last 30 days yet.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {([
+                    ['Hub (chat)', 'chat',     'bg-teal'],
+                    ['WhatsApp',   'whatsapp', 'bg-green-500'],
+                    ['Email',      'email',    'bg-blue-500'],
+                    ['Voice',      'voice',    'bg-purple-500'],
+                  ] as const).map(([label, key, color]) => {
+                    const v = engagementData.channels[key] as number
+                    const pct = engagementData.channels.total ? Math.round((v / engagementData.channels.total) * 100) : 0
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <span className="w-24 shrink-0 text-xs text-neutral-mid">{label}</span>
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-gray-100">
+                          <div className={`h-full ${color}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="w-20 shrink-0 text-right text-xs text-neutral-dark">{v} · {pct}%</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Card>
+          </div>
+      </>
+      )}
+      </>)}
 
       {tab === 'overview' && (<>
       {/* ── Stat cards ──────────────────────────────────────────────────────── */}

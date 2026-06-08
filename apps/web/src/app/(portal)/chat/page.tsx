@@ -6,13 +6,18 @@
 // Features: suggested queries, typing indicator, collapsible citations,
 //           language chip for non-English responses, localStorage session history.
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView } from '@/components/hub/annual-training-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
+
+// useLayoutEffect runs before the browser paints; on the server it no-ops (and
+// would warn), so fall back to useEffect there. Used to hydrate the sidebar from
+// localStorage before first paint so cached values never flash empty.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
 import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -356,12 +361,23 @@ export default function ChatPage() {
     if (v === 'induction' || v === 'training') setView(v)
   }, [])
 
+  // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the
+  // badges, saved policies and language picker all appear together on the first
+  // visible frame instead of popping in one-by-one as each fetch resolves. Runs
+  // before paint (useLayoutEffect) and batches all three setStates → no flash of
+  // empty, no staggered stages. The fetches below then silently revalidate.
+  useIsoLayoutEffect(() => {
+    try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
+    try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
+    try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
+  }, [userId])
+
   // Fetch the tenant's available languages (defaults + admin-added) for the
   // reply-language picker. Settings reads are open to all authenticated staff.
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).settings.get()
-      .then(s => { if (Array.isArray((s as any).languages)) setLangList((s as any).languages) })
+      .then(s => { if (Array.isArray((s as any).languages)) { setLangList((s as any).languages); try { localStorage.setItem(`cs_langs_${userId}`, JSON.stringify((s as any).languages)) } catch { /* ignore */ } } })
       .catch(() => { /* picker falls back to Auto-detect only */ })
   }, [session?.accessToken])
 
@@ -374,7 +390,6 @@ export default function ChatPage() {
   // revalidated. Refreshed on navigation so they stay fresh after completing items.
   useEffect(() => {
     if (!session?.accessToken) return
-    try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
     createApiClient(session.accessToken).me.counts()
       .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})
@@ -384,7 +399,6 @@ export default function ChatPage() {
   // set may have changed (opening/closing the policy sidebar), not on every nav.
   useEffect(() => {
     if (!session?.accessToken) return
-    try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`) || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     createApiClient(session.accessToken).me.savedPolicies()
       .then(d => { const v = d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })); setSavedPolicies(v); try { localStorage.setItem(`cs_saved_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})

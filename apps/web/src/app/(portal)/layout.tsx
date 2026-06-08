@@ -10,7 +10,7 @@ export default async function PortalLayout({ children }: { children: React.React
   if (!session) redirect('/login')
 
   return (
-    <AuthSessionProvider>
+    <AuthSessionProvider session={session}>
       <TenantAgentTools />
       <div className="flex h-screen flex-col bg-neutral-light">
         <PortalNav

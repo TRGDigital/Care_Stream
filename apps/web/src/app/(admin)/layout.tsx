@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (session.user.role !== 'admin') redirect('/chat')
 
   return (
-    <AuthSessionProvider>
+    <AuthSessionProvider session={session}>
       <TenantAgentTools />
       <AdminShell
         userName={session.user.name ?? ''}

@@ -121,6 +121,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState<'learn' | 'assess'>('learn')
   const [policiesOpen, setPoliciesOpen] = useState(false)
+  const [step, setStep] = useState(0)  // 0 = overview, 1..N = sections (paginated lesson)
   const [sel, setSel] = useState<Record<string, number>>({})
   const [checkSel, setCheckSel] = useState<Record<string, number>>({})  // in-lesson knowledge checks
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})  // scenario answers revealed
@@ -134,9 +135,9 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
   const learnSecondsRef = useRef(0)
   const phaseRef = useRef<'learn' | 'assess'>('learn')
 
-  // Jump back to the top whenever the phase (learn ⇄ assess) or result changes,
-  // so the assessment opens at question 1 rather than keeping the lesson scroll.
-  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [phase, result])
+  // Jump back to the top whenever the phase, step or result changes, so each
+  // lesson step / the assessment opens at the top rather than keeping the scroll.
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [phase, step, result])
 
   // Accumulate active time on the LESSON (paused when the tab is hidden) to
   // substantiate the module's claimed CPD duration. Flushed on leaving the lesson.
@@ -269,97 +270,122 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
           </div>
         )}
 
-        {/* Learn */}
-        {phase === 'learn' && (
-          <div className="mt-4 space-y-4">
-            {/* Intro card: cover image + summary */}
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-              {data.illustration_url && (
-                <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
-              )}
-              <div className="p-5">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learn</p>
-                  {data.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {data.duration_minutes} min</span> : null}
+        {/* Learn — one step at a time (overview → each section → assessment) */}
+        {phase === 'learn' && (() => {
+          const learnSteps  = 1 + sections.length            // overview + one per section
+          const totalStages = learnSteps + 1                 // + assessment
+          const onOverview  = step === 0
+          const sec         = onOverview ? null : sections[step - 1]
+          const isLastLearn = step >= learnSteps - 1         // last lesson step → next is the assessment
+          const progressPct = Math.round((step / totalStages) * 100)
+          const picked      = sec ? checkSel[sec.id] : undefined
+          const isRight     = sec ? picked === sec.check?.correct : false
+
+          return (
+            <div className="mt-4">
+              {/* Progress bar */}
+              <div className="mb-4">
+                <div className="mb-1 flex items-center justify-between text-xs text-neutral-mid">
+                  <span className="font-medium text-neutral-dark">{onOverview ? 'Overview' : `Section ${step} of ${sections.length}`}</span>
+                  <span>{progressPct}% complete</span>
                 </div>
-                {data.learning?.summary && <p className="text-sm text-neutral-dark">{data.learning.summary}</p>}
-                {Array.isArray(data.learning?.outcomes) && data.learning.outcomes.length > 0 && (
-                  <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
-                    <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
-                    <ul className="space-y-1">
-                      {data.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
-                    </ul>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100"><div className="h-2 rounded-full bg-teal transition-all duration-300" style={{ width: `${progressPct}%` }} /></div>
+              </div>
+
+              {onOverview ? (
+                /* ── Overview ── */
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                  {data.illustration_url && <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
+                  <div className="p-5">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learning — what to read first</p>
+                      {data.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {data.duration_minutes} min</span> : null}
+                    </div>
+                    {data.learning?.summary && <p className="text-sm text-neutral-dark">{data.learning.summary}</p>}
+                    {Array.isArray(data.learning?.outcomes) && data.learning.outcomes.length > 0 && (
+                      <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
+                        <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
+                        <ul className="space-y-1">
+                          {data.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {sections.length === 0 && Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
+                      <ul className="mt-3 space-y-1.5">
+                        {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
+                      </ul>
+                    )}
                   </div>
-                )}
+                </div>
+              ) : sec ? (
+                /* ── One section ── */
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                  {sec.image_url && <img src={apiAssetUrl(sec.image_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
+                  <div className="p-5">
+                    {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
+                    {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
+
+                    {sec.scenario?.situation && (
+                      <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
+                        <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
+                        <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
+                        {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
+                        {revealed[sec.id]
+                          ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
+                          : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
+                      </div>
+                    )}
+
+                    {sec.check?.question && Array.isArray(sec.check.options) && sec.check.options.length > 0 && (
+                      <div className="mt-3">
+                        <p className="mb-1.5 text-sm font-medium text-neutral-dark">Quick check: {sec.check.question}</p>
+                        <div className="space-y-1.5">
+                          {sec.check.options.map((opt: string, oi: number) => {
+                            const chosen = picked === oi
+                            const showState = picked != null && (oi === sec.check.correct || chosen)
+                            const good = oi === sec.check.correct
+                            return (
+                              <button key={oi} onClick={() => picked == null && setCheckSel(c => ({ ...c, [sec.id]: oi }))} disabled={picked != null}
+                                className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${showState ? (good ? 'border-green-300 bg-green-50 text-neutral-dark' : 'border-red-300 bg-red-50 text-neutral-dark') : 'border-gray-200 text-neutral-dark hover:border-teal/50'} ${picked != null ? 'cursor-default' : ''}`}>
+                                {showState ? (good ? <CheckCircle2 size={14} className="shrink-0 text-green-500" /> : chosen ? <AlertTriangle size={14} className="shrink-0 text-red-500" /> : <Circle size={14} className="shrink-0 text-gray-300" />) : <Circle size={14} className="shrink-0 text-gray-300" />}
+                                {opt}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Navigation */}
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <button onClick={() => step === 0 ? onExit(false) : setStep(step - 1)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                  <ChevronLeft size={15} /> {step === 0 ? 'Exit' : 'Back'}
+                </button>
+                {isLastLearn
+                  ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length}) →</button>
+                  : <button onClick={() => setStep(step + 1)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Next →</button>}
               </div>
             </div>
-
-            {/* Interactive sections — teach → scenario → quick check */}
-            {sections.length > 0 ? sections.map((sec: any, si: number) => {
-              const picked = checkSel[sec.id]
-              const isRight = picked === sec.check?.correct
-              return (
-                <div key={sec.id} className="rounded-xl border border-gray-200 bg-white p-5">
-                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Step {si + 1} of {sections.length}</p>
-                  {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
-                  {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
-
-                  {/* Scenario */}
-                  {sec.scenario?.situation && (
-                    <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
-                      <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
-                      <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
-                      {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
-                      {revealed[sec.id]
-                        ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
-                        : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
-                    </div>
-                  )}
-
-                  {/* In-lesson knowledge check (formative, not graded) */}
-                  {sec.check?.question && Array.isArray(sec.check.options) && sec.check.options.length > 0 && (
-                    <div className="mt-3">
-                      <p className="mb-1.5 text-sm font-medium text-neutral-dark">Quick check: {sec.check.question}</p>
-                      <div className="space-y-1.5">
-                        {sec.check.options.map((opt: string, oi: number) => {
-                          const chosen = picked === oi
-                          const showState = picked != null && (oi === sec.check.correct || chosen)
-                          const good = oi === sec.check.correct
-                          return (
-                            <button key={oi} onClick={() => picked == null && setCheckSel(c => ({ ...c, [sec.id]: oi }))} disabled={picked != null}
-                              className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${showState ? (good ? 'border-green-300 bg-green-50 text-neutral-dark' : 'border-red-300 bg-red-50 text-neutral-dark') : 'border-gray-200 text-neutral-dark hover:border-teal/50'} ${picked != null ? 'cursor-default' : ''}`}>
-                              {showState ? (good ? <CheckCircle2 size={14} className="shrink-0 text-green-500" /> : chosen ? <AlertTriangle size={14} className="shrink-0 text-red-500" /> : <Circle size={14} className="shrink-0 text-gray-300" />) : <Circle size={14} className="shrink-0 text-gray-300" />}
-                              {opt}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
-                    </div>
-                  )}
-                </div>
-              )
-            }) : (
-              // Fallback for older modules with no sections — key points list.
-              Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
-                <div className="rounded-xl border border-gray-200 bg-white p-5">
-                  <ul className="space-y-1.5">
-                    {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
-                  </ul>
-                </div>
-              )
-            )}
-
-            <button onClick={() => { flushLearnTime(); setPhase('assess') }} className="w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length} questions)</button>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Assess */}
         {phase === 'assess' && (
           <div className="mt-4">
+            {/* Progress bar — assessment */}
+            <div className="mb-4">
+              <div className="mb-1 flex items-center justify-between text-xs text-neutral-mid">
+                <span className="font-medium text-neutral-dark">Assessment · pass mark {data.pass_mark}%</span>
+                <span>{answered}/{qs.length} answered</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100"><div className="h-2 rounded-full bg-teal transition-all duration-300" style={{ width: `${qs.length ? Math.round((answered / qs.length) * 100) : 0}%` }} /></div>
+            </div>
             <div className="mb-3 flex items-center justify-between text-xs text-neutral-mid">
               <button onClick={() => setPhase('learn')} className="hover:text-teal">← Back to the lesson</button>
-              <span>{answered}/{qs.length} answered · pass mark {data.pass_mark}%</span>
             </div>
             <div className="space-y-3">
               {qs.map((q, qi) => (

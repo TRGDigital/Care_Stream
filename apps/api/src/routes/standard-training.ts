@@ -122,6 +122,8 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
       pass_mark: 80,
       duration_minutes: draft.estimated_minutes,
       image_key: topic.image_key ?? topic.group_key,
+      // NOTE: illustration_key (the AI cover image) is intentionally NOT set here, so
+      // a rebuild preserves any existing image. Changing the image is a separate action.
       policy_refs: draft.policy_refs,
       topic_id: topic.id,
       group_key: topic.group_key,

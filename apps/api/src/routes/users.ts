@@ -255,6 +255,11 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       second_language: second_language ?? null,
       comms_always_first_language: comms_always_first_language ?? true,
       password_hash:   passwordHash,
+      // Manager-provisioned accounts are trusted at creation — the admin vouches for
+      // the staff member. Auto-verify so they aren't blocked by the email-verification
+      // gate (which only applies to self-service org-admin registration, and for which
+      // staff receive no verification email). Without this, invited staff cannot log in.
+      email_verified:  true,
     },
     select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, created_at: true },
   })

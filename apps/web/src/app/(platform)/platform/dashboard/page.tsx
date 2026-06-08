@@ -2247,6 +2247,21 @@ function SystemReference() {
       </RefSection>
 
       {/* Tenant Isolation */}
+      <RefSection icon={Lock} title="Staff Sign-In & Account Provisioning">
+        <p className="leading-relaxed text-neutral-mid">
+          Part of the <strong>WhatsApp → Hub migration</strong>: getting staff into the hub with as little friction as
+          possible. Auth is next-auth (credentials) issuing a backend JWT; the hub is the <code className="text-xs bg-gray-100 px-1 rounded">/chat</code> portal.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Sign-in"             value="next-auth CredentialsProvider (email + password) → apps/api /auth/login issues access + refresh JWT. Login is blocked for users where email_verified is false." />
+          <RefRow label="Staff provisioning"  value="Managers create staff in /staff (InviteModal) → POST /users/invite (apps/api/src/routes/users.ts): creates the user with a random temp password; admin can copy it or email it (sendStaffWelcomeEmail / SendGrid)." />
+          <RefRow label="Email verification"  value="Self-service org-admin /register requires email verification. Manager-provisioned STAFF are AUTO-VERIFIED at creation (email_verified=true) — the admin is the trust anchor and staff get no verification email." />
+          <RefRow label="Fix (June 2026)"     value="Previously invited staff were created email_verified=false with no verification email, so they were hard-blocked at login. Invite now sets email_verified=true; existing unverified staff were backfilled." />
+          <RefRow label="Sessions"            value="next-auth JWT cookie ~30d; backend refresh token ~7d and not rotated, so effective 'stay signed in' ≈ 7 days. Lengthening/rotating + passwordless (magic-link / per-staff QR) are planned migration steps." />
+          <RefRow label="WhatsApp (no login)" value="The WhatsApp channel stays frictionless (tenant phone_allowlist, no login) and remains the fallback while the hub ramps up." />
+        </div>
+      </RefSection>
+
       <RefSection icon={Shield} title="Multi-tenancy & Security">
         <p className="leading-relaxed text-neutral-mid">
           Every data model (except platform-level shared tables) has a <code className="text-xs bg-gray-100 px-1 rounded">tenant_id</code>.

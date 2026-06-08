@@ -34,7 +34,9 @@ export function SectionsEditor({ value, onChange, onGenerateImage, assetUrl, ima
   async function genImage(i: number) {
     if (!onGenerateImage) return
     setImgBusy(i)
-    try { await onGenerateImage(i) } catch { /* parent surfaces */ } finally { setImgBusy(null) }
+    try { await onGenerateImage(i) }
+    catch (e: any) { alert(e?.message ?? 'Image generation failed — please try again.') }
+    finally { setImgBusy(null) }
   }
   const update = (i: number, patch: Partial<LessonSection>) => onChange(sections.map((s, j) => j === i ? { ...s, ...patch } : s))
   const updateScenario = (i: number, patch: Partial<LessonSection['scenario']>) => onChange(sections.map((s, j) => j === i ? { ...s, scenario: { ...s.scenario, ...patch } } : s))

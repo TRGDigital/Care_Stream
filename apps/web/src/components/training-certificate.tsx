@@ -33,7 +33,7 @@ export function TrainingCertificate({
       {/* Brand header band */}
       <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-white.png" alt="CareStream" className="h-11 w-auto object-contain" />
+        <img src="/logo-white.png" alt="CareStream" className="h-16 w-auto object-contain" />
         <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">Annual Training</span>
       </div>
 
@@ -105,7 +105,7 @@ export function TrainingCertificate({
         <div className="mt-8 flex items-center justify-center gap-2 border-t border-gray-100 pt-5">
           <span className="text-[10px] uppercase tracking-wide text-neutral-mid">Issued &amp; assessed by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.png" alt="CareStream" className="h-6 w-auto object-contain" />
+          <img src="/logo-color.png" alt="CareStream" className="h-10 w-auto object-contain" />
         </div>
         <p className="mx-auto mt-3 max-w-lg text-[9.5px] leading-relaxed text-neutral-mid">
           Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. This records completion of a knowledge

@@ -49,7 +49,7 @@ export function CourseSpecification({ m, qa, onClose }: { m: any; qa: any; onClo
               <h1 className="mt-0.5 text-xl font-bold text-neutral-dark">{m.name}</h1>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" className="h-7 w-auto object-contain" />
+            <img src="/logo-color.png" alt="CareStream" className="h-12 w-auto object-contain" />
           </div>
 
           <div className="mb-5">

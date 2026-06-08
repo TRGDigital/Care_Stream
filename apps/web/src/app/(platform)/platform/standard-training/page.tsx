@@ -212,10 +212,10 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
-      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Standard Training</button>
-
-      {/* Sticky action bar — act on the module without scrolling to the bottom */}
-      <div className="sticky top-0 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
+      {/* Sticky toolbar — pinned flush to the top so the actions follow you down the page */}
+      <div className="sticky -top-6 z-30 -mt-6 mb-4 flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white pt-6 pb-3 shadow-sm">
+        <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Standard Training</button>
+        <span className="mx-1 hidden h-5 w-px bg-gray-200 sm:block" />
         <button onClick={save} disabled={saving} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{saving ? 'Saving…' : 'Save draft'}</button>
         {!m.approved
           ? <button onClick={openAttest} disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><ShieldCheck size={14} /> Attest &amp; publish</button>

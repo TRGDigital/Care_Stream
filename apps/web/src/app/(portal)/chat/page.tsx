@@ -401,10 +401,6 @@ export default function ChatPage() {
       .catch(() => { /* falls back to auto-detect */ })
   }, [session?.accessToken, userId])
 
-  function chooseReplyLang(code: string) {
-    setReplyLang(code)
-    try { localStorage.setItem(`cs_reply_lang_${userId}`, code) } catch { /* ignore */ }
-  }
 
   // Sidebar badge counts — shown instantly from a localStorage cache, then
   // revalidated. Refreshed on navigation so they stay fresh after completing items.
@@ -999,21 +995,7 @@ export default function ChatPage() {
             </button>
           </form>
 
-          {/* Reply-language picker — forces responses into the chosen language */}
-          <div className="mx-auto mt-2 flex max-w-6xl items-center justify-end gap-1.5">
-            <Globe size={13} className="text-neutral-mid" />
-            <label htmlFor="reply-lang" className="text-xs text-neutral-mid">Reply in</label>
-            <select
-              id="reply-lang"
-              value={replyLang}
-              onChange={e => chooseReplyLang(e.target.value)}
-              className="rounded-md border border-gray-200 bg-white py-1 pl-2 pr-7 text-xs text-neutral-dark outline-none focus:border-teal focus:ring-1 focus:ring-teal/20"
-            >
-              <option value="">Auto-detect</option>
-              {langList.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-            </select>
-          </div>
-          <p className="mt-1.5 text-center text-xs text-neutral-mid">
+          <p className="mt-2 text-center text-xs text-neutral-mid">
             {input.length > 800
               ? `${input.length}/1000 characters`
               : category === 'training_module'

@@ -6,7 +6,7 @@ import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage } from '../services/storage/s3'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
-import { notifyAdmin } from '../lib/notify'
+import { notifyAdmin, notifyStaffAllocation } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
@@ -313,7 +313,7 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
       (prisma as any).user.findMany({ where: { id: { in: user_ids }, tenant_id: tenantId }, select: { id: true } }),
       // Only this tenant's own module copies are valid enrollment targets.
       // Valid targets: the tenant's own modules, OR a published platform standard module (tenant_id null).
-      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true } }),
+      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true, source: true } }),
     ])
     const validUserIds:   string[] = members.map((m: any) => m.id)
     const validModuleIds: string[] = modules.map((m: any) => m.id)
@@ -363,6 +363,14 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
           </p>`,
         })
       ).catch(e => console.error('[training/enroll] Notify error:', e))
+
+      // Email each staff member a link to the hub for what was newly assigned —
+      // split into My Training vs Annual Training so the link points to the right view.
+      const annualSet = new Set((modules as any[]).filter(m => m.source === 'ai_generated').map(m => m.id))
+      const newManualUsers = [...new Set(toCreate.filter(t => !annualSet.has(t.module_id)).map(t => t.user_id))]
+      const newAnnualUsers = [...new Set(toCreate.filter(t =>  annualSet.has(t.module_id)).map(t => t.user_id))]
+      notifyStaffAllocation(tenantId, newManualUsers, 'training').catch(e => console.error('[training/enroll] staff email error:', e))
+      notifyStaffAllocation(tenantId, newAnnualUsers, 'annual_training').catch(e => console.error('[training/enroll] staff email error:', e))
     }
     sendProactiveTrainingQuestions(tenantId, validUserIds, validModuleIds).catch(e =>
       console.error('[training/enroll] Proactive send error:', e)

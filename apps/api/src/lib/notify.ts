@@ -2,6 +2,7 @@
 // All service-email preference keys default to true if not explicitly set.
 
 import { prisma } from '../db/client'
+import { sendStaffAllocationEmail, type AllocationKind } from '../services/email/outbound'
 
 export async function isEmailEnabled(tenantId: string, prefKey: string): Promise<boolean> {
   const tenant = await (prisma as any).tenant.findUnique({
@@ -57,5 +58,26 @@ export async function notifyUsers(
     users.map(u => sendFn(u.email, u.name).catch(e =>
       console.error(`[notify] Failed to send ${prefKey} email to ${u.email}:`, e)
     ))
+  )
+}
+
+// Tenant email-preference key that gates each allocation type.
+const ALLOC_PREF: Record<AllocationKind, string> = {
+  induction:       'onboarding_updates',
+  training:        'training_updates',
+  annual_training: 'training_updates',
+  follow_up:       'training_updates',
+  cqc_prep:        'cqc_staff_prep',
+}
+
+// Email staff that work has been allocated to them, with a deep link to the hub.
+// Honours the tenant's email preference for that type. (Push is sent separately by
+// the channels that already do it, e.g. CQC delivery + proactive training.)
+export async function notifyStaffAllocation(tenantId: string, userIds: string[], kind: AllocationKind): Promise<void> {
+  if (!userIds.length) return
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
+  const portalUrl = (process.env.WEB_URL || 'https://carestreamai.com').replace(/\/$/, '')
+  await notifyUsers(tenantId, ALLOC_PREF[kind], userIds, (email, name) =>
+    sendStaffAllocationEmail({ to: email, name, orgName: tenant?.name ?? '', kind, portalUrl })
   )
 }

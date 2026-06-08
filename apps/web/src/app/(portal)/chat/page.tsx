@@ -361,7 +361,8 @@ export default function ChatPage() {
   // Honour ?view=induction|training (e.g. links from My Progress)
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get('view')
-    if (v === 'induction' || v === 'training') setView(v)
+    // Deep links from notification emails (e.g. /chat?view=annual) open that section.
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits') setView(v)
   }, [])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the

@@ -361,15 +361,57 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
     <div style="text-align:center;margin:0 0 32px">
-      <a href="${opts.portalUrl}/onboarding"
+      <a href="${opts.portalUrl}/chat?view=induction"
          style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
-        View onboarding progress
+        Start my induction
       </a>
     </div>
     ${emailFooter(opts.orgName)}
   `)
 
   await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
+}
+
+// ─── Staff allocation notification (training / annual training) ───────────────
+// Sent to a staff member when an admin assigns them work, with a deep link to the
+// relevant section of the staff hub.
+
+export type AllocationKind = 'induction' | 'training' | 'annual_training' | 'cqc_prep' | 'follow_up'
+
+const ALLOC_COPY: Record<AllocationKind, { noun: string; path: string; cta: string }> = {
+  induction:       { noun: 'induction',       path: '/chat?view=induction', cta: 'Start my induction' },
+  training:        { noun: 'training',         path: '/chat?view=training',  cta: 'Go to my training' },
+  annual_training: { noun: 'annual training',  path: '/chat?view=annual',    cta: 'Start annual training' },
+  follow_up:       { noun: 'follow-up',        path: '/chat?view=followup',  cta: 'Complete my follow-up' },
+  cqc_prep:        { noun: 'CQC prep',          path: '/cqc',                 cta: 'View my CQC questions' },
+}
+
+export async function sendStaffAllocationEmail(opts: { to: string; name: string; orgName: string; kind: AllocationKind; portalUrl: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const c         = ALLOC_COPY[opts.kind]
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const link      = `${opts.portalUrl.replace(/\/$/, '')}${c.path}`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Your manager has assigned you new <strong>${c.noun}</strong> in CareStream. Open the hub to get started, you can do it on your phone or computer.
+    </p>
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${link}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        ${c.cta}
+      </a>
+    </div>
+    <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0 0 8px">
+      Tip: add CareStream to your phone&rsquo;s home screen so it opens like an app.
+    </p>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `New ${c.noun} assigned to you — ${opts.orgName}`, html })
 }
 
 // ─── Staff welcome / credentials email ───────────────────────────────────────

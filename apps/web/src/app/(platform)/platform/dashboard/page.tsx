@@ -1786,6 +1786,32 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Staff Notification Emails */}
+      <RefSection icon={Mail} title="Staff Notification Emails">
+        <p className="leading-relaxed text-neutral-mid">
+          What CareStream emails STAFF (all via SendGrid, gated by the tenant&rsquo;s email preferences in
+          Settings, and deep-linking into the <code className="text-xs bg-gray-100 px-1 rounded">/chat</code> hub).
+          Senders live in <code className="text-xs bg-gray-100 px-1 rounded">apps/api/src/services/email/outbound.ts</code>;
+          gating + the allocation helper in <code className="text-xs bg-gray-100 px-1 rounded">apps/api/src/lib/notify.ts</code>.
+        </p>
+        <p className="mt-2 mb-1 text-sm font-semibold text-neutral-dark">When an admin allocates work (added June 2026)</p>
+        <div className="space-y-1">
+          <RefRow label="New induction"        value="Admin enrols staff on a flow (POST /onboarding/flows/:id/enroll) → 'Start my induction' → /chat?view=induction. Pref: onboarding_updates. (Link previously pointed at the admin /onboarding page — fixed.)" />
+          <RefRow label="New training"          value="Admin assigns a manual module (POST /training/enroll) → 'Go to my training' → /chat?view=training. Pref: training_updates. (Also still sends the proactive first question via WhatsApp/email.)" />
+          <RefRow label="New annual training"   value="Admin assigns an AI/annual module (same /training/enroll, source=ai_generated) → 'Start annual training' → /chat?view=annual. Pref: training_updates." />
+          <RefRow label="New CQC prep"          value="Admin delivers a question (POST /cqc-questions/:id/deliver) → 'View my CQC questions' → /cqc. Pref: cqc_staff_prep. (Also web-push.)" />
+          <RefRow label="Helper"                value="notifyStaffAllocation(tenantId, userIds, kind) + sendStaffAllocationEmail (kinds: induction | training | annual_training | cqc_prep | follow_up). /chat?view= deep links handled in the hub page." />
+          <RefRow label="Follow-up"             value="NOT a separate per-assignment email (follow-ups are auto-created when a staff member answers wrong, not allocated by an admin). Staff with open follow-ups are nudged by the weekly Monday knowledge-gap digest." />
+        </div>
+        <p className="mt-3 mb-1 text-sm font-semibold text-neutral-dark">Other staff emails (pre-existing)</p>
+        <div className="space-y-1">
+          <RefRow label="Sign-in link"          value="sendStaffLoginLinkEmail — admin 'Sign-in link' or staff 'Email me a sign-in link' (passwordless)." />
+          <RefRow label="Welcome / credentials" value="sendStaffWelcomeEmail — admin 'Send credentials' on a new staff member." />
+          <RefRow label="Training renewals"      value="renewalReminders (90/30/7-day) via WhatsApp/email + push." />
+          <RefRow label="Verify / reset"         value="sendVerificationEmail (org-admin signup) + sendPasswordResetEmail." />
+        </div>
+      </RefSection>
+
       {/* RAG Pipeline */}
       <RefSection icon={Zap} title="RAG Query Pipeline">
         <p className="leading-relaxed text-neutral-mid">

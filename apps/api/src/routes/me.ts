@@ -57,6 +57,31 @@ const UI_STRINGS: Record<string, string> = {
 
 // Lightweight outstanding-item counts for the Chat Hub sidebar badges.
 // Counts only — no heavy data or translation.
+// ─── Web-push subscription (PWA notifications) ────────────────────────────────
+meRouter.post('/push/subscribe', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const { endpoint, keys } = req.body ?? {}
+  if (!endpoint || !keys?.p256dh || !keys?.auth) { err(res, 'INVALID', 'endpoint and keys are required', 400); return }
+  const ua = (req.headers['user-agent'] as string | undefined)?.slice(0, 300) ?? null
+  try {
+    await (prisma as any).pushSubscription.upsert({
+      where:  { endpoint },
+      update: { user_id: userId, tenant_id: tenantId, p256dh: keys.p256dh, auth: keys.auth, user_agent: ua, last_used_at: new Date() },
+      create: { tenant_id: tenantId, user_id: userId, endpoint, p256dh: keys.p256dh, auth: keys.auth, user_agent: ua },
+    })
+    ok(res, { subscribed: true })
+  } catch (e: any) {
+    err(res, 'SUBSCRIBE_FAILED', e.message, 500)
+  }
+})
+
+meRouter.post('/push/unsubscribe', async (req: Request, res: Response) => {
+  const { endpoint } = req.body ?? {}
+  if (endpoint) await (prisma as any).pushSubscription.deleteMany({ where: { endpoint } }).catch(() => {})
+  ok(res, { subscribed: false })
+})
+
 meRouter.get('/counts', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub

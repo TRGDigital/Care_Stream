@@ -7,6 +7,7 @@
 import twilio from 'twilio'
 import sgMail from '@sendgrid/mail'
 import { prisma } from '../../db/client'
+import { sendPushToUsers } from '../../lib/push'
 import { splitIntoChunks } from '../../utils/htmlToWhatsApp'
 import { fmtQuestionWA, fmtQuestionEmail } from './conversation'
 import { translateTrainingQuestion, langName } from '../../lib/translate'
@@ -156,4 +157,7 @@ export async function sendProactiveTrainingQuestions(
       }
     }
   }
+
+  // PWA push — one in-hub nudge for the batch (additive; the WhatsApp/email above remain).
+  sendPushToUsers(userIds, { title: 'New training assigned', body: 'Tap to start your training in the hub.', url: '/chat', tag: 'training' }).catch(() => {})
 }

@@ -2288,7 +2288,11 @@ function SystemReference() {
           <RefRow label="iOS"             value="appleWebApp metadata + apple-touch-icon in apps/web/src/app/layout.tsx (viewport themeColor #9B52B5). iOS push requires the user to Add to Home Screen first." />
           <RefRow label="Service worker"  value="public/sw.js — skipWaiting/clients.claim, no-op fetch (aids installability), and push + notificationclick handlers (deep-link to /chat). Registered by components/pwa/pwa-register.tsx." />
           <RefRow label="Install prompt"  value="components/pwa/install-prompt.tsx — Android/desktop 'Install' button via beforeinstallprompt; iOS shows a Share→Add-to-Home-Screen hint. Dismissible (localStorage cs_install_dismissed). Mounted in (portal)/layout.tsx." />
-          <RefRow label="Push (status)"   value="SW push handlers are in place; the subscription storage + web-push send path + opt-in UX are the push workstream (see Push Notifications ref once built)." />
+          <RefRow label="Push — keys"     value="web-push (VAPID). Env: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT on care-stream-api; NEXT_PUBLIC_VAPID_PUBLIC_KEY on care-stream-web (client subscribe)." />
+          <RefRow label="Push — storage"  value="push_subscriptions table / PushSubscription model (one row per device; endpoint unique). Subscribe/unsubscribe: POST /me/push/subscribe + /me/push/unsubscribe (apps/api/src/routes/me.ts)." />
+          <RefRow label="Push — send"     value="apps/api/src/lib/push.ts sendPushToUsers(userIds, {title,body,url,tag}) — loads subs, sends via web-push, prunes dead (404/410). Never throws." />
+          <RefRow label="Push — opt-in"   value="components/pwa/notifications-optin.tsx — shown only inside the INSTALLED app (standalone); requests permission, subscribes with the VAPID key, POSTs to /me/push/subscribe. Mounted in (portal)/layout.tsx." />
+          <RefRow label="Push — wired in" value="Additive (WhatsApp/email kept as fallback): CQC prep delivery, proactive training question, and renewal reminders push to subscribed devices. Extend by calling sendPushToUsers in other proactive flows." />
         </div>
       </RefSection>
 

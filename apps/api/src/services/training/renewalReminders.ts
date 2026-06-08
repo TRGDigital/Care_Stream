@@ -10,6 +10,7 @@
 import twilio from 'twilio'
 import sgMail from '@sendgrid/mail'
 import { prisma } from '../../db/client'
+import { sendPushToUsers } from '../../lib/push'
 import { splitIntoChunks } from '../../utils/htmlToWhatsApp'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
@@ -163,6 +164,8 @@ export async function sendRenewalReminders(): Promise<ReminderResult> {
           staffReminderEmail(firstName, modName, threshold.days),
         )
       }
+      // PWA push (additive in-hub nudge)
+      sendPushToUsers([user.id as string], { title: 'Training renewal due', body: `${modName} renews in ${threshold.days} days — tap to complete it.`, url: '/chat', tag: `renew-${enrollment.module_id}` }).catch(() => {})
       sent++
     } catch (e) {
       console.error(`[training/reminders] Failed for user=${user.id} module=${enrollment.module_id}:`, e)

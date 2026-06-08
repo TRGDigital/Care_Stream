@@ -448,7 +448,20 @@ const GUIDE_SECTIONS: GuideSection[] = [
             After each response, CareStream shows three suggested follow-up questions. Staff can tap these to continue the conversation without typing.
           </p>
         </SectionBlock>
-        <Tip>The Chat Hub works best on mobile. Encourage staff to bookmark the portal URL on their phones for quick access during shifts.</Tip>
+        <SectionBlock title="Installing the hub as an app + notifications">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              Staff can <strong>install the hub to their phone&apos;s home screen</strong> so it opens like an app — no browser, no typing in a URL. When they open it on their phone they&apos;ll see a prompt: on Android it&apos;s an <strong>Install</strong> button; on iPhone they tap <strong>Share → Add to Home Screen</strong>.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              Once installed, the app offers to turn on <strong>notifications</strong>. With these on, staff get a tap on the shoulder when there&apos;s new training, a CQC practice question, or a renewal due — the same proactive nudge they got on WhatsApp, but landing straight in the hub. (Notifications are an extra: WhatsApp and email still work as before.)
+            </p>
+            <p className="text-sm text-neutral-mid">
+              Encourage your team to install the app and allow notifications — it&apos;s the easiest way to keep them engaged as more moves into the hub.
+            </p>
+          </div>
+        </SectionBlock>
+        <Tip>The Chat Hub works best on mobile. The quickest setup for staff: open the portal URL once on their phone, install it to the home screen, and allow notifications.</Tip>
       </div>
     ),
   },

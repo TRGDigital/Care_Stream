@@ -6,6 +6,7 @@ import { AuthSessionProvider } from '@/components/auth-session-provider'
 import { TenantAgentTools } from '@/components/agent/tenant-agent-tools'
 import { PwaRegister } from '@/components/pwa/pwa-register'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
+import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -16,6 +17,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <TenantAgentTools />
       <PwaRegister />
       <InstallPrompt />
+      <NotificationsOptIn />
       <div className="flex h-screen flex-col bg-neutral-light">
         <PortalNav
           userName={session.user.name ?? ''}

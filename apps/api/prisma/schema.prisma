@@ -377,6 +377,24 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Web-push subscriptions (one row per browser/device a staff member opted in on).
+// Powers PWA push — the in-hub replacement for the WhatsApp nudge.
+model PushSubscription {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  user_id      String
+  endpoint     String    @unique
+  p256dh       String
+  auth         String
+  user_agent   String?
+  created_at   DateTime  @default(now())
+  last_used_at DateTime?
+
+  @@index([user_id])
+  @@index([tenant_id])
+  @@map("push_subscriptions")
+}
+
 // Cached, content-based coverage of each external regulation by a tenant's policies.
 // Computed on demand (semantic retrieval + AI judgement), read by the Policy Gaps page.
 model RegulationCoverage {

@@ -467,6 +467,10 @@ export function createApiClient(token: string) {
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number }>('/me/counts', token),
+      pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+        apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),
+      pushUnsubscribe: (endpoint: string) =>
+        apiFetch<{ subscribed: boolean }>('/me/push/unsubscribe', token, { method: 'POST', body: JSON.stringify({ endpoint }) }),
       annualTraining: {
         list: () => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>('/me/annual-training', token),
         get: (id: string) => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; duration_minutes: number | null; illustration_url: string | null; learning: { summary: string; outcomes: string[]; key_points: string[]; sections: Array<{ id: string; heading: string; body: string; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[]; correct: number } }> }; questions: Array<{ id: string; text: string; options: string[] }>; policies: Array<{ policy_id: string; title: string }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string }>(`/me/annual-training/${id}`, token),

@@ -5,6 +5,7 @@ import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-lim
 import { callClaude } from '../services/ai/claude'
 import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
+import { sendPushToUsers } from '../lib/push'
 import { sendCqcPrepEmail } from '../services/email/outbound'
 
 export const cqcQuestionsRouter = Router()
@@ -444,6 +445,8 @@ Original: ${q.question}`,
       notifyUsers(tenantId, 'cqc_staff_prep', newUserIds, (email, name) =>
         sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))
+      // PWA push (additive — the in-hub nudge that replaces WhatsApp over time)
+      sendPushToUsers(newUserIds, { title: 'New CQC practice question', body: 'Tap to answer a quick CQC inspector-style question.', url: '/cqc', tag: 'cqc-prep' }).catch(() => {})
     }
   } catch (e: any) {
     err(res, 'DELIVER_FAILED', e.message, 500)

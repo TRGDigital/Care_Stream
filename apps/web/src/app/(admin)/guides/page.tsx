@@ -564,7 +564,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it is">
           <p className="text-sm text-neutral-mid">
-            Annual training modules <strong>teach</strong> a topic (a short, policy-grounded lesson) then <strong>assess</strong> it (a multiple-choice test). Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual training modules</strong>.
+            Annual training modules <strong>teach</strong> a topic then <strong>assess</strong> it. Each module has clear <strong>learning outcomes</strong>, an estimated <strong>duration</strong>, and an interactive lesson made of <strong>sections</strong> — every section teaches a point, then applies it with a real <strong>care scenario</strong> and a quick <strong>knowledge check</strong> — followed by the multiple-choice assessment. Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual training modules</strong>.
           </p>
         </SectionBlock>
 
@@ -586,10 +586,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="space-y-3">
             <Step n={1}>Open <strong>Annual training modules</strong>. You&apos;ll see a catalogue of UK care topics grouped by area, each with a default frequency and a <em>practical-also-required</em> flag where relevant.</Step>
             <Step n={2}>Use <strong>Assign standard</strong> (free) or <strong>Tailor to our policies</strong> (1 credit) on a topic. Tailored modules arrive as a <strong>draft</strong> with a lesson + question bank, citing the policies used.</Step>
-            <Step n={3}>Click <strong>Review</strong> to read and edit the lesson and every question (mark the correct answer), set the <strong>pass mark</strong> and <strong>frequency</strong>, optionally <strong>generate a cover image</strong> (see below), then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
-            <Step n={4}><strong>Assign</strong> a published module to staff — individually or tap a <strong>role</strong> to select everyone in it — with an optional due date.</Step>
+            <Step n={3}>Click <strong>Review</strong> to read and edit the <strong>learning outcomes</strong>, the <strong>lesson sections</strong> (each with its scenario and quick check), and every assessment question (mark the correct answer); set the <strong>pass mark</strong>, <strong>duration</strong> and <strong>frequency</strong>; optionally <strong>generate a cover image</strong>, then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
+            <Step n={4}>Because this is your own AI-generated module, a quick confirmation appears before publishing — you acknowledge it&apos;s <strong>internally generated</strong> and that you&apos;ve reviewed it (see &ldquo;Your own training vs the standard library&rdquo; below).</Step>
+            <Step n={5}><strong>Assign</strong> a published module to staff — individually or tap a <strong>role</strong> to select everyone in it — with an optional due date.</Step>
           </div>
           <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training — Module Generation&rdquo;.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Your own training vs the standard library">
+          <p className="text-sm text-neutral-mid">
+            The <strong>standard library</strong> modules are controlled by CareStream and are <strong>independently reviewed</strong> (and, over time, CPD-accredited). When you <strong>tailor a module to your own policies</strong>, it&apos;s <strong>your home&apos;s internal training material</strong> — it sits <strong>outside</strong> that independently-reviewed library. That&apos;s why publishing your own module asks you to confirm you understand this and have reviewed it. You remain responsible for checking your tailored content is accurate and appropriate for your service.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="Cover images (optional)">
@@ -600,8 +607,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="What staff see">
           <p className="text-sm text-neutral-mid">
-            Staff get an <strong>Annual Training</strong> item in the hub (separate from My Training). They read the lesson, then take the assessment (answers save as they go). Pass and they get a <strong>certificate</strong>; fail and they can review and retry. A prominent <strong>&ldquo;Ask about the policies behind this training&rdquo;</strong> panel lets them open any source policy and ask questions about it — all in their own language.
+            Staff get an <strong>Annual Training</strong> item in the hub (separate from My Training). They see the <strong>outcomes</strong> and estimated time, then work through the <strong>interactive sections</strong> — reading each point, trying the scenario (with a reveal-able answer) and a quick instant-feedback check — then take the assessment. Pass and they get a <strong>certificate</strong>; fail and they can review and retry. On passing they&apos;re asked a short <strong>confidence/usefulness</strong> question (optional). A prominent <strong>&ldquo;Ask about the policies behind this training&rdquo;</strong> panel lets them open any source policy and ask questions — all in their own language.
           </p>
+          <Tip>Completion, average score, claimed-vs-actual lesson time and learner feedback all roll up under <strong>Analytics → Training → Annual training</strong>.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Certificates, renewals &amp; practical sign-off">

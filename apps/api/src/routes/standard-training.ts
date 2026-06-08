@@ -85,7 +85,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
         group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key),
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,
         standards_count: Array.isArray(m.standards) ? m.standards.length : 0,
-        attested_by_name: m.attested_by_name, attested_at: m.attested_at,
+        attested_by_name: m.attested_by_name, attested_by_role: m.attested_by_role, attested_at: m.attested_at,
         qa_hard_fails: qa.hard_fails, qa_warnings: qa.warnings,
         ...(reviewByModule.get(m.id) ?? { review_status: null, review_changes_open: 0 }),
       })

@@ -83,10 +83,10 @@ export default function StandardTrainingPage() {
                         {m && (
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-400">
                             <span className="flex items-center gap-1"><Calendar size={11} /> Created {fmtDate(m.created_at)}{m.approved_at ? ` · Published ${fmtDate(m.approved_at)}` : ''}</span>
-                            {m.attested_by_name ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Attested · {m.attested_by_name}</span> : null}
+                            {m.attested_by_name ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Approved by {m.attested_by_name}{m.attested_by_role ? `, ${m.attested_by_role}` : ''}{m.attested_at ? ` · ${fmtDate(m.attested_at)}` : ''}</span> : null}
                             {m.standards_count > 0 ? <span>· {m.standards_count} standards</span> : null}
                             {m.qa_hard_fails > 0 ? <span className="flex items-center gap-0.5 text-red-500"><ShieldAlert size={11} /> {m.qa_hard_fails} QA issue{m.qa_hard_fails === 1 ? '' : 's'}</span> : null}
-                            {m.review_status === 'changes_requested' ? <span className="flex items-center gap-0.5 font-semibold text-amber-600"><AlertTriangle size={11} /> Reviewer changes ({m.review_changes_open} open)</span> : m.review_status === 'approved' ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Externally approved</span> : m.review_status === 'pending' ? <span className="flex items-center gap-0.5 text-blue-600"><History size={11} /> Awaiting review</span> : null}
+                            {!m.attested_by_name && m.review_status === 'changes_requested' ? <span className="flex items-center gap-0.5 font-semibold text-amber-600"><AlertTriangle size={11} /> Reviewer changes ({m.review_changes_open} open)</span> : !m.attested_by_name && m.review_status === 'approved' ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Externally approved — publish to confirm</span> : !m.attested_by_name && m.review_status === 'pending' ? <span className="flex items-center gap-0.5 text-blue-600"><History size={11} /> Awaiting review</span> : null}
                           </p>
                         )}
                       </div>
@@ -212,8 +212,9 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
-      {/* Sticky toolbar — pinned flush to the top so the actions follow you down the page */}
-      <div className="sticky -top-6 z-30 -mt-6 mb-4 flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white pt-6 pb-3 shadow-sm">
+      {/* Sticky toolbar — pinned flush to the top so the actions follow you down the page.
+          Full-bleed + page-matching background so it doesn't read as a mismatched white block. */}
+      <div className="sticky -top-6 z-30 -mx-6 -mt-6 mb-4 flex flex-wrap items-center gap-2 border-b border-gray-200 bg-neutral-light px-6 pt-6 pb-3 shadow-sm">
         <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Standard Training</button>
         <span className="mx-1 hidden h-5 w-px bg-gray-200 sm:block" />
         <button onClick={save} disabled={saving} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{saving ? 'Saving…' : 'Save draft'}</button>

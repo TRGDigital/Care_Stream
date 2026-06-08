@@ -4,13 +4,35 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
-import { CheckCircle2, FileQuestion, FileText, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react'
+import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
 function fmtWhen(iso: string | null) {
   if (!iso) return null
   return new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+function HelpAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mb-6 overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-teal-light/40"
+      >
+        <Info size={13} className="shrink-0 text-teal" />
+        <span className="flex-1 text-xs font-semibold text-teal">{title}</span>
+        <ChevronDown size={13} className={`shrink-0 text-teal transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="space-y-2 border-t border-teal/10 px-4 py-3 text-xs leading-relaxed text-neutral-mid">
+          {children}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function GapsPage() {
@@ -99,6 +121,15 @@ export default function GapsPage() {
           {analysing ? <><Loader2 size={15} className="animate-spin" /> Analysing…</> : <><RefreshCw size={15} /> {data.analysed ? 'Re-run analysis' : 'Run coverage analysis'}</>}
         </button>
       </div>
+
+      <HelpAccordion title="How Policy Gap Detection works">
+        <p><strong className="text-neutral-dark">What this page is for</strong> — it shows where your policies may not meet the regulations that apply to a registered care setting, and what staff are asking that your policies don&apos;t answer. Use it to find and close gaps before a CQC inspection.</p>
+        <p><strong className="text-neutral-dark">Coverage is read from your policy content, not titles</strong> — for each regulation, CareStream finds the most relevant passages across <em>all</em> your uploaded policies (using the same search that powers the staff chat) and an AI auditor judges, from that content alone, whether your policies substantively address it. So a regulation is only flagged when your documents genuinely don&apos;t cover it — not just because no policy happens to be named after it.</p>
+        <p><strong className="text-neutral-dark">The three results</strong> — <strong className="text-green-600">Covered</strong>: a policy clearly addresses it (the evidence policy is named). <strong className="text-amber-700">Partial</strong>: it&apos;s touched on but incomplete — the policy that partly covers it is named. <strong className="text-red-600">Gap</strong>: nothing in your policies addresses it.</p>
+        <p><strong className="text-neutral-dark">Running it</strong> — click <strong className="text-neutral-dark">Run coverage analysis</strong> to check all regulations. It reads through your policies and takes about a minute; the result is saved, so the page loads instantly afterwards. <strong className="text-neutral-dark">Re-run it whenever you upload or update policies</strong> to refresh the picture.</p>
+        <p><strong className="text-neutral-dark">Unanswered questions</strong> — separately, this page clusters questions staff asked (in chat, email or WhatsApp) that the assistant couldn&apos;t answer from your policies over the last 90 days. Recurring themes are real-world evidence of a missing or unclear policy.</p>
+        <p><strong className="text-neutral-dark">Coverage score</strong> — the headline percentage counts fully-covered regulations, plus partials at half weight, out of the total. It only appears once you&apos;ve run the analysis.</p>
+      </HelpAccordion>
 
       {/* Prompt to run the (content-based) analysis if it's never been run */}
       {!data.analysed && (

@@ -898,6 +898,40 @@ const GUIDE_SECTIONS: GuideSection[] = [
             </p>
           </div>
         </SectionBlock>
+        <SectionBlock title="How coverage is judged">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              CareStream keeps a library of the regulations that apply to registered care settings (CQC fundamental standards, the Care Act, health &amp; safety law, MCA/DoLS, infection control, and more). For each one, the coverage check works in three steps:
+            </p>
+            <ol className="list-decimal space-y-1.5 pl-5 text-sm text-neutral-mid">
+              <li><strong>Find the relevant policy passages.</strong> The regulation is turned into a search and run against the indexed content of <em>all</em> your uploaded policies — the same retrieval that powers the staff chat — to pull out the passages most likely to address it.</li>
+              <li><strong>Judge from the content.</strong> An AI compliance auditor reads those passages and decides — from your documents&apos; actual wording, not their titles — whether they substantively address the regulation.</li>
+              <li><strong>Record the verdict and evidence.</strong> Each regulation is marked Covered, Partial or Gap, with the policy that provides the evidence and a one-line reason. Results are cached so the page is instant until you re-run it.</li>
+            </ol>
+            <p className="text-sm text-neutral-mid">
+              This is the key difference from a simple checklist: a regulation is only flagged when your policies genuinely don&apos;t address it in content — so with a complete, well-maintained library the vast majority come back Covered.
+            </p>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Covered, Partial and Gap">
+          <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Covered', 'A policy clearly and substantively addresses the regulation. The evidence policy is named.'],
+              ['Partial', 'The topic is touched on but the policy is incomplete for what the regulation requires. The policy that partly covers it is named so you can strengthen it.'],
+              ['Gap',     'Nothing in your uploaded policies addresses the regulation — add a policy that covers it.'],
+            ].map(([label, desc]) => (
+              <div key={label} className="grid grid-cols-[6rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{label}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Unanswered staff questions">
+          <p className="text-sm text-neutral-mid">
+            Alongside regulation coverage, the page clusters questions your staff asked — in the Chat Hub, by email or on WhatsApp — that the assistant <strong>could not answer from your policies</strong> in the last 90 days. Recurring themes here are real-world evidence that a policy is missing, unclear, or not yet uploaded, straight from how your team actually uses CareStream.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Using policy gaps">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Policy Gaps</strong> in the sidebar.</Step>

@@ -66,13 +66,14 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
     (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
     (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
-    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { answers: { where: { is_correct: false }, select: { id: true } } } }).catch(() => []),
-    (prisma as any).onboardingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { progress: { where: { answer_correct: false }, select: { id: true } } } }).catch(() => []),
+    // Direct counts of outstanding wrong answers (was fetch-all-rows-and-sum).
+    (prisma as any).trainingAnswer.count({ where: { is_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
+    (prisma as any).onboardingProgress.count({ where: { answer_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
   ])
   const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
   const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && outstanding(e)).length
-  const followup = (tWrong as any[]).reduce((a, e) => a + (e.answers?.length ?? 0), 0) + (oWrong as any[]).reduce((a, e) => a + (e.progress?.length ?? 0), 0)
+  const followup = (tWrong as number) + (oWrong as number)
   ok(res, { training, induction, cqc, followup, annual })
 })
 

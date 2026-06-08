@@ -1298,12 +1298,12 @@ function MessageBubble({
 
 function FollowUpView({ token, onChange, onTalkToPolicy }: { token: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
-  const [items,   setItems]   = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const cached = pageCache.get<any[]>('hub-followup')
+  const [items,   setItems]   = useState<any[]>(cached ?? [])
+  const [loading, setLoading] = useState(!cached)
 
   function load() {
-    setLoading(true)
-    api.me.followUp().then(d => setItems(d.items)).catch(() => {}).finally(() => setLoading(false))
+    api.me.followUp().then(d => { setItems(d.items); pageCache.set('hub-followup', d.items) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1844,8 +1844,9 @@ function TrainingView({ token }: { token: string }) {
 
 function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
-  const [enrollments, setEnrollments] = useState<any[]>([])
-  const [loading,     setLoading]     = useState(true)
+  const cachedInd = pageCache.get<any[]>('hub-induction')
+  const [enrollments, setEnrollments] = useState<any[]>(cachedInd ?? [])
+  const [loading,     setLoading]     = useState(!cachedInd)
   const [completing,  setCompleting]  = useState<string | null>(null)
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
   const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
@@ -1858,7 +1859,7 @@ function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string
 
   useEffect(() => {
     api.onboarding.myEnrollments()
-      .then(d => setEnrollments(d.enrollments))
+      .then(d => { setEnrollments(d.enrollments); pageCache.set('hub-induction', d.enrollments) })
       .finally(() => setLoading(false))
     // Reflect already-saved policies so the Save button persists across refresh.
     api.me.savedPolicies()

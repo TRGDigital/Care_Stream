@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import {
   ClipboardCheck, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2,
   Sparkles, Play, Pause, Plus,
@@ -43,17 +44,17 @@ export function AuditsView({ token }: { token: string }) {
 // ─── List: templates to start, in-progress to resume, recent completed ─────────
 
 function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; onOpen: (runId: string) => void }) {
-  const [templates, setTemplates] = useState<any[]>([])
-  const [runs,      setRuns]      = useState<any[]>([])
-  const [rooms,     setRooms]     = useState<string[]>([])
+  const cached = pageCache.get<{ templates: any[]; runs: any[]; rooms: string[] }>('hub-audits')
+  const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
+  const [runs,      setRuns]      = useState<any[]>(cached?.runs ?? [])
+  const [rooms,     setRooms]     = useState<string[]>(cached?.rooms ?? [])
   const [roomInput, setRoomInput] = useState<Record<string, string>>({})
-  const [loading,   setLoading]   = useState(true)
+  const [loading,   setLoading]   = useState(!cached)
   const [starting,  setStarting]  = useState<string | null>(null)
 
   function load() {
-    setLoading(true)
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []) })
+      .then(([t, r]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []); pageCache.set('hub-audits', { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [] }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

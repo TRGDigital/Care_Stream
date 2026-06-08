@@ -12,8 +12,11 @@ import { generateAnnualModuleDraft, normaliseQuestion } from '../services/traini
 import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
 import { runModuleQa } from '../services/training/moduleQa'
 import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
+import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
+
+const REVIEW_LINK_DAYS = 30
 
 export const standardTrainingRouter = Router()
 standardTrainingRouter.use(requirePlatformAdmin)
@@ -142,6 +145,14 @@ standardTrainingRouter.get('/modules/:id/full', async (req: Request, res: Respon
     },
     qa: runModuleQa(module),
     standards_catalogue: STANDARDS_CATALOGUE,
+    review_links: await (async () => {
+      const links = await (prisma as any).moduleReviewLink.findMany({
+        where: { module_id: module.id }, orderBy: { created_at: 'desc' },
+        select: { id: true, status: true, created_at: true, expires_at: true, reviewer_name: true, reviewer_role: true, reviewer_org: true, decision: true, comments: true, decided_at: true, content_hash: true },
+      }).catch(() => [])
+      const currentHash = contentHash(module)
+      return (links as any[]).map(l => ({ ...l, stale: l.content_hash !== currentHash, content_hash: undefined }))
+    })(),
   })
 })
 
@@ -246,17 +257,71 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
     return
   }
 
-  // Named attestation is required.
-  const name = String(req.body?.reviewer_name ?? '').trim()
-  const role = String(req.body?.reviewer_role ?? '').trim()
+  let name: string, role: string, attestedAt = new Date()
+
+  // Option A — cite an external reviewer's approval (independent sign-off).
+  if (req.body?.external_link_id) {
+    const link = await (prisma as any).moduleReviewLink.findFirst({ where: { id: String(req.body.external_link_id), module_id: module.id } })
+    if (!link || link.status !== 'approved') { err(res, 'NO_EXTERNAL_APPROVAL', 'That external review is not approved.', 422); return }
+    if (link.content_hash !== contentHash(module)) { err(res, 'REVIEW_STALE', 'The module has changed since it was externally approved — send a fresh review link.', 422); return }
+    name = String(link.reviewer_name ?? '').trim()
+    role = `${String(link.reviewer_role ?? '').trim()}${link.reviewer_org ? `, ${link.reviewer_org}` : ''} (external review)`
+    attestedAt = link.decided_at ?? new Date()
+  } else {
+    // Option B — internal named attestation.
+    name = String(req.body?.reviewer_name ?? '').trim()
+    role = String(req.body?.reviewer_role ?? '').trim()
+  }
   if (!name || !role) { err(res, 'ATTESTATION_REQUIRED', 'A reviewer name and role are required to attest and publish.', 422); return }
 
   const updated = await (prisma as any).trainingModule.update({
     where: { id: module.id },
     data:  {
       approved: true, approved_at: new Date(), approved_by: name,
-      attested_by_name: name, attested_by_role: role, attested_at: new Date(),
+      attested_by_name: name, attested_by_role: role, attested_at: attestedAt,
     },
   })
   ok(res, { module: updated })
+})
+
+// ─── External review links ────────────────────────────────────────────────────
+
+// POST /admin/standard-training/modules/:id/review-link — create a password-protected,
+// snapshot-frozen link for an external specialist to review + sign off.
+standardTrainingRouter.post('/modules/:id/review-link', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const qa = runModuleQa(module)
+  if (!qa.ok_to_approve) { err(res, 'QA_FAILED', `Fix the ${qa.hard_fails} blocking quality check(s) before sending for review.`, 422); return }
+
+  const token = genToken()
+  const password = genPassword()
+  const now = new Date()
+  const expires = new Date(now.getTime() + REVIEW_LINK_DAYS * 86_400_000)
+  await (prisma as any).moduleReviewLink.create({
+    data: {
+      id: token, module_id: module.id, password_hash: hashPassword(token, password),
+      content_hash: contentHash(module), snapshot: buildSnapshot(module),
+      status: 'pending', created_by: 'Platform', expires_at: expires,
+    },
+  })
+  ok(res, { token, password, expires_at: expires, path: `/review/${token}` })
+})
+
+// GET /admin/standard-training/modules/:id/review-links — links + their status
+standardTrainingRouter.get('/modules/:id/review-links', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const links = await (prisma as any).moduleReviewLink.findMany({
+    where: { module_id: module.id }, orderBy: { created_at: 'desc' },
+    select: { id: true, status: true, created_at: true, expires_at: true, reviewer_name: true, reviewer_role: true, reviewer_org: true, decision: true, comments: true, decided_at: true, content_hash: true },
+  })
+  const currentHash = contentHash(module)
+  ok(res, { links: (links as any[]).map(l => ({ ...l, stale: l.content_hash !== currentHash, content_hash: undefined })) })
+})
+
+// POST /admin/standard-training/review-links/:linkId/revoke
+standardTrainingRouter.post('/review-links/:linkId/revoke', async (req: Request, res: Response) => {
+  await (prisma as any).moduleReviewLink.updateMany({ where: { id: req.params.linkId }, data: { status: 'revoked' } })
+  ok(res, { revoked: true })
 })

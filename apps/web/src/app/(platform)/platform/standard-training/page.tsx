@@ -9,7 +9,7 @@ import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -110,6 +110,9 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [hist, setHist] = useState<any>(null)
   const [qa, setQa] = useState<any>(null)
   const [stdCat, setStdCat] = useState<any[]>([])
+  const [reviewLinks, setReviewLinks] = useState<any[]>([])
+  const [newLink, setNewLink] = useState<any>(null)
+  const [creatingLink, setCreatingLink] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -123,7 +126,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [attest1, setAttest1] = useState(false)
   const [attest2, setAttest2] = useState(false)
 
-  function load() { setLoading(true); api.standardTraining.moduleFull(id).then(d => { setM(d.module); setHist(d.question_history); setQa(d.qa); setStdCat(d.standards_catalogue) }).catch(() => {}).finally(() => setLoading(false)) }
+  function load() { setLoading(true); api.standardTraining.moduleFull(id).then(d => { setM(d.module); setHist(d.question_history); setQa(d.qa); setStdCat(d.standards_catalogue); setReviewLinks(d.review_links ?? []) }).catch(() => {}).finally(() => setLoading(false)) }
   useEffect(() => { load() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function setField(k: string, v: any) { setM((p: any) => ({ ...p, [k]: v })) }
@@ -157,6 +160,22 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     try { const { module } = await api.standardTraining.approveModule(id, { reviewer_name: revName.trim(), reviewer_role: revRole.trim() }); setM(module); setAttestOpen(false); load() }
     catch (e: any) { alert(e?.message ?? 'Could not publish.') } finally { setSaving(false) }
   }
+  async function createReviewLink() {
+    setCreatingLink(true)
+    try { await saveEdits(); const r = await api.standardTraining.createReviewLink(id); setNewLink(r); load() }
+    catch (e: any) { alert(e?.message ?? 'Could not create the review link.') } finally { setCreatingLink(false) }
+  }
+  async function revokeLink(linkId: string) {
+    if (!confirm('Revoke this review link? The reviewer will no longer be able to open it.')) return
+    try { await api.standardTraining.revokeReviewLink(linkId); load() } catch { /* ignore */ }
+  }
+  async function publishExternal(linkId: string) {
+    if (!confirm('Publish this module to all tenants, citing the external reviewer\'s approval?')) return
+    setSaving(true)
+    try { const { module } = await api.standardTraining.approveModule(id, { external_link_id: linkId }); setM(module); load() }
+    catch (e: any) { alert(e?.message ?? 'Could not publish.') } finally { setSaving(false) }
+  }
+  function reviewUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : ''}/review/${token}` }
   function toggleStandard(framework: string, code: string, label: string) {
     const cur: any[] = Array.isArray(m.standards) ? m.standards : []
     const exists = cur.some(s => s.framework === framework && s.code === code)
@@ -358,6 +377,52 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
             <span className="mt-0.5 block text-gray-400">Only enable once The CPD Certification Service has formally accredited this module. Set the provider number via the <code className="rounded bg-gray-100 px-1">CPD_PROVIDER_NUMBER</code> env var.</span>
           </span>
         </label>
+
+        {/* Independent external review */}
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Independent external review</p>
+            <button onClick={createReviewLink} disabled={creatingLink} className="inline-flex items-center gap-1 rounded-lg border border-teal/30 bg-white px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal hover:text-white disabled:opacity-50">{creatingLink ? <><Loader2 size={12} className="animate-spin" /> Creating…</> : <><Share2 size={12} /> Send for external review</>}</button>
+          </div>
+          <p className="mt-1 text-[11px] text-gray-400">Generates a password-protected, read-only link (30 days) for a specialist outside CareStream to review &amp; sign off. Their approval enables publishing.</p>
+
+          {newLink && (
+            <div className="mt-3 rounded-lg border border-teal/30 bg-teal-light/20 p-3">
+              <p className="mb-2 text-xs font-semibold text-teal-dark">Link created — share the link and password <strong>separately</strong> with your reviewer:</p>
+              <div className="mb-1.5 flex items-center gap-2">
+                <input readOnly value={reviewUrl(newLink.token)} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px]" />
+                <button onClick={() => navigator.clipboard?.writeText(reviewUrl(newLink.token))} className="rounded-md bg-teal px-2 py-1 text-[11px] font-medium text-white">Copy link</button>
+              </div>
+              <div className="flex items-center gap-2">
+                <input readOnly value={newLink.password} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-mono tracking-wider" />
+                <button onClick={() => navigator.clipboard?.writeText(newLink.password)} className="rounded-md bg-teal px-2 py-1 text-[11px] font-medium text-white">Copy password</button>
+              </div>
+              <p className="mt-1.5 text-[10px] text-gray-400">The password is shown once. It can&apos;t be recovered — note it now.</p>
+            </div>
+          )}
+
+          {reviewLinks.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {reviewLinks.map(l => (
+                <div key={l.id} className="rounded-lg border border-gray-200 p-2.5 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`rounded-full px-2 py-0.5 font-semibold ${l.status === 'approved' ? 'bg-green-50 text-green-600' : l.status === 'changes_requested' ? 'bg-amber-50 text-amber-600' : l.status === 'revoked' ? 'bg-gray-100 text-neutral-mid' : 'bg-blue-50 text-blue-600'}`}>
+                      {l.status === 'approved' ? 'Approved' : l.status === 'changes_requested' ? 'Changes requested' : l.status === 'revoked' ? 'Revoked' : 'Awaiting review'}
+                    </span>
+                    <span className="text-[10px] text-gray-400">Sent {fmtDate(l.created_at)} · expires {fmtDate(l.expires_at)}</span>
+                  </div>
+                  {l.reviewer_name && <p className="mt-1 text-neutral-dark">{l.decision === 'approved' ? 'Approved' : 'Reviewed'} by <strong>{l.reviewer_name}</strong>{l.reviewer_role ? `, ${l.reviewer_role}` : ''}{l.reviewer_org ? ` (${l.reviewer_org})` : ''}{l.decided_at ? ` · ${fmtDate(l.decided_at)}` : ''}</p>}
+                  {l.comments && <p className="mt-1 rounded bg-neutral-light/60 p-1.5 text-neutral-mid">&ldquo;{l.comments}&rdquo;</p>}
+                  {l.stale && l.status === 'approved' && <p className="mt-1 flex items-center gap-1 text-amber-600"><AlertTriangle size={11} /> Content changed since this approval — send a fresh link.</p>}
+                  <div className="mt-1.5 flex gap-2">
+                    {l.status === 'approved' && !l.stale && !m.approved && <button onClick={() => publishExternal(l.id)} disabled={saving} className="rounded-md bg-teal px-2 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark disabled:opacity-50">Publish citing this approval</button>}
+                    {l.status === 'pending' && <button onClick={() => revokeLink(l.id)} className="rounded-md border border-gray-200 px-2 py-1 text-[11px] text-neutral-mid hover:text-red-500">Revoke</button>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">

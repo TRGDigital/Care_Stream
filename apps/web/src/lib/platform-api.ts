@@ -414,9 +414,12 @@ export function createPlatformClient(token: string) {
         question_history: { used_count: number; prior_versions: number; last_regenerated_at: string | null; review_due: boolean; review_due_at: string | null; interval_months: number }
         qa: { checks: Array<{ key: string; label: string; status: 'pass' | 'warn' | 'fail'; detail: string }>; hard_fails: number; warnings: number; ok_to_approve: boolean }
         standards_catalogue: Array<{ framework: string; label: string; items: Array<{ code: string; label: string }> }>
+        review_links: Array<{ id: string; status: string; created_at: string; expires_at: string; reviewer_name: string | null; reviewer_role: string | null; reviewer_org: string | null; decision: string | null; comments: string | null; decided_at: string | null; stale: boolean }>
       }>(`/standard-training/modules/${id}/full`, token),
       updateModule: (id: string, data: any) => adminFetch<{ module: any }>(`/standard-training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
-      approveModule: (id: string, opts: { approved?: boolean; reviewer_name?: string; reviewer_role?: string } = {}) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved: opts.approved !== false, reviewer_name: opts.reviewer_name, reviewer_role: opts.reviewer_role }) }),
+      approveModule: (id: string, opts: { approved?: boolean; reviewer_name?: string; reviewer_role?: string; external_link_id?: string } = {}) => adminFetch<{ module: any }>(`/standard-training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved: opts.approved !== false, reviewer_name: opts.reviewer_name, reviewer_role: opts.reviewer_role, external_link_id: opts.external_link_id }) }),
+      createReviewLink: (id: string) => adminFetch<{ token: string; password: string; expires_at: string; path: string }>(`/standard-training/modules/${id}/review-link`, token, { method: 'POST' }),
+      revokeReviewLink: (linkId: string) => adminFetch<{ revoked: boolean }>(`/standard-training/review-links/${linkId}/revoke`, token, { method: 'POST' }),
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
     },

@@ -812,6 +812,30 @@ model TrainingModule {
   @@map("training_modules")
 }
 
+// Password-protected, snapshot-frozen external review/sign-off links for standard
+// (platform) modules — lets an independent specialist review + attest without a login.
+model ModuleReviewLink {
+  id             String    @id                              // the share token
+  module_id      String
+  password_hash  String
+  content_hash   String                                     // staleness guard vs the live module
+  snapshot       Json                                       // frozen content the reviewer sees
+  status         String    @default("pending")              // pending|approved|changes_requested|revoked
+  created_by     String?
+  created_at     DateTime  @default(now())
+  expires_at     DateTime
+  reviewer_name  String?
+  reviewer_role  String?
+  reviewer_org   String?
+  reviewer_email String?
+  decision       String?
+  comments       String?
+  decided_at     DateTime?
+
+  @@index([module_id])
+  @@map("module_review_links")
+}
+
 model TrainingQuestionVersion {
   id         String         @id @default(uuid())
   module_id  String

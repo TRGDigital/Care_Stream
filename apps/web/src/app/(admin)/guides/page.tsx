@@ -804,11 +804,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="How it works">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>CQC Staff Prep</strong> in the Reporting section of the sidebar.</Step>
-            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led.</Step>
-            <Step n={3}>Click <strong>Send to staff</strong> on any question — or use <strong>Send all to staff</strong> to send every question in a domain at once.</Step>
-            <Step n={4}>Select which staff members to send to, then confirm. The question is automatically rephrased before delivery so staff cannot memorise the exact wording.</Step>
+            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong>model answer</strong> — the standard a strong answer is measured against, so you can see exactly what good looks like.</Step>
+            <Step n={3}>To send a question out, use <strong>Assign to all staff</strong> to send it to everyone at once, or <strong>Assign to specific staff</strong> to pick individuals. A domain header also has <strong>Assign all to staff</strong> to send every question in that domain in one go. (Admins are never included — only active staff are assigned.)</Step>
+            <Step n={4}>The question is automatically rephrased before delivery so staff cannot memorise the exact wording.</Step>
             <Step n={5}>Staff open their portal and write a free-text answer. There is no multiple choice — they must articulate their knowledge in their own words, just as they would with a real inspector.</Step>
-            <Step n={6}>CareStream immediately scores the answer from 0 to 100 and gives constructive written feedback. Staff see their result straight away.</Step>
+            <Step n={6}>CareStream immediately scores the answer from 0 to 100 — against the model answer — and gives constructive written feedback. Staff see their result straight away.</Step>
             <Step n={7}>Track progress across your whole team in the <strong>Performance</strong> tab — scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
           </div>
         </SectionBlock>
@@ -829,9 +829,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
         </SectionBlock>
         <SectionBlock title="Adding your own questions">
-          <p className="text-sm text-neutral-mid">
-            Click <strong>Add question</strong> in the Question Bank to create your own CQC prep questions. You can write them manually or describe a topic and let CareStream generate a question and model answer for you using AI. Generated questions follow the same CQC inspector style and include a reference answer used for scoring.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              Click <strong>Add question</strong> in the Question Bank to create a single CQC prep question. You can write it manually, or describe a topic and let CareStream draft the question and model answer for you using AI.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              To create several at once, click <strong>Generate with AI</strong>. Choose a single domain or a <strong>balanced mix across all five</strong>, pick how many (3, 5 or 10), and optionally give a focus theme (e.g. dementia care, medication). CareStream generates that many brand-new questions and model answers, saves them straight to your bank, and avoids duplicating questions you already have.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              All generated questions follow the same CQC inspector style and include a model answer used for scoring. <strong>AI generation uses 1 AI credit per question generated</strong> — so a batch of 5 uses 5 credits. The cost is shown before you confirm.
+            </p>
+          </div>
         </SectionBlock>
         <SectionBlock title="Understanding scores">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">

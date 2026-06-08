@@ -1132,15 +1132,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
 // ─── Accordion item ───────────────────────────────────────────────────────────
 
-function GuideAccordion({ section, forceOpen }: { section: GuideSection; forceOpen?: boolean }) {
-  const [open, setOpen] = useState(section.defaultOpen ?? false)
+function GuideAccordion({ section, isOpen, onToggle }: { section: GuideSection; isOpen: boolean; onToggle: () => void }) {
   const Icon = section.icon
-  const isOpen = forceOpen ?? open
 
   return (
     <div className="overflow-hidden rounded-card bg-white shadow-card">
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={onToggle}
         className="flex w-full items-center gap-3 px-6 py-4 text-left transition-colors hover:bg-neutral-light/50"
         aria-expanded={isOpen}
       >
@@ -1168,6 +1166,8 @@ function GuideAccordion({ section, forceOpen }: { section: GuideSection; forceOp
 
 export default function HelpPage() {
   const [query, setQuery] = useState('')
+  // Single-open accordion: only one section expanded at a time.
+  const [openId, setOpenId] = useState<string | null>(GUIDE_SECTIONS.find(s => s.defaultOpen)?.id ?? null)
   const q = query.trim().toLowerCase()
   const filtered = q
     ? GUIDE_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q))
@@ -1204,7 +1204,12 @@ export default function HelpPage() {
             No guides match &ldquo;{query}&rdquo;.
           </div>
         ) : filtered.map(section => (
-          <GuideAccordion key={section.id} section={section} forceOpen={q ? true : undefined} />
+          <GuideAccordion
+            key={section.id}
+            section={section}
+            isOpen={q ? true : openId === section.id}
+            onToggle={() => setOpenId(prev => prev === section.id ? null : section.id)}
+          />
         ))}
       </div>
 

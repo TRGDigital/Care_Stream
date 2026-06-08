@@ -6,7 +6,7 @@ import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage } from '../services/storage/s3'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
-import { notifyAdmin, notifyStaffAllocation } from '../lib/notify'
+import { notifyAdmin, notifyStaffAllocation, notifyFollowUp } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
@@ -447,6 +447,10 @@ trainingRouter.post('/enrollments/:id/answer', async (req: Request, res: Respons
     }
 
     ok(res, { saved: true, is_correct, correct_option: question ? OPTION_MAP[question.correct] : null })
+
+    // A wrong answer creates a follow-up item — nudge the staff member to the hub
+    // (debounced to once/24h so a bad session doesn't spam them).
+    if (!is_correct) notifyFollowUp(tenantId, enrollment.user_id).catch(() => {})
   } catch (e: any) {
     err(res, 'SAVE_FAILED', e.message, 500)
   }

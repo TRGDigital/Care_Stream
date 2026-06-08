@@ -3,7 +3,7 @@ import { requireAuth, requireAdmin } from '../middleware/auth'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import Anthropic from '@anthropic-ai/sdk'
-import { notifyUsers } from '../lib/notify'
+import { notifyUsers, notifyFollowUp } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
@@ -379,6 +379,9 @@ onboardingRouter.post('/enrollments/:enrollmentId/steps/:stepId/complete', async
         answer_correct,
       },
     })
+
+    // A wrong induction answer creates a follow-up — nudge them to the hub (debounced).
+    if (answer_correct === false) notifyFollowUp(tenantId, userId).catch(() => {})
 
     const allProgress = await prisma.onboardingProgress.findMany({ where: { enrollment_id: req.params.enrollmentId } })
     const allDone = enrollment.flow.steps.every(s => allProgress.some(p => p.step_id === s.id && p.completed_at))

@@ -226,6 +226,7 @@ model User {
   locked_until           DateTime?                          // lockout after 5 failed attempts
   first_login_at         DateTime?                          // set once on first successful login
   last_login_at          DateTime?                          // updated on every successful login
+  last_followup_email_at DateTime?                          // debounce for the "you have follow-up" email
   shift_type             String         @default("any")     // 'any' | 'day' | 'night'
   first_language         String         @default("eng")     // ISO 639-3 — primary language for outbound comms
   second_language        String?                            // optional secondary language

@@ -1801,7 +1801,7 @@ function SystemReference() {
           <RefRow label="New annual training"   value="Admin assigns an AI/annual module (same /training/enroll, source=ai_generated) → 'Start annual training' → /chat?view=annual. Pref: training_updates." />
           <RefRow label="New CQC prep"          value="Admin delivers a question (POST /cqc-questions/:id/deliver) → 'View my CQC questions' → /cqc. Pref: cqc_staff_prep. (Also web-push.)" />
           <RefRow label="Helper"                value="notifyStaffAllocation(tenantId, userIds, kind) + sendStaffAllocationEmail (kinds: induction | training | annual_training | cqc_prep | follow_up). /chat?view= deep links handled in the hub page." />
-          <RefRow label="Follow-up"             value="NOT a separate per-assignment email (follow-ups are auto-created when a staff member answers wrong, not allocated by an admin). Staff with open follow-ups are nudged by the weekly Monday knowledge-gap digest." />
+          <RefRow label="Follow-up"             value="Fires when a staff member answers a TRAINING or INDUCTION question WRONG (creates a follow-up) → 'Complete my follow-up' → /chat?view=followup. Pref: training_updates. DEBOUNCED to ≤1 email / 24h per staff (users.last_followup_email_at) so a bad session doesn't spam. notifyFollowUp() in lib/notify.ts. (The weekly Monday knowledge-gap digest still nudges anyone with open follow-ups too.)" />
         </div>
         <p className="mt-3 mb-1 text-sm font-semibold text-neutral-dark">Other staff emails (pre-existing)</p>
         <div className="space-y-1">

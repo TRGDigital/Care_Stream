@@ -8,7 +8,7 @@ import { AiCreditsBar } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, ExternalLink, GraduationCap, History,
-  Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, X,
+  Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, X,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -430,10 +430,36 @@ function McqQuestionEditor({ q, idx, moduleId, onChange, onRemove }: {
   )
 }
 
-function ModulesTab({ api, modules }: {
+function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   api:     ReturnType<typeof createApiClient>
   modules: Module[]
+  staff:   Staff[]
+  enrollments: Enrollment[]
+  onAssigned: () => void
 }) {
+  const [assignFor,  setAssignFor]  = useState<Module | null>(null)  // individual-assign modal
+  const [assignBusy, setAssignBusy] = useState<string | null>(null)  // module id during "assign all"
+  const [assignMsg,  setAssignMsg]  = useState<Record<string, string>>({})
+
+  // Staff currently assigned each module (for the "X assigned" count).
+  const assignedByModule = (() => {
+    const map: Record<string, Set<string>> = {}
+    for (const e of enrollments) { (map[e.module_id] ??= new Set()).add(e.user_id) }
+    return map
+  })()
+
+  async function assignAll(m: Module) {
+    if (!staff.length) { setAssignMsg(p => ({ ...p, [m.id]: 'No staff to assign.' })); return }
+    if (!confirm(`Assign "${m.name}" to all ${staff.length} staff members?`)) return
+    setAssignBusy(m.id)
+    try {
+      const r = await api.training.enroll({ user_ids: staff.map(s => s.id), module_ids: [m.id] })
+      setAssignMsg(p => ({ ...p, [m.id]: `Assigned to ${r.enrolled ?? staff.length} staff.` }))
+      onAssigned()
+    } catch (e: any) { setAssignMsg(p => ({ ...p, [m.id]: e.message ?? 'Failed to assign.' })) }
+    finally { setAssignBusy(null); setTimeout(() => setAssignMsg(p => { const n = { ...p }; delete n[m.id]; return n }), 3000) }
+  }
+
   const [open,           setOpen]           = useState<string | null>(null)
   const [editing,        setEditing]        = useState<Record<string, Question[]>>({})
   const [dirty,          setDirty]          = useState<Set<string>>(new Set())
@@ -676,6 +702,15 @@ function ModulesTab({ api, modules }: {
                       <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{genError[m.id]}</p>
                     )}
 
+                    {/* Assign this module to staff */}
+                    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
+                      <span className="flex items-center gap-1 text-xs font-medium text-neutral-dark"><Users size={13} className="text-teal" /> Assign this module:</span>
+                      <button onClick={() => setAssignFor(m)} className="rounded-lg border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal hover:text-white">Assign to specific staff…</button>
+                      <button onClick={() => assignAll(m)} disabled={assignBusy === m.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{assignBusy === m.id ? <><Loader2 size={12} className="animate-spin" /> Assigning…</> : `Assign to all staff (${staff.length})`}</button>
+                      <span className="text-[11px] text-neutral-mid">{assignedByModule[m.id]?.size ?? 0} of {staff.length} currently assigned</span>
+                      {assignMsg[m.id] && <span className="text-[11px] font-medium text-green-600">{assignMsg[m.id]}</span>}
+                    </div>
+
                     <div className={`space-y-3 ${isLocked ? 'pointer-events-none opacity-60' : ''}`}>
                       {qs.map((q, idx) => (
                         <McqQuestionEditor
@@ -748,6 +783,67 @@ function ModulesTab({ api, modules }: {
       {renderGroup('Statutory modules', 'text-teal', statutory)}
       {renderGroup('Specialist modules', 'text-indigo-500', specialist)}
 
+      {assignFor && (
+        <PerModuleAssignModal
+          api={api}
+          module={assignFor}
+          staff={staff}
+          alreadyAssigned={assignedByModule[assignFor.id] ?? new Set()}
+          onClose={() => setAssignFor(null)}
+          onAssigned={() => { onAssigned(); setAssignFor(null) }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Per-module staff picker — assign one module to selected staff members.
+function PerModuleAssignModal({ api, module, staff, alreadyAssigned, onClose, onAssigned }: {
+  api:     ReturnType<typeof createApiClient>
+  module:  Module
+  staff:   Staff[]
+  alreadyAssigned: Set<string>
+  onClose: () => void
+  onAssigned: () => void
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [saving,   setSaving]   = useState(false)
+  const [error,    setError]    = useState('')
+  const toggle = (id: string) => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+
+  async function assign() {
+    if (selected.size === 0) { setError('Select at least one staff member.'); return }
+    setSaving(true); setError('')
+    try { await api.training.enroll({ user_ids: [...selected], module_ids: [module.id] }); onAssigned() }
+    catch (e: any) { setError(e.message ?? 'Failed to assign.'); setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-card bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+          <div><h2 className="font-semibold text-neutral-dark">Assign to specific staff</h2><p className="text-xs text-neutral-mid">{module.name}</p></div>
+          <button onClick={onClose} className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={16} /></button>
+        </div>
+        <div className="flex items-center justify-between px-5 py-2 text-xs">
+          <span className="text-neutral-mid">{selected.size} selected</span>
+          <button onClick={() => setSelected(selected.size === staff.length ? new Set() : new Set(staff.map(s => s.id)))} className="font-medium text-teal hover:underline">{selected.size === staff.length ? 'Clear all' : 'Select all'}</button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 pb-2">
+          {staff.map(s => (
+            <label key={s.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-neutral-light/60">
+              <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} className="accent-teal" />
+              <span className="flex-1 text-neutral-dark">{s.name}{s.job_role ? <span className="text-neutral-mid"> · {s.job_role}</span> : ''}</span>
+              {alreadyAssigned.has(s.id) && <span className="rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-medium text-green-600">assigned</span>}
+            </label>
+          ))}
+        </div>
+        {error && <p className="px-5 text-xs text-red-500">{error}</p>}
+        <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-3">
+          <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light">Cancel</button>
+          <button onClick={assign} disabled={saving || selected.size === 0} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{saving ? 'Assigning…' : `Assign to ${selected.size}`}</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1674,7 +1770,7 @@ export default function TrainingPage() {
         <div className="mb-4 rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} />}
+      {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
       {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
 

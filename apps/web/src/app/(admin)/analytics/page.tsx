@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
@@ -238,22 +238,32 @@ const TABS: { id: TabId; label: string }[] = [
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
-  const analyticsCache = pageCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any }>('admin-analytics')
-  const [engagementData, setEngagement] = useState<any>(analyticsCache?.engagement ?? null)
-  const [data,         setData]     = useState<any>(analyticsCache?.data ?? null)
-  const [trainingData, setTraining] = useState<any>(analyticsCache?.training ?? null)
-  const [gapsData,     setGaps]     = useState<any>(analyticsCache?.gaps ?? null)
-  const [cqcPrepData,  setCqcPrep]  = useState<any>(analyticsCache?.cqcPrep ?? null)
-  const [auditData,    setAuditData] = useState<any>(analyticsCache?.audits ?? null)
-  const [riskData,     setRiskData]  = useState<any>(analyticsCache?.risk ?? null)
-  const [readingData,  setReadingData] = useState<any>(analyticsCache?.reading ?? null)
-  const [inductionPerf, setInductionPerf] = useState<any>(analyticsCache?.inductionPerf ?? null)
-  const [kgaps,        setKgaps]    = useState<any>(analyticsCache?.kgaps ?? null)
-  const [annual,       setAnnual]   = useState<any>(analyticsCache?.annual ?? null)
+  const userId = session?.user?.email ?? 'guest'
+  const [engagementData, setEngagement] = useState<any>(null)
+  const [data,         setData]     = useState<any>(null)
+  const [trainingData, setTraining] = useState<any>(null)
+  const [gapsData,     setGaps]     = useState<any>(null)
+  const [cqcPrepData,  setCqcPrep]  = useState<any>(null)
+  const [auditData,    setAuditData] = useState<any>(null)
+  const [riskData,     setRiskData]  = useState<any>(null)
+  const [readingData,  setReadingData] = useState<any>(null)
+  const [inductionPerf, setInductionPerf] = useState<any>(null)
+  const [kgaps,        setKgaps]    = useState<any>(null)
+  const [annual,       setAnnual]   = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
-  const [loading,      setLoading]  = useState(!analyticsCache)
+  const [loading,      setLoading]  = useState(true)
   const [error,        setError]    = useState(false)
+
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any }>(`admin-analytics-${userId}`)
+    if (cached) {
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null)
+      setLoading(false)
+    }
+  }, [userId])
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -273,7 +283,7 @@ export default function AnalyticsPage() {
     ])
       .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement]) => {
         setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement)
-        pageCache.set('admin-analytics', { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement })
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))

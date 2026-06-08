@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
@@ -37,18 +37,26 @@ function HelpAccordion({ title, children }: { title: string; children: React.Rea
 
 export default function GapsPage() {
   const { data: session } = useSession()
-  const [data,    setData]    = useState<GapsData | null>(() => pageCache.get<GapsData>('admin-gaps') ?? null)
-  const [loading, setLoading] = useState(() => pageCache.get<GapsData>('admin-gaps') === undefined)
+  const userId = session?.user?.email ?? 'guest'
+  const [data,    setData]    = useState<GapsData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [analysing, setAnalysing] = useState(false)
+
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<GapsData>(`admin-gaps-${userId}`)
+    if (cached) { setData(cached); setLoading(false) }
+  }, [userId])
 
   const load = useCallback(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).analytics.gaps()
-      .then(d => { setData(d); pageCache.set('admin-gaps', d) })
+      .then(d => { setData(d); persistentCache.set(`admin-gaps-${userId}`, d) })
       .catch((e: any) => setError(e.message ?? 'Failed to load gap analysis'))
       .finally(() => setLoading(false))
-  }, [session?.accessToken])
+  }, [session?.accessToken, userId])
 
   useEffect(() => { load() }, [load])
 

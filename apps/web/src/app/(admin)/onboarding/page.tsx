@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, Loader2 } from 'lucide-react'
 import type { Flow } from '@/components/admin/onboarding/onboarding-shared'
 
@@ -231,9 +231,9 @@ function DemoPreview() {
 
 export default function OnboardingPage() {
   const { data: session } = useSession()
-  const flowsCache = pageCache.get<Flow[]>('admin-onboarding')
-  const [flows,    setFlows]    = useState<Flow[]>(flowsCache ?? [])
-  const [loading,  setLoading]  = useState(!flowsCache)
+  const userId = session?.user?.email ?? 'guest'
+  const [flows,    setFlows]    = useState<Flow[]>([])
+  const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -253,7 +253,7 @@ export default function OnboardingPage() {
       ])
       setFlows(d.flows)
       setTemplates(t.templates)
-      pageCache.set('admin-onboarding', d.flows)
+      persistentCache.set(`admin-onboarding-${userId}`, d.flows)
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
     } finally {
@@ -274,6 +274,11 @@ export default function OnboardingPage() {
       await load()
     } catch (e: any) { setError(e.message ?? 'Could not adopt template') } finally { setAdoptingId(null) }
   }
+
+  useEffect(() => {
+    const cached = persistentCache.get<Flow[]>(`admin-onboarding-${userId}`)
+    if (cached) { setFlows(cached); setLoading(false) }
+  }, [userId])
 
   useEffect(() => { load() }, [session?.accessToken])
 

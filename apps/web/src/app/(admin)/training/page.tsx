@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { AiCreditsBar } from '@/components/ai-usage'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users,
@@ -1029,12 +1029,12 @@ function DeliveryTab({ api, modules, staff }: {
 
 export default function TrainingPage() {
   const { data: session } = useSession()
+  const userId = session?.user?.email ?? 'guest'
   const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery'>('compliance')
-  const trainingCache = pageCache.get<{ staff: Staff[]; modules: Module[]; enrollments: Enrollment[] }>('admin-training')
-  const [staff,       setStaff]       = useState<Staff[]>(trainingCache?.staff ?? [])
-  const [modules,     setModules]     = useState<Module[]>(trainingCache?.modules ?? [])
-  const [enrollments, setEnrollments] = useState<Enrollment[]>(trainingCache?.enrollments ?? [])
-  const [loading,     setLoading]     = useState(!trainingCache)
+  const [staff,       setStaff]       = useState<Staff[]>([])
+  const [modules,     setModules]     = useState<Module[]>([])
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
+  const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState('')
   const [showAssign,  setShowAssign]  = useState(false)
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null)
@@ -1051,7 +1051,7 @@ export default function TrainingPage() {
       setModules(modulesRes.modules as Module[])
       setStaff(complianceRes.users)
       setEnrollments(complianceRes.enrollments)
-      pageCache.set('admin-training', {
+      persistentCache.set(`admin-training-${userId}`, {
         staff: complianceRes.users,
         modules: modulesRes.modules as Module[],
         enrollments: complianceRes.enrollments,
@@ -1062,6 +1062,16 @@ export default function TrainingPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    const cached = persistentCache.get<{ staff: Staff[]; modules: Module[]; enrollments: Enrollment[] }>(`admin-training-${userId}`)
+    if (cached) {
+      setStaff(cached.staff)
+      setModules(cached.modules)
+      setEnrollments(cached.enrollments)
+      setLoading(false)
+    }
+  }, [userId])
 
   useEffect(() => { load() }, [session?.accessToken])
 

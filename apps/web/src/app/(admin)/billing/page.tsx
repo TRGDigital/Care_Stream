@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -43,20 +43,27 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function BillingPage() {
   const { data: session } = useSession()
+  const userId = session?.user?.email ?? 'guest'
 
-  const billingCache = pageCache.get<{ summary: any; invoices: any[] }>('admin-billing')
-  const [summary,  setSummary]  = useState<any>(billingCache?.summary ?? null)
-  const [invoices, setInvoices] = useState<any[]>(billingCache?.invoices ?? [])
-  const [loading,  setLoading]  = useState(!billingCache)
+  const [summary,  setSummary]  = useState<any>(null)
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [loading,  setLoading]  = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [error,    setError]    = useState('')
   const [portalError, setPortalError] = useState('')
+
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<{ summary: any; invoices: any[] }>(`admin-billing-${userId}`)
+    if (cached) { setSummary(cached.summary); setInvoices(cached.invoices); setLoading(false) }
+  }, [userId])
 
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.billing.summary(), api.billing.invoices()])
-      .then(([s, inv]) => { setSummary(s); setInvoices(inv.invoices); pageCache.set('admin-billing', { summary: s, invoices: inv.invoices }) })
+      .then(([s, inv]) => { setSummary(s); setInvoices(inv.invoices); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
       .catch((e: any) => setError(e.message ?? 'Failed to load billing information.'))
       .finally(() => setLoading(false))
   }, [session?.accessToken])

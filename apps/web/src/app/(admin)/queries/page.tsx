@@ -4,7 +4,7 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { BookOpen, ChevronDown, ChevronUp, Info, MessageSquare, Users, X } from 'lucide-react'
 
@@ -53,11 +53,11 @@ interface ModalSession {
 
 export default function QueriesPage() {
   const { data: session }       = useSession()
-  const queriesCache = pageCache.get<{ queries: any[]; total: number }>('admin-queries')
-  const [queries,  setQueries]  = useState<any[]>(queriesCache?.queries ?? [])
-  const [total,    setTotal]    = useState(queriesCache?.total ?? 0)
+  const userId = session?.user?.email ?? 'guest'
+  const [queries,  setQueries]  = useState<any[]>([])
+  const [total,    setTotal]    = useState(0)
   const [page,     setPage]     = useState(1)
-  const [loading,  setLoading]  = useState(!queriesCache)
+  const [loading,  setLoading]  = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [modal,    setModal]    = useState<ModalSession | null>(null)
   const [filter,   setFilter]   = useState({
@@ -67,6 +67,11 @@ export default function QueriesPage() {
   })
 
   const LIMIT = 20
+
+  useEffect(() => {
+    const cached = persistentCache.get<{ queries: any[]; total: number }>(`admin-queries-${userId}`)
+    if (cached) { setQueries(cached.queries); setTotal(cached.total); setLoading(false) }
+  }, [userId])
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -79,7 +84,7 @@ export default function QueriesPage() {
       .then(data => {
         const q = data?.queries ?? []; const t = data?.total ?? 0
         setQueries(q); setTotal(t)
-        if (page === 1 && !filter.language_detected && !filter.no_match && !filter.document_category) pageCache.set('admin-queries', { queries: q, total: t })
+        if (page === 1 && !filter.language_detected && !filter.no_match && !filter.document_category) persistentCache.set(`admin-queries-${userId}`, { queries: q, total: t })
       })
       .catch(() => {})
       .finally(() => setLoading(false))

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -58,11 +58,11 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AuditsPage() {
   const { data: session }           = useSession()
+  const userId = session?.user?.email ?? 'guest'
   const router                      = useRouter()
-  const auditsCache = pageCache.get<{ templates: any[]; runs: any[] }>('admin-audits')
-  const [templates, setTemplates]   = useState<any[]>(auditsCache?.templates ?? [])
-  const [runs,      setRuns]        = useState<any[]>(auditsCache?.runs ?? [])
-  const [loading,   setLoading]     = useState(!auditsCache)
+  const [templates, setTemplates]   = useState<any[]>([])
+  const [runs,      setRuns]        = useState<any[]>([])
+  const [loading,   setLoading]     = useState(true)
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
   const [confirming,  setConfirming]  = useState(false)
@@ -75,11 +75,18 @@ export default function AuditsPage() {
   const [rooms,       setRooms]       = useState<string[]>([])
   const [room,        setRoom]        = useState('')
 
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<{ templates: any[]; runs: any[] }>(`admin-audits-${userId}`)
+    if (cached) { setTemplates(cached.templates); setRuns(cached.runs); setLoading(false) }
+  }, [userId])
+
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); pageCache.set('admin-audits', { templates: t.templates, runs: r.runs }) })
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [session?.accessToken])

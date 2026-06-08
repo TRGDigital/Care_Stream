@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { AiCreditsBar } from '@/components/ai-usage'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ClipboardList,
   Info, Loader2, Plus, Sparkles, Trash2, Users, UserPlus,
@@ -486,14 +486,21 @@ function PerformanceTab({ deliveries, staff }: { deliveries: Delivery[]; staff: 
 export default function CqcQuestionsPage() {
   const { data: session } = useSession()
   const token = (session as any)?.accessToken as string
+  const userId = session?.user?.email ?? 'guest'
 
   const [tab, setTab]               = useState<'bank' | 'performance'>('bank')
-  const cqcCache = pageCache.get<{ questions: Question[]; deliveries: Delivery[]; staff: StaffUser[] }>('admin-cqc-questions')
-  const [questions, setQuestions]   = useState<Question[]>(cqcCache?.questions ?? [])
-  const [deliveries, setDeliveries] = useState<Delivery[]>(cqcCache?.deliveries ?? [])
-  const [staff, setStaff]           = useState<StaffUser[]>(cqcCache?.staff ?? [])
-  const [loading, setLoading]       = useState(!cqcCache)
+  const [questions, setQuestions]   = useState<Question[]>([])
+  const [deliveries, setDeliveries] = useState<Delivery[]>([])
+  const [staff, setStaff]           = useState<StaffUser[]>([])
+  const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
+
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<{ questions: Question[]; deliveries: Delivery[]; staff: StaffUser[] }>(`admin-cqc-questions-${userId}`)
+    if (cached) { setQuestions(cached.questions); setDeliveries(cached.deliveries); setStaff(cached.staff); setLoading(false) }
+  }, [userId])
 
   const load = useCallback(async () => {
     if (!token) return
@@ -508,13 +515,13 @@ export default function CqcQuestionsPage() {
       setQuestions(qRes.questions)
       setDeliveries(dRes.deliveries)
       setStaff(staffList)
-      pageCache.set('admin-cqc-questions', { questions: qRes.questions, deliveries: dRes.deliveries, staff: staffList })
+      persistentCache.set(`admin-cqc-questions-${userId}`, { questions: qRes.questions, deliveries: dRes.deliveries, staff: staffList })
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, userId])
 
   useEffect(() => { load() }, [load])
 

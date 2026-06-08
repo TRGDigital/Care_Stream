@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search } from 'lucide-react'
@@ -68,8 +68,9 @@ function sectionColour(name: string): string {
 
 export default function PoliciesPage() {
   const { data: session }           = useSession()
-  const [policies,       setPolicies]       = useState<any[]>(() => pageCache.get<any[]>('admin-policies') ?? [])
-  const [loading,        setLoading]        = useState(() => !pageCache.get('admin-policies'))
+  const userId = session?.user?.email ?? 'guest'
+  const [policies,       setPolicies]       = useState<any[]>([])
+  const [loading,        setLoading]        = useState(true)
   const [tab,            setTab]            = useState<'active' | 'archived'>('active')
   const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
@@ -81,10 +82,15 @@ export default function PoliciesPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     api.policies.list({ limit: '2000' })
-      .then(data => { const list = data?.policies ?? []; setPolicies(list); pageCache.set('admin-policies', list) })
+      .then(data => { const list = data?.policies ?? []; setPolicies(list); persistentCache.set(`admin-policies-${userId}`, list) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }
+
+  useEffect(() => {
+    const cached = persistentCache.get<any[]>(`admin-policies-${userId}`)
+    if (cached) { setPolicies(cached); setLoading(false) }
+  }, [userId])
 
   useEffect(load, [session?.accessToken])
 

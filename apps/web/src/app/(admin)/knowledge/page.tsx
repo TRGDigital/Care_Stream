@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type KnowledgeEntry } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 
 // Lazy-loaded: only fetched when the user opens the "Add entry" dialog.
 const AddEntryModal = dynamic(() => import('@/components/admin/knowledge/add-entry-modal').then(m => m.AddEntryModal), { ssr: false })
@@ -84,22 +84,29 @@ function groupPlatformByCategory(entries: KnowledgeEntry[]): Map<string, Knowled
 
 export default function KnowledgePage() {
   const { data: session }           = useSession()
-  const knowledgeCache = pageCache.get<{ entries: KnowledgeEntry[]; total: number }>('admin-knowledge')
-  const [entries, setEntries]       = useState<KnowledgeEntry[]>(knowledgeCache?.entries ?? [])
-  const [total, setTotal]           = useState(knowledgeCache?.total ?? 0)
-  const [loading, setLoading]       = useState(!knowledgeCache)
+  const userId = session?.user?.email ?? 'guest'
+  const [entries, setEntries]       = useState<KnowledgeEntry[]>([])
+  const [total, setTotal]           = useState(0)
+  const [loading, setLoading]       = useState(true)
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
   const [editId, setEditId]         = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
 
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<{ entries: KnowledgeEntry[]; total: number }>(`admin-knowledge-${userId}`)
+    if (cached) { setEntries(cached.entries); setTotal(cached.total); setLoading(false) }
+  }, [userId])
+
   const load = useCallback(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).knowledge.list({ limit: '500' })
-      .then(data => { setEntries(data.entries); setTotal(data.total); pageCache.set('admin-knowledge', { entries: data.entries, total: data.total }) })
+      .then(data => { setEntries(data.entries); setTotal(data.total); persistentCache.set(`admin-knowledge-${userId}`, { entries: data.entries, total: data.total }) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [session?.accessToken])
+  }, [session?.accessToken, userId])
 
   useEffect(() => { load() }, [load])
 

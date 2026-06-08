@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
@@ -207,14 +207,24 @@ type DashboardCache = {
 
 export default function DashboardPage() {
   const { data: session } = useSession()
-  const cached = pageCache.get<DashboardCache>('admin-dashboard')
-  const [queries,    setQueries]    = useState<any[]>(cached?.queries ?? [])
-  const [chartData,  setChartData]  = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>(cached?.chartData ?? [])
+  const userId = session?.user?.email ?? 'guest'
+  const [queries,    setQueries]    = useState<any[]>([])
+  const [chartData,  setChartData]  = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>([])
   const [chartDays,  setChartDays]  = useState(30)
-  const [loading,    setLoading]    = useState(!cached)
-  const [channels,   setChannels]   = useState(cached?.channels ?? { chat: 0, email: 0, whatsapp: 0, voice: 0 })
-  const [stats,      setStats]      = useState(cached?.stats ?? { activePolicies: '—', staffCount: '—', totalQueries: '—' })
+  const [loading,    setLoading]    = useState(true)
+  const [channels,   setChannels]   = useState({ chat: 0, email: 0, whatsapp: 0, voice: 0 })
+  const [stats,      setStats]      = useState({ activePolicies: '—', staffCount: '—', totalQueries: '—' })
   const [followUp,   setFollowUp]   = useState<{ staff: Array<{ id: string; name: string; job_role: string | null; unreviewed: number }>; summary: { total: number; total_gaps: number } } | null>(null)
+
+  // Hydrate from the persistent (localStorage) cache after mount — never during
+  // render, to avoid an SSR/client hydration mismatch.
+  useEffect(() => {
+    const cached = persistentCache.get<DashboardCache>(`admin-dashboard-${userId}`)
+    if (cached) {
+      setQueries(cached.queries); setChartData(cached.chartData); setChannels(cached.channels); setStats(cached.stats)
+      setLoading(false)
+    }
+  }, [userId])
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -242,7 +252,7 @@ export default function DashboardPage() {
         if (ch) nextChannels = { chat: ch.chat ?? 0, email: ch.email ?? 0, whatsapp: ch.whatsapp ?? 0, voice: ch.voice ?? 0 }
       }
       setStats(nextStats); setQueries(nextQueries); setChartData(nextChart); setChannels(nextChannels)
-      pageCache.set<DashboardCache>('admin-dashboard', { stats: nextStats, queries: nextQueries, chartData: nextChart, channels: nextChannels })
+      persistentCache.set<DashboardCache>(`admin-dashboard-${userId}`, { stats: nextStats, queries: nextQueries, chartData: nextChart, channels: nextChannels })
     }).finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken, chartDays])

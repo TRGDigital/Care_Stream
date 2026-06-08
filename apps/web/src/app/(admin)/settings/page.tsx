@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
@@ -80,55 +80,80 @@ function SettingSection({
 export default function SettingsPage() {
   const { data: session }           = useSession()
   const router                      = useRouter()
-  const settingsCache = pageCache.get<{ data: any; sites: any[]; training: any }>('admin-settings')
-  const cData = settingsCache?.data
-  const [inboundEmail,   setInboundEmail]   = useState(cData?.inbound_email ?? '')
-  const [accountNumber,  setAccountNumber]  = useState(cData?.account_number ?? '')
-  const [allowlist,      setAllowlist]      = useState<string[]>(cData?.email_allowlist ?? [])
-  const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>(cData?.phone_allowlist ?? [])
+  const userId = session?.user?.email ?? 'guest'
+  const [inboundEmail,   setInboundEmail]   = useState('')
+  const [accountNumber,  setAccountNumber]  = useState('')
+  const [allowlist,      setAllowlist]      = useState<string[]>([])
+  const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>([])
   const [newPhone,       setNewPhone]       = useState('')
   const [savingPhone,    setSavingPhone]    = useState(false)
-  const [facilityType,   setFacilityType]   = useState(cData?.facility_type ?? '')
-  const [roomCount,      setRoomCount]      = useState<number>((cData as any)?.room_count ?? 0)
+  const [facilityType,   setFacilityType]   = useState('')
+  const [roomCount,      setRoomCount]      = useState<number>(0)
   const [savingRooms,    setSavingRooms]    = useState(false)
   const [roomsSaved,     setRoomsSaved]     = useState(false)
-  const [logoUrl,        setLogoUrl]        = useState<string | null>(cData?.logo_url ?? null)
+  const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
   const [newEmail,       setNewEmail]       = useState('')
-  const [staffRoles,     setStaffRoles]     = useState<string[]>(cData?.staff_roles ?? [])
+  const [staffRoles,     setStaffRoles]     = useState<string[]>([])
   const [newRole,        setNewRole]        = useState('')
   const [savingRoles,    setSavingRoles]    = useState(false)
-  const [specialistRoles, setSpecialistRoles] = useState<string[]>(cData?.specialist_roles ?? [])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
   const [newSpecialist,   setNewSpecialist]   = useState('')
   const [savingSpecialists, setSavingSpecialists] = useState(false)
-  const [languages,      setLanguages]      = useState<Array<{ code: string; name: string }>>((cData as any)?.languages ?? [])
-  const [defaultLangCodes, setDefaultLangCodes] = useState<string[]>((cData as any)?.default_language_codes ?? [])
+  const [languages,      setLanguages]      = useState<Array<{ code: string; name: string }>>([])
+  const [defaultLangCodes, setDefaultLangCodes] = useState<string[]>([])
   const [newLanguage,    setNewLanguage]    = useState('')
   const [savingLanguage, setSavingLanguage] = useState(false)
   const [languageNote,   setLanguageNote]   = useState('')
-  const [policySections, setPolicySections] = useState<string[]>(cData?.policy_sections ?? [])
+  const [policySections, setPolicySections] = useState<string[]>([])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
-  const [loading,        setLoading]        = useState(!settingsCache)
+  const [loading,        setLoading]        = useState(true)
   const [loadError,      setLoadError]      = useState('')
   const [saving,         setSaving]         = useState(false)
   const [savingFacility, setSavingFacility] = useState(false)
   const [logoUploading,  setLogoUploading]  = useState(false)
   const [logoError,      setLogoError]      = useState('')
-  const [emailPrefs,     setEmailPrefs]     = useState<Record<string, boolean>>(cData?.email_preferences ?? {})
+  const [emailPrefs,     setEmailPrefs]     = useState<Record<string, boolean>>({})
   const [savingPrefKey,  setSavingPrefKey]  = useState<string | null>(null)
   const [error,          setError]          = useState('')
   const [copied,         setCopied]         = useState(false)
-  const [trainingSettings,  setTrainingSettings]  = useState<TrainingSettings>(settingsCache?.training?.settings ?? {})
+  const [trainingSettings,  setTrainingSettings]  = useState<TrainingSettings>({})
   const [savingTraining,    setSavingTraining]    = useState<string | null>(null)
-  const [sites,          setSites]          = useState<any[]>(settingsCache?.sites ?? [])
+  const [sites,          setSites]          = useState<any[]>([])
   const [showAddSite,    setShowAddSite]    = useState(false)
   const [newSiteName,    setNewSiteName]    = useState('')
   const [addingSite,     setAddingSite]     = useState(false)
   const [siteError,      setSiteError]      = useState('')
   const [switchingTo,    setSwitchingTo]    = useState<string | null>(null)
-  const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>(cData?.response_style ?? 'standard')
+  const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>('standard')
   const [savingStyle,    setSavingStyle]    = useState(false)
   const [staffDir,       setStaffDir]       = useState<Array<{ email: string; name: string; job_role: string | null; phone_number?: string | null }>>([])
+
+  // Hydrate instantly from the last-loaded snapshot (survives full reloads).
+  useEffect(() => {
+    const cached = persistentCache.get<{ data: any; sites: any[]; training: any }>(`admin-settings-${userId}`)
+    if (!cached) return
+    const data = cached.data
+    if (data) {
+      setInboundEmail(data.inbound_email ?? '')
+      setAccountNumber(data.account_number ?? '')
+      setAllowlist(data.email_allowlist ?? [])
+      setPhoneAllowlist(data.phone_allowlist ?? [])
+      setFacilityType(data.facility_type ?? '')
+      setRoomCount(data.room_count ?? 0)
+      setLogoUrl(data.logo_url ?? null)
+      setEmailPrefs(data.email_preferences ?? {})
+      setStaffRoles(data.staff_roles ?? [])
+      setSpecialistRoles(data.specialist_roles ?? [])
+      setLanguages(data.languages ?? [])
+      setDefaultLangCodes(data.default_language_codes ?? [])
+      setPolicySections(data.policy_sections ?? [])
+      setResponseStyle(data.response_style ?? 'standard')
+    }
+    setSites(cached.sites ?? [])
+    setTrainingSettings(cached.training?.settings ?? {})
+    setLoading(false)
+  }, [userId])
 
   // Staff directory — used to label approved-sender / WhatsApp entries with the
   // staff member's name + role for quick admin reference.
@@ -169,7 +194,7 @@ export default function SettingsPage() {
         setResponseStyle((data as any).response_style ?? 'standard')
         setSites(sitesData.sites)
         setTrainingSettings(trainingData.settings ?? {})
-        pageCache.set('admin-settings', { data, sites: sitesData.sites, training: trainingData })
+        persistentCache.set(`admin-settings-${userId}`, { data, sites: sitesData.sites, training: trainingData })
       })
       .catch((e: any) => setLoadError(e.message ?? 'Failed to load settings'))
       .finally(() => setLoading(false))

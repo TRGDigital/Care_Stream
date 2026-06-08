@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
@@ -169,12 +169,12 @@ function ActionMenu({
 
 export default function StaffPage() {
   const { data: session }              = useSession()
-  const staffCache = pageCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[] }>('admin-staff')
-  const [users,        setUsers]       = useState<any[]>(staffCache?.users ?? [])
-  const [staffRoles,   setStaffRoles]  = useState<string[]>(staffCache?.staffRoles ?? [])
-  const [specialistRoles, setSpecialistRoles] = useState<string[]>(staffCache?.specialistRoles ?? [])
-  const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(staffCache?.languages ?? LANGUAGES)
-  const [loading,      setLoading]     = useState(!staffCache)
+  const userId = session?.user?.email ?? 'guest'
+  const [users,        setUsers]       = useState<any[]>([])
+  const [staffRoles,   setStaffRoles]  = useState<string[]>([])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
+  const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(LANGUAGES)
+  const [loading,      setLoading]     = useState(true)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showInactive, setShowInactive] = useState(false)
   const [editUser,     setEditUser]    = useState<any | null>(null)
@@ -191,11 +191,22 @@ export default function StaffPage() {
         const specialists = (settings as any).specialist_roles ?? []
         const langs = (settings as any).languages ?? LANGUAGES
         setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists); setLanguages(langs)
-        pageCache.set('admin-staff', { users: list, staffRoles: roles, specialistRoles: specialists, languages: langs })
+        persistentCache.set(`admin-staff-${userId}`, { users: list, staffRoles: roles, specialistRoles: specialists, languages: langs })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }
+
+  useEffect(() => {
+    const cached = persistentCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[] }>(`admin-staff-${userId}`)
+    if (cached) {
+      setUsers(cached.users)
+      setStaffRoles(cached.staffRoles)
+      setSpecialistRoles(cached.specialistRoles)
+      setLanguages(cached.languages ?? LANGUAGES)
+      setLoading(false)
+    }
+  }, [userId])
 
   useEffect(load, [session?.accessToken])
 

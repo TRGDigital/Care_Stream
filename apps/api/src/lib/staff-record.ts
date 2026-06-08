@@ -38,7 +38,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
       include: {
-        module:  { select: { id: true, name: true, category: true, questions: true, source: true, requires_practical: true, frequency: true, pass_mark: true, duration_minutes: true, cpd_accredited: true } },
+        module:  { select: { id: true, name: true, category: true, questions: true, source: true, requires_practical: true, frequency: true, pass_mark: true, duration_minutes: true, cpd_accredited: true, independently_reviewed: true } },
         answers: { select: { is_correct: true, answered_at: true, question_text: true } },
       },
       orderBy: { created_at: 'asc' },
@@ -75,6 +75,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       practical_signed: !!e.practical_signed, practical_signed_by: e.practical_signed_by ?? null, practical_signed_at: e.practical_signed_at ?? null, practical_note: e.practical_note ?? null,
       cpd_accredited: !!e.module?.cpd_accredited,
       cpd_hours: e.module?.duration_minutes ? Math.round((e.module.duration_minutes / 60) * 10) / 10 : null,
+      independently_reviewed: !!e.module?.independently_reviewed,
     }
   })
   const training       = allTrainingItems.filter(t => t.source !== 'ai_generated')

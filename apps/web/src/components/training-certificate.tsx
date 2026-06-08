@@ -2,7 +2,7 @@
 // admin staff record. Keeps the `.cert-sheet` class so the print CSS in
 // globals.css can isolate + colour-print just the certificate.
 
-import { Award } from 'lucide-react'
+import { Award, ShieldCheck } from 'lucide-react'
 
 function fmt(d?: string | null): string {
   if (!d) return '—'
@@ -22,11 +22,12 @@ export type TrainingCertificateProps = {
   cpdAccredited?:    boolean
   cpdHours?:         number | null
   cpdProviderNumber?: string | null
+  independentlyReviewed?: boolean
 }
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
-  cpdAccredited, cpdHours, cpdProviderNumber,
+  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed,
 }: TrainingCertificateProps) {
   return (
     <div className="cert-sheet relative overflow-hidden rounded-2xl border border-teal/20 bg-white shadow-card">
@@ -52,6 +53,11 @@ export function TrainingCertificate({
 
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal">Certificate of Completion</p>
         <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-neutral-mid">Knowledge Assessment</p>
+        {independentlyReviewed && (
+          <span className="mx-auto mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal-light/40 px-3 py-1 text-[11px] font-semibold text-teal-dark">
+            <ShieldCheck size={13} className="text-teal" /> Independently reviewed content
+          </span>
+        )}
 
         <p className="mt-7 text-sm text-neutral-mid">This certifies that</p>
         <p className="mt-1 font-serif text-3xl font-bold text-neutral-dark">{staffName}</p>

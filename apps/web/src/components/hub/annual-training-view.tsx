@@ -419,6 +419,7 @@ function CertView({ token, id, onExit }: { token: string; id: string; onExit: ()
           cpdAccredited={c.cpd?.accredited}
           cpdHours={c.cpd?.hours}
           cpdProviderNumber={c.cpd?.provider_number}
+          independentlyReviewed={c.independently_reviewed}
         />
       </div>
     </div>

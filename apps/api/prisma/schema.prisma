@@ -801,6 +801,7 @@ model TrainingModule {
   attested_at         DateTime?
   standards           Json?                                         // mapped external standards [{ framework, code, label }]
   cpd_accredited      Boolean                   @default(false)     // CPD-certified → certificate shows CPD branding + hours
+  independently_reviewed Boolean                @default(false)     // published via external specialist review → 'Independently reviewed' cert tag
   created_at          DateTime                  @default(now())
   tenant              Tenant?                   @relation(fields: [tenant_id], references: [id])
   enrollments         TrainingEnrollment[]

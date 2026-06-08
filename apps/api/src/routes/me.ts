@@ -413,7 +413,7 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
   const [enr, tenant, user] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { name: true, requires_practical: true, frequency: true, questions: true, duration_minutes: true, cpd_accredited: true } }, answers: { select: { question_id: true, is_correct: true } } },
+      include: { module: { select: { name: true, requires_practical: true, frequency: true, questions: true, duration_minutes: true, cpd_accredited: true, independently_reviewed: true } }, answers: { select: { question_id: true, is_correct: true } } },
     }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }),
@@ -427,6 +427,7 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
     staff_name: user?.name ?? '', module_name: enr.module.name, org_name: tenant?.name ?? '', logo_url: tenant?.logo_url ?? null,
     completed_at: enr.completed_at, expires_at: enr.expires_at, frequency: enr.module.frequency,
     requires_practical: enr.module.requires_practical, score: total ? Math.round((correct / total) * 100) : 0,
+    independently_reviewed: !!enr.module.independently_reviewed,
     cpd: { accredited: !!enr.module.cpd_accredited, hours: cpdHours, provider_number: process.env.CPD_PROVIDER_NUMBER ?? null },
   })
 })

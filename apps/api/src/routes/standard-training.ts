@@ -114,7 +114,7 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
       questions: draft.questions,
       is_annual: !['once', 'adhoc'].includes(topic.default_frequency),
       source: 'ai_generated', approved: false, approved_at: null, approved_by: null,
-      attested_by_name: null, attested_by_role: null, attested_at: null,
+      attested_by_name: null, attested_by_role: null, attested_at: null, independently_reviewed: false,
       learning_content: draft.learning_content,
       requires_practical: !!topic.requires_practical,
       frequency: topic.default_frequency,
@@ -209,7 +209,7 @@ standardTrainingRouter.post('/modules/:id/regenerate-questions', async (req: Req
         questions: draft.questions,
         questions_version: { increment: 1 },
         approved: false, approved_at: null, approved_by: null,
-        attested_by_name: null, attested_by_role: null, attested_at: null,
+        attested_by_name: null, attested_by_role: null, attested_at: null, independently_reviewed: false,
       },
     })
     ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) }, generated: draft.questions.length, avoided: texts.length })
@@ -261,7 +261,7 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
   if (!approve) {
     const updated = await (prisma as any).trainingModule.update({
       where: { id: module.id },
-      data:  { approved: false, approved_at: null, approved_by: null, attested_by_name: null, attested_by_role: null, attested_at: null },
+      data:  { approved: false, approved_at: null, approved_by: null, attested_by_name: null, attested_by_role: null, attested_at: null, independently_reviewed: false },
     })
     ok(res, { module: updated }); return
   }
@@ -273,7 +273,7 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
     return
   }
 
-  let name: string, role: string, attestedAt = new Date()
+  let name: string, role: string, attestedAt = new Date(), independent = false
 
   // Option A — cite an external reviewer's approval (independent sign-off).
   if (req.body?.external_link_id) {
@@ -283,6 +283,7 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
     name = String(link.reviewer_name ?? '').trim()
     role = `${String(link.reviewer_role ?? '').trim()}${link.reviewer_org ? `, ${link.reviewer_org}` : ''} (external review)`
     attestedAt = link.decided_at ?? new Date()
+    independent = true
   } else {
     // Option B — internal named attestation.
     name = String(req.body?.reviewer_name ?? '').trim()
@@ -295,6 +296,7 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
     data:  {
       approved: true, approved_at: new Date(), approved_by: name,
       attested_by_name: name, attested_by_role: role, attested_at: attestedAt,
+      independently_reviewed: independent,
     },
   })
   ok(res, { module: updated })

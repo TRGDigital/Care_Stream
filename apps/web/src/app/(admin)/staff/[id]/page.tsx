@@ -673,6 +673,7 @@ export default function StaffRecordPage() {
               cpdAccredited={certItem.cpd_accredited}
               cpdHours={certItem.cpd_hours}
               cpdProviderNumber={rec.cpd_provider_number}
+              independentlyReviewed={certItem.independently_reviewed}
             />
           </div>
         </div>

@@ -221,13 +221,15 @@ async function ensureTenantModules(tenantId: string): Promise<void> {
   })
 }
 
-// GET /training/modules — list this tenant's active modules (cloning from templates on first access)
+// GET /training/modules — list this tenant's active LEGACY question modules (the
+// adhoc question sets for "My Training"). AI annual modules (source='ai_generated')
+// are excluded — they belong only to the separate Annual Training system.
 trainingRouter.get('/modules', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
     await ensureTenantModules(tenantId)
     const modules = await (prisma as any).trainingModule.findMany({
-      where:   { tenant_id: tenantId, is_active: true },
+      where:   { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } },
       orderBy: { sort_order: 'asc' },
     })
     ok(res, { modules })

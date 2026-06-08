@@ -201,5 +201,13 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><p className="mb-2 text-sm font-semibold text-teal-dark">{title}</p>{children}</div>
 }
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-neutral-light px-4 py-8">{children}</div>
+  return (
+    <div className="min-h-screen bg-neutral-light px-4 py-8">
+      <div className="mx-auto mb-6 flex max-w-3xl items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-color.png" alt="CareStream" className="h-9 w-auto object-contain" />
+      </div>
+      {children}
+    </div>
+  )
 }

@@ -86,6 +86,7 @@ export default function StandardTrainingPage() {
                             {m.attested_by_name ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Attested · {m.attested_by_name}</span> : null}
                             {m.standards_count > 0 ? <span>· {m.standards_count} standards</span> : null}
                             {m.qa_hard_fails > 0 ? <span className="flex items-center gap-0.5 text-red-500"><ShieldAlert size={11} /> {m.qa_hard_fails} QA issue{m.qa_hard_fails === 1 ? '' : 's'}</span> : null}
+                            {m.review_status === 'changes_requested' ? <span className="flex items-center gap-0.5 font-semibold text-amber-600"><AlertTriangle size={11} /> Reviewer changes ({m.review_changes_open} open)</span> : m.review_status === 'approved' ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Externally approved</span> : m.review_status === 'pending' ? <span className="flex items-center gap-0.5 text-blue-600"><History size={11} /> Awaiting review</span> : null}
                           </p>
                         )}
                       </div>
@@ -228,6 +229,21 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-neutral-mid">Standard library · shared to all tenants</span>
       </div>
+
+      {/* Open external-review change requests — surfaced prominently */}
+      {(() => {
+        const open = reviewLinks.flatMap((l: any) => (Array.isArray(l.item_feedback) ? l.item_feedback : []).filter((it: any) => it.status === 'changes_requested' && !it.resolved))
+        if (!open.length) return null
+        return (
+          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3">
+            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-amber-700"><AlertTriangle size={15} /> {open.length} change{open.length === 1 ? '' : 's'} requested by your external reviewer</p>
+            <ul className="space-y-1 text-xs text-amber-800">
+              {open.map((it: any, i: number) => <li key={i}><strong>{it.label}:</strong> {it.note || '(no detail)'}</li>)}
+            </ul>
+            <p className="mt-1.5 text-[11px] text-amber-600">Action each one, then tick it off under <strong>CPD governance → Independent external review</strong> below.</p>
+          </div>
+        )
+      })()}
 
       {/* Tracking & question history */}
       <div className={`mb-4 rounded-xl border p-4 ${hist?.review_due ? 'border-amber-200 bg-amber-50/50' : 'border-gray-200 bg-white'}`}>

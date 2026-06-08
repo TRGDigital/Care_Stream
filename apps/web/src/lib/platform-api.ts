@@ -406,7 +406,7 @@ export function createPlatformClient(token: string) {
     standardTraining: {
       catalogue: () => adminFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; duration_minutes: number | null; question_count: number; illustration_url: string | null; standards_count: number; attested_by_name: string | null; attested_at: string | null; qa_hard_fails: number; qa_warnings: number } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; duration_minutes: number | null; question_count: number; illustration_url: string | null; standards_count: number; attested_by_name: string | null; attested_at: string | null; qa_hard_fails: number; qa_warnings: number; review_status: string | null; review_changes_open: number } }>
       }>('/standard-training', token),
       generate: (topicId: string) => adminFetch<{ module: any }>('/standard-training/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       moduleFull: (id: string) => adminFetch<{

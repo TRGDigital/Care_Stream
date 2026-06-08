@@ -60,6 +60,21 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
         select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true },
       }),
     ])
+    // Latest external review status per module (so the catalogue can flag reviewer changes).
+    const moduleIds = (modules as any[]).map(m => m.id)
+    const reviewByModule = new Map<string, any>()
+    if (moduleIds.length) {
+      const links = await (prisma as any).moduleReviewLink.findMany({
+        where: { module_id: { in: moduleIds }, status: { not: 'revoked' } },
+        orderBy: { created_at: 'desc' },
+        select: { module_id: true, status: true, item_feedback: true },
+      }).catch(() => [])
+      for (const l of (links as any[])) {
+        if (reviewByModule.has(l.module_id)) continue // first = latest
+        const open = (Array.isArray(l.item_feedback) ? l.item_feedback : []).filter((it: any) => it.status === 'changes_requested' && !it.resolved).length
+        reviewByModule.set(l.module_id, { review_status: l.status, review_changes_open: open })
+      }
+    }
     const byTopic = new Map<string, any>()
     for (const m of (modules as any[])) {
       if (!m.topic_id) continue
@@ -72,6 +87,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
         standards_count: Array.isArray(m.standards) ? m.standards.length : 0,
         attested_by_name: m.attested_by_name, attested_at: m.attested_at,
         qa_hard_fails: qa.hard_fails, qa_warnings: qa.warnings,
+        ...(reviewByModule.get(m.id) ?? { review_status: null, review_changes_open: 0 }),
       })
     }
     ok(res, { groups: TOPIC_GROUP_LABELS, topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })) })

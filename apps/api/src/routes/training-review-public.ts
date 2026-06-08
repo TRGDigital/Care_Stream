@@ -36,6 +36,7 @@ publicTrainingReviewRouter.post('/:token/unlock', async (req: Request, res: Resp
     decision: link.decision ?? null,
     reviewer_name: link.reviewer_name ?? null,
     decided_at: link.decided_at ?? null,
+    item_feedback: link.item_feedback ?? [],
   })
 })
 
@@ -49,11 +50,19 @@ publicTrainingReviewRouter.post('/:token/decision', async (req: Request, res: Re
   }
   if (link.status !== 'pending') { err(res, 'ALREADY_DECIDED', 'This review has already been completed.', 409); return }
 
-  const decision = req.body?.decision === 'approved' ? 'approved' : req.body?.decision === 'changes_requested' ? 'changes_requested' : null
   const name = String(req.body?.reviewer_name ?? '').trim()
   const role = String(req.body?.reviewer_role ?? '').trim()
-  if (!decision) { err(res, 'VALIDATION', 'A decision is required.', 400); return }
   if (!name || !role) { err(res, 'VALIDATION', 'Your name and role are required.', 400); return }
+
+  // Per-item sign-off (sections + questions). Any item needing changes → overall changes_requested.
+  const rawItems = Array.isArray(req.body?.item_feedback) ? req.body.item_feedback : []
+  const item_feedback = rawItems
+    .filter((it: any) => typeof it?.ref === 'string' && (it.status === 'approved' || it.status === 'changes_requested'))
+    .slice(0, 200)
+    .map((it: any) => ({ ref: String(it.ref), label: String(it.label ?? it.ref).slice(0, 160), status: it.status, note: String(it.note ?? '').slice(0, 2000), resolved: false }))
+  const anyChanges = item_feedback.some((it: any) => it.status === 'changes_requested')
+
+  const decision = anyChanges ? 'changes_requested' : (req.body?.decision === 'changes_requested' ? 'changes_requested' : 'approved')
 
   await (prisma as any).moduleReviewLink.update({
     where: { id: link.id },
@@ -63,6 +72,7 @@ publicTrainingReviewRouter.post('/:token/decision', async (req: Request, res: Re
       reviewer_org: String(req.body?.reviewer_org ?? '').trim() || null,
       reviewer_email: String(req.body?.reviewer_email ?? '').trim() || null,
       comments: String(req.body?.comments ?? '').slice(0, 4000) || null,
+      item_feedback,
       decided_at: new Date(),
     },
   })

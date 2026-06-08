@@ -831,6 +831,7 @@ model ModuleReviewLink {
   decision       String?
   comments       String?
   decided_at     DateTime?
+  item_feedback  Json?                                             // per-section/per-question sign-off [{ ref, label, status, note, resolved }]
 
   @@index([module_id])
   @@map("module_review_links")

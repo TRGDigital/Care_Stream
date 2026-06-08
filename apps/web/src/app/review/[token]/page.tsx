@@ -66,16 +66,20 @@ function Reviewer({ token, password, data }: { token: string; password: string; 
   const [email, setEmail] = useState('')
   const [comments, setComments] = useState('')
   const [confirm1, setConfirm1] = useState(false)
-  const [decision, setDecision] = useState<'approved' | 'changes_requested' | null>(null)
+  const [itemFb, setItemFb] = useState<Record<string, { status: 'approved' | 'changes_requested'; note: string; label: string }>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  async function submit() {
-    if (!decision) return
-    if (decision === 'approved' && (!name.trim() || !role.trim() || !confirm1)) { setError('Please add your name, role and confirm the statement.'); return }
-    if (decision === 'changes_requested' && (!name.trim() || !comments.trim())) { setError('Please add your name and describe the changes needed.'); return }
+  const changeItems = Object.values(itemFb).filter(v => v.status === 'changes_requested')
+  const anyChange = changeItems.length > 0
+
+  async function submit(decision: 'approved' | 'changes_requested') {
+    if (!name.trim() || !role.trim()) { setError('Please add your name and role.'); return }
+    if (decision === 'approved' && !confirm1) { setError('Please confirm the statement to approve.'); return }
+    if (decision === 'changes_requested' && !anyChange && !comments.trim()) { setError('Flag the section(s)/question(s) that need changes, or add an overall comment.'); return }
+    const item_feedback = Object.entries(itemFb).map(([ref, v]) => ({ ref, label: v.label, status: v.status, note: v.note }))
     setBusy(true); setError('')
-    try { await post(`/${token}/decision`, { password, decision, reviewer_name: name.trim(), reviewer_role: role.trim(), reviewer_org: org.trim(), reviewer_email: email.trim(), comments: comments.trim() }); setDecided(true) }
+    try { await post(`/${token}/decision`, { password, decision, reviewer_name: name.trim(), reviewer_role: role.trim(), reviewer_org: org.trim(), reviewer_email: email.trim(), comments: comments.trim(), item_feedback }); setDecided(true) }
     catch (e: any) { setError(e.message) } finally { setBusy(false) }
   }
 
@@ -115,15 +119,17 @@ function Reviewer({ token, password, data }: { token: string; password: string; 
                 <ul className="mt-1 space-y-0.5">{(sec.check.options ?? []).map((o: string, oi: number) => <li key={oi} className={oi === sec.check.correct ? 'font-medium text-green-600' : 'text-neutral-mid'}>{oi === sec.check.correct ? '✓ ' : '• '}{o}</li>)}</ul>
               </div>
             )}
+            {!decided && <ItemReview refId={`section:${i}`} label={`Section ${i + 1}: ${sec.heading || ''}`} fb={itemFb} setFb={setItemFb} />}
           </Card>
         ))}
 
         <Card title={`Assessment questions (${questions.length})`}>
           <div className="space-y-3">
             {questions.map((q, qi) => (
-              <div key={qi} className="text-sm">
+              <div key={qi} className="border-b border-gray-50 pb-3 text-sm last:border-0">
                 <p className="font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
                 <ul className="mt-1 space-y-0.5">{(q.options ?? []).map((o: string, oi: number) => <li key={oi} className={oi === q.correct ? 'font-medium text-green-600' : 'text-neutral-mid'}>{oi === q.correct ? '✓ ' : '• '}{o}</li>)}</ul>
+                {!decided && <ItemReview refId={`question:${qi}`} label={`Question ${qi + 1}`} fb={itemFb} setFb={setItemFb} />}
               </div>
             ))}
           </div>
@@ -152,11 +158,12 @@ function Reviewer({ token, password, data }: { token: string; password: string; 
             <div className="mt-3">
               <Field label="Comments (required if requesting changes)"><textarea value={comments} onChange={e => setComments(e.target.value)} rows={3} className={INPUT} /></Field>
             </div>
+            {anyChange && <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs font-medium text-amber-700">You&apos;ve requested changes on {changeItems.length} item{changeItems.length === 1 ? '' : 's'} — submit with &ldquo;Request changes&rdquo;.</p>}
             <label className="mt-3 flex items-start gap-2 text-xs text-neutral-dark"><input type="checkbox" checked={confirm1} onChange={e => setConfirm1(e.target.checked)} className="mt-0.5 accent-teal" /> I confirm I have reviewed this module and that the content is accurate, safe and appropriate for the stated learning outcomes.</label>
             {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
             <div className="mt-4 flex flex-wrap gap-2">
-              <button onClick={() => { setDecision('approved'); setTimeout(submit, 0) }} disabled={busy} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} Approve</button>
-              <button onClick={() => { setDecision('changes_requested'); setTimeout(submit, 0) }} disabled={busy} className="flex items-center gap-1.5 rounded-lg border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-50 disabled:opacity-50"><AlertTriangle size={14} /> Request changes</button>
+              <button onClick={() => submit('approved')} disabled={busy || anyChange} title={anyChange ? 'You have items flagged for change' : ''} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} Approve</button>
+              <button onClick={() => submit('changes_requested')} disabled={busy} className="flex items-center gap-1.5 rounded-lg border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-50 disabled:opacity-50"><AlertTriangle size={14} /> Request changes</button>
             </div>
           </div>
         )}
@@ -168,6 +175,25 @@ function Reviewer({ token, password, data }: { token: string; password: string; 
 }
 
 const INPUT = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal'
+
+// Per-item Approve / Request-change control shown under each section and question.
+function ItemReview({ refId, label, fb, setFb }: { refId: string; label: string; fb: Record<string, any>; setFb: (fn: (p: any) => any) => void }) {
+  const cur = fb[refId]
+  const set = (status: 'approved' | 'changes_requested') => setFb(p => ({ ...p, [refId]: { status, note: p[refId]?.note ?? '', label } }))
+  return (
+    <div className="mt-2.5 border-t border-gray-100 pt-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[11px] text-neutral-mid">Your review:</span>
+        <button onClick={() => set('approved')} className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${cur?.status === 'approved' ? 'bg-green-500 text-white' : 'bg-gray-100 text-neutral-mid hover:bg-gray-200'}`}>✓ Approve</button>
+        <button onClick={() => set('changes_requested')} className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${cur?.status === 'changes_requested' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-neutral-mid hover:bg-gray-200'}`}>✎ Request change</button>
+      </div>
+      {cur?.status === 'changes_requested' && (
+        <textarea value={cur.note} onChange={e => setFb(p => ({ ...p, [refId]: { ...p[refId], note: e.target.value } }))} rows={2} placeholder="Describe the change needed…" className="mt-1.5 w-full rounded-lg border border-amber-300 bg-amber-50/40 px-3 py-2 text-sm outline-none focus:border-amber-400" />
+      )}
+    </div>
+  )
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block"><span className="mb-1 block text-xs font-medium text-neutral-mid">{label}</span>{children}</label>
 }

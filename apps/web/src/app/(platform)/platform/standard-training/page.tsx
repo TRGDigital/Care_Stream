@@ -113,6 +113,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [reviewLinks, setReviewLinks] = useState<any[]>([])
   const [newLink, setNewLink] = useState<any>(null)
   const [creatingLink, setCreatingLink] = useState(false)
+  const [copied, setCopied] = useState<'link' | 'password' | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -169,6 +170,10 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     if (!confirm('Revoke this review link? The reviewer will no longer be able to open it.')) return
     try { await api.standardTraining.revokeReviewLink(linkId); load() } catch { /* ignore */ }
   }
+  async function resolveItem(linkId: string, ref: string, resolved: boolean) {
+    setReviewLinks(links => links.map(l => l.id === linkId ? { ...l, item_feedback: (l.item_feedback ?? []).map((it: any) => it.ref === ref ? { ...it, resolved } : it) } : l))
+    try { await api.standardTraining.resolveReviewItem(linkId, ref, resolved) } catch { load() }
+  }
   async function publishExternal(linkId: string) {
     if (!confirm('Publish this module to all tenants, citing the external reviewer\'s approval?')) return
     setSaving(true)
@@ -176,6 +181,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch (e: any) { alert(e?.message ?? 'Could not publish.') } finally { setSaving(false) }
   }
   function reviewUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : ''}/review/${token}` }
+  function copy(which: 'link' | 'password', text: string) { navigator.clipboard?.writeText(text); setCopied(which); setTimeout(() => setCopied(c => c === which ? null : c), 1500) }
   function toggleStandard(framework: string, code: string, label: string) {
     const cur: any[] = Array.isArray(m.standards) ? m.standards : []
     const exists = cur.some(s => s.framework === framework && s.code === code)
@@ -206,6 +212,18 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   return (
     <div className="mx-auto max-w-3xl pb-16">
       <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Standard Training</button>
+
+      {/* Sticky action bar — act on the module without scrolling to the bottom */}
+      <div className="sticky top-0 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
+        <button onClick={save} disabled={saving} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{saving ? 'Saving…' : 'Save draft'}</button>
+        {!m.approved
+          ? <button onClick={openAttest} disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><ShieldCheck size={14} /> Attest &amp; publish</button>
+          : <button onClick={unpublish} disabled={saving} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-mid hover:border-amber-300 hover:text-amber-600">Unpublish</button>}
+        <button onClick={regenerate} disabled={regenerating} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">{regenerating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Rebuild</button>
+        <button onClick={() => setSpecOpen(true)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal"><FileText size={13} /> Course spec</button>
+        {savedNote && <span className="text-sm font-medium text-green-600">{savedNote}</span>}
+      </div>
+
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-neutral-mid">Standard library · shared to all tenants</span>
@@ -391,11 +409,11 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
               <p className="mb-2 text-xs font-semibold text-teal-dark">Link created — share the link and password <strong>separately</strong> with your reviewer:</p>
               <div className="mb-1.5 flex items-center gap-2">
                 <input readOnly value={reviewUrl(newLink.token)} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px]" />
-                <button onClick={() => navigator.clipboard?.writeText(reviewUrl(newLink.token))} className="rounded-md bg-teal px-2 py-1 text-[11px] font-medium text-white">Copy link</button>
+                <button onClick={() => copy('link', reviewUrl(newLink.token))} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-white transition-colors ${copied === 'link' ? 'bg-green-500' : 'bg-teal'}`}>{copied === 'link' ? <><CheckCircle2 size={11} /> Copied</> : 'Copy link'}</button>
               </div>
               <div className="flex items-center gap-2">
                 <input readOnly value={newLink.password} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-mono tracking-wider" />
-                <button onClick={() => navigator.clipboard?.writeText(newLink.password)} className="rounded-md bg-teal px-2 py-1 text-[11px] font-medium text-white">Copy password</button>
+                <button onClick={() => copy('password', newLink.password)} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-white transition-colors ${copied === 'password' ? 'bg-green-500' : 'bg-teal'}`}>{copied === 'password' ? <><CheckCircle2 size={11} /> Copied</> : 'Copy password'}</button>
               </div>
               <p className="mt-1.5 text-[10px] text-gray-400">The password is shown once. It can&apos;t be recovered — note it now.</p>
             </div>
@@ -413,6 +431,19 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
                   </div>
                   {l.reviewer_name && <p className="mt-1 text-neutral-dark">{l.decision === 'approved' ? 'Approved' : 'Reviewed'} by <strong>{l.reviewer_name}</strong>{l.reviewer_role ? `, ${l.reviewer_role}` : ''}{l.reviewer_org ? ` (${l.reviewer_org})` : ''}{l.decided_at ? ` · ${fmtDate(l.decided_at)}` : ''}</p>}
                   {l.comments && <p className="mt-1 rounded bg-neutral-light/60 p-1.5 text-neutral-mid">&ldquo;{l.comments}&rdquo;</p>}
+                  {Array.isArray(l.item_feedback) && l.item_feedback.filter((it: any) => it.status === 'changes_requested').length > 0 && (
+                    <div className="mt-2">
+                      <p className="mb-1 text-[11px] font-semibold text-amber-600">Changes requested ({l.item_feedback.filter((it: any) => it.status === 'changes_requested' && !it.resolved).length} open):</p>
+                      <div className="space-y-1">
+                        {l.item_feedback.filter((it: any) => it.status === 'changes_requested').map((it: any) => (
+                          <div key={it.ref} className={`flex items-start gap-2 rounded border p-1.5 ${it.resolved ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-amber-200 bg-amber-50/50'}`}>
+                            <input type="checkbox" checked={!!it.resolved} onChange={e => resolveItem(l.id, it.ref, e.target.checked)} className="mt-0.5 accent-teal" title="Mark addressed" />
+                            <span className={it.resolved ? 'line-through' : ''}><span className="font-medium text-neutral-dark">{it.label}:</span> <span className="text-neutral-mid">{it.note || '(no detail)'}</span></span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {l.stale && l.status === 'approved' && <p className="mt-1 flex items-center gap-1 text-amber-600"><AlertTriangle size={11} /> Content changed since this approval — send a fresh link.</p>}
                   <div className="mt-1.5 flex gap-2">
                     {l.status === 'approved' && !l.stale && !m.approved && <button onClick={() => publishExternal(l.id)} disabled={saving} className="rounded-md bg-teal px-2 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark disabled:opacity-50">Publish citing this approval</button>}
@@ -423,16 +454,6 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
             </div>
           )}
         </div>
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
-        <button onClick={save} disabled={saving} className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{saving ? 'Saving…' : 'Save draft'}</button>
-        {!m.approved
-          ? <button onClick={openAttest} disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><ShieldCheck size={14} /> Attest &amp; publish</button>
-          : <button onClick={unpublish} disabled={saving} className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-amber-300 hover:text-amber-600">Unpublish</button>}
-        <button onClick={regenerate} disabled={regenerating} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">{regenerating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Rebuild whole module</button>
-        <button onClick={() => setSpecOpen(true)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal"><FileText size={13} /> Course spec</button>
-        {savedNote && <span className="text-sm font-medium text-green-600">{savedNote}</span>}
       </div>
 
       {specOpen && <CourseSpecification m={m} qa={qa} onClose={() => setSpecOpen(false)} />}

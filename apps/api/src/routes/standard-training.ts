@@ -148,7 +148,7 @@ standardTrainingRouter.get('/modules/:id/full', async (req: Request, res: Respon
     review_links: await (async () => {
       const links = await (prisma as any).moduleReviewLink.findMany({
         where: { module_id: module.id }, orderBy: { created_at: 'desc' },
-        select: { id: true, status: true, created_at: true, expires_at: true, reviewer_name: true, reviewer_role: true, reviewer_org: true, decision: true, comments: true, decided_at: true, content_hash: true },
+        select: { id: true, status: true, created_at: true, expires_at: true, reviewer_name: true, reviewer_role: true, reviewer_org: true, decision: true, comments: true, decided_at: true, content_hash: true, item_feedback: true },
       }).catch(() => [])
       const currentHash = contentHash(module)
       return (links as any[]).map(l => ({ ...l, stale: l.content_hash !== currentHash, content_hash: undefined }))
@@ -324,4 +324,16 @@ standardTrainingRouter.get('/modules/:id/review-links', async (req: Request, res
 standardTrainingRouter.post('/review-links/:linkId/revoke', async (req: Request, res: Response) => {
   await (prisma as any).moduleReviewLink.updateMany({ where: { id: req.params.linkId }, data: { status: 'revoked' } })
   ok(res, { revoked: true })
+})
+
+// POST /admin/standard-training/review-links/:linkId/resolve — mark one change request
+// addressed (or not). { ref, resolved }. Tracks which reviewer changes have been actioned.
+standardTrainingRouter.post('/review-links/:linkId/resolve', async (req: Request, res: Response) => {
+  const link = await (prisma as any).moduleReviewLink.findUnique({ where: { id: req.params.linkId } })
+  if (!link) { err(res, 'NOT_FOUND', 'Link not found', 404); return }
+  const ref = String(req.body?.ref ?? '')
+  const resolved = req.body?.resolved !== false
+  const items = (Array.isArray(link.item_feedback) ? link.item_feedback : []).map((it: any) => it.ref === ref ? { ...it, resolved } : it)
+  await (prisma as any).moduleReviewLink.update({ where: { id: link.id }, data: { item_feedback: items } })
+  ok(res, { item_feedback: items })
 })

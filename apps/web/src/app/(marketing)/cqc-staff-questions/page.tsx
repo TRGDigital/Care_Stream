@@ -1,21 +1,22 @@
 import Link from 'next/link'
 import {
-  CheckCircle2, MessageSquare, BarChart2,
-  ShieldCheck, Users, Brain, Zap, Bell, AlertTriangle, FileText, ClipboardList, Target,
+  CheckCircle2, BarChart2,
+  ShieldCheck, Users, Brain, RefreshCw, PenLine, Gauge, Sparkles,
+  ClipboardList, Target,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
   title:       'CQC Staff Preparation Questions | CareStreamAI',
-  description: 'Prepare your care staff to answer CQC inspector questions with confidence. CareStreamAI delivers practice questions aligned to the five key lines of enquiry through WhatsApp, email, and chat.',
+  description: 'Prepare your care staff to answer CQC inspector questions with confidence. CareStream sends open-ended, inspector-style questions in the hub, scores each free-text answer with AI feedback, and lets staff review the model answer and try again.',
   openGraph: {
     title: 'CQC Staff Preparation Questions | CareStreamAI',
-    description: 'Practice CQC inspector questions aligned to the five key lines of enquiry — delivered via WhatsApp, email, and chat.',
+    description: 'Open-ended, inspector-style practice questions across the five key lines of enquiry, AI-scored with feedback, completed in the CareStream hub.',
     url: 'https://carestreamai.com/cqc-staff-questions',
   },
 }
 
-// ── CQC Readiness Score Card ──────────────────────────────────────────────────
+// ── CQC Prep Dashboard Card ───────────────────────────────────────────────────
 
 function CQCReadinessMockup() {
   const categories = [
@@ -30,20 +31,20 @@ function CQCReadinessMockup() {
       <div className="bg-teal px-5 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">CQC Staff Readiness</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">CQC Staff Prep</p>
             <p className="text-sm font-bold text-white">Crossways Care Home</p>
           </div>
           <div className="rounded-xl bg-white/20 px-3 py-2 text-center">
-            <p className="text-lg font-extrabold leading-none text-white">78%</p>
-            <p className="mt-0.5 text-[9px] font-medium text-white/70">prepared</p>
+            <p className="text-lg font-extrabold leading-none text-white">82</p>
+            <p className="mt-0.5 text-[9px] font-medium text-white/70">avg score</p>
           </div>
         </div>
       </div>
       <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-gray-50">
         {[
-          { label: 'Confident',   value: '19', color: 'text-green-600' },
-          { label: 'Developing',  value: '6',  color: 'text-amber-500' },
-          { label: 'Not started', value: '1',  color: 'text-red-500'   },
+          { label: 'Staff',    value: '26',  color: 'text-neutral-dark' },
+          { label: 'Answered', value: '248', color: 'text-neutral-dark' },
+          { label: 'Retried',  value: '34',  color: 'text-teal'         },
         ].map(({ label, value, color }) => (
           <div key={label} className="py-3 text-center">
             <p className={`text-base font-extrabold ${color}`}>{value}</p>
@@ -52,13 +53,13 @@ function CQCReadinessMockup() {
         ))}
       </div>
       <div className="px-5 py-4">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Key lines of enquiry</p>
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Average score by key line of enquiry</p>
         <div className="space-y-3">
           {categories.map(({ name, score, color }) => (
             <div key={name}>
               <div className="mb-1 flex items-center justify-between">
                 <p className="text-xs font-medium text-neutral-dark">{name}</p>
-                <p className="text-[10px] font-semibold text-neutral-mid">{score}%</p>
+                <p className="text-[10px] font-semibold text-neutral-mid">{score}</p>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                 <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${score}%` }} />
@@ -67,10 +68,10 @@ function CQCReadinessMockup() {
           ))}
         </div>
       </div>
-      <div className="border-t border-amber-100 bg-amber-50 px-5 py-3">
+      <div className="border-t border-teal/10 bg-teal/5 px-5 py-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle size={13} className="flex-shrink-0 text-amber-600" />
-          <p className="text-[11px] font-medium text-amber-800">Responsive category below target. Focus recommended.</p>
+          <RefreshCw size={13} className="flex-shrink-0 text-teal" />
+          <p className="text-[11px] font-medium text-teal">Scores rise 17 points on average after staff review the model answer and retry.</p>
         </div>
       </div>
     </div>
@@ -101,8 +102,9 @@ export default function CQCStaffQuestionsPage() {
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
                 During every CQC inspection, inspectors speak to frontline care workers individually
                 and ask them about safeguarding, medication, care planning, and values. Staff who have
-                never practiced those conversations give hesitant, inconsistent answers. CareStreamAI
-                prepares every member of your team before the inspector arrives.
+                never practised those conversations give hesitant, inconsistent answers. CareStream
+                lets every member of your team practise in their own words and shows you exactly where
+                they stand before the inspector arrives.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
@@ -134,9 +136,9 @@ export default function CQCStaffQuestionsPage() {
                 </p>
                 <p>
                   Most managers focus inspection preparation on documentation, policies, and paperwork.
-                  The staff conversations are left to chance. CareStreamAI closes that gap by giving
+                  The staff conversations are left to chance. CareStream closes that gap by giving
                   every member of your team regular practice with the exact types of questions
-                  inspectors ask.
+                  inspectors ask, marked with instant feedback.
                 </p>
               </div>
             </div>
@@ -150,8 +152,8 @@ export default function CQCStaffQuestionsPage() {
                 },
                 {
                   icon: '✅',
-                  label: 'With CareStreamAI',
-                  text: 'Staff have practiced answering questions across all five key lines of enquiry via WhatsApp, email, and chat. Their answers are confident, consistent, and accurate.',
+                  label: 'With CareStream',
+                  text: 'Staff have practised answering inspector-style questions across all five key lines of enquiry in the hub, with an AI score and feedback on every answer. Their answers are confident, consistent, and accurate.',
                   dim: false,
                 },
               ].map(({ icon, label, text, dim }) => (
@@ -174,14 +176,14 @@ export default function CQCStaffQuestionsPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How CareStreamAI Staff Prep Works</SectionLabel>
+          <SectionLabel>How CareStream Staff Prep Works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Practice questions delivered through the channels your team already uses.
+            Inspector-style questions, answered in their own words, scored instantly.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            No training day. No login. No LMS. Questions aligned to the five CQC key lines of
-            enquiry are delivered to each staff member via WhatsApp, email, or the chat portal,
-            and their readiness is tracked in real time.
+            No training day and no classroom. Questions aligned to the five CQC key lines of enquiry
+            are sent to each staff member in the hub. They answer in their own words, the AI scores
+            the answer and gives feedback, and their readiness is tracked in real time.
           </p>
           <div className="grid gap-6 md:grid-cols-3">
             {[
@@ -189,19 +191,19 @@ export default function CQCStaffQuestionsPage() {
                 step: '01',
                 Icon: ClipboardList,
                 title: 'Questions mapped to every KLOE',
-                body: 'CareStreamAI includes a library of practice questions covering all five CQC key lines of enquiry: Safe, Effective, Caring, Responsive, and Well-led. Each question reflects the type of conversation an inspector has with frontline staff, not the type of question a manager writes in a self-assessment.',
+                body: 'CareStream ships with a bank of open-ended, inspector-style questions covering all five CQC key lines of enquiry: Safe, Effective, Caring, Responsive, and Well-led. Each one comes with a best-practice model answer, and you can generate more questions with AI whenever you need them.',
               },
               {
                 step: '02',
-                Icon: MessageSquare,
-                title: 'Delivered where your staff already are',
-                body: 'Questions arrive via WhatsApp, email, or the chat portal. Staff answer in their own time without needing to attend a training session. The system records every answer, tracks progress across each KLOE category, and surfaces areas where knowledge is weak.',
+                Icon: PenLine,
+                title: 'Answered in their own words, in the hub',
+                body: 'Staff are notified in the hub and answer in their own time, writing a real answer rather than picking from options. Each question is reworded slightly on delivery, so staff build genuine understanding instead of memorising a fixed reply.',
               },
               {
                 step: '03',
-                Icon: BarChart2,
-                title: 'Manager sees readiness scores per category',
-                body: 'The readiness dashboard shows each KLOE category as a percentage score across the whole team. Managers can see at a glance which categories need attention before the next inspection and target practice accordingly.',
+                Icon: Gauge,
+                title: 'Scored instantly with feedback',
+                body: 'The AI scores each answer out of 100 against the model answer and explains what was strong and what to improve. The model answer is then revealed, and staff can review it and try again. Every score feeds the readiness dashboard.',
               },
             ].map(({ step, Icon, title, body }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
@@ -224,21 +226,22 @@ export default function CQCStaffQuestionsPage() {
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>See It In Action</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            A practice session that mirrors exactly what an inspector asks.
+            A practice question that mirrors exactly what an inspector asks.
           </h2>
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Scenario-based questions across all five key lines of enquiry.
+                Open-ended, scenario-based questions across all five key lines of enquiry.
               </h3>
               <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                CareStreamAI does not send generic knowledge questions. It sends scenario-based
-                practice questions that reflect how inspectors actually test understanding. Staff
-                are asked what they would do in a given situation, not just asked to recall a definition.
+                CareStream does not send multiple-choice quizzes. It sends open-ended, scenario-based
+                questions that reflect how inspectors actually test understanding. Staff are asked what
+                they would do in a given situation and answer in their own words, just as they would
+                with an inspector.
               </p>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Questions are distributed across all five KLOE categories so every member of the
-                team builds familiarity with the full range of topics an inspector might raise.
+                Questions are spread across all five KLOE categories, so every member of the team
+                builds familiarity with the full range of topics an inspector might raise.
               </p>
               <div className="space-y-3">
                 {[
@@ -254,49 +257,47 @@ export default function CQCStaffQuestionsPage() {
               </div>
             </div>
 
-            {/* Chat mockup */}
+            {/* Scored answer mockup */}
             <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[360px] overflow-hidden rounded-2xl border border-gray-200 shadow-xl">
+              <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
                 <div className="flex items-center justify-between bg-teal px-4 py-3">
                   <div>
-                    <p className="text-sm font-bold text-white">CareStreamAI</p>
-                    <p className="text-[11px] text-white/70">CQC Prep Practice</p>
+                    <p className="text-sm font-bold text-white">CQC Practice</p>
+                    <p className="text-[11px] text-white/70">Key line of enquiry: Safe</p>
                   </div>
-                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white">Safe</span>
+                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white">Answered</span>
                 </div>
-                <div className="space-y-3 bg-gray-50 p-4">
-                  <div className="flex gap-2">
-                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-teal text-[9px] font-bold text-white">CS</div>
-                    <div className="max-w-[88%] rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-2xl bg-white p-3 shadow-sm">
-                      <p className="mb-0.5 text-[11px] font-semibold text-teal">CQC Prep: Safe</p>
-                      <p className="mb-2 text-[10px] text-gray-400">Question 3 of 6</p>
-                      <p className="mb-2.5 text-xs font-medium leading-snug text-gray-800">
-                        A resident shows you an unexplained bruise and seems distressed. You are alone with them. What is your immediate responsibility?
+                <div className="space-y-3 p-4">
+                  {/* Question */}
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-teal">Question</p>
+                    <p className="text-xs font-medium leading-snug text-neutral-dark">
+                      A resident shows you an unexplained bruise and seems distressed. You are alone with them. What is your immediate responsibility?
+                    </p>
+                  </div>
+                  {/* Staff free-text answer */}
+                  <div className="rounded-xl border border-gray-100 p-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Your answer</p>
+                    <p className="text-xs leading-snug text-neutral-dark">
+                      I would make sure the resident is safe and reassured, then report it to the safeguarding lead straight away. I would write down exactly what I saw and not confront anyone myself.
+                    </p>
+                  </div>
+                  {/* AI score + feedback */}
+                  <div className="rounded-xl border border-teal/20 bg-teal/5 p-3">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-teal">
+                        <Sparkles size={11} /> AI feedback
                       </p>
-                      <div className="space-y-1 text-[11px] text-gray-600">
-                        <p><span className="font-bold">A)</span> Photograph it and report at handover</p>
-                        <p><span className="font-bold">B)</span> Speak to a family member before escalating</p>
-                        <p className="rounded bg-teal/10 px-1.5 py-0.5 font-semibold text-teal"><span className="font-bold">C)</span> Report to the safeguarding lead immediately ✓</p>
-                        <p><span className="font-bold">D)</span> Document and wait for a manager to raise it</p>
-                      </div>
+                      <span className="rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-white">82 / 100</span>
                     </div>
+                    <p className="text-[11px] leading-snug text-neutral-dark">
+                      Strong. You escalated immediately and documented what you saw. To improve, mention preserving any evidence and avoiding leading questions with the resident.
+                    </p>
                   </div>
-                  <div className="flex justify-end">
-                    <div className="rounded-tl-2xl rounded-tr-sm rounded-bl-2xl rounded-br-2xl bg-teal px-4 py-2 text-sm font-bold text-white">C</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-teal text-[9px] font-bold text-white">CS</div>
-                    <div className="max-w-[88%] rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-2xl bg-white p-3 shadow-sm">
-                      <p className="text-xs text-gray-800">✅ <span className="font-semibold">Correct.</span> Safeguarding concerns must be escalated immediately, not deferred to handover.</p>
-                      <p className="mt-1 text-[11px] text-gray-400">Question 4 of 6 when you are ready.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 border-t border-gray-200 bg-white px-3 py-2.5">
-                  <div className="flex-1 rounded-full border border-gray-200 px-4 py-1.5 text-[11px] text-gray-300">Reply A, B, C or D</div>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal text-white">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                  </div>
+                  {/* Retry affordance */}
+                  <button className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[11px] font-semibold text-neutral-mid">
+                    <RefreshCw size={11} /> Review the model answer and try again
+                  </button>
                 </div>
               </div>
             </div>
@@ -312,40 +313,41 @@ export default function CQCStaffQuestionsPage() {
             Know exactly where every member of your team stands before the inspector arrives.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
-            CQC inspections are rarely announced with enough time to run a full preparation session.
-            CareStreamAI keeps your team in a state of continuous readiness so you never have to scramble.
+            CQC inspections are rarely announced with much notice. CareStream keeps your team in a
+            state of continuous readiness, with a live picture of how everyone is performing across
+            all five key lines of enquiry.
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                Icon: Target,
-                title: 'Targeted gap filling',
-                body: 'When the readiness dashboard shows a specific KLOE category is weak across the team, managers can push a focused batch of practice questions to close that gap before the next inspection.',
+                Icon: BarChart2,
+                title: 'Live readiness dashboard',
+                body: 'See the team average and the average score for each KLOE category at any time, so you know which areas are strong and which need attention before the next inspection.',
               },
               {
                 Icon: Users,
                 title: 'Individual staff scores',
-                body: 'Every staff member has their own readiness score per KLOE category. A new starter or recently returned member of staff is clearly visible in the dashboard and can be prioritised for catch-up practice.',
+                body: 'Every staff member has their own score in each KLOE category. A new starter or recently returned member of staff is clearly visible and can be prioritised for catch-up practice.',
+              },
+              {
+                Icon: RefreshCw,
+                title: 'Review and retry',
+                body: 'After answering, staff see the model answer and the feedback, then try the question again. The improvement from their first attempt to their latest is tracked, so you can show real learning.',
+              },
+              {
+                Icon: Target,
+                title: 'Send practice to weaker areas',
+                body: 'When the dashboard shows a KLOE category is weak across the team, push a focused batch of practice questions to the staff who need it most, ahead of an inspection.',
               },
               {
                 Icon: Brain,
-                title: 'Scenario variety prevents memorisation',
-                body: 'Questions are not repeated in the same form. Each practice session uses different scenarios that test the same underlying knowledge, so staff develop genuine understanding rather than memorised answers.',
-              },
-              {
-                Icon: Zap,
-                title: 'Pre-inspection readiness report',
-                body: 'Managers can generate a readiness report at any point showing team-wide scores across all five KLOE categories, individual staff performance, and the areas most likely to come up in conversation during an inspection.',
-              },
-              {
-                Icon: Bell,
-                title: 'Automatic alerts when scores drop',
-                body: 'If a KLOE category score falls below a set threshold, managers receive an alert and practice questions are automatically distributed to bring the score back up.',
+                title: 'Reworded so staff cannot memorise',
+                body: 'Each question is reworded slightly when it is sent, so it tests the same knowledge without letting staff fall back on a memorised reply. They build genuine understanding instead.',
               },
               {
                 Icon: ShieldCheck,
                 title: 'Consistent answers across the team',
-                body: 'When all staff have practiced the same scenarios, inspectors hear consistent, confident answers regardless of which staff member they approach. Consistency is one of the strongest signals of a well-run service.',
+                body: 'When all staff have practised the same scenarios, inspectors hear consistent, confident answers regardless of which staff member they approach. Consistency is one of the strongest signals of a well-run service.',
               },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="card-lift rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
@@ -370,24 +372,23 @@ export default function CQCStaffQuestionsPage() {
           <div className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
             <p>
               When an inspector asks how you ensure staff are competent to carry out their roles,
-              a completed supervision record from six months ago is a limited answer.
-              CareStreamAI gives you something more current and specific.
+              a supervision record from six months ago is a limited answer. CareStream gives you
+              something more current and specific.
             </p>
           </div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
-              <span>What CareStreamAI records</span>
+              <span>What CareStream records</span>
               <span>What this shows an inspector</span>
             </div>
             {[
-              ['Individual readiness scores per KLOE', 'Each staff member has a tracked score against every key line of enquiry, showing how their knowledge compares to expectations across all five inspection categories.'],
-              ['Question and answer history', 'The exact question asked, the answer given, and whether it was correct. Evidence that staff knowledge is actively tested, not only supervised or observed.'],
-              ['Category-level trend over time', 'Managers can show that a KLOE category which was weak six months ago has improved as a direct result of targeted practice delivery.'],
-              ['Pre-inspection reports generated', 'A time-stamped report showing team-wide readiness at a specific point, demonstrating that inspection preparation is a structured, ongoing process.'],
-              ['New starter catch-up activity', 'Evidence that new staff are brought up to speed on all KLOE categories within the onboarding period, not only at their first formal supervision.'],
-              ['Manager response to low scores', 'When an alert fires and questions are pushed to the team, the record shows the manager identified a gap and took action, which is exactly the type of active oversight inspectors look for.'],
+              ['Average score per KLOE, per staff member', 'Each staff member has a tracked score against every key line of enquiry, showing how their knowledge compares across all five inspection categories.'],
+              ['Every question, answer, score and feedback', 'The exact question asked, the answer the staff member wrote, the AI score out of 100, and the feedback given. Evidence that staff knowledge is actively tested, not only supervised.'],
+              ['Improvement from first attempt to latest', 'Where a staff member reviewed the model answer and tried again, the record shows their score improving, demonstrating learning rather than a one-off result.'],
+              ['A live readiness dashboard', 'Team-wide and per-staff readiness across all five KLOE categories, available at any point, showing inspection preparation is a structured, ongoing process.'],
+              ['Targeted practice to weaker areas', 'When a category is weak, the record shows the manager sent focused practice to the staff who needed it, which is exactly the type of active oversight inspectors look for.'],
             ].map(([what, why], i) => (
-              <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 5 ? 'border-b border-gray-100' : ''}`}>
+              <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 4 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-start gap-2 pr-4">
                   <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-teal" />
                   <span className="font-semibold text-neutral-dark">{what}</span>
@@ -408,14 +409,14 @@ export default function CQCStaffQuestionsPage() {
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: ClipboardList, label: 'KLOE-mapped question library',       desc: 'Questions across all five key lines of enquiry, designed to mirror the conversations inspectors actually have with frontline care staff.',       iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
-              { icon: MessageSquare, label: 'WhatsApp, email and chat delivery',   desc: 'Questions delivered on every channel. Staff answer in under two minutes with no app, no login, and no session to attend.',                         iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
-              { icon: BarChart2,     label: 'Readiness scores per KLOE category', desc: 'Track each staff member and the whole team across Safe, Effective, Caring, Responsive, and Well-led. See gaps at a glance.',                        iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
-              { icon: Target,        label: 'Gap-targeted question delivery',      desc: 'Push a focused batch of questions to any KLOE category that falls below the threshold. Close gaps before the inspector arrives.',                    iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-              { icon: Brain,         label: 'Scenario-based question format',      desc: 'Questions reflect real inspector conversations. Staff practice responses to realistic scenarios, not definitions.',                                   iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
-              { icon: FileText,      label: 'Pre-inspection readiness report',     desc: 'Generate a team-wide report at any time showing readiness scores per KLOE category, with individual staff breakdowns.',                             iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-              { icon: Bell,          label: 'Low score alerts for managers',       desc: 'Automatic notification when any KLOE category drops below the target threshold, with triggered practice delivery to bring scores back up.',          iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
-              { icon: Users,         label: 'Individual and team-level tracking',  desc: 'See whole-team averages and individual staff scores. Identify the people who need the most practice before the next inspection.',                    iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
+              { icon: ClipboardList, label: 'KLOE-mapped question bank',     desc: 'Open-ended, inspector-style questions across all five key lines of enquiry, each with a model answer. Generate more with AI whenever you need them.',  iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
+              { icon: PenLine,       label: 'Answers in their own words',     desc: 'Staff write a real answer rather than picking from options, exactly as they would in conversation with an inspector.',                              iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
+              { icon: Gauge,         label: 'AI scoring with feedback',       desc: 'Every answer is scored out of 100 against the model answer, with clear feedback on what was strong and what to improve.',                          iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
+              { icon: RefreshCw,     label: 'Review and retry',               desc: 'Staff see the model answer after answering, then try again. The improvement from first attempt to latest is tracked.',                          iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+              { icon: BarChart2,     label: 'Readiness scores per KLOE',      desc: 'Track each staff member and the whole team across Safe, Effective, Caring, Responsive, and Well-led. See gaps at a glance.',                    iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
+              { icon: Target,        label: 'Targeted practice delivery',     desc: 'Send a focused batch of questions to any KLOE category that is weak across the team, to the staff who need it most.',                          iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+              { icon: Brain,         label: 'Reworded on delivery',           desc: 'Each question is reworded slightly when it is sent, so staff build understanding rather than memorising a fixed reply.',                      iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+              { icon: Sparkles,      label: 'Notified in the hub',            desc: 'Staff are nudged with a notification when a new question is waiting, and answer in the hub on any device whenever it suits them.',           iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
             ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
               <div key={label} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-lg ${iconBg}`}>
@@ -430,26 +431,27 @@ export default function CQCStaffQuestionsPage() {
       </section>
 
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-6">
-          <div className="grid gap-12 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
-            <div className="md:pr-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">5</p>
-              <p className="mb-3 text-xl font-bold text-neutral-dark">
+          <div className="grid gap-16 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
+            <div className="md:px-12">
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">5</p>
+              <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
                 CQC key lines of enquiry that inspectors use to assess every care service.
               </p>
-              <p className="text-base leading-relaxed text-neutral-mid">
-                CareStreamAI maps every practice question to a specific KLOE so you always know
+              <p className="text-base leading-loose text-neutral-mid">
+                CareStream maps every practice question to a specific KLOE, so you always know
                 where your team is strong and where they need more work.
               </p>
             </div>
-            <div className="md:pl-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">2 min</p>
-              <p className="mb-3 text-xl font-bold text-neutral-dark">
-                average time for a staff member to complete a CQC practice question via WhatsApp.
+            <div className="md:px-12">
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">0 to 100</p>
+              <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
+                every answer scored, with feedback and a model answer to learn from.
               </p>
-              <p className="text-base leading-relaxed text-neutral-mid">
-                One question. One reply. Readiness score updated. No session to attend and no login required.
+              <p className="text-base leading-loose text-neutral-mid">
+                Staff answer in their own words in the hub, see exactly how they did, and try again
+                to improve. One question, one answer, readiness score updated.
               </p>
             </div>
           </div>
@@ -458,7 +460,7 @@ export default function CQCStaffQuestionsPage() {
 
       <PageCta
         heading="Give every member of your team the confidence to speak to an inspector."
-        sub="See how CareStreamAI CQC preparation works for your service."
+        sub="See how CareStream CQC preparation works for your service."
         primary={{ label: 'Book a demo', href: '/demo' }}
         secondary={{ label: 'See pricing', href: '/pricing' }}
       />

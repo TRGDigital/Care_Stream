@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, Phone, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw,
@@ -42,11 +42,19 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 }
 
 function SectionBlock({ title, children }: { title?: string; children: React.ReactNode }) {
+  // Titles of the form "Main, subtitle" render the main part large and bold with
+  // the rest as a lighter subtitle.
+  const [main, sub] = (title ?? '').split(', ')
   return (
-    <div className="space-y-3">
-      {title && <p className="text-xs font-semibold uppercase tracking-wider text-neutral-mid">{title}</p>}
-      {children}
-    </div>
+    <section className="rounded-xl border border-gray-100 bg-neutral-light/40 p-4 sm:p-5">
+      {title && (
+        <div className="mb-3 border-b border-gray-200/70 pb-2.5">
+          <h3 className="text-lg font-bold leading-snug text-neutral-dark">{main}</h3>
+          {sub && <p className="mt-0.5 text-sm text-neutral-mid">{sub}</p>}
+        </div>
+      )}
+      <div className="space-y-3">{children}</div>
+    </section>
   )
 }
 
@@ -121,7 +129,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Policy sections (internal policies)">
           <p className="text-sm text-neutral-mid">
-            Internal policies can be filed under a <strong>section</strong> — e.g. Safeguarding, GDPR, Infection control — so your library is organised and easy to scan. Each section shows in its own colour in a dedicated column on the Policies page.
+            Internal policies can be filed under a <strong>section</strong>: e.g. Safeguarding, GDPR, Infection control, so your library is organised and easy to scan. Each section shows in its own colour in a dedicated column on the Policies page.
           </p>
           <div className="mt-3 space-y-3">
             <Step n={1}>When you upload internal policies, choose the <strong>Section</strong> shown next to the category. For a bulk upload it applies to the whole batch, so upload each section&rsquo;s policies together.</Step>
@@ -144,46 +152,46 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="Adding staff members">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Staff</strong> in the sidebar and click <strong>Add staff member</strong>; enter their name and email address.</Step>
-            <Step n={2}>Choose their <strong>Position</strong> from the dropdown (Care Assistant, Nurse, Chef, etc.). This is the key field — it decides which onboarding and training they receive.</Step>
+            <Step n={2}>Choose their <strong>Position</strong> from the dropdown (Care Assistant, Nurse, Chef, etc.). This is the key field, it decides which onboarding and training they receive.</Step>
             <Step n={3}>If they hold a <strong>specialist role</strong> (e.g. Infection Control, Night Staff), answer <em>Yes</em> and pick one or more from the list. These add extra, specialist onboarding and training on top of their position.</Step>
-            <Step n={4}>Choose the <strong>Staff type</strong> — <em>New starter</em> auto-enrols them in the onboarding for their position and specialisms; <em>Existing staff member</em> doesn't.</Step>
+            <Step n={4}>Choose the <strong>Staff type</strong>: <em>New starter</em> auto-enrols them in the onboarding for their position and specialisms; <em>Existing staff member</em> doesn't.</Step>
             <Step n={5}>Optionally add a WhatsApp number and their first/second language, then share the login details shown on screen.</Step>
           </div>
-          <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step — tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
+          <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step, tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
         </SectionBlock>
         <SectionBlock title="Viewing & managing a staff member">
           <p className="text-sm text-neutral-mid">
-            Click a staff member's <strong>name</strong> on the Staff page to open their detail card — a single view of everything they're set up for:
+            Click a staff member's <strong>name</strong> on the Staff page to open their detail card, a single view of everything they're set up for:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li>Their <strong>profile</strong> — position, specialist roles, shift, WhatsApp, email access and account status.</li>
-            <li><strong>Language</strong> — their first and second language, and the communication toggle (below).</li>
-            <li><strong>Training</strong> — every module assigned to them with a live status (Not started, In progress, Complete, Expired). Use <strong>+ Assign training</strong> to add more at any time.</li>
-            <li><strong>Onboarding</strong> — the induction flows they're enrolled on, with step-by-step progress. Use <strong>+ Assign onboarding</strong> to enrol them on more (flows they're already on are marked and can't be double-assigned).</li>
+            <li>Their <strong>profile</strong>: position, specialist roles, shift, WhatsApp, email access and account status.</li>
+            <li><strong>Language</strong>: their first and second language, and the communication toggle (below).</li>
+            <li><strong>Training</strong>: every module assigned to them with a live status (Not started, In progress, Complete, Expired). Use <strong>+ Assign training</strong> to add more at any time.</li>
+            <li><strong>Onboarding</strong>: the induction flows they're enrolled on, with step-by-step progress. Use <strong>+ Assign onboarding</strong> to enrol them on more (flows they're already on are marked and can't be double-assigned).</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">
-            To change their details — name, position, specialisms, languages, shift or WhatsApp — use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
+            To change their details (name, position, specialisms, languages, shift or WhatsApp) use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
           </p>
         </SectionBlock>
         <SectionBlock title="Getting staff into the hub (no password)">
           <div className="space-y-3">
             <p className="text-sm text-neutral-mid">
-              The easiest way to get a care assistant signed in on their phone is a <strong>passwordless sign-in link</strong> — no password to type or remember. On a staff member&apos;s detail card, click <strong>Sign-in link</strong>. You&apos;ll get a <strong>QR code</strong> they can scan, a link you can <strong>copy</strong>, or an <strong>Email it to them</strong> button. It works once and lasts 14 days; signing in this way also keeps them logged in on that phone for a long time.
+              The easiest way to get a care assistant signed in on their phone is a <strong>passwordless sign-in link</strong>: no password to type or remember. On a staff member&apos;s detail card, click <strong>Sign-in link</strong>. You&apos;ll get a <strong>QR code</strong> they can scan, a link you can <strong>copy</strong>, or an <strong>Email it to them</strong> button. It works once and lasts 14 days; signing in this way also keeps them logged in on that phone for a long time.
             </p>
             <p className="text-sm text-neutral-mid">
               Staff can also get themselves in: on the sign-in page there&apos;s an <strong>“Email me a sign-in link”</strong> option, so they never need to remember a password.
             </p>
             <p className="text-sm text-neutral-mid">
-              Once they&apos;re in, encourage them to <strong>add CareStream to their home screen</strong> and turn on notifications (see the Chat Hub guide) — that&apos;s how the hub replaces the WhatsApp nudges.
+              Once they&apos;re in, encourage them to <strong>add CareStream to their home screen</strong> and turn on notifications (see the Chat Hub guide), that&apos;s how the hub replaces the WhatsApp nudges.
             </p>
           </div>
         </SectionBlock>
         <SectionBlock title="Positions & specialist roles — how they drive onboarding & training">
           <p className="text-sm text-neutral-mid">
-            A staff member's <strong>position</strong> is the single most important thing you set, because CareStream uses it to give them the <strong>right onboarding and the right training questions</strong> for their job — a Care Assistant's induction and quizzes are different from a Nurse's or a Chef's.
+            A staff member's <strong>position</strong> is the single most important thing you set, because CareStream uses it to give them the <strong>right onboarding and the right training questions</strong> for their job, a Care Assistant's induction and quizzes are different from a Nurse's or a Chef's.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            <strong>Specialist roles</strong> work on top of the position. If someone is a Senior Care Assistant who is also your Infection Control lead, they get the Senior Care Assistant onboarding <em>plus</em> the Infection Control specialist onboarding — and their training is tailored to both.
+            <strong>Specialist roles</strong> work on top of the position. If someone is a Senior Care Assistant who is also your Infection Control lead, they get the Senior Care Assistant onboarding <em>plus</em> the Infection Control specialist onboarding, and their training is tailored to both.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             Both lists are managed in <strong>Settings → Positions</strong> and <strong>Settings → Specialist roles</strong>. The standard care/nursing positions and specialisms are already there; add any extras specific to your home and they'll appear in the dropdowns straight away.
@@ -191,10 +199,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Language preferences">
           <p className="text-sm text-neutral-mid">
-            When adding a staff member you can record their <strong>first language</strong> and an optional <strong>second language</strong>. CareStream uses the first language to send training questions and automated messages in the staff member's own language — if their first language is Polish, their training quiz questions arrive in Polish. The same applies to renewal reminders and other proactive communications.
+            When adding a staff member you can record their <strong>first language</strong> and an optional <strong>second language</strong>. CareStream uses the first language to send training questions and automated messages in the staff member's own language, if their first language is Polish, their training quiz questions arrive in Polish. The same applies to renewal reminders and other proactive communications.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Each staff member has an <strong>“Always communicate in their first language”</strong> toggle (in the Add / Edit forms and on their detail card). When it's <strong>on</strong> — the default — every message CareStream sends them is translated into their first language. Turn it <strong>off</strong> for staff who'd rather receive everything in English. You can flip it instantly from the detail card.
+            Each staff member has an <strong>“Always communicate in their first language”</strong> toggle (in the Add / Edit forms and on their detail card). When it's <strong>on</strong>: the default, every message CareStream sends them is translated into their first language. Turn it <strong>off</strong> for staff who'd rather receive everything in English. You can flip it instantly from the detail card.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, add it in <strong>Settings → Languages</strong> (type its English name, e.g. “Shona”) and it appears in the first &amp; second language dropdowns straight away.
@@ -202,13 +210,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Approved senders & WhatsApp access (added automatically)">
           <p className="text-sm text-neutral-mid">
-            When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list, and their WhatsApp number (if provided) is automatically added to the <strong>WhatsApp access</strong> list — both in <em>Settings</em>. You don't need to add them in two places.
+            When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list, and their WhatsApp number (if provided) is automatically added to the <strong>WhatsApp access</strong> list, both in <em>Settings</em>. You don't need to add them in two places.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Both lists in Settings show each entry alongside the staff member it belongs to — for example <em>jane@example.com — Jane Smith (Care Assistant)</em> — so you can see at a glance who each address or number belongs to. Only addresses and numbers on these lists can query CareStream by email or WhatsApp; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
+            Both lists in Settings show each entry alongside the staff member it belongs to, for example <em>jane@example.com, Jane Smith (Care Assistant)</em>, so you can see at a glance who each address or number belongs to. Only addresses and numbers on these lists can query CareStream by email or WhatsApp; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
           </p>
         </SectionBlock>
-        <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen — share them securely, and use <strong>Re-send login</strong> from the staff member's menu if they're ever needed again.</Tip>
+        <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen, share them securely, and use <strong>Re-send login</strong> from the staff member's menu if they're ever needed again.</Tip>
       </div>
     ),
   },
@@ -221,38 +229,38 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="Opening a staff record">
           <p className="text-sm text-neutral-mid">
-            Every staff member has a full <strong>record page</strong> — a single view of what they've been assigned, what they've completed, how they're scoring, and how engaged they are. Open it two ways from the <strong>Staff</strong> page:
+            Every staff member has a full <strong>record page</strong>: a single view of what they've been assigned, what they've completed, how they're scoring, and how engaged they are. Open it two ways from the <strong>Staff</strong> page:
           </p>
           <div className="mt-2 space-y-3">
             <Step n={1}>Click the small <strong>chart icon</strong> next to a name to jump straight to their record.</Step>
             <Step n={2}>Or click the <strong>name</strong> to open the quick overlay (where you assign training/onboarding), then use <strong>View full record →</strong>.</Step>
           </div>
-          <div className="mt-3"><Tip>Every section of the record has an <strong>ⓘ</strong> icon — hover or tap it for a plain-English explanation of what you're looking at. The notes below are the same guidance in one place.</Tip></div>
+          <div className="mt-3"><Tip>Every section of the record has an <strong>ⓘ</strong> icon, hover or tap it for a plain-English explanation of what you're looking at. The notes below are the same guidance in one place.</Tip></div>
         </SectionBlock>
 
         <SectionBlock title="Reading the record">
           <div className="space-y-2 text-sm text-neutral-mid">
-            <p><strong className="text-neutral-dark">Completion rings</strong> — the share of assigned items finished: training modules, induction flows, and the average quiz score across completed modules. Aim for 100%; a low average score is an early sign someone may not have understood the material.</p>
-            <p><strong className="text-neutral-dark">Needs attention</strong> — a coloured banner listing anything outstanding (overdue or expired training, overdue/stalled induction, never logged in). Red = urgent.</p>
-            <p><strong className="text-neutral-dark">How they compare to the team</strong> — the teal bar is this person's figure; the dark tick is your home's average. A bar sitting left of the tick is below average and may be worth a conversation.</p>
-            <p><strong className="text-neutral-dark">Training record</strong> — every module with its status and <strong>score</strong> (the % of quiz questions answered correctly). "Expires" applies to annual modules due for renewal; "Overdue" means past the due date and not complete. <strong>Reset</strong> clears a module so they can retake it.</p>
-            <p><strong className="text-neutral-dark">Induction record</strong> — their onboarding flows, with a bar showing steps completed and an "X/Y correct" count for the question steps.</p>
-            <p><strong className="text-neutral-dark">Engagement</strong> — how actively they use CareStream: questions asked in the portal, the topics they ask about, CQC prep answered, and logins. Low engagement alongside overdue training is a useful early warning.</p>
-            <p><strong className="text-neutral-dark">Completions (6 months) &amp; Activity timeline</strong> — momentum over time and a dated history of everything they've done. The timeline is good evidence of ongoing development.</p>
+            <p><strong className="text-neutral-dark">Completion rings</strong>: the share of assigned items finished: training modules, induction flows, and the average quiz score across completed modules. Aim for 100%; a low average score is an early sign someone may not have understood the material.</p>
+            <p><strong className="text-neutral-dark">Needs attention</strong>: a coloured banner listing anything outstanding (overdue or expired training, overdue/stalled induction, never logged in). Red = urgent.</p>
+            <p><strong className="text-neutral-dark">How they compare to the team</strong>: the teal bar is this person's figure; the dark tick is your home's average. A bar sitting left of the tick is below average and may be worth a conversation.</p>
+            <p><strong className="text-neutral-dark">Training record</strong>: every module with its status and <strong>score</strong> (the % of quiz questions answered correctly). "Expires" applies to annual modules due for renewal; "Overdue" means past the due date and not complete. <strong>Reset</strong> clears a module so they can retake it.</p>
+            <p><strong className="text-neutral-dark">Induction record</strong>: their onboarding flows, with a bar showing steps completed and an "X/Y correct" count for the question steps.</p>
+            <p><strong className="text-neutral-dark">Engagement</strong>: how actively they use CareStream: questions asked in the portal, the topics they ask about, CQC prep answered, and logins. Low engagement alongside overdue training is a useful early warning.</p>
+            <p><strong className="text-neutral-dark">Completions (6 months) &amp; Activity timeline</strong>: momentum over time and a dated history of everything they've done. The timeline is good evidence of ongoing development.</p>
           </div>
         </SectionBlock>
 
         <SectionBlock title="Actions on the record">
           <div className="space-y-2 text-sm text-neutral-mid">
-            <p><strong className="text-neutral-dark">Send reminder</strong> — immediately sends the staff member their outstanding training questions by WhatsApp or email (it doesn't wait for the scheduled send).</p>
-            <p><strong className="text-neutral-dark">CQC evidence (PDF)</strong> — downloads the whole record as a PDF: training matrix, scores, induction sign-off and dates. Hand this to an inspector as proof a staff member is trained and inducted.</p>
-            <p><strong className="text-neutral-dark">Reset</strong> (per module) — clears someone's answers and completion so they can take a module again.</p>
+            <p><strong className="text-neutral-dark">Send reminder</strong>: immediately sends the staff member their outstanding training questions by WhatsApp or email (it doesn't wait for the scheduled send).</p>
+            <p><strong className="text-neutral-dark">CQC evidence (PDF)</strong>: downloads the whole record as a PDF: training matrix, scores, induction sign-off and dates. Hand this to an inspector as proof a staff member is trained and inducted.</p>
+            <p><strong className="text-neutral-dark">Reset</strong> (per module), clears someone's answers and completion so they can take a module again.</p>
           </div>
         </SectionBlock>
 
         <SectionBlock title="Spotting problems across the whole team">
           <p className="text-sm text-neutral-mid">
-            The <strong>Analytics</strong> page has a <strong>“Staff needing attention”</strong> panel at the top. It surfaces everyone with a flag — overdue or expired training, overdue/stalled induction, or never logged in — so you can triage without opening each record. Each card links straight to that person's record, and urgent cases are dotted red.
+            The <strong>Analytics</strong> page has a <strong>“Staff needing attention”</strong> panel at the top. It surfaces everyone with a flag, overdue or expired training, overdue/stalled induction, or never logged in, so you can triage without opening each record. Each card links straight to that person's record, and urgent cases are dotted red.
           </p>
         </SectionBlock>
 
@@ -261,22 +269,22 @@ const GUIDE_SECTIONS: GuideSection[] = [
             When staff read policies during their induction, CareStream records how they read them. You can see this two ways:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>On the staff record</strong> — a <strong>Policy reading</strong> table per person: the time they spent on each policy, the furthest they scrolled, and a label — <strong>Thorough</strong> (scrolled to the end), <strong>Skimmed</strong> (marked read without scrolling far) or <strong>Partial</strong>. This is included in the CQC evidence PDF.</li>
-            <li><strong>On the Analytics page</strong> — a <strong>Policy reading engagement</strong> section with team-wide figures (sessions, average time, average scroll depth, and % who read to the end).</li>
+            <li><strong>On the staff record</strong>: a <strong>Policy reading</strong> table per person: the time they spent on each policy, the furthest they scrolled, and a label, <strong>Thorough</strong> (scrolled to the end), <strong>Skimmed</strong> (marked read without scrolling far) or <strong>Partial</strong>. This is included in the CQC evidence PDF.</li>
+            <li><strong>On the Analytics page</strong>: a <strong>Policy reading engagement</strong> section with team-wide figures (sessions, average time, average scroll depth, and % who read to the end).</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">
-            This data is for managers only — staff don't see their own reading stats on My Progress.
+            This data is for managers only, staff don't see their own reading stats on My Progress.
           </p>
         </SectionBlock>
 
         <SectionBlock title="Induction question performance">
           <p className="text-sm text-neutral-mid">
-            Induction flows include questions, and CareStream marks each answer automatically — multiple-choice is graded instantly, and written answers are checked by AI. (If someone gets a multiple-choice question wrong, they're asked to try again before the step completes.) You can see how staff are doing in two places:
+            Induction flows include questions, and CareStream marks each answer automatically, multiple-choice is graded instantly, and written answers are checked by AI. (If someone gets a multiple-choice question wrong, they're asked to try again before the step completes.) You can see how staff are doing in two places:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>On the staff record</strong> — an <strong>Induction questions</strong> section listing every question that person has answered, with a ✓ or ✗, their answer, and the correct answer where they got it wrong. A quick way to spot exactly where an individual needs support. Included in the CQC evidence PDF.</li>
-            <li><strong>On the Analytics page</strong> — an <strong>Induction question performance</strong> section: the percentage answered correctly across the team, plus a <strong>“Most-missed induction questions”</strong> list that highlights the topics where knowledge is weakest, so you know what to reinforce in supervision or training.</li>
-            <li><strong>CQC Staff Prep</strong> — each staff record also has a <strong>CQC Staff Prep</strong> section showing every prep question that person was assigned, their AI score, and any improvement after reviewing the model answer and retrying. The team-wide view (including the review-and-retry improvement) is in <strong>Analytics → CQC Staff Prep</strong>. Both feed the CQC evidence PDF.</li>
+            <li><strong>On the staff record</strong>: an <strong>Induction questions</strong> section listing every question that person has answered, with a ✓ or ✗, their answer, and the correct answer where they got it wrong. A quick way to spot exactly where an individual needs support. Included in the CQC evidence PDF.</li>
+            <li><strong>On the Analytics page</strong>: an <strong>Induction question performance</strong> section: the percentage answered correctly across the team, plus a <strong>“Most-missed induction questions”</strong> list that highlights the topics where knowledge is weakest, so you know what to reinforce in supervision or training.</li>
+            <li><strong>CQC Staff Prep</strong>: each staff record also has a <strong>CQC Staff Prep</strong> section showing every prep question that person was assigned, their AI score, and any improvement after reviewing the model answer and retrying. The team-wide view (including the review-and-retry improvement) is in <strong>Analytics → CQC Staff Prep</strong>. Both feed the CQC evidence PDF.</li>
           </ul>
         </SectionBlock>
 
@@ -285,7 +293,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Staff have their own read-only <strong>My Progress</strong> page in the portal (top menu and chat sidebar). It shows their completion rings, what's left to finish with quick links to do it, how they compare to the team, and their training &amp; induction lists.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            If a staff member's <strong>“always communicate in their first language”</strong> setting is on, their entire My Progress page — including the ⓘ help bubbles — is shown <strong>in that language</strong>, so non-English speakers can follow their own progress without help.
+            If a staff member's <strong>“always communicate in their first language”</strong> setting is on, their entire My Progress page, including the ⓘ help bubbles, is shown <strong>in that language</strong>, so non-English speakers can follow their own progress without help.
           </p>
         </SectionBlock>
       </div>
@@ -295,13 +303,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'knowledge-gaps',
     icon:    RefreshCw,
     title:   'Knowledge gaps & follow-up',
-    summary: 'How wrong answers turn into reinforced learning — and how you track it',
+    summary: 'How wrong answers turn into reinforced learning, and how you track it',
     content: (
       <div className="space-y-5">
         <SectionBlock title="The idea">
           <p className="text-sm text-neutral-mid">
             When a staff member gets a training or induction question wrong, that&rsquo;s a <strong>knowledge gap</strong>. Rather than letting it sit,
-            CareStream turns it into a short piece of learning and then checks they&rsquo;ve got it — so the gap actually closes. The whole loop is automatic;
+            CareStream turns it into a short piece of learning and then checks they&rsquo;ve got it, so the gap actually closes. The whole loop is automatic;
             this section explains what your team sees and what you can track.
           </p>
         </SectionBlock>
@@ -311,13 +319,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Anyone with an unanswered or incorrectly-answered question gets a <strong>Follow-up</strong> item in their hub (with a red badge). Opening it, they choose:
           </p>
           <div className="mt-2 space-y-3">
-            <Step n={1}><strong>Learn &amp; retry</strong> — a short, plain-language micro-lesson built from <em>your own policies</em>: why the right answer matters, the key points to remember, a real-life scenario to think through, an optional &ldquo;ask about this policy&rdquo; chat, and then a <strong>fresh</strong> question to confirm they&rsquo;ve understood (never the identical one).</Step>
-            <Step n={2}><strong>Just retry</strong> — simply re-answer the original question. If they get it wrong, there&rsquo;s a nudge to learn the point instead.</Step>
+            <Step n={1}><strong>Learn &amp; retry</strong>: a short, plain-language micro-lesson built from <em>your own policies</em>: why the right answer matters, the key points to remember, a real-life scenario to think through, an optional &ldquo;ask about this policy&rdquo; chat, and then a <strong>fresh</strong> question to confirm they&rsquo;ve understood (never the identical one).</Step>
+            <Step n={2}><strong>Just retry</strong>: simply re-answer the original question. If they get it wrong, there&rsquo;s a nudge to learn the point instead.</Step>
           </div>
           <p className="mt-2 text-sm text-neutral-mid">
             The lesson is shown in the staff member&rsquo;s <strong>first language</strong> if their &ldquo;always communicate in first language&rdquo; setting is on. Answering correctly clears the item from their Follow-up immediately.
           </p>
-          <Tip>The micro-lessons are grounded only in your home&rsquo;s policies (and anonymised reference policies for general training topics) — they won&rsquo;t invent rules. They&rsquo;re generated once and reused, so they appear quickly.</Tip>
+          <Tip>The micro-lessons are grounded only in your home&rsquo;s policies (and anonymised reference policies for general training topics), they won&rsquo;t invent rules. They&rsquo;re generated once and reused, so they appear quickly.</Tip>
         </SectionBlock>
 
         <SectionBlock title="On the staff record — “How gaps get resolved”">
@@ -325,8 +333,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Each person&rsquo;s record (<strong>Staff → record</strong>) shows two things about gaps:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>Recommended follow-up</strong> — the questions they currently have wrong, with actions to re-send the questions or mark the gap as reviewed (supervision evidence).</li>
-            <li><strong>How gaps get resolved</strong> — a count of <strong>Learn &amp; retry</strong> vs <strong>Just retry</strong>, an &ldquo;engaged with learning&rdquo; percentage, and a recent list. A healthy lean towards <em>Learn &amp; retry</em> means the person is genuinely engaging, not just clicking through. Both are included in the CQC evidence PDF.</li>
+            <li><strong>Recommended follow-up</strong>: the questions they currently have wrong, with actions to re-send the questions or mark the gap as reviewed (supervision evidence).</li>
+            <li><strong>How gaps get resolved</strong>: a count of <strong>Learn &amp; retry</strong> vs <strong>Just retry</strong>, an &ldquo;engaged with learning&rdquo; percentage, and a recent list. A healthy lean towards <em>Learn &amp; retry</em> means the person is genuinely engaging, not just clicking through. Both are included in the CQC evidence PDF.</li>
           </ul>
         </SectionBlock>
 
@@ -335,10 +343,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
             The <strong>Analytics</strong> page has a <strong>Knowledge gaps</strong> section pulling training and induction together:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>Summary</strong> — open gaps, staff affected, gaps closed in the last 30 days, and the team&rsquo;s &ldquo;engaged with learning&rdquo; percentage.</li>
-            <li><strong>Most-missed questions</strong> &amp; <strong>Weakest topics</strong> — exactly where to aim a refresher or supervision.</li>
-            <li><strong>Knowledge gaps over time</strong> — a trend chart showing whether open gaps are rising or falling (it builds up from a daily snapshot).</li>
-            <li><strong>How gaps are being closed</strong> — the team-wide Learn-vs-retry split and a recent feed.</li>
+            <li><strong>Summary</strong>: open gaps, staff affected, gaps closed in the last 30 days, and the team&rsquo;s &ldquo;engaged with learning&rdquo; percentage.</li>
+            <li><strong>Most-missed questions</strong> &amp; <strong>Weakest topics</strong>: exactly where to aim a refresher or supervision.</li>
+            <li><strong>Knowledge gaps over time</strong>: a trend chart showing whether open gaps are rising or falling (it builds up from a daily snapshot).</li>
+            <li><strong>How gaps are being closed</strong>: the team-wide Learn-vs-retry split and a recent feed.</li>
           </ul>
         </SectionBlock>
 
@@ -347,7 +355,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every <strong>Monday</strong>, CareStream emails admins a <strong>knowledge-gap digest</strong> (open gaps with a week-on-week change, most-missed questions and weakest topics), and sends staff with open gaps a gentle reminder to complete their Follow-up.
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li>Both honour the <strong>Knowledge-gap digest</strong> switch in <strong>Settings → Email preferences</strong> — turn it off to stop all of it.</li>
+            <li>Both honour the <strong>Knowledge-gap digest</strong> switch in <strong>Settings → Email preferences</strong>: turn it off to stop all of it.</li>
             <li>Use <strong>Send digest now</strong> on the Analytics page to email yourself the current digest at any time (handy before a supervision or inspection).</li>
           </ul>
         </SectionBlock>
@@ -363,7 +371,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What an onboarding flow is">
           <p className="text-sm text-neutral-mid">
-            An onboarding flow is a guided induction for new staff — an ordered checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong>. New starters complete their flow from the staff portal, and you can track who has finished.
+            An onboarding flow is a guided induction for new staff, an ordered checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong>. New starters complete their flow from the staff portal, and you can track who has finished.
           </p>
         </SectionBlock>
         <SectionBlock title="Ready-made flows (the quickest way to start)">
@@ -381,29 +389,29 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Where the ready-made flows come from">
           <p className="text-sm text-neutral-mid">
-            The ready-made flows are built from a library of real care-sector policies that have been <strong>anonymised</strong> — every home name, address, person and contact detail removed — so they reflect genuine, well-written procedures without belonging to any one home. When you adopt a flow, CareStream uses this as the starting point but always matches and tailors it to <em>your</em> own policies, so what your staff read and answer is specific to your home.
+            The ready-made flows are built from a library of real care-sector policies that have been <strong>anonymised</strong>: every home name, address, person and contact detail removed, so they reflect genuine, well-written procedures without belonging to any one home. When you adopt a flow, CareStream uses this as the starting point but always matches and tailors it to <em>your</em> own policies, so what your staff read and answer is specific to your home.
           </p>
         </SectionBlock>
         <SectionBlock title="Multiple-choice questions">
           <p className="text-sm text-neutral-mid">
-            Questions can be <strong>multiple choice</strong> — staff pick an answer in the portal and it's marked instantly. A wrong answer asks them to review the policy and try again, so a completed flow is real evidence they understood it. You can also use free-text questions (CareStream assesses the answer) when you build your own steps.
+            Questions can be <strong>multiple choice</strong>: staff pick an answer in the portal and it's marked instantly. A wrong answer asks them to review the policy and try again, so a completed flow is real evidence they understood it. You can also use free-text questions (CareStream assesses the answer) when you build your own steps.
           </p>
         </SectionBlock>
         <SectionBlock title="Building your own flow">
           <div className="space-y-3">
             <Step n={1}>Click <strong>New flow</strong>, name it, and choose which <strong>job roles</strong> it applies to (leave blank for all staff).</Step>
-            <Step n={2}>Add steps — a policy to read, or a question. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
-            <Step n={3}>Make sure the flow is <strong>active</strong> — only active flows are assigned to new starters.</Step>
+            <Step n={2}>Add steps, a policy to read, or a question. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
+            <Step n={3}>Make sure the flow is <strong>active</strong>: only active flows are assigned to new starters.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">
-            When you add a staff member and choose <strong>New starter</strong>, CareStream automatically enrols them in every active flow (adopted or your own) that matches their <strong>position</strong> or any of their <strong>specialist roles</strong>. So a new Nurse who is also Night Staff joins both the Nurse induction and the Night Staff specialist flow. Set the flows up once and every new starter is enrolled from day one — the confirmation screen tells you how many they joined.
+            When you add a staff member and choose <strong>New starter</strong>, CareStream automatically enrols them in every active flow (adopted or your own) that matches their <strong>position</strong> or any of their <strong>specialist roles</strong>. So a new Nurse who is also Night Staff joins both the Nurse induction and the Night Staff specialist flow. Set the flows up once and every new starter is enrolled from day one, the confirmation screen tells you how many they joined.
           </p>
         </SectionBlock>
         <SectionBlock title="Tracking progress">
           <p className="text-sm text-neutral-mid">
-            Each flow shows its enrolled staff and how far through they are, giving you a clear, auditable record that every new starter completed their induction — useful CQC evidence.
+            Each flow shows its enrolled staff and how far through they are, giving you a clear, auditable record that every new starter completed their induction, useful CQC evidence.
           </p>
         </SectionBlock>
         <SectionBlock title="Reading policies during induction">
@@ -411,13 +419,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             When an induction step asks staff to read a policy, they tap <strong>Read policy</strong> to open the full document in a clean, readable view (letterhead and contact details are stripped out and it's laid out with headings and bullet points). If the staff member's <strong>first language</strong> is set and their communication toggle is on, the policy is shown <strong>in their language</strong>. They can also <strong>Save for later</strong>, which pins the policy to a <em>Saved policies</em> list in their Chat Hub sidebar.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            CareStream quietly records <strong>how they read each policy</strong> — the time they spent and how far they scrolled — so you can tell the difference between someone who read it properly and someone who opened it and marked it done. They can mark a policy as read at any point; we simply record what they actually did.
+            CareStream quietly records <strong>how they read each policy</strong>: the time they spent and how far they scrolled, so you can tell the difference between someone who read it properly and someone who opened it and marked it done. They can mark a policy as read at any point; we simply record what they actually did.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Inside the reader there's also a <strong>“Talk to this Policy”</strong> button. It opens a focused chat where every answer comes straight from that one policy, and it suggests a few practical questions about it (in the staff member's language) to get them started — so if anything in the policy isn't clear, they can ask about it there and then.
+            Inside the reader there's also a <strong>“Talk to this Policy”</strong> button. It opens a focused chat where every answer comes straight from that one policy, and it suggests a few practical questions about it (in the staff member's language) to get them started, so if anything in the policy isn't clear, they can ask about it there and then.
           </p>
         </SectionBlock>
-        <Tip>If you add a new starter before a matching flow exists, no onboarding is assigned — adopt or create a flow for that role and future new starters will be enrolled automatically.</Tip>
+        <Tip>If you add a new starter before a matching flow exists, no onboarding is assigned, adopt or create a flow for that role and future new starters will be enrolled automatically.</Tip>
       </div>
     ),
   },
@@ -440,16 +448,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Replying in the staff member's language">
           <p className="text-sm text-neutral-mid">
-            The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile) — so a Polish-speaking carer gets Polish answers straight away, just like on WhatsApp. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.
+            The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile), so a Polish-speaking carer gets Polish answers straight away, just like on WhatsApp. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.
           </p>
         </SectionBlock>
         <SectionBlock title="Voice — speak and listen">
           <div className="space-y-3">
             <p className="text-sm text-neutral-mid">
-              Staff don&apos;t have to type. The <strong>microphone</strong> button next to the message box lets them <strong>speak their question</strong> — and it now listens in their <strong>own language</strong>, not just English, so a carer can ask in Romanian or Tagalog by voice.
+              Staff don&apos;t have to type. The <strong>microphone</strong> button next to the message box lets them <strong>speak their question</strong>: and it now listens in their <strong>own language</strong>, not just English, so a carer can ask in Romanian or Tagalog by voice.
             </p>
             <p className="text-sm text-neutral-mid">
-              Every answer also has a <strong>“Listen”</strong> button that <strong>reads the reply aloud</strong> in the answer&apos;s language — a real help for staff who find reading on a phone difficult, or who simply prefer to listen on shift.
+              Every answer also has a <strong>“Listen”</strong> button that <strong>reads the reply aloud</strong> in the answer&apos;s language, a real help for staff who find reading on a phone difficult, or who simply prefer to listen on shift.
             </p>
           </div>
         </SectionBlock>
@@ -474,13 +482,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="Installing the hub as an app + notifications">
           <div className="space-y-3">
             <p className="text-sm text-neutral-mid">
-              Staff can <strong>install the hub to their phone&apos;s home screen</strong> so it opens like an app — no browser, no typing in a URL. When they open it on their phone they&apos;ll see a prompt: on Android it&apos;s an <strong>Install</strong> button; on iPhone they tap <strong>Share → Add to Home Screen</strong>.
+              Staff can <strong>install the hub to their phone&apos;s home screen</strong> so it opens like an app, no browser, no typing in a URL. When they open it on their phone they&apos;ll see a prompt: on Android it&apos;s an <strong>Install</strong> button; on iPhone they tap <strong>Share → Add to Home Screen</strong>.
             </p>
             <p className="text-sm text-neutral-mid">
-              Once installed, the app offers to turn on <strong>notifications</strong>. With these on, staff get a tap on the shoulder when there&apos;s new training, a CQC practice question, or a renewal due — the same proactive nudge they got on WhatsApp, but landing straight in the hub. (Notifications are an extra: WhatsApp and email still work as before.)
+              Once installed, the app offers to turn on <strong>notifications</strong>. With these on, staff get a tap on the shoulder when there&apos;s new training, a CQC practice question, or a renewal due, the same proactive nudge they got on WhatsApp, but landing straight in the hub. (Notifications are an extra: WhatsApp and email still work as before.)
             </p>
             <p className="text-sm text-neutral-mid">
-              Encourage your team to install the app and allow notifications — it&apos;s the easiest way to keep them engaged as more moves into the hub.
+              Encourage your team to install the app and allow notifications, it&apos;s the easiest way to keep them engaged as more moves into the hub.
             </p>
           </div>
         </SectionBlock>
@@ -601,21 +609,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it is">
           <p className="text-sm text-neutral-mid">
-            Annual training modules <strong>teach</strong> a topic then <strong>assess</strong> it. Each module has clear <strong>learning outcomes</strong>, an estimated <strong>duration</strong>, and an interactive lesson made of <strong>sections</strong> — every section teaches a point, then applies it with a real <strong>care scenario</strong> and a quick <strong>knowledge check</strong> — followed by the multiple-choice assessment. Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual training modules</strong>.
+            Annual training modules <strong>teach</strong> a topic then <strong>assess</strong> it. Each module has clear <strong>learning outcomes</strong>, an estimated <strong>duration</strong>, and an interactive lesson made of <strong>sections</strong>: every section teaches a point, then applies it with a real <strong>care scenario</strong> and a quick <strong>knowledge check</strong>: followed by the multiple-choice assessment. Staff complete them in the hub <strong>in their first language</strong>, and passing issues a certificate. Find it at <strong>Training → Annual training modules</strong>.
           </p>
         </SectionBlock>
 
         <SectionBlock title="Two ways to get a module">
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
-            <li><strong>Assign standard</strong> — a ready-made module from the CareStream <strong>standard library</strong>, written against good-practice care-sector guidance. These are <strong>free</strong> to assign and don&apos;t use any AI credits. Quickest way to get started.</li>
-            <li><strong>Tailor to our policies</strong> — the AI reads <strong>your own uploaded policies</strong> (plus anonymised reference policies) and writes a module specific to how <em>your</em> home works, citing the policies it used. Tailoring a module uses <strong>1 AI credit</strong>.</li>
+            <li><strong>Assign standard</strong>: a ready-made module from the CareStream <strong>standard library</strong>, written against good-practice care-sector guidance. These are <strong>free</strong> to assign and don&apos;t use any AI credits. Quickest way to get started.</li>
+            <li><strong>Tailor to our policies</strong>: the AI reads <strong>your own uploaded policies</strong> (plus anonymised reference policies) and writes a module specific to how <em>your</em> home works, citing the policies it used. Tailoring a module uses <strong>1 AI credit</strong>.</li>
           </ul>
-          <Tip>Both kinds work identically for staff — the difference is only how the content was created. Start with standard modules and tailor the ones where your policies differ from the norm.</Tip>
+          <Tip>Both kinds work identically for staff, the difference is only how the content was created. Start with standard modules and tailor the ones where your policies differ from the norm.</Tip>
         </SectionBlock>
 
         <SectionBlock title="AI credits">
           <p className="text-sm text-neutral-mid">
-            Tailoring modules, generating cover images and a few other AI features draw on your plan&apos;s <strong>monthly AI credits</strong> (Starter 5, Professional 25). The remaining balance is shown at the top of the Annual training page and on your dashboard. Credits are <strong>separate</strong> from everyday <em>queries</em> (the questions staff ask in the hub) — running low on one never affects the other. The balance resets at the start of each month. When you&apos;re out, you can still assign standard modules for free, or upgrade your plan.
+            Tailoring modules, generating cover images and a few other AI features draw on your plan&apos;s <strong>monthly AI credits</strong> (Starter 5, Professional 25). The remaining balance is shown at the top of the Annual training page and on your dashboard. Credits are <strong>separate</strong> from everyday <em>queries</em> (the questions staff ask in the hub), running low on one never affects the other. The balance resets at the start of each month. When you&apos;re out, you can still assign standard modules for free, or upgrade your plan.
           </p>
         </SectionBlock>
 
@@ -624,35 +632,35 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>Open <strong>Annual training modules</strong>. You&apos;ll see a catalogue of UK care topics grouped by area, each with a default frequency and a <em>practical-also-required</em> flag where relevant.</Step>
             <Step n={2}>Use <strong>Assign standard</strong> (free) or <strong>Tailor to our policies</strong> (1 credit) on a topic. Tailored modules arrive as a <strong>draft</strong> with a lesson + question bank, citing the policies used.</Step>
             <Step n={3}>Click <strong>Review</strong> to read and edit the <strong>learning outcomes</strong>, the <strong>lesson sections</strong> (each with its scenario and quick check), and every assessment question (mark the correct answer); set the <strong>pass mark</strong>, <strong>duration</strong> and <strong>frequency</strong>; optionally <strong>generate a cover image</strong>, then <strong>Approve &amp; publish</strong>. Nothing reaches staff until you approve it.</Step>
-            <Step n={4}>Because this is your own AI-generated module, a quick confirmation appears before publishing — you acknowledge it&apos;s <strong>internally generated</strong> and that you&apos;ve reviewed it (see &ldquo;Your own training vs the standard library&rdquo; below).</Step>
-            <Step n={5}><strong>Assign</strong> a published module to staff — individually or tap a <strong>role</strong> to select everyone in it — with an optional due date.</Step>
+            <Step n={4}>Because this is your own AI-generated module, a quick confirmation appears before publishing, you acknowledge it&apos;s <strong>internally generated</strong> and that you&apos;ve reviewed it (see &ldquo;Your own training vs the standard library&rdquo; below).</Step>
+            <Step n={5}><strong>Assign</strong> a published module to staff, individually or tap a <strong>role</strong> to select everyone in it, with an optional due date.</Step>
           </div>
-          <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training — Module Generation&rdquo;.</Tip>
+          <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training, Module Generation&rdquo;.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Your own training vs the standard library">
           <p className="text-sm text-neutral-mid">
-            The <strong>standard library</strong> modules are controlled by CareStream and are <strong>independently reviewed</strong> (and, over time, CPD-accredited). When you <strong>tailor a module to your own policies</strong>, it&apos;s <strong>your home&apos;s internal training material</strong> — it sits <strong>outside</strong> that independently-reviewed library. That&apos;s why publishing your own module asks you to confirm you understand this and have reviewed it. You remain responsible for checking your tailored content is accurate and appropriate for your service.
+            The <strong>standard library</strong> modules are controlled by CareStream and are <strong>independently reviewed</strong> (and, over time, CPD-accredited). When you <strong>tailor a module to your own policies</strong>, it&apos;s <strong>your home&apos;s internal training material</strong>: it sits <strong>outside</strong> that independently-reviewed library. That&apos;s why publishing your own module asks you to confirm you understand this and have reviewed it. You remain responsible for checking your tailored content is accurate and appropriate for your service.
           </p>
         </SectionBlock>
 
         <SectionBlock title="Cover images (optional)">
           <p className="text-sm text-neutral-mid">
-            In the review screen you can <strong>Generate image</strong> to create a friendly cover illustration for the module — it appears below the title in the hub and helps staff recognise it. Generating an image uses <strong>1 AI credit</strong>; you can regenerate it if you&apos;d like a different one. It&apos;s entirely optional and modules work fine without one. Standard-library modules already come with images at no cost.
+            In the review screen you can <strong>Generate image</strong> to create a friendly cover illustration for the module, it appears below the title in the hub and helps staff recognise it. Generating an image uses <strong>1 AI credit</strong>; you can regenerate it if you&apos;d like a different one. It&apos;s entirely optional and modules work fine without one. Standard-library modules already come with images at no cost.
           </p>
         </SectionBlock>
 
         <SectionBlock title="What staff see">
           <p className="text-sm text-neutral-mid">
-            Staff get an <strong>Annual Training</strong> item in the hub (separate from My Training). They see the <strong>outcomes</strong> and estimated time, then work through the <strong>interactive sections</strong> — reading each point, trying the scenario (with a reveal-able answer) and a quick instant-feedback check — then take the assessment. Pass and they get a <strong>certificate</strong>; fail and they can review and retry. On passing they&apos;re asked a short <strong>confidence/usefulness</strong> question (optional). A prominent <strong>&ldquo;Ask about the policies behind this training&rdquo;</strong> panel lets them open any source policy and ask questions — all in their own language.
+            Staff get an <strong>Annual Training</strong> item in the hub (separate from My Training). They see the <strong>outcomes</strong> and estimated time, then work through the <strong>interactive sections</strong>: reading each point, trying the scenario (with a reveal-able answer) and a quick instant-feedback check, then take the assessment. Pass and they get a <strong>certificate</strong>; fail and they can review and retry. On passing they&apos;re asked a short <strong>confidence/usefulness</strong> question (optional). A prominent <strong>&ldquo;Ask about the policies behind this training&rdquo;</strong> panel lets them open any source policy and ask questions, all in their own language.
           </p>
           <Tip>Completion, average score, claimed-vs-actual lesson time and learner feedback all roll up under <strong>Analytics → Training → Annual training</strong>.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Certificates, renewals &amp; practical sign-off">
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>Certificates</strong> are honest <em>knowledge-assessment</em> records (not accredited qualifications) — viewable and printable on the staff record and included in the CQC evidence PDF.</li>
-            <li><strong>Renewals</strong> follow the module&apos;s frequency (annual = +12 months, etc.) and resurface automatically when due — admins are reminded, and it shows as &ldquo;due for renewal&rdquo; on the record.</li>
+            <li><strong>Certificates</strong> are honest <em>knowledge-assessment</em> records (not accredited qualifications), viewable and printable on the staff record and included in the CQC evidence PDF.</li>
+            <li><strong>Renewals</strong> follow the module&apos;s frequency (annual = +12 months, etc.) and resurface automatically when due, admins are reminded, and it shows as &ldquo;due for renewal&rdquo; on the record.</li>
             <li><strong>Practical-required topics</strong> (e.g. Moving &amp; Handling, Medication, First Aid) show a banner that the module is the knowledge component only. On the staff record, use <strong>&ldquo;Record practical&rdquo;</strong> to log the observed assessment (with your name + date).</li>
           </ul>
         </SectionBlock>
@@ -674,7 +682,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="How it works">
           <p className="text-sm text-neutral-mid">
-            CareStream sends training questions directly to staff via WhatsApp or email. Staff answer by replying with A, B, C, or D. Results are tracked on the Training dashboard and Analytics page. Training questions are always a separate delivery — they are never mixed into policy or CQC conversations.
+            CareStream sends training questions directly to staff via WhatsApp or email. Staff answer by replying with A, B, C, or D. Results are tracked on the Training dashboard and Analytics page. Training questions are always a separate delivery, they are never mixed into policy or CQC conversations.
           </p>
         </SectionBlock>
         <SectionBlock title="Training in your team's language">
@@ -734,7 +742,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               Go to <strong>Analytics → Engagement</strong> for the single most important number as you move your team onto the staff hub: <strong>weekly active staff %</strong>. A staff member counts as active in a week if they opened the hub, asked a question, or read a policy. The tab also shows how many were active, your team size, and an <strong>8-week trend</strong> so you can see the direction of travel.
             </p>
             <p className="text-sm text-neutral-mid">
-              The <strong>channel mix</strong> shows where questions are coming in — hub vs WhatsApp vs email vs voice — over the last 30 days, with the <strong>hub&apos;s share</strong> called out. As you encourage staff onto the hub, you want weekly active % to hold steady (or rise) and the hub&apos;s share of questions to grow.
+              The <strong>channel mix</strong> shows where questions are coming in, hub vs WhatsApp vs email vs voice, over the last 30 days, with the <strong>hub&apos;s share</strong> called out. As you encourage staff onto the hub, you want weekly active % to hold steady (or rise) and the hub&apos;s share of questions to grow.
             </p>
           </div>
         </SectionBlock>
@@ -765,16 +773,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Click <strong>Add entry</strong> and fill in the question and answer.</Step>
             <Step n={3}>Select the <strong>Category</strong> that best describes the entry (see below).</Step>
             <Step n={4}>Optionally add a source name (e.g. the plan or policy the entry comes from).</Step>
-            <Step n={5}>Save the entry — it is saved as <em>pending</em>. Approve it from the list before it is used in responses.</Step>
+            <Step n={5}>Save the entry, it is saved as <em>pending</em>. Approve it from the list before it is used in responses.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Knowledge categories">
           <div className="space-y-2 text-sm text-neutral-mid">
             <p>The category you choose determines where the entry is used:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>General</strong> — available across all policy and handbook queries via the general knowledge base.</li>
-              <li><strong>Business Continuity</strong> — appears exclusively in the Business Continuity chat channel. Staff can access it on the portal by selecting the Business Continuity card.</li>
-              <li><strong>Policies &amp; Procedures, HR &amp; Staff, Health &amp; Safety, Medication, Infection Control</strong> — all feed into the general knowledge base and appear alongside relevant policy content.</li>
+              <li><strong>General</strong>: available across all policy and handbook queries via the general knowledge base.</li>
+              <li><strong>Business Continuity</strong>: appears exclusively in the Business Continuity chat channel. Staff can access it on the portal by selecting the Business Continuity card.</li>
+              <li><strong>Policies &amp; Procedures, HR &amp; Staff, Health &amp; Safety, Medication, Infection Control</strong>: all feed into the general knowledge base and appear alongside relevant policy content.</li>
             </ul>
           </div>
         </SectionBlock>
@@ -783,7 +791,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             CareStream also comes pre-loaded with a library of regulatory knowledge covering CQC Key Lines of Enquiry, health and safety legislation, infection control guidance, medication regulations, and more. This is available to all care settings on the platform and does not count against your document limit.
           </p>
         </SectionBlock>
-        <Tip>Use the knowledge base for things that change less often than policies — such as your registration number, registered manager, bed capacity, or emergency escalation contacts. Categorising entries correctly ensures staff can find them in the right chat channel.</Tip>
+        <Tip>Use the knowledge base for things that change less often than policies, such as your registration number, registered manager, bed capacity, or emergency escalation contacts. Categorising entries correctly ensures staff can find them in the right chat channel.</Tip>
       </div>
     ),
   },
@@ -796,7 +804,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it does">
           <p className="text-sm text-neutral-mid">
-            The Business Continuity chat channel lets staff ask questions about your organisation&apos;s emergency procedures, escalation contacts, and contingency plans — directly from the staff portal. It reads exclusively from knowledge entries you have categorised as <strong>Business Continuity</strong>, so the answers are specific to your care setting.
+            The Business Continuity chat channel lets staff ask questions about your organisation&apos;s emergency procedures, escalation contacts, and contingency plans, directly from the staff portal. It reads exclusively from knowledge entries you have categorised as <strong>Business Continuity</strong>, so the answers are specific to your care setting.
           </p>
         </SectionBlock>
         <SectionBlock title="Setting it up">
@@ -805,7 +813,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Write a question a staff member might ask (e.g. &ldquo;What do I do if we have a power cut during a night shift?&rdquo;) and the correct answer from your plan.</Step>
             <Step n={3}>Set the <strong>Category</strong> dropdown to <strong>Business Continuity</strong>.</Step>
             <Step n={4}>Optionally add the source name (e.g. &ldquo;Business Continuity Plan v2&rdquo;).</Step>
-            <Step n={5}>Save and <strong>Approve</strong> the entry — only approved entries appear in responses.</Step>
+            <Step n={5}>Save and <strong>Approve</strong> the entry, only approved entries appear in responses.</Step>
             <Step n={6}>Repeat for all key scenarios: staff shortages, IT outages, fire/evacuation, adverse weather, utility failures, supplier failures, and key person absence.</Step>
           </div>
         </SectionBlock>
@@ -813,7 +821,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="space-y-2 text-sm text-neutral-mid">
             <p>Staff open the portal and click the <strong>Business Continuity</strong> card. They can then ask free-text questions such as:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>&ldquo;We are two carers short tonight — what is the escalation process?&rdquo;</li>
+              <li>&ldquo;We are two carers short tonight, what is the escalation process?&rdquo;</li>
               <li>&ldquo;Who do I call if the fire alarm system fails?&rdquo;</li>
               <li>&ldquo;What are the steps if we need to transfer residents to another facility?&rdquo;</li>
             </ul>
@@ -832,7 +840,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             </ul>
           </div>
         </SectionBlock>
-        <Tip>Business Continuity entries are not used in any other chat channel — they are kept separate so staff always get focused, relevant answers in an emergency situation.</Tip>
+        <Tip>Business Continuity entries are not used in any other chat channel, they are kept separate so staff always get focused, relevant answers in an emergency situation.</Tip>
       </div>
     ),
   },
@@ -845,19 +853,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it is">
           <p className="text-sm text-neutral-mid">
-            CQC Staff Prep helps your team prepare for conversations with CQC inspectors. Staff are sent open-ended practice questions — the kind an inspector would actually ask — and write their answers in their own words. CareStream evaluates each answer and gives a score out of 100 with specific feedback, so staff know exactly where to improve before an inspection.
+            CQC Staff Prep helps your team prepare for conversations with CQC inspectors. Staff are sent open-ended practice questions, the kind an inspector would actually ask, and write their answers in their own words. CareStream evaluates each answer and gives a score out of 100 with specific feedback, so staff know exactly where to improve before an inspection.
           </p>
         </SectionBlock>
         <SectionBlock title="How it works">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>CQC Staff Prep</strong> in the Reporting section of the sidebar.</Step>
-            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong>model answer</strong> — the standard a strong answer is measured against — and its own tracking line: how many staff it&apos;s been <strong>assigned</strong> to, how many have <strong>answered</strong>, and their <strong>average score</strong>.</Step>
-            <Step n={3}>To send a question out, use <strong>Assign to all staff</strong> to send it to everyone at once, or <strong>Assign to specific staff</strong> to pick individuals. A domain header also has <strong>Assign all to staff</strong> to send every question in that domain in one go. (Admins are never included — only active staff are assigned.)</Step>
+            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong>model answer</strong>: the standard a strong answer is measured against, and its own tracking line: how many staff it&apos;s been <strong>assigned</strong> to, how many have <strong>answered</strong>, and their <strong>average score</strong>.</Step>
+            <Step n={3}>To send a question out, use <strong>Assign to all staff</strong> to send it to everyone at once, or <strong>Assign to specific staff</strong> to pick individuals. A domain header also has <strong>Assign all to staff</strong> to send every question in that domain in one go. (Admins are never included, only active staff are assigned.)</Step>
             <Step n={4}>The question is automatically rephrased before delivery so staff cannot memorise the exact wording. (If someone already has that question, they aren&apos;t sent a duplicate.)</Step>
-            <Step n={5}>Staff open their portal and write a free-text answer. There is no multiple choice — they must articulate their knowledge in their own words, just as they would with a real inspector.</Step>
-            <Step n={6}>CareStream immediately scores the answer from 0 to 100 — against the model answer — and gives constructive written feedback. Staff see their result, and the <strong>model answer</strong>, straight away.</Step>
-            <Step n={7}>If a staff member scores below 60, they can <strong>review the model answer and feedback, then try again</strong> in their own words. The new attempt is re-scored and replaces the old one, so the follow-up is built in — no manual re-sending needed.</Step>
-            <Step n={8}>Track progress across your whole team in the <strong>Performance</strong> tab — scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
+            <Step n={5}>Staff open their portal and write a free-text answer. There is no multiple choice, they must articulate their knowledge in their own words, just as they would with a real inspector.</Step>
+            <Step n={6}>CareStream immediately scores the answer from 0 to 100, against the model answer, and gives constructive written feedback. Staff see their result, and the <strong>model answer</strong>, straight away.</Step>
+            <Step n={7}>If a staff member scores below 60, they can <strong>review the model answer and feedback, then try again</strong> in their own words. The new attempt is re-scored and replaces the old one, so the follow-up is built in, no manual re-sending needed.</Step>
+            <Step n={8}>Track progress across your whole team in the <strong>Performance</strong> tab, scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="The five CQC domains">
@@ -885,14 +893,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
               To create several at once, click <strong>Generate with AI</strong>. Choose a single domain or a <strong>balanced mix across all five</strong>, pick how many (3, 5 or 10), and optionally give a focus theme (e.g. dementia care, medication). CareStream generates that many brand-new questions and model answers, saves them straight to your bank, and avoids duplicating questions you already have.
             </p>
             <p className="text-sm text-neutral-mid">
-              All generated questions follow the same CQC inspector style and include a model answer used for scoring. <strong>AI generation uses 1 AI credit per question generated</strong> — so a batch of 5 uses 5 credits. The cost is shown before you confirm.
+              All generated questions follow the same CQC inspector style and include a model answer used for scoring. <strong>AI generation uses 1 AI credit per question generated</strong>: so a batch of 5 uses 5 credits. The cost is shown before you confirm.
             </p>
           </div>
         </SectionBlock>
         <SectionBlock title="Understanding scores">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
-              ['80–100', 'Excellent', 'Covers all key points clearly — staff would reassure an inspector on this topic.'],
+              ['80–100', 'Excellent', 'Covers all key points clearly, staff would reassure an inspector on this topic.'],
               ['60–79',  'Good',      'Solid knowledge with minor gaps. A little more detail would strengthen the answer.'],
               ['40–59',  'Partial',   'Some good points but significant gaps. An inspector would probe further.'],
               ['0–39',   'Needs work','Key knowledge is missing or vague. This area needs focused attention before an inspection.'],
@@ -907,7 +915,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Learn &amp; retry">
           <p className="text-sm text-neutral-mid">
-            After answering, staff see the model answer. If they score below 60 they get a <strong>Review &amp; try again</strong> option: they read the model answer and feedback, then re-answer in their own words. The new attempt is re-scored and replaces the old one, and we keep their first score so the <strong>improvement</strong> is recorded — built-in follow-up, with no manual re-sending.
+            After answering, staff see the model answer. If they score below 60 they get a <strong>Review &amp; try again</strong> option: they read the model answer and feedback, then re-answer in their own words. The new attempt is re-scored and replaces the old one, and we keep their first score so the <strong>improvement</strong> is recorded, built-in follow-up, with no manual re-sending.
           </p>
         </SectionBlock>
         <SectionBlock title="Tracking &amp; evidence">
@@ -916,7 +924,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               In the <strong>Question Bank</strong>, each question shows how many staff it&apos;s been assigned to, how many answered, and the average score.
             </p>
             <p className="text-sm text-neutral-mid">
-              In <strong>Analytics → CQC Staff Prep</strong>, you get the whole-team picture: scores by inspection domain, a per-staff table, and a <strong>Review &amp; retry</strong> summary showing how many answers were re-attempted and the average score improvement — direct evidence staff are learning.
+              In <strong>Analytics → CQC Staff Prep</strong>, you get the whole-team picture: scores by inspection domain, a per-staff table, and a <strong>Review &amp; retry</strong> summary showing how many answers were re-attempted and the average score improvement, direct evidence staff are learning.
             </p>
             <p className="text-sm text-neutral-mid">
               On each <strong>staff record</strong>, a <strong>CQC Staff Prep</strong> section lists every question that person was assigned, their score, and any improvement after retrying. It&apos;s included in the CQC evidence PDF.
@@ -937,10 +945,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="What it does">
           <div className="space-y-3">
             <p className="text-sm text-neutral-mid">
-              Policy Gaps checks the regulations that apply to a registered care setting against the <strong>actual content</strong> of your uploaded policies — it reads inside the documents rather than matching on titles. For each regulation it tells you whether your policies <strong>cover</strong> it, partially cover it, or leave a <strong>gap</strong>, and names the policy that provides the evidence.
+              Policy Gaps checks the regulations that apply to a registered care setting against the <strong>actual content</strong> of your uploaded policies, it reads inside the documents rather than matching on titles. For each regulation it tells you whether your policies <strong>cover</strong> it, partially cover it, or leave a <strong>gap</strong>, and names the policy that provides the evidence.
             </p>
             <p className="text-sm text-neutral-mid">
-              It also surfaces <strong>unanswered staff questions</strong> — recurring themes where staff asked something the assistant couldn&apos;t answer from your policies — which is real-world evidence of a missing or unclear policy.
+              It also surfaces <strong>unanswered staff questions</strong>: recurring themes where staff asked something the assistant couldn&apos;t answer from your policies, which is real-world evidence of a missing or unclear policy.
             </p>
           </div>
         </SectionBlock>
@@ -950,12 +958,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
               CareStream keeps a library of the regulations that apply to registered care settings (CQC fundamental standards, the Care Act, health &amp; safety law, MCA/DoLS, infection control, and more). For each one, the coverage check works in three steps:
             </p>
             <ol className="list-decimal space-y-1.5 pl-5 text-sm text-neutral-mid">
-              <li><strong>Find the relevant policy passages.</strong> The regulation is turned into a search and run against the indexed content of <em>all</em> your uploaded policies — the same retrieval that powers the staff chat — to pull out the passages most likely to address it.</li>
-              <li><strong>Judge from the content.</strong> An AI compliance auditor reads those passages and decides — from your documents&apos; actual wording, not their titles — whether they substantively address the regulation.</li>
+              <li><strong>Find the relevant policy passages.</strong> The regulation is turned into a search and run against the indexed content of <em>all</em> your uploaded policies, the same retrieval that powers the staff chat, to pull out the passages most likely to address it.</li>
+              <li><strong>Judge from the content.</strong> An AI compliance auditor reads those passages and decides, from your documents&apos; actual wording, not their titles, whether they substantively address the regulation.</li>
               <li><strong>Record the verdict and evidence.</strong> Each regulation is marked Covered, Partial or Gap, with the policy that provides the evidence and a one-line reason. Results are cached so the page is instant until you re-run it.</li>
             </ol>
             <p className="text-sm text-neutral-mid">
-              This is the key difference from a simple checklist: a regulation is only flagged when your policies genuinely don&apos;t address it in content — so with a complete, well-maintained library the vast majority come back Covered.
+              This is the key difference from a simple checklist: a regulation is only flagged when your policies genuinely don&apos;t address it in content, so with a complete, well-maintained library the vast majority come back Covered.
             </p>
           </div>
         </SectionBlock>
@@ -964,7 +972,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             {[
               ['Covered', 'A policy clearly and substantively addresses the regulation. The evidence policy is named.'],
               ['Partial', 'The topic is touched on but the policy is incomplete for what the regulation requires. The policy that partly covers it is named so you can strengthen it.'],
-              ['Gap',     'Nothing in your uploaded policies addresses the regulation — add a policy that covers it.'],
+              ['Gap',     'Nothing in your uploaded policies addresses the regulation, add a policy that covers it.'],
             ].map(([label, desc]) => (
               <div key={label} className="grid grid-cols-[6rem_1fr] gap-3 px-4 py-3">
                 <span className="font-medium text-neutral-dark">{label}</span>
@@ -975,18 +983,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Unanswered staff questions">
           <p className="text-sm text-neutral-mid">
-            Alongside regulation coverage, the page clusters questions your staff asked — in the Chat Hub, by email or on WhatsApp — that the assistant <strong>could not answer from your policies</strong> in the last 90 days. Recurring themes here are real-world evidence that a policy is missing, unclear, or not yet uploaded, straight from how your team actually uses CareStream.
+            Alongside regulation coverage, the page clusters questions your staff asked, in the Chat Hub, by email or on WhatsApp, that the assistant <strong>could not answer from your policies</strong> in the last 90 days. Recurring themes here are real-world evidence that a policy is missing, unclear, or not yet uploaded, straight from how your team actually uses CareStream.
           </p>
         </SectionBlock>
         <SectionBlock title="Using policy gaps">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Policy Gaps</strong> in the sidebar.</Step>
-            <Step n={2}>Click <strong>Run coverage analysis</strong>. CareStream reads through your policies and judges each regulation against their content — this takes about a minute. The result is saved, so re-open the page any time; re-run it after you&apos;ve uploaded or updated policies.</Step>
+            <Step n={2}>Click <strong>Run coverage analysis</strong>. CareStream reads through your policies and judges each regulation against their content, this takes about a minute. The result is saved, so re-open the page any time; re-run it after you&apos;ve uploaded or updated policies.</Step>
             <Step n={3}>Review anything flagged as a <strong>Gap</strong> or <strong>Partial</strong>. Each shows why, and partials name the policy that partly covers it.</Step>
             <Step n={4}>For each gap, upload a policy that addresses it (or strengthen the partial one). Re-run the analysis to confirm it&apos;s now covered.</Step>
           </div>
         </SectionBlock>
-        <Tip>Because coverage is judged from policy content, a regulation only shows as a gap when your policies genuinely don&apos;t address it — not just because no policy happens to be titled with the regulation&apos;s name. Re-run the analysis before a CQC inspection for an up-to-date picture.</Tip>
+        <Tip>Because coverage is judged from policy content, a regulation only shows as a gap when your policies genuinely don&apos;t address it, not just because no policy happens to be titled with the regulation&apos;s name. Re-run the analysis before a CQC inspection for an up-to-date picture.</Tip>
       </div>
     ),
   },
@@ -994,12 +1002,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'monthly-audits',
     icon:    ClipboardCheck,
     title:   'Monthly Audits',
-    summary: 'Complete, store, and review care quality audits — on the web, in the hub, or via WhatsApp — with AI recommendations',
+    summary: 'Complete, store, and review care quality audits, on the web, in the hub, or via WhatsApp, with AI recommendations',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Audits module provides pre-built audit templates covering the key governance areas of a care setting — Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web, in the <strong>Chat Hub</strong>, or via WhatsApp, and generate CQC-linked AI recommendations on completion.
+            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web, in the <strong>Chat Hub</strong>, or via WhatsApp, and generate CQC-linked AI recommendations on completion.
           </p>
         </SectionBlock>
 
@@ -1031,7 +1039,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>Go to <strong>Monthly Audits</strong> in the sidebar and click <em>New audit</em>.</Step>
             <Step n={2}>Choose the audit type, select the month, and optionally enter the auditor's name and role. Click <em>Start audit</em>, then confirm the details on the next screen.</Step>
             <Step n={3}>Work through each section using the tabs at the top. Answer yes/no questions by tapping Yes or No (or N/A where applicable). For findings-based audits, type your observations directly into the Findings field and record any planned actions in Actions &amp; Timescales.</Step>
-            <Step n={4}>Answers save automatically as you go. To pause and return later, click <em>Save &amp; exit</em> at the top of the form — your audit will appear in the <strong>In progress</strong> section on the Monthly Audits page.</Step>
+            <Step n={4}>Answers save automatically as you go. To pause and return later, click <em>Save &amp; exit</em> at the top of the form, your audit will appear in the <strong>In progress</strong> section on the Monthly Audits page.</Step>
             <Step n={5}>Once all required questions are answered, open the <strong>Summary</strong> tab. Fill in the strengths, areas for improvement, and a target completion date for any actions.</Step>
             <Step n={6}>Click <em>Complete &amp; get AI recommendations</em> to finalise the audit and generate your report.</Step>
           </div>
@@ -1043,19 +1051,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>CareStream lists the available audit templates. Reply with the number of the template you want to complete.</Step>
             <Step n={3}>Reply <em>yes</em> to confirm you want to start that audit, or <em>no</em> to cancel. For the <strong>Fire Marshall Checklist</strong>, you will also be asked to select <em>day</em> or <em>night</em> shift. For the <strong>Resident Bedrooms</strong> audit, you will be asked to enter the room number.</Step>
             <Step n={4}>The system walks you through each question. For yes/no questions reply <em>yes</em>, <em>no</em>, or <em>n/a</em>. For findings questions type your observation, then reply with any planned actions (or <em>skip</em> if none).</Step>
-            <Step n={5}>To pause at any time, send <strong>stop</strong> or <strong>pause</strong>. Your progress is saved and you can ask other questions as normal. To resume, send "audit" again and select the same template — the system continues from where you left off.</Step>
+            <Step n={5}>To pause at any time, send <strong>stop</strong> or <strong>pause</strong>. Your progress is saved and you can ask other questions as normal. To resume, send "audit" again and select the same template, the system continues from where you left off.</Step>
           </div>
-          <Tip>You can start an audit on WhatsApp and finish it on the web (or vice versa) — answers are stored in real time regardless of channel.</Tip>
+          <Tip>You can start an audit on WhatsApp and finish it on the web (or vice versa), answers are stored in real time regardless of channel.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Doing audits in the Chat Hub">
           <p className="text-sm text-neutral-mid">
-            Staff whose role is <strong>Admin</strong> get an <strong>Audits</strong> item in the Chat Hub sidebar — handy for completing checks on a phone or tablet while walking the home.
+            Staff whose role is <strong>Admin</strong> get an <strong>Audits</strong> item in the Chat Hub sidebar, handy for completing checks on a phone or tablet while walking the home.
           </p>
           <div className="mt-2 space-y-3">
             <Step n={1}>Open the hub and choose <strong>Audits</strong>. Templates are grouped by frequency (Daily, Weekly, Monthly…), with anything in progress shown at the top to resume.</Step>
-            <Step n={2}>Tap <strong>Start</strong> to begin a run, answer each question (Yes/No/N-A, findings or free-text — saved automatically), then <strong>Complete audit</strong> to generate the AI recommendations.</Step>
-            <Step n={3}>Audits done in the hub are the same records as on the web — they appear in your <strong>Audit section</strong> (and repository) automatically. Nothing is duplicated.</Step>
+            <Step n={2}>Tap <strong>Start</strong> to begin a run, answer each question (Yes/No/N-A, findings or free-text, saved automatically), then <strong>Complete audit</strong> to generate the AI recommendations.</Step>
+            <Step n={3}>Audits done in the hub are the same records as on the web, they appear in your <strong>Audit section</strong> (and repository) automatically. Nothing is duplicated.</Step>
           </div>
         </SectionBlock>
 
@@ -1065,7 +1073,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
             <li>Set how many rooms your home has in <strong>Settings → Rooms</strong>. The room picker then offers <strong>1</strong> to that number.</li>
-            <li>Need a named room (e.g. "Lavender")? Just type it into the room box when starting — it&apos;s remembered for next time.</li>
+            <li>Need a named room (e.g. "Lavender")? Just type it into the room box when starting, it&apos;s remembered for next time.</li>
           </ul>
         </SectionBlock>
 
@@ -1124,32 +1132,31 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
 // ─── Accordion item ───────────────────────────────────────────────────────────
 
-function GuideAccordion({ section }: { section: GuideSection }) {
+function GuideAccordion({ section, forceOpen }: { section: GuideSection; forceOpen?: boolean }) {
   const [open, setOpen] = useState(section.defaultOpen ?? false)
   const Icon = section.icon
+  const isOpen = forceOpen ?? open
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-card bg-white shadow-card">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-neutral-light/50"
-        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-6 py-4 text-left transition-colors hover:bg-neutral-light/50"
+        aria-expanded={isOpen}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-light text-teal">
-          <Icon size={17} />
-        </span>
+        <Icon size={18} className="shrink-0 text-teal" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-neutral-dark text-sm">{section.title}</p>
-          <p className="text-xs text-neutral-mid truncate">{section.summary}</p>
+          <p className="text-base font-semibold text-neutral-dark">{section.title}</p>
+          <p className="mt-0.5 text-xs text-neutral-mid">{section.summary}</p>
         </div>
-        {open
+        {isOpen
           ? <ChevronUp size={16} className="shrink-0 text-neutral-mid" />
           : <ChevronDown size={16} className="shrink-0 text-neutral-mid" />
         }
       </button>
 
-      {open && (
-        <div className="border-t border-gray-100 px-5 py-5">
+      {isOpen && (
+        <div className="space-y-5 border-t border-gray-100 px-6 py-6">
           {section.content}
         </div>
       )}
@@ -1160,18 +1167,44 @@ function GuideAccordion({ section }: { section: GuideSection }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HelpPage() {
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const filtered = q
+    ? GUIDE_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q))
+    : GUIDE_SECTIONS
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-dark">Help &amp; Guides</h1>
+        <h1 className="text-2xl font-bold text-neutral-dark">Help &amp; Guides</h1>
         <p className="mt-1 text-sm text-neutral-mid">
-          Step-by-step guides for every part of CareStream. Click a section to expand it.
+          Step-by-step guides for every part of CareStream. Search or click a section to expand it.
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative max-w-xl">
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search guides…"
+          className="w-full rounded-card border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-sm shadow-card outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+        />
+        {query && (
+          <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark">
+            <X size={15} />
+          </button>
+        )}
+      </div>
+
       <div className="space-y-3">
-        {GUIDE_SECTIONS.map(section => (
-          <GuideAccordion key={section.id} section={section} />
+        {filtered.length === 0 ? (
+          <div className="rounded-card bg-white px-6 py-10 text-center text-sm text-neutral-mid shadow-card">
+            No guides match &ldquo;{query}&rdquo;.
+          </div>
+        ) : filtered.map(section => (
+          <GuideAccordion key={section.id} section={section} forceOpen={q ? true : undefined} />
         ))}
       </div>
 

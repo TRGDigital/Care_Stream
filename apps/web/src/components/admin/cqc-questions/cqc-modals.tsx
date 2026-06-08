@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { AlertCircle, CheckCircle2, Loader2, Send, Sparkles, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Sparkles, UserPlus, X } from 'lucide-react'
 import { DOMAINS, type Domain, type Question, type StaffUser } from './cqc-shared'
 
 // ─── Add Question Modal ───────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ export function SendModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-card shadow-elevated w-full max-w-lg max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-base font-semibold text-neutral-dark">Send to staff</h2>
+          <h2 className="text-base font-semibold text-neutral-dark">Assign to specific staff</h2>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
         <div className="p-6 space-y-4">
@@ -203,8 +203,8 @@ export function SendModal({
           <button onClick={handleSend} disabled={selected.length === 0 || sending}
             className="flex items-center gap-2 px-4 py-2 bg-teal text-white rounded-btn text-sm font-medium hover:bg-teal-dark disabled:opacity-50"
           >
-            {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-            {sending ? 'Sending…' : `Send to ${selected.length} staff`}
+            {sending ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
+            {sending ? 'Assigning…' : `Assign to ${selected.length} staff`}
           </button>
         </div>
       </div>

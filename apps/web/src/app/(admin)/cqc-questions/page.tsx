@@ -8,7 +8,7 @@ import { AiCreditsBar } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ClipboardList,
-  Info, Loader2, Plus, Send, Trash2,
+  Info, Loader2, Plus, Trash2, Users, UserPlus,
 } from 'lucide-react'
 import { DOMAINS, type Delivery, type Question, type StaffUser } from '@/components/admin/cqc-questions/cqc-shared'
 
@@ -71,8 +71,10 @@ function QuestionBankTab({
   const [sendTarget, setSendTarget]   = useState<Question | null>(null)
   const [showAdd, setShowAdd]         = useState(false)
   const [deactivating, setDeact]      = useState<string | null>(null)
-  const [sendingDomain, setSendingDom] = useState<string | null>(null)
-  const [sentDomain, setSentDomain]   = useState<string | null>(null)
+  const [assigningDomain, setAssigningDom] = useState<string | null>(null)
+  const [assignedDomain, setAssignedDomain] = useState<string | null>(null)
+  const [assigningOne, setAssigningOne] = useState<string | null>(null)
+  const [assignedOne, setAssignedOne]   = useState<string | null>(null)
   const api = createApiClient(token)
 
   function toggleDomain(domain: string) {
@@ -85,9 +87,10 @@ function QuestionBankTab({
     finally { setDeact(null) }
   }
 
-  async function handleSendAllDomain(domain: string, domainQuestions: Question[]) {
+  // Assign every question in a domain to all staff at once.
+  async function handleAssignAllDomain(domain: string, domainQuestions: Question[]) {
     if (staff.length === 0 || domainQuestions.length === 0) return
-    setSendingDom(domain)
+    setAssigningDom(domain)
     try {
       const allStaffIds = staff.map(s => s.id)
       await Promise.all(
@@ -95,11 +98,24 @@ function QuestionBankTab({
           api.cqcQuestions.deliver(q.id, { user_ids: allStaffIds, channel: 'portal' })
         )
       )
-      setSentDomain(domain)
-      setTimeout(() => setSentDomain(null), 2500)
+      setAssignedDomain(domain)
+      setTimeout(() => setAssignedDomain(null), 2500)
       onSent()
     } catch { /* silent — individual failures don't block */ }
-    finally { setSendingDom(null) }
+    finally { setAssigningDom(null) }
+  }
+
+  // Assign a single question to all staff.
+  async function handleAssignAllStaff(q: Question) {
+    if (staff.length === 0) return
+    setAssigningOne(q.id)
+    try {
+      await api.cqcQuestions.deliver(q.id, { user_ids: staff.map(s => s.id), channel: 'portal' })
+      setAssignedOne(q.id)
+      setTimeout(() => setAssignedOne(null), 2500)
+      onSent()
+    } catch { /* silent */ }
+    finally { setAssigningOne(null) }
   }
 
   return (
@@ -132,18 +148,18 @@ function QuestionBankTab({
               </button>
               {qs.length > 0 && staff.length > 0 && (
                 <button
-                  onClick={e => { e.stopPropagation(); handleSendAllDomain(d.key, qs) }}
-                  disabled={sendingDomain === d.key}
+                  onClick={e => { e.stopPropagation(); handleAssignAllDomain(d.key, qs) }}
+                  disabled={assigningDomain === d.key}
                   className="ml-3 flex items-center gap-1.5 rounded-btn border border-teal px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal hover:text-white transition-colors disabled:opacity-50 shrink-0"
                 >
-                  {sendingDomain === d.key ? (
+                  {assigningDomain === d.key ? (
                     <Loader2 size={12} className="animate-spin" />
-                  ) : sentDomain === d.key ? (
+                  ) : assignedDomain === d.key ? (
                     <CheckCircle2 size={12} />
                   ) : (
-                    <Send size={12} />
+                    <Users size={12} />
                   )}
-                  {sendingDomain === d.key ? 'Sending…' : sentDomain === d.key ? 'Sent!' : 'Send all to staff'}
+                  {assigningDomain === d.key ? 'Assigning…' : assignedDomain === d.key ? 'Assigned!' : 'Assign all to staff'}
                 </button>
               )}
             </div>
@@ -153,21 +169,28 @@ function QuestionBankTab({
                 {qs.length === 0 ? (
                   <p className="px-5 py-4 text-sm text-neutral-mid">No questions in this domain yet.</p>
                 ) : qs.map(q => (
-                  <div key={q.id} className="px-5 py-4 space-y-2">
+                  <div key={q.id} className="px-5 py-4 space-y-2.5">
                     <p className="text-sm font-medium text-neutral-dark">{q.question}</p>
-                    <details>
-                      <summary className="text-xs text-neutral-mid cursor-pointer hover:text-neutral-dark list-none">
-                        Show model answer
-                      </summary>
-                      <p className="mt-2 text-sm text-neutral-mid bg-neutral-light rounded-lg px-3 py-2 leading-relaxed">
-                        {q.model_answer}
+
+                    {/* Model answer — the factual standard the AI scores staff answers against. */}
+                    <div className="rounded-lg border border-teal/15 bg-teal-light/15 px-3 py-2.5">
+                      <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal">
+                        <CheckCircle2 size={12} /> Model answer · what a strong answer covers
                       </p>
-                    </details>
-                    <div className="flex items-center gap-2 pt-1">
-                      <button onClick={() => setSendTarget(q)}
-                        className="flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark"
+                      <p className="text-sm leading-relaxed text-neutral-mid">{q.model_answer}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button onClick={() => handleAssignAllStaff(q)} disabled={assigningOne === q.id || staff.length === 0}
+                        className="flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                       >
-                        <Send size={12} /> Send to staff
+                        {assigningOne === q.id ? <Loader2 size={12} className="animate-spin" /> : assignedOne === q.id ? <CheckCircle2 size={12} /> : <Users size={12} />}
+                        {assigningOne === q.id ? 'Assigning…' : assignedOne === q.id ? 'Assigned!' : 'Assign to all staff'}
+                      </button>
+                      <button onClick={() => setSendTarget(q)} disabled={staff.length === 0}
+                        className="flex items-center gap-1.5 rounded-btn border border-teal px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        <UserPlus size={12} /> Assign to specific staff
                       </button>
                       <button onClick={() => handleDeactivate(q.id)} disabled={deactivating === q.id}
                         className="flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs text-neutral-mid hover:text-red-600 hover:border-red-200"
@@ -500,7 +523,7 @@ export default function CqcQuestionsPage() {
         <>
           <HelpAccordion title="How CQC Staff Prep works">
             <p><strong className="text-neutral-dark">Question Bank</strong> — 21 pre-loaded CQC inspector-style questions are organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. You can add your own questions manually or generate them using AI by providing a topic.</p>
-            <p><strong className="text-neutral-dark">Sending questions</strong> — click <strong className="text-neutral-dark">Send to staff</strong> on any question to send it to one or more team members. The system automatically rephrases the question before delivery so staff cannot memorise the exact wording.</p>
+            <p><strong className="text-neutral-dark">Assigning questions</strong> — use <strong className="text-neutral-dark">Assign to all staff</strong> to send a question to everyone, or <strong className="text-neutral-dark">Assign to specific staff</strong> to pick individuals. The system automatically rephrases the question before delivery so staff cannot memorise the exact wording.</p>
             <p><strong className="text-neutral-dark">How staff answer</strong> — staff write free-text answers in their portal (not multiple choice). There are no trick questions; they are assessed on whether they demonstrate the right knowledge and approach.</p>
             <p><strong className="text-neutral-dark">AI scoring</strong> — each answer is evaluated by AI against the model answer and given a score from 0 to 100 with constructive feedback. Scores appear in the Performance tab straight away.</p>
           </HelpAccordion>

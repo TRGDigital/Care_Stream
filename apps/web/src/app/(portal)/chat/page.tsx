@@ -12,7 +12,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView } from '@/components/hub/annual-training-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache, hubKey } from '@/lib/page-cache'
 
 // useLayoutEffect runs before the browser paints; on the server it no-ops (and
 // would warn), so fall back to useEffect there. Used to hydrate the sidebar from
@@ -403,6 +403,29 @@ export default function ChatPage() {
       .then(d => { const v = d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })); setSavedPolicies(v); try { localStorage.setItem(`cs_saved_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})
   }, [session?.accessToken, sidebarPolicy]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Warm the view caches in the background shortly after the hub opens, so the
+  // first click of a view paints instantly instead of fetching on click. Gated to
+  // views whose persistent cache is still COLD (never loaded on this device) — once
+  // warm, this stays silent and the view's own on-click revalidation keeps it
+  // fresh, so we don't add background load on every hub open. Deferred so it never
+  // competes with the first paint or the counts fetch. (Follow-up is intentionally
+  // left to load on click — it can trigger per-question translation.)
+  useEffect(() => {
+    if (!session?.accessToken) return
+    const api = createApiClient(session.accessToken)
+    const t = setTimeout(() => {
+      const warm = <T,>(name: string, fetch: () => Promise<T>) => {
+        if (persistentCache.get(hubKey(name, userId)) !== undefined) return  // already warm
+        fetch().then(v => persistentCache.set(hubKey(name, userId), v)).catch(() => {})
+      }
+      warm('induction',   () => api.onboarding.myEnrollments().then(d => d.enrollments))
+      warm('my-training', () => api.training.myEnrollments().then(d => d.enrollments))
+      warm('annual',      () => api.me.annualTraining.list().then(d => d.items))
+      if (isAdmin) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
+    }, 500)
+    return () => clearTimeout(t)
+  }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function removeSaved(policyId: string) {
     setSavedPolicies(prev => prev.filter(p => p.policy_id !== policyId))
@@ -798,29 +821,29 @@ export default function ChatPage() {
 
         {/* Induction view */}
         {view === 'induction' && session?.accessToken && (
-          <InductionView token={session.accessToken} onSavedChange={refreshSavedPolicies} onTalkToPolicy={talkToPolicy} />
+          <InductionView token={session.accessToken} userId={userId} onSavedChange={refreshSavedPolicies} onTalkToPolicy={talkToPolicy} />
         )}
 
         {/* Training view */}
         {view === 'training' && session?.accessToken && (
-          <TrainingView token={session.accessToken} />
+          <TrainingView token={session.accessToken} userId={userId} />
         )}
 
         {/* Audits view (admin-role staff only) */}
         {view === 'audits' && isAdmin && session?.accessToken && (
-          <AuditsView token={session.accessToken} />
+          <AuditsView token={session.accessToken} userId={userId} />
         )}
 
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
-          <AnnualTrainingView token={session.accessToken} onTalkToPolicy={talkToPolicy} onChange={() => {
+          <AnnualTrainingView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
         )}
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
-          <FollowUpView token={session.accessToken} onTalkToPolicy={talkToPolicy} onChange={() => {
+          <FollowUpView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
         )}
@@ -1310,14 +1333,15 @@ function MessageBubble({
 // "Learn & retry" (a short, policy-grounded micro-lesson then a fresh check
 // question). Closing a gap either way clears it from here.
 
-function FollowUpView({ token, onChange, onTalkToPolicy }: { token: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+function FollowUpView({ token, userId, onChange, onTalkToPolicy }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
-  const cached = pageCache.get<any[]>('hub-followup')
+  const ck = hubKey('followup', userId)
+  const cached = persistentCache.get<any[]>(ck)
   const [items,   setItems]   = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)
 
   function load() {
-    api.me.followUp().then(d => { setItems(d.items); pageCache.set('hub-followup', d.items) }).catch(() => {}).finally(() => setLoading(false))
+    api.me.followUp().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1546,10 +1570,11 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const
 
-function TrainingView({ token }: { token: string }) {
+function TrainingView({ token, userId }: { token: string; userId: string }) {
   const api = createApiClient(token)
 
-  const cachedEnr = pageCache.get<any[]>('hub-my-training')
+  const ck = hubKey('my-training', userId)
+  const cachedEnr = persistentCache.get<any[]>(ck)
   const [enrollments, setEnrollments] = useState<any[]>(cachedEnr ?? [])
   const [loading,     setLoading]     = useState(!cachedEnr)  // instant from cache, revalidate
   // enrollmentId → questionId → selected letter
@@ -1565,7 +1590,7 @@ function TrainingView({ token }: { token: string }) {
     try {
       const d = await api.training.myEnrollments()
       setEnrollments(d.enrollments)
-      pageCache.set('hub-my-training', d.enrollments)
+      persistentCache.set(ck, d.enrollments)
     } finally {
       setLoading(false)
     }
@@ -1856,9 +1881,10 @@ function TrainingView({ token }: { token: string }) {
 
 // ─── InductionView ────────────────────────────────────────────────────────────
 
-function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token: string; userId: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
-  const cachedInd = pageCache.get<any[]>('hub-induction')
+  const ck = hubKey('induction', userId)
+  const cachedInd = persistentCache.get<any[]>(ck)
   const [enrollments, setEnrollments] = useState<any[]>(cachedInd ?? [])
   const [loading,     setLoading]     = useState(!cachedInd)
   const [completing,  setCompleting]  = useState<string | null>(null)
@@ -1873,7 +1899,7 @@ function InductionView({ token, onSavedChange, onTalkToPolicy }: { token: string
 
   useEffect(() => {
     api.onboarding.myEnrollments()
-      .then(d => { setEnrollments(d.enrollments); pageCache.set('hub-induction', d.enrollments) })
+      .then(d => { setEnrollments(d.enrollments); persistentCache.set(ck, d.enrollments) })
       .finally(() => setLoading(false))
     // Reflect already-saved policies so the Save button persists across refresh.
     api.me.savedPolicies()

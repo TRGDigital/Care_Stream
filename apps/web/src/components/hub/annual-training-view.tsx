@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
@@ -25,25 +25,26 @@ const STATE_META: Record<string, { label: string; cls: string }> = {
 
 function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 
-export function AnnualTrainingView({ token, onChange, onTalkToPolicy }: { token: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string }>({ mode: 'list' })
   if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
-  return <AnnualList token={token} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
+  return <AnnualList token={token} userId={userId} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
 }
 
 // ─── List ─────────────────────────────────────────────────────────────────────
 
-function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: string, name: string) => void; onCert: (id: string) => void }) {
+function AnnualList({ token, userId, onOpen, onCert }: { token: string; userId: string; onOpen: (id: string, name: string) => void; onCert: (id: string) => void }) {
   const api = createApiClient(token)
-  const cached = pageCache.get<any[]>('hub-annual')
+  const ck = hubKey('annual', userId)
+  const cached = persistentCache.get<any[]>(ck)
   const [items, setItems] = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)   // instant from cache, revalidate in background
   const [error, setError] = useState(false)
 
   useEffect(() => {
     api.me.annualTraining.list()
-      .then(d => { setItems(d.items); pageCache.set('hub-annual', d.items); setError(false) })
+      .then(d => { setItems(d.items); persistentCache.set(ck, d.items); setError(false) })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -55,7 +56,7 @@ function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: str
       <AlertTriangle size={32} className="text-amber-400" />
       <p className="font-medium text-neutral-dark">Couldn&apos;t load your annual training</p>
       <p className="text-sm text-neutral-mid">Please check your connection and try again.</p>
-      <button onClick={() => { setLoading(true); setError(false); api.me.annualTraining.list().then(d => { setItems(d.items); pageCache.set('hub-annual', d.items) }).catch(() => setError(true)).finally(() => setLoading(false)) }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Retry</button>
+      <button onClick={() => { setLoading(true); setError(false); api.me.annualTraining.list().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => setError(true)).finally(() => setLoading(false)) }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Retry</button>
     </div>
   )
 

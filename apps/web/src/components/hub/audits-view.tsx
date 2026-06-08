@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { pageCache } from '@/lib/page-cache'
+import { persistentCache, hubKey } from '@/lib/page-cache'
 import {
   ClipboardCheck, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2,
   Sparkles, Play, Pause, Plus,
@@ -31,20 +31,21 @@ function isAnswered(q: any, a?: Answer) {
   return a?.answer_na === true || (a?.answer_yn !== null && a?.answer_yn !== undefined)
 }
 
-export function AuditsView({ token }: { token: string }) {
+export function AuditsView({ token, userId }: { token: string; userId: string }) {
   const api = createApiClient(token)
   const [activeRunId, setActiveRunId] = useState<string | null>(null)
 
   if (activeRunId) {
     return <AuditRunner token={token} runId={activeRunId} onExit={() => setActiveRunId(null)} />
   }
-  return <AuditList api={api} onOpen={setActiveRunId} />
+  return <AuditList api={api} userId={userId} onOpen={setActiveRunId} />
 }
 
 // ─── List: templates to start, in-progress to resume, recent completed ─────────
 
-function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; onOpen: (runId: string) => void }) {
-  const cached = pageCache.get<{ templates: any[]; runs: any[]; rooms: string[] }>('hub-audits')
+function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiClient>; userId: string; onOpen: (runId: string) => void }) {
+  const ck = hubKey('audits', userId)
+  const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[] }>(ck)
   const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
   const [runs,      setRuns]      = useState<any[]>(cached?.runs ?? [])
   const [rooms,     setRooms]     = useState<string[]>(cached?.rooms ?? [])
@@ -54,7 +55,7 @@ function AuditList({ api, onOpen }: { api: ReturnType<typeof createApiClient>; o
 
   function load() {
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []); pageCache.set('hub-audits', { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [] }) })
+      .then(([t, r]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [] }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

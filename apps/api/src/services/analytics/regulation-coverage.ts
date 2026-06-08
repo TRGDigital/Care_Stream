@@ -16,6 +16,40 @@ import { mapLimit } from '../../lib/translate'
 
 const HAIKU = 'claude-haiku-4-5-20251001'
 
+// Editable in the platform console (/prompts, usage "regulation_coverage"). Placeholders:
+// {{official_name}}, {{summary}}, {{care_home_context}}, {{excerpts}}.
+export const DEFAULT_REGULATION_COVERAGE_PROMPT = `You are a UK care-home compliance auditor. Judge ONLY from the policy extracts provided whether this care home has a policy that substantively addresses the regulation. Do not rely on outside knowledge or assume coverage that is not shown in the extracts.
+
+REGULATION: {{official_name}}
+WHAT IT REQUIRES: {{summary}}
+IN A CARE HOME: {{care_home_context}}
+
+POLICY EXTRACTS FROM THIS HOME (each tagged with its policy title):
+{{excerpts}}
+
+Decide how well this home's policies address the regulation:
+- "covered"  — a policy clearly and substantively addresses it
+- "partial"  — the topic is touched on but is incomplete for what the regulation requires
+- "gap"      — it is not addressed in these extracts
+
+Pick the single policy title that best evidences your decision (or leave empty for a gap).
+
+Respond with ONLY minified JSON, no markdown or preamble:
+{"status":"covered|partial|gap","confidence":0-100,"policy":"<best-matching policy title, or empty>","reason":"<one short sentence>"}`
+
+// Read the live prompt from the DB (falls back to the default if not yet seeded).
+async function getCoveragePrompt(): Promise<string> {
+  try {
+    const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'regulation_coverage' } })
+    return (row?.content as string) || DEFAULT_REGULATION_COVERAGE_PROMPT
+  } catch {
+    return DEFAULT_REGULATION_COVERAGE_PROMPT
+  }
+}
+
+const fillTemplate = (tpl: string, vars: Record<string, string>): string =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{{${k}}}`).join(v ?? ''), tpl)
+
 export type CoverageRow = {
   reference_key:        string
   status:               'covered' | 'partial' | 'gap'
@@ -45,6 +79,9 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
     `${r.official_name}. ${r.summary} ${r.care_home_context}`.slice(0, 1500))
   const embeddings = await embedTexts(queryTexts)
 
+  // One DB read for the (editable) judging prompt, reused for every regulation.
+  const promptTemplate = await getCoveragePrompt()
+
   const rows: CoverageRow[] = await mapLimit(regulations as any[], 5, async (reg: any, i: number) => {
     const fallback: CoverageRow = {
       reference_key: reg.reference_key, status: 'gap', confidence: 0,
@@ -59,20 +96,14 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
         .map((m, j) => `[${j + 1}] (${policyTitle(m.metadata.source_filename)}) ${String(m.metadata.chunk_text ?? '').slice(0, 700)}`)
         .join('\n\n')
 
-      const sys = 'You are a UK care-home compliance auditor. Judge ONLY from the policy extracts provided whether the home has a policy that substantively addresses the regulation. Do not rely on outside knowledge or assume coverage that is not shown in the extracts.'
-      const user = [
-        `REGULATION: ${reg.official_name}`,
-        `WHAT IT REQUIRES: ${reg.summary}`,
-        `IN A CARE HOME: ${reg.care_home_context}`,
-        '',
-        `POLICY EXTRACTS FROM THIS HOME:`,
+      const user = fillTemplate(promptTemplate, {
+        official_name:     reg.official_name,
+        summary:           reg.summary,
+        care_home_context: reg.care_home_context,
         excerpts,
-        '',
-        'Do this home\'s policies substantively address this regulation? "covered" = a policy clearly addresses it; "partial" = touched on but incomplete; "gap" = not addressed in these extracts.',
-        'Reply with ONLY minified JSON: {"status":"covered|partial|gap","confidence":0-100,"policy":"<title of the best-matching extract, or empty>","reason":"<one short sentence>"}',
-      ].join('\n')
+      })
 
-      const text = await callClaude(sys, user, { model: HAIKU, maxTokens: 250 })
+      const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250 })
       const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
       const status: CoverageRow['status'] = ['covered', 'partial', 'gap'].includes(parsed.status) ? parsed.status : 'gap'
       const evidence = matches.find(m => policyTitle(m.metadata.source_filename) === parsed.policy) ?? matches[0]

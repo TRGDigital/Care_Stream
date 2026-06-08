@@ -675,25 +675,25 @@ export default function CareAuditsPage() {
       </section>
 
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-6">
-          <div className="grid gap-12 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
-            <div className="md:pr-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">Under an hour</p>
-              <p className="mb-3 text-xl font-bold text-neutral-dark">
+          <div className="grid gap-16 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
+            <div className="md:px-12">
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">Under an hour</p>
+              <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
                 to complete a structured audit in the hub instead of an afternoon on a spreadsheet.
               </p>
-              <p className="text-base leading-relaxed text-neutral-mid">
+              <p className="text-base leading-loose text-neutral-mid">
                 A guided, structured audit with answers that save as you go is far quicker than a
                 blank form, and produces a better formatted report at the end of it.
               </p>
             </div>
-            <div className="md:pl-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">10</p>
-              <p className="mb-3 text-xl font-bold text-neutral-dark">
+            <div className="md:px-12">
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">10</p>
+              <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
                 pre-built audit templates covering the areas CQC inspects, ready to use out of the box.
               </p>
-              <p className="text-base leading-relaxed text-neutral-mid">
+              <p className="text-base leading-loose text-neutral-mid">
                 Medicines, infection control, health and safety, fire, resident bedrooms, the kitchen,
                 accident and incident records, and data protection. Use them as they are or build your own.
               </p>

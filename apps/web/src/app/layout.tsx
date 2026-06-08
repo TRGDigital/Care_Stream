@@ -36,7 +36,11 @@ export const metadata: Metadata = {
   // PWA: app/manifest.ts is auto-linked by Next; these add the iOS home-screen
   // icon + standalone launch behaviour so the installed hub looks/acts like an app.
   icons: {
-    icon:  '/icon-192.png',
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
     apple: '/apple-touch-icon.png',
   },
   appleWebApp: {

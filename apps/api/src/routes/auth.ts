@@ -9,7 +9,8 @@ import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
-import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email/outbound'
+import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { createLoginLink, consumeLoginToken } from '../lib/login-tokens'
 
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -257,6 +258,54 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       subscription_status: user.tenant.subscription_status,
     },
   })
+})
+
+// Shared success path — record login, audit, issue tokens, respond. `user` must
+// include its `tenant` relation. Reused by password login and magic-link sign-in.
+async function respondWithSession(res: Response, user: any): Promise<void> {
+  const now = new Date()
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(user.first_login_at ? {} : { first_login_at: now }) },
+  })
+  await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
+  ok(res, {
+    access_token:  generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role }),
+    refresh_token: generateRefreshToken(user.id),
+    user:   { id: user.id, name: user.name, email: user.email, role: user.role, tenant_id: user.tenant_id },
+    tenant: { id: user.tenant.id, name: user.tenant.name, slug: user.tenant.slug, subscription_status: user.tenant.subscription_status },
+  })
+}
+
+// ─── POST /auth/magic-link/request ───────────────────────────────────────────
+// Staff-initiated: "email me a sign-in link". Always responds success (no email
+// enumeration); only sends when the email maps to an active account.
+const MAGIC_REQUEST_TTL_MIN = 30
+authRouter.post('/magic-link/request', async (req: Request, res: Response) => {
+  const email = String(req.body?.email ?? '').trim().toLowerCase()
+  if (!email) { err(res, 'INVALID', 'Email is required', 400); return }
+  try {
+    const user = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, is_active: true, email: true, name: true } })
+    if (user && user.is_active !== false) {
+      const link = await createLoginLink(user.id, user.tenant_id, MAGIC_REQUEST_TTL_MIN * 60_000)
+      await sendStaffLoginLinkEmail({ to: user.email, name: user.name, link, expiresMins: MAGIC_REQUEST_TTL_MIN }).catch(e => console.error('[magic/request] email', e))
+    }
+  } catch (e) { console.error('[magic/request]', e) }
+  ok(res, { sent: true })
+})
+
+// ─── POST /auth/magic-link/verify ─────────────────────────────────────────────
+// Consume a sign-in token (from a magic link or QR) and start a session.
+authRouter.post('/magic-link/verify', async (req: Request, res: Response) => {
+  const token = String(req.body?.token ?? '')
+  const consumed = await consumeLoginToken(token)
+  if (!consumed) { err(res, 'INVALID_TOKEN', 'This sign-in link is invalid or has expired.', 401); return }
+  const user = await (prisma as any).user.findUnique({
+    where:   { id: consumed.user_id },
+    include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true } } },
+  })
+  if (!user || user.is_active === false) { err(res, 'INVALID_TOKEN', 'This sign-in link is no longer valid.', 401); return }
+  await respondWithSession(res, user)
 })
 
 // ─── GET /auth/verify-email?token=xxx ────────────────────────────────────────

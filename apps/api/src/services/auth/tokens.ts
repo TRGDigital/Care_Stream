@@ -11,7 +11,9 @@ import type { JwtPayload } from '../../middleware/auth'
 // in a future iteration).
 
 const ACCESS_EXPIRY = '1h'
-const REFRESH_EXPIRY = '7d'
+// Long refresh window so care staff "stay signed in" on their phone like WhatsApp,
+// rather than being booted to a login screen after a week. (WhatsApp → Hub migration.)
+const REFRESH_EXPIRY = '90d'
 
 export function generateAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: ACCESS_EXPIRY })

@@ -165,6 +165,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
             To change their details — name, position, specialisms, languages, shift or WhatsApp — use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
           </p>
         </SectionBlock>
+        <SectionBlock title="Getting staff into the hub (no password)">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              The easiest way to get a care assistant signed in on their phone is a <strong>passwordless sign-in link</strong> — no password to type or remember. On a staff member&apos;s detail card, click <strong>Sign-in link</strong>. You&apos;ll get a <strong>QR code</strong> they can scan, a link you can <strong>copy</strong>, or an <strong>Email it to them</strong> button. It works once and lasts 14 days; signing in this way also keeps them logged in on that phone for a long time.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              Staff can also get themselves in: on the sign-in page there&apos;s an <strong>“Email me a sign-in link”</strong> option, so they never need to remember a password.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              Once they&apos;re in, encourage them to <strong>add CareStream to their home screen</strong> and turn on notifications (see the Chat Hub guide) — that&apos;s how the hub replaces the WhatsApp nudges.
+            </p>
+          </div>
+        </SectionBlock>
         <SectionBlock title="Positions & specialist roles — how they drive onboarding & training">
           <p className="text-sm text-neutral-mid">
             A staff member's <strong>position</strong> is the single most important thing you set, because CareStream uses it to give them the <strong>right onboarding and the right training questions</strong> for their job — a Care Assistant's induction and quizzes are different from a Nurse's or a Chef's.

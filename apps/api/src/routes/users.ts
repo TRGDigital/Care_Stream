@@ -6,7 +6,8 @@ import { prisma } from '../db/client'
 import { hashPassword } from '../services/auth/password'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
-import { sendStaffWelcomeEmail } from '../services/email/outbound'
+import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
 import { buildStaffRecord } from '../lib/staff-record'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
@@ -470,6 +471,31 @@ usersRouter.post('/:id/reactivate', async (req: Request, res: Response) => {
   })
 
   ok(res, { reactivated: true })
+})
+
+// ─── POST /users/:id/login-link ──────────────────────────────────────────────
+// Generate a passwordless sign-in link for a staff member (for the manager to copy,
+// show as a QR, or email). Valid 14 days, single-use. The frictionless way to get a
+// care assistant into the hub the first time — no password to type.
+usersRouter.post('/:id/login-link', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const { id }   = req.params
+  const sendEmail = req.body?.send_email === true
+
+  const user = await (prisma as any).user.findUnique({ where: { id }, select: { id: true, name: true, email: true, tenant_id: true, is_active: true } })
+  if (!user || user.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  if (user.is_active === false) { err(res, 'INACTIVE', 'This staff member is deactivated.', 400); return }
+
+  const ttlMs = 14 * 24 * 60 * 60 * 1000
+  try {
+    const url = await createLoginLink(user.id, tenantId, ttlMs)
+    if (sendEmail) {
+      await sendStaffLoginLinkEmail({ to: user.email as string, name: user.name as string, link: url, expiresMins: 14 * 24 * 60 }).catch(e => console.error('[login-link] email', e))
+    }
+    ok(res, { url, expires_at: new Date(Date.now() + ttlMs).toISOString(), emailed: sendEmail })
+  } catch (e: any) {
+    err(res, 'LINK_FAILED', e.message, 500)
+  }
 })
 
 // ─── POST /users/:id/send-credentials ────────────────────────────────────────

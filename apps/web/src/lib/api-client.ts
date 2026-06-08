@@ -160,6 +160,10 @@ export function createApiClient(token: string) {
         apiFetch<{ user: { id: string; name: string; email: string }; temp_password: string; contact: StaffContact }>(
           `/users/${id}/reset-password`, token, { method: 'POST' }
         ),
+      loginLink: (id: string, sendEmail: boolean) =>
+        apiFetch<{ url: string; expires_at: string; emailed: boolean }>(`/users/${id}/login-link`, token, {
+          method: 'POST', body: JSON.stringify({ send_email: sendEmail }),
+        }),
       sendCredentials: (id: string, tempPassword: string) =>
         apiFetch<{ sent: boolean }>(`/users/${id}/send-credentials`, token, {
           method: 'POST',

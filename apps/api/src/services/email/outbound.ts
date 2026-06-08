@@ -158,6 +158,47 @@ export async function sendVerificationEmail(to: string, name: string, verificati
   })
 }
 
+// ─── Passwordless sign-in link (magic link) ───────────────────────────────────
+
+export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; link: string; expiresMins: number }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping sign-in link email')
+    return
+  }
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const hrs = opts.expiresMins >= 60 ? `${Math.round(opts.expiresMins / 60)} hours` : `${opts.expiresMins} minutes`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Tap the button below to sign in to CareStream — no password needed.
+    </p>
+
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${opts.link}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        Sign in to CareStream
+      </a>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+      This link works once and expires in <strong>${hrs}</strong>. Once you're in, add CareStream to your home screen so it opens like an app. If you didn't request this, you can ignore it.
+    </p>
+
+    <p style="color:#9ca3af;font-size:12px;margin:0">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <span style="color:${PURPLE}">${opts.link}</span>
+    </p>
+
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: 'Your CareStream sign-in link', html })
+}
+
 // ─── Password reset ───────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<void> {

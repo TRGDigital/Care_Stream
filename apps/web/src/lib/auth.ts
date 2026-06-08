@@ -51,6 +51,7 @@ export const authOptions: NextAuthOptions = {
         email:         { label: 'Email',    type: 'email'    },
         password:      { label: 'Password', type: 'password' },
         mode:          { label: 'Mode',         type: 'text' },
+        token:         { label: 'Magic Token',  type: 'text' },
         access_token:  { label: 'Access Token',  type: 'text' },
         refresh_token: { label: 'Refresh Token', type: 'text' },
         tenant_name:   { label: 'Tenant Name',   type: 'text' },
@@ -74,6 +75,31 @@ export const authOptions: NextAuthOptions = {
               tenantName:   credentials.tenant_name as string,
               accessToken:  credentials.access_token as string,
               refreshToken: credentials.refresh_token as string,
+            }
+          } catch { return null }
+        }
+
+        // ─── Magic-link / QR sign-in ──────────────────────────────────────────
+        if (credentials?.mode === 'magic') {
+          if (!credentials.token) return null
+          try {
+            const res = await fetch(`${API_URL}/auth/magic-link/verify`, {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ token: credentials.token }),
+            })
+            const body = await res.json()
+            if (!res.ok || !body.success) return null
+            const { user, tenant, access_token, refresh_token } = body.data
+            return {
+              id:           user.id,
+              name:         user.name,
+              email:        user.email,
+              role:         user.role as 'admin' | 'staff',
+              tenantId:     user.tenant_id,
+              tenantName:   tenant.name,
+              accessToken:  access_token,
+              refreshToken: refresh_token,
             }
           } catch { return null }
         }
@@ -113,7 +139,9 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  session:  { strategy: 'jwt' },
+  // Long session so staff stay signed in on their phone (matches the 90d backend
+  // refresh token) rather than being logged out after a week.
+  session:  { strategy: 'jwt', maxAge: 90 * 24 * 60 * 60 },
   callbacks: {
     async jwt({ token, user }) {
       // Initial sign-in: store tokens and decode expiry from the JWT

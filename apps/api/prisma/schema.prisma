@@ -377,6 +377,20 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Passwordless sign-in tokens (magic link / per-staff QR). Single-use, hashed.
+model LoginToken {
+  id         String    @id @default(uuid())
+  token_hash String    @unique
+  user_id    String
+  tenant_id  String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  @@index([user_id])
+  @@map("login_tokens")
+}
+
 // Web-push subscriptions (one row per browser/device a staff member opted in on).
 // Powers PWA push — the in-hub replacement for the WhatsApp nudge.
 model PushSubscription {

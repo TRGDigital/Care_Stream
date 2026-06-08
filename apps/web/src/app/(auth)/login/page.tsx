@@ -11,7 +11,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
+  const [magicSent,    setMagicSent]    = useState(false)
+  const [magicLoading, setMagicLoading] = useState(false)
   const router = useRouter()
+
+  async function sendMagicLink() {
+    if (!email.trim()) { setError('Enter your email address, then tap “Email me a sign-in link”.'); return }
+    setError(''); setMagicLoading(true)
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ''}/auth/magic-link/request`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }),
+      })
+      setMagicSent(true)
+    } catch { setMagicSent(true) /* same UX — don't reveal */ }
+    finally { setMagicLoading(false) }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -81,6 +95,26 @@ export default function LoginPage() {
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
+
+      {/* Passwordless option — easier for care staff on a phone */}
+      <div className="my-5 flex items-center gap-3 text-xs text-neutral-mid">
+        <span className="h-px flex-1 bg-gray-200" /> or <span className="h-px flex-1 bg-gray-200" />
+      </div>
+      {magicSent ? (
+        <p className="rounded-lg border border-teal/20 bg-teal-light/30 px-4 py-3 text-center text-sm text-neutral-dark">
+          If that email is registered, a sign-in link is on its way. Open it on your phone — no password needed.
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={sendMagicLink}
+          disabled={magicLoading}
+          className="w-full rounded-md border border-teal px-3 py-2.5 text-sm font-medium text-teal hover:bg-teal hover:text-white transition-colors disabled:opacity-50"
+        >
+          {magicLoading ? 'Sending…' : 'Email me a sign-in link'}
+        </button>
+      )}
+
       <p className="mt-6 text-center text-sm text-neutral-mid">
         Don&apos;t have an account?{' '}
         <Link href="/register" className="font-medium text-teal hover:underline">

@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
+import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import {
   ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
@@ -202,7 +203,8 @@ export default function StaffRecordPage() {
         <button onClick={() => router.push('/staff')} className="flex items-center gap-1.5 text-sm text-neutral-mid hover:text-neutral-dark">
           <ArrowLeft size={15} /> Back to staff
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 print:hidden">
+          {token && u?.role === 'staff' && <SignInLinkButton token={token} userId={id} userName={u?.name ?? ''} />}
           <button onClick={sendReminder} disabled={busy === 'remind'} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
             {busy === 'remind' ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />} Send reminder
           </button>

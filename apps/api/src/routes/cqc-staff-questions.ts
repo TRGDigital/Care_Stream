@@ -63,6 +63,35 @@ Provide 2–3 sentences of constructive feedback that the staff member can act o
 Respond in this exact JSON format with no markdown, no code block, no preamble:
 {"score":75,"feedback":"..."}`
 
+export const DEFAULT_QUESTION_BATCH_PROMPT = `You are a CQC (Care Quality Commission) inspection expert with extensive knowledge of the Health and Social Care Act 2008, the Fundamental Standards, and the CQC's Key Lines of Enquiry (KLOEs).
+
+Generate {{count}} DISTINCT, realistic CQC inspector-style questions that an inspector would ask frontline care workers during an inspection, each with a comprehensive model answer.
+
+{{domain_instruction}}
+{{topic_instruction}}
+
+Do NOT duplicate or closely paraphrase any of these existing questions:
+{{avoid_list}}
+
+Requirements for each question:
+- Open-ended (not multiple choice or yes/no)
+- Realistic — exactly the kind of question a CQC inspector would ask a care worker on the floor
+- Tests practical knowledge and safe working practices, not theoretical knowledge
+- Phrased naturally, as if the inspector is speaking directly to the staff member
+- Appropriately challenging but fair for a frontline care worker
+- Each question must be meaningfully different from the others in this batch
+
+Requirements for each model answer:
+- 3–6 sentences covering the key points a strong answer should include
+- Practical and specific — references real actions, not vague intentions
+- Reflects current CQC expectations and best practice for the domain
+- Written from the staff member's perspective (first person)
+- Includes the specific detail that distinguishes an excellent answer from a basic one
+
+Respond with ONLY a valid JSON array — no markdown, no code block, no preamble — in this exact shape:
+[{"domain":"safe","question":"...","model_answer":"..."}]
+Each "domain" must be exactly one of: safe, effective, caring, responsive, well_led.`
+
 // Fetch a live prompt from the DB, falling back to the default if not yet saved
 async function getPrompt(usage: string, defaultPrompt: string): Promise<string> {
   try {
@@ -263,6 +292,73 @@ cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Res
     }
     await logAiCredit(tenantId, 'cqc_questions')
     ok(res, { question: parsed.question, model_answer: parsed.model_answer, domain })
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e.message, 500)
+  }
+})
+
+// POST /cqc-questions/generate-batch — AI generates a batch of NEW questions and
+// saves them to the bank. Charges one AI credit per question generated.
+cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const VALID = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+  const domainLabel: Record<string, string> = {
+    safe: 'Safe', effective: 'Effective', caring: 'Caring', responsive: 'Responsive', well_led: 'Well-led',
+  }
+  const body = req.body ?? {}
+  const count = Math.max(1, Math.min(10, parseInt(body.count, 10) || 5))
+  const specificDomain = typeof body.domain === 'string' && VALID.includes(body.domain) ? body.domain : null
+  const topic = typeof body.topic === 'string' ? body.topic.trim() : ''
+
+  try {
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
+    // Pass existing questions so the AI avoids duplicates.
+    const existing = await (prisma as any).cqcStaffQuestion.findMany({
+      where: { tenant_id: tenantId, is_active: true }, select: { question: true }, take: 60,
+    }).catch(() => [])
+    const avoid = ((existing as any[]).map(q => `- ${q.question}`).join('\n') || '(none yet)').slice(0, 4000)
+
+    const domainInstruction = specificDomain
+      ? `All ${count} questions must be for the ${domainLabel[specificDomain]} domain. Set every "domain" field to "${specificDomain}".`
+      : `Spread the ${count} questions as evenly as possible across the five CQC domains (safe, effective, caring, responsive, well_led).`
+    const topicInstruction = topic ? `Focus the questions on this theme: ${topic}.` : ''
+
+    const promptTemplate = await getPrompt('cqc_question_batch_generation', DEFAULT_QUESTION_BATCH_PROMPT)
+    const userMessage = promptTemplate
+      .replace('{{count}}', String(count))
+      .replace('{{domain_instruction}}', domainInstruction)
+      .replace('{{topic_instruction}}', topicInstruction)
+      .replace('{{avoid_list}}', avoid)
+
+    const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000 })
+    let parsed: Array<{ domain: string; question: string; model_answer: string }>
+    try {
+      const start = text.indexOf('['), end = text.lastIndexOf(']')
+      parsed = JSON.parse(text.slice(start, end + 1))
+    } catch {
+      return err(res, 'PARSE_FAILED', 'AI returned invalid JSON', 500)
+    }
+
+    const clean = (Array.isArray(parsed) ? parsed : [])
+      .filter(q => q && typeof q.question === 'string' && q.question.trim() && typeof q.model_answer === 'string' && q.model_answer.trim())
+      .map(q => ({
+        domain:       VALID.includes(q.domain) ? q.domain : (specificDomain ?? 'safe'),
+        question:     q.question.trim(),
+        model_answer: q.model_answer.trim(),
+      }))
+      .slice(0, count)
+
+    if (clean.length === 0) return err(res, 'GENERATE_FAILED', 'No questions were generated — please try again', 500)
+
+    const created = await Promise.all(clean.map(q =>
+      (prisma as any).cqcStaffQuestion.create({ data: { tenant_id: tenantId, domain: q.domain, question: q.question, model_answer: q.model_answer } })
+    ))
+    // One AI credit per question generated (consistent with the single-question generate).
+    await Promise.all(created.map((q: any) => logAiCredit(tenantId, 'cqc_questions', q.id)))
+
+    ok(res, { questions: created, credits_used: created.length }, 201)
   } catch (e: any) {
     err(res, 'GENERATE_FAILED', e.message, 500)
   }

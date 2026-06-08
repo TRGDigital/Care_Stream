@@ -211,3 +211,115 @@ export function SendModal({
     </div>
   )
 }
+
+// ─── Generate Batch Modal ─────────────────────────────────────────────────────
+// AI-generates a batch of brand-new questions and saves them to the bank. Each
+// generated question consumes one of the tenant's AI credits.
+
+export function GenerateBatchModal({
+  token, onClose, onGenerated,
+}: {
+  token: string
+  onClose: () => void
+  onGenerated: (questions: Question[]) => void
+}) {
+  const api = createApiClient(token)
+  const [domain, setDomain]       = useState<'all' | Domain>('all')
+  const [count, setCount]         = useState(5)
+  const [topic, setTopic]         = useState('')
+  const [generating, setGen]      = useState(false)
+  const [error, setError]         = useState('')
+
+  async function handleGenerate() {
+    setGen(true); setError('')
+    try {
+      const res = await api.cqcQuestions.generateBatch({
+        domain: domain === 'all' ? undefined : domain,
+        count,
+        topic: topic.trim() || undefined,
+      })
+      if (!res.questions?.length) { setError('No questions were generated — please try again.'); setGen(false); return }
+      onGenerated(res.questions)
+    } catch (e: any) {
+      setError(e?.message ?? 'Generation failed — please try again.')
+      setGen(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-card shadow-elevated w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-neutral-dark">
+            <Sparkles size={16} className="text-teal" /> Generate questions with AI
+          </h2>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+        <div className="p-6 space-y-5">
+          <p className="text-sm text-neutral-mid">
+            AI will create a batch of fresh CQC inspector-style questions (each with a model answer) and add them to your bank. It avoids duplicating questions you already have.
+          </p>
+
+          {/* Domain */}
+          <div>
+            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-mid">Domain</label>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setDomain('all')}
+                className={`rounded-btn px-3 py-1.5 text-sm font-medium border transition-colors ${domain === 'all' ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-mid hover:border-teal'}`}
+              >
+                All domains (balanced)
+              </button>
+              {DOMAINS.map(d => (
+                <button key={d.key} onClick={() => setDomain(d.key)}
+                  className={`rounded-btn px-3 py-1.5 text-sm font-medium border transition-colors ${domain === d.key ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-mid hover:border-teal'}`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Count */}
+          <div>
+            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-mid">How many</label>
+            <div className="flex flex-wrap gap-2">
+              {[3, 5, 10].map(n => (
+                <button key={n} onClick={() => setCount(n)}
+                  className={`rounded-btn px-4 py-1.5 text-sm font-medium border transition-colors ${count === n ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-mid hover:border-teal'}`}
+                >
+                  {n} questions
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Optional focus */}
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-mid">Focus (optional)</label>
+            <input value={topic} onChange={e => setTopic(e.target.value)}
+              placeholder="e.g. dementia care, medication, safeguarding…"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-neutral-mid">Leave blank for a general mix.</p>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+            <span>Uses AI credits — 1 credit per question generated (this batch: <strong>{count} credit{count !== 1 ? 's' : ''}</strong>).</span>
+          </div>
+
+          {error && <p className="flex items-center gap-2 text-sm text-red-600"><AlertCircle size={15} />{error}</p>}
+        </div>
+        <div className="flex justify-end gap-3 px-6 pb-6">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-neutral-mid">Cancel</button>
+          <button onClick={handleGenerate} disabled={generating}
+            className="flex items-center gap-2 px-4 py-2 bg-teal text-white rounded-btn text-sm font-medium hover:bg-teal-dark disabled:opacity-50"
+          >
+            {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {generating ? 'Generating…' : `Generate ${count} questions`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -8,13 +8,14 @@ import { AiCreditsBar } from '@/components/ai-usage'
 import { pageCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ClipboardList,
-  Info, Loader2, Plus, Trash2, Users, UserPlus,
+  Info, Loader2, Plus, Sparkles, Trash2, Users, UserPlus,
 } from 'lucide-react'
 import { DOMAINS, type Delivery, type Question, type StaffUser } from '@/components/admin/cqc-questions/cqc-shared'
 
 // Modals are lazy-loaded — only fetched when a dialog is opened.
 const AddQuestionModal = dynamic(() => import('@/components/admin/cqc-questions/cqc-modals').then(m => m.AddQuestionModal), { ssr: false })
 const SendModal = dynamic(() => import('@/components/admin/cqc-questions/cqc-modals').then(m => m.SendModal), { ssr: false })
+const GenerateBatchModal = dynamic(() => import('@/components/admin/cqc-questions/cqc-modals').then(m => m.GenerateBatchModal), { ssr: false })
 
 // ─── Shared UI helpers ──────────────────────────────────────────────────────
 
@@ -61,15 +62,17 @@ function DomainBadge({ domain }: { domain: string }) {
 // ─── Question Bank Tab ────────────────────────────────────────────────────────
 
 function QuestionBankTab({
-  questions, staff, onDeactivate, onAdd, onSent, token,
+  questions, staff, onDeactivate, onAdd, onAddMany, onSent, token,
 }: {
   questions: Question[]; staff: StaffUser[]
   onDeactivate: (id: string) => void; onAdd: (q: Question) => void
+  onAddMany: (qs: Question[]) => void
   onSent: () => void; token: string
 }) {
   const [expanded, setExpanded]       = useState<string[]>([])
   const [sendTarget, setSendTarget]   = useState<Question | null>(null)
   const [showAdd, setShowAdd]         = useState(false)
+  const [showGenerate, setShowGen]    = useState(false)
   const [deactivating, setDeact]      = useState<string | null>(null)
   const [assigningDomain, setAssigningDom] = useState<string | null>(null)
   const [assignedDomain, setAssignedDomain] = useState<string | null>(null)
@@ -124,11 +127,18 @@ function QuestionBankTab({
         <p className="text-sm text-neutral-mid">
           {questions.length} active question{questions.length !== 1 ? 's' : ''} across {DOMAINS.length} CQC domains
         </p>
-        <button onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
-        >
-          <Plus size={15} /> Add question
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowGen(true)}
+            className="flex items-center gap-2 rounded-btn border border-teal px-4 py-2 text-sm font-medium text-teal hover:bg-teal hover:text-white transition-colors"
+          >
+            <Sparkles size={15} /> Generate with AI
+          </button>
+          <button onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
+          >
+            <Plus size={15} /> Add question
+          </button>
+        </div>
       </div>
 
       {DOMAINS.map(d => {
@@ -211,6 +221,14 @@ function QuestionBankTab({
       {showAdd && (
         <AddQuestionModal token={token} onClose={() => setShowAdd(false)}
           onSave={q => { onAdd(q); setShowAdd(false) }} />
+      )}
+      {showGenerate && (
+        <GenerateBatchModal token={token} onClose={() => setShowGen(false)}
+          onGenerated={qs => {
+            onAddMany(qs)
+            setExpanded(e => [...new Set([...e, ...qs.map(q => q.domain)])])
+            setShowGen(false)
+          }} />
       )}
       {sendTarget && (
         <SendModal question={sendTarget} staff={staff} token={token}
@@ -531,6 +549,7 @@ export default function CqcQuestionsPage() {
             questions={questions} staff={staff} token={token}
             onDeactivate={id => setQuestions(qs => qs.filter(q => q.id !== id))}
             onAdd={q => setQuestions(qs => [...qs, q])}
+            onAddMany={newQs => setQuestions(qs => [...qs, ...newQs])}
             onSent={() => load()}
           />
         </>

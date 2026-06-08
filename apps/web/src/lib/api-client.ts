@@ -418,6 +418,8 @@ export function createApiClient(token: string) {
         apiFetch<{ question: any }>('/cqc-questions', token, { method: 'POST', body: JSON.stringify(data) }),
       generate: (data: { domain: string; topic: string }) =>
         apiFetch<{ question: string; model_answer: string; domain: string }>('/cqc-questions/generate', token, { method: 'POST', body: JSON.stringify(data) }),
+      generateBatch: (data: { domain?: string; count: number; topic?: string }) =>
+        apiFetch<{ questions: any[]; credits_used: number }>('/cqc-questions/generate-batch', token, { method: 'POST', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ success: boolean }>(`/cqc-questions/${id}`, token, { method: 'DELETE' }),
       deliver: (id: string, data: { user_ids: string[]; channel?: string }) =>

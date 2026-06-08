@@ -14,14 +14,17 @@ const ACCESS_EXPIRY = '1h'
 // Long refresh window so care staff "stay signed in" on their phone like WhatsApp,
 // rather than being booted to a login screen after a week. (WhatsApp → Hub migration.)
 const REFRESH_EXPIRY = '90d'
+export const REFRESH_TTL_MS = 90 * 24 * 60 * 60 * 1000
 
 export function generateAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: ACCESS_EXPIRY })
 }
 
-export function generateRefreshToken(userId: string): string {
+// Sign a refresh token carrying a `jti` so it can be tracked + rotated server-side.
+// (Issuance + storage live in lib/refresh-tokens.ts; this is just the signing.)
+export function signRefreshToken(userId: string, jti: string): string {
   return jwt.sign(
-    { sub: userId, type: 'refresh' },
+    { sub: userId, type: 'refresh', jti },
     process.env.JWT_REFRESH_SECRET!,
     { expiresIn: REFRESH_EXPIRY }
   )
@@ -31,10 +34,10 @@ export function verifyAccessToken(token: string): JwtPayload {
   return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
 }
 
-export function verifyRefreshToken(token: string): { sub: string } {
-  const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { sub: string; type: string }
+export function verifyRefreshToken(token: string): { sub: string; jti?: string } {
+  const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { sub: string; type: string; jti?: string }
   if (payload.type !== 'refresh') {
     throw new Error('Not a refresh token')
   }
-  return { sub: payload.sub }
+  return { sub: payload.sub, jti: payload.jti }
 }

@@ -3,7 +3,8 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { prisma } from '../db/client'
 import { hashPassword, verifyPassword } from '../services/auth/password'
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken, verifyAccessToken } from '../services/auth/tokens'
+import { generateAccessToken, verifyAccessToken } from '../services/auth/tokens'
+import { issueRefreshToken, rotateRefreshToken } from '../lib/refresh-tokens'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { authLimiter } from '../middleware/rateLimiter'
@@ -239,7 +240,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   })
 
   const accessToken  = generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role })
-  const refreshToken = generateRefreshToken(user.id)
+  const refreshToken = await issueRefreshToken(user.id)
 
   ok(res, {
     access_token:  accessToken,
@@ -271,7 +272,7 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
   ok(res, {
     access_token:  generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role }),
-    refresh_token: generateRefreshToken(user.id),
+    refresh_token: await issueRefreshToken(user.id),
     user:   { id: user.id, name: user.name, email: user.email, role: user.role, tenant_id: user.tenant_id },
     tenant: { id: user.tenant.id, name: user.tenant.name, slug: user.tenant.slug, subscription_status: user.tenant.subscription_status },
   })
@@ -488,18 +489,16 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
     return
   }
 
-  let userId: string
-  try {
-    const payload = verifyRefreshToken(parsed.data.refresh_token)
-    userId = payload.sub
-  } catch {
+  // Validate + rotate the refresh token (issues a fresh one; reuse = theft → revoke).
+  const rotated = await rotateRefreshToken(parsed.data.refresh_token)
+  if (!rotated) {
     err(res, 'INVALID_TOKEN', 'Refresh token is invalid or expired.', 401)
     return
   }
 
-  // Look up user to confirm they still exist and are not locked
+  // Confirm the user still exists and isn't locked.
   const user = await (prisma as any).user.findUnique({
-    where: { id: userId },
+    where: { id: rotated.userId },
     select: { id: true, tenant_id: true, role: true, locked_until: true },
   })
 
@@ -514,7 +513,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
     role: user.role,
   })
 
-  ok(res, { access_token: accessToken })
+  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken })
 })
 
 // ─── POST /auth/switch-site ───────────────────────────────────────────────────
@@ -568,7 +567,7 @@ authRouter.post('/switch-site', async (req: Request, res: Response) => {
   })
 
   const accessToken  = generateAccessToken({ sub: payload.sub, tenant_id, role: 'admin' })
-  const refreshToken = generateRefreshToken(payload.sub)
+  const refreshToken = await issueRefreshToken(payload.sub)
 
   ok(res, {
     access_token:  accessToken,

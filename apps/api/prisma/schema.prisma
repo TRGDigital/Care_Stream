@@ -377,6 +377,20 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Rotating refresh tokens — one row per issued refresh JWT (id = its jti). On each
+// /auth/refresh the current token is rotated (rotated_at set) and a new one issued;
+// reusing a rotated/unknown token is treated as theft and revokes the user's tokens.
+model RefreshToken {
+  id         String    @id            // jti
+  user_id    String
+  expires_at DateTime
+  rotated_at DateTime?
+  created_at DateTime  @default(now())
+
+  @@index([user_id])
+  @@map("refresh_tokens")
+}
+
 // Passwordless sign-in tokens (magic link / per-staff QR). Single-use, hashed.
 model LoginToken {
   id         String    @id @default(uuid())

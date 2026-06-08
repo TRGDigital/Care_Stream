@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
-import { generateAccessToken, generateRefreshToken } from '../services/auth/tokens'
+import { generateAccessToken } from '../services/auth/tokens'
+import { issueRefreshToken } from '../lib/refresh-tokens'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 
@@ -85,7 +86,7 @@ sitesRouter.post('/', async (req: Request, res: Response) => {
 
   // Issue tokens so the admin can switch to the new site immediately
   const accessToken  = generateAccessToken({ sub: req.user!.sub, tenant_id: newTenant.id, role: 'admin' })
-  const refreshToken = generateRefreshToken(req.user!.sub)
+  const refreshToken = await issueRefreshToken(req.user!.sub)
 
   ok(res, {
     tenant:        { id: newTenant.id, name: newTenant.name, slug: newTenant.slug },

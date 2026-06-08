@@ -176,6 +176,9 @@ export const authOptions: NextAuthOptions = {
         const payload = JSON.parse(Buffer.from(body.data.access_token.split('.')[1], 'base64').toString())
         token.accessToken      = body.data.access_token
         token.accessTokenExpiry = payload.exp * 1000
+        // Rotation: the backend returns a fresh refresh token each time — keep it,
+        // or the next refresh would replay a now-consumed token and get rejected.
+        if (body.data.refresh_token) token.refreshToken = body.data.refresh_token
       } catch {
         // Refresh failed — force re-login by clearing the token
         return { ...token, error: 'RefreshAccessTokenError' }

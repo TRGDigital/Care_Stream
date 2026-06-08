@@ -270,29 +270,40 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
           </div>
         )}
 
-        {/* Learn — one step at a time (overview → each section → assessment) */}
+        {/* Learn — one step at a time: overview → (per section: teach → check) → assessment */}
         {phase === 'learn' && (() => {
-          const learnSteps  = 1 + sections.length            // overview + one per section
-          const totalStages = learnSteps + 1                 // + assessment
-          const onOverview  = step === 0
-          const sec         = onOverview ? null : sections[step - 1]
-          const isLastLearn = step >= learnSteps - 1         // last lesson step → next is the assessment
-          const progressPct = Math.round((step / totalStages) * 100)
+          // Flat list of lesson steps. Each section becomes a teaching step and, if it
+          // has one, a separate quick-check step (keeping the same section image).
+          type LStep = { type: 'overview' } | { type: 'teach'; i: number } | { type: 'check'; i: number }
+          const lessonSteps: LStep[] = [{ type: 'overview' }]
+          sections.forEach((sc: any, i: number) => {
+            lessonSteps.push({ type: 'teach', i })
+            if (sc.check?.question && Array.isArray(sc.check.options) && sc.check.options.length > 0) lessonSteps.push({ type: 'check', i })
+          })
+          const totalStages = lessonSteps.length + 1   // + assessment
+          const idx         = Math.min(step, lessonSteps.length - 1)
+          const cur         = lessonSteps[idx]
+          const isLastLearn = idx >= lessonSteps.length - 1
+          const progressPct = Math.round((idx / totalStages) * 100)
+          const sec         = cur.type === 'overview' ? null : sections[cur.i]
           const picked      = sec ? checkSel[sec.id] : undefined
           const isRight     = sec ? picked === sec.check?.correct : false
+          const label       = cur.type === 'overview' ? 'Overview'
+            : cur.type === 'teach' ? `Section ${cur.i + 1} of ${sections.length}`
+            : `Section ${cur.i + 1} — quick check`
 
           return (
             <div className="mt-4">
               {/* Progress bar */}
               <div className="mb-4">
                 <div className="mb-1 flex items-center justify-between text-xs text-neutral-mid">
-                  <span className="font-medium text-neutral-dark">{onOverview ? 'Overview' : `Section ${step} of ${sections.length}`}</span>
+                  <span className="font-medium text-neutral-dark">{label}</span>
                   <span>{progressPct}% complete</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100"><div className="h-2 rounded-full bg-teal transition-all duration-300" style={{ width: `${progressPct}%` }} /></div>
               </div>
 
-              {onOverview ? (
+              {cur.type === 'overview' ? (
                 /* ── Overview ── */
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   {data.illustration_url && <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
@@ -318,27 +329,30 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
                   </div>
                 </div>
               ) : sec ? (
-                /* ── One section ── */
+                /* ── Section step (teach OR check), same image on both ── */
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   {sec.image_url && <img src={apiAssetUrl(sec.image_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
                   <div className="p-5">
-                    {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
-                    {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
-
-                    {sec.scenario?.situation && (
-                      <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
-                        <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
-                        <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
-                        {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
-                        {revealed[sec.id]
-                          ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
-                          : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
-                      </div>
-                    )}
-
-                    {sec.check?.question && Array.isArray(sec.check.options) && sec.check.options.length > 0 && (
-                      <div className="mt-3">
-                        <p className="mb-1.5 text-sm font-medium text-neutral-dark">Quick check: {sec.check.question}</p>
+                    {cur.type === 'teach' ? (
+                      <>
+                        {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
+                        {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
+                        {sec.scenario?.situation && (
+                          <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
+                            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
+                            <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
+                            {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
+                            {revealed[sec.id]
+                              ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
+                              : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {sec.heading && <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">{sec.heading}</p>}
+                        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={14} className="text-teal" /> Quick check</p>
+                        <p className="mb-2 text-sm font-medium text-neutral-dark">{sec.check.question}</p>
                         <div className="space-y-1.5">
                           {sec.check.options.map((opt: string, oi: number) => {
                             const chosen = picked === oi
@@ -354,7 +368,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
                           })}
                         </div>
                         {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>

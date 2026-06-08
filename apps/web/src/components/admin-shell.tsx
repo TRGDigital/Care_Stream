@@ -44,22 +44,28 @@ const NAV_SECTIONS = [
     heading: 'Reporting',
     iconColor: 'text-amber-400',
     items: [
-      { href: '/analytics',            label: 'Analytics',      Icon: TrendingUp     },
-      { href: '/analytics/cqc-report', label: 'CQC Report',     Icon: ClipboardCheck },
-      { href: '/gaps',                 label: 'Policy Gaps',    Icon: ShieldAlert    },
-      { href: '/training',             label: 'Training',       Icon: ShieldCheck    },
-      { href: '/cqc-questions',        label: 'CQC Staff Prep', Icon: ClipboardList  },
-      { href: '/audits',               label: 'Monthly Audits', Icon: ClipboardCheck },
+      { href: '/analytics',            label: 'Analytics',    Icon: TrendingUp     },
+      { href: '/analytics/cqc-report', label: 'CQC Reports',  Icon: ClipboardCheck },
+      { href: '/gaps',                 label: 'Gap Analysis', Icon: ShieldAlert    },
+    ],
+  },
+  {
+    heading: 'Tools',
+    iconColor: 'text-green-400',
+    items: [
+      { href: '/training',      label: 'Training',         Icon: ShieldCheck    },
+      { href: '/cqc-questions', label: 'CQC Staff Prep',   Icon: ClipboardList  },
+      { href: '/audits',        label: 'Monthly Audits',   Icon: ClipboardCheck },
+      { href: '/onboarding',    label: 'Staff Onboarding', Icon: GraduationCap  },
     ],
   },
   {
     heading: 'Admin',
     iconColor: 'text-slate-400',
     items: [
-      { href: '/onboarding', label: 'Onboarding',    Icon: GraduationCap },
-      { href: '/billing',    label: 'Billing',       Icon: CreditCard    },
-      { href: '/settings',   label: 'Settings',      Icon: Settings      },
-      { href: '/guides',     label: 'Help & Guides', Icon: HelpCircle    },
+      { href: '/billing',    label: 'Billing',       Icon: CreditCard },
+      { href: '/settings',   label: 'Settings',      Icon: Settings   },
+      { href: '/guides',     label: 'Help & Guides', Icon: HelpCircle },
     ],
   },
 ]

@@ -353,84 +353,105 @@ export function InviteModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
-      <div className="w-full max-w-md rounded-card bg-white p-6 shadow-xl">
+      <div className={`w-full rounded-card bg-white p-6 shadow-xl ${step === 'form' ? 'max-w-3xl' : 'max-w-md'}`}>
 
         <h2 className="mb-5 text-lg font-semibold text-neutral-dark">
           {step === 'form' ? 'Add staff member' : step === 'credentials' ? 'Account created' : `Assign training to ${form.name}`}
         </h2>
 
         {step === 'form' ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {([
-              { k: 'name',  label: 'Full name',    type: 'text',  ph: 'Jane Smith'          },
-              { k: 'email', label: 'Email address', type: 'email', ph: 'jane@carehome.co.uk' },
-            ] as const).map(({ k, label, type, ph }) => (
-              <div key={k}>
-                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">{label}</label>
-                <input
-                  type={type}
-                  required
-                  placeholder={ph}
-                  value={form[k]}
-                  onChange={update(k)}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Core details — two columns */}
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Full name</label>
+                <input type="text" required placeholder="Jane Smith" value={form.name} onChange={update('name')}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Email address</label>
+                <input type="email" required placeholder="jane@carehome.co.uk" value={form.email} onChange={update('email')}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
+                <select
+                  value={form.job_role}
+                  onChange={update('job_role')}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                />
+                >
+                  <option value="">— select a position —</option>
+                  {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <p className="mt-1 text-xs text-neutral-mid">Drives their onboarding &amp; training. Add more positions in Settings.</p>
               </div>
-            ))}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Staff type</label>
+                <select
+                  value={form.staff_type}
+                  onChange={update('staff_type')}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                >
+                  <option value="existing">Existing staff member</option>
+                  <option value="new">New starter</option>
+                </select>
+                <p className="mt-1 text-xs text-neutral-mid">
+                  {form.staff_type === 'new'
+                    ? 'Automatically enrols them in the onboarding flow(s) matching their job role.'
+                    : 'No onboarding is assigned automatically.'}
+                </p>
+              </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Staff type</label>
-              <select
-                value={form.staff_type}
-                onChange={update('staff_type')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="existing">Existing staff member</option>
-                <option value="new">New starter</option>
-              </select>
-              <p className="mt-1 text-xs text-neutral-mid">
-                {form.staff_type === 'new'
-                  ? 'Automatically enrols them in the onboarding flow(s) matching their job role.'
-                  : 'No onboarding is assigned automatically.'}
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
-                WhatsApp number
-                <span className="ml-1.5 text-xs font-normal text-neutral-mid">(optional)</span>
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
+                  WhatsApp number
+                  <span className="ml-1.5 text-xs font-normal text-neutral-mid">(optional)</span>
+                </label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="+447911123456"
+                    value={form.phone_number}
+                    onChange={update('phone_number')}
+                    className="w-full rounded-md border border-gray-300 py-2 pl-8 pr-3 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  />
                 </div>
-                <input
-                  type="tel"
-                  placeholder="+447911123456"
-                  value={form.phone_number}
-                  onChange={update('phone_number')}
-                  className="w-full rounded-md border border-gray-300 py-2 pl-8 pr-3 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                />
+                <p className="mt-1 text-xs text-neutral-mid">
+                  Include the country code. Enables policy questions via WhatsApp.
+                </p>
               </div>
-              <p className="mt-1 text-xs text-neutral-mid">
-                Include the country code. Enables this staff member to ask policy questions via WhatsApp.
-              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
+                  <select
+                    value={form.shift_type}
+                    onChange={update('shift_type')}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  >
+                    <option value="any">Flexible</option>
+                    <option value="day">Day shift</option>
+                    <option value="night">Night shift</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Access level</label>
+                  <select
+                    value={form.role}
+                    onChange={update('role')}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  >
+                    <option value="staff">Staff — chat only</option>
+                    <option value="admin">Admin — full access</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
-              <select
-                value={form.job_role}
-                onChange={update('job_role')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="">— select a position —</option>
-                {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-              <p className="mt-1 text-xs text-neutral-mid">Drives their onboarding &amp; training. Add more positions in Settings.</p>
-            </div>
-
-            {/* Specialist roles */}
+            {/* Specialist roles — full width */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Does this person have a specialist role?</label>
               <div className="flex gap-2">
@@ -462,32 +483,6 @@ export function InviteModal({
                   <p className="mt-1 text-xs text-neutral-mid">Adds the matching specialist onboarding/training. Add more in Settings.</p>
                 </div>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
-                <select
-                  value={form.shift_type}
-                  onChange={update('shift_type')}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                >
-                  <option value="any">Flexible / not specified</option>
-                  <option value="day">Day shift</option>
-                  <option value="night">Night shift</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">System access level</label>
-                <select
-                  value={form.role}
-                  onChange={update('role')}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                >
-                  <option value="staff">Staff — chat access only</option>
-                  <option value="admin">Admin — full dashboard access</option>
-                </select>
-              </div>
             </div>
 
             <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-4 space-y-3">
@@ -843,7 +838,7 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
-      <div className="w-full max-w-lg rounded-card bg-white p-6 shadow-xl">
+      <div className={`w-full rounded-card bg-white p-6 shadow-xl ${view === 'detail' ? 'max-w-4xl' : 'max-w-lg'}`}>
 
         {/* Header */}
         <div className="mb-5 flex items-start justify-between gap-3">
@@ -897,6 +892,10 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
               </button>
             </div>
 
+            {/* Two columns: profile + languages on the left, training + onboarding on the right */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="space-y-5">
+
             {/* Profile grid */}
             <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
               <Field label="Position">{user.job_role || <span className="italic text-neutral-mid/60">Not set</span>}</Field>
@@ -932,6 +931,9 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
               </div>
             </div>
 
+            </div>{/* ── end left column ── */}
+
+            <div className="space-y-5">{/* ── right column ── */}
             {/* Training */}
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -983,6 +985,9 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
                 </ul>
               )}
             </div>
+
+            </div>{/* ── end right column ── */}
+            </div>{/* ── end two-column grid ── */}
 
             {/* Dates */}
             <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4 text-xs">

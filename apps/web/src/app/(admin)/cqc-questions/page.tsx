@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
@@ -62,13 +62,26 @@ function DomainBadge({ domain }: { domain: string }) {
 // ─── Question Bank Tab ────────────────────────────────────────────────────────
 
 function QuestionBankTab({
-  questions, staff, onDeactivate, onAdd, onAddMany, onSent, token,
+  questions, staff, deliveries, onDeactivate, onAdd, onAddMany, onSent, token,
 }: {
-  questions: Question[]; staff: StaffUser[]
+  questions: Question[]; staff: StaffUser[]; deliveries: Delivery[]
   onDeactivate: (id: string) => void; onAdd: (q: Question) => void
   onAddMany: (qs: Question[]) => void
   onSent: () => void; token: string
 }) {
+  // Per-question delivery stats (sent / answered / average score), from the same
+  // deliveries the Performance tab uses — no extra fetch.
+  const statsByQ = useMemo(() => {
+    const m = new Map<string, { sent: number; answered: number; total: number }>()
+    for (const d of deliveries) {
+      const s = m.get(d.question_id) ?? { sent: 0, answered: 0, total: 0 }
+      s.sent++
+      if (d.status === 'evaluated') { s.answered++; s.total += d.score ?? 0 }
+      m.set(d.question_id, s)
+    }
+    return m
+  }, [deliveries])
+
   const [expanded, setExpanded]       = useState<string[]>([])
   const [sendTarget, setSendTarget]   = useState<Question | null>(null)
   const [showAdd, setShowAdd]         = useState(false)
@@ -189,6 +202,22 @@ function QuestionBankTab({
                       </p>
                       <p className="text-sm leading-relaxed text-neutral-mid">{q.model_answer}</p>
                     </div>
+
+                    {/* Per-question tracking — how many staff this has gone to, how many answered, average score */}
+                    {(() => {
+                      const st = statsByQ.get(q.id)
+                      if (!st || st.sent === 0) return <p className="text-xs text-neutral-mid/70">Not yet assigned to anyone.</p>
+                      const avg = st.answered > 0 ? Math.round(st.total / st.answered) : null
+                      return (
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-mid">
+                          <span><strong className="text-neutral-dark">{st.sent}</strong> assigned</span>
+                          <span className="text-gray-300">·</span>
+                          <span><strong className="text-neutral-dark">{st.answered}</strong> answered{st.sent > st.answered ? ` · ${st.sent - st.answered} awaiting` : ''}</span>
+                          {avg !== null && <><span className="text-gray-300">·</span>
+                            <span>avg <strong className={avg >= 80 ? 'text-green-600' : avg >= 60 ? 'text-amber-600' : 'text-red-600'}>{avg}%</strong></span></>}
+                        </div>
+                      )
+                    })()}
 
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <button onClick={() => handleAssignAllStaff(q)} disabled={assigningOne === q.id || staff.length === 0}
@@ -540,13 +569,14 @@ export default function CqcQuestionsPage() {
       {tab === 'bank' && (
         <>
           <HelpAccordion title="How CQC Staff Prep works">
-            <p><strong className="text-neutral-dark">Question Bank</strong> — 21 pre-loaded CQC inspector-style questions are organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong className="text-neutral-dark">model answer</strong> — the standard staff answers are scored against. Add your own with <strong className="text-neutral-dark">Add question</strong>, or use <strong className="text-neutral-dark">Generate with AI</strong> to create a whole batch at once (1 AI credit per question generated).</p>
+            <p><strong className="text-neutral-dark">Question Bank</strong> — 21 pre-loaded CQC inspector-style questions are organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong className="text-neutral-dark">model answer</strong> and a tracking line (how many staff it&apos;s been assigned to, how many answered, and their average score). Add your own with <strong className="text-neutral-dark">Add question</strong>, or use <strong className="text-neutral-dark">Generate with AI</strong> to create a whole batch at once (1 AI credit per question generated).</p>
             <p><strong className="text-neutral-dark">Assigning questions</strong> — use <strong className="text-neutral-dark">Assign to all staff</strong> to send a question to everyone, or <strong className="text-neutral-dark">Assign to specific staff</strong> to pick individuals. The system automatically rephrases the question before delivery so staff cannot memorise the exact wording.</p>
             <p><strong className="text-neutral-dark">How staff answer</strong> — staff write free-text answers in their portal (not multiple choice). There are no trick questions; they are assessed on whether they demonstrate the right knowledge and approach.</p>
             <p><strong className="text-neutral-dark">AI scoring</strong> — each answer is evaluated by AI against the model answer and given a score from 0 to 100 with constructive feedback. Scores appear in the Performance tab straight away.</p>
+            <p><strong className="text-neutral-dark">Review &amp; retry</strong> — after answering, staff see the model answer. If they scored below 60 they can review it and <strong className="text-neutral-dark">try again</strong> in their own words; the new attempt is re-scored and replaces the old one, so weak answers get a built-in follow-up automatically.</p>
           </HelpAccordion>
           <QuestionBankTab
-            questions={questions} staff={staff} token={token}
+            questions={questions} staff={staff} deliveries={deliveries} token={token}
             onDeactivate={id => setQuestions(qs => qs.filter(q => q.id !== id))}
             onAdd={q => setQuestions(qs => [...qs, q])}
             onAddMany={newQs => setQuestions(qs => [...qs, ...newQs])}

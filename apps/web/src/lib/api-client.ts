@@ -423,7 +423,9 @@ export function createApiClient(token: string) {
       deactivate: (id: string) =>
         apiFetch<{ success: boolean }>(`/cqc-questions/${id}`, token, { method: 'DELETE' }),
       deliver: (id: string, data: { user_ids: string[]; channel?: string }) =>
-        apiFetch<{ delivered: number }>(`/cqc-questions/${id}/deliver`, token, { method: 'POST', body: JSON.stringify(data) }),
+        apiFetch<{ delivered: number; skipped: number }>(`/cqc-questions/${id}/deliver`, token, { method: 'POST', body: JSON.stringify(data) }),
+      retry: (deliveryId: string) =>
+        apiFetch<{ delivery: any }>(`/cqc-questions/deliveries/${deliveryId}/retry`, token, { method: 'POST' }),
       deliveries: () =>
         apiFetch<{ deliveries: any[] }>('/cqc-questions/deliveries', token),
       myDeliveries: () =>

@@ -986,6 +986,7 @@ model CqcStaffDelivery {
   score        Int?             // 0–100 AI evaluation score
   feedback     String?          // AI constructive feedback
   status       String           @default("pending")  // 'pending' | 'answered' | 'evaluated'
+  attempts     Int              @default(1)           // bumped each time staff re-attempt after a low score
   sent_at      DateTime         @default(now())
   answered_at  DateTime?
   evaluated_at DateTime?
@@ -993,6 +994,7 @@ model CqcStaffDelivery {
   question     CqcStaffQuestion @relation(fields: [question_id], references: [id])
   user         User             @relation(fields: [user_id], references: [id])
 
+  @@unique([tenant_id, user_id, question_id])
   @@index([tenant_id, user_id])
   @@index([tenant_id, status])
   @@index([user_id, status])

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight,
-  ClipboardList, Loader2, Send, Star,
+  ClipboardList, Loader2, RotateCcw, Send, Star,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -20,8 +20,12 @@ type Delivery = {
   status:      'pending' | 'answered' | 'evaluated'
   sent_at:     string
   answered_at: string | null
-  question:    { domain: string }
+  attempts?:   number
+  question:    { domain: string; model_answer?: string | null }
 }
+
+// Staff can review & retry a completed question scoring below this.
+const RETRY_BELOW = 60
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -112,8 +116,40 @@ function AnswerForm({
 
 // ─── Result Card ──────────────────────────────────────────────────────────────
 
-function ResultCard({ delivery }: { delivery: Delivery }) {
+function ResultCard({ delivery, token, onUpdated }: {
+  delivery:  Delivery
+  token:     string
+  onUpdated: (updated: Delivery) => void
+}) {
   const score = delivery.score ?? 0
+  const [retrying, setRetrying]   = useState(false)   // showing the retry textarea
+  const [answer, setAnswer]       = useState('')
+  const [submitting, setSub]      = useState(false)
+  const [error, setError]         = useState('')
+
+  async function submitRetry() {
+    if (!answer.trim()) return
+    setSub(true); setError('')
+    try {
+      const api = createApiClient(token)
+      await api.cqcQuestions.retry(delivery.id)                       // re-open this delivery
+      const res = await api.cqcQuestions.submitAnswer(delivery.id, answer)  // re-score
+      onUpdated({
+        ...delivery,
+        answer_text: res.delivery?.answer_text ?? answer,
+        score:       res.score,
+        feedback:    res.feedback,
+        status:      'evaluated',
+        attempts:    (delivery.attempts ?? 1) + 1,
+      })
+      setRetrying(false); setAnswer('')
+    } catch (e: any) {
+      setError(e.message ?? 'Something went wrong — please try again.')
+    } finally {
+      setSub(false)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {/* Score */}
@@ -122,11 +158,14 @@ function ResultCard({ delivery }: { delivery: Delivery }) {
           {score}<span className="text-base font-normal">/100</span>
         </div>
         <div>
-          <p className="font-semibold text-gray-900">{scoreLabel(score)}</p>
+          <p className="font-semibold text-gray-900">
+            {scoreLabel(score)}
+            {(delivery.attempts ?? 1) > 1 && <span className="ml-2 text-xs font-normal text-gray-400">Attempt {delivery.attempts}</span>}
+          </p>
           <p className="text-xs text-gray-500">
             {score >= 80 ? 'You\'re well prepared for this topic.' :
              score >= 60 ? 'Good foundation — a little more detail would strengthen your answer.' :
-             'Keep practising — reviewing the key points below will help.'}
+             'Keep practising — review the model answer below, then try again.'}
           </p>
         </div>
       </div>
@@ -144,6 +183,54 @@ function ResultCard({ delivery }: { delivery: Delivery }) {
         <div className="bg-teal-50 border border-teal-100 rounded-xl px-4 py-3">
           <p className="text-xs font-medium text-teal-700 uppercase tracking-wide mb-1">Feedback</p>
           <p className="text-sm text-teal-800">{delivery.feedback}</p>
+        </div>
+      )}
+
+      {/* Model answer — revealed after answering so staff can see what good looks like */}
+      {delivery.question?.model_answer && (
+        <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-green-700 uppercase tracking-wide mb-1">
+            <Star className="w-3.5 h-3.5" /> Model answer — what a strong answer covers
+          </p>
+          <p className="text-sm text-green-800 leading-relaxed">{delivery.question.model_answer}</p>
+        </div>
+      )}
+
+      {/* Review & try again */}
+      {!retrying ? (
+        <button
+          onClick={() => { setRetrying(true); setError('') }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${
+            score < RETRY_BELOW
+              ? 'bg-teal-600 hover:bg-teal-700 text-white'
+              : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          <RotateCcw className="w-4 h-4" /> {score < RETRY_BELOW ? 'Review & try again' : 'Practise again'}
+        </button>
+      ) : (
+        <div className="space-y-3 border-t border-gray-100 pt-3">
+          <p className="text-xs text-gray-500">Now that you&apos;ve seen the model answer, have another go in your own words:</p>
+          <textarea
+            rows={5}
+            value={answer}
+            onChange={e => setAnswer(e.target.value)}
+            placeholder="Write your improved answer here…"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+          />
+          {error && <p className="flex items-center gap-2 text-sm text-red-600"><AlertCircle className="w-4 h-4" /> {error}</p>}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={submitRetry}
+              disabled={!answer.trim() || submitting}
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium disabled:opacity-50"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {submitting ? 'Evaluating…' : 'Submit new answer'}
+            </button>
+            <button onClick={() => { setRetrying(false); setAnswer(''); setError('') }} disabled={submitting}
+              className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+          </div>
         </div>
       )}
     </div>
@@ -316,7 +403,8 @@ export default function CqcPortalPage() {
                 </button>
                 {expanded === d.id && (
                   <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-                    <ResultCard delivery={d} />
+                    <ResultCard delivery={d} token={token}
+                      onUpdated={updated => setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x))} />
                   </div>
                 )}
               </div>

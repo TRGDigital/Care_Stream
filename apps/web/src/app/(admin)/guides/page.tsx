@@ -804,12 +804,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="How it works">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>CQC Staff Prep</strong> in the Reporting section of the sidebar.</Step>
-            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong>model answer</strong> — the standard a strong answer is measured against, so you can see exactly what good looks like.</Step>
+            <Step n={2}>The Question Bank comes pre-loaded with 21 CQC inspector-style questions organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong>model answer</strong> — the standard a strong answer is measured against — and its own tracking line: how many staff it&apos;s been <strong>assigned</strong> to, how many have <strong>answered</strong>, and their <strong>average score</strong>.</Step>
             <Step n={3}>To send a question out, use <strong>Assign to all staff</strong> to send it to everyone at once, or <strong>Assign to specific staff</strong> to pick individuals. A domain header also has <strong>Assign all to staff</strong> to send every question in that domain in one go. (Admins are never included — only active staff are assigned.)</Step>
-            <Step n={4}>The question is automatically rephrased before delivery so staff cannot memorise the exact wording.</Step>
+            <Step n={4}>The question is automatically rephrased before delivery so staff cannot memorise the exact wording. (If someone already has that question, they aren&apos;t sent a duplicate.)</Step>
             <Step n={5}>Staff open their portal and write a free-text answer. There is no multiple choice — they must articulate their knowledge in their own words, just as they would with a real inspector.</Step>
-            <Step n={6}>CareStream immediately scores the answer from 0 to 100 — against the model answer — and gives constructive written feedback. Staff see their result straight away.</Step>
-            <Step n={7}>Track progress across your whole team in the <strong>Performance</strong> tab — scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
+            <Step n={6}>CareStream immediately scores the answer from 0 to 100 — against the model answer — and gives constructive written feedback. Staff see their result, and the <strong>model answer</strong>, straight away.</Step>
+            <Step n={7}>If a staff member scores below 60, they can <strong>review the model answer and feedback, then try again</strong> in their own words. The new attempt is re-scored and replaces the old one, so the follow-up is built in — no manual re-sending needed.</Step>
+            <Step n={8}>Track progress across your whole team in the <strong>Performance</strong> tab — scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="The five CQC domains">

@@ -402,6 +402,20 @@ cqcQuestionsRouter.post('/:id/deliver', requireAdmin, async (req: Request, res: 
       return err(res, 'NO_VALID_RECIPIENTS', 'No recipients belong to this organisation.', 400)
     }
 
+    // Skip anyone who already has this question — they keep their existing copy (and
+    // can retry it after a low score) rather than getting a duplicate.
+    const already = await (prisma as any).cqcStaffDelivery.findMany({
+      where: { tenant_id: tenantId, question_id: q.id, user_id: { in: validUserIds } },
+      select: { user_id: true },
+    })
+    const alreadySet = new Set((already as any[]).map(a => a.user_id))
+    const newUserIds = validUserIds.filter(id => !alreadySet.has(id))
+    const skipped = validUserIds.length - newUserIds.length
+
+    if (newUserIds.length === 0) {
+      return ok(res, { delivered: 0, skipped })
+    }
+
     // Rephrase the question so staff cannot memorise exact wording
     const rephrased = await callClaude(
       'You are a CQC interview preparation assistant. Rephrase questions slightly to test the same knowledge without allowing rote memorisation.',
@@ -412,7 +426,7 @@ Original: ${q.question}`,
     ).catch(() => q.question as string)
 
     const deliveries = await (prisma as any).cqcStaffDelivery.createMany({
-      data: validUserIds.map((uid: string) => ({
+      data: newUserIds.map((uid: string) => ({
         tenant_id:  tenantId,
         question_id: q.id,
         user_id:    uid,
@@ -422,12 +436,12 @@ Original: ${q.question}`,
       skipDuplicates: true,
     })
 
-    ok(res, { delivered: deliveries.count })
+    ok(res, { delivered: deliveries.count, skipped })
 
     if (deliveries.count > 0) {
       const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
       const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
-      notifyUsers(tenantId, 'cqc_staff_prep', validUserIds, (email, name) =>
+      notifyUsers(tenantId, 'cqc_staff_prep', newUserIds, (email, name) =>
         sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))
     }
@@ -454,18 +468,46 @@ cqcQuestionsRouter.get('/deliveries', requireAdmin, async (req: Request, res: Re
   }
 })
 
-// GET /cqc-questions/my-deliveries — staff: own pending + completed deliveries
+// GET /cqc-questions/my-deliveries — staff: own pending + completed deliveries.
+// The model answer is revealed only AFTER a question has been answered (so it can't
+// be read ahead of answering a pending question).
 cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => {
   const userId = (req as any).user.id
   try {
     const deliveries = await (prisma as any).cqcStaffDelivery.findMany({
       where:   { user_id: userId },
-      include: { question: { select: { domain: true } } },
+      include: { question: { select: { domain: true, model_answer: true } } },
       orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
     })
-    ok(res, { deliveries })
+    const safe = (deliveries as any[]).map(d => ({
+      ...d,
+      question: { domain: d.question.domain, model_answer: d.status === 'evaluated' ? d.question.model_answer : null },
+    }))
+    ok(res, { deliveries: safe })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// POST /cqc-questions/deliveries/:id/retry — staff re-opens an answered question to
+// try again after reviewing the model answer & feedback. Reuses the same delivery
+// row (so there's one record per staff+question) and bumps the attempt count.
+cqcQuestionsRouter.post('/deliveries/:id/retry', async (req: Request, res: Response) => {
+  const userId = (req as any).user.id
+  try {
+    const delivery = await (prisma as any).cqcStaffDelivery.findFirst({
+      where:   { id: req.params.id, user_id: userId, status: 'evaluated' },
+      include: { question: { select: { domain: true } } },
+    })
+    if (!delivery) return err(res, 'NOT_FOUND', 'Question not found or not yet answered', 404)
+
+    const updated = await (prisma as any).cqcStaffDelivery.update({
+      where: { id: delivery.id },
+      data:  { status: 'pending', attempts: { increment: 1 }, answered_at: null, evaluated_at: null },
+    })
+    ok(res, { delivery: { ...updated, question: { domain: delivery.question.domain } } })
+  } catch (e: any) {
+    err(res, 'RETRY_FAILED', e.message, 500)
   }
 })
 

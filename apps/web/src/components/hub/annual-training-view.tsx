@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
@@ -35,12 +36,28 @@ export function AnnualTrainingView({ token, onChange, onTalkToPolicy }: { token:
 
 function AnnualList({ token, onOpen, onCert }: { token: string; onOpen: (id: string, name: string) => void; onCert: (id: string) => void }) {
   const api = createApiClient(token)
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const cached = pageCache.get<any[]>('hub-annual')
+  const [items, setItems] = useState<any[]>(cached ?? [])
+  const [loading, setLoading] = useState(!cached)   // instant from cache, revalidate in background
+  const [error, setError] = useState(false)
 
-  useEffect(() => { api.me.annualTraining.list().then(d => setItems(d.items)).catch(() => {}).finally(() => setLoading(false)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    api.me.annualTraining.list()
+      .then(d => { setItems(d.items); pageCache.set('hub-annual', d.items); setError(false) })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <div className="flex-1 space-y-3 overflow-y-auto p-6">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />)}</div>
+
+  if (error && !items.length) return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+      <AlertTriangle size={32} className="text-amber-400" />
+      <p className="font-medium text-neutral-dark">Couldn&apos;t load your annual training</p>
+      <p className="text-sm text-neutral-mid">Please check your connection and try again.</p>
+      <button onClick={() => { setLoading(true); setError(false); api.me.annualTraining.list().then(d => { setItems(d.items); pageCache.set('hub-annual', d.items) }).catch(() => setError(true)).finally(() => setLoading(false)) }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Retry</button>
+    </div>
+  )
 
   if (!items.length) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">

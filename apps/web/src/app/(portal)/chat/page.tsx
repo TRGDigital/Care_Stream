@@ -12,6 +12,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView } from '@/components/hub/annual-training-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
+import { pageCache } from '@/lib/page-cache'
 import { Spinner } from '@/components/ui/spinner'
 import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -369,14 +370,25 @@ export default function ChatPage() {
     try { localStorage.setItem(`cs_reply_lang_${userId}`, code) } catch { /* ignore */ }
   }
 
-  // Outstanding-item counts for the sidebar notification badges + saved policies.
-  // Refetched on view changes so they stay fresh.
+  // Sidebar badge counts — shown instantly from a localStorage cache, then
+  // revalidated. Refreshed on navigation so they stay fresh after completing items.
   useEffect(() => {
     if (!session?.accessToken) return
-    const api = createApiClient(session.accessToken)
-    api.me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
-    api.me.savedPolicies().then(d => setSavedPolicies(d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })))).catch(() => {})
-  }, [session?.accessToken, view, sidebarPolicy])
+    try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
+    createApiClient(session.accessToken).me.counts()
+      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
+      .catch(() => {})
+  }, [session?.accessToken, view]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Saved policies — cached for instant display; only refetched when the saved
+  // set may have changed (opening/closing the policy sidebar), not on every nav.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`) || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
+    createApiClient(session.accessToken).me.savedPolicies()
+      .then(d => { const v = d.saved.map(s => ({ policy_id: s.policy_id, title: s.title })); setSavedPolicies(v); try { localStorage.setItem(`cs_saved_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
+      .catch(() => {})
+  }, [session?.accessToken, sidebarPolicy]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function removeSaved(policyId: string) {
     setSavedPolicies(prev => prev.filter(p => p.policy_id !== policyId))
@@ -1523,8 +1535,9 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const
 function TrainingView({ token }: { token: string }) {
   const api = createApiClient(token)
 
-  const [enrollments, setEnrollments] = useState<any[]>([])
-  const [loading,     setLoading]     = useState(true)
+  const cachedEnr = pageCache.get<any[]>('hub-my-training')
+  const [enrollments, setEnrollments] = useState<any[]>(cachedEnr ?? [])
+  const [loading,     setLoading]     = useState(!cachedEnr)  // instant from cache, revalidate
   // enrollmentId → questionId → selected letter
   const [selected,   setSelected]    = useState<Record<string, Record<string, string>>>({})
   // questionId → immediate result from server (for showing correct option on wrong answers)
@@ -1538,6 +1551,7 @@ function TrainingView({ token }: { token: string }) {
     try {
       const d = await api.training.myEnrollments()
       setEnrollments(d.enrollments)
+      pageCache.set('hub-my-training', d.enrollments)
     } finally {
       setLoading(false)
     }

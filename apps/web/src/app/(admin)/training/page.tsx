@@ -709,6 +709,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                       <button onClick={() => assignAll(m)} disabled={assignBusy === m.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{assignBusy === m.id ? <><Loader2 size={12} className="animate-spin" /> Assigning…</> : `Assign to all staff (${staff.length})`}</button>
                       <span className="text-[11px] text-neutral-mid">{assignedByModule[m.id]?.size ?? 0} of {staff.length} currently assigned</span>
                       {assignMsg[m.id] && <span className="text-[11px] font-medium text-green-600">{assignMsg[m.id]}</span>}
+                      {incomplete && <span className="flex w-full items-center gap-1 text-[11px] text-amber-600"><AlertCircle size={11} /> Generate answer options before staff can be assessed — they&apos;ll see a placeholder until then.</span>}
                     </div>
 
                     <div className={`space-y-3 ${isLocked ? 'pointer-events-none opacity-60' : ''}`}>

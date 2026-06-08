@@ -1605,12 +1605,13 @@ function TrainingView({ token }: { token: string }) {
         <h2 className="mb-5 text-xl font-bold text-neutral-dark">My Training</h2>
         <div className="space-y-6">
           {enrollments.map(enrollment => {
-            const questions   = enrollment.module.questions as Array<{ id: string; text: string; options: string[] }>
+            const questions   = (Array.isArray(enrollment.module?.questions) ? enrollment.module.questions : []) as Array<{ id: string; text: string; options: string[] }>
+            const answers     = Array.isArray(enrollment.answers) ? enrollment.answers : []
             const totalQs     = questions.length
-            const answeredQs  = enrollment.answers.length
-            const correctQs   = enrollment.answers.filter((a: any) => a.is_correct).length
+            const answeredQs  = answers.length
+            const correctQs   = answers.filter((a: any) => a.is_correct).length
             const pct         = totalQs > 0 ? Math.round((answeredQs / totalQs) * 100) : 0
-            const answeredIds = new Set(enrollment.answers.map((a: any) => a.question_id))
+            const answeredIds = new Set(answers.map((a: any) => a.question_id))
             const allAnswered = totalQs > 0 && questions.every(q => answeredIds.has(q.id))
 
             const STATUS_STYLES: Record<string, string> = {
@@ -1666,10 +1667,11 @@ function TrainingView({ token }: { token: string }) {
                 {/* Questions */}
                 <div className="divide-y divide-gray-50 px-5">
                   {questions.map((question, qi) => {
-                    const existingAnswer = enrollment.answers.find((a: any) => a.question_id === question.id)
+                    const existingAnswer = answers.find((a: any) => a.question_id === question.id)
                     const isRetrying     = retrying.has(question.id)
                     const pendingFeedback = feedback[question.id]
                     const currentSel     = selected[enrollment.id]?.[question.id]
+                    const opts           = Array.isArray(question.options) ? question.options : []
 
                     const showAnsweredState = existingAnswer && !isRetrying
 
@@ -1680,10 +1682,13 @@ function TrainingView({ token }: { token: string }) {
                           {question.text}
                         </p>
 
-                        {showAnsweredState ? (
+                        {opts.length === 0 ? (
+                          /* ── No answer options set yet ── */
+                          <p className="rounded-lg bg-neutral-light/60 px-3 py-2 text-xs italic text-neutral-mid">Answer options for this question haven&apos;t been added yet — your manager will set them before you&apos;re assessed.</p>
+                        ) : showAnsweredState ? (
                           /* ── Answered state ── */
                           <div className="space-y-2">
-                            {question.options.map((opt, oi) => {
+                            {opts.map((opt, oi) => {
                               const letter      = OPTION_LETTERS[oi]
                               const wasSelected = existingAnswer.answer_text === letter
                               const isCorrect   = existingAnswer.is_correct
@@ -1715,7 +1720,7 @@ function TrainingView({ token }: { token: string }) {
                                 <span className="flex items-center gap-1 text-xs font-medium text-red-500">
                                   <XCircle size={13} /> Incorrect
                                   {pendingFeedback?.correct_option !== null && pendingFeedback?.correct_option !== undefined
-                                    ? ` — correct answer: ${OPTION_LETTERS[pendingFeedback.correct_option]}. ${question.options[pendingFeedback.correct_option]}`
+                                    ? ` — correct answer: ${OPTION_LETTERS[pendingFeedback.correct_option]}. ${opts[pendingFeedback.correct_option] ?? ''}`
                                     : ''}
                                 </span>
                               )}
@@ -1732,7 +1737,7 @@ function TrainingView({ token }: { token: string }) {
                         ) : (
                           /* ── MCQ input state ── */
                           <div className="space-y-2">
-                            {question.options.map((opt, oi) => {
+                            {opts.map((opt, oi) => {
                               const letter     = OPTION_LETTERS[oi]
                               const isSelected = currentSel === letter
                               return (

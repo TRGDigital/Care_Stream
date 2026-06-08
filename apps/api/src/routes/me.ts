@@ -57,6 +57,22 @@ const UI_STRINGS: Record<string, string> = {
 
 // Lightweight outstanding-item counts for the Chat Hub sidebar badges.
 // Counts only — no heavy data or translation.
+// ─── GET /me/profile ──────────────────────────────────────────────────────────
+// Lightweight profile for the hub: the staff member's own language so the chat can
+// default the "Reply in" picker and dictate voice input in their language.
+meRouter.get('/profile', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub
+  const user = await (prisma as any).user.findUnique({
+    where:  { id: userId },
+    select: { first_language: true, second_language: true, comms_always_first_language: true },
+  }).catch(() => null)
+  ok(res, {
+    first_language:              (user?.first_language as string) ?? 'eng',
+    second_language:             (user?.second_language as string) ?? null,
+    comms_always_first_language: user?.comms_always_first_language !== false,
+  })
+})
+
 // ─── Web-push subscription (PWA notifications) ────────────────────────────────
 meRouter.post('/push/subscribe', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

@@ -470,6 +470,7 @@ export function createApiClient(token: string) {
 
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
+      profile: () => apiFetch<{ first_language: string; second_language: string | null; comms_always_first_language: boolean }>('/me/profile', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number }>('/me/counts', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),

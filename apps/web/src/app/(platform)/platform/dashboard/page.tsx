@@ -1716,6 +1716,8 @@ function SystemReference() {
           <RefRow label="Confidence floor"  value="0.5 — below this defaults to English + lowConfidence flag for review." />
           <RefRow label="Response language" value="apps/api/src/lib/translate.ts (langName) maps the code to a name fed to Claude; staff first/second language drives proactive training delivery." />
           <RefRow label="Channels"          value="Detection runs on web chat, email and WhatsApp inbound; replies stay in-thread in the same language." />
+          <RefRow label="Hub voice (WS5)"   value="Voice INPUT: apps/web/src/hooks/useSpeech.ts (browser Web Speech API) now dictates in the staff member's language via apps/web/src/lib/locale.ts bcp47() (ISO 639-3 → BCP-47). Voice OUTPUT: 'Listen' button on every answer reads it aloud via speechSynthesis in the answer's language." />
+          <RefRow label="Reply-lang default" value="GET /me/profile exposes first_language + comms_always_first_language to the hub; the chat 'Reply in' picker now defaults to the staff member's own language (unless they've picked one on the device) — parity with WhatsApp. (Whisper-quality server voice input remains a future upgrade; deferred to avoid OpenAI cost.)" />
         </div>
         <p className="mt-3 mb-1 text-sm font-semibold text-neutral-dark">Languages we name &amp; respond in</p>
         <p className="mb-2 text-xs text-neutral-mid">franc can detect 180+ languages; these are the ones we map to a friendly name (UK-care-common in bold). Claude can answer in many more.</p>

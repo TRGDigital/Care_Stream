@@ -440,8 +440,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Replying in the staff member's language">
           <p className="text-sm text-neutral-mid">
-            By default CareStream replies in whatever language the staff member writes in. Under the message box there's a <strong>“Reply in”</strong> picker — they can leave it on <em>Auto-detect</em>, or choose a fixed language so every answer comes back in it (their choice is remembered on that device). The picker lists all your available languages, including any you've added in <strong>Settings → Languages</strong>.
+            The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile) — so a Polish-speaking carer gets Polish answers straight away, just like on WhatsApp. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.
           </p>
+        </SectionBlock>
+        <SectionBlock title="Voice — speak and listen">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              Staff don&apos;t have to type. The <strong>microphone</strong> button next to the message box lets them <strong>speak their question</strong> — and it now listens in their <strong>own language</strong>, not just English, so a carer can ask in Romanian or Tagalog by voice.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              Every answer also has a <strong>“Listen”</strong> button that <strong>reads the reply aloud</strong> in the answer&apos;s language — a real help for staff who find reading on a phone difficult, or who simply prefer to listen on shift.
+            </p>
+          </div>
         </SectionBlock>
         <SectionBlock title="What staff can ask">
           <div className="space-y-2 text-sm text-neutral-mid">

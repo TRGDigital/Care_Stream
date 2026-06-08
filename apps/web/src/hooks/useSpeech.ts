@@ -16,7 +16,9 @@ export interface UseSpeechReturn {
 // The hook transcribes speech, appends the transcript to `onTranscript`, and
 // resets to idle. The caller decides when to submit.
 
-export function useSpeech(onTranscript: (text: string) => void): UseSpeechReturn {
+// `lang` is a BCP-47 locale (e.g. 'pl-PL') so staff can dictate in their own
+// language; falls back to the device language, then English.
+export function useSpeech(onTranscript: (text: string) => void, lang?: string): UseSpeechReturn {
   const [state,      setState]      = useState<SpeechState>('idle')
   const [transcript, setTranscript] = useState('')
   const recognitionRef              = useRef<any>(null)
@@ -40,8 +42,8 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechReturn
     recognition.continuous       = false
     recognition.interimResults   = false
     recognition.maxAlternatives  = 1
-    // Detect the browser's UI language; falls back to English
-    recognition.lang = navigator.language || 'en-GB'
+    // Dictate in the staff member's language when known; else the device language.
+    recognition.lang = lang || navigator.language || 'en-GB'
 
     recognition.onstart = () => {
       setState('listening')
@@ -69,7 +71,7 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechReturn
 
     recognitionRef.current = recognition
     recognition.start()
-  }, [SpeechRecognition, state, onTranscript])
+  }, [SpeechRecognition, state, onTranscript, lang])
 
   // Clean up on unmount
   useEffect(() => {

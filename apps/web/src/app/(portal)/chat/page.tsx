@@ -19,8 +19,9 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, X, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
+import { bcp47 } from '@/lib/locale'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -329,14 +330,16 @@ export default function ChatPage() {
   const [input, setInput]                              = useState('')
   const [sending, setSending]                          = useState(false)
 
-  const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
-    useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)))
   const [expandedCitations, setExpandedCitations]      = useState<Set<string>>(new Set())
   const [fullPolicyRequestedIds, setFullPolicyRequestedIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId]          = useState<string | null>(null)
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
+  const [firstLang,    setFirstLang]                    = useState<string>('eng') // the staff member's own language (from their profile)
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
+  // Voice: dictate in the chosen reply language, else the staff member's own language.
+  const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
+    useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
   const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
@@ -380,6 +383,23 @@ export default function ChatPage() {
       .then(s => { if (Array.isArray((s as any).languages)) { setLangList((s as any).languages); try { localStorage.setItem(`cs_langs_${userId}`, JSON.stringify((s as any).languages)) } catch { /* ignore */ } } })
       .catch(() => { /* picker falls back to Auto-detect only */ })
   }, [session?.accessToken])
+
+  // Load the staff member's own language so voice dictates in it and the "Reply in"
+  // picker defaults to it (parity with WhatsApp, where their language is applied
+  // automatically) — unless they've already chosen a language on this device.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.profile()
+      .then(p => {
+        setFirstLang(p.first_language || 'eng')
+        let stored: string | null = null
+        try { stored = localStorage.getItem(`cs_reply_lang_${userId}`) } catch { /* ignore */ }
+        if (!stored && p.comms_always_first_language && p.first_language && p.first_language !== 'eng') {
+          setReplyLang(p.first_language)
+        }
+      })
+      .catch(() => { /* falls back to auto-detect */ })
+  }, [session?.accessToken, userId])
 
   function chooseReplyLang(code: string) {
     setReplyLang(code)
@@ -912,6 +932,7 @@ export default function ChatPage() {
                   sessionRef={msg.id === firstUserMsgId ? sessionRef(sessionId) : undefined}
                   feedbackState={msg.queryId ? msgFeedback[msg.queryId] : undefined}
                   onSubmitFeedback={submitFeedback}
+                  speechLang={bcp47(replyLang || firstLang)}
                 />
               ))}
               <div ref={bottomRef} />
@@ -1168,6 +1189,7 @@ function MessageBubble({
   sessionRef: ref,
   feedbackState,
   onSubmitFeedback,
+  speechLang,
 }: {
   msg:                 ChatMessage
   userInitial:         string
@@ -1180,7 +1202,26 @@ function MessageBubble({
   sessionRef?:         string
   feedbackState?:      'positive' | 'negative'
   onSubmitFeedback:    (queryId: string, rating: 'positive' | 'negative') => void
+  speechLang:          string
 }) {
+  const [speaking, setSpeaking] = useState(false)
+  // Read-aloud (TTS) of an answer — in the answer's own language (or the chosen
+  // reply language). A real accessibility win for low-literacy staff.
+  function speakMsg() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    if (speaking) { window.speechSynthesis.cancel(); setSpeaking(false); return }
+    const tmp = document.createElement('div'); tmp.innerHTML = msg.content
+    const text = (tmp.textContent || '').trim()
+    if (!text) return
+    window.speechSynthesis.cancel()
+    const u = new SpeechSynthesisUtterance(text)
+    u.lang = msg.language ? bcp47(msg.language) : speechLang
+    u.onend = () => setSpeaking(false)
+    u.onerror = () => setSpeaking(false)
+    setSpeaking(true)
+    window.speechSynthesis.speak(u)
+  }
+
   if (msg.role === 'user') {
     return (
       <div className="flex items-end justify-end gap-3">
@@ -1225,10 +1266,15 @@ function MessageBubble({
             />
           )}
         </div>
-        {msg.timestamp && !msg.loading && (
-          <p className="mt-1 text-xs text-neutral-mid">
-            {formatMsgTime(msg.timestamp)}
-          </p>
+        {!msg.loading && (msg.timestamp || msg.content) && (
+          <div className="mt-1 flex items-center gap-3">
+            {msg.timestamp && <span className="text-xs text-neutral-mid">{formatMsgTime(msg.timestamp)}</span>}
+            {msg.content && (
+              <button onClick={speakMsg} className="flex items-center gap-1 text-xs text-neutral-mid transition-colors hover:text-teal" title={speaking ? 'Stop' : 'Listen'}>
+                {speaking ? <Square size={11} /> : <Volume2 size={12} />} {speaking ? 'Stop' : 'Listen'}
+              </button>
+            )}
+          </div>
         )}
 
         {msg.queryId && !msg.loading && (

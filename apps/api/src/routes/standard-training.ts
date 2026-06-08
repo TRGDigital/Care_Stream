@@ -32,6 +32,15 @@ function questionTexts(questions: any): string[] {
   return (Array.isArray(questions) ? questions : []).map((q: any) => String(q?.text ?? '')).filter(Boolean)
 }
 
+// When a module is regenerated its content changes, so any outstanding/approved
+// external review no longer applies — mark them superseded (a fresh review is needed).
+async function supersedeReviewLinks(moduleId: string): Promise<void> {
+  await (prisma as any).moduleReviewLink.updateMany({
+    where: { module_id: moduleId, status: { in: ['approved', 'pending', 'changes_requested'] } },
+    data:  { status: 'superseded' },
+  }).catch((e: any) => console.error('[std-training] supersede review links failed:', e?.message ?? e))
+}
+
 // Every distinct question text ever used by a module: current bank + all snapshots.
 async function gatherUsedQuestions(moduleId: string, currentQuestions: any): Promise<{ texts: string[]; versions: Array<{ version: number; count: number; created_at: Date }> }> {
   const versions = await (prisma as any).trainingQuestionVersion.findMany({
@@ -65,7 +74,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
     const reviewByModule = new Map<string, any>()
     if (moduleIds.length) {
       const links = await (prisma as any).moduleReviewLink.findMany({
-        where: { module_id: { in: moduleIds }, status: { not: 'revoked' } },
+        where: { module_id: { in: moduleIds }, status: { notIn: ['revoked', 'superseded'] } },
         orderBy: { created_at: 'desc' },
         select: { module_id: true, status: true, item_feedback: true },
       }).catch(() => [])
@@ -132,6 +141,7 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
     const module = existing
       ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
       : await (prisma as any).trainingModule.create({ data: { tenant_id: null, slug: `std-${kebab(topic.title)}`, ...data } })
+    if (existing) await supersedeReviewLinks(existing.id)  // content changed → external approval no longer valid
     ok(res, { module })
   } catch (e: any) {
     console.error('[standard-training/generate] failed:', e?.message ?? e)
@@ -214,6 +224,7 @@ standardTrainingRouter.post('/modules/:id/regenerate-questions', async (req: Req
         attested_by_name: null, attested_by_role: null, attested_at: null, independently_reviewed: false,
       },
     })
+    await supersedeReviewLinks(module.id)  // content changed → external approval no longer valid
     ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) }, generated: draft.questions.length, avoided: texts.length })
   } catch (e: any) {
     console.error('[std-training/regenerate-questions] failed:', e?.message ?? e)

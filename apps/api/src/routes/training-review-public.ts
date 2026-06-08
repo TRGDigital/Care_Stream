@@ -17,6 +17,7 @@ async function loadLink(token: string) {
 function linkState(link: any): { ok: true } | { ok: false; reason: string } {
   if (!link) return { ok: false, reason: 'This review link was not found.' }
   if (link.status === 'revoked') return { ok: false, reason: 'This review link has been revoked.' }
+  if (link.status === 'superseded') return { ok: false, reason: 'This training has been updated since this link was created — please ask for a fresh review link.' }
   if (new Date(link.expires_at) < new Date()) return { ok: false, reason: 'This review link has expired.' }
   return { ok: true }
 }
@@ -29,8 +30,14 @@ publicTrainingReviewRouter.post('/:token/unlock', async (req: Request, res: Resp
   if (!passwordMatches(link.id, String(req.body?.password ?? ''), link.password_hash)) {
     err(res, 'BAD_PASSWORD', 'Incorrect password.', 401); return
   }
+  // Backfill the cover image for links frozen before snapshots included it.
+  const snapshot = { ...(link.snapshot as any) }
+  if (!snapshot.illustration_url) {
+    const m = await (prisma as any).trainingModule.findUnique({ where: { id: link.module_id }, select: { illustration_key: true } }).catch(() => null)
+    if (m?.illustration_key) snapshot.illustration_url = `/public/training/image/${String(m.illustration_key).split('/').pop()}`
+  }
   ok(res, {
-    snapshot: link.snapshot,
+    snapshot,
     status: link.status,
     expires_at: link.expires_at,
     decision: link.decision ?? null,

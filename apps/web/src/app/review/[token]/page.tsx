@@ -96,6 +96,10 @@ function Reviewer({ token, password, data }: { token: string; password: string; 
             <span>· {questions.length} questions</span>
             {s.requires_practical && <span className="text-amber-600">· practical also required</span>}
           </p>
+          {s.illustration_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`${API_URL}${s.illustration_url}`} alt="" className="mt-4 aspect-[16/9] w-full rounded-xl border border-gray-100 object-cover" />
+          )}
         </div>
 
         {lc.summary && <Card title="Overview"><p className="text-sm text-neutral-dark">{lc.summary}</p></Card>}

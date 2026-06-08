@@ -1,6 +1,7 @@
 // Helpers for password-protected external review links of standard modules.
 
 import { randomBytes, createHash, timingSafeEqual } from 'crypto'
+import { illustrationUrl } from '../services/training/moduleImage'
 
 export function genToken(): string {
   return randomBytes(24).toString('base64url') // ~32 chars, unguessable
@@ -52,6 +53,7 @@ export function buildSnapshot(m: any) {
     requires_practical: !!m?.requires_practical,
     standards: Array.isArray(m?.standards) ? m.standards : [],
     policy_refs: Array.isArray(m?.policy_refs) ? m.policy_refs : [],
+    illustration_url: illustrationUrl(m?.illustration_key),
     created_at: m?.created_at ?? null,
   }
 }

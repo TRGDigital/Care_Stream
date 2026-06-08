@@ -441,8 +441,8 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
               {reviewLinks.map(l => (
                 <div key={l.id} className="rounded-lg border border-gray-200 p-2.5 text-xs">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`rounded-full px-2 py-0.5 font-semibold ${l.status === 'approved' ? 'bg-green-50 text-green-600' : l.status === 'changes_requested' ? 'bg-amber-50 text-amber-600' : l.status === 'revoked' ? 'bg-gray-100 text-neutral-mid' : 'bg-blue-50 text-blue-600'}`}>
-                      {l.status === 'approved' ? 'Approved' : l.status === 'changes_requested' ? 'Changes requested' : l.status === 'revoked' ? 'Revoked' : 'Awaiting review'}
+                    <span className={`rounded-full px-2 py-0.5 font-semibold ${l.status === 'approved' ? 'bg-green-50 text-green-600' : l.status === 'changes_requested' ? 'bg-amber-50 text-amber-600' : l.status === 'revoked' || l.status === 'superseded' ? 'bg-gray-100 text-neutral-mid' : 'bg-blue-50 text-blue-600'}`}>
+                      {l.status === 'approved' ? 'Approved' : l.status === 'changes_requested' ? 'Changes requested' : l.status === 'revoked' ? 'Revoked' : l.status === 'superseded' ? 'Superseded (content changed)' : 'Awaiting review'}
                     </span>
                     <span className="text-[10px] text-gray-400">Sent {fmtDate(l.created_at)} · expires {fmtDate(l.expires_at)}</span>
                   </div>

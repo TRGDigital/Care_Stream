@@ -301,6 +301,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     id: `s${i + 1}`,
     heading: String(s?.heading ?? ''),
     body: String(s?.body ?? ''),
+    image_url: illustrationUrl(s?.image_key),
     scenario: { situation: String(s?.scenario?.situation ?? ''), prompt: String(s?.scenario?.prompt ?? ''), answer: String(s?.scenario?.answer ?? '') },
     check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
   })).filter((s: any) => s.body || s.heading)

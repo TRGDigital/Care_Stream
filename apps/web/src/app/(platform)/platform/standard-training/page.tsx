@@ -311,7 +311,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
         </div>
 
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
-        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} />
+        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} assetUrl={platformAssetUrl} imageHint="free" onGenerateImage={async (i) => { await saveEdits(); await api.standardTraining.generateSectionImage(id, i); load() }} />
 
         <div className="mt-4">
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Key points (recap)</label>

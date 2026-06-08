@@ -9,7 +9,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { generateAnnualModuleDraft, normaliseQuestion } from '../services/training/moduleGenerator'
-import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
+import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { runModuleQa } from '../services/training/moduleQa'
 import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
@@ -241,6 +241,21 @@ standardTrainingRouter.post('/modules/:id/generate-image', async (req: Request, 
     ok(res, { illustration_url: illustrationUrl(key) })
   } catch (e: any) {
     console.error('[standard-training/generate-image] failed:', e?.message ?? e)
+    err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
+  }
+})
+
+// POST /admin/standard-training/modules/:id/sections/:index/generate-image — section image (free)
+standardTrainingRouter.post('/modules/:id/sections/:index/generate-image', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const index = parseInt(String(req.params.index), 10)
+  if (!Number.isInteger(index) || index < 0) { err(res, 'VALIDATION_ERROR', 'Invalid section index'); return }
+  try {
+    const key = await generateSectionImage(module.id, index)
+    ok(res, { image_url: illustrationUrl(key) })
+  } catch (e: any) {
+    console.error('[standard-training/section-image] failed:', e?.message ?? e)
     err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
   }
 })

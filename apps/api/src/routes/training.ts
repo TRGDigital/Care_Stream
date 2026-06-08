@@ -14,7 +14,7 @@ import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting
 import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
-import { generateModuleIllustration, illustrationUrl } from '../services/training/moduleImage'
+import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, PlanLimitError } from '../lib/plan-limits'
 
@@ -149,6 +149,25 @@ trainingRouter.post('/modules/:id/generate-image', requireAdmin, async (req: Req
     ok(res, { illustration_url: illustrationUrl(key) })
   } catch (e: any) {
     console.error('[training/generate-image] failed:', e?.message ?? e)
+    err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
+  }
+})
+
+// POST /training/modules/:id/sections/:index/generate-image — section image (uses 1 AI credit)
+trainingRouter.post('/modules/:id/sections/:index/generate-image', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const index = parseInt(String(req.params.index), 10)
+  if (!Number.isInteger(index) || index < 0) { err(res, 'VALIDATION_ERROR', 'Invalid section index'); return }
+  try {
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+    const key = await generateSectionImage(module.id, index)
+    await logAiCredit(tenantId, 'training_image', module.id)
+    ok(res, { image_url: illustrationUrl(key) })
+  } catch (e: any) {
+    console.error('[training/section-image] failed:', e?.message ?? e)
     err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
   }
 })

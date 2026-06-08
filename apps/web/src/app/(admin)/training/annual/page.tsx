@@ -291,7 +291,11 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
         </div>
 
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
-        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} />
+        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} assetUrl={apiAssetUrl} imageHint="uses 1 AI credit" onGenerateImage={async (i) => {
+          if (!confirm('Generating a section image uses 1 AI credit. Continue?')) return
+          await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes })
+          try { await api.training.generateSectionImage(id, i); load() } catch (e: any) { alert(e?.message ?? 'Image generation failed') }
+        }} />
 
         <div className="mt-4">
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Key points (recap)</label>

@@ -323,6 +323,8 @@ export function createApiClient(token: string) {
         apiFetch<{ module: any }>(`/training/modules/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved }) }),
       generateModuleImage: (id: string) =>
         apiFetch<{ illustration_url: string | null }>(`/training/modules/${id}/generate-image`, token, { method: 'POST' }),
+      generateSectionImage: (id: string, index: number) =>
+        apiFetch<{ image_url: string | null }>(`/training/modules/${id}/sections/${index}/generate-image`, token, { method: 'POST' }),
 
       getEnrollment: (id: string) =>
         apiFetch<{ enrollment: any }>(`/training/enrollments/${id}`, token),

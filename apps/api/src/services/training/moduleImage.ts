@@ -41,8 +41,21 @@ function buildPrompt(template: string, name: string, summary?: string | null): s
   return template.replace(/\{\{\s*topic\s*\}\}/g, name).replace(/\{\{\s*summary\s*\}\}/g, ctx)
 }
 
-// Generate an illustration for a module and persist its S3 key on the module.
-// Returns the new illustration_key. Throws on generation/storage failure.
+// Generate one flat illustration for a topic + context and store it in S3.
+// Returns the S3 key. Shared by the module cover and per-section images.
+async function generateImageKey(name: string, context?: string | null): Promise<string> {
+  const template = await getImagePrompt()
+  const result = await openai.images.generate({
+    model:  'gpt-image-1',
+    prompt: buildPrompt(template, name, context),
+    size:   '1024x1024',
+  })
+  const b64 = result.data?.[0]?.b64_json
+  if (!b64) throw new Error('Image generation returned no data')
+  return uploadTrainingImage(Buffer.from(b64, 'base64'))
+}
+
+// Generate the module COVER illustration and persist its key on the module.
 export async function generateModuleIllustration(moduleId: string): Promise<string> {
   const module = await (prisma as any).trainingModule.findUnique({
     where:  { id: moduleId },
@@ -54,19 +67,28 @@ export async function generateModuleIllustration(moduleId: string): Promise<stri
     ? (module.learning_content.summary as string | undefined)
     : undefined
 
-  const template = await getImagePrompt()
-  const result = await openai.images.generate({
-    model:  'gpt-image-1',
-    prompt: buildPrompt(template, module.name, summary),
-    size:   '1024x1024',
-  })
-
-  const b64 = result.data?.[0]?.b64_json
-  if (!b64) throw new Error('Image generation returned no data')
-  const buffer = Buffer.from(b64, 'base64')
-
-  const key = await uploadTrainingImage(buffer)
+  const key = await generateImageKey(module.name, summary)
   await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { illustration_key: key } })
+  return key
+}
+
+// Generate an image for ONE lesson section (using the same prompt approach as the
+// cover, seeded from the section's heading + body) and store it in that section.
+export async function generateSectionImage(moduleId: string, sectionIndex: number): Promise<string> {
+  const module = await (prisma as any).trainingModule.findUnique({
+    where:  { id: moduleId },
+    select: { id: true, learning_content: true },
+  })
+  if (!module) throw new Error('Module not found')
+  const lc = (module.learning_content && typeof module.learning_content === 'object') ? { ...module.learning_content } : {}
+  const sections = Array.isArray((lc as any).sections) ? [...(lc as any).sections] : []
+  const sec = sections[sectionIndex]
+  if (!sec) throw new Error('Section not found')
+
+  const key = await generateImageKey(String(sec.heading || 'Care-home training'), String(sec.body || ''))
+  sections[sectionIndex] = { ...sec, image_key: key }
+  ;(lc as any).sections = sections
+  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { learning_content: lc } })
   return key
 }
 

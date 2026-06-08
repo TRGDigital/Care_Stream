@@ -422,6 +422,7 @@ export function createPlatformClient(token: string) {
       revokeReviewLink: (linkId: string) => adminFetch<{ revoked: boolean }>(`/standard-training/review-links/${linkId}/revoke`, token, { method: 'POST' }),
       resolveReviewItem: (linkId: string, ref: string, resolved: boolean) => adminFetch<{ item_feedback: any[] }>(`/standard-training/review-links/${linkId}/resolve`, token, { method: 'POST', body: JSON.stringify({ ref, resolved }) }),
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
+      generateSectionImage: (id: string, index: number) => adminFetch<{ image_url: string | null }>(`/standard-training/modules/${id}/sections/${index}/generate-image`, token, { method: 'POST' }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
     },
 

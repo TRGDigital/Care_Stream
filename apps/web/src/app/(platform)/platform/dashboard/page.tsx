@@ -15,7 +15,7 @@ import {
   FileText, Loader2, Mail, MessageSquare, Search, TrendingUp, Users, X,
   Cpu, Globe, Database, Zap, GitBranch, Shield, GraduationCap, Bot,
   CheckCircle2, XCircle, RefreshCw, ClipboardList, ChevronRight, ChevronLeft, Download,
-  Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings, HardDrive,
+  Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings, HardDrive, Smartphone,
 } from 'lucide-react'
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
@@ -2274,6 +2274,21 @@ function SystemReference() {
           <RefRow label="Weekly active %" value="active in last 7d ÷ active team size. Headline counts logins too; the 8-week TREND is activity-based (QueryRecord + PolicyReadSession) because last_login_at has no history." />
           <RefRow label="Channel mix"    value="QueryRecord.channel over 30d: chat (hub) | whatsapp | email | voice, plus hub_pct (chat share). Email questions with null user_id aren't user-attributed." />
           <RefRow label="UI"             value="apps/web .../analytics/page.tsx — new 'Engagement' tab: WAU% + active/team/hub-share stat cards, 8-week trend bars, channel-mix bars." />
+        </div>
+      </RefSection>
+
+      <RefSection icon={Smartphone} title="Staff Hub PWA & Push">
+        <p className="leading-relaxed text-neutral-mid">
+          The hub is an installable <strong>PWA</strong> (&ldquo;Add to Home Screen&rdquo;) so it opens standalone like an app —
+          the foundation for the WhatsApp → Hub move and the prerequisite for iOS web-push.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Manifest"        value="apps/web/src/app/manifest.ts (Next App Router convention) — name CareStream, display standalone, start_url /chat, theme #9B52B5. Served at /manifest.webmanifest." />
+          <RefRow label="Icons"           value="public/icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png — generated from logo-color.png via sharp (centred on a white square)." />
+          <RefRow label="iOS"             value="appleWebApp metadata + apple-touch-icon in apps/web/src/app/layout.tsx (viewport themeColor #9B52B5). iOS push requires the user to Add to Home Screen first." />
+          <RefRow label="Service worker"  value="public/sw.js — skipWaiting/clients.claim, no-op fetch (aids installability), and push + notificationclick handlers (deep-link to /chat). Registered by components/pwa/pwa-register.tsx." />
+          <RefRow label="Install prompt"  value="components/pwa/install-prompt.tsx — Android/desktop 'Install' button via beforeinstallprompt; iOS shows a Share→Add-to-Home-Screen hint. Dismissible (localStorage cs_install_dismissed). Mounted in (portal)/layout.tsx." />
+          <RefRow label="Push (status)"   value="SW push handlers are in place; the subscription storage + web-push send path + opt-in UX are the push workstream (see Push Notifications ref once built)." />
         </div>
       </RefSection>
 

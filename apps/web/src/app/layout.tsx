@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
@@ -33,6 +33,21 @@ export const metadata: Metadata = {
     index:  true,
     follow: true,
   },
+  // PWA: app/manifest.ts is auto-linked by Next; these add the iOS home-screen
+  // icon + standalone launch behaviour so the installed hub looks/acts like an app.
+  icons: {
+    icon:  '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable:        true,
+    title:          'CareStream',
+    statusBarStyle: 'default',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#9B52B5',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

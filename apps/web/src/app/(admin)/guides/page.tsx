@@ -889,18 +889,24 @@ const GUIDE_SECTIONS: GuideSection[] = [
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it does">
-          <p className="text-sm text-neutral-mid">
-            The Policy Gaps tool analyses your uploaded policy documents against a set of recommended topics for registered care settings. It identifies areas where you either have no policy at all, or where your existing policy may be incomplete.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              Policy Gaps checks the regulations that apply to a registered care setting against the <strong>actual content</strong> of your uploaded policies — it reads inside the documents rather than matching on titles. For each regulation it tells you whether your policies <strong>cover</strong> it, partially cover it, or leave a <strong>gap</strong>, and names the policy that provides the evidence.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              It also surfaces <strong>unanswered staff questions</strong> — recurring themes where staff asked something the assistant couldn&apos;t answer from your policies — which is real-world evidence of a missing or unclear policy.
+            </p>
+          </div>
         </SectionBlock>
         <SectionBlock title="Using policy gaps">
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Policy Gaps</strong> in the sidebar.</Step>
-            <Step n={2}>Review the list of flagged gaps. Each one shows the recommended topic and why it matters.</Step>
-            <Step n={3}>For each gap, either upload a new policy or use the <em>Generate draft</em> feature to create a starting-point document.</Step>
+            <Step n={2}>Click <strong>Run coverage analysis</strong>. CareStream reads through your policies and judges each regulation against their content — this takes about a minute. The result is saved, so re-open the page any time; re-run it after you&apos;ve uploaded or updated policies.</Step>
+            <Step n={3}>Review anything flagged as a <strong>Gap</strong> or <strong>Partial</strong>. Each shows why, and partials name the policy that partly covers it.</Step>
+            <Step n={4}>For each gap, upload a policy that addresses it (or strengthen the partial one). Re-run the analysis to confirm it&apos;s now covered.</Step>
           </div>
         </SectionBlock>
-        <Tip>Running the policy gaps check before a CQC inspection helps you identify areas an inspector is likely to ask about.</Tip>
+        <Tip>Because coverage is judged from policy content, a regulation only shows as a gap when your policies genuinely don&apos;t address it — not just because no policy happens to be titled with the regulation&apos;s name. Re-run the analysis before a CQC inspection for an up-to-date picture.</Tip>
       </div>
     ),
   },

@@ -377,6 +377,24 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Cached, content-based coverage of each external regulation by a tenant's policies.
+// Computed on demand (semantic retrieval + AI judgement), read by the Policy Gaps page.
+model RegulationCoverage {
+  id                   String   @id @default(uuid())
+  tenant_id            String
+  reference_key        String
+  status               String                         // 'covered' | 'partial' | 'gap'
+  confidence           Int?                           // 0-100
+  evidence_policy_id   String?
+  evidence_policy_name String?
+  reason               String?
+  analysed_at          DateTime @default(now())
+
+  @@unique([tenant_id, reference_key])
+  @@index([tenant_id])
+  @@map("regulation_coverage")
+}
+
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.

@@ -9,6 +9,7 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
+import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
 
 export const analyticsRouter = Router()
 
@@ -293,26 +294,17 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000)
 
-  const [noMatchQueries, activePolicies, regulations] = await Promise.all([
+  const [noMatchQueries, regulations, coverage] = await Promise.all([
     (prisma as any).queryRecord.findMany({
       where:   { tenant_id: tenantId, no_match: true, created_at: { gte: ninetyDaysAgo } },
       select:  { id: true, query_text: true, created_at: true },
       orderBy: { created_at: 'desc' },
     }),
-    (prisma as any).policy.findMany({
-      where:  { tenant_id: tenantId, status: 'active' },
-      select: { id: true, name: true, tags: true },
-    }),
     (prisma as any).externalRegulation.findMany({
       where:  { is_active: true },
-      select: {
-        reference_key:    true,
-        official_name:    true,
-        also_known_as:    true,
-        summary:          true,
-        care_home_context: true,
-      },
+      select: { reference_key: true, official_name: true, summary: true, care_home_context: true },
     }),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId } }),
   ])
 
   // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
@@ -350,54 +342,85 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     if (themes.length >= 10) break
   }
 
-  // ── 2. Regulation gap detection ───────────────────────────────────────────────
-  // For each regulation, check if any active policy name or tags mentions it.
-  // A regulation is "covered" if a policy plausibly addresses it.
-  const policyText = activePolicies
-    .map((p: any) => `${p.name} ${(p.tags as string[]).join(' ')}`.toLowerCase())
-    .join(' ')
+  // ── 2. Regulation coverage (content-based, cached) ────────────────────────────
+  // Read the cached, AI-judged coverage (computed by POST /analytics/gaps/analyse,
+  // which reads inside the policies via the vector index). If it's never been run,
+  // we report not_analysed so the UI can prompt for it — we no longer guess from
+  // policy names/tags.
+  const covByKey = new Map<string, any>((coverage as any[]).map(c => [c.reference_key, c]))
+  const analysed = (coverage as any[]).length > 0
+  const analysedAt = analysed
+    ? (coverage as any[]).reduce((max: Date, c: any) => (c.analysed_at > max ? c.analysed_at : max), (coverage as any[])[0].analysed_at)
+    : null
 
-  const regulationGaps: Array<{
-    reference_key:     string
-    official_name:     string
-    summary:           string
-    care_home_context: string
-    covered:           boolean
-  }> = []
+  const regulationGaps = (regulations as any[]).map((reg: any) => {
+    const c = covByKey.get(reg.reference_key)
+    const status: 'covered' | 'partial' | 'gap' | 'unknown' = c?.status ?? 'unknown'
+    return {
+      reference_key:        reg.reference_key,
+      official_name:        reg.official_name,
+      summary:              reg.summary,
+      care_home_context:    reg.care_home_context,
+      status,
+      covered:              status === 'covered' || status === 'partial',  // back-compat
+      confidence:           c?.confidence ?? null,
+      evidence_policy_id:   c?.evidence_policy_id ?? null,
+      evidence_policy_name: c?.evidence_policy_name ?? null,
+      reason:               c?.reason ?? null,
+    }
+  })
 
-  for (const reg of regulations) {
-    const terms = [
-      reg.official_name,
-      ...(reg.also_known_as as string[]),
-    ].map((t: string) => t.toLowerCase())
-
-    const covered = terms.some(t => policyText.includes(t))
-    regulationGaps.push({
-      reference_key:     reg.reference_key,
-      official_name:     reg.official_name,
-      summary:           reg.summary,
-      care_home_context: reg.care_home_context,
-      covered,
-    })
-  }
-
-  const coveredCount = regulationGaps.filter(r => r.covered).length
   const totalCount   = regulationGaps.length
-  const coverageScore = totalCount > 0
-    ? Math.round((coveredCount / totalCount) * 100)
-    : 100
+  const coveredCount = regulationGaps.filter(r => r.status === 'covered').length
+  const partialCount = regulationGaps.filter(r => r.status === 'partial').length
+  const gapCount     = regulationGaps.filter(r => r.status === 'gap').length
+  const coverageScore = analysed && totalCount > 0
+    ? Math.round(((coveredCount + partialCount * 0.5) / totalCount) * 100)
+    : null
+
+  // Order: gaps first, then partial, then covered — most actionable on top.
+  const rank = (s: string) => (s === 'gap' ? 0 : s === 'partial' ? 1 : s === 'covered' ? 2 : 3)
 
   ok(res, {
     coverage_score:    coverageScore,
+    analysed,
+    analysed_at:       analysedAt,
     unanswered_themes: themes,
-    regulation_gaps:   regulationGaps.sort((a, b) => Number(a.covered) - Number(b.covered)),
+    regulation_gaps:   regulationGaps.sort((a, b) => rank(a.status) - rank(b.status)),
     meta: {
-      no_match_total:    noMatchQueries.length,
-      days_analysed:     90,
-      regulations_total: totalCount,
+      no_match_total:      noMatchQueries.length,
+      days_analysed:       90,
+      regulations_total:   totalCount,
       regulations_covered: coveredCount,
+      regulations_partial: partialCount,
+      regulations_gap:     gapCount,
     },
   })
+})
+
+// ─── POST /analytics/gaps/analyse ─────────────────────────────────────────────
+// Run the content-based regulation coverage analysis (semantic retrieval + AI
+// judgement over the tenant's own policies) and cache it. Can take ~1 minute.
+analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const rows = await analyseRegulationCoverage(tenantId)
+    ok(res, {
+      analysed_at: new Date(),
+      regulations_total:   rows.length,
+      regulations_covered: rows.filter(r => r.status === 'covered').length,
+      regulations_partial: rows.filter(r => r.status === 'partial').length,
+      regulations_gap:     rows.filter(r => r.status === 'gap').length,
+    })
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e.message, 500)
+  }
 })
 
 // ─── GET /analytics/daily-activity ───────────────────────────────────────────

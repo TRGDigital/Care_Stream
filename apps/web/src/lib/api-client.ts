@@ -540,11 +540,14 @@ export function createApiClient(token: string) {
       }>('/analytics/training-gaps', token),
 
       gaps: () => apiFetch<{
-        coverage_score:    number
+        coverage_score:    number | null
+        analysed:          boolean
+        analysed_at:       string | null
         unanswered_themes: Array<{ theme: string; count: number; sample_questions: string[] }>
-        regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; covered: boolean }>
-        meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number }
+        regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; status: 'covered' | 'partial' | 'gap' | 'unknown'; covered: boolean; confidence: number | null; evidence_policy_id: string | null; evidence_policy_name: string | null; reason: string | null }>
+        meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }
       }>('/analytics/gaps', token),
+      analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
     },
   }
 }

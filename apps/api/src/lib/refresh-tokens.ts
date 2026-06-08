@@ -8,6 +8,10 @@ import crypto from 'crypto'
 import { prisma } from '../db/client'
 import { signRefreshToken, verifyRefreshToken, REFRESH_TTL_MS } from '../services/auth/tokens'
 
+// Grace window in which replaying a just-rotated token is treated as a concurrent
+// refresh (tolerated) rather than theft.
+const ROTATION_GRACE_MS = 30_000
+
 // Mint + store a new refresh token for a user.
 export async function issueRefreshToken(userId: string): Promise<string> {
   const jti = crypto.randomUUID()
@@ -42,9 +46,20 @@ export async function rotateRefreshToken(raw: string): Promise<{ userId: string;
 
   const row = await (prisma as any).refreshToken.findUnique({ where: { id: jti } }).catch(() => null)
 
-  // Validly-signed token whose jti we've never seen, or one already consumed →
-  // treat as replay/theft: revoke everything for this user and refuse.
-  if (!row || row.user_id !== sub || row.rotated_at || new Date(row.expires_at) < new Date()) {
+  // Validly-signed token whose jti we've never seen, or one that's expired → replay/
+  // theft: revoke everything for this user and refuse.
+  if (!row || row.user_id !== sub || new Date(row.expires_at) < new Date()) {
+    await revokeUserRefreshTokens(sub)
+    return null
+  }
+
+  // Already rotated. Within a brief grace window this is almost certainly a concurrent
+  // refresh (e.g. the PWA + a browser tab firing at once), not theft — tolerate it by
+  // issuing a fresh token. Outside the window, treat as replay/theft and revoke all.
+  if (row.rotated_at) {
+    if (Date.now() - new Date(row.rotated_at).getTime() < ROTATION_GRACE_MS) {
+      return { userId: sub, refreshToken: await issueRefreshToken(sub) }
+    }
     await revokeUserRefreshTokens(sub)
     return null
   }

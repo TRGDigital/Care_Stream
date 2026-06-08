@@ -88,10 +88,13 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
     for (const m of (modules as any[])) {
       if (!m.topic_id) continue
       const qa = runModuleQa(m)
+      const secs = Array.isArray(m.learning_content?.sections) ? m.learning_content.sections : []
+      const sectionImages = secs.filter((s: any) => s?.image_key).length
       byTopic.set(m.topic_id, {
         id: m.id, name: m.name, topic_id: m.topic_id, approved: m.approved, approved_at: m.approved_at, created_at: m.created_at,
         frequency: m.frequency, requires_practical: m.requires_practical, pass_mark: m.pass_mark, duration_minutes: m.duration_minutes,
         group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key),
+        image_count: (m.illustration_key ? 1 : 0) + sectionImages, image_slots: 1 + secs.length,
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,
         standards_count: Array.isArray(m.standards) ? m.standards.length : 0,
         attested_by_name: m.attested_by_name, attested_by_role: m.attested_by_role, attested_at: m.attested_at,

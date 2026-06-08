@@ -79,6 +79,7 @@ export default function StandardTrainingPage() {
                           {m && <span className={`rounded-full px-1.5 py-0.5 font-medium ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>}
                           {m && <span>· {m.question_count} questions</span>}
                           {m?.duration_minutes ? <span>· {m.duration_minutes} min ({(m.duration_minutes / 60).toFixed(1)} CPD h)</span> : null}
+                          {m && <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${m.image_count >= m.image_slots ? 'bg-green-50 text-green-600' : m.image_count > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-neutral-mid'}`}><ImageIcon size={10} /> {m.image_count}/{m.image_slots} images</span>}
                         </p>
                         {m && (
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-400">

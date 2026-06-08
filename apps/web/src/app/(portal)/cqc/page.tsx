@@ -77,7 +77,7 @@ function AnswerForm({
     try {
       const api = createApiClient(token)
       const res = await api.cqcQuestions.submitAnswer(delivery.id, answer)
-      onAnswered({ ...delivery, ...res.delivery, score: res.score, feedback: res.feedback })
+      onAnswered({ ...delivery, ...res.delivery, score: res.score, feedback: res.feedback, question: { ...delivery.question, model_answer: res.model_answer } })
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -141,6 +141,7 @@ function ResultCard({ delivery, token, onUpdated }: {
         feedback:    res.feedback,
         status:      'evaluated',
         attempts:    (delivery.attempts ?? 1) + 1,
+        question:    { ...delivery.question, model_answer: res.model_answer ?? delivery.question?.model_answer ?? null },
       })
       setRetrying(false); setAnswer('')
     } catch (e: any) {

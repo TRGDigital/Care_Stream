@@ -7,6 +7,8 @@ import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
 import { sendPushToUsers } from '../lib/push'
 import { sendCqcPrepEmail } from '../services/email/outbound'
+import { translateText, translateTextsBatch, withTranslationBudget } from '../lib/translate'
+import { languageNameForCode } from '../data/languages'
 
 export const cqcQuestionsRouter = Router()
 
@@ -475,17 +477,46 @@ cqcQuestionsRouter.get('/deliveries', requireAdmin, async (req: Request, res: Re
 // The model answer is revealed only AFTER a question has been answered (so it can't
 // be read ahead of answering a pending question).
 cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => {
-  const userId = (req as any).user.id
+  const userId   = (req as any).user.id
+  const tenantId = (req as any).user.tenant_id
   try {
-    const deliveries = await (prisma as any).cqcStaffDelivery.findMany({
-      where:   { user_id: userId },
-      include: { question: { select: { domain: true, model_answer: true } } },
-      orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
-    })
-    const safe = (deliveries as any[]).map(d => ({
+    const [deliveries, user, tenant] = await Promise.all([
+      (prisma as any).cqcStaffDelivery.findMany({
+        where:   { user_id: userId },
+        include: { question: { select: { domain: true, model_answer: true } } },
+        orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
+      }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+    ])
+
+    // Hide the model answer until the question has been answered.
+    let safe = (deliveries as any[]).map(d => ({
       ...d,
       question: { domain: d.question.domain, model_answer: d.status === 'evaluated' ? d.question.model_answer : null },
     }))
+
+    // Deliver CQC questions in the staff member's own language (parity with training,
+    // induction and chat). Translate the question, the revealed model answer and the
+    // AI feedback in batched, cached passes; fall back to English if it runs over budget.
+    const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+    if (lang !== 'eng' && safe.length) {
+      const langName = languageNameForCode(lang, tenant?.custom_languages)
+      safe = await withTranslationBudget((async () => {
+        const [qT, mT, fT] = await Promise.all([
+          translateTextsBatch(safe.map(d => d.rephrased_q ?? ''), lang, langName),
+          translateTextsBatch(safe.map(d => d.question.model_answer ?? ''), lang, langName),
+          translateTextsBatch(safe.map(d => d.feedback ?? ''), lang, langName),
+        ])
+        return safe.map((d, i) => ({
+          ...d,
+          rephrased_q: qT[i] || d.rephrased_q,
+          feedback:    d.feedback ? (fT[i] || d.feedback) : d.feedback,
+          question:    { ...d.question, model_answer: d.question.model_answer ? (mT[i] || d.question.model_answer) : null },
+        }))
+      })(), 18_000, safe)
+    }
+
     ok(res, { deliveries: safe })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -559,7 +590,26 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
       },
     })
 
-    ok(res, { delivery: updated, score, feedback })
+    // Show the feedback in the staff member's language right away (the stored copy
+    // stays English so the admin Performance view is consistent).
+    let outFeedback = feedback
+    let outModelAnswer = delivery.question.model_answer as string | null
+    try {
+      const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } })
+      const lang = u?.comms_always_first_language === false ? 'eng' : ((u?.first_language as string) ?? 'eng')
+      if (lang !== 'eng') {
+        const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null)
+        const langName = languageNameForCode(lang, tenant?.custom_languages)
+        const [f, m] = await Promise.all([
+          translateText(feedback, lang, langName),
+          delivery.question.model_answer ? translateText(delivery.question.model_answer, lang, langName) : Promise.resolve(null),
+        ])
+        outFeedback = f || feedback
+        outModelAnswer = m
+      }
+    } catch { /* fall back to English */ }
+
+    ok(res, { delivery: updated, score, feedback: outFeedback, model_answer: outModelAnswer })
   } catch (e: any) {
     err(res, 'ANSWER_FAILED', e.message, 500)
   }

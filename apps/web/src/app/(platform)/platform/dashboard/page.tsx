@@ -2099,6 +2099,7 @@ function SystemReference() {
           <RefRow label="Scoring"            value="Claude Haiku evaluates answer → score 0–100 + 2–3 sentence feedback, stored on CqcStaffDelivery" />
           <RefRow label="Admin page"         value="/cqc-questions — Question Bank tab (send, add, remove) + Performance tab (staff × domain grid)" />
           <RefRow label="Staff portal"       value="/cqc — pending questions to answer + results with score and feedback" />
+          <RefRow label="First-language delivery" value="GET /deliveries translates the rephrased question, model answer (once evaluated) and feedback into each staff member's first_language at serve time (translateTextsBatch, budget-guarded). The answer they submit is evaluated against the canonical English model answer — Claude scores meaning across languages — and the live feedback + revealed model answer are returned already translated. The English rephrase + feedback stay stored, so the admin Performance view is consistent. Honours comms_always_first_language." />
           <RefRow label="Both prompts"       value="Editable at /platform/prompts — changes take effect immediately with no restart" />
         </div>
       </RefSection>

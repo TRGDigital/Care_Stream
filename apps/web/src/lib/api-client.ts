@@ -435,7 +435,7 @@ export function createApiClient(token: string) {
       myDeliveries: () =>
         apiFetch<{ deliveries: any[] }>('/cqc-questions/my-deliveries', token),
       submitAnswer: (deliveryId: string, answer_text: string) =>
-        apiFetch<{ delivery: any; score: number; feedback: string }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text }) }),
+        apiFetch<{ delivery: any; score: number; feedback: string; model_answer: string | null }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text }) }),
     },
 
     audits: {

@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, translateQuestionCached, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
@@ -122,10 +122,8 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
   if (lang !== 'eng' && items.length > 0) {
     const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget(
-      mapLimit(items, 6, async (it: any) => {
-        const t = await translateQuestionCached({ text: it.text ?? '', options: it.options }, lang, langName)
-        return { ...it, text: t.text, options: t.options }
-      }),
+      translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName)
+        .then(ts => items.map((it: any, i: number) => ({ ...it, text: ts[i].text, options: ts[i].options }))),
       18_000, items,
     )
     ok(res, { items: translated })
@@ -263,7 +261,11 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
   if (lang !== 'eng' && items.length) {
     const langName = languageNameForCode(lang, tenant?.custom_languages)
-    items = await withTranslationBudget(mapLimit(items, 6, async (it: any) => ({ ...it, name: await translateText(it.name, lang, langName) })), 12_000, items)
+    items = await withTranslationBudget(
+      translateTextsBatch(items.map((it: any) => it.name), lang, langName)
+        .then(names => items.map((it: any, i: number) => ({ ...it, name: names[i] }))),
+      12_000, items,
+    )
   }
   ok(res, { items })
 })
@@ -312,24 +314,31 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   if (lang !== 'eng') {
     const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget((async () => {
-      const [s, oc, kp, qs, secs] = await Promise.all([
-        translateText(summary, lang, langName),
-        mapLimit(outcomes, 6, (p: string) => translateText(p, lang, langName)),
-        mapLimit(keyPoints, 6, (p: string) => translateText(p, lang, langName)),
-        mapLimit(questions, 6, async (q: any) => { const t = await translateQuestionCached({ text: q.text ?? '', options: q.options }, lang, langName); return { ...q, text: t.text, options: t.options } }),
-        mapLimit(sections, 4, async (sec: any) => {
-          const [heading, body, situation, prompt, answer, chk] = await Promise.all([
-            translateText(sec.heading, lang, langName),
-            translateText(sec.body, lang, langName),
-            translateText(sec.scenario.situation, lang, langName),
-            translateText(sec.scenario.prompt, lang, langName),
-            translateText(sec.scenario.answer, lang, langName),
-            translateQuestionCached({ text: sec.check.question ?? '', options: sec.check.options }, lang, langName),
-          ])
-          return { ...sec, heading, body, scenario: { situation, prompt, answer }, check: { ...sec.check, question: chk.text, options: chk.options } }
-        }),
+      // Flatten every plain string and every question across the whole module into
+      // two batches → one cache read + one bulk write each, instead of dozens of
+      // per-field round-trips. Reassembled below in the exact same order.
+      const texts: string[] = [summary, ...outcomes, ...keyPoints]
+      for (const sec of sections as any[]) texts.push(sec.heading, sec.body, sec.scenario.situation, sec.scenario.prompt, sec.scenario.answer)
+      const qs = [
+        ...(questions as any[]).map((q: any) => ({ text: q.text ?? '', options: q.options })),
+        ...(sections as any[]).map((sec: any) => ({ text: sec.check.question ?? '', options: sec.check.options })),
+      ]
+      const [tTexts, tQs] = await Promise.all([
+        translateTextsBatch(texts, lang, langName),
+        translateQuestionsBatch(qs, lang, langName),
       ])
-      return { summary: s, outcomes: oc, keyPoints: kp, questions: qs, sections: secs }
+      let p = 0
+      const s  = tTexts[p++]
+      const oc = (outcomes as string[]).map(() => tTexts[p++])
+      const kp = (keyPoints as string[]).map(() => tTexts[p++])
+      const secs = (sections as any[]).map((sec: any) => {
+        const heading = tTexts[p++], body = tTexts[p++], situation = tTexts[p++], prompt = tTexts[p++], answer = tTexts[p++]
+        return { ...sec, heading, body, scenario: { situation, prompt, answer } }
+      })
+      let qi = 0
+      const newQs = (questions as any[]).map((q: any) => { const t = tQs[qi++]; return { ...q, text: t.text, options: t.options } })
+      const secsFull = secs.map((sec: any) => { const t = tQs[qi++]; return { ...sec, check: { ...sec.check, question: t.text, options: t.options } } })
+      return { summary: s, outcomes: oc, keyPoints: kp, questions: newQs, sections: secsFull }
     })(), 25_000, null)
     if (translated) { summary = translated.summary; outcomes = translated.outcomes; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
   }

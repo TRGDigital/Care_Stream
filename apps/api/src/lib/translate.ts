@@ -3,8 +3,10 @@
 // Returns original content unchanged if targetLang is 'eng' or unavailable.
 
 import Anthropic from '@anthropic-ai/sdk'
+import { createHash } from 'crypto'
 import { recordUsage } from './token-usage'
 import { languageNameForCode } from '../data/languages'
+import { prisma } from '../db/client'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -79,48 +81,157 @@ export async function translateTrainingQuestion(
 }
 
 // ─── Cached helpers for portal rendering (training & onboarding views) ─────────
-// Portal views re-fetch on every visit, so we memoise translations per warm
-// process to avoid repeat Haiku calls for identical (language, source) pairs.
+// Two-tier cache so non-English portal loads are fast AND survive serverless cold
+// starts (the in-memory Map alone is per-instance and wiped on recycle, which made
+// every cold load re-call Haiku for every question and often time out to English):
+//   L1  in-memory Map  — instant within a warm process
+//   L2  translation_cache table — shared across all instances, persists forever
+//   L3  Haiku          — only on a genuine first-ever miss; result is written to L2
+// The *Batch helpers do L2 in a single IN-query and a single bulk insert, so a warm
+// DB cache turns N per-question round-trips into one read with no model calls.
 
 const _qCache = new Map<string, { text: string; options: string[] }>()
 const _tCache = new Map<string, string>()
 
+const qHash = (q: { text: string; options: string[] }) =>
+  createHash('sha256').update(`q::${q.text}::${(q.options ?? []).join('|')}`).digest('hex')
+const tHash = (text: string) => createHash('sha256').update(`t::${text}`).digest('hex')
+
+// Batched L2 read: one query for many hashes. Returns hash → translated JSON.
+async function cacheReadMany(langCode: string, hashes: string[]): Promise<Map<string, any>> {
+  const out = new Map<string, any>()
+  if (!hashes.length) return out
+  try {
+    const rows: any[] = await (prisma as any).translationCache.findMany({
+      where:  { lang_code: langCode, source_hash: { in: [...new Set(hashes)] } },
+      select: { source_hash: true, translated: true },
+    })
+    for (const r of rows) out.set(r.source_hash, r.translated)
+  } catch { /* table/db unavailable → treat as all-miss, fall through to Haiku */ }
+  return out
+}
+
+// Batched L2 write: one insert for all new entries, ignoring races (skipDuplicates).
+async function cacheWriteMany(langCode: string, entries: Array<{ hash: string; translated: any }>): Promise<void> {
+  if (!entries.length) return
+  const seen = new Set<string>()
+  const data = entries.filter(e => !seen.has(e.hash) && seen.add(e.hash))
+    .map(e => ({ lang_code: langCode, source_hash: e.hash, translated: e.translated }))
+  try { await (prisma as any).translationCache.createMany({ data, skipDuplicates: true }) }
+  catch { /* best-effort cache; a failed write just means we re-translate next time */ }
+}
+
+// Batch-translate questions (text + options) into langCode. One L2 read for the
+// whole set, Haiku only for entries missing from both caches, one L2 write back.
+// Results are aligned to the input order; option order is preserved.
+export async function translateQuestionsBatch(
+  questions: Array<{ text: string; options: string[] }>,
+  langCode: string,
+  langName?: string,
+): Promise<Array<{ text: string; options: string[] }>> {
+  if (!langCode || langCode === 'eng') return questions.map(q => ({ text: q.text, options: q.options ?? [] }))
+
+  const results = new Array<{ text: string; options: string[] }>(questions.length)
+  const memKey  = (q: { text: string; options: string[] }) => `${langCode}::${q.text}::${(q.options ?? []).join('|')}`
+  const need: number[] = []
+
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i]
+    if (!q.text) { results[i] = { text: q.text, options: q.options ?? [] }; continue }
+    const hit = _qCache.get(memKey(q))
+    if (hit) { results[i] = hit; continue }
+    need.push(i)
+  }
+  if (!need.length) return results
+
+  const hashes = new Map<number, string>(need.map(i => [i, qHash(questions[i])]))
+  const fromDb = await cacheReadMany(langCode, need.map(i => hashes.get(i)!))
+  const stillNeed: number[] = []
+  for (const i of need) {
+    const t = fromDb.get(hashes.get(i)!)
+    if (t) { results[i] = t; _qCache.set(memKey(questions[i]), t) }
+    else stillNeed.push(i)
+  }
+
+  if (stillNeed.length) {
+    const fresh = await mapLimit(stillNeed, 6, async (i) => ({ i, t: await translateTrainingQuestion(questions[i], langCode, langName) }))
+    const toWrite: Array<{ hash: string; translated: any }> = []
+    for (const { i, t } of fresh) {
+      results[i] = t
+      _qCache.set(memKey(questions[i]), t)
+      toWrite.push({ hash: hashes.get(i)!, translated: t })
+    }
+    await cacheWriteMany(langCode, toWrite)
+  }
+  return results
+}
+
+// Batch-translate short strings (step titles, module names) into langCode.
+export async function translateTextsBatch(texts: string[], langCode: string, langName?: string): Promise<string[]> {
+  if (!langCode || langCode === 'eng') return texts
+  const name = langName ?? langName_internal(langCode)
+
+  const results = new Array<string>(texts.length)
+  const need: number[] = []
+  for (let i = 0; i < texts.length; i++) {
+    const text = texts[i]
+    if (!text) { results[i] = text; continue }
+    const hit = _tCache.get(`${langCode}::${text}`)
+    if (hit) { results[i] = hit; continue }
+    need.push(i)
+  }
+  if (!need.length) return results
+
+  const hashes = new Map<number, string>(need.map(i => [i, tHash(texts[i])]))
+  const fromDb = await cacheReadMany(langCode, need.map(i => hashes.get(i)!))
+  const stillNeed: number[] = []
+  for (const i of need) {
+    const t = fromDb.get(hashes.get(i)!)
+    if (t) { results[i] = t.text ?? texts[i]; _tCache.set(`${langCode}::${texts[i]}`, results[i]) }
+    else stillNeed.push(i)
+  }
+
+  if (stillNeed.length) {
+    const fresh = await mapLimit(stillNeed, 6, async (i) => {
+      try {
+        const msg = await anthropic.messages.create({
+          model:      'claude-haiku-4-5-20251001',
+          max_tokens: 400,
+          messages:   [{ role: 'user', content: `Translate the following short text into ${name}. Return ONLY the translation — no quotes, labels, or explanation.\n\n${texts[i]}` }],
+        })
+        recordUsage('claude-haiku-4-5-20251001', msg.usage)
+        const out = ((msg.content[0] as any).text as string).trim()
+        return { i, v: out || texts[i] }
+      } catch (e) {
+        console.error('[translate] Failed to translate text:', e)
+        return { i, v: texts[i] }
+      }
+    })
+    const toWrite: Array<{ hash: string; translated: any }> = []
+    for (const { i, v } of fresh) {
+      results[i] = v
+      _tCache.set(`${langCode}::${texts[i]}`, v)
+      if (v !== texts[i]) toWrite.push({ hash: hashes.get(i)!, translated: { text: v } })
+    }
+    await cacheWriteMany(langCode, toWrite)
+  }
+  return results
+}
+
+// Single-item wrappers (kept for callers that translate one item at a time, e.g.
+// the follow-up micro-lesson). Both are DB-backed via the batch helpers above.
 export async function translateQuestionCached(
   question: { text: string; options: string[] },
   langCode: string,
   langName?: string,
 ): Promise<{ text: string; options: string[] }> {
   if (!langCode || langCode === 'eng' || !question.text) return question
-  const key = `${langCode}::${question.text}::${(question.options ?? []).join('|')}`
-  const hit = _qCache.get(key)
-  if (hit) return hit
-  const result = await translateTrainingQuestion(question, langCode, langName)
-  _qCache.set(key, result)
-  return result
+  return (await translateQuestionsBatch([question], langCode, langName))[0]
 }
 
-// Translate a single short string (e.g. a step title or module name).
 export async function translateText(text: string, langCode: string, langName?: string): Promise<string> {
   if (!text || !langCode || langCode === 'eng') return text
-  const name = langName ?? langName_internal(langCode)
-  const key  = `${langCode}::${text}`
-  const hit  = _tCache.get(key)
-  if (hit) return hit
-  try {
-    const msg = await anthropic.messages.create({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      messages:   [{ role: 'user', content: `Translate the following short text into ${name}. Return ONLY the translation — no quotes, labels, or explanation.\n\n${text}` }],
-    })
-    recordUsage('claude-haiku-4-5-20251001', msg.usage)
-    const out = ((msg.content[0] as any).text as string).trim()
-    const result = out || text
-    _tCache.set(key, result)
-    return result
-  } catch (e) {
-    console.error('[translate] Failed to translate text:', e)
-    return text
-  }
+  return (await translateTextsBatch([text], langCode, langName))[0]
 }
 
 function langName_internal(code: string): string {

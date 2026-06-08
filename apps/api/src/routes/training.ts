@@ -11,7 +11,7 @@ import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
-import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
@@ -584,14 +584,31 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
 
     let sanitised = baseline
     if (translate) {
-      const translateAll = Promise.all(baseline.map(async (e: any) => {
-        const questions = await mapLimit(e.module.questions as any[], 6, async (q: any) => {
-          const t = await translateQuestionCached({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] }, langCode, langName)
-          return { ...q, text: t.text, options: t.options }
+      // Flatten every module name and every question across all enrollments into
+      // two batches (one cache read + one bulk write each), then redistribute —
+      // instead of a per-enrollment, per-question round-trip fan-out.
+      const translateAll = (async () => {
+        const names = (baseline as any[]).map((e: any) => e.module.name)
+        const qFlat: Array<{ text: string; options: string[] }> = []
+        const qSpan: Array<[number, number]> = []  // [start, count] per enrollment
+        for (const e of baseline as any[]) {
+          const qs = (e.module.questions as any[]) ?? []
+          qSpan.push([qFlat.length, qs.length])
+          for (const q of qs) qFlat.push({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] })
+        }
+        const [tNames, tQs] = await Promise.all([
+          translateTextsBatch(names, langCode, langName),
+          translateQuestionsBatch(qFlat, langCode, langName),
+        ])
+        return (baseline as any[]).map((e: any, i: number) => {
+          const [start, count] = qSpan[i]
+          const questions = ((e.module.questions as any[]) ?? []).map((q: any, j: number) => {
+            const t = tQs[start + j]
+            return { ...q, text: t.text, options: t.options }
+          })
+          return { ...e, module: { ...e.module, name: tNames[i], questions } }
         })
-        const name = await translateText(e.module.name, langCode, langName)
-        return { ...e, module: { ...e.module, name, questions } }
-      }))
+      })()
       // Never let translation hang the request — fall back to English after the
       // budget; in-flight work still warms the cache for the next (fast) load.
       sanitised = await withTranslationBudget(translateAll, 18_000, baseline)

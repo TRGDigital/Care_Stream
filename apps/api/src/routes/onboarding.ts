@@ -8,7 +8,7 @@ import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { facilityTypeToSetting } from '../lib/care-setting'
-import { translateQuestionCached, translateText, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
 export const onboardingRouter = Router()
@@ -290,18 +290,33 @@ onboardingRouter.get('/my', async (req, res) => {
 
     let result = baseline
     if (translate) {
-      const translateAll = Promise.all(baseline.map(async e => ({
-        ...e,
-        flow_name: await translateText(e.flow_name, langCode, langName),
-        steps: await mapLimit(e.steps, 6, async (s: any) => {
-          const title = await translateText(s.title, langCode, langName)
-          if (s.type === 'answer_question' && s.question) {
-            const t = await translateQuestionCached({ text: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] }, langCode, langName)
-            return { ...s, title, question: t.text, options: t.options as any }
-          }
-          return { ...s, title }
-        }),
-      })))
+      // One text batch (flow names + every step title) and one question batch
+      // (every MCQ step) across all enrollments, then redistribute — rather than a
+      // per-step round-trip fan-out.
+      const translateAll = (async () => {
+        const texts: string[] = []
+        const flowNameIdx = baseline.map(e => { texts.push(e.flow_name); return texts.length - 1 })
+        const titleIdx = baseline.map(e => e.steps.map((s: any) => { texts.push(s.title); return texts.length - 1 }))
+        const qFlat: Array<{ text: string; options: string[] }> = []
+        const qIdx = baseline.map(e => e.steps.map((s: any) => {
+          if (s.type === 'answer_question' && s.question) { qFlat.push({ text: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] }); return qFlat.length - 1 }
+          return -1
+        }))
+        const [tTexts, tQs] = await Promise.all([
+          translateTextsBatch(texts, langCode, langName),
+          translateQuestionsBatch(qFlat, langCode, langName),
+        ])
+        return baseline.map((e, ei) => ({
+          ...e,
+          flow_name: tTexts[flowNameIdx[ei]],
+          steps: e.steps.map((s: any, si: number) => {
+            const title = tTexts[titleIdx[ei][si]]
+            const qi = qIdx[ei][si]
+            if (qi >= 0) { const t = tQs[qi]; return { ...s, title, question: t.text, options: t.options as any } }
+            return { ...s, title }
+          }),
+        }))
+      })()
       result = await withTranslationBudget(translateAll, 18_000, baseline)
     }
 

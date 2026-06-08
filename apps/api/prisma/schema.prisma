@@ -76,6 +76,17 @@ model KnowledgeGapSnapshot {
 
 // ─── Policy reading (induction) ─────────────────────────────────────────────────
 
+model TranslationCache {
+  id          String   @id @default(uuid())
+  lang_code   String
+  source_hash String
+  translated  Json
+  created_at  DateTime @default(now())
+
+  @@unique([lang_code, source_hash])
+  @@map("translation_cache")
+}
+
 model PolicyTranslation {
   id         String   @id @default(uuid())
   tenant_id  String

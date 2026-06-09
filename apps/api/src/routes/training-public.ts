@@ -85,8 +85,9 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
 })
 
 // Public detail for one standard training subject, for the per-module marketing
-// pages. Returns the high-level outline only (summary, outcomes, key points,
-// section headings, mapped standards) — never the full lesson text.
+// pages. Returns the teaching outline (summary, outcomes, key points, section
+// headings and bodies, mapped standards) — the assessment questions and answers
+// stay private.
 publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Response) => {
   try {
     const slug = String(req.params.slug ?? '')

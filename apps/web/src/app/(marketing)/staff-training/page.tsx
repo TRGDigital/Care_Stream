@@ -11,28 +11,44 @@ export const revalidate = 60
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-type StandardModule = {
-  id: string
-  name: string
-  description: string
+type CatalogueTopic = {
+  title: string
+  group_key: string
   frequency: string
+  requires_practical: boolean
+  built: boolean
+  description: string | null
   duration_minutes: number | null
-  pass_mark: number
-  cpd_accredited: boolean
+  pass_mark: number | null
   illustration_url: string | null
 }
 
-async function getStandardModules(): Promise<StandardModule[]> {
+type Catalogue = { groups: Record<string, string>; topics: CatalogueTopic[] }
+
+async function getCatalogue(): Promise<Catalogue> {
   try {
     const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 60 } })
     if (res.ok) {
-      const body = await res.json()
-      return (body?.data?.modules ?? []) as StandardModule[]
+      const d = (await res.json())?.data
+      if (Array.isArray(d?.topics)) return { groups: d.groups ?? {}, topics: d.topics as CatalogueTopic[] }
     }
   } catch {
-    // fall through to an empty list
+    // fall through to an empty catalogue
   }
-  return []
+  return { groups: {}, topics: [] }
+}
+
+const GROUP_ORDER = ['core_mandatory', 'health_safety', 'care_clinical', 'conduct_governance', 'role_specific']
+const GROUP_BLURB: Record<string, string> = {
+  core_mandatory:     'A core mandatory subject every care worker must complete.',
+  health_safety:      'A statutory health and safety subject for your team.',
+  care_clinical:      'A care and clinical subject for hands-on staff.',
+  conduct_governance: 'A conduct and governance subject for a well-run service.',
+  role_specific:      'A role or resident-specific subject, assigned where needed.',
+}
+function frequencyLabel(f: string): string {
+  return f === 'annual' ? 'Annual' : f === 'biennial' ? 'Biennial' : f === 'triennial' ? 'Triennial'
+    : f === 'once' ? 'One-off' : f === 'adhoc' ? 'Ad-hoc' : f
 }
 
 export const metadata = {
@@ -112,7 +128,7 @@ function TrainingDashboardMockup() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function StaffTrainingPage() {
-  const modules = await getStandardModules()
+  const catalogue = await getCatalogue()
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -311,49 +327,59 @@ export default async function StaffTrainingPage() {
       </section>
 
       {/* ── Annual mandatory training library ─────────────────────────────── */}
-      {modules.length > 0 && (
+      {catalogue.topics.length > 0 && (
         <section className="bg-neutral-light py-24">
           <div className="mx-auto max-w-content px-6">
             <SectionLabel>Annual Mandatory Training Library</SectionLabel>
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-              Every mandatory module, ready to assign.
+              Every mandatory subject, ready to assign.
             </h2>
             <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
               The standard library covers the mandatory training every care service needs, grounded in
-              best practice for UK adult social care. Each module is a complete teach-then-assess course
-              with its own cover, learning sections, a real care scenario, and an assessment.
+              best practice for UK adult social care. Each one becomes a complete teach-then-assess
+              module with its own cover, learning sections, a real care scenario, and an assessment.
             </p>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {modules.map((m) => (
-                <div key={m.id} className="card-lift flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
-                  <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
-                    {m.illustration_url ? (
-                      <SiteImage src={`${API_URL}${m.illustration_url}`} alt={m.name} className="absolute inset-0 h-full w-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-teal-gradient">
-                        <GraduationCap size={44} className="text-white/80" />
+            <div className="space-y-16">
+              {GROUP_ORDER.filter((g) => catalogue.topics.some((t) => t.group_key === g)).map((g) => (
+                <div key={g}>
+                  <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-teal">{catalogue.groups[g] ?? g}</h3>
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {catalogue.topics.filter((t) => t.group_key === g).map((t) => (
+                      <div key={t.title} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
+                          {t.illustration_url ? (
+                            <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-teal-gradient">
+                              <GraduationCap size={40} className="text-white/80" />
+                            </div>
+                          )}
+                          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
+                            {frequencyLabel(t.frequency)}
+                          </span>
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                          <h4 className="mb-2 font-bold leading-snug text-neutral-dark">{t.title}</h4>
+                          <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">
+                            {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
+                            {t.duration_minutes ? (
+                              <span className="flex items-center gap-1"><Clock size={12} /> {(t.duration_minutes / 60).toFixed(1)} hours</span>
+                            ) : null}
+                            {t.pass_mark ? <span>Pass mark {t.pass_mark}%</span> : null}
+                            {t.requires_practical ? <span>Practical sign-off</span> : null}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
-                      {m.frequency === 'annual' ? 'Annual' : m.frequency}
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="mb-2 font-bold leading-snug text-neutral-dark">{m.name}</h3>
-                    <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">{m.description}</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
-                      {m.duration_minutes ? (
-                        <span className="flex items-center gap-1"><Clock size={12} /> {(m.duration_minutes / 60).toFixed(1)} hours</span>
-                      ) : null}
-                      <span>Pass mark {m.pass_mark}%</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
-            <p className="mt-10 text-sm text-neutral-mid">
-              Every standard module is included and ready to assign. You can also generate tailored
-              modules from your own policies.
+            <p className="mt-12 text-sm text-neutral-mid">
+              Every subject is part of your standard library. You can also generate tailored modules
+              from your own policies.
             </p>
           </div>
         </section>

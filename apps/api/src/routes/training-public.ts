@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { downloadFile } from '../services/storage/s3'
 import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
+import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 
 const IMAGE_CONTENT_TYPES: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
@@ -29,32 +30,39 @@ publicTrainingRouter.get('/image/:file', async (req: Request, res: Response) => 
   }
 })
 
-// Public list of the published standard (annual mandatory) training modules, for
-// the marketing site. These are the shared library modules: tenant_id = null,
-// source = ai_generated, approved = true. No tenant data, so no auth needed.
+// Public catalogue of the standard annual mandatory training subjects, for the
+// marketing site. Returns every active platform topic (the full mandatory list),
+// each with its published module's cover image and description where one has been
+// built and approved. No tenant data, so no auth needed.
 publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Response) => {
   try {
-    const mods = await (prisma as any).trainingModule.findMany({
-      where:  { tenant_id: null, source: 'ai_generated', approved: true },
-      select: {
-        id: true, name: true, description: true, frequency: true,
-        duration_minutes: true, pass_mark: true, cpd_accredited: true,
-        independently_reviewed: true, illustration_key: true,
-      },
-      orderBy: { name: 'asc' },
+    const [topics, modules] = await Promise.all([
+      (prisma as any).trainingTopic.findMany({
+        where:   { tenant_id: null, is_active: true },
+        orderBy: { sort_order: 'asc' },
+      }),
+      (prisma as any).trainingModule.findMany({
+        where:  { tenant_id: null, source: 'ai_generated', approved: true },
+        select: { id: true, topic_id: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
+      }),
+    ])
+    const byTopic = new Map<string, any>()
+    for (const m of (modules as any[])) { if (m.topic_id) byTopic.set(m.topic_id, m) }
+    const items = (topics as any[]).map(t => {
+      const m = byTopic.get(t.id)
+      return {
+        title:              t.title,
+        group_key:          t.group_key,
+        frequency:          m?.frequency ?? t.default_frequency,
+        requires_practical: t.requires_practical,
+        built:              !!m,
+        description:        m?.description ?? null,
+        duration_minutes:   m?.duration_minutes ?? null,
+        pass_mark:          m?.pass_mark ?? null,
+        illustration_url:   m ? illustrationUrl(m.illustration_key) : null,
+      }
     })
-    const modules = (mods as any[]).map(m => ({
-      id:               m.id,
-      name:             m.name,
-      description:      m.description,
-      frequency:        m.frequency,
-      duration_minutes: m.duration_minutes,
-      pass_mark:        m.pass_mark,
-      cpd_accredited:   m.cpd_accredited,
-      independently_reviewed: m.independently_reviewed,
-      illustration_url: illustrationUrl(m.illustration_key),
-    }))
-    res.json({ data: { modules } })
+    res.json({ data: { groups: TOPIC_GROUP_LABELS, topics: items } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })
   }

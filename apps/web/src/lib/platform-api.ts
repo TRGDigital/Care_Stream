@@ -471,6 +471,12 @@ export function createPlatformClient(token: string) {
       insights: (id: string) =>
         adminFetch<TenantInsights>(`/tenants/${id}/insights`, token),
 
+      // Mint a one-time sign-in link to open the client's own dashboard.
+      openAccount: (id: string, userId?: string) =>
+        adminFetch<{ url: string; signed_in_as: { id: string; name: string; email: string } }>(
+          `/tenants/${id}/open-account`, token, { method: 'POST', body: JSON.stringify(userId ? { user_id: userId } : {}) }
+        ),
+
       costs: () => adminFetch<PlatformCosts>(`/costs`, token),
 
       reactivateStaff: (tenantId: string, userId: string) =>

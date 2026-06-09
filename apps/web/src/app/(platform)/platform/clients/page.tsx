@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantSummary, type PlanLimits } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { AlertTriangle, Building2, Loader2 } from 'lucide-react'
+import { AlertTriangle, Building2, Loader2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
 // ─── Usage bar ────────────────────────────────────────────────────────────────
@@ -121,6 +121,7 @@ export default function ClientsPage() {
                   <th className="px-4 py-3 text-right">Handbooks</th>
                   <th className="px-4 py-3 text-right">Manual KB</th>
                   <th className="px-4 py-3">Joined</th>
+                  <th className="px-4 py-3 text-right">Account</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -190,6 +191,9 @@ export default function ClientsPage() {
                       <td className="px-4 py-3 text-neutral-mid text-xs">
                         {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <OpenAccountButton token={token!} tenantId={t.id} name={t.name} />
+                      </td>
                     </tr>
                   )
                 })}
@@ -202,6 +206,46 @@ export default function ClientsPage() {
         )}
       </div>
     </PlatformShell>
+  )
+}
+
+// Opens the client's own dashboard in a new tab via a one-time sign-in link.
+// Signs the operator in as the client's admin (separate cookie session — the
+// console's platform login is untouched).
+function OpenAccountButton({ token, tenantId, name }: { token: string; tenantId: string; name: string }) {
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
+
+  const open = async () => {
+    setLoading(true); setError(null)
+    // Open the tab synchronously so the browser treats it as user-initiated
+    // (avoids the pop-up blocker); we set its location once the link is minted.
+    const tab = window.open('', '_blank')
+    try {
+      const { url } = await createPlatformClient(token).tenants.openAccount(tenantId)
+      if (tab) tab.location.href = url
+      else window.location.href = url
+    } catch (e: any) {
+      tab?.close()
+      setError(e.message ?? 'Could not open account')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <button
+        onClick={open}
+        disabled={loading}
+        title={`Open ${name}'s dashboard`}
+        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal hover:text-teal disabled:opacity-50"
+      >
+        {loading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+        Open
+      </button>
+      {error && <span className="text-[10px] text-red-600">{error}</span>}
+    </div>
   )
 }
 

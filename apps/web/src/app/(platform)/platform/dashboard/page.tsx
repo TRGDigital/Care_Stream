@@ -2291,6 +2291,7 @@ function SystemReference() {
           <RefRow label="Sessions"            value="'Stay signed in like WhatsApp': next-auth session.maxAge 90d + backend REFRESH_EXPIRY 90d (services/auth/tokens.ts)." />
           <RefRow label="Refresh rotation"    value="refresh_tokens table (id=jti) + lib/refresh-tokens.ts. Each /auth/refresh rotates: marks the old token consumed + issues a fresh one (sliding 90d window, returned to the web jwt callback which stores it). Reusing a consumed/unknown but validly-signed token = theft → revokeUserRefreshTokens (all sessions). Legacy pre-rotation tokens are grandfathered once." />
           <RefRow label="WhatsApp (no login)" value="The WhatsApp channel stays frictionless (tenant phone_allowlist, no login) and remains the fallback while the hub ramps up." />
+          <RefRow label="Open account (operator)" value="Console → Clients → 'Open' button signs you into a client's own dashboard to view/support their account. POST /admin/tenants/:id/open-account (platform-admin only) mints a single-use 5-min login link for the client's first/owner admin (reuses login_tokens) and opens it in a new tab — a separate next-auth cookie session, so your console login is untouched. Logged server-side. Optional body { user_id } targets a specific staff member." />
         </div>
       </RefSection>
 

@@ -24,6 +24,7 @@ import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowl
 import { seedTenantKnowledge, seedAllTenants, seedCustomSeedToAllTenants } from '../services/knowledge/seeder'
 import { hashPassword } from '../services/auth/password'
 import { sendStaffWelcomeEmail } from '../services/email/outbound'
+import { createLoginLink } from '../lib/login-tokens'
 import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
@@ -578,6 +579,35 @@ adminRouter.post('/tenants/:id/staff/:userId/send-credentials', async (req: Requ
   } catch (e: any) {
     err(res, 'EMAIL_FAILED', e.message ?? 'Failed to send email.', 500)
   }
+})
+
+// ─── POST /admin/tenants/:id/open-account ────────────────────────────────────
+// Platform owner "opens" a client's account: mint a single-use, short-lived
+// sign-in link for that tenant's admin and return it. Opening it in a new tab
+// signs the operator into the client's own dashboard (separate next-auth cookie
+// session — does not disturb the console's platform token). Reuses the
+// passwordless magic-link infra. Optional ?userId targets a specific staff member.
+adminRouter.post('/tenants/:id/open-account', async (req: Request, res: Response) => {
+  const tenantId   = String(req.params.id)
+  const targetUser = (req.body?.user_id as string | undefined) ?? undefined
+
+  const where = targetUser
+    ? { id: targetUser, tenant_id: tenantId, is_active: true }
+    : { tenant_id: tenantId, role: 'admin', is_active: true }
+
+  const user = await (prisma as any).user.findFirst({
+    where,
+    select:  { id: true, name: true, email: true, tenant_id: true },
+    orderBy: { created_at: 'asc' },   // the first/owner admin
+  })
+  if (!user || user.tenant_id !== tenantId) {
+    err(res, 'NOT_FOUND', 'No active admin found for this client.', 404); return
+  }
+
+  // Short-lived (5 min) one-time link — it's used immediately when the tab opens.
+  const url = await createLoginLink(user.id, tenantId, 5 * 60 * 1000)
+  console.info(`[platform] open-account: operator signed into tenant ${tenantId} as ${user.email}`)
+  ok(res, { url, signed_in_as: { id: user.id, name: user.name, email: user.email } })
 })
 
 // ─── POST /admin/tenants/:id/staff/:userId/deactivate ────────────────────────

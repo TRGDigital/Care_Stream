@@ -910,7 +910,7 @@ function RegulationLayerSection() {
 
           {/* Right: WhatsApp conversation mockup */}
           <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
+            <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-elevated">
               {/* Header */}
               <div className="flex items-center gap-3 bg-teal px-4 py-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-extrabold text-white">CS</div>
@@ -921,23 +921,23 @@ function RegulationLayerSection() {
               </div>
 
               {/* Messages */}
-              <div className="space-y-3 px-3 py-4" style={{ background: '#0b141a', minHeight: 380 }}>
+              <div className="space-y-3 bg-gray-50 px-3 py-4" style={{ minHeight: 380 }}>
                 {/* Staff question */}
                 <div className="flex justify-end">
-                  <div className="max-w-[82%] rounded-2xl rounded-br-sm px-3 py-2.5" style={{ background: '#0d9488' }}>
-                    <p className="text-xs leading-relaxed text-white/90">What do I need to document after a medication error?</p>
-                    <p className="mt-0.5 text-right text-[10px] text-white/35">22:31 ✓✓</p>
+                  <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-teal px-3 py-2.5">
+                    <p className="text-xs leading-relaxed text-white">What do I need to document after a medication error?</p>
+                    <p className="mt-0.5 text-right text-[10px] text-white/60">22:31 ✓✓</p>
                   </div>
                 </div>
 
                 {/* AI response */}
                 <div className="flex justify-start">
-                  <div className="max-w-[88%] rounded-2xl rounded-bl-sm px-3 py-2.5" style={{ background: '#202c33' }}>
+                  <div className="max-w-[88%] rounded-2xl rounded-bl-sm border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
 
                     {/* Internal policy section */}
                     <div className="mb-2.5 rounded-lg border-l-2 border-teal bg-teal/10 px-2.5 py-2">
                       <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-teal">Your Medication Error Policy</p>
-                      <p className="text-xs leading-relaxed text-white/85">
+                      <p className="text-xs leading-relaxed text-neutral-dark">
                         Complete a Medication Error form within 1 hour, record in the MAR chart, and notify the GP and next of kin by end of shift.
                       </p>
                     </div>
@@ -945,24 +945,24 @@ function RegulationLayerSection() {
                     {/* External regulation section */}
                     <div className="mb-2.5 rounded-lg border-l-2 border-amber-brand bg-amber-brand/10 px-2.5 py-2">
                       <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-brand">CQC Regulation 12 also requires</p>
-                      <p className="text-xs leading-relaxed text-white/85">
+                      <p className="text-xs leading-relaxed text-neutral-dark">
                         The incident must be reviewed as part of your quality monitoring. If the error caused harm, it may trigger a RIDDOR report within 10 days.
                       </p>
                     </div>
 
                     {/* Interaction note */}
-                    <p className="text-xs italic leading-relaxed text-white/50">
+                    <p className="text-xs italic leading-relaxed text-neutral-mid">
                       Your policy meets CQC Reg 12 and goes further with same-day notification requirements.
                     </p>
 
                     {/* Citations */}
                     <div className="mt-2 space-y-0.5">
-                      <p className="text-[10px] text-white/30">📄 Medication Error Policy v2.1 · Section 4.2</p>
-                      <p className="text-[10px] text-white/30">⚖️ CQC Fundamental Standards · Reg 12</p>
-                      <p className="text-[10px] text-white/30">⚖️ RIDDOR 2013 · Regulation 4</p>
+                      <p className="text-[10px] text-neutral-mid">📄 Medication Error Policy v2.1 · Section 4.2</p>
+                      <p className="text-[10px] text-neutral-mid">⚖️ CQC Fundamental Standards · Reg 12</p>
+                      <p className="text-[10px] text-neutral-mid">⚖️ RIDDOR 2013 · Regulation 4</p>
                     </div>
 
-                    <p className="mt-0.5 text-right text-[10px] text-white/35">22:31</p>
+                    <p className="mt-0.5 text-right text-[10px] text-gray-400">22:31</p>
                   </div>
                 </div>
               </div>
@@ -1269,7 +1269,7 @@ function WhatsAppSection() {
 
           {/* Right, WhatsApp chat mockup */}
           <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
+            <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-elevated">
               {/* Header */}
               <div className="flex items-center gap-3 bg-teal px-4 py-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-extrabold text-white">CS</div>
@@ -1283,24 +1283,27 @@ function WhatsAppSection() {
                 </div>
               </div>
               {/* Messages */}
-              <div className="space-y-3 px-3 py-4" style={{ background: '#0b141a', minHeight: 280 }}>
-                {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.side === 'right' ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className="max-w-[82%] rounded-2xl px-3 py-2"
-                      style={{ background: msg.bg, borderRadius: msg.side === 'right' ? '18px 18px 4px 18px' : '18px 18px 18px 4px' }}
-                    >
-                      {msg.label && (
-                        <p className="mb-1.5 text-[10px] font-semibold text-green-400">{msg.label}</p>
-                      )}
-                      <p className="text-xs leading-relaxed text-white/90">{msg.text}</p>
-                      {msg.source && (
-                        <p className="mt-1 text-[10px] text-white/30">{msg.source}</p>
-                      )}
-                      <p className="mt-0.5 text-right text-[10px] text-white/35">{msg.meta}</p>
+              <div className="space-y-2.5 bg-gray-50 px-3 py-4" style={{ minHeight: 280 }}>
+                {chatMessages.map((msg, i) => {
+                  const isUser = msg.side === 'right'
+                  return (
+                    <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[82%] px-3 py-2 ${isUser ? 'bg-teal' : 'border border-gray-100 bg-white shadow-sm'}`}
+                        style={{ borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px' }}
+                      >
+                        {msg.label && (
+                          <p className="mb-1.5 text-[10px] font-semibold text-teal">{msg.label}</p>
+                        )}
+                        <p className={`text-xs leading-relaxed ${isUser ? 'text-white' : 'text-neutral-dark'}`}>{msg.text}</p>
+                        {msg.source && (
+                          <p className="mt-1 text-[10px] text-neutral-mid">{msg.source}</p>
+                        )}
+                        <p className={`mt-0.5 text-right text-[10px] ${isUser ? 'text-white/60' : 'text-gray-400'}`}>{msg.meta}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>

@@ -52,6 +52,22 @@ function scoreLabel(score: number) {
   return 'Keep practising'
 }
 
+const DOMAIN_ORDER = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+
+// Group deliveries by CQC domain, ordered by the five key questions.
+function groupByDomain(list: Delivery[]): Array<[string, Delivery[]]> {
+  const map = new Map<string, Delivery[]>()
+  for (const d of list) {
+    const k = d.question.domain
+    if (!map.has(k)) map.set(k, [])
+    map.get(k)!.push(d)
+  }
+  const ordered: Array<[string, Delivery[]]> = []
+  for (const k of DOMAIN_ORDER) if (map.has(k)) ordered.push([k, map.get(k)!])
+  for (const [k, v] of map) if (!DOMAIN_ORDER.includes(k)) ordered.push([k, v])
+  return ordered
+}
+
 // ─── Answer Form ──────────────────────────────────────────────────────────────
 
 function AnswerForm({ delivery, token, onAnswered }: {
@@ -229,7 +245,10 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
-  const [expanded, setExpanded]     = useState<string | null>(null)
+  const [expanded, setExpanded]     = useState<string | null>(null)        // question card open
+  const [openDomains, setOpenDomains] = useState<Set<string>>(new Set())   // domain accordions open
+  const toggleDomain = (key: string) =>
+    setOpenDomains(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
 
   const load = useCallback(async () => {
     if (!token) return
@@ -238,7 +257,7 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
       const res = await api.cqcQuestions.myDeliveries()
       setDeliveries(res.deliveries)
       const first = res.deliveries.find((d: Delivery) => d.status === 'pending')
-      if (first) setExpanded(first.id)
+      if (first) { setExpanded(first.id); setOpenDomains(new Set([`p:${first.question.domain}`])) }
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -303,69 +322,108 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
         </div>
       )}
 
-      {pending.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Questions to answer ({pending.length})</h2>
-          <div className="space-y-3">
-            {pending.map(d => (
-              <div key={d.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${DOMAIN_COLORS[d.question.domain] ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
-                        {DOMAIN_LABELS[d.question.domain] ?? d.question.domain}
-                      </span>
-                      <span className="text-xs text-amber-600 font-medium">Awaiting answer</span>
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
-                  </div>
-                  {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-1" />}
-                </button>
-                {expanded === d.id && (
-                  <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-                    <AnswerForm delivery={d} token={token}
-                      onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setExpanded(null); onChange?.() }} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {evaluated.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Completed ({evaluated.length})</h2>
-          <div className="space-y-3">
-            {evaluated.map(d => (
-              <div key={d.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${DOMAIN_COLORS[d.question.domain] ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
-                        {DOMAIN_LABELS[d.question.domain] ?? d.question.domain}
-                      </span>
-                      {d.score !== null && (
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${scoreBadge(d.score)}`}>
-                          {d.score}/100 — {scoreLabel(d.score)}
+      {pending.length > 0 && (() => {
+        const groups = groupByDomain(pending)
+        const multi  = groups.length > 1
+        return (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Questions to answer ({pending.length})</h2>
+            <div className="space-y-3">
+              {groups.map(([domain, items]) => {
+                const open = !multi || openDomains.has(`p:${domain}`)
+                return (
+                  <div key={domain} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                    {/* Domain header */}
+                    <button onClick={() => multi && toggleDomain(`p:${domain}`)} className={`w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left ${multi ? 'hover:bg-gray-50' : 'cursor-default'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${DOMAIN_COLORS[domain] ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
+                          {DOMAIN_LABELS[domain] ?? domain}
                         </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
+                        <span className="text-xs text-gray-500">{items.length} to answer</span>
+                      </div>
+                      {multi && (open ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />)}
+                    </button>
+                    {/* Questions within the domain */}
+                    {open && (
+                      <div className="border-t border-gray-100 px-5">
+                        {items.map(d => (
+                          <div key={d.id} className="border-b border-gray-50 last:border-0">
+                            <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 py-3.5 text-left">
+                              <p className="flex-1 min-w-0 text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
+                              {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}
+                            </button>
+                            {expanded === d.id && (
+                              <div className="pb-4">
+                                <AnswerForm delivery={d} token={token}
+                                  onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setExpanded(null); onChange?.() }} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-1" />}
-                </button>
-                {expanded === d.id && (
-                  <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-                    <ResultCard delivery={d} token={token}
-                      onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); onChange?.() }} />
-                  </div>
-                )}
-              </div>
-            ))}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
+
+      {evaluated.length > 0 && (() => {
+        const groups = groupByDomain(evaluated)
+        const multi  = groups.length > 1
+        return (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Completed ({evaluated.length})</h2>
+            <div className="space-y-3">
+              {groups.map(([domain, items]) => {
+                const open = !multi || openDomains.has(`c:${domain}`)
+                const avg  = Math.round(items.reduce((s, d) => s + (d.score ?? 0), 0) / items.length)
+                return (
+                  <div key={domain} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                    <button onClick={() => multi && toggleDomain(`c:${domain}`)} className={`w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left ${multi ? 'hover:bg-gray-50' : 'cursor-default'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${DOMAIN_COLORS[domain] ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
+                          {DOMAIN_LABELS[domain] ?? domain}
+                        </span>
+                        <span className="text-xs text-gray-500">{items.length} done</span>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${scoreBadge(avg)}`}>avg {avg}</span>
+                      </div>
+                      {multi && (open ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />)}
+                    </button>
+                    {open && (
+                      <div className="border-t border-gray-100 px-5">
+                        {items.map(d => (
+                          <div key={d.id} className="border-b border-gray-50 last:border-0">
+                            <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 py-3.5 text-left">
+                              <div className="flex-1 min-w-0">
+                                {d.score !== null && (
+                                  <span className={`mb-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${scoreBadge(d.score)}`}>
+                                    {d.score}/100 — {scoreLabel(d.score)}
+                                  </span>
+                                )}
+                                <p className="text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
+                              </div>
+                              {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}
+                            </button>
+                            {expanded === d.id && (
+                              <div className="pb-4">
+                                <ResultCard delivery={d} token={token}
+                                  onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); onChange?.() }} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
     </div>
     </div>
   )

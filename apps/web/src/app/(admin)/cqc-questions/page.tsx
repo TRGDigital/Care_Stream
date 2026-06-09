@@ -511,7 +511,8 @@ export default function CqcQuestionsPage() {
         api.cqcQuestions.deliveries(),
         api.users.list(),
       ])
-      const staffList = (sRes.users ?? []).filter((u: any) => u.role === 'staff' && u.is_active)
+      // Include admins too — they're often hands-on care staff who should practise CQC prep.
+      const staffList = (sRes.users ?? []).filter((u: any) => u.is_active)
       setQuestions(qRes.questions)
       setDeliveries(dRes.deliveries)
       setStaff(staffList)

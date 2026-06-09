@@ -28,7 +28,7 @@ export type Delivery = {
   question:    { id: string; domain: string; question: string; model_answer: string }
 }
 
-export type StaffUser = { id: string; name: string; job_role: string | null }
+export type StaffUser = { id: string; name: string; job_role: string | null; role?: 'admin' | 'staff' }
 
 export const DOMAINS: { key: Domain; label: string; short: string; color: string; bg: string }[] = [
   { key: 'safe',       label: 'Safe',       short: 'Safe',  color: 'text-red-700',    bg: 'bg-red-50 border-red-200'       },

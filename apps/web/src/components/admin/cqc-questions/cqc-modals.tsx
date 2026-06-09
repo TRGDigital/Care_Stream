@@ -189,7 +189,10 @@ export function SendModal({
                   <input type="checkbox" checked={selected.includes(s.id)} onChange={() => toggle(s.id)}
                     className="w-4 h-4 text-teal rounded" />
                   <div>
-                    <p className="text-sm font-medium text-neutral-dark">{s.name}</p>
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-neutral-dark">
+                      {s.name}
+                      {s.role === 'admin' && <span className="rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">Admin</span>}
+                    </p>
                     {s.job_role && <p className="text-xs text-neutral-mid">{s.job_role}</p>}
                   </div>
                 </label>

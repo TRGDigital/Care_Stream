@@ -84,17 +84,18 @@ function Hero() {
               {/* Invisible sizer — reserves the tallest layout (longest phrase) so the image
                   and all the text around the hero never shift while the word animates. */}
               <span aria-hidden="true" className="invisible">
-                Your CQC Staff Questions are written in English. Your workforce isn&apos;t.
+                Your Risk Assessments are written in English. Your workforce isn&apos;t.
               </span>
               <span className="absolute inset-x-0 bottom-0">
-                Your <Typewriter words={['Care Policies', 'HR Policies', 'Training', 'CQC Staff Questions', 'Care Audits']} /> are written in English.{' '}
+                Your <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} /> are written in English.{' '}
                 <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
               </span>
             </h1>
 
             <p className="mb-10 max-w-xl text-lg leading-relaxed text-white/75">
-              CareStreamAI gives every member of your care team instant access to your policies,
-              in the language they think in. Powered by your documents. Never the internet.
+              CareStream gives every member of your team instant, accurate answers from your own
+              policies, training, audits and CQC tools, in the language they think in. Powered by
+              your documents. Never the internet.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">

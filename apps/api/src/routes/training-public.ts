@@ -41,25 +41,37 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         where:   { tenant_id: null, is_active: true },
         orderBy: { sort_order: 'asc' },
       }),
+      // Include drafts as well as approved: the cover image is generic topic
+      // artwork, so we surface it even before a module is formally approved.
+      // Descriptions and meta, however, only come from an approved module.
       (prisma as any).trainingModule.findMany({
-        where:  { tenant_id: null, source: 'ai_generated', approved: true },
-        select: { id: true, topic_id: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
+        where:  { tenant_id: null, source: 'ai_generated' },
+        select: { id: true, topic_id: true, approved: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
       }),
     ])
-    const byTopic = new Map<string, any>()
-    for (const m of (modules as any[])) { if (m.topic_id) byTopic.set(m.topic_id, m) }
+    const coverByTopic = new Map<string, any>()     // best cover per topic (prefer approved)
+    const approvedByTopic = new Map<string, any>()  // approved module per topic (for text/meta)
+    for (const m of (modules as any[])) {
+      if (!m.topic_id) continue
+      if (m.illustration_key) {
+        const ex = coverByTopic.get(m.topic_id)
+        if (!ex || (m.approved && !ex.approved)) coverByTopic.set(m.topic_id, m)
+      }
+      if (m.approved && !approvedByTopic.has(m.topic_id)) approvedByTopic.set(m.topic_id, m)
+    }
     const items = (topics as any[]).map(t => {
-      const m = byTopic.get(t.id)
+      const cover = coverByTopic.get(t.id)
+      const appr  = approvedByTopic.get(t.id)
       return {
         title:              t.title,
         group_key:          t.group_key,
-        frequency:          m?.frequency ?? t.default_frequency,
+        frequency:          appr?.frequency ?? t.default_frequency,
         requires_practical: t.requires_practical,
-        built:              !!m,
-        description:        m?.description ?? null,
-        duration_minutes:   m?.duration_minutes ?? null,
-        pass_mark:          m?.pass_mark ?? null,
-        illustration_url:   m ? illustrationUrl(m.illustration_key) : null,
+        built:              !!appr,
+        description:        appr?.description ?? null,
+        duration_minutes:   appr?.duration_minutes ?? null,
+        pass_mark:          appr?.pass_mark ?? null,
+        illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
       }
     })
     res.json({ data: { groups: TOPIC_GROUP_LABELS, topics: items } })

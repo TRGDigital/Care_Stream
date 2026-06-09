@@ -5,7 +5,6 @@ import {
   Smartphone, GraduationCap, RefreshCw, Calendar, Bell,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
-import { Mockup, MOCKUPS } from '@/components/marketing/mockup'
 import { pageMetadata } from '@/lib/page-meta'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
@@ -73,6 +72,59 @@ function ChatDemoMockup() {
         <div className="flex-1 rounded-full border border-gray-200 px-4 py-1.5 text-[11px] text-gray-300">Ask a policy question...</div>
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal text-white">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Hub mockup (self-contained, no iframe) ───────────────────────────────────
+function HubMockup() {
+  return (
+    <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[6px] border-neutral-dark bg-white shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between bg-teal px-4 py-3">
+        <div>
+          <p className="text-sm font-bold text-white">The hub</p>
+          <p className="text-[11px] text-white/70">Crossways Care Home</p>
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">SJ</div>
+      </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-100 bg-white px-3 pt-2">
+        {([['Ask', true], ['Policies', false], ['Training', false]] as const).map(([t, active]) => (
+          <div key={t} className={`rounded-t-lg px-3 py-2 text-[11px] font-semibold ${active ? 'bg-teal-light text-teal' : 'text-neutral-mid'}`}>{t}</div>
+        ))}
+      </div>
+      {/* Body */}
+      <div className="space-y-3 bg-gray-50 p-4">
+        <div className="flex justify-end">
+          <div className="max-w-[82%] rounded-2xl rounded-tr-sm bg-teal px-3 py-2 text-[11px] font-medium text-white">
+            Ano ang gagawin ko pagkatapos ng pagbagsak ng residente?
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal text-[9px] font-bold text-white">CS</div>
+          <div className="max-w-[86%] rounded-2xl rounded-tl-sm bg-white p-3 shadow-sm">
+            <p className="mb-1.5 text-[11px] font-semibold text-neutral-dark">After a fall, before end of shift:</p>
+            <div className="space-y-1 text-[10px] text-neutral-mid">
+              {['Complete the post-fall observation record', 'Log the incident in the resident file', 'Tell next of kin if injury is suspected'].map((p, i) => (
+                <div key={i} className="flex items-start gap-1.5"><span className="font-bold text-teal">{i + 1}.</span><p>{p}</p></div>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-teal/5 px-2 py-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-teal" />
+              <p className="text-[9px] font-medium text-teal">Source: Falls Policy, Section 4.2</p>
+            </div>
+            <span className="mt-2 inline-block rounded-full bg-teal/10 px-2 py-0.5 text-[9px] font-bold text-teal">Tagalog detected</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
+          <GraduationCap size={14} className="shrink-0 text-amber-brand" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold text-neutral-dark">New training assigned</p>
+            <p className="truncate text-[9px] text-neutral-mid">Fire Safety, due in 14 days</p>
+          </div>
         </div>
       </div>
     </div>
@@ -280,7 +332,7 @@ export default function HowItWorksPage() {
                   </ul>
                 </div>
                 <div>
-                  <Mockup {...MOCKUPS['mockup-01']} />
+                  <HubMockup />
                 </div>
               </div>
             </div>

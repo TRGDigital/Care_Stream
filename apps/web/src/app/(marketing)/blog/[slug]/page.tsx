@@ -130,15 +130,25 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <p className="mb-1 text-lg font-extrabold text-neutral-dark">See CareStream in action</p>
           <p className="mb-5 text-sm text-neutral-mid">Book a demo or start your free trial today.</p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/demo" className="inline-flex items-center justify-center rounded-lg bg-teal px-6 py-2.5 text-sm font-semibold text-white hover:bg-teal-dark">
+            <Link href="/demo" className="btn-amber inline-flex items-center justify-center rounded-btn px-6 py-2.5 text-sm">
               Book a Demo
             </Link>
-            <Link href="/register" className="inline-flex items-center justify-center rounded-lg border border-teal px-6 py-2.5 text-sm font-semibold text-teal hover:bg-teal/10">
+            <Link href="/register" className="inline-flex items-center justify-center rounded-btn border border-teal px-6 py-2.5 text-sm font-semibold text-teal transition-colors hover:bg-teal hover:text-white">
               Start Free Trial
             </Link>
           </div>
         </div>
       )}
+
+      {/* About CareStream — short bio */}
+      <div className="not-prose mt-10 border-t border-gray-100 pt-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">About CareStream AI</p>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-mid">
+          CareStream AI was built by people who understand the UK care sector — giving every care worker,
+          regardless of language, instant access to the policies and knowledge they need to work safely and
+          confidently. <Link href="/about" className="font-medium text-teal hover:underline">Learn more about us →</Link>
+        </p>
+      </div>
       </ArticleLayout>
     </>
   )

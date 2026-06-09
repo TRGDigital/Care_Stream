@@ -1729,7 +1729,38 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-5 text-xl font-bold text-neutral-dark">My Training</h2>
+        <h2 className="mb-4 text-xl font-bold text-neutral-dark">My Training</h2>
+
+        {/* Snapshot */}
+        {(() => {
+          const toDo   = enrollments.filter(e => ['not_started', 'expired'].includes(e.status)).length
+          const inProg = enrollments.filter(e => e.status === 'in_progress').length
+          const done   = enrollments.filter(e => e.status === 'complete').length
+          let answered = 0, correct = 0
+          for (const e of enrollments) { const a = Array.isArray(e.answers) ? e.answers : []; answered += a.length; correct += a.filter((x: any) => x.is_correct).length }
+          const avg = answered > 0 ? Math.round((correct / answered) * 100) : null
+          return (
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+                <p className={`text-2xl font-bold ${toDo > 0 ? 'text-amber-600' : 'text-gray-300'}`}>{toDo}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">To do</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+                <p className="text-2xl font-bold text-blue-600">{inProg}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">In progress</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+                <p className="text-2xl font-bold text-green-600">{done}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Completed</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+                <p className={`text-2xl font-bold ${avg !== null ? (avg >= 60 ? 'text-green-600' : 'text-orange-600') : 'text-gray-300'}`}>{avg !== null ? `${avg}%` : '—'}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Avg score</p>
+              </div>
+            </div>
+          )
+        })()}
+
         <div className="space-y-6">
           {enrollments.map(enrollment => {
             const questions   = (Array.isArray(enrollment.module?.questions) ? enrollment.module.questions : []) as Array<{ id: string; text: string; options: string[] }>

@@ -7,18 +7,11 @@ import {
   Home, Stethoscope, MapPin, Activity, Heart, Pill, Building2, ShieldCheck,
   type LucideIcon,
 } from 'lucide-react'
-import { SETTINGS_LIST } from '@/lib/settings/list'
+import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
 
 const ICONS: Record<string, LucideIcon> = {
   home: Home, stethoscope: Stethoscope, mapPin: MapPin, activity: Activity,
   heart: Heart, pill: Pill, building: Building2, shield: ShieldCheck,
-}
-
-// The three original settings have photography; the rest use a gradient + icon.
-const IMAGES: Record<string, string> = {
-  'residential-care': '/images/residential-care.jpg',
-  'nursing-homes':    '/images/nursing-home.jpg',
-  'domiciliary-care': '/images/domiciliary-care.jpg',
 }
 
 const GRADIENTS = [
@@ -38,22 +31,23 @@ export function SettingsCarousel() {
   return (
     <div>
       {/* Scroll arrows */}
-      <div className="mb-5 flex justify-end gap-2">
+      <div className="mb-5 flex items-center justify-end gap-3">
+        <span className="mr-1 hidden text-sm font-medium text-neutral-mid sm:inline">Scroll to see more</span>
         <button
           type="button"
           onClick={() => scroll(-1)}
           aria-label="Scroll left"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-neutral-mid shadow-card transition-colors hover:border-teal hover:text-teal"
+          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal bg-white text-teal shadow-card transition-colors hover:bg-teal hover:text-white"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={20} />
         </button>
         <button
           type="button"
           onClick={() => scroll(1)}
           aria-label="Scroll right"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-neutral-mid shadow-card transition-colors hover:border-teal hover:text-teal"
+          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal bg-teal text-white shadow-card transition-colors hover:bg-teal-dark"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={20} />
         </button>
       </div>
 
@@ -65,7 +59,7 @@ export function SettingsCarousel() {
       >
         {SETTINGS_LIST.map(({ slug, label, description, iconKey }, i) => {
           const Icon = ICONS[iconKey] ?? Home
-          const image = IMAGES[slug]
+          const image = SETTING_IMAGES[slug]
           const gradient = GRADIENTS[i % GRADIENTS.length]
           return (
             <a key={slug} href={`/${slug}`} className="group block w-[300px] flex-shrink-0 snap-start">

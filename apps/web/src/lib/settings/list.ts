@@ -9,6 +9,21 @@ export type SettingListItem = {
   iconKey: string
 }
 
+// Hero / card photography per setting (web-sized JPGs in public/images).
+export const SETTING_IMAGES: Record<string, string> = {
+  'residential-care':      '/images/residential-care.jpg',
+  'nursing-homes':         '/images/nursing-home.jpg',
+  'domiciliary-care':      '/images/domiciliary-care.jpg',
+  'live-in-care':          '/images/live-in-care.jpg',
+  'complex-care':          '/images/complex-care.jpg',
+  'shared-lives':          '/images/shared-lives.jpg',
+  'substance-misuse':      '/images/substance-misuse.jpg',
+  'hospices':              '/images/hospices.jpg',
+  'independent-hospitals': '/images/independent-hospitals.jpg',
+  'gp-practices':          '/images/gp-practices.jpg',
+  'dental-practices':      '/images/dental-practices.jpg',
+}
+
 export const SETTINGS_LIST: SettingListItem[] = [
   { slug: 'residential-care',      label: 'Residential Care Homes',                 description: '24/7 policy access for care assistants and seniors, in any language, with CQC evidence that builds itself.',     iconKey: 'home' },
   { slug: 'nursing-homes',         label: 'Nursing Homes',                          description: 'Clinical answers at the bedside for your mixed nursing and care team, in any language, on every shift.',          iconKey: 'stethoscope' },

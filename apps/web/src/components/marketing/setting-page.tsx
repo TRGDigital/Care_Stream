@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { PageCta, SectionLabel } from './ui'
 import { HomeFaq } from './home-faq'
+import { SiteImage } from '@/components/site-image'
+import { SETTING_IMAGES } from '@/lib/settings/list'
 
 // Icon registry — configs reference icons by key (pure data, no JSX in configs).
 export const SETTING_ICONS: Record<string, LucideIcon> = {
@@ -124,6 +126,7 @@ function HubMockup({ m }: { m: SettingPageConfig['mockup'] }) {
 
 export function SettingPage({ config }: { config: SettingPageConfig }) {
   const c = config
+  const image = SETTING_IMAGES[c.slug]
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -135,7 +138,7 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
           className="absolute bottom-0 left-0 right-0 h-16"
           style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
         />
-        <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
+        <div className="relative mx-auto max-w-content px-6 pb-24 pt-20 md:pb-32 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <SectionLabel light>CareStream for {c.label}</SectionLabel>
@@ -146,8 +149,21 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
                 <Link href="/register" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
               </div>
             </div>
-            <div className="flex justify-center lg:justify-end">
-              <HubMockup m={c.mockup} />
+            <div className="relative">
+              {image ? (
+                <>
+                  <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10">
+                    <SiteImage src={image} alt={`CareStream for ${c.label}`} className="aspect-[4/3] w-full object-cover" />
+                  </div>
+                  <div className="mt-6 flex justify-center lg:absolute lg:-bottom-10 lg:-left-8 lg:mt-0 lg:w-[290px] lg:justify-start">
+                    <HubMockup m={c.mockup} />
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-center lg:justify-end">
+                  <HubMockup m={c.mockup} />
+                </div>
+              )}
             </div>
           </div>
         </div>

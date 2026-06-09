@@ -336,6 +336,18 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                           : <><Sparkles size={12} /> Generate answer options</>
                         }
                       </button>
+                      <button
+                        onClick={() => save(m)}
+                        disabled={saving === m.id || !isDirty || isLocked}
+                        className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-40"
+                      >
+                        {saving === m.id
+                          ? <><Loader2 size={12} className="animate-spin" /> Saving…</>
+                          : saved === m.id
+                            ? <><CheckCircle2 size={12} /> Saved</>
+                            : <><Save size={12} /> Save</>
+                        }
+                      </button>
                       <span className="text-[10px] text-neutral-mid">AI generates questions using your Knowledge seed and care setting context</span>
                     </div>
                     {genError[m.id] && (

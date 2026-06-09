@@ -1632,6 +1632,11 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
   const [completing, setCompleting]  = useState<string | null>(null) // enrollmentId
   // questionIds where user clicked "Try again" (hides saved answer, shows MCQ)
   const [retrying,   setRetrying]    = useState<Set<string>>(new Set())
+  // enrollmentIds expanded in the module accordion (collapsed by default when >1)
+  const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
+  function toggleModule(id: string) {
+    setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
 
   async function load() {
     try {
@@ -1713,6 +1718,9 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
             const pct         = totalQs > 0 ? Math.round((answeredQs / totalQs) * 100) : 0
             const answeredIds = new Set(answers.map((a: any) => a.question_id))
             const allAnswered = totalQs > 0 && questions.every(q => answeredIds.has(q.id))
+            // Accordion: collapse modules when several are assigned; a lone module stays open.
+            const multi      = enrollments.length > 1
+            const isExpanded = !multi || openIds.has(enrollment.id)
 
             const STATUS_STYLES: Record<string, string> = {
               not_started: 'bg-gray-100 text-neutral-mid',
@@ -1732,8 +1740,13 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
 
             return (
               <div key={enrollment.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
-                {/* Module header */}
-                <div className="border-b border-gray-100 px-5 py-4">
+                {/* Module header — tap to expand/collapse when several modules are assigned */}
+                <div
+                  className={`border-b border-gray-100 px-5 py-4 ${multi ? 'cursor-pointer select-none hover:bg-neutral-light/40' : ''}`}
+                  onClick={multi ? () => toggleModule(enrollment.id) : undefined}
+                  role={multi ? 'button' : undefined}
+                  aria-expanded={multi ? isExpanded : undefined}
+                >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold text-neutral-dark">{enrollment.module.name}</p>
@@ -1746,7 +1759,10 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                         </span>
                       </div>
                     </div>
-                    <span className="text-sm text-neutral-mid">{answeredQs}/{totalQs} answered</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-mid">{answeredQs}/{totalQs} answered</span>
+                      {multi && (isExpanded ? <ChevronUp size={16} className="text-neutral-mid" /> : <ChevronDown size={16} className="text-neutral-mid" />)}
+                    </div>
                   </div>
                   {/* Progress bar */}
                   <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100">
@@ -1764,6 +1780,7 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                   )}
                 </div>
 
+                {isExpanded && (<>
                 {/* Questions */}
                 <div className="divide-y divide-gray-50 px-5">
                   {questions.map((question, qi) => {
@@ -1917,6 +1934,7 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                     </button>
                   </div>
                 ) : null}
+                </>)}
               </div>
             )
           })}

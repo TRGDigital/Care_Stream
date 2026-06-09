@@ -1,27 +1,19 @@
 import Link from 'next/link'
 import {
-  MessageSquare, Mail, Mic, FileText, BookOpen,
-  Upload, Layers, ShieldAlert, ClipboardCheck, Lock,
+  MessageSquare, Mail, FileText, BookOpen,
+  Upload, Layers, ShieldAlert, ClipboardCheck, BadgeCheck,
   Check, Zap, Search, TrendingUp,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
   title: 'Care Policies',
-  description: 'Upload your policy library once. Your entire team can then query any policy in 50+ languages, instantly, via WhatsApp, email, or web — with every interaction logged.',
+  description: 'Upload your policy library once. Your entire team can then query any policy in 60+ languages, instantly, in the hub or by email, with every interaction logged.',
   openGraph: {
     title: 'Care Policies | CareStreamAI',
-    description: 'Digital policy access for your entire team — 50+ languages, WhatsApp, email, and web.',
+    description: 'Digital policy access for your entire team, in 60+ languages, in the hub or by email.',
     url: 'https://carestreamai.com/care-policies',
   },
-}
-
-function WhatsAppIcon({ size = 20, color = '#16a34a' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
-  )
 }
 
 // ── Feature Dashboard Mockup ──────────────────────────────────────────────────
@@ -30,7 +22,7 @@ function FeatureDashboardMockup() {
   return (
     <div className="w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-white/20">
       <div className="bg-teal px-5 py-4">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">CareStreamAI</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">CareStream</p>
         <p className="text-sm font-bold text-white">Crossways Care Home · Dashboard</p>
       </div>
       <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-gray-50">
@@ -47,12 +39,11 @@ function FeatureDashboardMockup() {
       </div>
       <div className="border-b border-gray-100 px-5 py-4">
         <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Queries by channel</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Chat',     count: 412, color: 'bg-teal' },
-            { label: 'WhatsApp', count: 243, color: 'bg-green-500' },
-            { label: 'Email',    count: 142, color: 'bg-blue-500' },
-            { label: 'Voice',    count: 50,  color: 'bg-purple-500' },
+            { label: 'Hub',   count: 605, color: 'bg-teal' },
+            { label: 'Email', count: 182, color: 'bg-blue-500' },
+            { label: 'Voice', count: 60,  color: 'bg-purple-500' },
           ].map(({ label, count, color }) => (
             <div key={label} className="text-center">
               <div className="mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
@@ -107,10 +98,10 @@ export default function FeaturesPage() {
             <div>
               <SectionLabel light>Features</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Everything your care team needs. Nothing they don&apos;t.
+                Everything your care team needs. Nothing they do not.
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CareStreamAI is purpose-built for UK care settings. Every feature addresses a real challenge that registered managers, HR leads, and frontline staff face every day.
+                CareStream is purpose-built for UK care settings. Every feature addresses a real challenge that registered managers, HR leads, and frontline staff face every day.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
@@ -128,15 +119,15 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* 1. Four channels */}
+      {/* 1. Channels */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>Access Channels</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Four ways to ask. One consistent answer.
+            Ask in the hub, or by email. One consistent answer.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Every channel draws from the same policy library and generates the same quality of response. Staff use whichever channel fits their situation, and every interaction lands in the same audit trail.
+            Both draw from the same policy library and give the same quality of answer. Staff use whichever fits their situation, and every interaction lands in the same audit trail.
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -147,20 +138,20 @@ export default function FeaturesPage() {
                   <MessageSquare size={22} className="text-teal" />
                 </div>
                 <div>
-                  <p className="font-bold text-neutral-dark">Web Chat Portal</p>
-                  <p className="text-xs text-neutral-mid">Desktop and mobile browser</p>
+                  <p className="font-bold text-neutral-dark">The Hub</p>
+                  <p className="text-xs text-neutral-mid">Web and installable app</p>
                 </div>
               </div>
               <p className="mb-5 leading-relaxed text-neutral-mid">
-                A full conversational interface accessible on any device from any browser. Staff log in once and can ask follow-up questions naturally within the same session. The system retains full context for the entire conversation.
+                A full conversational interface in any browser, and installable as an app on staff phones. Staff sign in once with a one-tap link, then ask questions by typing or speaking, with full context kept for the whole conversation.
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
                 {[
+                  'Type or speak your question, and hear the answer read back',
                   'Full session context maintained across multiple questions',
-                  'Conversation history visible to the staff member',
                   'Suggested follow-up questions after every response',
-                  'Works on any smartphone, tablet, or desktop browser',
-                  'Formatted responses with section headings and bullet points',
+                  'Installs like an app on any phone, with a passwordless sign-in link',
+                  'Answers in over 60 languages, in the language you ask',
                 ].map(p => (
                   <li key={p} className="flex items-start gap-2">
                     <Check size={13} className="mt-0.5 shrink-0 text-teal" />{p}
@@ -180,74 +171,18 @@ export default function FeaturesPage() {
                 </div>
               </div>
               <p className="mb-5 leading-relaxed text-neutral-mid">
-                Staff email your dedicated CareStreamAI address from any device. A reply arrives within 30 seconds. Replying to the response continues the conversation with full thread context maintained across every exchange.
+                Staff email your dedicated CareStream address from any device. The reply arrives in the same thread, and replying to it continues the conversation with full context kept across every exchange.
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
                 {[
-                  'No login and no app required to use',
-                  'Response delivered into the same email thread within 30 seconds',
+                  'No app and no sign-in required to use',
+                  'Response delivered into the same email thread',
                   'Reply to ask a follow-up question at any time',
                   'Works from any email app on any device',
                   'Ideal during shift handover or when away from the home',
                 ].map(p => (
                   <li key={p} className="flex items-start gap-2">
                     <Check size={13} className="mt-0.5 shrink-0 text-blue-500" />{p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
-                  <WhatsAppIcon size={22} color="#16a34a" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-dark">WhatsApp</p>
-                  <p className="text-xs text-neutral-mid">Any smartphone, iOS or Android</p>
-                </div>
-              </div>
-              <p className="mb-5 leading-relaxed text-neutral-mid">
-                Staff message the CareStreamAI WhatsApp number exactly as they would text a colleague. No app to download, no login to create. Responses arrive in under 30 seconds. Voice notes are fully supported for hands-free queries.
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[
-                  'Staff use their existing WhatsApp with no setup required',
-                  'Voice notes transcribed and answered automatically',
-                  'Tappable follow-up question buttons sent after each response',
-                  '24-hour session window for natural follow-up conversations',
-                  'Phone number allowlist ensures only registered staff can query',
-                  'Responses in the language the message was sent in',
-                ].map(p => (
-                  <li key={p} className="flex items-start gap-2">
-                    <Check size={13} className="mt-0.5 shrink-0 text-green-600" />{p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50">
-                  <Mic size={22} className="text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-dark">Voice Input</p>
-                  <p className="text-xs text-neutral-mid">Via WhatsApp voice note or chat portal</p>
-                </div>
-              </div>
-              <p className="mb-5 leading-relaxed text-neutral-mid">
-                Not everyone types quickly in their second language, or has two hands free on a care floor. Voice input lets staff speak their question naturally in any language. The audio is transcribed, language-detected, and answered from your policies in the same language it was spoken.
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[
-                  'Over 50 languages detected and supported for voice input',
-                  'Transcription shown alongside the answer for transparency',
-                  'Same response quality and citation detail as typed queries',
-                  'Appears identically in the audit trail as any other query',
-                ].map(p => (
-                  <li key={p} className="flex items-start gap-2">
-                    <Check size={13} className="mt-0.5 shrink-0 text-purple-500" />{p}
                   </li>
                 ))}
               </ul>
@@ -264,7 +199,7 @@ export default function FeaturesPage() {
             <div>
               <SectionLabel>Multilingual Engine</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-                50+ languages. Zero configuration.
+                60+ languages. Zero configuration.
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
                 Language detection is automatic on every query. Staff do not select a language, toggle a setting, or use any special command. They ask their question in the language they think in, and the answer arrives in the same language.
@@ -274,7 +209,7 @@ export default function FeaturesPage() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Languages detected', value: '50+' },
+                  { label: 'Languages detected', value: '60+' },
                   { label: 'Source policy language', value: 'English' },
                   { label: 'Setup required', value: 'None' },
                   { label: 'Extra cost per language', value: '£0' },
@@ -322,7 +257,7 @@ export default function FeaturesPage() {
             A policy library that works as hard as you do.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Upload once and CareStreamAI handles the rest. Documents are automatically processed, indexed, and made searchable within minutes of upload with no manual work required.
+            Upload once and CareStream handles the rest. Documents are automatically processed, indexed, and made searchable within minutes of upload with no manual work required.
           </p>
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -332,7 +267,7 @@ export default function FeaturesPage() {
                 bg: 'bg-teal-light',
                 color: 'text-teal',
                 title: 'PDF, Word and plain text',
-                body: 'Upload any combination of file formats. CareStreamAI reads and indexes all common document types with no conversion or reformatting needed from you.',
+                body: 'Upload any combination of file formats. CareStream reads and indexes all common document types with no conversion or reformatting needed from you.',
               },
               {
                 Icon: Zap,
@@ -367,14 +302,14 @@ export default function FeaturesPage() {
                 bg: 'bg-red-50',
                 color: 'text-red-500',
                 title: 'Review date reminders',
-                body: 'Set a review interval for each policy and CareStreamAI will remind you when it is due. Your library stays current without any manual tracking.',
+                body: 'Set a review interval for each policy and CareStream will remind you when it is due. Your library stays current without any manual tracking.',
               },
               {
                 Icon: BookOpen,
                 bg: 'bg-teal-light',
                 color: 'text-teal',
                 title: 'Staff handbook support',
-                body: 'Upload your staff handbook alongside your clinical policies. Staff can ask about annual leave, disciplinary procedures, pay and onboarding and receive accurate answers from your actual document.',
+                body: 'Upload your staff handbook alongside your clinical policies. Large handbooks are indexed chapter by chapter, so staff get accurate answers about annual leave, disciplinary procedures, pay and onboarding from the right part of the document.',
               },
               {
                 Icon: Layers,
@@ -384,11 +319,11 @@ export default function FeaturesPage() {
                 body: 'Organise your library by category, department, or regulatory framework. Makes browsing and reporting easier for managers and auditors.',
               },
               {
-                Icon: Lock,
+                Icon: BadgeCheck,
                 bg: 'bg-blue-50',
                 color: 'text-blue-600',
-                title: 'No document count limit',
-                body: 'Upload your complete policy library with no cap on the number of documents or file size. All plans include unlimited policy storage.',
+                title: 'Answers cite the source',
+                body: 'Every answer names the policy and the version it came from, so staff can check the exact source and you can trust what was said.',
               },
             ].map(({ Icon, bg, color, title, body }) => (
               <div key={title} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
@@ -408,10 +343,10 @@ export default function FeaturesPage() {
         <div className="mx-auto max-w-content px-6">
           <SectionLabel light>Regulatory Intelligence</SectionLabel>
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-            Over 50 UK regulatory frameworks, pre-loaded.
+            UK regulation, alongside your own policies.
           </h2>
           <p className="mb-12 max-w-2xl text-lg leading-relaxed text-gray-300">
-            Your internal policies are built on UK law and regulation. CareStreamAI has over 50 regulatory frameworks already loaded so that when a staff member asks something that touches both your policy and an external requirement, the response explains how the two interact.
+            Your internal policies are built on UK law and regulation. CareStream keeps the UK regulations that matter to care services loaded and up to date, so when a staff member asks something that touches both your policy and an external requirement, the response explains how the two interact.
           </p>
 
           <div className="grid gap-8 lg:grid-cols-2">
@@ -433,7 +368,7 @@ export default function FeaturesPage() {
                     color: 'text-amber-brand',
                     bg: 'bg-amber-brand/20',
                     title: 'Relevant regulations are overlaid',
-                    body: 'CareStreamAI identifies which of the pre-loaded frameworks apply to the question and adds that regulatory context to the response.',
+                    body: 'CareStream identifies which of the loaded frameworks apply to the question and adds that regulatory context to the response.',
                   },
                   {
                     Icon: MessageSquare,
@@ -475,7 +410,7 @@ export default function FeaturesPage() {
                   </div>
                 ))}
                 <div className="rounded-xl bg-teal/20 px-4 py-3 text-center">
-                  <span className="text-sm font-semibold text-teal">42 additional frameworks included</span>
+                  <span className="text-sm font-semibold text-teal">Plus more, kept up to date as regulations change</span>
                 </div>
               </div>
             </div>
@@ -491,17 +426,17 @@ export default function FeaturesPage() {
             Not generic answers. <span style={{ color: '#E8850A' }}>Your home&rsquo;s answers.</span>
           </h2>
           <p className="mb-6 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            CareStreamAI automatically analyses every uploaded policy and extracts the precise, home-specific facts that staff are most likely to ask about: named individuals, specific schedules and exact local procedures.
+            CareStream answers from the actual content of your own policies. When a policy names a person, a schedule, or an exact local procedure, that is what staff get back, not a generic restatement.
           </p>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Managers can also add and edit knowledge entries directly, capturing the operational knowledge that lives in practice and making it immediately available to everyone on the team.
+            Managers can also add knowledge entries directly, capturing the operational detail that lives in practice, named leads, local procedures, and out-of-hours contacts, and approving it so it is available to everyone in the same answers.
           </p>
 
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
             <div className="grid grid-cols-3 border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
               <span>Staff asks</span>
               <span>Generic policy answer</span>
-              <span className="text-amber-brand">CareStreamAI answer</span>
+              <span className="text-amber-brand">CareStream answer</span>
             </div>
             {[
               {
@@ -545,7 +480,7 @@ export default function FeaturesPage() {
                 Find your gaps before CQC does.
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Every time CareStreamAI cannot find an answer in your documents, it flags the query as a gap. Over time, patterns emerge: the same questions appearing repeatedly without any policy coverage.
+                Every time CareStream cannot find an answer in your documents, it flags the query as a gap. Over time, patterns emerge: the same questions appearing repeatedly without any policy coverage.
               </p>
               <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
                 Your Policy Gap Report shows exactly which questions your staff are asking that your current policies do not address, ranked by frequency. This is actionable evidence of where your library needs strengthening, surfaced before an inspection identifies it first.
@@ -561,8 +496,8 @@ export default function FeaturesPage() {
                     body: 'The most commonly asked unanswered questions appear first, so you address the most impactful gaps first.',
                   },
                   {
-                    title: 'Monthly summary report',
-                    body: 'A summary is compiled automatically and made available for your manager review cycle.',
+                    title: 'Always up to date',
+                    body: 'The gap report is kept current and ready for your manager review cycle, with nothing to compile by hand.',
                   },
                   {
                     title: 'Evidence for CQC',
@@ -629,7 +564,7 @@ export default function FeaturesPage() {
             Your compliance evidence builds automatically.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Every interaction with CareStreamAI is logged and structured. Your analytics dashboard and CQC Readiness Report are generated from this data continuously, with nothing to compile manually.
+            Every interaction with CareStream is logged and structured. Your analytics dashboard and CQC Readiness Report are generated from this data continuously, with nothing to compile manually.
           </p>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <table className="w-full text-sm">
@@ -643,7 +578,7 @@ export default function FeaturesPage() {
               <tbody className="divide-y divide-gray-100">
                 {[
                   ['Total queries and trend over time', true, true],
-                  ['Queries by channel (chat, email, WhatsApp, voice)', true, true],
+                  ['Queries by channel (hub, email, voice)', true, true],
                   ['Most requested policies this month', true, true],
                   ['Active staff members this month', true, true],
                   ['Plan usage vs allowance', true, true],
@@ -688,7 +623,7 @@ export default function FeaturesPage() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Tenant isolation', detail: 'Complete data separation between all organisations' },
-                  { label: 'Encrypted at rest', detail: 'AES-256 encryption for all stored documents and logs' },
+                  { label: 'Approved knowledge only', detail: 'Only vetted, approved content is ever served to staff' },
                   { label: 'Never used for training', detail: 'Your documents are never used to train AI models' },
                   { label: 'UK data residency', detail: 'Available on Professional and Enterprise plans' },
                 ].map(({ label, detail }) => (

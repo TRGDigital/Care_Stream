@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
-  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList,
+  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -84,7 +84,18 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const [sites,      setSites]      = useState<any[]>([])
   const [dropOpen,   setDropOpen]   = useState(false)
   const [switching,  setSwitching]  = useState<string | null>(null)
+  const [mobileNav,  setMobileNav]  = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+
+  // Close the mobile nav drawer whenever the route changes.
+  useEffect(() => { setMobileNav(false) }, [pathname])
+
+  // Close the mobile nav drawer on Escape.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setMobileNav(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   // Load sites list once the session token is available
   useEffect(() => {
@@ -132,66 +143,42 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-light">
 
-      {/* Sidebar */}
+      {/* Sidebar (desktop / tablet ≥ md) */}
       <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
-        {/* Logo */}
-        <div className="border-b border-white/10 px-5 pb-5 pt-6">
-          <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-            Admin Portal
-          </p>
-        </div>
-
-        {/* Nav */}
-        <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
-          {NAV_SECTIONS.map(({ heading, iconColor, items }) => {
-            const allHrefs = NAV_SECTIONS.flatMap(s => s.items.map(i => i.href))
-            const hasExactMatch = allHrefs.some(href => href === pathname)
-            return (
-              <div key={heading} className="mb-4">
-                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
-                  {heading}
-                </p>
-                {items.map(({ href, label, Icon }) => {
-                  const active = pathname === href || (!hasExactMatch && pathname.startsWith(href + '/'))
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className={clsx(
-                        'mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                        active
-                          ? 'border-l-2 border-teal-light bg-white/10 text-white'
-                          : 'text-white/70 hover:bg-white/10 hover:text-white',
-                      )}
-                      aria-current={active ? 'page' : undefined}
-                    >
-                      <Icon size={16} className={active ? 'text-teal-light' : iconColor} />
-                      {label}
-                    </Link>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </nav>
-
-        {/* Back to portal */}
-        <div className="border-t border-white/10 px-3 py-3">
-          <Link
-            href="/chat"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white"
-          >
-            <MessageSquare size={16} className="text-white/50" />
-            Chat Hub
-          </Link>
-        </div>
+        <SidebarContent pathname={pathname} />
       </aside>
+
+      {/* Sidebar drawer (mobile < md) */}
+      {mobileNav && (
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileNav(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-64 max-w-[82%] flex-col bg-[#1A0830] shadow-2xl">
+            <button
+              onClick={() => setMobileNav(false)}
+              aria-label="Close menu"
+              className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+            <SidebarContent pathname={pathname} onNavigate={() => setMobileNav(false)} />
+          </aside>
+        </div>
+      )}
 
       {/* Main column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 print:hidden">
+        <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6 print:hidden">
+
+          <div className="flex min-w-0 items-center gap-2.5">
+            {/* Hamburger — opens the nav drawer on mobile */}
+            <button
+              onClick={() => setMobileNav(true)}
+              aria-label="Open navigation menu"
+              className="-ml-1 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark md:hidden"
+            >
+              <Menu size={20} />
+            </button>
 
           {/* Site name / switcher */}
           {multiSite ? (
@@ -248,11 +235,12 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
               )}
             </div>
           ) : (
-            <p className="text-sm font-semibold text-neutral-dark">{tenantName}</p>
+            <p className="truncate text-sm font-semibold text-neutral-dark">{tenantName}</p>
           )}
+          </div>
 
-          <div className="flex items-center gap-5">
-            <span className="text-sm text-neutral-mid">{userName}</span>
+          <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">
+            <span className="hidden text-sm text-neutral-mid sm:inline">{userName}</span>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-sm font-medium text-neutral-mid hover:text-neutral-dark"
@@ -263,11 +251,71 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>
 
     </div>
+  )
+}
+
+// Sidebar contents — shared by the desktop sidebar and the mobile drawer.
+function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const allHrefs = NAV_SECTIONS.flatMap(s => s.items.map(i => i.href))
+  const hasExactMatch = allHrefs.some(href => href === pathname)
+  return (
+    <>
+      {/* Logo */}
+      <div className="border-b border-white/10 px-5 pb-5 pt-6">
+        <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
+        <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+          Admin Portal
+        </p>
+      </div>
+
+      {/* Nav */}
+      <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
+        {NAV_SECTIONS.map(({ heading, iconColor, items }) => (
+          <div key={heading} className="mb-4">
+            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+              {heading}
+            </p>
+            {items.map(({ href, label, Icon }) => {
+              const active = pathname === href || (!hasExactMatch && pathname.startsWith(href + '/'))
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onNavigate}
+                  className={clsx(
+                    'mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    active
+                      ? 'border-l-2 border-teal-light bg-white/10 text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white',
+                  )}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <Icon size={16} className={active ? 'text-teal-light' : iconColor} />
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* Back to portal */}
+      <div className="border-t border-white/10 px-3 py-3">
+        <Link
+          href="/chat"
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white"
+        >
+          <MessageSquare size={16} className="text-white/50" />
+          Chat Hub
+        </Link>
+      </div>
+    </>
   )
 }

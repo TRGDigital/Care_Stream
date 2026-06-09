@@ -13,7 +13,7 @@ export const revalidate = 60
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-type ModuleSection = { heading: string; body: string }
+type ModuleSection = { heading: string; body: string; image_url: string | null }
 type ModuleDetail = {
   slug: string
   title: string
@@ -100,7 +100,8 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const summary = careSetting(m.summary ?? m.description) || `What ${m.title.toLowerCase()} training covers, who needs it and how often, and how CareStream delivers it to your whole team in any language.`
   const outcomes = m.outcomes.map(careSetting)
   const keyPoints = m.key_points.map(careSetting)
-  const sections = m.sections.map((s) => ({ heading: careSetting(s.heading), body: careSetting(s.body) })).filter((s) => s.body)
+  const sections = m.sections.map((s) => ({ heading: careSetting(s.heading), body: careSetting(s.body), image_url: s.image_url })).filter((s) => s.body)
+  const hasSectionImages = sections.some((s) => s.image_url)
 
   const faqs = [
     { question: `Is ${m.title} training mandatory in care settings?`, answer: `${m.title} is part of the training that CQC-regulated care settings are expected to provide. CareStream includes it in the standard library so you can assign it to your whole team.` },
@@ -199,19 +200,51 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
               The module is built in short, practical sections. Each one teaches a part of the topic,
               then applies it to a real care scenario and checks understanding before moving on.
             </p>
-            <div className="space-y-8">
-              {sections.map((s, i) => (
-                <div key={s.heading} className="flex gap-5">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
-                    {String(i + 1).padStart(2, '0')}
+            {hasSectionImages ? (
+              <div className="space-y-14 lg:space-y-20">
+                {sections.map((s, i) => {
+                  const flip = i % 2 === 1
+                  return (
+                    <div key={s.heading} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+                      <div className={flip ? 'lg:order-2' : ''}>
+                        <div className="mb-4 flex items-center gap-3">
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
+                          <h3 className="text-2xl font-bold text-neutral-dark">{s.heading}</h3>
+                        </div>
+                        <p className="text-lg leading-relaxed text-neutral-mid">{s.body}</p>
+                      </div>
+                      <div className={flip ? 'lg:order-1' : ''}>
+                        {s.image_url ? (
+                          <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-gray-100">
+                            <SiteImage src={`${API_URL}${s.image_url}`} alt={`${s.heading} — ${m.title} training`} className="aspect-[4/3] w-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-light ring-1 ring-gray-100">
+                            <GraduationCap size={56} className="text-teal/30" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {sections.map((s, i) => (
+                  <div key={s.heading} className="flex gap-5">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div>
+                      <h3 className="mb-1.5 text-lg font-bold text-neutral-dark">{s.heading}</h3>
+                      <p className="max-w-2xl leading-relaxed text-neutral-mid">{s.body}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="mb-1.5 text-lg font-bold text-neutral-dark">{s.heading}</h3>
-                    <p className="max-w-2xl leading-relaxed text-neutral-mid">{s.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}

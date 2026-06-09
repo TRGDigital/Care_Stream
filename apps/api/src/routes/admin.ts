@@ -25,6 +25,7 @@ import { seedTenantKnowledge, seedAllTenants, seedCustomSeedToAllTenants } from 
 import { hashPassword } from '../services/auth/password'
 import { sendStaffWelcomeEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
+import { cloneTenant } from '../services/tenant/clone'
 import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
@@ -578,6 +579,32 @@ adminRouter.post('/tenants/:id/staff/:userId/send-credentials', async (req: Requ
     ok(res, { sent: true })
   } catch (e: any) {
     err(res, 'EMAIL_FAILED', e.message ?? 'Failed to send email.', 500)
+  }
+})
+
+// ─── POST /admin/tenants/:id/clone ───────────────────────────────────────────
+// Full content/config clone of a tenant into a brand-new "Live" account (clean
+// slate — no activity; one fresh admin). Renames the source to free the clean
+// slug. Copies DB rows, S3 files and Pinecone vectors (no re-embedding).
+// Body: { live:{name,slug,email_domain}, admin_rename:{name,slug,email_domain},
+//         admin:{email,name,password?} }. Returns a temp password if none given.
+adminRouter.post('/tenants/:id/clone', async (req: Request, res: Response) => {
+  const { live, admin_rename, admin } = req.body ?? {}
+  if (!live?.name || !live?.slug || !live?.email_domain) { err(res, 'VALIDATION_ERROR', 'live {name,slug,email_domain} required', 400); return }
+  if (!admin_rename?.name || !admin_rename?.slug || !admin_rename?.email_domain) { err(res, 'VALIDATION_ERROR', 'admin_rename {name,slug,email_domain} required', 400); return }
+  if (!admin?.email || !admin?.name) { err(res, 'VALIDATION_ERROR', 'admin {email,name} required', 400); return }
+
+  const password = (admin.password && String(admin.password)) || crypto.randomBytes(9).toString('base64url')
+  try {
+    const result = await cloneTenant({
+      sourceTenantId: String(req.params.id),
+      adminRename:    admin_rename,
+      live,
+      newAdmin:       { email: String(admin.email).toLowerCase().trim(), name: admin.name, password },
+    })
+    ok(res, { ...result, temp_password: admin.password ? undefined : password })
+  } catch (e: any) {
+    err(res, 'CLONE_FAILED', e.message ?? 'Clone failed', 500)
   }
 })
 

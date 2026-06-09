@@ -6,7 +6,7 @@ import { Typewriter } from '@/components/marketing/typewriter'
 
 export const metadata: Metadata = {
   title:       'CareStreamAI — AI Policy Access for UK Care Homes',
-  description: 'Give your entire care team instant access to your policies in any language, 24/7. CareStreamAI delivers grounded answers via WhatsApp, email and chat — never the internet.',
+  description: 'Give your entire care team instant access to your policies, training, audits and CQC tools in any language, 24/7. CareStream delivers grounded answers in the hub or by email, never the internet.',
   openGraph:   { title: 'CareStreamAI — AI Policy Access for UK Care Homes', description: 'Instant multilingual policy access for UK care providers. Powered by your documents. Never the internet.', url: 'https://carestreamai.com' },
 }
 import { MarketingFooter } from '@/components/marketing/footer'
@@ -19,6 +19,7 @@ import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
+  GraduationCap, HelpCircle, FileText, Smartphone, Volume2,
 } from 'lucide-react'
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
@@ -124,9 +125,9 @@ function Hero() {
               />
             </div>
 
-            {/* 50+ Languages, bottom left */}
+            {/* 60+ Languages, bottom left */}
             <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-5 py-4 shadow-card-hover">
-              <p className="text-2xl font-extrabold text-teal">50+</p>
+              <p className="text-2xl font-extrabold text-teal">60+</p>
               <p className="text-xs font-medium text-neutral-mid">Languages supported</p>
             </div>
 
@@ -160,8 +161,8 @@ function Hero() {
                   <span className="text-xs font-semibold text-amber-brand">Chat</span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-lg bg-green-50 px-2.5 py-1.5">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  <span className="text-xs font-semibold text-green-700">WhatsApp</span>
+                  <Smartphone size={10} className="text-green-700" />
+                  <span className="text-xs font-semibold text-green-700">App</span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-lg bg-purple-50 px-2.5 py-1.5">
                   <Mic size={10} className="text-purple-600" />
@@ -447,7 +448,7 @@ function TheSolution() {
       iconBg: 'bg-teal-light',
       iconColor: 'text-teal',
       title: 'Ask in any language',
-      body: 'Staff ask about your policies in any of 50+ languages via email or chat. Language is detected automatically, no setup, no menus, no extra cost.',
+      body: 'Staff ask about your policies in any of 60+ languages in the hub or by email. Language is detected automatically, no setup, no menus, no extra cost.',
     },
     {
       Icon: Zap,
@@ -848,14 +849,14 @@ function RegulationLayerSection() {
           </div>
           <div className="lg:pb-1">
             <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-              Over 50 UK care regulations and statutory frameworks are pre-loaded into CareStreamAI.
-              When a staff member asks something that touches both your internal policy and an external
-              framework, the response explains how the two interact — not just what your policy says
-              in isolation.
+              The UK care regulations and statutory frameworks that matter to a care service are loaded
+              into CareStream and kept up to date. When a staff member asks something that touches both
+              your internal policy and an external framework, the response explains how the two interact,
+              not just what your policy says in isolation.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full bg-teal/10 px-4 py-2">
               <div className="h-2 w-2 rounded-full bg-teal" />
-              <span className="text-sm font-semibold text-teal">50+ regulatory frameworks pre-loaded</span>
+              <span className="text-sm font-semibold text-teal">UK regulations, loaded and kept up to date</span>
             </div>
           </div>
         </div>
@@ -871,7 +872,7 @@ function RegulationLayerSection() {
             <div className="divide-y divide-gray-100">
               {/* Question */}
               <div className="px-6 py-5">
-                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Staff asks via WhatsApp</p>
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Staff asks in the hub</p>
                 <p className="text-base font-medium text-neutral-dark">
                   &ldquo;What do I need to document after a medication error?&rdquo;
                 </p>
@@ -911,15 +912,11 @@ function RegulationLayerSection() {
           <div className="flex justify-center lg:justify-end">
             <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
               {/* Header */}
-              <div className="flex items-center gap-3 px-4 py-3" style={{ background: '#202c33' }}>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25d366]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                </div>
+              <div className="flex items-center gap-3 bg-teal px-4 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-extrabold text-white">CS</div>
                 <div>
-                  <p className="text-sm font-semibold text-white">CareStreamAI</p>
-                  <p className="text-xs text-green-400">online</p>
+                  <p className="text-sm font-semibold text-white">CareStream</p>
+                  <p className="text-xs text-white/60">Crossways Care Home</p>
                 </div>
               </div>
 
@@ -927,7 +924,7 @@ function RegulationLayerSection() {
               <div className="space-y-3 px-3 py-4" style={{ background: '#0b141a', minHeight: 380 }}>
                 {/* Staff question */}
                 <div className="flex justify-end">
-                  <div className="max-w-[82%] rounded-2xl rounded-br-sm px-3 py-2.5" style={{ background: '#005c4b' }}>
+                  <div className="max-w-[82%] rounded-2xl rounded-br-sm px-3 py-2.5" style={{ background: '#0d9488' }}>
                     <p className="text-xs leading-relaxed text-white/90">What do I need to document after a medication error?</p>
                     <p className="mt-0.5 text-right text-[10px] text-white/35">22:31 ✓✓</p>
                   </div>
@@ -977,7 +974,7 @@ function RegulationLayerSection() {
         {/* Regulation cards */}
         <div className="mb-6 flex items-end justify-between gap-4">
           <p className="text-sm font-semibold uppercase tracking-widest text-neutral-mid">A selection of frameworks included</p>
-          <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-xs font-bold text-teal">50+ total</span>
+          <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-xs font-bold text-teal">and more</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {frameworks.map(({ name, reg, desc }) => (
@@ -1048,7 +1045,7 @@ function HomeKnowledgeCallout() {
         {/* Multilingual visualization */}
         <div className="mt-20">
           <div className="mb-3">
-            <SectionLabel light>50+ Languages</SectionLabel>
+            <SectionLabel light>60+ Languages</SectionLabel>
           </div>
           <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <h3 className="text-2xl font-extrabold text-white md:text-3xl">
@@ -1140,25 +1137,19 @@ function HomeKnowledgeCallout() {
   )
 }
 
-const whatsappLogo = (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="#16a34a">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-)
-
 function FeaturesOverview() {
   const features: Array<{ icon: React.ReactNode; title: string; desc: string; highlight?: boolean }> = [
-    { icon: '🌍', title: '50+ language support',        desc: 'Staff ask in any language. Answers come back in the same language, automatically.' },
-    { icon: '💬', title: 'Email & web chat',             desc: 'Access via plain email or the web portal. No app download, no login required for staff.' },
+    { icon: '🌍', title: '60+ language support',        desc: 'Staff ask in any language. Answers come back in the same language, automatically.' },
+    { icon: '💬', title: 'Hub and email',               desc: 'Use the hub in any browser or installed as an app, with a passwordless sign-in link. Email is there for anyone who prefers it.' },
     {
-      icon: whatsappLogo,
-      title: 'WhatsApp access',
-      desc: 'Staff send questions via WhatsApp on any phone. Responses arrive in under 30 seconds, in the language asked.',
+      icon: <Smartphone size={28} className="text-teal" />,
+      title: 'Installable hub app',
+      desc: 'Staff install the hub on their phone and get push notifications for training and reminders. Nothing to learn.',
     },
     {
       icon: <Mic size={28} className="text-purple-600" />,
       title: 'Voice input',
-      desc: 'Speak a question in any language, hands-free. Automatically transcribed, detected, and answered from your policies.',
+      desc: 'Speak a question in any language, hands-free, and hear the answer read back from your policies.',
     },
     { icon: '🏠', title: 'Your home, in detail',        desc: 'Knows your specific roles, schedules, and local procedures, not just generic policy text.', highlight: true },
     { icon: '📊', title: 'CQC Readiness Report',        desc: 'Inspection evidence generated automatically, covering access logs, language activity and staff engagement.' },
@@ -1207,7 +1198,7 @@ function WhatsAppSection() {
   const chatMessages = [
     {
       side: 'right',
-      bg: '#005c4b',
+      bg: '#0d9488',
       text: 'Maaari mo bang ipadaan ang patakaran sa pagbagsak?',
       meta: '22:14 ✓✓',
     },
@@ -1221,7 +1212,7 @@ function WhatsAppSection() {
     },
     {
       side: 'right',
-      bg: '#005c4b',
+      bg: '#0d9488',
       text: 'Who is the on-call manager tonight?',
       meta: '22:15 ✓✓',
     },
@@ -1241,25 +1232,24 @@ function WhatsAppSection() {
 
           {/* Left, text */}
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 border border-green-100">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#16a34a">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              <span className="text-sm font-semibold text-green-700">WhatsApp</span>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-teal-light px-4 py-2 border border-teal/20">
+              <Smartphone size={16} className="text-teal" />
+              <span className="text-sm font-semibold text-teal">The Hub</span>
             </div>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Policy answers on the app your staff already use.
+              Everything in one place, on the app your staff install.
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-              Your care team is already on WhatsApp. Now they can ask your policies a question
-              the same way they text a colleague, in any language, at any hour, from any phone.
+              The hub is where your whole team works. They install it on their phone like any app, sign
+              in once with a one-tap link, and can ask your policies a question in any language, at any
+              hour, by typing or speaking.
             </p>
             <ul className="mb-10 space-y-4">
               {[
-                'No app download. No training. No login.',
-                'Answers in under 30 seconds, in the language asked.',
+                'Installs like an app on any phone, with a passwordless sign-in link.',
+                'Ask by typing or speaking, and hear the answer read back.',
                 'Every conversation logged for your CQC audit trail.',
-                'Works on every smartphone, including iOS and Android.',
+                'Push notifications bring training and reminders to staff in the hub.',
               ].map((point) => (
                 <li key={point} className="flex items-start gap-3">
                   <div className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
@@ -1281,18 +1271,15 @@ function WhatsAppSection() {
           <div className="flex justify-center lg:justify-end">
             <div className="w-full max-w-sm overflow-hidden rounded-3xl shadow-elevated" style={{ background: '#111b21' }}>
               {/* Header */}
-              <div className="flex items-center gap-3 px-4 py-3" style={{ background: '#202c33' }}>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25d366]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                </div>
+              <div className="flex items-center gap-3 bg-teal px-4 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-extrabold text-white">CS</div>
                 <div>
-                  <p className="text-sm font-semibold text-white">CareStreamAI</p>
-                  <p className="text-xs text-green-400">online</p>
+                  <p className="text-sm font-semibold text-white">CareStream</p>
+                  <p className="text-xs text-white/60">Crossways Care Home</p>
                 </div>
-                <div className="ml-auto flex items-center gap-2">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#aebac1"><path d="M15.9 14.3H15l-.3-.3c1-1.1 1.6-2.7 1.6-4.3 0-3.7-3-6.7-6.7-6.7S2.9 6 2.9 9.7s3 6.7 6.7 6.7c1.6 0 3.2-.6 4.3-1.6l.3.3v.8l5.1 5.1 1.5-1.5-4.9-5.2zm-6.2 0c-2.6 0-4.6-2.1-4.6-4.6s2.1-4.6 4.6-4.6 4.6 2.1 4.6 4.6-2 4.6-4.6 4.6z"/></svg>
+                <div className="ml-auto flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-0.5">
+                  <Smartphone size={11} className="text-white" />
+                  <span className="text-[10px] font-semibold text-white">App</span>
                 </div>
               </div>
               {/* Messages */}
@@ -1379,31 +1366,32 @@ function VoiceSection() {
 
           {/* Right, text */}
           <div>
-            <SectionLabel light>Voice Access</SectionLabel>
+            <SectionLabel light>Voice in the Hub</SectionLabel>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-white md:text-4xl lg:text-5xl">
               Speak your question.{' '}
-              <span style={{ color: '#E8850A' }}>Get your answer.</span>
+              <span style={{ color: '#E8850A' }}>Hear your answer.</span>
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-gray-300">
-              Not everyone types quickly in their second language. Voice access lets staff ask
-              policy questions naturally, by speaking, hands-free, mid-task, in any language.
+              Not everyone types quickly in their second language. In the hub, staff can ask policy
+              questions by speaking instead of typing, hands-free, mid-task, in their own language,
+              and have the answer read back to them.
             </p>
             <div className="space-y-6">
               {[
                 {
                   icon: '🗣️',
-                  title: 'Any language, any accent',
-                  body: 'Voice input is automatically transcribed and language-detected across 50+ languages. Staff speak naturally; the system handles the rest.',
+                  title: 'Speak in your own language',
+                  body: 'The hub turns speech into text as staff talk, in over 60 languages, so anyone who finds typing in English hard can simply ask out loud.',
                 },
                 {
-                  icon: '⚡',
-                  title: 'Under 30 seconds',
-                  body: 'Spoken questions are processed at the same speed as typed ones. The answer arrives on screen in the language that was spoken.',
+                  icon: '🔊',
+                  title: 'Listen to the answer',
+                  body: 'Every answer can be read aloud in the hub, so staff can keep their hands free on the care floor while they listen.',
                 },
                 {
                   icon: '📋',
                   title: 'Same audit trail',
-                  body: 'Voice queries are logged identically to chat and email interactions, capturing date, time, user and policy cited, all for your CQC records.',
+                  body: 'Voice queries are logged identically to typed questions, capturing date, time, user and policy cited, all for your CQC records.',
                 },
               ].map(({ icon, title, body }) => (
                 <div key={title} className="flex gap-4">
@@ -1543,7 +1531,7 @@ function PricingSnapshot() {
             <p className="mb-1 text-4xl font-extrabold text-neutral-dark">£49<span className="text-base font-normal text-neutral-mid">/month</span></p>
             <p className="mb-8 text-sm text-neutral-mid">Per home. Unlimited staff users.</p>
             <ul className="mb-8 space-y-3 text-sm">
-              {['Policy library (up to 25 policies)', 'Email & chat access for all staff', '50+ language support', '500 queries/month', 'Full audit trail', 'Basic analytics'].map(f => (
+              {['Policy library (up to 25 policies)', 'Hub and email access for all staff', '60+ language support', '500 queries/month', 'Full audit trail', 'Basic analytics'].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-neutral-dark">
                   <Check size={16} className="flex-shrink-0 text-teal" /> {f}
                 </li>
@@ -1666,16 +1654,62 @@ function FinalCta() {
   )
 }
 
+function OurServices() {
+  const services = [
+    { Icon: FileText,      title: 'Care Policies',       href: '/care-policies',       desc: 'Every policy answerable in seconds, in 60+ languages, with the source policy and version cited.' },
+    { Icon: BookOpen,      title: 'HR Policies',         href: '/hr-policies',         desc: 'Your staff handbook on demand. Leave, pay and disciplinary questions answered in any language.' },
+    { Icon: GraduationCap, title: 'Staff Training',      href: '/staff-training',      desc: 'Modules built from your own policies, delivered in the hub, with renewal reminders and tracking.' },
+    { Icon: ClipboardCheck,title: 'Care Audits',         href: '/care-audits',         desc: 'Guided, structured audits that score each section and produce an inspection-ready report.' },
+    { Icon: Shield,        title: 'CQC & Compliance',    href: '/cqc-compliance',      desc: 'Evidence that builds itself, plus regulation coverage showing exactly where your gaps are.' },
+    { Icon: HelpCircle,    title: 'CQC Staff Questions', href: '/cqc-staff-questions', desc: 'Inspector-style questions, answered by staff in their own words and scored by AI, with retry.' },
+    { Icon: MessageSquare, title: 'CQC Report Chat',     href: '/cqc-report-chat',     desc: 'Upload your inspection report and chat with it, cross-referenced against your own policies.' },
+    { Icon: ShieldAlert,   title: 'Business Continuity', href: '/business-continuity', desc: 'Make your business continuity information instantly queryable by every member of staff, on any shift.' },
+  ]
+  return (
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-content px-6">
+        <SectionLabel>Our Services</SectionLabel>
+        <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+          One platform for your whole care operation.
+        </h2>
+        <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          CareStream is far more than policy access. Training, audits, CQC preparation and your staff
+          handbook all run on the same engine, grounded in your own documents, and all in one hub your
+          team signs into once.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {services.map(({ Icon, title, href, desc }) => (
+            <Link
+              key={title}
+              href={href}
+              className="card-lift group flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-card transition-colors hover:border-teal/30"
+            >
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-light">
+                <Icon size={20} className="text-teal" />
+              </div>
+              <h3 className="mb-2 font-bold text-neutral-dark">{title}</h3>
+              <p className="mb-4 flex-1 text-sm leading-relaxed text-neutral-mid">{desc}</p>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-teal">
+                Learn more <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export const revalidate = 60
 
 // Code fallback. The live FAQs are managed in the platform Pages tab (home page),
 // stored on the site_pages row for "/". This list is used only if that is empty.
 const DEFAULT_HOME_FAQS: Faq[] = [
-  { question: 'What is CareStream?', answer: 'CareStream is a tool for UK care providers that lets every member of your team ask questions about your own policies and get a clear answer in seconds, by web chat, email or WhatsApp.' },
+  { question: 'What is CareStream?', answer: 'CareStream is a platform for UK care providers that lets every member of your team ask questions about your own policies, training and CQC preparation, and get a clear answer in seconds, in the hub or by email.' },
   { question: 'How does CareStream work?', answer: 'You upload your policies once. Your staff can then ask a question in plain language and receive an answer drawn from your own documents, with the source policy shown so they can check it.' },
   { question: 'Who is CareStream for?', answer: 'It is built for care homes, nursing homes, domiciliary care and other registered care services, and for everyone in the team from new starters to senior managers.' },
   { question: 'Can staff ask questions in their own language?', answer: 'Yes. Staff can ask in the language they are most comfortable with and receive the answer back in that same language, which is a great help for international teams.' },
-  { question: 'How do staff access CareStream?', answer: 'Staff can use it from any phone, tablet or computer through web chat, by email or on WhatsApp. There is nothing to download.' },
+  { question: 'How do staff access CareStream?', answer: 'Staff can use it from any phone, tablet or computer, in the hub or by email. The hub works in any browser and can be installed like an app, with a one-tap sign-in link and no password to remember.' },
   { question: 'Will the answers always match our policies?', answer: 'Yes. Answers are based only on the documents you upload, so the guidance staff receive is always your own. The source policy is shown with each answer.' },
   { question: 'Does CareStream help with CQC inspections?', answer: 'Yes. It records how your team engages with your policies and can produce a CQC Readiness Report, giving you helpful evidence to prepare for inspection.' },
   { question: 'Is our data kept private and secure?', answer: 'Yes. Your information is private to your organisation, is stored within the UK and EEA, and is never used to train AI models. A Data Processing Agreement is available to every subscriber.' },
@@ -1749,6 +1783,7 @@ export default async function HomePage() {
         <CareSettings />
         <ValueProposition />
         <TheSolution />
+        <OurServices />
         <GroupLevel />
         <FreeTrialBand />
         <OperateAtScale />

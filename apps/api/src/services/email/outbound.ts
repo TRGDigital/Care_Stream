@@ -159,6 +159,38 @@ export async function sendVerificationEmail(to: string, name: string, verificati
   })
 }
 
+// ─── New-account notification to the platform owner ─────────────────────────────
+// Sent whenever a new tenant registers. Recipient defaults to len@carestreamai.com
+// (override with PLATFORM_NOTIFY_EMAIL).
+export async function sendNewTenantNotification(opts: {
+  orgName: string; adminName: string; adminEmail: string; accountNumber: string; slug: string; planName?: string | null
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping new-tenant notification'); return }
+
+  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:13px;font-weight:600">${esc(v)}</td></tr>`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🎉 New CareStream account</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A new organisation has just registered on CareStreamAI.</p>
+    <table style="border-collapse:collapse;margin:0 0 22px">
+      ${row('Organisation', opts.orgName)}
+      ${row('Account number', opts.accountNumber)}
+      ${row('Plan', opts.planName ?? '—')}
+      ${row('Admin', opts.adminName)}
+      ${row('Admin email', opts.adminEmail)}
+      ${row('Slug', opts.slug)}
+    </table>
+    <p style="color:#9ca3af;font-size:12px;margin:0">Open the platform console → Clients to view the account.</p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to, from, subject: `New CareStream account: ${opts.orgName} (${opts.accountNumber})`, html })
+}
+
 // ─── Passwordless sign-in link (magic link) ───────────────────────────────────
 
 export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; link: string; expiresMins: number }): Promise<void> {

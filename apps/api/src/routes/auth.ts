@@ -11,7 +11,7 @@ import { siteUrl } from '../lib/urls'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
-import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail, sendNewTenantNotification } from '../services/email/outbound'
 import { createLoginLink, consumeLoginToken } from '../lib/login-tokens'
 
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
@@ -127,6 +127,17 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     await sendVerificationEmail(email, name, verificationUrl)
   } catch (e) {
     console.error('[register] Failed to send verification email:', e)
+  }
+
+  // Notify the platform owner of the new account.
+  try {
+    const plan = plan_id ? await (prisma as any).plan.findUnique({ where: { id: plan_id }, select: { name: true } }).catch(() => null) : null
+    await sendNewTenantNotification({
+      orgName: tenant.name, adminName: name, adminEmail: email,
+      accountNumber: tenant.account_number, slug: tenant.slug, planName: plan?.name ?? null,
+    })
+  } catch (e) {
+    console.error('[register] new-account notification failed:', e)
   }
 
   ok(res, { email_verification_required: true, email }, 201)

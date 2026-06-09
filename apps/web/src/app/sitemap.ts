@@ -38,9 +38,29 @@ const MARKETING: Entry[] = [
   { url: '/help',                                  changeFrequency: 'monthly', priority: 0.5 },
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// The per-module staff-training guide pages are data-driven, so pull their paths
+// from the API rather than hard-coding them. Falls back to none on error.
+async function trainingPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/seo-index`, { next: { revalidate: 3600 } })
+    if (res.ok) {
+      const pages = (await res.json())?.data?.pages ?? []
+      return (pages as Array<{ path?: string }>)
+        .filter((p) => p.path)
+        .map((p) => ({ url: p.path as string, changeFrequency: 'monthly' as const, priority: 0.7 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
-  return MARKETING.map(({ url, changeFrequency, priority }) => ({
+  const entries = [...MARKETING, ...(await trainingPages())]
+  return entries.map(({ url, changeFrequency, priority }) => ({
     url:             `${BASE}${url}`,
     lastModified:    now,
     changeFrequency,

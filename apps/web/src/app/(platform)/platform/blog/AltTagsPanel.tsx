@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Loader2, Check } from 'lucide-react'
+import { fetchTrainingSeoIndex, platformAssetUrl } from '@/lib/platform-api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -18,11 +19,22 @@ export function AltTagsPanel({ token }: { token: string }) {
     if (!token) return
     ;(async () => {
       try {
-        const res  = await fetch(`${API_URL}/admin/image-alts`, { headers: { Authorization: `Bearer ${token}` } })
+        const [res, seo] = await Promise.all([
+          fetch(`${API_URL}/admin/image-alts`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetchTrainingSeoIndex(),
+        ])
         const body = await res.json()
-        const imgs: ImageAlt[] = body?.data?.images ?? []
-        setImages(imgs)
-        setDrafts(Object.fromEntries(imgs.map(i => [i.src, i.alt])))
+        const dbImgs: ImageAlt[] = body?.data?.images ?? []
+        const haveSrc = new Set(dbImgs.map(i => i.src))
+        // Training module images (cover + section illustrations) as virtual rows —
+        // editing one creates its site_image_alts record. The suggested alt already
+        // shows live on the site, so a row is only "dirty" once you change it.
+        const virtual: ImageAlt[] = seo.images
+          .map(im => ({ id: '', src: platformAssetUrl(im.src) ?? im.src, alt: im.alt }))
+          .filter(im => !haveSrc.has(im.src))
+        const merged = [...dbImgs, ...virtual]
+        setImages(merged)
+        setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {
         setLoading(false)
       }

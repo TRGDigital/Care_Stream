@@ -8,6 +8,7 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
+import { pageMetadata } from '@/lib/page-meta'
 
 export const revalidate = 60
 
@@ -86,13 +87,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) return { title: 'Staff Training | CareStreamAI' }
-  const title = `${m.title} Training for Care Staff`
+  // Module-derived fallback; overridden by the Pages tab (site_pages) when set.
+  const title = `${m.title} Training for Care Staff | CareStreamAI`
   const description = careSetting(m.summary ?? m.description) || `${m.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it in any language.`
-  return {
-    title,
-    description,
-    openGraph: { title: `${title} | CareStreamAI`, description, url: `https://carestreamai.com/staff-training/${m.slug}` },
-  }
+  return pageMetadata(`/staff-training/${slug}`, { title, description })
 }
 
 export default async function TrainingModulePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -221,7 +219,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
                       <div className={flip ? 'lg:order-1' : ''}>
                         {s.image_url ? (
                           <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-gray-100">
-                            <SiteImage src={`${API_URL}${s.image_url}`} alt={`${s.heading} — ${m.title} training`} className="aspect-[4/3] w-full object-cover" />
+                            <SiteImage src={`${API_URL}${s.image_url}`} alt={`${m.title} training: ${s.heading}`} className="aspect-[4/3] w-full object-cover" />
                           </div>
                         ) : (
                           <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-light ring-1 ring-gray-100">

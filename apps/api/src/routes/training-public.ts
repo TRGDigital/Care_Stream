@@ -7,6 +7,21 @@ import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
+// The generated module content uses a care-home voice ("our home"). CareStream
+// serves every kind of CQC-regulated service, so the public-facing defaults say
+// "care setting". Mirrors the same helper on the marketing page.
+const careSetting = (input?: string | null): string =>
+  (input ?? '')
+    .replace(/\bat our home\b/gi, 'at the care setting')
+    .replace(/\bcare homes\b/gi, 'care settings')
+    .replace(/\bcare home\b/gi, 'care setting')
+    .replace(/\bnursing homes\b/gi, 'care settings')
+    .replace(/\bnursing home\b/gi, 'care setting')
+    .replace(/\bour home\b/gi, 'the care setting')
+    .replace(/\bthe home\b/gi, 'the care setting')
+    .replace(/\bthis home\b/gi, 'this care setting')
+    .replace(/\byour home\b/gi, 'your care setting')
+
 const IMAGE_CONTENT_TYPES: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
 }
@@ -138,6 +153,78 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       standards,
       illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
     } } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
+
+// Public SEO index for the standard training module pages. Feeds the platform
+// console (Blog → Pages and → Alt Tags) so meta and image alt text are editable,
+// and the marketing sitemap. Returns one page per built module, plus every image
+// (cover + section illustrations) with a suggested default alt. Image `src` is
+// the API-relative path; the console/site prefix it with NEXT_PUBLIC_API_URL to
+// match the <SiteImage> key. No tenant data, so no auth needed.
+publicTrainingRouter.get('/seo-index', async (_req: Request, res: Response) => {
+  try {
+    const [topics, modules] = await Promise.all([
+      (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
+      (prisma as any).trainingModule.findMany({
+        where:   { tenant_id: null, source: 'ai_generated' },
+        select:  { topic_id: true, approved: true, description: true, illustration_key: true, learning_content: true },
+        orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
+      }),
+    ])
+    // Group modules per topic; the first per group is the best (approved, recent).
+    const modsByTopic = new Map<string, any[]>()
+    for (const m of (modules as any[])) {
+      if (!m.topic_id) continue
+      if (!modsByTopic.has(m.topic_id)) modsByTopic.set(m.topic_id, [])
+      modsByTopic.get(m.topic_id)!.push(m)
+    }
+
+    const pages: Array<{ path: string; title: string; description: string }> = []
+    const images: Array<{ src: string; alt: string }> = []
+    const seenSrc = new Set<string>()
+    const pushImg = (key: string | null | undefined, alt: string) => {
+      if (!key) return
+      const src = illustrationUrl(key)
+      if (!src || seenSrc.has(src)) return
+      seenSrc.add(src)
+      images.push({ src, alt })
+    }
+
+    for (const t of (topics as any[])) {
+      const mods = modsByTopic.get(t.id) ?? []
+      if (!mods.length) continue                       // only built modules get a public page
+      const best = mods[0]
+      const lc = (best.learning_content ?? {}) as any
+      const slug = slugify(t.title)
+      const summary = careSetting(typeof lc.summary === 'string' ? lc.summary : (best.description ?? ''))
+      pages.push({
+        path:        `/staff-training/${slug}`,
+        title:       `${t.title} Training for Care Staff | CareStreamAI`,
+        description: summary || `${t.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it in any language.`,
+      })
+
+      // Cover (any version that has one), then section illustrations by index.
+      const coverMod = mods.find(x => x.illustration_key)
+      pushImg(coverMod?.illustration_key, careSetting(`${t.title} training`))
+
+      const headings: string[] = Array.isArray(lc.sections) ? lc.sections.map((s: any) => String(s?.heading ?? '')) : []
+      const imgByIdx = new Map<number, string>()
+      for (const mod of mods) {
+        const secs = (mod.learning_content as any)?.sections
+        if (!Array.isArray(secs)) continue
+        secs.forEach((s: any, i: number) => { if (s?.image_key && !imgByIdx.has(i)) imgByIdx.set(i, s.image_key) })
+      }
+      for (const [i, key] of imgByIdx) {
+        const h = careSetting(headings[i] ?? '')
+        pushImg(key, h ? `${t.title} training: ${h}` : `${t.title} training illustration`)
+      }
+    }
+
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+    res.json({ data: { pages, images } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })
   }

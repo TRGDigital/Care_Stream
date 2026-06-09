@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
-  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck,
+  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, ArrowRight,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
@@ -12,6 +12,7 @@ export const revalidate = 60
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 type CatalogueTopic = {
+  slug: string
   title: string
   group_key: string
   frequency: string
@@ -345,10 +346,14 @@ export default async function StaffTrainingPage() {
                   <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-teal">{catalogue.groups[g] ?? g}</h3>
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {catalogue.topics.filter((t) => t.group_key === g).map((t) => (
-                      <div key={t.title} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
+                      <Link
+                        key={t.slug}
+                        href={`/staff-training/${t.slug}`}
+                        className="card-lift group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card transition hover:border-teal/40"
+                      >
                         <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
                           {t.illustration_url ? (
-                            <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover" />
+                            <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center bg-teal-gradient">
                               <GraduationCap size={40} className="text-white/80" />
@@ -359,15 +364,18 @@ export default async function StaffTrainingPage() {
                           </span>
                         </div>
                         <div className="flex flex-1 flex-col p-5">
-                          <h4 className="mb-2 font-bold leading-snug text-neutral-dark">{t.title}</h4>
+                          <h4 className="mb-2 font-bold leading-snug text-neutral-dark group-hover:text-teal">{t.title}</h4>
                           <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">
                             {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
                           </p>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
-                            {t.requires_practical ? <span>Practical sign-off</span> : null}
+                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-neutral-mid">
+                            {t.requires_practical ? <span>Practical sign-off</span> : <span />}
+                            <span className="inline-flex items-center gap-1 font-semibold text-teal">
+                              Read guide <ArrowRight size={13} className="transition group-hover:translate-x-0.5" />
+                            </span>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>

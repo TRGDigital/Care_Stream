@@ -9,6 +9,26 @@ export function platformAssetUrl(path?: string | null): string | null {
   return /^https?:\/\//.test(path) ? path : `${API_URL}${path}`
 }
 
+export interface TrainingSeoIndex {
+  pages:  Array<{ path: string; title: string; description: string }>
+  images: Array<{ src: string; alt: string }>   // src is API-relative
+}
+
+// Public (no-auth) index of the standard training module pages and their images,
+// used to populate the Pages and Alt Tags tabs with editable rows.
+export async function fetchTrainingSeoIndex(): Promise<TrainingSeoIndex> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/seo-index`)
+    if (res.ok) {
+      const body = await res.json()
+      return { pages: body?.data?.pages ?? [], images: body?.data?.images ?? [] }
+    }
+  } catch {
+    // ignore — tabs just show the existing entries
+  }
+  return { pages: [], images: [] }
+}
+
 const TOKEN_KEY = 'platform_admin_token'
 
 export function getPlatformToken(): string | null {

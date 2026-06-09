@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient, uploadBlogImage, type BlogAuthor, type BlogPost, type SitePage } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
@@ -991,6 +991,9 @@ export default function BlogPage() {
   const [savingPage,  setSavingPage]  = useState(false)
   const [pageError,   setPageError]   = useState('')
   const [pageSearch,  setPageSearch]  = useState('')
+  // Data-driven staff-training module pages (from the public SEO index), shown as
+  // editable rows alongside the coded pages.
+  const [trainingPages, setTrainingPages] = useState<Array<{ path: string; title: string; description: string }>>([])
   const pageEditRef = useRef<HTMLDivElement>(null)
 
   // When a page is opened for editing (including from the Footer Links tab),
@@ -1005,8 +1008,8 @@ export default function BlogPage() {
   useEffect(() => {
     if (!token) return
     const api = createPlatformClient(token)
-    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] }))])
-      .then(([p, a, pg]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages) })
+    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex()])
+      .then(([p, a, pg, seo]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
@@ -1143,7 +1146,19 @@ export default function BlogPage() {
 
   // Extra DB pages not in DEFAULT_PAGES
   const extraPages = pages.filter(p => !DEFAULT_PAGES.find(d => d.path === p.path))
-  const allPages   = [...mergedPages, ...extraPages]
+  const codedAndDbPages = [...mergedPages, ...extraPages]
+
+  // Data-driven training module pages that don't yet have a DB record — shown as
+  // editable virtual rows; editing one creates its site_pages record (upsert).
+  const trainingVirtual = trainingPages
+    .filter(tp => !codedAndDbPages.find(p => p.path === tp.path))
+    .map(tp => ({
+      id: '', path: tp.path, title: tp.title, description: tp.description,
+      og_title: null, og_description: null, og_image_url: null,
+      is_footer_page: false, footer_group: null, footer_label: null, footer_sort: 0,
+      page_type: 'marketing', status: 'published', created_at: '', updated_at: '',
+    } as SitePage))
+  const allPages = [...codedAndDbPages, ...trainingVirtual]
 
   const filteredPages = pageSearch
     ? allPages.filter(p => p.path.includes(pageSearch.toLowerCase()) || p.title.toLowerCase().includes(pageSearch.toLowerCase()))

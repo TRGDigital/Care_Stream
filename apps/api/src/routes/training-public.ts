@@ -4,6 +4,9 @@ import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 
+const slugify = (s: string): string =>
+  s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
 const IMAGE_CONTENT_TYPES: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
 }
@@ -63,6 +66,7 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
       const txt   = textByTopic.get(t.id)
       const cover = coverByTopic.get(t.id)
       return {
+        slug:               slugify(t.title),
         title:              t.title,
         group_key:          t.group_key,
         frequency:          txt?.frequency ?? t.default_frequency,
@@ -75,6 +79,47 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
       }
     })
     res.json({ data: { groups: TOPIC_GROUP_LABELS, topics: items } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
+
+// Public detail for one standard training subject, for the per-module marketing
+// pages. Returns the high-level outline only (summary, outcomes, key points,
+// section headings, mapped standards) — never the full lesson text.
+publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.params.slug ?? '')
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true } })
+    const topic = (topics as any[]).find(t => slugify(t.title) === slug)
+    if (!topic) { res.status(404).json({ error: 'not found' }); return }
+
+    const modules = await (prisma as any).trainingModule.findMany({
+      where:   { tenant_id: null, source: 'ai_generated', topic_id: topic.id },
+      select:  { approved: true, description: true, frequency: true, illustration_key: true, learning_content: true, standards: true },
+      orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
+    })
+    const m = (modules as any[])[0]
+    const cover = (modules as any[]).find(x => x.illustration_key)
+    const lc = (m?.learning_content ?? {}) as any
+    const sections = Array.isArray(lc.sections) ? lc.sections.map((s: any) => s?.heading).filter(Boolean) : []
+    const standards = Array.isArray(m?.standards) ? (m.standards as any[]).map(s => s?.label).filter(Boolean) : []
+
+    res.json({ data: { module: {
+      slug,
+      title:              topic.title,
+      group_key:          topic.group_key,
+      group_label:        TOPIC_GROUP_LABELS[topic.group_key] ?? topic.group_key,
+      frequency:          m?.frequency ?? topic.default_frequency,
+      requires_practical: topic.requires_practical,
+      description:        m?.description ?? null,
+      summary:            typeof lc.summary === 'string' ? lc.summary : null,
+      outcomes:           Array.isArray(lc.outcomes) ? lc.outcomes.map(String).slice(0, 6) : [],
+      key_points:         Array.isArray(lc.key_points) ? lc.key_points.map(String).slice(0, 8) : [],
+      sections,
+      standards,
+      illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
+    } } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })
   }

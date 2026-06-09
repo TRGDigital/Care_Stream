@@ -5,6 +5,7 @@ import {
   Smartphone, GraduationCap, RefreshCw, Calendar, Bell,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { Mockup, MOCKUPS } from '@/components/marketing/mockup'
 import { pageMetadata } from '@/lib/page-meta'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
@@ -253,28 +254,35 @@ export default function HowItWorksPage() {
 
             {/* The hub (primary) */}
             <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card lg:col-span-2">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
-                  <Smartphone size={22} className="text-teal" />
+              <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+                <div>
+                  <div className="mb-5 flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
+                      <Smartphone size={22} className="text-teal" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-dark">The hub app</p>
+                      <p className="text-xs text-neutral-mid">On any smartphone, plus desktop browser</p>
+                    </div>
+                  </div>
+                  <p className="mb-5 leading-relaxed text-neutral-mid">
+                    The hub is the one place for your whole team. Staff open it to ask a policy question, read a procedure, or complete a piece of training, all in the language they think in. The chat is conversational, so they can ask follow-ups within the same session and the system keeps full context. Reminders and new training arrive as notifications, so nothing gets missed.
+                  </p>
+                  <ul className="space-y-2 text-sm text-neutral-mid">
+                    {[
+                      'Policies, training and answers in one place',
+                      'Push notifications for reminders and new training',
+                      'Conversational follow-ups with full session context',
+                      'Voice input for hands-free questions mid-task',
+                      'Suggested follow-up questions after each response',
+                      'Works on any smartphone or desktop browser',
+                    ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
+                  </ul>
                 </div>
                 <div>
-                  <p className="font-bold text-neutral-dark">The hub app</p>
-                  <p className="text-xs text-neutral-mid">On any smartphone, plus desktop browser</p>
+                  <Mockup {...MOCKUPS['mockup-01']} />
                 </div>
               </div>
-              <p className="mb-4 max-w-3xl leading-relaxed text-neutral-mid">
-                The hub is the one place for your whole team. Staff open it to ask a policy question, read a procedure, or complete a piece of training, all in the language they think in. The chat is conversational, so they can ask follow-ups within the same session and the system keeps full context. Reminders and new training arrive as notifications, so nothing gets missed.
-              </p>
-              <ul className="grid gap-2 text-sm text-neutral-mid sm:grid-cols-2">
-                {[
-                  'Policies, training and answers in one place',
-                  'Push notifications for reminders and new training',
-                  'Conversational follow-ups with full session context',
-                  'Voice input for hands-free questions mid-task',
-                  'Suggested follow-up questions after each response',
-                  'Works on any smartphone or desktop browser',
-                ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
-              </ul>
             </div>
 
             {/* Email */}

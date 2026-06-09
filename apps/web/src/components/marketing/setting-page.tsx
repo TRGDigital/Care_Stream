@@ -130,14 +130,18 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-hero-gradient">
-        <div className="absolute inset-0 dot-mesh" />
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
-        />
+      {/* z-10 + no clip on the section so the floating mock-up can overflow into
+          the white block below; decorations are clipped in their own layer. */}
+      <section className="relative z-10 bg-hero-gradient">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 dot-mesh" />
+          <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
+          <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-16"
+            style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
+          />
+        </div>
         <div className="relative mx-auto max-w-content px-6 pb-24 pt-20 md:pb-32 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
@@ -157,9 +161,10 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
                   <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10">
                     <SiteImage src={image} alt={`CareStream for ${c.label}`} className="aspect-[4/3] w-full object-cover lg:aspect-auto lg:h-[560px]" />
                   </div>
-                  {/* Scaled down (not just narrowed) so the mock-up stays compact
-                      without its text re-wrapping taller. Anchored bottom-left. */}
-                  <div className="mt-6 flex justify-center lg:absolute lg:-bottom-3 lg:-left-3 lg:mt-0 lg:w-[300px] lg:origin-bottom-left lg:scale-[0.78] lg:justify-start">
+                  {/* Scaled down (not just narrowed) so the text doesn't re-wrap
+                      taller, and dropped low so it clears most of the photo with
+                      its tail spilling into the white block below. */}
+                  <div className="mt-6 flex justify-center lg:absolute lg:-bottom-40 lg:-left-3 lg:mt-0 lg:w-[300px] lg:origin-bottom-left lg:scale-[0.78] lg:justify-start">
                     <HubMockup m={c.mockup} />
                   </div>
                 </>

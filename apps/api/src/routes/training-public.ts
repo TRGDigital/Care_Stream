@@ -41,36 +41,36 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         where:   { tenant_id: null, is_active: true },
         orderBy: { sort_order: 'asc' },
       }),
-      // Include drafts as well as approved: the cover image is generic topic
-      // artwork, so we surface it even before a module is formally approved.
-      // Descriptions and meta, however, only come from an approved module.
+      // Include drafts as well as approved: these are the platform's own standard
+      // library, so we surface the generated cover, description and meta even
+      // before a module is formally approved. Approved versions are preferred.
       (prisma as any).trainingModule.findMany({
-        where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, topic_id: true, approved: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
+        where:   { tenant_id: null, source: 'ai_generated' },
+        select:  { id: true, topic_id: true, approved: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
+        orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
       }),
     ])
-    const coverByTopic = new Map<string, any>()     // best cover per topic (prefer approved)
-    const approvedByTopic = new Map<string, any>()  // approved module per topic (for text/meta)
+    // First module per topic (approved preferred, then most recent) for text and
+    // meta; first module that has a cover (approved preferred) for the image.
+    const textByTopic = new Map<string, any>()
+    const coverByTopic = new Map<string, any>()
     for (const m of (modules as any[])) {
       if (!m.topic_id) continue
-      if (m.illustration_key) {
-        const ex = coverByTopic.get(m.topic_id)
-        if (!ex || (m.approved && !ex.approved)) coverByTopic.set(m.topic_id, m)
-      }
-      if (m.approved && !approvedByTopic.has(m.topic_id)) approvedByTopic.set(m.topic_id, m)
+      if (!textByTopic.has(m.topic_id)) textByTopic.set(m.topic_id, m)
+      if (m.illustration_key && !coverByTopic.has(m.topic_id)) coverByTopic.set(m.topic_id, m)
     }
     const items = (topics as any[]).map(t => {
+      const txt   = textByTopic.get(t.id)
       const cover = coverByTopic.get(t.id)
-      const appr  = approvedByTopic.get(t.id)
       return {
         title:              t.title,
         group_key:          t.group_key,
-        frequency:          appr?.frequency ?? t.default_frequency,
+        frequency:          txt?.frequency ?? t.default_frequency,
         requires_practical: t.requires_practical,
-        built:              !!appr,
-        description:        appr?.description ?? null,
-        duration_minutes:   appr?.duration_minutes ?? null,
-        pass_mark:          appr?.pass_mark ?? null,
+        built:              !!txt,
+        description:        txt?.description ?? null,
+        duration_minutes:   txt?.duration_minutes ?? null,
+        pass_mark:          txt?.pass_mark ?? null,
         illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
       }
     })

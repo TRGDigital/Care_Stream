@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
-  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, Clock,
+  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
@@ -364,9 +364,6 @@ export default async function StaffTrainingPage() {
                             {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
                           </p>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
-                            {t.duration_minutes ? (
-                              <span className="flex items-center gap-1"><Clock size={12} /> {(t.duration_minutes / 60).toFixed(1)} hours</span>
-                            ) : null}
                             {t.pass_mark ? <span>Pass mark {t.pass_mark}%</span> : null}
                             {t.requires_practical ? <span>Practical sign-off</span> : null}
                           </div>

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react'
+import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle, Check, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -47,10 +47,23 @@ export default function BillingPage() {
 
   const [summary,  setSummary]  = useState<any>(null)
   const [invoices, setInvoices] = useState<any[]>([])
+  const [plans,    setPlans]    = useState<any[]>([])
   const [loading,  setLoading]  = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [error,    setError]    = useState('')
   const [portalError, setPortalError] = useState('')
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
+  const [banner, setBanner] = useState<'success' | 'cancelled' | null>(null)
+
+  // Post-checkout banner (read from the URL, client-only to avoid Suspense needs).
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('checkout')
+    if (p === 'success' || p === 'cancelled') {
+      setBanner(p)
+      window.history.replaceState({}, '', '/billing')
+    }
+  }, [])
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
@@ -62,11 +75,22 @@ export default function BillingPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    Promise.all([api.billing.summary(), api.billing.invoices()])
-      .then(([s, inv]) => { setSummary(s); setInvoices(inv.invoices); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
+    Promise.all([api.billing.summary(), api.billing.invoices(), api.billing.plans()])
+      .then(([s, inv, pl]) => { setSummary(s); setInvoices(inv.invoices); setPlans(pl.plans); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
       .catch((e: any) => setError(e.message ?? 'Failed to load billing information.'))
       .finally(() => setLoading(false))
   }, [session?.accessToken])
+
+  async function subscribe(planId: string) {
+    if (!session?.accessToken) return
+    setCheckoutError(''); setCheckoutPlan(planId)
+    try {
+      const { url } = await createApiClient(session.accessToken).billing.checkout(planId)
+      window.location.href = url   // hand off to Stripe-hosted Checkout
+    } catch (e: any) {
+      setCheckoutError(e.message ?? 'Could not start checkout.'); setCheckoutPlan(null)
+    }
+  }
 
   async function openPortal() {
     if (!session?.accessToken) return
@@ -84,6 +108,18 @@ export default function BillingPage() {
 
       {error && (
         <div className="mb-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
+      {banner === 'success' && (
+        <div className="mb-6 flex items-start gap-2 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
+          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          <span>Thank you — your subscription is being activated. It may take a few seconds to appear below.</span>
+        </div>
+      )}
+      {banner === 'cancelled' && (
+        <div className="mb-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Checkout was cancelled — you have not been charged. You can choose a plan again below whenever you’re ready.
+        </div>
       )}
 
       {/* ── Plan summary ────────────────────────────────────────────────────── */}
@@ -162,6 +198,65 @@ export default function BillingPage() {
           ) : null}
         </div>
       </div>
+
+      {/* ── Plan chooser (shown until a subscription is active) ──────────────── */}
+      {!loading && summary && summary.subscription_status !== 'active' && plans.length > 0 && (
+        <div className="mb-6 rounded-card bg-white shadow-card">
+          <div className="border-b border-gray-100 px-6 py-4">
+            <h2 className="text-sm font-semibold text-neutral-dark">
+              {summary.has_stripe ? 'Reactivate your subscription' : 'Choose a plan to go live'}
+            </h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">
+              Secure payment is handled by Stripe — we never see or store your card details.
+            </p>
+          </div>
+          <div className="px-6 py-5">
+            {checkoutError && (
+              <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{checkoutError}</p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {plans.map((p: any) => {
+                const isCurrent = summary.plan_name === p.name
+                const feats: string[] = [
+                  `${p.monthly_query_limit?.toLocaleString() ?? 'Unlimited'} queries / month`,
+                  `${p.max_staff_users ?? 'Unlimited'} staff`,
+                  `${p.max_policies ?? 'Unlimited'} policies`,
+                  ...(p.has_cqc_report ? ['CQC reports'] : []),
+                  ...(p.has_gap_detection ? ['Gap analysis'] : []),
+                  ...(p.has_advanced_analytics ? ['Advanced analytics'] : []),
+                ]
+                return (
+                  <div key={p.id} className={clsx('rounded-lg border p-5', isCurrent ? 'border-teal ring-1 ring-teal/30' : 'border-gray-200')}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-neutral-dark">{p.name}</h3>
+                      {isCurrent && <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-medium text-teal">Your plan</span>}
+                    </div>
+                    <p className="mb-4">
+                      <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_monthly_pence)}</span>
+                      <span className="text-sm text-neutral-mid"> / month</span>
+                    </p>
+                    <ul className="mb-5 space-y-1.5">
+                      {feats.map((f, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-neutral-dark">
+                          <Check size={14} className="shrink-0 text-teal" />{f}
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      onClick={() => subscribe(p.id)}
+                      disabled={!!checkoutPlan}
+                      className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
+                    >
+                      {checkoutPlan === p.id ? <Loader2 size={14} className="animate-spin" /> : null}
+                      {checkoutPlan === p.id ? 'Redirecting to Stripe…' : 'Subscribe'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Invoice history ──────────────────────────────────────────────────── */}
       <div className="rounded-card bg-white shadow-card">

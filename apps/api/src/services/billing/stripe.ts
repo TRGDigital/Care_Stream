@@ -1,4 +1,6 @@
-// §10.6 — Stripe integration: Customer Portal + webhook event handling.
+// §10.6 — Stripe integration: Checkout, Customer Portal, live summary/invoices,
+// and webhook event handling. Card data never touches our servers — all payment
+// capture happens on Stripe-hosted Checkout / Portal (PCI SAQ A).
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
@@ -12,23 +14,145 @@ function getStripe(): Stripe {
   return _stripe
 }
 
-// ─── Customer Portal ──────────────────────────────────────────────────────────
+// First configured WEB_URL origin (the env may hold a comma-separated CORS allowlist).
+function webUrl(): string {
+  return (process.env.WEB_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '')
+}
 
+// Map a Stripe subscription status → our tenant.subscription_status vocabulary.
+function mapStatus(s: Stripe.Subscription.Status): string {
+  switch (s) {
+    case 'active':             return 'active'
+    case 'trialing':           return 'trialling'
+    case 'past_due':           return 'past_due'
+    case 'unpaid':             return 'past_due'
+    case 'canceled':           return 'cancelled'
+    case 'incomplete_expired': return 'cancelled'
+    default:                   return 'trialling' // incomplete / paused
+  }
+}
+
+// ─── Plan → Stripe price (lazy create) ────────────────────────────────────────
+// Returns the recurring monthly price id for a plan, creating the Stripe Product
+// + Price on first use and persisting the id. Avoids any manual dashboard setup.
+async function ensurePlanPrice(plan: any): Promise<string> {
+  if (plan.stripe_price_id_monthly) return plan.stripe_price_id_monthly
+  const stripe = getStripe()
+  const product = await stripe.products.create({
+    name:     `CareStreamAI — ${plan.name}`,
+    metadata: { plan_id: plan.id },
+  })
+  const price = await stripe.prices.create({
+    product:    product.id,
+    currency:   'gbp',
+    unit_amount: plan.price_monthly_pence,
+    recurring:  { interval: 'month' },
+    metadata:   { plan_id: plan.id },
+  })
+  await (prisma as any).plan.update({ where: { id: plan.id }, data: { stripe_price_id_monthly: price.id } })
+  return price.id
+}
+
+// ─── Checkout ─────────────────────────────────────────────────────────────────
+// Creates a hosted Checkout Session for a tenant to subscribe to a plan.
+export async function createCheckoutSession(tenantId: string, planId: string): Promise<string> {
+  const stripe = getStripe()
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true } })
+  if (!tenant) throw new Error('Tenant not found')
+  const plan = await (prisma as any).plan.findUnique({ where: { id: planId } })
+  if (!plan || !plan.is_active) throw new Error('Plan not available')
+
+  const priceId = await ensurePlanPrice(plan)
+  const admin = await (prisma as any).user.findFirst({
+    where:   { tenant_id: tenantId, role: 'admin', is_active: true },
+    orderBy: { created_at: 'asc' }, select: { email: true },
+  })
+
+  const session = await stripe.checkout.sessions.create({
+    mode:        'subscription',
+    line_items:  [{ price: priceId, quantity: 1 }],
+    ...(tenant.stripe_customer_id
+      ? { customer: tenant.stripe_customer_id }
+      : { customer_email: admin?.email, customer_creation: 'always' }),
+    client_reference_id:   tenantId,
+    metadata:              { tenant_id: tenantId, plan_id: planId },
+    subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId } },
+    allow_promotion_codes: true,
+    billing_address_collection: 'required',
+    success_url: `${webUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/billing?checkout=cancelled`,
+  })
+  if (!session.url) throw new Error('Stripe did not return a checkout URL')
+  return session.url
+}
+
+// ─── Customer Portal ──────────────────────────────────────────────────────────
 export async function createPortalSession(stripeCustomerId: string): Promise<string> {
   const session = await getStripe().billingPortal.sessions.create({
     customer:   stripeCustomerId,
-    return_url: `${process.env.WEB_URL ?? 'http://localhost:3000'}/billing`,
+    return_url: `${webUrl()}/billing`,
   })
   return session.url
 }
 
-// ─── Webhook handler ──────────────────────────────────────────────────────────
-// Events handled:
-//   checkout.session.completed   → set stripe_customer_id + mark active
-//   invoice.paid                 → subscription_status = 'active'
-//   invoice.payment_failed       → subscription_status = 'past_due'
-//   customer.subscription.deleted → subscription_status = 'cancelled'
+// ─── Live billing summary (Stripe subscription fields) ────────────────────────
+export interface StripeSubInfo {
+  next_billing_date:    string | null
+  current_period_start: string | null
+  current_period_end:   string | null
+  billing_interval:     string | null
+  cancel_at_period_end: boolean
+}
 
+export async function getSubscriptionInfo(tenant: { stripe_customer_id: string | null; stripe_subscription_id: string | null }): Promise<StripeSubInfo | null> {
+  if (!tenant.stripe_customer_id) return null
+  const stripe = getStripe()
+  try {
+    let sub: Stripe.Subscription | null = null
+    if (tenant.stripe_subscription_id) {
+      sub = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id).catch(() => null)
+    }
+    if (!sub) {
+      const list = await stripe.subscriptions.list({ customer: tenant.stripe_customer_id, status: 'all', limit: 1 })
+      sub = list.data[0] ?? null
+    }
+    if (!sub) return null
+    const interval = sub.items.data[0]?.price?.recurring?.interval ?? null
+    const iso = (n: number | null | undefined) => (n ? new Date(n * 1000).toISOString() : null)
+    return {
+      next_billing_date:    iso((sub as any).current_period_end),
+      current_period_start: iso((sub as any).current_period_start),
+      current_period_end:   iso((sub as any).current_period_end),
+      billing_interval:     interval,
+      cancel_at_period_end: !!sub.cancel_at_period_end,
+    }
+  } catch (e: any) {
+    console.error('[stripe] getSubscriptionInfo error:', e?.message)
+    return null
+  }
+}
+
+// ─── Invoices ─────────────────────────────────────────────────────────────────
+export async function listInvoices(stripeCustomerId: string) {
+  const stripe = getStripe()
+  const res = await stripe.invoices.list({ customer: stripeCustomerId, limit: 24 })
+  return res.data
+    .filter(inv => inv.status !== 'draft')
+    .map(inv => ({
+      id:           inv.id,
+      date:         new Date(inv.created * 1000).toISOString(),
+      description:  inv.lines.data[0]?.description ?? 'CareStreamAI subscription',
+      amount_pence: inv.amount_paid || inv.amount_due,
+      status:       inv.status ?? 'open',
+      pdf_url:      inv.invoice_pdf ?? null,
+      hosted_url:   inv.hosted_invoice_url ?? null,
+    }))
+}
+
+// ─── Webhook handler ──────────────────────────────────────────────────────────
+// Subscribe these events on the live endpoint:
+//   checkout.session.completed, customer.subscription.created/updated/deleted,
+//   invoice.paid, invoice.payment_failed
 export async function handleWebhook(payload: Buffer, signature: string): Promise<void> {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET is not configured')
@@ -38,17 +162,47 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
-      const tenantId = session.metadata?.tenant_id
+      const tenantId = session.metadata?.tenant_id || session.client_reference_id || undefined
       if (tenantId && session.customer) {
         await (prisma as any).tenant.update({
           where: { id: tenantId },
           data: {
-            stripe_customer_id:  String(session.customer),
-            subscription_status: 'active',
+            stripe_customer_id:     String(session.customer),
+            stripe_subscription_id: session.subscription ? String(session.subscription) : undefined,
+            subscription_status:    'active',
+            ...(session.metadata?.plan_id ? { plan_id: session.metadata.plan_id } : {}),
           },
         })
         console.log(`[stripe] checkout.session.completed: tenant=${tenantId}`)
       }
+      break
+    }
+
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as Stripe.Subscription
+      const tenantId = sub.metadata?.tenant_id
+      const where = tenantId ? { id: tenantId } : { stripe_customer_id: String(sub.customer) }
+      await (prisma as any).tenant.updateMany({
+        where,
+        data: {
+          stripe_customer_id:     String(sub.customer),
+          stripe_subscription_id: sub.id,
+          subscription_status:    mapStatus(sub.status),
+          ...(sub.metadata?.plan_id ? { plan_id: sub.metadata.plan_id } : {}),
+        },
+      })
+      console.log(`[stripe] ${event.type}: customer=${sub.customer} status=${sub.status}`)
+      break
+    }
+
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as Stripe.Subscription
+      await (prisma as any).tenant.updateMany({
+        where: { stripe_customer_id: String(sub.customer) },
+        data:  { subscription_status: 'cancelled' },
+      })
+      console.log(`[stripe] subscription.deleted: customer=${sub.customer}`)
       break
     }
 
@@ -75,20 +229,7 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
       break
     }
 
-    case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription
-      if (sub.customer) {
-        await (prisma as any).tenant.updateMany({
-          where: { stripe_customer_id: String(sub.customer) },
-          data:  { subscription_status: 'cancelled' },
-        })
-        console.log(`[stripe] subscription.deleted: customer=${sub.customer}`)
-      }
-      break
-    }
-
     default:
-      // Silently ignore event types we don't handle
-      break
+      break // ignore unhandled event types
   }
 }

@@ -163,6 +163,7 @@ model Tenant {
   slug                String             @unique   // e.g. sunrise-care
   email_domain        String             @unique   // inbound: policies@{slug}.carestreamai.co.uk
   stripe_customer_id  String?            @unique
+  stripe_subscription_id String?                              // active Stripe subscription (set via checkout/webhook)
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   plan_id             String?
   branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4

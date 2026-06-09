@@ -183,6 +183,7 @@ export function createApiClient(token: string) {
         current_period_start: string | null
         current_period_end:   string | null
         billing_interval:     string | null
+        cancel_at_period_end?: boolean
       }>('/billing/summary', token),
       invoices: () => apiFetch<{ invoices: Array<{
         id:           string
@@ -193,6 +194,14 @@ export function createApiClient(token: string) {
         pdf_url:      string | null
         hosted_url:   string | null
       }> }>('/billing/invoices', token),
+      plans: () => apiFetch<{ plans: Array<{
+        id: string; name: string; price_monthly_pence: number; monthly_query_limit: number
+        max_policies: number | null; max_staff_users: number | null; max_handbooks: number | null
+        max_manual_knowledge_entries: number | null; monthly_ai_credit_limit: number | null
+        has_advanced_analytics: boolean; has_cqc_report: boolean; has_gap_detection: boolean
+      }> }>('/billing/plans', token),
+      checkout: (plan_id: string) =>
+        apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id }) }),
     },
 
     settings: {

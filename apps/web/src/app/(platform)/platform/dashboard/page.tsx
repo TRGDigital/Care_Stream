@@ -2203,10 +2203,27 @@ function SystemReference() {
             <p className="font-semibold text-neutral-dark mb-1">Other</p>
             <RefRow label="JWT_SECRET"              value="Access token signing (15-min expiry)" />
             <RefRow label="JWT_REFRESH_SECRET"      value="Refresh token signing (7-day expiry)" />
-            <RefRow label="STRIPE_SECRET_KEY"       value="Subscription billing" />
+            <RefRow label="STRIPE_SECRET_KEY"       value="Subscription billing (use sk_live_… in production)" />
+            <RefRow label="STRIPE_WEBHOOK_SECRET"   value="whsec_… for the LIVE webhook endpoint — see Billing & Subscriptions section" />
             <RefRow label="REDIS_HOST / PORT"       value="BullMQ job queue" />
             <RefRow label="AWS_ACCESS_KEY_ID"       value="S3 file storage (eu-west-2)" />
           </div>
+        </div>
+      </RefSection>
+
+      {/* Billing & Subscriptions */}
+      <RefSection icon={CreditCard} title="Billing & Subscriptions">
+        <p className="leading-relaxed text-neutral-mid">
+          Stripe-hosted Checkout + Customer Portal. Card data never touches our servers (PCI SAQ A).
+          Tenant admins subscribe from <code className="text-xs bg-gray-100 px-1 rounded">/billing</code>.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Subscribe flow"   value="POST /billing/checkout (admin only) → creates a hosted Stripe Checkout Session (mode: subscription) for the chosen plan and redirects. On first use it lazily creates the Stripe Product + recurring GBP Price for the plan and stores plans.stripe_price_id_monthly — no manual dashboard price setup needed." />
+          <RefRow label="Plan chooser"     value="GET /billing/plans lists active plans; the /billing page shows the chooser until subscription_status = 'active'." />
+          <RefRow label="Manage / invoices" value="GET /billing/portal → Stripe Customer Portal (update card, cancel, invoices). GET /billing/summary + /billing/invoices pull live data from Stripe (next billing date, period, interval, invoice PDFs)." />
+          <RefRow label="Webhook"          value="POST /billing/webhook — raw body, signature-verified (STRIPE_WEBHOOK_SECRET). Mounted before express.json + before rate-limiting so events are never dropped. services/billing/stripe.ts → handleWebhook." />
+          <RefRow label="Events to register" value="checkout.session.completed · customer.subscription.created · customer.subscription.updated · customer.subscription.deleted · invoice.paid · invoice.payment_failed → keep tenants.subscription_status / plan_id / stripe_customer_id / stripe_subscription_id in sync." />
+          <RefRow label="Go-live checklist" value="(1) STRIPE_SECRET_KEY = sk_live_… (2) register the live webhook at /billing/webhook + set its STRIPE_WEBHOOK_SECRET (3) enable the Customer Portal in the Stripe Dashboard (4) complete the PCI SAQ A questionnaire (5) if you tested in TEST mode first, null out plans.stripe_price_id_monthly so LIVE Prices are created on first live checkout (a test price id won't work in live mode). SCA/3-D Secure is handled automatically by hosted Checkout." />
         </div>
       </RefSection>
 

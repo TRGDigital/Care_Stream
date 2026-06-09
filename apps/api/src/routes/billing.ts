@@ -2,10 +2,40 @@
 
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
-import { createPortalSession, handleWebhook } from '../services/billing/stripe'
+import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices } from '../services/billing/stripe'
+import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 
 export const billingRouter = Router()
+
+// ─── GET /billing/plans — active plans for the subscribe chooser ──────────────
+billingRouter.get('/plans', async (_req: Request, res: Response) => {
+  const plans = await (prisma as any).plan.findMany({
+    where:   { is_active: true },
+    orderBy: { price_monthly_pence: 'asc' },
+    select: {
+      id: true, name: true, price_monthly_pence: true, monthly_query_limit: true,
+      max_policies: true, max_staff_users: true, max_handbooks: true,
+      max_manual_knowledge_entries: true, monthly_ai_credit_limit: true,
+      has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
+    },
+  })
+  ok(res, { plans })
+})
+
+// ─── POST /billing/checkout — start a hosted Stripe Checkout for a plan ────────
+// Admin only. Body: { plan_id }. Returns { url } to redirect the browser to.
+billingRouter.post('/checkout', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const planId   = (req.body?.plan_id as string | undefined)?.trim()
+  if (!planId) { err(res, 'VALIDATION_ERROR', 'plan_id is required.', 400); return }
+  try {
+    const url = await createCheckoutSession(tenantId, planId)
+    ok(res, { url })
+  } catch (e: any) {
+    err(res, 'CHECKOUT_FAILED', e.message ?? 'Could not start checkout.', 500)
+  }
+})
 
 // ─── GET /billing/summary ─────────────────────────────────────────────────────
 // Returns current plan + subscription info.
@@ -20,6 +50,7 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
     select: {
       subscription_status: true,
       stripe_customer_id:  true,
+      stripe_subscription_id: true,
       plan: {
         select: {
           name:               true,
@@ -35,17 +66,20 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
     return
   }
 
+  // Live subscription fields from Stripe (null if not subscribed / Stripe down).
+  const sub = await getSubscriptionInfo(tenant).catch(() => null)
+
   ok(res, {
     plan_name:           tenant.plan?.name ?? null,
     subscription_status: tenant.subscription_status as string,
     price_monthly_pence: tenant.plan?.price_monthly_pence ?? null,
     monthly_query_limit: tenant.plan?.monthly_query_limit ?? null,
     has_stripe:          !!tenant.stripe_customer_id,
-    // ── Stripe fields — wire these up during Stripe integration ──────────────
-    next_billing_date:    null as string | null,   // from Stripe subscription.current_period_end
-    current_period_start: null as string | null,   // from Stripe subscription.current_period_start
-    current_period_end:   null as string | null,   // from Stripe subscription.current_period_end
-    billing_interval:     null as string | null,   // 'month' | 'year' from Stripe price.recurring.interval
+    next_billing_date:    sub?.next_billing_date    ?? null,
+    current_period_start: sub?.current_period_start ?? null,
+    current_period_end:   sub?.current_period_end   ?? null,
+    billing_interval:     sub?.billing_interval     ?? null,
+    cancel_at_period_end: sub?.cancel_at_period_end ?? false,
   })
 })
 
@@ -67,33 +101,15 @@ billingRouter.get('/invoices', async (req: Request, res: Response) => {
     return
   }
 
-  // ── Stripe integration point ──────────────────────────────────────────────
-  // Replace the empty array below with:
-  //   const stripeInvoices = await stripe.invoices.list({
-  //     customer: tenant.stripe_customer_id,
-  //     limit: 24,
-  //     status: 'paid',
-  //   })
-  //   const invoices = stripeInvoices.data.map(inv => ({
-  //     id:          inv.id,
-  //     date:        new Date(inv.created * 1000).toISOString(),
-  //     description: inv.lines.data[0]?.description ?? 'CareStreamAI subscription',
-  //     amount_pence: inv.amount_paid,
-  //     status:      inv.status,          // 'paid' | 'open' | 'void' | 'uncollectible'
-  //     pdf_url:     inv.invoice_pdf,
-  //     hosted_url:  inv.hosted_invoice_url,
-  //   }))
-  const invoices: Array<{
-    id:           string
-    date:         string
-    description:  string
-    amount_pence: number
-    status:       string
-    pdf_url:      string | null
-    hosted_url:   string | null
-  }> = []
-
-  ok(res, { invoices })
+  // No Stripe customer yet → no invoices. Otherwise pull the real invoice list.
+  if (!tenant.stripe_customer_id) { ok(res, { invoices: [] }); return }
+  try {
+    const invoices = await listInvoices(tenant.stripe_customer_id)
+    ok(res, { invoices })
+  } catch (e: any) {
+    console.error('[billing] invoices error:', e?.message)
+    ok(res, { invoices: [] })
+  }
 })
 
 // ─── GET /billing/portal — generate a Stripe Customer Portal session for the current tenant.

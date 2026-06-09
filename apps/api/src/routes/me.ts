@@ -12,6 +12,7 @@ import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
 import { trackAiAction } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
+import { getAuditsDue } from '../services/audits/due'
 import { prisma } from '../db/client'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -115,7 +116,12 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
   const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && outstanding(e)).length
   const followup = (tWrong as number) + (oWrong as number)
-  ok(res, { training, induction, cqc, followup, annual })
+  // Admins get an audits badge: recurring audits due to start + any in progress.
+  let audits = 0
+  if ((req as any).user.role === 'admin') {
+    try { const a = await getAuditsDue(tenantId); audits = a.due.length + a.inProgress } catch { /* ignore */ }
+  }
+  ok(res, { training, induction, cqc, followup, annual, audits })
 })
 
 // ─── GET /me/follow-up ────────────────────────────────────────────────────────

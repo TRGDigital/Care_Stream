@@ -2333,6 +2333,7 @@ function SystemReference() {
           <RefRow label="DB models"      value="AuditTemplate (seed + tenant), AuditSection, AuditQuestion, AuditRun (shift?, room_number?), AuditAnswer" />
           <RefRow label="Seed templates" value="12 templates seeded at platform level (tenant_id: null, is_seed: true) — auto-seeded on first GET /audits/templates" />
           <RefRow label="Admin"          value="/platform/audit-seeds — view all seeded templates, sections, and questions grouped by frequency" />
+          <RefRow label="Reminders"      value="Daily cron (sendDailyAuditReminders) emails admins/managers an 'Audits to complete' list (gated on the audit_updates pref) + a hub badge on the Audits nav. services/audits/due.ts (getAuditsDue) flags what needs attention: daily=not run today, weekly/monthly=not run this period, quarterly=not run this quarter. Long-cycle audits only nag in their deadline window (monthly = last 10 days; quarterly = final month of the quarter, Mar/Jun/Sep/Dec) so admins aren't reminded for the whole period. me.counts returns `audits` (due + in-progress) for admins." />
         </div>
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Seeded templates</p>

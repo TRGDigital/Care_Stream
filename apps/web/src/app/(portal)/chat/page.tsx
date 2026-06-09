@@ -348,7 +348,7 @@ function ChatPageInner() {
   // Voice: dictate in the chosen reply language, else the staff member's own language.
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
     useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
-  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0 })
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
@@ -421,7 +421,7 @@ function ChatPageInner() {
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.counts()
-      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
+      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})
   }, [session?.accessToken, view]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -738,6 +738,7 @@ function ChatPageInner() {
             >
               <ClipboardCheck size={15} />
               Audits
+              {navCounts.audits > 0 && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
             </button>
           )}
           <button
@@ -881,21 +882,21 @@ function ChatPageInner() {
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
           <AnnualTrainingView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
           <FollowUpView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
 
         {/* CQC Prep view */}
         {view === 'cqc' && session?.accessToken && (
           <CqcView token={session.accessToken} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
 

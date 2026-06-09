@@ -6,6 +6,7 @@ import sgMail from '@sendgrid/mail'
 import { prisma } from '../../db/client'
 import { notifyUsers } from '../../lib/notify'
 import { siteUrl } from '../../lib/urls'
+import { getAuditsDue, frequencyLabel, type DueAudit } from './due'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -18,9 +19,9 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   await (sgMail as any).send({ to, from, subject, html })
 }
 
-function reminderHtml(orgName: string, due: string[], inProgress: number): string {
+function reminderHtml(orgName: string, due: DueAudit[], inProgress: number): string {
   const dueList = due.length
-    ? `<p style="margin:0 0 6px;font-weight:600">Recurring audits to start:</p><ul style="margin:0 0 14px;padding-left:18px">${due.map(n => `<li style="font-size:14px;color:#111827">${esc(n)}</li>`).join('')}</ul>`
+    ? `<p style="margin:0 0 6px;font-weight:600">Audits to complete:</p><ul style="margin:0 0 14px;padding-left:18px">${due.map(a => `<li style="font-size:14px;color:#111827">${esc(a.name)} <span style="color:#6b7280">(${esc(frequencyLabel(a.frequency))})</span></li>`).join('')}</ul>`
     : ''
   const inProg = inProgress > 0
     ? `<p style="margin:0 0 14px;font-size:14px;color:#111827">You have <strong>${inProgress}</strong> audit${inProgress === 1 ? '' : 's'} in progress to finish.</p>`
@@ -40,22 +41,7 @@ export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent
   let sent = 0
   for (const t of tenants as any[]) {
     try {
-      const [templates, runs] = await Promise.all([
-        (prisma as any).auditTemplate.findMany({ where: { is_active: true, OR: [{ tenant_id: null }, { tenant_id: t.id }] }, select: { id: true, name: true, frequency: true } }),
-        (prisma as any).auditRun.findMany({ where: { tenant_id: t.id }, select: { template_id: true, status: true, audit_month: true } }),
-      ])
-      const now = new Date()
-      const sameMonth = (d: Date) => d.getUTCMonth() === now.getUTCMonth() && d.getUTCFullYear() === now.getUTCFullYear()
-      const sameDay   = (d: Date) => sameMonth(d) && d.getUTCDate() === now.getUTCDate()
-      const ranThisMonth = new Set((runs as any[]).filter(r => sameMonth(new Date(r.audit_month))).map(r => r.template_id))
-      const ranToday     = new Set((runs as any[]).filter(r => sameDay(new Date(r.audit_month))).map(r => r.template_id))
-      const inProgress = (runs as any[]).filter(r => r.status === 'in_progress').length
-      // Daily audits are due if not started today; weekly if not started this month.
-      const due = (templates as any[]).filter(tp =>
-        tp.frequency === 'daily' ? !ranToday.has(tp.id)
-        : tp.frequency === 'weekly' ? !ranThisMonth.has(tp.id)
-        : false,
-      ).map(tp => tp.name)
+      const { due, inProgress } = await getAuditsDue(t.id)
       if (!due.length && !inProgress) continue
 
       const admins = await (prisma as any).user.findMany({ where: { tenant_id: t.id, role: { in: ['admin', 'manager'] }, is_active: true }, select: { id: true } })

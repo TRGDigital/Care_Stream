@@ -7,6 +7,7 @@ import { generateAccessToken, verifyAccessToken } from '../services/auth/tokens'
 import { issueRefreshToken, rotateRefreshToken } from '../lib/refresh-tokens'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
+import { siteUrl } from '../lib/urls'
 import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
@@ -120,7 +121,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
   })
 
   // Send verification email — awaited so it completes before the serverless function exits
-  const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
+  const webUrl = siteUrl()
   const verificationUrl = `${webUrl}/verify-email?token=${verificationToken}`
   try {
     await sendVerificationEmail(email, name, verificationUrl)
@@ -377,7 +378,7 @@ authRouter.post('/resend-verification', async (req: Request, res: Response) => {
     },
   })
 
-  const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
+  const webUrl = siteUrl()
   const verificationUrl = `${webUrl}/verify-email?token=${token}`
   try {
     await sendVerificationEmail(email, user.name, verificationUrl)
@@ -416,7 +417,7 @@ authRouter.post('/forgot-password', async (req: Request, res: Response) => {
     },
   })
 
-  const webUrl  = process.env.WEB_URL ?? 'http://localhost:3000'
+  const webUrl = siteUrl()
   const resetUrl = `${webUrl}/reset-password?token=${token}`
 
   try {

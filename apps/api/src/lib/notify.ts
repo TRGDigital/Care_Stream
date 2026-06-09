@@ -2,6 +2,7 @@
 // All service-email preference keys default to true if not explicitly set.
 
 import { prisma } from '../db/client'
+import { siteUrl } from './urls'
 import { sendStaffAllocationEmail, type AllocationKind } from '../services/email/outbound'
 
 export async function isEmailEnabled(tenantId: string, prefKey: string): Promise<boolean> {
@@ -76,7 +77,7 @@ const ALLOC_PREF: Record<AllocationKind, string> = {
 export async function notifyStaffAllocation(tenantId: string, userIds: string[], kind: AllocationKind): Promise<void> {
   if (!userIds.length) return
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
-  const portalUrl = (process.env.WEB_URL || 'https://carestreamai.com').replace(/\/$/, '')
+  const portalUrl = siteUrl()
   await notifyUsers(tenantId, ALLOC_PREF[kind], userIds, (email, name) =>
     sendStaffAllocationEmail({ to: email, name, orgName: tenant?.name ?? '', kind, portalUrl })
   )

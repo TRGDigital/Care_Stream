@@ -17,7 +17,7 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats, getPlatformVectorStats } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
-import { blogImagePublicUrl } from '../lib/urls'
+import { blogImagePublicUrl, siteUrl } from '../lib/urls'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
@@ -566,7 +566,7 @@ adminRouter.post('/tenants/:id/staff/:userId/send-credentials', async (req: Requ
     where: { id: req.params.id }, select: { name: true },
   })
 
-  const portalUrl = process.env.FRONTEND_URL ?? 'https://app.carestreamai.co.uk'
+  const portalUrl = siteUrl()
 
   try {
     await sendStaffWelcomeEmail({

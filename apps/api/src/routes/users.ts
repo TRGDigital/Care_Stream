@@ -6,6 +6,7 @@ import { prisma } from '../db/client'
 import { hashPassword } from '../services/auth/password'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
+import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
@@ -19,7 +20,7 @@ export const usersRouter = Router()
 usersRouter.use(requireAdmin)
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
-const LOGIN_URL = `${process.env.WEB_URL ?? process.env.FRONTEND_URL ?? 'https://care-stream-web.vercel.app'}/login`
+const LOGIN_URL = `${siteUrl()}/login`
 const PLATFORM_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER ?? ''
 
 // The three ways a staff member reaches CareStream — shown on the credentials

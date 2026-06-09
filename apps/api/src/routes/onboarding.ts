@@ -8,6 +8,7 @@ import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { facilityTypeToSetting } from '../lib/care-setting'
+import { siteUrl } from '../lib/urls'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
@@ -179,7 +180,7 @@ onboardingRouter.post('/flows/:id/enroll', requireAdmin, async (req, res) => {
     )
     res.json({ success: true, data: { enrolled: created.length } })
 
-    const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+    const portalUrl = siteUrl()
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     notifyUsers(tenantId, 'onboarding_updates', user_ids as string[], (email, name) =>
       sendOnboardingUpdateEmail({

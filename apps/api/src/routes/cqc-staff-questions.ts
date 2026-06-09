@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { siteUrl } from '../lib/urls'
 import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-limits'
 import { callClaude } from '../services/ai/claude'
 import { requireAdmin } from '../middleware/auth'
@@ -443,7 +444,7 @@ Original: ${q.question}`,
 
     if (deliveries.count > 0) {
       const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-      const portalUrl = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+      const portalUrl = siteUrl()
       notifyUsers(tenantId, 'cqc_staff_prep', newUserIds, (email, name) =>
         sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))

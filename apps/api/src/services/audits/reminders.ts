@@ -5,9 +5,10 @@
 import sgMail from '@sendgrid/mail'
 import { prisma } from '../../db/client'
 import { notifyUsers } from '../../lib/notify'
+import { siteUrl } from '../../lib/urls'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
-const WEB_URL        = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+const WEB_URL        = siteUrl()
 const esc = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {

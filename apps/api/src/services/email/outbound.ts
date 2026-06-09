@@ -3,9 +3,10 @@
 
 import sgMail from '@sendgrid/mail'
 import { signFeedbackToken } from '../../lib/feedback-token'
+import { siteUrl } from '../../lib/urls'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
-const WEB_URL        = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+const WEB_URL        = siteUrl()
 const LOGO_URL       = `${WEB_URL}/logo-color.png`
 
 // Brand colours

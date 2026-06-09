@@ -10,9 +10,10 @@ import sgMail from '@sendgrid/mail'
 import { prisma } from '../../db/client'
 import { notifyUsers, isEmailEnabled } from '../../lib/notify'
 import { getKnowledgeGapData, KnowledgeGapData } from '../../lib/knowledge-gaps'
+import { siteUrl } from '../../lib/urls'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
-const WEB_URL        = process.env.WEB_URL ?? 'https://care-stream-web.vercel.app'
+const WEB_URL        = siteUrl()
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   if (!process.env.SENDGRID_API_KEY) return

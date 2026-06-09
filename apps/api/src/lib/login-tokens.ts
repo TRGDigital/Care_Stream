@@ -4,6 +4,7 @@
 
 import crypto from 'crypto'
 import { prisma } from '../db/client'
+import { siteUrl } from './urls'
 
 function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
@@ -15,8 +16,7 @@ export async function createLoginLink(userId: string, tenantId: string, ttlMs: n
   await (prisma as any).loginToken.create({
     data: { token_hash: hashToken(token), user_id: userId, tenant_id: tenantId, expires_at: new Date(Date.now() + ttlMs) },
   })
-  const base = (process.env.WEB_URL || 'https://carestreamai.com').replace(/\/$/, '')
-  return `${base}/auth/link?token=${token}`
+  return `${siteUrl()}/auth/link?token=${token}`
 }
 
 // Validate + consume a sign-in token. Returns the user_id once, or null if the

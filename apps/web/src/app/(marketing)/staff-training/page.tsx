@@ -657,6 +657,90 @@ export default async function StaffTrainingPage() {
         </div>
       </section>
 
+      {/* ── Close the loop (learn and retry) ──────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Close the Loop</SectionLabel>
+          <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
+            A wrong answer becomes a lesson, not just a mark.
+          </h2>
+          <div className="grid items-start gap-12 lg:grid-cols-2">
+            <div>
+              <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
+                When a staff member gets it wrong, CareStream teaches the point and checks it again.
+              </h3>
+              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
+                The moment a question is answered incorrectly, CareStream turns it into a short,
+                policy-grounded micro-lesson: a warm explanation of the right answer and why it matters,
+                the key points to remember, and a real care scenario.
+              </p>
+              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
+                Then it asks a brand new question on the same point, never a repeat of the one they
+                missed, to make sure it has landed. The whole loop takes a couple of minutes, in the
+                staff member's own language.
+              </p>
+              <div className="space-y-3">
+                {[
+                  { Icon: BadgeCheck,   label: 'Taught from your own policy', text: 'The micro-lesson is grounded in your policy, so the correction matches your home and not generic advice.' },
+                  { Icon: RefreshCw,    label: 'A fresh question, not a repeat', text: 'Understanding is checked with a new, scenario-based question, so staff cannot simply remember the answer.' },
+                  { Icon: CheckCircle2, label: 'Logged as closed, for CQC', text: 'Every learn-and-retry is recorded, giving you evidence that the gap was closed, not just flagged.' },
+                ].map(({ Icon, label, text }) => (
+                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
+                    <div>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Learn-and-retry mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                <div className="bg-teal px-4 py-3">
+                  <p className="text-sm font-bold text-white">Let us revisit this</p>
+                  <p className="text-[11px] text-white/70">Medication Management</p>
+                </div>
+                <div className="space-y-3 bg-gray-50 p-4">
+                  <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
+                    <RefreshCw size={13} className="flex-shrink-0 text-amber-600" />
+                    <p className="text-[11px] font-semibold text-amber-700">Not quite. Let us go over it together.</p>
+                  </div>
+                  <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-teal">Why it matters</p>
+                    <p className="text-[11px] leading-relaxed text-neutral-dark">
+                      A medication error must be reported straight away, not left until handover, so the resident can be checked and the right action taken without delay.
+                    </p>
+                    <p className="mb-1 mt-2.5 text-[10px] font-bold uppercase tracking-wide text-teal">Remember</p>
+                    <ul className="space-y-0.5 text-[11px] text-neutral-mid">
+                      <li>• Tell the nurse in charge immediately</li>
+                      <li>• Record exactly what happened</li>
+                      <li>• Monitor the resident for any effects</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-xl border border-teal/20 bg-teal/5 p-3">
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-teal">A new question</p>
+                    <p className="mb-2 text-[11px] font-medium leading-snug text-neutral-dark">
+                      You realise a colleague gave a double dose an hour ago. What do you do first?
+                    </p>
+                    <div className="space-y-1 text-[11px]">
+                      <p className="rounded-md bg-white px-2 py-1 text-neutral-mid">Note it for the next handover</p>
+                      <p className="rounded-md bg-teal px-2 py-1 font-semibold text-white">Tell the nurse in charge now ✓</p>
+                      <p className="rounded-md bg-white px-2 py-1 text-neutral-mid">Wait and see if anything happens</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-green-600">
+                    <CheckCircle2 size={13} className="flex-shrink-0" /> Got it. Gap closed and logged.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── The ongoing engagement angle ──────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">

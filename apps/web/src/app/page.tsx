@@ -87,7 +87,7 @@ function Hero() {
                 Your Risk Assessments are written in English. Your workforce isn&apos;t.
               </span>
               <span className="absolute inset-x-0 bottom-0">
-                Your <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} /> are written in English.{' '}
+                Your <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} rounds={2} /> are written in English.{' '}
                 <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
               </span>
             </h1>

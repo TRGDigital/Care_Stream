@@ -767,6 +767,10 @@ Output ONLY a JSON array — no markdown, no explanation.
 Format: [{"text":"Question text","options":["Option A","Option B","Option C","Option D"],"correct":0}]
 "correct" is the zero-based index of the correct option.`
 
+// Appended to every generation request so the output shape is guaranteed even when
+// the admin-editable system prompt doesn't specify it (the parser is also tolerant).
+const QUESTION_JSON_FORMAT = `\n\nReturn ONLY a JSON array — no markdown fences, no commentary — in EXACTLY this shape:\n[{"text":"<question text>","options":["<option A>","<option B>","<option C>","<option D>"],"correct":<0-based index of the correct option>}]\nEach question must have exactly 4 options and "correct" must be the integer index (0–3) of the correct option.`
+
 async function getTrainingPrompt(): Promise<string> {
   try {
     const prompt = await (prisma as any).aiPrompt.findUnique({
@@ -817,19 +821,62 @@ async function settingSeedContextForModule(tenantId: string, moduleName: string)
   } catch { return '' }
 }
 
+// Tolerant parser — the generation prompt is admin-editable, so the model's JSON
+// shape varies. Accept a bare array or a { questions: [...] } wrapper, options as
+// strings or objects, and "correct" as an index, an A–D letter, or matching text.
 function parseGeneratedQuestions(raw: string): Array<{ text: string; options: string[]; correct: number }> {
-  const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
-  try {
-    const parsed = JSON.parse(clean)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((q: any) =>
-      typeof q.text === 'string' &&
-      Array.isArray(q.options) && q.options.length === 4 &&
-      typeof q.correct === 'number'
-    )
-  } catch {
-    return []
+  if (!raw) return []
+  const clean = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+
+  let data: any = null
+  try { data = JSON.parse(clean) } catch {
+    // The JSON may be wrapped in prose — pull out the first array/object literal.
+    for (const m of [clean.match(/\[[\s\S]*\]/)?.[0], clean.match(/\{[\s\S]*\}/)?.[0]]) {
+      if (!m) continue
+      try { data = JSON.parse(m); break } catch { /* try next */ }
+    }
   }
+  if (!data) return []
+
+  const arr: any[] = Array.isArray(data) ? data
+    : Array.isArray(data.questions) ? data.questions
+    : Array.isArray(data.items)     ? data.items
+    : []
+
+  const toIndex = (v: any): number | null => {
+    if (typeof v === 'number' && v >= 0 && v <= 3) return v
+    if (typeof v === 'string') {
+      const s = v.trim().toUpperCase()
+      if (['A', 'B', 'C', 'D'].includes(s)) return s.charCodeAt(0) - 65
+      const n = Number(s); if (!Number.isNaN(n) && n >= 0 && n <= 3) return n
+    }
+    return null
+  }
+
+  const out: Array<{ text: string; options: string[]; correct: number }> = []
+  for (const q of arr) {
+    const text = String(q?.text ?? q?.question ?? q?.q ?? '').trim()
+    const rawOpts = q?.options ?? q?.answers ?? q?.choices
+    let options: string[] = []
+    if (Array.isArray(rawOpts)) {
+      options = rawOpts.map((o: any) => String(typeof o === 'string' ? o : (o?.text ?? o?.option ?? o?.label ?? o?.value ?? '')).trim())
+    } else if (rawOpts && typeof rawOpts === 'object') {
+      options = ['A', 'B', 'C', 'D'].map(k => String(rawOpts[k] ?? rawOpts[k.toLowerCase()] ?? '').trim())
+    }
+    options = options.filter(Boolean).slice(0, 4)
+
+    let correct = toIndex(q?.correct ?? q?.correctIndex ?? q?.correct_index ?? q?.answer ?? q?.correct_answer)
+    if (correct === null) {
+      const ans = String(q?.correct_answer ?? q?.answer ?? '').trim().toLowerCase()
+      const idx = options.findIndex(o => o.toLowerCase() === ans)
+      if (idx >= 0) correct = idx
+    }
+
+    if (text && options.length === 4 && correct !== null && correct >= 0 && correct <= 3) {
+      out.push({ text, options, correct })
+    }
+  }
+  return out
 }
 
 // POST /training/modules/:id/generate-questions — generate question texts from training seed
@@ -855,7 +902,7 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
 
     const systemPrompt = await getTrainingPrompt()
     const policyContext = await settingSeedContextForModule(tenantId, module.name)
-    const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.`
+    const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.${QUESTION_JSON_FORMAT}`
 
     const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.6 })
     const generated = parseGeneratedQuestions(raw)
@@ -902,7 +949,7 @@ trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: R
 
     const systemPrompt = await getTrainingPrompt()
     const questionList = questions.map((q: any, i: number) => `${i + 1}. ${q.text}`).join('\n')
-    const userMessage  = `${buildSeedContext(seed)}\n\nFor each of the following questions, generate exactly 4 answer options (A, B, C, D) and identify the correct one.\nReturn the same number of questions as given, in the same order.\n\nQuestions:\n${questionList}`
+    const userMessage  = `${buildSeedContext(seed)}\n\nFor each of the following questions, generate exactly 4 answer options (A, B, C, D) and identify the correct one.\nReturn the same number of questions as given, in the same order.\n\nQuestions:\n${questionList}${QUESTION_JSON_FORMAT}`
 
     const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.4 })
     const generated = parseGeneratedQuestions(raw)

@@ -2224,6 +2224,24 @@ function SystemReference() {
           <RefRow label="Webhook"          value="POST /billing/webhook — raw body, signature-verified (STRIPE_WEBHOOK_SECRET). Mounted before express.json + before rate-limiting so events are never dropped. services/billing/stripe.ts → handleWebhook." />
           <RefRow label="Events to register" value="checkout.session.completed · customer.subscription.created · customer.subscription.updated · customer.subscription.deleted · invoice.paid · invoice.payment_failed → keep tenants.subscription_status / plan_id / stripe_customer_id / stripe_subscription_id in sync." />
           <RefRow label="Go-live checklist" value="(1) STRIPE_SECRET_KEY = sk_live_… (2) register the live webhook at /billing/webhook + set its STRIPE_WEBHOOK_SECRET (3) enable the Customer Portal in the Stripe Dashboard (4) complete the PCI SAQ A questionnaire (5) if you tested in TEST mode first, null out plans.stripe_price_id_monthly so LIVE Prices are created on first live checkout (a test price id won't work in live mode). SCA/3-D Secure is handled automatically by hosted Checkout." />
+          <RefRow label="Test before live" value="With test keys, do one subscription using card 4242 4242 4242 4242 (any future expiry / CVC) and confirm the webhook flips the tenant to subscription_status = 'active'." />
+          <RefRow label="Plans" value="plans table — Starter £49/mo (price 4900p), Professional £129/mo (12900p). Prices in pence (GBP). stripe_price_id_monthly auto-filled on first checkout." />
+        </div>
+      </RefSection>
+
+      {/* Payment Security (Stripe) — audit 2026-06-09 */}
+      <RefSection icon={Lock} title="Payment Security (Stripe / PCI)">
+        <p className="leading-relaxed text-neutral-mid">
+          Security review of the Stripe integration, 2026-06-09. Verdict: architecture meets Stripe's
+          requirements — lowest PCI tier (SAQ A) with correct webhook, secret and transport handling.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="PCI scope — SAQ A" value="Card data NEVER touches our servers: no Stripe Elements, no card inputs, no raw PAN anywhere. All capture is on Stripe-hosted Checkout + Customer Portal. Keeps us in SAQ A (simplest self-assessment). Rule: never add raw card fields — always use hosted Checkout/Portal." />
+          <RefRow label="Webhook signature"  value="VERIFIED — stripe.webhooks.constructEvent(rawBody, sig, STRIPE_WEBHOOK_SECRET). Raw body preserved (express.raw mounted before express.json) and mounted before apiLimiter so legit events are never rate-limited away. (app.ts, services/billing/stripe.ts)" />
+          <RefRow label="Secrets handling"   value="No sk_/whsec_ keys in source; .env git-ignored (only .env.example tracked); keys read from env only. Logs contain customer/tenant IDs only — never card or PII." />
+          <RefRow label="Transport + headers" value="HTTPS/TLS enforced by Vercel; helmet() sets HSTS + X-Frame-Options etc.; CORS is an allowlist (WEB_URL), not '*'; trust proxy = 1 for correct IP behind Vercel." />
+          <RefRow label="SCA / 3-D Secure"   value="Required in UK/EEA — handled automatically by hosted Checkout. (If raw PaymentIntents are ever used directly, SCA must be handled manually — don't.)" />
+          <RefRow label="Optional hardening" value="Webhook event de-duplication by event.id (current handlers are already idempotent, so low priority); pin the Stripe API version in new Stripe(key, { apiVersion }) for stability." />
         </div>
       </RefSection>
 

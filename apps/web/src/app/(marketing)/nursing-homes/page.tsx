@@ -2,10 +2,10 @@ import Link from 'next/link'
 import {
   CheckCircle2, Stethoscope, Globe, ShieldCheck, GraduationCap, ClipboardCheck,
   HelpCircle, MessageSquare, BookOpen, FileText, ShieldAlert, Clock, Users, BarChart2,
+  Mic, Send, Volume2,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
-import { JsonLd } from '@/components/json-ld'
-import { faqPageSchema } from '@/lib/schema'
+import { HomeFaq } from '@/components/marketing/home-faq'
 
 export const metadata = {
   title: 'CareStream for Nursing Homes',
@@ -55,19 +55,39 @@ const SERVICES = [
   { Icon: ShieldAlert,    title: 'Business Continuity', href: '/business-continuity', desc: 'Make your continuity information instantly reachable by every member of staff, on any shift.' },
 ]
 
+const SCENARIOS = [
+  { tag: 'On a night shift', body: 'A care assistant notices a resident becoming drowsy and harder to rouse. Rather than wait for the nurse in charge to be free, they ask CareStream and get your exact deterioration and escalation steps, drawn from your own policy, in seconds. They act with confidence and the resident is reviewed sooner.' },
+  { tag: 'A new nurse settling in', body: 'A newly registered nurse is not yet sure of your local processes. Instead of interrupting colleagues or guessing, they ask the hub and receive your approved procedure every time, so their practice matches the rest of the team from their very first shift.' },
+  { tag: 'During the medicines round', body: 'A senior carer is unsure whether a PRN protocol applies, or how a covert medication should be handled. They check the medicines policy in the hub at the trolley, see the answer with the source, and record it correctly.' },
+  { tag: 'When a relative asks a question', body: 'A family member asks about visiting during an outbreak, or about your approach to end-of-life care. Any member of staff can check the relevant policy and answer clearly and consistently, rather than promising to find out and get back to them.' },
+  { tag: 'In a language they are confident in', body: 'A carer whose first language is Romanian asks a moving-and-handling question by voice, in Romanian, and listens to the answer read back. The guidance is exactly the same as an English-speaking colleague would receive.' },
+  { tag: 'Getting ready for inspection', body: 'Before an inspection, the registered manager sends CQC practice questions to the team, reviews who has answered, and checks the regulation coverage report to see where a policy needs strengthening, all before the inspector arrives.' },
+]
+
 // ── Hero hub mockup ───────────────────────────────────────────────────────────
 
 function HubMockup() {
   return (
-    <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-white/20">
+    <div className="w-full max-w-[400px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-white/20">
+      {/* Header */}
       <div className="flex items-center justify-between bg-teal px-4 py-3">
-        <div>
-          <p className="text-sm font-bold text-white">CareStream</p>
-          <p className="text-[11px] text-white/70">Crossways Nursing Home</p>
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 text-[10px] font-extrabold text-white">CS</div>
+          <div>
+            <p className="text-sm font-bold text-white">CareStream Hub</p>
+            <p className="text-[10px] text-white/70">Crossways Nursing Home</p>
+          </div>
         </div>
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">Night shift</span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold text-white">Night shift</span>
       </div>
-      <div className="space-y-3 bg-gray-50 p-4">
+      {/* Category tabs */}
+      <div className="flex gap-1.5 overflow-hidden border-b border-gray-100 bg-white px-3 py-2">
+        {['Policies', 'Handbook', 'Training', 'CQC'].map((c, i) => (
+          <span key={c} className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${i === 0 ? 'bg-teal text-white' : 'bg-gray-100 text-neutral-mid'}`}>{c}</span>
+        ))}
+      </div>
+      {/* Chat */}
+      <div className="space-y-2.5 bg-gray-50 p-3.5">
         <div className="flex justify-end">
           <div className="max-w-[82%] rounded-tl-2xl rounded-tr-sm rounded-bl-2xl rounded-br-2xl bg-teal px-3 py-2">
             <p className="text-xs leading-snug text-white">What are the early warning signs of sepsis I should escalate?</p>
@@ -76,17 +96,30 @@ function HubMockup() {
         <div className="flex gap-2">
           <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-teal text-[9px] font-bold text-white">CS</div>
           <div className="max-w-[88%] rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-gray-100 bg-white p-3 shadow-sm">
-            <p className="mb-1.5 text-[11px] font-semibold text-teal">From your Sepsis and Deteriorating Resident Policy</p>
             <p className="text-[11px] leading-relaxed text-neutral-dark">
-              Escalate immediately if you see a new high NEWS2 score, raised respiratory rate, low blood pressure, new confusion, or mottled skin. Inform the nurse in charge and follow the escalation pathway.
+              Escalate immediately for a new high NEWS2 score, raised respiratory rate, low blood pressure, new confusion or mottled skin. Inform the nurse in charge and follow the escalation pathway.
             </p>
-            <p className="mt-2 text-[10px] text-neutral-mid">Source: Sepsis Policy v2.4 · Section 3</p>
+            <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal/15 bg-teal/5 px-2 py-1">
+              <FileText size={11} className="flex-shrink-0 text-teal" />
+              <span className="text-[10px] font-medium text-teal">Sepsis Policy v2.4 · Section 3</span>
+            </div>
+            <div className="mt-2 flex items-center gap-3">
+              <span className="flex items-center gap-1 text-[10px] font-medium text-neutral-mid"><Volume2 size={11} /> Listen</span>
+              <span className="flex items-center gap-1 text-[10px] font-medium text-neutral-mid"><Globe size={11} /> 60+ languages</span>
+            </div>
           </div>
         </div>
+        <div className="flex flex-wrap gap-1.5 pl-8">
+          {['What is the NEWS2 threshold?', 'Who do I call overnight?'].map((s) => (
+            <span key={s} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[10px] text-neutral-mid">{s}</span>
+          ))}
+        </div>
       </div>
+      {/* Input bar */}
       <div className="flex items-center gap-2 border-t border-gray-200 bg-white px-3 py-2.5">
-        <div className="flex-1 rounded-full border border-gray-200 px-4 py-1.5 text-[11px] text-gray-300">Ask a question</div>
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal/10 text-teal"><Stethoscope size={13} /></div>
+        <div className="flex-1 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] text-gray-300">Ask a question…</div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal/10 text-teal"><Mic size={13} /></div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal text-white"><Send size={12} /></div>
       </div>
     </div>
   )
@@ -97,8 +130,6 @@ function HubMockup() {
 export default function NursingHomesPage() {
   return (
     <>
-      <JsonLd data={[faqPageSchema(FAQS)]} />
-
       {/* ── Split hero ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />
@@ -208,8 +239,30 @@ export default function NursingHomesPage() {
         </div>
       </section>
 
-      {/* ── Clinical deep-dive ────────────────────────────────────────────── */}
+      {/* ── Scenarios ─────────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>In Practice</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            How your nursing home uses CareStream, day to day.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            CareStream is not another system your team has to remember to use. It fits the moments that
+            already happen on every shift, and gives the right answer at the moment it matters.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            {SCENARIOS.map(({ tag, body }) => (
+              <div key={tag} className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+                <span className="mb-3 inline-block rounded-full bg-teal/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">{tag}</span>
+                <p className="leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Clinical deep-dive ────────────────────────────────────────────── */}
+      <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
@@ -232,7 +285,7 @@ export default function NursingHomesPage() {
                   'Syringe drivers', 'Catheter care', 'Falls management',
                   'PEG feeding', 'End-of-life and anticipatory medicines',
                 ].map((t) => (
-                  <span key={t} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-neutral-dark">{t}</span>
+                  <span key={t} className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-dark">{t}</span>
                 ))}
               </div>
             </div>
@@ -264,7 +317,7 @@ export default function NursingHomesPage() {
       </section>
 
       {/* ── What it does for you ──────────────────────────────────────────── */}
-      <section className="bg-neutral-light py-24">
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>What CareStream Does For You</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold leading-tight text-neutral-dark">
@@ -284,6 +337,33 @@ export default function NursingHomesPage() {
                   <Icon size={18} className="text-teal" />
                 </div>
                 <p className="mb-1.5 font-semibold text-neutral-dark">{title}</p>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Getting started ───────────────────────────────────────────────── */}
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Getting Started</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Up and running in your nursing home, usually the same day.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            There is no new hardware, no integration project, and no training day. You bring your own
+            policies, and CareStream does the rest.
+          </p>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              { step: '01', title: 'Upload your policies', body: 'Add your clinical and care policies, your staff handbook and any local procedures. CareStream reads and indexes them automatically within minutes, and keeps your version history.' },
+              { step: '02', title: 'Invite your team', body: 'Staff get a one-tap sign-in link and install the hub on their phone like an app. No passwords to remember, no classroom session, and nothing for them to learn.' },
+              { step: '03', title: 'Start asking', body: 'From day one, your nurses and carers ask questions and get answers from your own documents, and your CQC evidence begins to build itself with every query.' },
+            ].map(({ step, title, body }) => (
+              <div key={step} className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+                <span className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
                 <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
               </div>
             ))}
@@ -323,23 +403,7 @@ export default function NursingHomesPage() {
         </div>
       </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
-      <section className="bg-neutral-light py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <SectionLabel>Common Questions</SectionLabel>
-          <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Nursing home questions, answered.
-          </h2>
-          <div className="space-y-4">
-            {FAQS.map(({ question, answer }) => (
-              <div key={question} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
-                <p className="mb-2 font-bold text-neutral-dark">{question}</p>
-                <p className="text-sm leading-relaxed text-neutral-mid">{answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeFaq faqs={FAQS} />
 
       <PageCta
         heading="Give your whole nursing team the right answer, on every shift."

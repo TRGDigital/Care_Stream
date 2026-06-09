@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArticleLayout } from '@/components/marketing/article-layout'
+import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
 import { blogPostingSchema, faqPageSchema } from '@/lib/schema'
 
@@ -112,20 +113,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* Main body — stored as HTML in the admin editor */}
       <div dangerouslySetInnerHTML={{ __html: post.content }} />
 
-      {faqs.length > 0 && (
-        <div className="not-prose mt-12 border-t border-gray-100 pt-8">
-          <h2 className="mb-6 text-xl font-extrabold text-neutral-dark">Frequently asked questions</h2>
-          <div className="space-y-5">
-            {faqs.map((f, i) => (
-              <div key={i}>
-                <p className="mb-1 font-semibold text-neutral-dark">{f.question}</p>
-                <p className="text-sm leading-relaxed text-neutral-mid" dangerouslySetInnerHTML={{ __html: f.answer }} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
 
+      {/* Per-post custom CTA (optional, set in the admin editor) */}
       {post.cta_text && post.cta_url && (
         <div className="not-prose mt-12 rounded-xl bg-teal-light p-6 text-center">
           <Link href={post.cta_url} className="inline-flex items-center gap-2 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-dark">
@@ -133,6 +123,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Link>
         </div>
       )}
+
+      {/* Standard end-of-article CTA — shown on every post */}
+      <div className="not-prose mt-12 rounded-xl border border-teal/20 bg-teal-light p-8 text-center">
+        <p className="mb-1 text-lg font-extrabold text-neutral-dark">See CareStream in action</p>
+        <p className="mb-5 text-sm text-neutral-mid">Book a demo or start your free trial today.</p>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href="/demo" className="inline-flex items-center justify-center rounded-lg bg-teal px-6 py-2.5 text-sm font-semibold text-white hover:bg-teal-dark">
+            Book a Demo
+          </Link>
+          <Link href="/register" className="inline-flex items-center justify-center rounded-lg border border-teal px-6 py-2.5 text-sm font-semibold text-teal hover:bg-teal/10">
+            Start Free Trial
+          </Link>
+        </div>
+      </div>
       </ArticleLayout>
     </>
   )

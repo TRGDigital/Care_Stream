@@ -5,9 +5,9 @@ import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 import { Typewriter } from '@/components/marketing/typewriter'
 
 export const metadata: Metadata = {
-  title:       'CareStreamAI — AI Policy Access for UK Care Homes',
+  title:       'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes',
   description: 'Give your entire care team instant access to your policies, training, audits and CQC tools in any language, 24/7. CareStream delivers grounded answers in the hub or by email, never the internet.',
-  openGraph:   { title: 'CareStreamAI — AI Policy Access for UK Care Homes', description: 'Instant multilingual policy access for UK care providers. Powered by your documents. Never the internet.', url: 'https://carestreamai.com' },
+  openGraph:   { title: 'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes', description: 'One platform for UK care providers: policy access, staff training, audits and CQC preparation. Powered by your documents. Never the internet.', url: 'https://carestreamai.com' },
 }
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'
@@ -19,7 +19,7 @@ import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
-  GraduationCap, HelpCircle, FileText, Smartphone, Volume2,
+  GraduationCap, HelpCircle, FileText, Smartphone,
 } from 'lucide-react'
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
@@ -826,7 +826,7 @@ function CareSectorAiSection() {
 
 function RegulationLayerSection() {
   const frameworks = [
-    { name: 'CQC Fundamental Standards',       reg: 'Reg 12, 17 & 19', desc: 'The baseline requirements every registered service must meet — safe care, governance, and fit and proper persons.' },
+    { name: 'CQC Fundamental Standards',       reg: 'Reg 12, 17 & 19', desc: 'The baseline requirements every registered service must meet: safe care, governance, and fit and proper persons.' },
     { name: 'Health & Safety at Work Act 1974', reg: 'HSWA 1974',       desc: 'Employer and employee duties around risk assessment, safe systems of work, and incident reporting.' },
     { name: 'GDPR & Data Protection Act 2018',  reg: 'UK GDPR',         desc: 'How resident and staff data must be collected, stored, shared, and protected.' },
     { name: 'Mental Capacity Act 2005',          reg: 'MCA 2005',        desc: 'Supporting residents who may lack capacity to make decisions, including best-interest processes.' },
@@ -867,7 +867,7 @@ function RegulationLayerSection() {
           {/* Left: example breakdown */}
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
             <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-neutral-mid">How it works — example</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-neutral-mid">How it works, an example</p>
             </div>
             <div className="divide-y divide-gray-100">
               {/* Question */}
@@ -887,11 +887,11 @@ function RegulationLayerSection() {
                   </div>
                   <div className="flex items-center gap-2.5 rounded-lg bg-amber-50 px-3 py-2">
                     <div className="h-2 w-2 shrink-0 rounded-full bg-amber-brand" />
-                    <span className="text-xs font-semibold text-amber-brand">CQC Reg 12 — Safe Care &amp; Treatment</span>
+                    <span className="text-xs font-semibold text-amber-brand">CQC Reg 12, Safe Care &amp; Treatment</span>
                   </div>
                   <div className="flex items-center gap-2.5 rounded-lg bg-amber-50 px-3 py-2">
                     <div className="h-2 w-2 shrink-0 rounded-full bg-amber-brand" />
-                    <span className="text-xs font-semibold text-amber-brand">RIDDOR 2013 — Incident Reporting</span>
+                    <span className="text-xs font-semibold text-amber-brand">RIDDOR 2013, Incident Reporting</span>
                   </div>
                 </div>
               </div>

@@ -372,6 +372,12 @@ function CareSettings() {
             </a>
           ))}
         </div>
+
+        <div className="mt-10 text-center">
+          <Link href="/who-we-serve" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
+            View all settings we serve <ArrowRight size={16} />
+          </Link>
+        </div>
       </div>
     </section>
   )

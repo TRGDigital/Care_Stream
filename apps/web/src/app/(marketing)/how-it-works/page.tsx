@@ -2,27 +2,16 @@ import Link from 'next/link'
 import {
   ArrowRight, Upload, Search, Zap, ClipboardCheck, Globe, Mail, MessageSquare,
   Mic, BarChart2, ShieldAlert, BookOpen, Layers, Check, FileText, Users, Lock,
+  Smartphone, GraduationCap, RefreshCw, Calendar, Bell,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: 'How It Works',
-  description: 'CareStreamAI works in three steps: upload your policies, let staff ask questions via WhatsApp, email, or web, and review every interaction in your analytics dashboard.',
-  openGraph: {
-    title: 'How CareStreamAI Works',
-    description: 'Upload policies, enable staff queries in 50+ languages, review every interaction. Three steps.',
-    url: 'https://carestreamai.com/how-it-works',
-  },
-}
-
-// ─── WhatsApp SVG (not in lucide) ────────────────────────────────────────────
-function WhatsAppIcon({ size = 20, color = '#16a34a' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
-  )
-}
+// Overridable from the platform console (Blog → Pages / site_pages).
+export const generateMetadata = () => pageMetadata('/how-it-works', {
+  title:       'How It Works',
+  description: 'CareStreamAI in three steps: upload your policies, your team uses the hub or email in 60+ languages, and your training and CQC evidence build automatically.',
+})
 
 // ── Chat Demo Mockup ──────────────────────────────────────────────────────────
 
@@ -71,7 +60,7 @@ function ChatDemoMockup() {
         {[
           { color: 'bg-teal', label: 'Logged to audit trail' },
           { color: 'bg-green-500', label: 'Source cited' },
-          { color: 'bg-blue-500', label: 'Via: Web chat' },
+          { color: 'bg-blue-500', label: 'Via: Hub' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className={`h-1.5 w-1.5 rounded-full ${color}`} />
@@ -148,7 +137,7 @@ export default function HowItWorksPage() {
                 Icon: Upload,
                 title: 'Upload your documents',
                 body: 'Upload your policy library, staff handbook, and any supporting documents from the admin dashboard. PDF, Word, and plain text are all accepted. There is no limit on file size or number of policies.',
-                detail: 'Most homes upload between 20 and 80 policy documents. The upload takes minutes.',
+                detail: 'Most care settings upload between 20 and 80 policy documents. The upload takes minutes.',
               },
               {
                 step: '02',
@@ -161,8 +150,8 @@ export default function HowItWorksPage() {
                 step: '03',
                 Icon: Zap,
                 title: 'Your team goes live',
-                body: 'Add your staff email addresses or phone numbers. They can immediately start asking questions via email, the chat portal, WhatsApp, or voice. No training needed, no app downloads, no logins required for frontline staff.',
-                detail: 'Most homes are fully live within 45 minutes of starting the setup process.',
+                body: 'Add your staff and they get the hub on their phone, with email as a backup. They can immediately ask questions, read policies and start their training, in the language they think in, with voice input when typing is harder.',
+                detail: 'Most care settings are fully live within 45 minutes of starting the setup process.',
               },
             ].map(({ step, Icon, title, body, detail }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
@@ -252,34 +241,36 @@ export default function HowItWorksPage() {
       {/* ── 3. The four channels ───────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Access Channels</SectionLabel>
+          <SectionLabel>The Hub</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Four ways to ask. One consistent answer.
+            One hub on their phone. Email and voice when it suits.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Every channel gives the same quality of response, drawn from the same policy library, with the same audit trail. Staff use whichever channel fits their situation.
+            The hub is where your team lives day to day: their policies, their training and instant answers, in one place. Email and voice give the same quality of response, drawn from the same library, with the same audit trail.
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
 
-            {/* Chat portal */}
-            <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
+            {/* The hub (primary) */}
+            <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card lg:col-span-2">
               <div className="mb-5 flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
-                  <MessageSquare size={22} className="text-teal" />
+                  <Smartphone size={22} className="text-teal" />
                 </div>
                 <div>
-                  <p className="font-bold text-neutral-dark">Web chat portal</p>
-                  <p className="text-xs text-neutral-mid">Desktop and mobile browser</p>
+                  <p className="font-bold text-neutral-dark">The hub app</p>
+                  <p className="text-xs text-neutral-mid">On any smartphone, plus desktop browser</p>
                 </div>
               </div>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                Staff access the CareStreamAI portal on any browser. No app download is needed, though a login is required. The chat is conversational: staff can ask follow-up questions within the same session and the system maintains full context throughout.
+              <p className="mb-4 max-w-3xl leading-relaxed text-neutral-mid">
+                The hub is the one place for your whole team. Staff open it to ask a policy question, read a procedure, or complete a piece of training, all in the language they think in. The chat is conversational, so they can ask follow-ups within the same session and the system keeps full context. Reminders and new training arrive as notifications, so nothing gets missed.
               </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
+              <ul className="grid gap-2 text-sm text-neutral-mid sm:grid-cols-2">
                 {[
-                  'Session context maintained for natural follow-up conversations',
-                  'Full conversation history available to the staff member',
+                  'Policies, training and answers in one place',
+                  'Push notifications for reminders and new training',
+                  'Conversational follow-ups with full session context',
+                  'Voice input for hands-free questions mid-task',
                   'Suggested follow-up questions after each response',
                   'Works on any smartphone or desktop browser',
                 ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
@@ -310,31 +301,6 @@ export default function HowItWorksPage() {
               </ul>
             </div>
 
-            {/* WhatsApp */}
-            <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
-                  <WhatsAppIcon size={22} color="#16a34a" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-dark">WhatsApp</p>
-                  <p className="text-xs text-neutral-mid">Any smartphone, iOS or Android</p>
-                </div>
-              </div>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                Staff message the CareStreamAI WhatsApp number exactly as they would text a colleague. No app, no login, no setup. Responses arrive in under 30 seconds in the language asked. WhatsApp voice notes are also supported. Staff can speak their question hands-free.
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[
-                  'No login or app download, staff use their existing WhatsApp',
-                  'Voice notes transcribed and answered automatically',
-                  'Phone numbers allowlisted by the manager for security',
-                  'Suggested follow-up questions sent as tappable buttons',
-                  'Session maintained for 24 hours for natural follow-up conversations',
-                ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-green-600" />{p}</li>)}
-              </ul>
-            </div>
-
             {/* Voice */}
             <div className="card-lift rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
               <div className="mb-5 flex items-center gap-3">
@@ -343,7 +309,7 @@ export default function HowItWorksPage() {
                 </div>
                 <div>
                   <p className="font-bold text-neutral-dark">Voice input</p>
-                  <p className="text-xs text-neutral-mid">Via WhatsApp voice note or chat portal</p>
+                  <p className="text-xs text-neutral-mid">In the hub, hands-free</p>
                 </div>
               </div>
               <p className="mb-4 leading-relaxed text-neutral-mid">
@@ -351,7 +317,7 @@ export default function HowItWorksPage() {
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
                 {[
-                  '50+ languages supported for voice input',
+                  '60+ languages supported for voice input',
                   'Transcription shown alongside the answer for transparency',
                   'Same response quality as typed queries',
                   'Logged identically, voice queries appear in the audit trail',
@@ -363,6 +329,42 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* ── 3b. Staff training ─────────────────────────────────────────────── */}
+      <section className="bg-teal-gradient py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel light>Staff Training</SectionLabel>
+          <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
+            Training that lives in the same hub.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+            CareStream is not only about answering questions. It delivers your mandatory training and
+            modules built from your own policies, in the hub your team already uses, in 60+ languages,
+            with renewals tracked for you.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { Icon: GraduationCap, title: 'Mandatory library', body: 'Every annual mandatory subject, ready to assign, from safeguarding to moving and handling.' },
+              { Icon: FileText,      title: 'Built from your policies', body: 'Generate a module from your own policy documents, so it teaches your procedures, not generic content.' },
+              { Icon: ClipboardCheck,title: 'Teach, then assess', body: 'Each module teaches in short sections, applies a real care scenario, and finishes with an assessment.' },
+              { Icon: RefreshCw,     title: 'Learn and retry', body: 'A wrong answer triggers a short follow-up lesson and a fresh question, so the gap is closed.' },
+            ].map(({ Icon, title, body }) => (
+              <div key={title} className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20"><Icon size={18} className="text-white" /></div>
+                <h3 className="mb-2 font-bold text-white">{title}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Link href="/staff-training" className="inline-flex items-center gap-2 font-semibold text-white hover:underline">
+              See how training works <ArrowRight size={16} />
+            </Link>
+            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Calendar size={15} /> Renewal reminders at 90, 30 and 7 days</span>
+            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Bell size={15} /> New training arrives as a hub notification</span>
+          </div>
+        </div>
+      </section>
+
       {/* ── 4. Multilingual engine ─────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
@@ -370,7 +372,7 @@ export default function HowItWorksPage() {
             <div>
               <SectionLabel>Multilingual Engine</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-                50+ languages. Zero configuration.
+                60+ languages. Zero configuration.
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
                 Language detection is automatic and happens on every query. Staff do not select a language, toggle a setting, or use a special command. They simply ask their question, in the language they think in, and the answer comes back in the same language.
@@ -380,7 +382,7 @@ export default function HowItWorksPage() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Languages detected', value: '50+' },
+                  { label: 'Languages detected', value: '60+' },
                   { label: 'Source policy language', value: 'English' },
                   { label: 'Setup required', value: 'None' },
                   { label: 'Extra cost per language', value: '£0' },
@@ -500,13 +502,13 @@ export default function HowItWorksPage() {
             <div>
               <SectionLabel light>The Knowledge Base</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Not just your policies. Your home, in detail.
+                Not just your policies. Your care setting, in detail.
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-gray-300">
-                CareStreamAI doesn&rsquo;t just answer generic questions about policies. Because it reads your actual documents, it extracts the specific facts that make your home unique: named individuals, direct-dial numbers, shift arrangements and local procedures.
+                CareStreamAI doesn&rsquo;t just answer generic questions about policies. Because it reads your actual documents, it extracts the specific facts that make your service unique: named individuals, direct-dial numbers, shift arrangements and local procedures.
               </p>
               <p className="mb-8 text-lg leading-relaxed text-gray-300">
-                Upload your staff handbook, on-call rota, local infection control guidance, or any supporting document and it becomes immediately queryable. Staff get answers that reflect how your home actually operates, not how a generic care home might.
+                Upload your staff handbook, on-call rota, local infection control guidance, or any supporting document and it becomes immediately queryable. Staff get answers that reflect how your service actually operates, not how a generic care setting might.
               </p>
               <div className="space-y-3">
                 {[
@@ -656,7 +658,7 @@ export default function HowItWorksPage() {
                 iconBg: 'bg-teal-light',
                 iconColor: 'text-teal',
                 title: 'Usage analytics dashboard',
-                body: 'See total queries, active staff, top policies accessed, busiest times, and channel breakdown (chat, email, WhatsApp, voice), updated in real time.',
+                body: 'See total queries, active staff, top policies accessed, busiest times, and channel breakdown (hub, email, voice), updated in real time.',
               },
               {
                 Icon: Globe,

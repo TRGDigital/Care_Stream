@@ -1,16 +1,13 @@
 import Link from 'next/link'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, FileText, GraduationCap, ClipboardCheck, ShieldCheck, Smartphone, Users } from 'lucide-react'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: 'About CareStreamAI',
-  description: 'CareStreamAI was built by people who understand the UK care sector. Learn about our mission to give every care worker instant access to the policies that guide their work.',
-  openGraph: {
-    title: 'About CareStreamAI',
-    description: 'Built for the UK care sector — giving every care worker instant access to the policies that guide their work.',
-    url: 'https://carestreamai.com/about',
-  },
-}
+// Overridable from the platform console (Blog → Pages / site_pages).
+export const generateMetadata = () => pageMetadata('/about', {
+  title:       'About CareStreamAI',
+  description: 'CareStreamAI is one platform for UK care providers: policy access, staff training, audits and CQC tools, in any language. Built by people who understand the care sector.',
+})
 
 function AboutHeroMockup() {
   return (
@@ -21,7 +18,7 @@ function AboutHeroMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-[#ffbc2e]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
         <div className="mx-auto rounded px-10 py-1 text-[10px] text-[#5E4D70]" style={{ background: '#EAE2F5' }}>
-          app.carestreamai.co.uk/dashboard
+          carestreamai.com/dashboard
         </div>
       </div>
       {/* App shell */}
@@ -89,9 +86,9 @@ function AboutHeroMockup() {
               <span>Query</span><span>Language</span><span>Status</span>
             </div>
             {[
-              { q: 'Falls policy — witness procedure', lang: 'Tagalog', status: 'Answered', statusColor: '#e8f5ee', statusText: '#1A6B45' },
+              { q: 'Falls policy: witness procedure', lang: 'Tagalog', status: 'Answered', statusColor: '#e8f5ee', statusText: '#1A6B45' },
               { q: 'Controlled drugs verification', lang: 'English', status: 'Answered', statusColor: '#e8f5ee', statusText: '#1A6B45' },
-              { q: 'Infection control — isolation', lang: 'Yoruba', status: 'Processing', statusColor: '#fff8e6', statusText: '#854F0B' },
+              { q: 'Infection control: isolation', lang: 'Yoruba', status: 'Processing', statusColor: '#fff8e6', statusText: '#854F0B' },
             ].map(({ q, lang, status, statusColor, statusText }) => (
               <div key={q} className="grid items-center px-3 py-2" style={{ gridTemplateColumns: '2fr 1fr 1fr', borderBottom: '0.5px solid #F0E8FA', fontSize: 10 }}>
                 <p style={{ color: '#1A1530', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>{q}</p>
@@ -123,8 +120,9 @@ export default function AboutPage() {
                 Built by people who understand care.
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CareStreamAI was founded with one mission: to give every care worker, regardless of language,
-                the same access to the knowledge they need to do their job safely and confidently.
+                CareStreamAI was founded with one mission: to give every member of a care team, whatever
+                language they think in, the same instant access to the policies, training and guidance they
+                need to do their job safely and well. Today it is one platform that does exactly that.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/demo" className="btn-amber rounded-btn px-8 py-4 text-sm text-center">
@@ -137,7 +135,7 @@ export default function AboutPage() {
               <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/50">
                 <span className="flex items-center gap-1.5"><Check size={13} className="text-white/40" /> UK-built and hosted</span>
                 <span className="flex items-center gap-1.5"><Check size={13} className="text-white/40" /> CQC-aligned</span>
-                <span className="flex items-center gap-1.5"><Check size={13} className="text-white/40" /> 50+ languages</span>
+                <span className="flex items-center gap-1.5"><Check size={13} className="text-white/40" /> 60+ languages</span>
               </div>
             </div>
             <div className="relative lg:pl-4">
@@ -169,32 +167,69 @@ export default function AboutPage() {
                 </p>
                 <p>
                   CareStreamAI was built to close that gap, not by replacing policies, but by making them
-                  genuinely accessible to everyone.
+                  genuinely accessible to everyone. The same problem, we realised, applied to mandatory
+                  training and to the evidence a service needs at inspection. So CareStream grew from policy
+                  access into a single hub for policies, training, audits and CQC readiness.
                 </p>
               </div>
             </div>
             <div className="rounded-2xl bg-teal-gradient p-10 shadow-teal-glow">
               <p className="mb-6 text-4xl font-extrabold text-white">190,000+</p>
-              <p className="mb-2 text-lg font-bold text-white/80">overseas workers joined the UK care sector in 2023–24.</p>
+              <p className="mb-2 text-lg font-bold text-white/80">overseas workers joined the UK care sector in 2023/24.</p>
               <p className="text-white/60">Most were expected to navigate complex policy libraries in a second language from day one.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Principles */}
+      {/* What CareStream is today */}
       <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>The Platform Today</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            One platform for your whole care operation.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            What began as policy access has grown into a single hub for the things a care team relies on
+            every day, all grounded in your own documents and available in any language.
+          </p>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              { Icon: FileText,       title: 'Policy access', body: 'Instant, cited answers from your own policies, in 60+ languages, day or night.', href: '/care-policies' },
+              { Icon: GraduationCap,  title: 'Staff training', body: 'Mandatory training and modules built from your own policies, delivered in the hub.', href: '/staff-training' },
+              { Icon: ClipboardCheck, title: 'Care audits', body: 'Structured audits with AI recommendations, so issues are found and fixed early.', href: '/care-audits' },
+              { Icon: ShieldCheck,    title: 'CQC readiness', body: 'Inspection evidence and reports that build themselves from everyday use.', href: '/cqc-compliance' },
+              { Icon: Smartphone,     title: 'The hub', body: 'One app where staff find policies, training and answers, on the phone in their pocket.', href: '/how-it-works' },
+              { Icon: Users,          title: 'HR policies', body: 'The same instant, grounded access for your staff handbook and HR procedures.', href: '/hr-policies' },
+            ].map(({ Icon, title, body, href }) => (
+              <Link key={title} href={href} className="card-lift group flex flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card transition hover:border-teal/40">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
+                  <Icon size={22} className="text-teal" />
+                </div>
+                <h3 className="mb-2 font-bold text-neutral-dark group-hover:text-teal">{title}</h3>
+                <p className="flex-1 leading-relaxed text-neutral-mid">{body}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-teal">
+                  Learn more <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Principles */}
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>What We Believe</SectionLabel>
           <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark">Our principles.</h2>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[
-              { icon: '🛡️', title: 'Policy access is a safety issue', body: "When a care worker can't find or understand the correct procedure, patient safety is at risk. Equitable access to policy knowledge is foundational to safe care delivery." },
+              { icon: '🛡️', title: 'Access is a safety issue', body: "When a care worker can't find or understand the correct procedure, the people they support are at risk. Equitable access to the right knowledge is foundational to safe care." },
               { icon: '🌍', title: 'Language should not be a barrier', body: "The UK care sector is one of the most linguistically diverse workforces in the country. A care worker whose first language is Tagalog deserves the same access to policy knowledge as a native English speaker." },
               { icon: '🤖', title: 'AI should be bounded, not speculative', body: 'In a compliance setting, confident but incorrect AI answers are dangerous. CareStreamAI is designed so the AI can only answer from approved documents, never from general knowledge, never from guesswork.' },
               { icon: '📊', title: 'Compliance should be continuous', body: 'Inspection evidence should not be assembled manually the week before a CQC visit. CareStreamAI builds that evidence automatically, one policy interaction at a time.' },
               { icon: '🔒', title: 'Data belongs to you', body: 'Your policies, your staff data, and your query history are yours. We will never use them to train AI models or share them with any other party.' },
-              { icon: '📚', title: 'The policy library is a living resource', body: 'A policy that nobody reads is not a resource, it is a liability. CareStreamAI makes your policy library active: accessed, tracked, and demonstrably used by the people it is there to help.' },
+              { icon: '📚', title: 'Knowledge should be reinforced, not filed', body: 'A policy nobody reads, or training watched once and forgotten, is a liability. CareStreamAI keeps knowledge active: accessed when it is needed, taught in short modules, checked, and demonstrably used by the people it is there to help.' },
             ].map(({ icon, title, body }) => (
               <div key={title} className="card-lift rounded-2xl bg-white p-7 shadow-card">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light text-2xl">{icon}</div>
@@ -207,7 +242,7 @@ export default function AboutPage() {
       </section>
 
       {/* UK-focused */}
-      <section className="bg-white py-24">
+      <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-3xl px-6">
           <SectionLabel>UK-Specific</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">

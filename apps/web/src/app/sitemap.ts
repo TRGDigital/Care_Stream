@@ -44,7 +44,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 // from the API rather than hard-coding them. Falls back to none on error.
 async function trainingPages(): Promise<Entry[]> {
   try {
-    const res = await fetch(`${API_URL}/public/training/seo-index`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_URL}/public/training/seo-index`, { next: { revalidate: 900 } })
     if (res.ok) {
       const pages = (await res.json())?.data?.pages ?? []
       return (pages as Array<{ path?: string }>)

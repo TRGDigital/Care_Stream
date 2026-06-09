@@ -1,8 +1,15 @@
 import { MetadataRoute } from 'next'
+import { SETTINGS_LIST } from '@/lib/settings/list'
 
 const BASE = 'https://carestreamai.com'
 
 type Entry = { url: string; lastModified?: Date; changeFrequency?: MetadataRoute.Sitemap[number]['changeFrequency']; priority?: number }
+
+// The "who we serve" index plus every per-setting page.
+const SETTINGS: Entry[] = [
+  { url: '/who-we-serve', changeFrequency: 'monthly', priority: 0.7 },
+  ...SETTINGS_LIST.map((s) => ({ url: `/${s.slug}`, changeFrequency: 'monthly' as const, priority: 0.8 })),
+]
 
 const MARKETING: Entry[] = [
   { url: '/',                                      changeFrequency: 'weekly',  priority: 1.0 },
@@ -59,7 +66,13 @@ async function trainingPages(): Promise<Entry[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
-  const entries = [...MARKETING, ...(await trainingPages())]
+  // Dedupe by path (some settings also appear in MARKETING), first entry wins.
+  const seen = new Set<string>()
+  const entries = [...MARKETING, ...SETTINGS, ...(await trainingPages())].filter((e) => {
+    if (seen.has(e.url)) return false
+    seen.add(e.url)
+    return true
+  })
   return entries.map(({ url, changeFrequency, priority }) => ({
     url:             `${BASE}${url}`,
     lastModified:    now,

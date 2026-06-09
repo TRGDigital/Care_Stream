@@ -1,15 +1,8 @@
 import { SettingPage } from '@/components/marketing/setting-page'
 import { config } from '@/lib/settings/domiciliary-care'
+import { settingPageMetadata } from '@/lib/settings/meta'
 
-export const metadata = {
-  title: config.meta.title,
-  description: config.meta.description,
-  openGraph: {
-    title: config.meta.title,
-    description: config.meta.ogDescription,
-    url: `https://carestreamai.com/${config.slug}`,
-  },
-}
+export const generateMetadata = () => settingPageMetadata(config)
 
 export default function Page() {
   return <SettingPage config={config} />

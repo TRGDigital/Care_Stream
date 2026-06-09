@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Loader2, Check } from 'lucide-react'
 import { fetchTrainingSeoIndex, platformAssetUrl } from '@/lib/platform-api'
+import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -32,7 +33,11 @@ export function AltTagsPanel({ token }: { token: string }) {
         const virtual: ImageAlt[] = seo.images
           .map(im => ({ id: '', src: platformAssetUrl(im.src) ?? im.src, alt: im.alt }))
           .filter(im => !haveSrc.has(im.src))
-        const merged = [...dbImgs, ...virtual]
+        // Setting page hero photos (local /images/*.jpg, keyed by their plain src).
+        const settingVirtual: ImageAlt[] = SETTINGS_LIST
+          .map(s => ({ id: '', src: SETTING_IMAGES[s.slug], alt: `CareStream for ${s.label}` }))
+          .filter(im => im.src && !haveSrc.has(im.src))
+        const merged = [...dbImgs, ...virtual, ...settingVirtual]
         setImages(merged)
         setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {

@@ -5,16 +5,13 @@ import {
 } from 'lucide-react'
 import { PageHero, PageCta } from '@/components/marketing/ui'
 import { SETTINGS_LIST } from '@/lib/settings/list'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: 'Who We Serve',
+// Overridable from the platform console (Blog → Pages / site_pages).
+export const generateMetadata = () => pageMetadata('/who-we-serve', {
+  title:       'Who We Serve | CareStreamAI',
   description: 'CareStream supports every kind of CQC-regulated service: residential and nursing homes, domiciliary, live-in and complex care, Shared Lives, hospices, rehabilitation, independent hospitals, GP and dental practices.',
-  openGraph: {
-    title: 'Who We Serve | CareStreamAI',
-    description: 'One platform for policies, training, audits and CQC tools, across every kind of CQC-regulated care and clinical setting.',
-    url: 'https://carestreamai.com/who-we-serve',
-  },
-}
+})
 
 const ICONS: Record<string, LucideIcon> = {
   home: Home, stethoscope: Stethoscope, mapPin: MapPin, activity: Activity,

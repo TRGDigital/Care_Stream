@@ -241,7 +241,8 @@ export default function DashboardPage() {
       setFollowUp(followUpRes.status === 'fulfilled' ? followUpRes.value : null)
       const nextStats = {
         activePolicies: policiesRes.status === 'fulfilled' ? String(policiesRes.value?.total ?? '—') : '—',
-        staffCount:     usersRes.status   === 'fulfilled' ? String(usersRes.value?.total ?? (Array.isArray(usersRes.value) ? usersRes.value.length : '—')) : '—',
+        // Count ACTIVE staff only — deactivated members shouldn't inflate the headcount.
+        staffCount:     usersRes.status   === 'fulfilled' ? String(((usersRes.value?.users ?? []) as any[]).filter(u => u?.is_active !== false).length) : '—',
         totalQueries:   queriesRes.status === 'fulfilled' ? String(queriesRes.value?.total ?? '—') : '—',
       }
       const nextQueries  = queriesRes.status === 'fulfilled' ? (queriesRes.value?.queries ?? queriesRes.value?.items ?? []) : queries

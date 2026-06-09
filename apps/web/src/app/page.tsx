@@ -13,6 +13,7 @@ import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
 import { HomeBlogSection, type HomeBlogPost } from '@/components/marketing/home-blog-section'
+import { SettingsCarousel } from '@/components/marketing/settings-carousel'
 import { SiteImage } from '@/components/site-image'
 import { JsonLd } from '@/components/json-ld'
 import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
@@ -266,62 +267,6 @@ function TheProblem() {
 }
 
 function CareSettings() {
-  const settings = [
-    {
-      slug: 'residential',
-      href: '/residential-care',
-      label: 'Residential Care Homes',
-      description: 'Supporting registered managers and care staff with 24/7 policy access, multilingual answers, and automatic CQC compliance evidence.',
-      image: '/images/residential-care.jpg',
-      gradient: 'from-teal to-teal-dark',
-      icon: (
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="8" y="28" width="48" height="28" rx="3" fill="white" fillOpacity="0.15"/>
-          <path d="M4 32 L32 10 L60 32" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="24" y="40" width="16" height="16" rx="2" fill="white" fillOpacity="0.3"/>
-          <circle cx="32" cy="48" r="3" fill="white" fillOpacity="0.6"/>
-          <rect x="12" y="36" width="10" height="10" rx="1.5" fill="white" fillOpacity="0.25"/>
-          <rect x="42" y="36" width="10" height="10" rx="1.5" fill="white" fillOpacity="0.25"/>
-        </svg>
-      ),
-    },
-    {
-      slug: 'nursing',
-      href: '/nursing-homes',
-      label: 'Nursing Homes',
-      description: 'Giving nursing and care teams instant access to clinical procedures in any language, at any hour, with every query logged for inspection.',
-      image: '/images/nursing-home.jpg',
-      gradient: 'from-[#0A5F5F] to-[#0D4A6E]',
-      icon: (
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="20" r="10" fill="white" fillOpacity="0.2"/>
-          <path d="M18 56c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-          <rect x="27" y="13" width="10" height="14" rx="5" fill="white" fillOpacity="0.35"/>
-          <path d="M26 32h12M32 26v12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-          <circle cx="32" cy="20" r="10" stroke="white" strokeWidth="2.5" strokeOpacity="0.5"/>
-        </svg>
-      ),
-    },
-    {
-      slug: 'domiciliary',
-      href: '/domiciliary-care',
-      label: 'Domiciliary Care',
-      description: 'Keeping dispersed home-care teams connected to approved procedures whether they are in the office, on the road, or supporting a client.',
-      image: '/images/domiciliary-care.jpg',
-      gradient: 'from-[#1A6B6B] to-[#0E5550]',
-      icon: (
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="20" stroke="white" strokeWidth="2.5" strokeOpacity="0.4"/>
-          <path d="M12 32h40M32 12v40" stroke="white" strokeWidth="1.5" strokeOpacity="0.25"/>
-          <path d="M32 12c-6 8-9 14-9 20s3 12 9 20c6-8 9-14 9-20s-3-12-9-20z" fill="white" fillOpacity="0.15"/>
-          <circle cx="32" cy="32" r="5" fill="white" fillOpacity="0.5"/>
-          <circle cx="20" cy="26" r="3" fill="white" fillOpacity="0.35"/>
-          <circle cx="44" cy="38" r="3" fill="white" fillOpacity="0.35"/>
-        </svg>
-      ),
-    },
-  ]
-
   return (
     <section className="bg-white py-20">
       <div className="mx-auto max-w-content px-6">
@@ -332,46 +277,7 @@ function CareSettings() {
           </h2>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-3">
-          {settings.map(({ slug, href, label, description, image, gradient, icon }) => (
-            <a
-              key={slug}
-              href={href}
-              className="group block"
-            >
-              {/* Image card */}
-              <div className={`relative mb-5 overflow-hidden rounded-2xl aspect-[4/3] ${image ? '' : `bg-gradient-to-br ${gradient}`}`}>
-                {image ? (
-                  <SiteImage
-                    src={image}
-                    alt={label}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <>
-                    <div className="dot-mesh absolute inset-0 opacity-40" />
-                    <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5" />
-                    <div className="pointer-events-none absolute -bottom-10 -left-10 h-52 w-52 rounded-full bg-black/10" />
-                    <div className="absolute inset-0 flex items-center justify-center">{icon}</div>
-                  </>
-                )}
-                {/* Explore badge */}
-                <div className="absolute right-4 top-4 rounded-full bg-amber-brand px-4 py-1.5 text-xs font-bold text-white shadow-amber-glow transition-transform duration-200 group-hover:scale-105">
-                  Explore
-                </div>
-              </div>
-
-              {/* Text */}
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark transition-colors group-hover:text-teal">
-                {label}
-              </h3>
-              <p className="mb-4 text-sm leading-relaxed text-neutral-mid">{description}</p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal transition-colors group-hover:text-teal-dark">
-                Read more <ArrowRight size={14} />
-              </span>
-            </a>
-          ))}
-        </div>
+        <SettingsCarousel />
 
         <div className="mt-10 text-center">
           <Link href="/who-we-serve" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">

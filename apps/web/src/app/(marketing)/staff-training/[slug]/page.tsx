@@ -59,7 +59,10 @@ async function getModule(slug: string): Promise<ModuleDetail | null> {
 
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 300 } })
+    // no-store: always read the live list at build time. A cached (revalidate)
+    // entry can pin an empty response from a window when the API was down,
+    // which would prerender zero pages and 404 every slug.
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { cache: 'no-store' })
     if (res.ok) {
       const topics = (await res.json())?.data?.topics ?? []
       return (topics as Array<{ slug?: string }>).map((t) => ({ slug: t.slug })).filter((p) => p.slug)

@@ -102,7 +102,9 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
     const m = (modules as any[])[0]
     const cover = (modules as any[]).find(x => x.illustration_key)
     const lc = (m?.learning_content ?? {}) as any
-    const sections = Array.isArray(lc.sections) ? lc.sections.map((s: any) => s?.heading).filter(Boolean) : []
+    const sections = Array.isArray(lc.sections)
+      ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? '') })).filter((s: any) => s.heading)
+      : []
     const standards = Array.isArray(m?.standards) ? (m.standards as any[]).map(s => s?.label).filter(Boolean) : []
 
     res.json({ data: { module: {

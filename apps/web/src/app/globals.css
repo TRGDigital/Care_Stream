@@ -85,7 +85,7 @@ a, button { transition: all 0.18s ease; }
   background-clip: text;
 }
 
-/* Styles for Claude-generated HTML inside chat bubbles */
+/* Styles for AI-generated HTML inside chat bubbles */
 .message-content p            { margin-bottom: 0.75rem; }
 .message-content p:last-child { margin-bottom: 0; }
 .message-content h2           { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.5rem; }

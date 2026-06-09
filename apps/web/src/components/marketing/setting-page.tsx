@@ -152,10 +152,12 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
             <div className="relative">
               {image ? (
                 <>
+                  {/* Photo gets a generous fixed height on desktop so the floating
+                      mock-up always tucks inside it rather than spilling above. */}
                   <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10">
-                    <SiteImage src={image} alt={`CareStream for ${c.label}`} className="aspect-[4/3] w-full object-cover" />
+                    <SiteImage src={image} alt={`CareStream for ${c.label}`} className="aspect-[4/3] w-full object-cover lg:aspect-auto lg:h-[480px]" />
                   </div>
-                  <div className="mt-6 flex justify-center lg:absolute lg:-bottom-10 lg:-left-8 lg:mt-0 lg:w-[290px] lg:justify-start">
+                  <div className="mt-6 flex justify-center lg:absolute lg:-bottom-6 lg:-left-6 lg:mt-0 lg:w-[290px] lg:justify-start">
                     <HubMockup m={c.mockup} />
                   </div>
                 </>

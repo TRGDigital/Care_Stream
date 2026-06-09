@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, BarChart2,
   ShieldCheck, Users, Brain, RefreshCw, PenLine, Gauge, Sparkles,
-  ClipboardList, Target,
+  ClipboardList, Target, Languages,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
@@ -305,6 +305,96 @@ export default function CQCStaffQuestionsPage() {
         </div>
       </section>
 
+      {/* ── First language ────────────────────────────────────────────────── */}
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>In Every Language Your Team Speaks</SectionLabel>
+          <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Staff practise in their own language. Your reporting stays in English.
+          </h2>
+          <div className="grid items-start gap-12 lg:grid-cols-2">
+            <div>
+              <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
+                A multilingual workforce, prepared in the language each person thinks in.
+              </h3>
+              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
+                Care is delivered by people from all over the world. A member of staff who is most
+                confident in Polish, Romanian, or Tagalog should not be held back by having to
+                practise inspector questions in English.
+              </p>
+              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
+                CareStream shows the question, the model answer, and the feedback to each staff member
+                in their own language, the same way the rest of the platform works across chat,
+                training, and induction. They answer in their own words, in their own language, and
+                the AI scores the answer just the same.
+              </p>
+              <div className="space-y-3">
+                {[
+                  { label: 'Set once, applied everywhere',     text: 'The language on each staff profile is used automatically, so staff do not have to choose it every time.' },
+                  { label: 'Answer naturally',                 text: 'Staff reply in the language they think in, and still receive a score out of 100 with clear feedback.' },
+                  { label: 'Consistent reporting in English',  text: 'The manager dashboard keeps every score and record in English, so the whole team can be compared at a glance whatever language each person practised in.' },
+                ].map(({ label, text }) => (
+                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-white p-4">
+                    <Languages size={16} className="mt-0.5 flex-shrink-0 text-teal" />
+                    <div>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Translated answer mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                <div className="flex items-center justify-between bg-teal px-4 py-3">
+                  <div>
+                    <p className="text-sm font-bold text-white">Ćwiczenie CQC</p>
+                    <p className="text-[11px] text-white/70">Obszar: Bezpieczeństwo</p>
+                  </div>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <Languages size={10} /> Polski
+                  </span>
+                </div>
+                <div className="space-y-3 p-4">
+                  {/* Question */}
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-teal">Pytanie</p>
+                    <p className="text-xs font-medium leading-snug text-neutral-dark">
+                      Mieszkaniec pokazuje Ci niewyjaśniony siniak i wydaje się przygnębiony. Jesteś z nim sam. Jaki jest Twój natychmiastowy obowiązek?
+                    </p>
+                  </div>
+                  {/* Staff free-text answer */}
+                  <div className="rounded-xl border border-gray-100 p-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Twoja odpowiedź</p>
+                    <p className="text-xs leading-snug text-neutral-dark">
+                      Najpierw upewniłabym się, że mieszkaniec jest bezpieczny i spokojny, a potem od razu zgłosiłabym to osobie odpowiedzialnej za ochronę. Zapisałabym dokładnie to, co zobaczyłam, i nie konfrontowałabym się z nikim sama.
+                    </p>
+                  </div>
+                  {/* AI score + feedback */}
+                  <div className="rounded-xl border border-teal/20 bg-teal/5 p-3">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-teal">
+                        <Sparkles size={11} /> Informacja zwrotna AI
+                      </p>
+                      <span className="rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-white">82 / 100</span>
+                    </div>
+                    <p className="text-[11px] leading-snug text-neutral-dark">
+                      Bardzo dobrze. Od razu zgłosiłaś sprawę i udokumentowałaś, co zobaczyłaś. Aby poprawić odpowiedź, wspomnij o zabezpieczeniu śladów i unikaniu pytań sugerujących.
+                    </p>
+                  </div>
+                  {/* Retry affordance */}
+                  <button className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[11px] font-semibold text-neutral-mid">
+                    <RefreshCw size={11} /> Zobacz wzorcową odpowiedź i spróbuj ponownie
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Readiness at scale ────────────────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">
@@ -415,7 +505,7 @@ export default function CQCStaffQuestionsPage() {
               { icon: RefreshCw,     label: 'Review and retry',               desc: 'Staff see the model answer after answering, then try again. The improvement from first attempt to latest is tracked.',                          iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
               { icon: BarChart2,     label: 'Readiness scores per KLOE',      desc: 'Track each staff member and the whole team across Safe, Effective, Caring, Responsive, and Well-led. See gaps at a glance.',                    iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
               { icon: Target,        label: 'Targeted practice delivery',     desc: 'Send a focused batch of questions to any KLOE category that is weak across the team, to the staff who need it most.',                          iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-              { icon: Brain,         label: 'Reworded on delivery',           desc: 'Each question is reworded slightly when it is sent, so staff build understanding rather than memorising a fixed reply.',                      iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+              { icon: Languages,     label: 'In their first language',         desc: 'Staff see the question, the model answer, and the feedback in their own language, and answer in their own words, just like the rest of CareStream.', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
               { icon: Sparkles,      label: 'Notified in the hub',            desc: 'Staff are nudged with a notification when a new question is waiting, and answer in the hub on any device whenever it suits them.',           iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
             ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
               <div key={label} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">

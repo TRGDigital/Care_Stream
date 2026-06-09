@@ -6,10 +6,12 @@
 // Features: suggested queries, typing indicator, collapsible citations,
 //           language chip for non-English responses, localStorage session history.
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView } from '@/components/hub/annual-training-view'
+import { CqcView } from '@/components/hub/cqc-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
@@ -318,10 +320,14 @@ function NavBadge({ count, className }: { count: number; className: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ChatPage() {
+  return <Suspense fallback={null}><ChatPageInner /></Suspense>
+}
+
+function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
@@ -363,11 +369,13 @@ export default function ChatPage() {
   useEffect(() => { setNavOpen(false) }, [sessionId, view])
 
   // Honour ?view=induction|training (e.g. links from My Progress)
+  // Deep links + top-nav (e.g. /chat?view=cqc) open that section — reactive to the
+  // query so it works even when already on /chat (query-only navigation).
+  const searchParams = useSearchParams()
   useEffect(() => {
-    const v = new URLSearchParams(window.location.search).get('view')
-    // Deep links from notification emails (e.g. /chat?view=annual) open that section.
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits') setView(v)
-  }, [])
+    const v = searchParams.get('view')
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc') setView(v)
+  }, [searchParams])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the
   // badges, saved policies and language picker all appear together on the first
@@ -731,14 +739,14 @@ export default function ChatPage() {
               Audits
             </button>
           )}
-          <Link
-            href="/cqc"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          <button
+            onClick={() => setView('cqc')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'cqc' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <ShieldCheck size={15} />
             CQC Prep
             {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
-          </Link>
+          </button>
           <Link
             href="/progress"
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
@@ -879,6 +887,13 @@ export default function ChatPage() {
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
           <FollowUpView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
+          }} />
+        )}
+
+        {/* CQC Prep view */}
+        {view === 'cqc' && session?.accessToken && (
+          <CqcView token={session.accessToken} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
         )}

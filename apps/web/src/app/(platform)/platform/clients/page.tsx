@@ -108,8 +108,8 @@ export default function ClientsPage() {
             <Loader2 size={28} className="animate-spin text-neutral-mid" />
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <table className="w-full min-w-[1100px] text-sm">
               <thead className="border-b border-gray-200 bg-neutral-light text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
                 <tr>
                   <th className="px-4 py-3">Client</th>
@@ -121,7 +121,7 @@ export default function ClientsPage() {
                   <th className="px-4 py-3 text-right">Handbooks</th>
                   <th className="px-4 py-3 text-right">Manual KB</th>
                   <th className="px-4 py-3">Joined</th>
-                  <th className="px-4 py-3 text-right">Account</th>
+                  <th className="sticky right-0 bg-neutral-light px-4 py-3 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)]">Account</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -191,7 +191,7 @@ export default function ClientsPage() {
                       <td className="px-4 py-3 text-neutral-mid text-xs">
                         {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className={`sticky right-0 px-4 py-3 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)] ${risk ? 'bg-amber-50' : 'bg-white'}`}>
                         <OpenAccountButton token={token!} tenantId={t.id} name={t.name} />
                       </td>
                     </tr>

@@ -347,6 +347,24 @@ export default function ClientDetailPage() {
   const [error,       setError]       = useState<string | null>(null)
   const [seeding,     setSeeding]     = useState(false)
   const [seedMsg,     setSeedMsg]     = useState('')
+  const [opening,     setOpening]     = useState(false)
+
+  // Sign into the client's own dashboard in a new tab (one-time magic link).
+  async function handleOpenAccount() {
+    if (!token || !id) return
+    setOpening(true); setError(null)
+    const tab = window.open('', '_blank')   // open synchronously so it isn't pop-up-blocked
+    try {
+      const { url } = await createPlatformClient(token).tenants.openAccount(id)
+      if (tab) tab.location.href = url
+      else window.location.href = url
+    } catch (e: any) {
+      tab?.close()
+      setError(e.message ?? 'Could not open account')
+    } finally {
+      setOpening(false)
+    }
+  }
 
   // Staff state
   const [staff,        setStaff]        = useState<any[]>([])
@@ -478,10 +496,16 @@ export default function ClientDetailPage() {
               )}
             </div>
           </div>
-          <Button onClick={handleSeedTenant} disabled={seeding || loading} size="md" variant="secondary">
-            <Sparkles size={14} className="mr-1.5" />
-            {seeding ? 'Seeding…' : 'Seed knowledge'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleOpenAccount} disabled={opening || loading} size="md" variant="primary">
+              {opening ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <ExternalLink size={14} className="mr-1.5" />}
+              {opening ? 'Opening…' : 'Open account'}
+            </Button>
+            <Button onClick={handleSeedTenant} disabled={seeding || loading} size="md" variant="secondary">
+              <Sparkles size={14} className="mr-1.5" />
+              {seeding ? 'Seeding…' : 'Seed knowledge'}
+            </Button>
+          </div>
         </div>
 
         {seedMsg && (

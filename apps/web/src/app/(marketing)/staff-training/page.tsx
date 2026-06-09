@@ -364,7 +364,6 @@ export default async function StaffTrainingPage() {
                             {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
                           </p>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
-                            {t.pass_mark ? <span>Pass mark {t.pass_mark}%</span> : null}
                             {t.requires_practical ? <span>Practical sign-off</span> : null}
                           </div>
                         </div>

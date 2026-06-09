@@ -124,19 +124,21 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* Standard end-of-article CTA — shown on every post */}
-      <div className="not-prose mt-12 rounded-xl border border-teal/20 bg-teal-light p-8 text-center">
-        <p className="mb-1 text-lg font-extrabold text-neutral-dark">See CareStream in action</p>
-        <p className="mb-5 text-sm text-neutral-mid">Book a demo or start your free trial today.</p>
-        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/demo" className="inline-flex items-center justify-center rounded-lg bg-teal px-6 py-2.5 text-sm font-semibold text-white hover:bg-teal-dark">
-            Book a Demo
-          </Link>
-          <Link href="/register" className="inline-flex items-center justify-center rounded-lg border border-teal px-6 py-2.5 text-sm font-semibold text-teal hover:bg-teal/10">
-            Start Free Trial
-          </Link>
+      {/* Standard end-of-article CTA — only when the post has no custom CTA */}
+      {!(post.cta_text && post.cta_url) && (
+        <div className="not-prose mt-12 rounded-xl border border-teal/20 bg-teal-light p-8 text-center">
+          <p className="mb-1 text-lg font-extrabold text-neutral-dark">See CareStream in action</p>
+          <p className="mb-5 text-sm text-neutral-mid">Book a demo or start your free trial today.</p>
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/demo" className="inline-flex items-center justify-center rounded-lg bg-teal px-6 py-2.5 text-sm font-semibold text-white hover:bg-teal-dark">
+              Book a Demo
+            </Link>
+            <Link href="/register" className="inline-flex items-center justify-center rounded-lg border border-teal px-6 py-2.5 text-sm font-semibold text-teal hover:bg-teal/10">
+              Start Free Trial
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
       </ArticleLayout>
     </>
   )

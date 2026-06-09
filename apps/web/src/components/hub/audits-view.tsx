@@ -45,17 +45,18 @@ export function AuditsView({ token, userId }: { token: string; userId: string })
 
 function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiClient>; userId: string; onOpen: (runId: string) => void }) {
   const ck = hubKey('audits', userId)
-  const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[] }>(ck)
+  const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[]; stats: any }>(ck)
   const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
   const [runs,      setRuns]      = useState<any[]>(cached?.runs ?? [])
   const [rooms,     setRooms]     = useState<string[]>(cached?.rooms ?? [])
+  const [stats,     setStats]     = useState<any>(cached?.stats ?? null)
   const [roomInput, setRoomInput] = useState<Record<string, string>>({})
   const [loading,   setLoading]   = useState(!cached)
   const [starting,  setStarting]  = useState<string | null>(null)
 
   function load() {
-    Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [] }) })
+    Promise.all([api.audits.templates(), api.audits.runs(), api.audits.stats()])
+      .then(([t, r, s]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setRuns(r.runs ?? []); setStats(s); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [], stats: s }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }
@@ -86,9 +87,31 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <datalist id="audit-rooms">{rooms.map(r => <option key={r} value={r} />)}</datalist>
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><ClipboardCheck size={20} className="text-teal" /> Audits</h2>
         <p className="mb-5 text-sm text-neutral-mid">Start, save and complete audits here — they appear in your admin Audit section automatically.</p>
+
+        {/* Snapshot */}
+        {stats && (
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+              <p className="text-2xl font-bold text-amber-600">{stats.in_progress}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">Open</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+              <p className={`text-2xl font-bold ${stats.due > 0 ? 'text-orange-600' : 'text-gray-300'}`}>{stats.due}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">To start</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+              <p className="text-2xl font-bold text-green-600">{stats.completed_this_month}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">Done this month</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+              <p className="text-2xl font-bold text-teal-600">{stats.completed}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">Completed total</p>
+            </div>
+          </div>
+        )}
 
         {inProgress.length > 0 && (
           <div className="mb-6">

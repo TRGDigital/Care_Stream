@@ -467,6 +467,7 @@ export function createApiClient(token: string) {
       report: (id: string) => apiFetch<{ report: any }>(`/audits/runs/${id}/report`, token),
       stats: () => apiFetch<{
         total: number; completed: number; in_progress: number
+        due: number; due_list: Array<{ id: string; name: string; frequency: string }>; completed_this_month: number
         by_frequency: Record<string, { completed: number; in_progress: number; last_completed: string | null }>
       }>('/audits/stats', token),
     },

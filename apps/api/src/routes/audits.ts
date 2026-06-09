@@ -6,6 +6,7 @@ import { callClaude } from '../services/ai/claude'
 import { trackAiAction } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
+import { getAuditsDue } from '../services/audits/due'
 
 export const auditsRouter = Router()
 
@@ -960,10 +961,23 @@ auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => 
     }
   }
 
+  // "Due to start" — same logic as the reminder email / hub badge.
+  const { due } = await getAuditsDue(tenantId)
+
+  const now = new Date()
+  const completed_this_month = runs.filter((r: any) =>
+    r.status === 'completed' && r.completed_at &&
+    new Date(r.completed_at).getUTCFullYear() === now.getUTCFullYear() &&
+    new Date(r.completed_at).getUTCMonth() === now.getUTCMonth()
+  ).length
+
   ok(res, {
     total:        runs.length,
     completed:    runs.filter((r: any) => r.status === 'completed').length,
     in_progress:  runs.filter((r: any) => r.status !== 'completed').length,
+    due:          due.length,
+    due_list:     due,
+    completed_this_month,
     by_frequency,
   })
 })

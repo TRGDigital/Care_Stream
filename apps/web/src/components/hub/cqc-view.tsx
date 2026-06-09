@@ -287,7 +287,7 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
 
   return (
     <div className="flex-1 overflow-y-auto">
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       <div>
         <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>
         <p className="text-sm text-gray-500 mt-1">

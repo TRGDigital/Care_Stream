@@ -105,7 +105,7 @@ function AnnualList({ token, userId, onOpen, onCert }: { token: string; userId: 
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> Annual Training</h2>
         <p className="mb-5 text-sm text-neutral-mid">Training tailored to your home&apos;s policies. Read the lesson, pass the assessment, get your certificate.</p>
         {todo.length > 0 && <div className="mb-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">To complete</p><div className="space-y-2">{todo.map(Card)}</div></div>}

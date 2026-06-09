@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, useRef, useContext, createContext, isValidElement, Children, type ReactNode } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import {
   createPlatformClient,
@@ -1363,10 +1363,48 @@ function AgentInteractions({ token }: { token: string | null }) {
 
 // ─── System Reference ─────────────────────────────────────────────────────────
 
+// Active System-Reference search query (lowercased), shared with every RefSection.
+const RefSearchCtx = createContext('')
+
+// Recursively gather all searchable text from a React subtree — RefRow label/value,
+// RefSection title, paragraph text and any nested children.
+function nodeText(node: React.ReactNode): string {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(nodeText).join(' ')
+  if (isValidElement(node)) {
+    const p = node.props as any
+    return [p?.label, p?.value, p?.title, nodeText(p?.children)].filter(Boolean).map(String).join(' ')
+  }
+  return ''
+}
+
 function RefSection({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+  const query = useContext(RefSearchCtx)
   const [open, setOpen] = useState(false)
+
+  // ── Search mode: hide non-matching sections, auto-expand + narrow to matches ──
+  if (query) {
+    const titleMatch = title.toLowerCase().includes(query)
+    if (!titleMatch && !nodeText(children).toLowerCase().includes(query)) return null
+    const shown = titleMatch
+      ? children
+      : Children.toArray(children).filter(c => nodeText(c).toLowerCase().includes(query))
+    return (
+      <div data-refsec className="rounded-xl border border-teal/30 bg-white overflow-hidden">
+        <div className="flex w-full items-center gap-3 px-5 py-4">
+          <Icon size={16} className="shrink-0 text-teal" />
+          <span className="flex-1 text-sm font-semibold text-neutral-dark">{title}</span>
+        </div>
+        <div className="border-t border-gray-100 px-5 py-4 text-sm text-neutral-dark space-y-3">
+          {shown}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div data-refsec className="rounded-xl border border-gray-200 bg-white overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-neutral-light/50 transition-colors"
@@ -1616,15 +1654,56 @@ function ChannelRoutingMap() {
 }
 
 function SystemReference() {
+  const [q, setQ] = useState('')
+  const query = q.trim().toLowerCase()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [hasResults, setHasResults] = useState(true)
+
+  // After each query change, count the sections that actually rendered.
+  useEffect(() => {
+    if (!query) { setHasResults(true); return }
+    setHasResults((containerRef.current?.querySelectorAll('[data-refsec]').length ?? 0) > 0)
+  }, [query])
+
   return (
-    <div className="space-y-3">
+    <RefSearchCtx.Provider value={query}>
+    <div className="space-y-3" ref={containerRef}>
       <div className="rounded-xl border border-teal/20 bg-teal-light/30 px-5 py-4">
         <p className="text-sm font-semibold text-teal-dark">CareStream AI — Internal System Reference</p>
         <p className="mt-1 text-xs text-neutral-mid">
-          Quick reference for the core systems, logic, and integrations. Click any section to expand.
+          Quick reference for the core systems, logic, and integrations. Search or click any section to expand.
           Last reviewed: June 2026.
         </p>
       </div>
+
+      {/* Search */}
+      <div className="sticky top-0 z-10 -mx-1 bg-neutral-light/80 px-1 py-2 backdrop-blur">
+        <div className="relative">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+          <input
+            type="text"
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Search the reference — e.g. Stripe, webhook, Pinecone, refresh token…"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-9 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+          />
+          {q && (
+            <button
+              onClick={() => setQ('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"
+              aria-label="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {query && !hasResults && (
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-8 text-center text-sm text-neutral-mid">
+          No reference entries match “{q.trim()}”.
+        </div>
+      )}
 
       {/* Architecture Overview */}
       <RefSection icon={Cpu} title="Architecture Overview">
@@ -2717,6 +2796,7 @@ function SystemReference() {
         </div>
       </RefSection>
     </div>
+    </RefSearchCtx.Provider>
   )
 }
 

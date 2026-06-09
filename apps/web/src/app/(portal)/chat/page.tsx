@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
+import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
 import { createApiClient, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
@@ -327,7 +328,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
@@ -374,7 +375,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc') setView(v)
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress') setView(v)
   }, [searchParams])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the
@@ -747,13 +748,13 @@ function ChatPageInner() {
             CQC Prep
             {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </button>
-          <Link
-            href="/progress"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          <button
+            onClick={() => setView('progress')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'progress' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <TrendingUp size={15} />
             My Progress
-          </Link>
+          </button>
         </div>
 
         {/* Saved policies */}
@@ -896,6 +897,11 @@ function ChatPageInner() {
           <CqcView token={session.accessToken} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual })).catch(() => {})
           }} />
+        )}
+
+        {/* My Progress view */}
+        {view === 'progress' && session?.accessToken && (
+          <ProgressView token={session.accessToken} />
         )}
 
         {/* Active category badge */}

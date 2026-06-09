@@ -32,7 +32,7 @@ export function PortalNav({ userName, userRole }: Props) {
 
   const links = [
     { href: '/chat',     label: 'Chat Hub'    },
-    { href: '/progress', label: 'My Progress' },
+    { href: '/chat?view=progress', label: 'My Progress' },
     { href: '/chat?view=cqc', label: 'CQC Prep', badge: pendingCqc },
     ...(userRole === 'admin' ? [{ href: '/dashboard', label: 'Admin' }] : []),
   ]

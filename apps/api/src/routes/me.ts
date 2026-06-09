@@ -516,7 +516,7 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   if (!englishHtml) {
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
     if (!raw) { ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return }
-    englishHtml = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 45_000, null)
+    englishHtml = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 90_000, null)
     if (englishHtml) {
       await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: englishHtml } }).catch(() => {})
       trackAiAction(tenantId, 'policy_format', policyId)

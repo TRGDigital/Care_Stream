@@ -9,7 +9,8 @@ import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGener
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
-import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats } from '../services/storage/s3'
+import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText } from '../services/storage/s3'
+import { formatPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
@@ -579,6 +580,42 @@ adminRouter.post('/tenants/:id/staff/:userId/send-credentials', async (req: Requ
     ok(res, { sent: true })
   } catch (e: any) {
     err(res, 'EMAIL_FAILED', e.message ?? 'Failed to send email.', 500)
+  }
+})
+
+// ─── POST /admin/tenants/:id/format-policies ─────────────────────────────────
+// Pre-format + cache the clean reading HTML for a tenant's policies, so the staff
+// hub policy reader serves them instantly (formatted) instead of formatting on the
+// fly per open (which can time out → raw/unformatted text). Idempotent: skips
+// already-cached policies. Processes a bounded batch per call (returns `remaining`
+// so the caller can loop until 0).
+adminRouter.post('/tenants/:id/format-policies', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const limit = Math.min(Number(req.body?.limit) || 25, 40)
+  try {
+    const [policies, cached] = await Promise.all([
+      (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true } }),
+      (prisma as any).policyTranslation.findMany({ where: { tenant_id: tenantId, lang: 'eng' }, select: { policy_id: true } }),
+    ])
+    const cachedSet = new Set((cached as any[]).map(c => c.policy_id))
+    const todo = (policies as any[]).filter(p => !cachedSet.has(p.id)).map(p => p.id)
+    const batch = todo.slice(0, limit)
+
+    let formatted = 0, failed = 0
+    await mapLimit(batch, 4, async (policyId: string) => {
+      try {
+        const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+        if (!raw) { failed++; return }
+        const html = await formatPolicyHtml(raw, 'eng')
+        if (!html) { failed++; return }
+        await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: html } }).catch(() => {})
+        formatted++
+      } catch { failed++ }
+    })
+
+    ok(res, { formatted, failed, processed: batch.length, remaining: Math.max(0, todo.length - batch.length), total_active: policies.length, total_cached: cachedSet.size + formatted })
+  } catch (e: any) {
+    err(res, 'FORMAT_FAILED', e.message ?? 'Format failed', 500)
   }
 })
 

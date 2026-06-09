@@ -478,7 +478,7 @@ cqcQuestionsRouter.get('/deliveries', requireAdmin, async (req: Request, res: Re
 // The model answer is revealed only AFTER a question has been answered (so it can't
 // be read ahead of answering a pending question).
 cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => {
-  const userId   = (req as any).user.id
+  const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
   try {
     const [deliveries, user, tenant] = await Promise.all([
@@ -528,7 +528,7 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
 // try again after reviewing the model answer & feedback. Reuses the same delivery
 // row (so there's one record per staff+question) and bumps the attempt count.
 cqcQuestionsRouter.post('/deliveries/:id/retry', async (req: Request, res: Response) => {
-  const userId = (req as any).user.id
+  const userId = (req as any).user.sub
   try {
     const delivery = await (prisma as any).cqcStaffDelivery.findFirst({
       where:   { id: req.params.id, user_id: userId, status: 'evaluated' },
@@ -548,7 +548,7 @@ cqcQuestionsRouter.post('/deliveries/:id/retry', async (req: Request, res: Respo
 
 // POST /cqc-questions/deliveries/:id/answer — staff submits free-text answer
 cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Response) => {
-  const userId   = (req as any).user.id
+  const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
   const { answer_text } = req.body
   if (!answer_text?.trim()) {

@@ -18,7 +18,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <PwaRegister />
       <InstallPrompt />
       <NotificationsOptIn />
-      <div className="flex h-screen flex-col bg-neutral-light">
+      <div className="flex h-[100dvh] flex-col bg-neutral-light">
         <PortalNav
           userName={session.user.name ?? ''}
           userRole={session.user.role}

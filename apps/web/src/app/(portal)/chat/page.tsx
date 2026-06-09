@@ -19,7 +19,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -329,6 +329,7 @@ export default function ChatPage() {
   const [messages, setMessages]                        = useState<ChatMessage[]>([])
   const [input, setInput]                              = useState('')
   const [sending, setSending]                          = useState(false)
+  const [navOpen, setNavOpen]                          = useState(false)  // mobile: in-chat sidebar drawer
 
   const [expandedCitations, setExpandedCitations]      = useState<Set<string>>(new Set())
   const [fullPolicyRequestedIds, setFullPolicyRequestedIds] = useState<Set<string>>(new Set())
@@ -357,6 +358,9 @@ export default function ChatPage() {
       try { const v = localStorage.getItem(`cs_reply_lang_${userId}`); if (v) setReplyLang(v) } catch { /* ignore */ }
     }
   }, [userId])
+
+  // Close the mobile sidebar drawer when the user navigates (picks a chat / view).
+  useEffect(() => { setNavOpen(false) }, [sessionId, view])
 
   // Honour ?view=induction|training (e.g. links from My Progress)
   useEffect(() => {
@@ -659,12 +663,19 @@ export default function ChatPage() {
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* ── Left panel ─────────────────────────────────────────────────────── */}
-      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
+      {/* Mobile backdrop for the sidebar drawer */}
+      {navOpen && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setNavOpen(false)} />}
+
+      {/* ── Left panel (static ≥ md, drawer on mobile) ─────────────────────── */}
+      <aside className={`w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:static md:z-auto md:flex md:shadow-none ${navOpen ? 'fixed inset-y-0 left-0 z-50 flex shadow-2xl' : 'hidden'}`}>
+        {/* Close (mobile drawer only) */}
+        <button onClick={() => setNavOpen(false)} aria-label="Close menu" className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light md:hidden">
+          <X size={18} />
+        </button>
         {/* New chat — pinned, always visible */}
         <div className="flex-shrink-0 border-b border-gray-100 p-3">
           <button
-            onClick={() => { setView('chat'); startNewChat() }}
+            onClick={() => { setView('chat'); startNewChat(); setNavOpen(false) }}
             className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal/90"
           >
             <Plus size={15} />
@@ -835,6 +846,13 @@ export default function ChatPage() {
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">
+
+        {/* Mobile-only bar: open the chat sidebar (conversations / saved policies) */}
+        <div className="flex flex-shrink-0 items-center gap-2 border-b border-gray-100 bg-white px-3 py-1.5 md:hidden">
+          <button onClick={() => setNavOpen(true)} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-teal">
+            <Menu size={16} /> Chats &amp; saved
+          </button>
+        </div>
 
         {/* Induction view */}
         {view === 'induction' && session?.accessToken && (

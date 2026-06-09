@@ -18,13 +18,20 @@ export function InstallPrompt() {
     try { if (localStorage.getItem('cs_install_dismissed') === '1') return } catch { /* ignore */ }
 
     const ua = navigator.userAgent
-    const ios = /iphone|ipad|ipod/i.test(ua) && /safari/i.test(ua) && !/crios|fxios/i.test(ua)
+    const ios = /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && 'ontouchend' in document) // iPadOS reports as Mac
+    const android = /android/i.test(ua)
+    const mobile = ios || android
     setIsIOS(ios)
 
+    // Android/desktop fire beforeinstallprompt → real Install button.
     const onPrompt = (e: any) => { e.preventDefault(); setDeferred(e); setShow(true) }
     window.addEventListener('beforeinstallprompt', onPrompt)
-    if (ios) setShow(true) // iOS: no event — show the hint directly
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+
+    // On any mobile device, surface the prompt after a short delay even if no
+    // install event fires (iOS never fires it; some browsers withhold it).
+    let t: any
+    if (mobile) t = setTimeout(() => setShow(true), 2500)
+    return () => { window.removeEventListener('beforeinstallprompt', onPrompt); if (t) clearTimeout(t) }
   }, [])
 
   function dismiss() {
@@ -53,8 +60,12 @@ export function InstallPrompt() {
             <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">
               Tap the Share icon <Share size={11} className="inline align-text-bottom" /> in your browser bar, then <strong>Add to Home Screen</strong>. It opens like an app — no logging in each time.
             </p>
-          ) : (
+          ) : deferred ? (
             <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">Install the hub for one-tap access — and notifications when something needs you.</p>
+          ) : (
+            <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">
+              Open your browser menu <strong>⋮</strong> and tap <strong>Add to Home screen</strong> (or <strong>Install app</strong>). It opens like an app — no logging in each time.
+            </p>
           )}
           {!isIOS && deferred && (
             <button onClick={install} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark">

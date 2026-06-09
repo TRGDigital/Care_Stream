@@ -31,7 +31,7 @@ export function organizationSchema() {
     url:          SITE_URL,
     logo:         `${SITE_URL}/logo-color.png`,
     email:        'hello@carestreamai.com',
-    description:  'AI-powered policy access and compliance platform for UK care providers — instant, multilingual access to your own policies via web, email and WhatsApp.',
+    description:  'AI-powered policy access and compliance platform for UK care providers: instant, multilingual access to your own policies and training, in the hub or by email.',
     // sameAs / address / telephone added once the real values are supplied.
     contactPoint: {
       '@type':       'ContactPoint',
@@ -72,8 +72,8 @@ export function webApplicationSchema() {
     name:                 SITE_NAME,
     url:                  SITE_URL,
     applicationCategory:  'HealthApplication',
-    operatingSystem:      'Web (also accessible via email and WhatsApp)',
-    description:          'Gives care teams 24/7 access to their organisation’s own policies, in 50+ languages, via web chat, email and WhatsApp — grounded in approved documents (RAG), with training, audits and CQC readiness reporting.',
+    operatingSystem:      'Web and mobile hub (also accessible by email)',
+    description:          'Gives care teams 24/7 access to their organisation’s own policies and training, in 60+ languages, in the hub or by email, grounded in approved documents (RAG), with audits and CQC readiness reporting.',
     provider:             { '@id': ORG_ID },
     offers: [
       { '@type': 'Offer', name: 'Starter',      price: '49.00',  priceCurrency: 'GBP', category: 'subscription', url: `${SITE_URL}/pricing` },

@@ -598,7 +598,9 @@ adminRouter.post('/tenants/:id/format-policies', async (req: Request, res: Respo
       (prisma as any).policyTranslation.findMany({ where: { tenant_id: tenantId, lang: 'eng' }, select: { policy_id: true } }),
     ])
     const cachedSet = new Set((cached as any[]).map(c => c.policy_id))
-    const todo = (policies as any[]).filter(p => !cachedSet.has(p.id)).map(p => p.id)
+    const explicitIds: string[] = Array.isArray(req.body?.policy_ids) ? req.body.policy_ids.map(String) : []
+    let todo = (policies as any[]).filter(p => !cachedSet.has(p.id)).map(p => p.id)
+    if (explicitIds.length) todo = todo.filter(id => explicitIds.includes(id))   // format these first
     const batch = todo.slice(0, limit)
 
     let formatted = 0, failed = 0

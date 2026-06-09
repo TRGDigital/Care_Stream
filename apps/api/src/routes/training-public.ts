@@ -103,8 +103,23 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
     const m = (modules as any[])[0]
     const cover = (modules as any[]).find(x => x.illustration_key)
     const lc = (m?.learning_content ?? {}) as any
+    // Per-section images may have been generated on a different module version
+    // than the one chosen for text (e.g. on a draft). Build a per-index image
+    // map, preferring the selected module, aligned by section order.
+    const sectionImageByIdx = new Map<number, string>()
+    for (const mod of [m, ...(modules as any[])]) {
+      const secs = (mod?.learning_content as any)?.sections
+      if (!Array.isArray(secs)) continue
+      secs.forEach((sec: any, i: number) => {
+        if (sec?.image_key && !sectionImageByIdx.has(i)) sectionImageByIdx.set(i, sec.image_key)
+      })
+    }
     const sections = Array.isArray(lc.sections)
-      ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? '') })).filter((s: any) => s.heading)
+      ? lc.sections.map((s: any, i: number) => ({
+          heading:   String(s?.heading ?? ''),
+          body:      String(s?.body ?? ''),
+          image_url: sectionImageByIdx.has(i) ? illustrationUrl(sectionImageByIdx.get(i)!) : null,
+        })).filter((s: any) => s.heading)
       : []
     const standards = Array.isArray(m?.standards) ? (m.standards as any[]).map(s => s?.label).filter(Boolean) : []
 

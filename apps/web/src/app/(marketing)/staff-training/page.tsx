@@ -2,9 +2,38 @@ import Link from 'next/link'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
-  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck,
+  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, Clock,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { SiteImage } from '@/components/site-image'
+
+export const revalidate = 60
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+type StandardModule = {
+  id: string
+  name: string
+  description: string
+  frequency: string
+  duration_minutes: number | null
+  pass_mark: number
+  cpd_accredited: boolean
+  illustration_url: string | null
+}
+
+async function getStandardModules(): Promise<StandardModule[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const body = await res.json()
+      return (body?.data?.modules ?? []) as StandardModule[]
+    }
+  } catch {
+    // fall through to an empty list
+  }
+  return []
+}
 
 export const metadata = {
   title:       'Staff Training and Compliance | CareStreamAI',
@@ -82,7 +111,8 @@ function TrainingDashboardMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function StaffTrainingPage() {
+export default async function StaffTrainingPage() {
+  const modules = await getStandardModules()
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -229,6 +259,105 @@ export default function StaffTrainingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Two kinds of training ─────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Two Kinds of Training</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Ask anything any time, and cover every mandatory subject.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            CareStream covers both sides of training in one hub: quick, ad-hoc questions you send
+            whenever you need them, and full annual modules for every mandatory subject.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
+                <MessageSquare size={22} className="text-teal" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-neutral-dark">Ad-hoc questions and knowledge checks</h3>
+              <p className="mb-4 leading-relaxed text-neutral-mid">
+                Raise a question or a knowledge check and send it to any staff member whenever you want.
+                They answer in their own words in the hub, the AI marks it with feedback, and you see
+                exactly who knows what. Ideal for a quick refresher after an incident, an audit finding,
+                or a policy change.
+              </p>
+              <ul className="space-y-2 text-sm text-neutral-mid">
+                {['Sent and answered in the hub', 'Marked instantly with feedback', 'Perfect for spot-checks and refreshers'].map((p) => (
+                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-teal/20 bg-teal/5 p-8 shadow-card">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-teal-glow">
+                <GraduationCap size={22} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-neutral-dark">Annual mandatory training modules</h3>
+              <p className="mb-4 leading-relaxed text-neutral-mid">
+                A full library of teach-then-assess modules covering every mandatory subject, ready to
+                assign and included as standard. Each module teaches the topic, applies it to a real care
+                scenario, and finishes with an assessment, with automatic renewal reminders so nobody
+                falls out of date.
+              </p>
+              <ul className="space-y-2 text-sm text-neutral-mid">
+                {['Every mandatory subject, ready to assign', 'Teach, scenario and assessment in each module', 'Renewal reminders at 90, 30 and 7 days'].map((p) => (
+                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Annual mandatory training library ─────────────────────────────── */}
+      {modules.length > 0 && (
+        <section className="bg-neutral-light py-24">
+          <div className="mx-auto max-w-content px-6">
+            <SectionLabel>Annual Mandatory Training Library</SectionLabel>
+            <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+              Every mandatory module, ready to assign.
+            </h2>
+            <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+              The standard library covers the mandatory training every care service needs, grounded in
+              best practice for UK adult social care. Each module is a complete teach-then-assess course
+              with its own cover, learning sections, a real care scenario, and an assessment.
+            </p>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {modules.map((m) => (
+                <div key={m.id} className="card-lift flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
+                    {m.illustration_url ? (
+                      <SiteImage src={`${API_URL}${m.illustration_url}`} alt={m.name} className="absolute inset-0 h-full w-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-teal-gradient">
+                        <GraduationCap size={44} className="text-white/80" />
+                      </div>
+                    )}
+                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
+                      {m.frequency === 'annual' ? 'Annual' : m.frequency}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <h3 className="mb-2 font-bold leading-snug text-neutral-dark">{m.name}</h3>
+                    <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">{m.description}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
+                      {m.duration_minutes ? (
+                        <span className="flex items-center gap-1"><Clock size={12} /> {(m.duration_minutes / 60).toFixed(1)} hours</span>
+                      ) : null}
+                      <span>Pass mark {m.pass_mark}%</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-10 text-sm text-neutral-mid">
+              Every standard module is included and ready to assign. You can also generate tailored
+              modules from your own policies.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ── Built from your policies ──────────────────────────────────────── */}
       <section className="bg-white py-24">

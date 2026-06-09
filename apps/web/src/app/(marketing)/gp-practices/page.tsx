@@ -1,5 +1,5 @@
 import { SettingPage } from '@/components/marketing/setting-page'
-import { config } from '@/lib/settings/domiciliary-care'
+import { config } from '@/lib/settings/gp-practices'
 
 export const metadata = {
   title: config.meta.title,

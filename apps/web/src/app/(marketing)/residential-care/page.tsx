@@ -1,30 +1,16 @@
-import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { SettingPage } from '@/components/marketing/setting-page'
+import { config } from '@/lib/settings/residential-care'
 
 export const metadata = {
-  title: 'CareStreamAI for Residential Care Homes',
-  description: 'Give every member of your residential care home team instant access to your policies. CareStreamAI works across all shifts, all languages, and all care roles.',
+  title: config.meta.title,
+  description: config.meta.description,
   openGraph: {
-    title: 'CareStreamAI for Residential Care Homes',
-    description: 'Instant policy access for every shift and every care role, in any language.',
-    url: 'https://carestreamai.com/residential-care',
+    title: config.meta.title,
+    description: config.meta.ogDescription,
+    url: `https://carestreamai.com/${config.slug}`,
   },
 }
 
-export default function ResidentialCarePage() {
-  return (
-    <>
-      <PageHero
-        label="Residential Care Homes"
-        title="Content coming soon"
-        subtitle="This page is being prepared. Check back shortly."
-      />
-
-      <PageCta
-        heading="Ready to see CareStreamAI in action?"
-        sub="Book a demo and see how it works for your home."
-        primary={{ label: 'Book a demo', href: '/demo' }}
-        secondary={{ label: 'See pricing', href: '/pricing' }}
-      />
-    </>
-  )
+export default function Page() {
+  return <SettingPage config={config} />
 }

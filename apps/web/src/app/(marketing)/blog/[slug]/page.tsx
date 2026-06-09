@@ -31,6 +31,7 @@ interface Post {
   cta_text: string | null
   cta_url: string | null
   faqs: Faq[] | null
+  author: { name: string; title: string | null; photo_url: string | null; bio: string | null } | null
 }
 
 async function getPost(slug: string): Promise<Post | null> {
@@ -140,15 +141,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* About CareStream — short bio */}
-      <div className="not-prose mt-10 border-t border-gray-100 pt-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">About CareStream AI</p>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-mid">
-          CareStream AI was built by people who understand the UK care sector — giving every care worker,
-          regardless of language, instant access to the policies and knowledge they need to work safely and
-          confidently. <Link href="/about" className="font-medium text-teal hover:underline">Learn more about us →</Link>
-        </p>
-      </div>
+      {/* Author bio — set per post in the admin (blog author) */}
+      {post.author && (post.author.bio || post.author.name) && (
+        <div className="not-prose mt-10 flex items-start gap-4 border-t border-gray-100 pt-6">
+          {post.author.photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.author.photo_url}
+              alt={post.author.name}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+          )}
+          <div>
+            <p className="font-semibold text-neutral-dark">{post.author.name}</p>
+            {post.author.title && <p className="text-xs text-neutral-mid">{post.author.title}</p>}
+            {post.author.bio && (
+              <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{post.author.bio}</p>
+            )}
+          </div>
+        </div>
+      )}
       </ArticleLayout>
     </>
   )

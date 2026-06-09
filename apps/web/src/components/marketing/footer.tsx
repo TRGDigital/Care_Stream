@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { CookieSettingsButton } from './cookie-consent'
 import { SiteImage } from '@/components/site-image'
+import { SETTINGS_LIST } from '@/lib/settings/list'
+
+const WHO_WE_SERVE = [
+  { href: '/who-we-serve', label: 'All settings' },
+  ...SETTINGS_LIST.map((s) => ({ href: `/${s.slug}`, label: s.label })),
+]
 
 const PRODUCT = [
   { href: '/how-it-works',         label: 'How It Works' },
@@ -41,6 +47,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 const STATIC_GROUPS: Array<{ heading: string; links: Array<{ href: string; label: string }> }> = [
   { heading: 'Product',       links: PRODUCT },
+  { heading: 'Who We Serve',  links: WHO_WE_SERVE },
   { heading: 'Trust & Legal', links: TRUST },
   { heading: 'Company',       links: COMPANY },
   { heading: 'Get Started',   links: GET_STARTED },
@@ -98,7 +105,7 @@ export async function MarketingFooter() {
         </div>
 
         {/* Links grid */}
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
           {groups.map(({ heading, links }) => (
             <div key={heading}>
               <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">{heading}</p>

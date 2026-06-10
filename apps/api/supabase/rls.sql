@@ -471,3 +471,29 @@ END $$;
 ALTER FUNCTION public.get_current_tenant_id() SET search_path = '';
 ALTER FUNCTION public.prevent_audit_log_mutation() SET search_path = '';
 ALTER FUNCTION public.update_email_session_expiry() SET search_path = '';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Section 12 — tables added AFTER the 2026-06-01 RLS pass. The Supabase security
+-- advisor flagged these as rls_disabled_in_public (2026-06-08). RLS on, app role
+-- (carestreamai_api) full access, anon/authenticated (PostgREST) denied.
+-- USING(true): these are not DB-tenant-isolated (tenant scoping is enforced in the
+-- app's Prisma queries, same as before). login_tokens + refresh_tokens are read
+-- PRE-auth (no tenant context yet), so they must NOT be tenant-scoped or login breaks.
+-- (The app connects as `postgres`, which BYPASSRLS, so these policies are belt-and-
+-- braces for the app; the real protection is anon being denied.)
+-- ─────────────────────────────────────────────────────────────────────────────
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'ai_credit_logs','knowledge_gap_reviews','knowledge_gap_snapshots','login_tokens',
+    'module_review_links','policy_read_sessions','policy_seeds','policy_translations',
+    'push_subscriptions','refresh_tokens','regulation_coverage','remediation_attempts',
+    'remediation_lessons','saved_policies','training_topics','translation_cache',
+    'agent_events','marketing_leads'
+  ] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', t||'_api_all', t);
+    EXECUTE format('CREATE POLICY %I ON public.%I FOR ALL TO carestreamai_api USING (true) WITH CHECK (true)', t||'_api_all', t);
+  END LOOP;
+END $$;

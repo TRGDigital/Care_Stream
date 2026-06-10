@@ -22,28 +22,35 @@ export default function RagPage() {
       {/* ── What RAG is ───────────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>The Principle</SectionLabel>
-          <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-            AI that is anchored to facts, not free to guess.
-          </h2>
-          <div className="mb-14 max-w-3xl space-y-5 text-lg leading-relaxed text-neutral-mid">
-            <p>
-              The most widely reported problem with AI is hallucination, where a system produces a confident,
-              plausible-sounding answer that is simply wrong. In most general-purpose AI tools, the model draws
-              on everything it was trained on: vast amounts of internet text, much of which is outdated, incorrect,
-              or irrelevant to your organisation.
-            </p>
-            <p>
-              Retrieval Augmented Generation (RAG) is the architectural answer to that problem. Instead of relying
-              on what a model already knows, RAG requires the system to find the relevant information first, and
-              only then compose a response from what it has retrieved. The model is not guessing. It is reading
-              and summarising verified source material.
-            </p>
-            <p>
-              CareStreamAI uses RAG across the platform: answering policy questions from your uploaded documents,
-              generating training from specialist care knowledge, and grounding the CQC prep and audit tools in real
-              guidance. In every case, the AI is explicitly bounded by the source material it is given. It cannot go beyond it.
-            </p>
+          <div className="mb-14 grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]">
+            <div>
+              <SectionLabel>The Principle</SectionLabel>
+              <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
+                AI that is anchored to facts, not free to guess.
+              </h2>
+              <div className="space-y-5 text-lg leading-relaxed text-neutral-mid">
+                <p>
+                  The most widely reported problem with AI is hallucination, where a system produces a confident,
+                  plausible-sounding answer that is simply wrong. In most general-purpose AI tools, the model draws
+                  on everything it was trained on: vast amounts of internet text, much of which is outdated, incorrect,
+                  or irrelevant to your organisation.
+                </p>
+                <p>
+                  Retrieval Augmented Generation (RAG) is the architectural answer to that problem. Instead of relying
+                  on what a model already knows, RAG requires the system to find the relevant information first, and
+                  only then compose a response from what it has retrieved. The model is not guessing. It is reading
+                  and summarising verified source material.
+                </p>
+                <p>
+                  CareStreamAI uses RAG across the platform: answering policy questions from your uploaded documents,
+                  generating training from specialist care knowledge, and grounding the CQC prep and audit tools in real
+                  guidance. In every case, the AI is explicitly bounded by the source material it is given. It cannot go beyond it.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <HubChatMockup />
+            </div>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -102,29 +109,24 @@ export default function RagPage() {
                 </p>
               </div>
             </div>
-            <div className="space-y-6">
-              <div className="flex justify-center lg:justify-start">
-                <HubChatMockup />
-              </div>
-              <div className="space-y-4">
-                {[
-                  { step: '01', label: 'Staff member asks a question',          detail: 'In the hub or by email, in any language.' },
-                  { step: '02', label: 'System searches your policy library',   detail: 'Only your uploaded documents are searched. Nothing else.' },
-                  { step: '03', label: 'Relevant sections are identified',       detail: 'The most applicable content is retrieved from your policies.' },
-                  { step: '04', label: 'AI composes a response from the source', detail: 'The answer is drawn directly from the retrieved content.' },
-                  { step: '05', label: 'Response delivered with citation',        detail: 'Staff receive the answer and a reference to the source policy.' },
-                ].map(({ step, label, detail }) => (
-                  <div key={step} className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-card">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal text-xs font-extrabold text-white">
-                      {step}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-neutral-dark">{label}</p>
-                      <p className="mt-0.5 text-sm text-neutral-mid">{detail}</p>
-                    </div>
+            <div className="space-y-4">
+              {[
+                { step: '01', label: 'Staff member asks a question',          detail: 'In the hub or by email, in any language.' },
+                { step: '02', label: 'System searches your policy library',   detail: 'Only your uploaded documents are searched. Nothing else.' },
+                { step: '03', label: 'Relevant sections are identified',       detail: 'The most applicable content is retrieved from your policies.' },
+                { step: '04', label: 'AI composes a response from the source', detail: 'The answer is drawn directly from the retrieved content.' },
+                { step: '05', label: 'Response delivered with citation',        detail: 'Staff receive the answer and a reference to the source policy.' },
+              ].map(({ step, label, detail }) => (
+                <div key={step} className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-card">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal text-xs font-extrabold text-white">
+                    {step}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-neutral-dark">{label}</p>
+                    <p className="mt-0.5 text-sm text-neutral-mid">{detail}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

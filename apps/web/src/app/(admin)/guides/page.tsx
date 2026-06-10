@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   ChevronDown, ChevronUp, Search, X,
-  FileText, Users, MessageSquare, Mail, Phone, ClipboardCheck,
+  FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw,
 } from 'lucide-react'
@@ -78,10 +78,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <strong>Add your staff.</strong> Go to <em>Staff</em> and add each team member with their name, email address, and role. This lets CareStream personalise responses and track training progress.
           </Step>
           <Step n={3}>
-            <strong>Configure your settings.</strong> Go to <em>Settings</em> and set up your dedicated email address (for email queries), enable WhatsApp, and configure any access restrictions you need.
+            <strong>Configure your settings.</strong> Go to <em>Settings</em> and set up your dedicated email address (for email queries) and configure any access restrictions you need.
           </Step>
           <Step n={4}>
-            <strong>Tell your team.</strong> Share the portal link, WhatsApp number, or email address with your staff so they can start asking questions.
+            <strong>Tell your team.</strong> Share the portal link or email address with your staff so they can start asking questions.
           </Step>
           <Step n={5}>
             <strong>Upload your CQC report.</strong> Go to <em>Policies</em>, select category <em>CQC Report</em>, and upload your most recent inspection report. This enables the CQC Report Chat feature.
@@ -155,7 +155,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Choose their <strong>Position</strong> from the dropdown (Care Assistant, Nurse, Chef, etc.). This is the key field, it decides which onboarding and training they receive.</Step>
             <Step n={3}>If they hold a <strong>specialist role</strong> (e.g. Infection Control, Night Staff), answer <em>Yes</em> and pick one or more from the list. These add extra, specialist onboarding and training on top of their position.</Step>
             <Step n={4}>Choose the <strong>Staff type</strong>: <em>New starter</em> auto-enrols them in the onboarding for their position and specialisms; <em>Existing staff member</em> doesn't.</Step>
-            <Step n={5}>Optionally add a WhatsApp number and their first/second language, then share the login details shown on screen.</Step>
+            <Step n={5}>Optionally set their first/second language, then share the login details shown on screen.</Step>
           </div>
           <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step, tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
         </SectionBlock>
@@ -164,13 +164,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Click a staff member's <strong>name</strong> on the Staff page to open their detail card, a single view of everything they're set up for:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li>Their <strong>profile</strong>: position, specialist roles, shift, WhatsApp, email access and account status.</li>
+            <li>Their <strong>profile</strong>: position, specialist roles, shift, email access and account status.</li>
             <li><strong>Language</strong>: their first and second language, and the communication toggle (below).</li>
             <li><strong>Training</strong>: every module assigned to them with a live status (Not started, In progress, Complete, Expired). Use <strong>+ Assign training</strong> to add more at any time.</li>
             <li><strong>Onboarding</strong>: the induction flows they're enrolled on, with step-by-step progress. Use <strong>+ Assign onboarding</strong> to enrol them on more (flows they're already on are marked and can't be double-assigned).</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">
-            To change their details (name, position, specialisms, languages, shift or WhatsApp) use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
+            To change their details (name, position, specialisms, languages or shift) use <strong>Edit details</strong> on the card (or the <strong>⋮</strong> menu on their row).
           </p>
         </SectionBlock>
         <SectionBlock title="Getting staff into the hub (no password)">
@@ -182,7 +182,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               Staff can also get themselves in: on the sign-in page there&apos;s an <strong>“Email me a sign-in link”</strong> option, so they never need to remember a password.
             </p>
             <p className="text-sm text-neutral-mid">
-              Once they&apos;re in, encourage them to <strong>add CareStream to their home screen</strong> and turn on notifications (see the Chat Hub guide), that&apos;s how the hub replaces the WhatsApp nudges.
+              Once they&apos;re in, encourage them to <strong>add CareStream to their home screen</strong> and turn on notifications (see the Chat Hub guide), that&apos;s how the hub keeps staff nudged.
             </p>
           </div>
         </SectionBlock>
@@ -208,12 +208,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, add it in <strong>Settings → Languages</strong> (type its English name, e.g. “Shona”) and it appears in the first &amp; second language dropdowns straight away.
           </p>
         </SectionBlock>
-        <SectionBlock title="Approved senders & WhatsApp access (added automatically)">
+        <SectionBlock title="Approved senders (added automatically)">
           <p className="text-sm text-neutral-mid">
-            When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list, and their WhatsApp number (if provided) is automatically added to the <strong>WhatsApp access</strong> list, both in <em>Settings</em>. You don't need to add them in two places.
+            When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list in <em>Settings</em>. You don't need to add them in two places.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Both lists in Settings show each entry alongside the staff member it belongs to, for example <em>jane@example.com, Jane Smith (Care Assistant)</em>, so you can see at a glance who each address or number belongs to. Only addresses and numbers on these lists can query CareStream by email or WhatsApp; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
+            The list in Settings shows each entry alongside the staff member it belongs to, for example <em>jane@example.com, Jane Smith (Care Assistant)</em>, so you can see at a glance who each address belongs to. Only addresses on this list can query CareStream by email; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
           </p>
         </SectionBlock>
         <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen, share them securely, and use <strong>Re-send login</strong> from the staff member's menu if they're ever needed again.</Tip>
@@ -252,7 +252,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="Actions on the record">
           <div className="space-y-2 text-sm text-neutral-mid">
-            <p><strong className="text-neutral-dark">Send reminder</strong>: immediately sends the staff member their outstanding training questions by WhatsApp or email (it doesn't wait for the scheduled send).</p>
+            <p><strong className="text-neutral-dark">Send reminder</strong>: immediately sends the staff member their outstanding training questions by email (it doesn't wait for the scheduled send).</p>
             <p><strong className="text-neutral-dark">CQC evidence (PDF)</strong>: downloads the whole record as a PDF: training matrix, scores, induction sign-off and dates. Hand this to an inspector as proof a staff member is trained and inducted.</p>
             <p><strong className="text-neutral-dark">Reset</strong> (per module), clears someone's answers and completion so they can take a module again.</p>
           </div>
@@ -448,7 +448,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Replying in the staff member's language">
           <p className="text-sm text-neutral-mid">
-            The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile), so a Polish-speaking carer gets Polish answers straight away, just like on WhatsApp. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.
+            The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile), so a Polish-speaking carer gets Polish answers straight away. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.
           </p>
         </SectionBlock>
         <SectionBlock title="Voice — speak and listen">
@@ -485,7 +485,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               Staff can <strong>install the hub to their phone&apos;s home screen</strong> so it opens like an app, no browser, no typing in a URL. When they open it on their phone they&apos;ll see a prompt: on Android it&apos;s an <strong>Install</strong> button; on iPhone they tap <strong>Share → Add to Home Screen</strong>.
             </p>
             <p className="text-sm text-neutral-mid">
-              Once installed, the app offers to turn on <strong>notifications</strong>. With these on, staff get a tap on the shoulder when there&apos;s new training, a CQC practice question, or a renewal due, the same proactive nudge they got on WhatsApp, but landing straight in the hub. (Notifications are an extra: WhatsApp and email still work as before.)
+              Once installed, the app offers to turn on <strong>notifications</strong>. With these on, staff get a tap on the shoulder when there&apos;s new training, a CQC practice question, or a renewal due, a proactive nudge landing straight in the hub. (Notifications are an extra: email still works as before.)
             </p>
             <p className="text-sm text-neutral-mid">
               Encourage your team to install the app and allow notifications, it&apos;s the easiest way to keep them engaged as more moves into the hub.
@@ -526,39 +526,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
         </SectionBlock>
         <Tip>Email replies are formatted with bold headings, bullet points, and policy references that appear clearly in any email client.</Tip>
-      </div>
-    ),
-  },
-  {
-    id:      'whatsapp',
-    icon:    Phone,
-    title:   'WhatsApp queries',
-    summary: 'Staff ask questions via WhatsApp, including voice notes',
-    content: (
-      <div className="space-y-5">
-        <SectionBlock title="How it works">
-          <p className="text-sm text-neutral-mid">
-            Staff send a WhatsApp message to your CareStream number. The AI reads your policies and replies in the same conversation. Voice notes are transcribed automatically before being processed.
-          </p>
-        </SectionBlock>
-        <SectionBlock title="Enabling WhatsApp">
-          <div className="space-y-3">
-            <Step n={1}>Go to <strong>Settings</strong> and expand the <em>WhatsApp</em> section.</Step>
-            <Step n={2}>Enable WhatsApp and note the phone number provided.</Step>
-            <Step n={3}>Share the number with your team. They add it as a contact and message it like any WhatsApp conversation.</Step>
-          </div>
-        </SectionBlock>
-        <SectionBlock title="Voice notes">
-          <p className="text-sm text-neutral-mid">
-            Staff can send a voice note instead of typing. CareStream automatically transcribes the audio and processes it as a normal text query. This is especially useful for staff who find typing difficult or are on the go.
-          </p>
-        </SectionBlock>
-        <SectionBlock title="Session continuity">
-          <p className="text-sm text-neutral-mid">
-            Each WhatsApp conversation is remembered for 24 hours. Follow-up messages in the same conversation are answered with full context from the earlier exchange.
-          </p>
-        </SectionBlock>
-        <Tip>WhatsApp responses are formatted as plain text with clean spacing. Bold text appears as *asterisks* as per WhatsApp formatting conventions.</Tip>
       </div>
     ),
   },
@@ -682,7 +649,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="How it works">
           <p className="text-sm text-neutral-mid">
-            CareStream sends training questions directly to staff via WhatsApp or email. Staff answer by replying with A, B, C, or D. Results are tracked on the Training dashboard and Analytics page. Training questions are always a separate delivery, they are never mixed into policy or CQC conversations.
+            CareStream sends training questions directly to staff by email or in the hub. Staff answer by replying with A, B, C, or D. Results are tracked on the Training dashboard and Analytics page. Training questions are always a separate delivery, they are never mixed into policy or CQC conversations.
           </p>
         </SectionBlock>
         <SectionBlock title="Training in your team's language">
@@ -695,7 +662,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Asking questions about training topics">
           <p className="text-sm text-neutral-mid">
-            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or WhatsApp. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Questions or inspection framework so staff understand the regulatory context behind what they are learning.
+            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or voice. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Questions or inspection framework so staff understand the regulatory context behind what they are learning.
           </p>
           <p className="text-sm text-neutral-mid">
             For example, a staff member asking about moving and handling will receive guidance drawing from your internal manual handling policy, any relevant training module you have uploaded, the applicable health and safety regulations, and any CQC Safe domain guidance that relates to that topic.
@@ -708,7 +675,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="What staff see">
           <p className="text-sm text-neutral-mid">
-            When a training module is assigned, CareStream sends the first question directly to the staff member as a standalone message on their preferred channel (WhatsApp or email). After each answer, the next question follows automatically. The training flow is completely separate from policy and CQC conversations.
+            When a training module is assigned, CareStream sends the first question directly to the staff member as a standalone message on their preferred channel (email or the hub). After each answer, the next question follows automatically. The training flow is completely separate from policy and CQC conversations.
           </p>
         </SectionBlock>
         <SectionBlock title="Viewing results">
@@ -728,7 +695,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="Query history">
           <p className="text-sm text-neutral-mid">
-            Every query sent via any channel (web, email, WhatsApp, voice) is logged. Go to <strong>Query history</strong> to see the full list, including the question, the AI response, which policies were cited, and whether the staff member gave feedback.
+            Every query sent via any channel (web, email, voice) is logged. Go to <strong>Query history</strong> to see the full list, including the question, the AI response, which policies were cited, and whether the staff member gave feedback.
           </p>
         </SectionBlock>
         <SectionBlock title="Analytics dashboard">
@@ -742,7 +709,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               Go to <strong>Analytics → Engagement</strong> for the single most important number as you move your team onto the staff hub: <strong>weekly active staff %</strong>. A staff member counts as active in a week if they opened the hub, asked a question, or read a policy. The tab also shows how many were active, your team size, and an <strong>8-week trend</strong> so you can see the direction of travel.
             </p>
             <p className="text-sm text-neutral-mid">
-              The <strong>channel mix</strong> shows where questions are coming in, hub vs WhatsApp vs email vs voice, over the last 30 days, with the <strong>hub&apos;s share</strong> called out. As you encourage staff onto the hub, you want weekly active % to hold steady (or rise) and the hub&apos;s share of questions to grow.
+              The <strong>channel mix</strong> shows where questions are coming in, hub vs email vs voice, over the last 30 days, with the <strong>hub&apos;s share</strong> called out. As you encourage staff onto the hub, you want weekly active % to hold steady (or rise) and the hub&apos;s share of questions to grow.
             </p>
           </div>
         </SectionBlock>
@@ -983,7 +950,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Unanswered staff questions">
           <p className="text-sm text-neutral-mid">
-            Alongside regulation coverage, the page clusters questions your staff asked, in the Chat Hub, by email or on WhatsApp, that the assistant <strong>could not answer from your policies</strong> in the last 90 days. Recurring themes here are real-world evidence that a policy is missing, unclear, or not yet uploaded, straight from how your team actually uses CareStream.
+            Alongside regulation coverage, the page clusters questions your staff asked, in the Chat Hub, by email or by voice, that the assistant <strong>could not answer from your policies</strong> in the last 90 days. Recurring themes here are real-world evidence that a policy is missing, unclear, or not yet uploaded, straight from how your team actually uses CareStream.
           </p>
         </SectionBlock>
         <SectionBlock title="Using policy gaps">
@@ -1002,12 +969,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'monthly-audits',
     icon:    ClipboardCheck,
     title:   'Monthly Audits',
-    summary: 'Complete, store, and review care quality audits, on the web, in the hub, or via WhatsApp, with AI recommendations',
+    summary: 'Complete, store, and review care quality audits, on the web or in the hub, with AI recommendations',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web, in the <strong>Chat Hub</strong>, or via WhatsApp, and generate CQC-linked AI recommendations on completion.
+            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web or in the <strong>Chat Hub</strong>, and generate CQC-linked AI recommendations on completion.
           </p>
         </SectionBlock>
 
@@ -1043,17 +1010,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={5}>Once all required questions are answered, open the <strong>Summary</strong> tab. Fill in the strengths, areas for improvement, and a target completion date for any actions.</Step>
             <Step n={6}>Click <em>Complete &amp; get AI recommendations</em> to finalise the audit and generate your report.</Step>
           </div>
-        </SectionBlock>
-
-        <SectionBlock title="Completing an audit via WhatsApp">
-          <div className="space-y-3">
-            <Step n={1}>Send the word <strong>audit</strong> to your CareStream WhatsApp number.</Step>
-            <Step n={2}>CareStream lists the available audit templates. Reply with the number of the template you want to complete.</Step>
-            <Step n={3}>Reply <em>yes</em> to confirm you want to start that audit, or <em>no</em> to cancel. For the <strong>Fire Marshall Checklist</strong>, you will also be asked to select <em>day</em> or <em>night</em> shift. For the <strong>Resident Bedrooms</strong> audit, you will be asked to enter the room number.</Step>
-            <Step n={4}>The system walks you through each question. For yes/no questions reply <em>yes</em>, <em>no</em>, or <em>n/a</em>. For findings questions type your observation, then reply with any planned actions (or <em>skip</em> if none).</Step>
-            <Step n={5}>To pause at any time, send <strong>stop</strong> or <strong>pause</strong>. Your progress is saved and you can ask other questions as normal. To resume, send "audit" again and select the same template, the system continues from where you left off.</Step>
-          </div>
-          <Tip>You can start an audit on WhatsApp and finish it on the web (or vice versa), answers are stored in real time regardless of channel.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Doing audits in the Chat Hub">
@@ -1102,14 +1058,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'settings',
     icon:    Settings,
     title:   'Settings',
-    summary: 'Configure email, WhatsApp, access controls, and AI behaviour',
+    summary: 'Configure email, access controls, and AI behaviour',
     content: (
       <div className="space-y-5">
         <SectionBlock title="Settings sections">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
               ['Dedicated email address', 'Your inbound email address for staff queries. Copy this to share with your team.'],
-              ['WhatsApp',                'Enable WhatsApp queries and view your CareStream WhatsApp number.'],
               ['Portal access',           'Restrict who can access the staff Chat Hub. Options: open, PIN protected, or staff-only.'],
               ['Email allowlist',         'Limit which email addresses can receive AI replies. Leave empty to allow all registered staff.'],
               ['AI behaviour',            'Adjust the tone and verbosity of AI responses across all channels.'],

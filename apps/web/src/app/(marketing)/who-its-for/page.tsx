@@ -188,7 +188,7 @@ const SETTINGS: Array<{
       { label: 'CQC Regulation 17, Good Governance', note: 'Mandates accurate, complete records and documented evidence of policy engagement.' },
     ],
     howItWorks: {
-      channel:  'WhatsApp',
+      channel:  'Voice',
       question: 'A resident has just had a fall. It is 3am. What observations do I need to carry out and how often?',
       sources: [
         { type: 'policy',     label: 'Your Falls and Post-Fall Management Policy' },
@@ -243,9 +243,9 @@ const SETTINGS: Array<{
     slug:     'home-care',
     name:     'Home Care and Domiciliary Care',
     headline: 'Policy access for a workforce that is never in one place.',
-    desc:     'Domiciliary care staff work alone, often in challenging environments, without a colleague or manager nearby. CareStreamAI gives your dispersed workforce instant access to your procedures via WhatsApp or voice, wherever they are.',
+    desc:     'Domiciliary care staff work alone, often in challenging environments, without a colleague or manager nearby. CareStreamAI gives your dispersed workforce instant access to your procedures via the hub or voice, wherever they are.',
     points: [
-      'Field-based carers get immediate policy answers on WhatsApp or by voice note while travelling between visits.',
+      'Field-based carers get immediate policy answers in the hub or by voice note while travelling between visits.',
       'Lone workers check safeguarding, consent, and incident procedures without travelling to the office or waiting for a callback.',
       'Managers see query patterns across the entire dispersed workforce from one dashboard, revealing where guidance or retraining is needed.',
       'All queries are logged by staff member and location, supporting lone working audits and CQC inspection evidence.',
@@ -258,7 +258,7 @@ const SETTINGS: Array<{
       { label: 'CQC Regulation 17, Good Governance', note: 'Every visit, missed contact, and incident must be recorded accurately in real time.' },
     ],
     howItWorks: {
-      channel:  'WhatsApp',
+      channel:  'Voice',
       question: 'I have arrived at a service user\'s home and they are not answering the door. The lights are on and I can see them through the window but they are not responding. What is the procedure?',
       sources: [
         { type: 'policy',     label: 'Lone Working and Missed Visit Policy'      },
@@ -385,7 +385,7 @@ const SETTINGS: Array<{
     headline: 'Policy access that moves with your team throughout the day.',
     desc:     'Day services and respite care staff often move between multiple service users and environments without a fixed base. CareStreamAI gives your team instant procedure access wherever the working day takes them.',
     points: [
-      'Staff moving between service users throughout the day access procedures via WhatsApp or voice note hands-free, without pausing the activity.',
+      'Staff moving between service users throughout the day access procedures via the hub or voice note hands-free, without pausing the activity.',
       'Safeguarding, incident, and emergency procedures are always available, including off-site and community visits.',
       'Respite coordinators can log and review every procedure query from their team from a single dashboard.',
       'Quick query logging reduces the administrative burden on staff during a busy, activity-led day.',
@@ -491,7 +491,7 @@ const SETTINGS: Array<{
     desc:     'Reablement services are time-limited and intensely goal-focused, with staff often joining at short notice. CareStreamAI ensures your full procedure library is available to every team member from their very first shift.',
     points: [
       'New staff access your full procedure library from day one, without waiting for a formal induction session.',
-      'Clinical reablement procedures are available to therapy and care staff in the field via WhatsApp or voice note.',
+      'Clinical reablement procedures are available to therapy and care staff in the field via the hub or voice note.',
       'Every procedure query is logged throughout the reablement episode, providing automatic CQC evidence of consistent practice.',
       'Managers see which procedures are being queried most during the reablement period, informing team briefings and clinical supervision.',
     ],
@@ -525,9 +525,9 @@ const SETTINGS: Array<{
     headline: 'Procedure access for staff who are never at a desk.',
     desc:     'Community care and outreach workers operate entirely in the field, often without access to an office, a desktop, or a colleague nearby. CareStreamAI gives them full procedure access via the channels they already use.',
     points: [
-      'Lone workers check safeguarding, consent, capacity, and incident procedures via WhatsApp or voice note in any community setting.',
+      'Lone workers check safeguarding, consent, capacity, and incident procedures via the hub or voice note in any community setting.',
       'Policy updates reach the entire community workforce instantly, with access tracked so managers know the change has arrived.',
-      'All four channels (chat, email, WhatsApp, and voice) suit staff without regular access to a desk or an office computer.',
+      'All three channels (chat, email, and voice) suit staff without regular access to a desk or an office computer.',
       'Every interaction is logged, supporting lone working safeguards and providing automatic evidence for CQC and commissioning audits.',
     ],
     scenario: null,
@@ -538,7 +538,7 @@ const SETTINGS: Array<{
       { label: 'CQC Regulation 12, Safe Care and Treatment', note: 'Lone workers must have access to safe care procedures during every community visit.' },
     ],
     howItWorks: {
-      channel:  'WhatsApp',
+      channel:  'Voice',
       question: 'A service user has told me that their family member has been taking money from them without permission. What is the safeguarding procedure I need to follow right now, while I am still at the address?',
       sources: [
         { type: 'policy',     label: 'Safeguarding Adults Policy'                          },
@@ -760,7 +760,7 @@ export default function WhoItsForPage() {
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { heading: 'All four channels',   body: 'Chat, email, WhatsApp, and voice. Staff access policies whichever way suits their role and environment.' },
+              { heading: 'All three channels',  body: 'Chat, email, and voice. Staff access policies whichever way suits their role and environment.' },
               { heading: '50 plus languages',   body: 'Every staff member gets the same quality of policy access regardless of their first language.' },
               { heading: 'CQC evidence built in', body: 'Every query is logged. Your CQC Readiness Report is generated automatically, not assembled under pressure.' },
               { heading: 'Always up to date',   body: 'Upload a new policy version and CareStreamAI answers from it immediately. Staff never read superseded guidance.' },

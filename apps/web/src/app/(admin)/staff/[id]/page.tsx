@@ -9,7 +9,7 @@ import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import {
   ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
-  Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, Phone, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
+  Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -249,7 +249,6 @@ export default function StaffRecordPage() {
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-mid">
                   <span>{u.shift_type === 'day' ? 'Day shift' : u.shift_type === 'night' ? 'Night shift' : 'Flexible'}</span>
                   <span className="flex items-center gap-1"><Globe size={11} /> {u.first_language?.toUpperCase()}</span>
-                  {u.phone_number && <span className="flex items-center gap-1"><Phone size={11} /> WhatsApp</span>}
                   <span>Added {fmtDate(u.created_at)}</span>
                   <span>Last seen {u.last_login_at ? fmtDate(u.last_login_at) : 'never'}</span>
                 </div>

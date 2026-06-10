@@ -20,7 +20,6 @@ const STARTER_FEATURES: Array<[string, string | boolean]> = [
   ['Languages supported',                '50+'               ],
   ['Web chat interface',                 true                ],
   ['Email interface',                    true                ],
-  ['WhatsApp interface',                 true                ],
   ['Voice input',                        true                ],
   ['External regulatory knowledge base', true                ],
   ['Document versioning',                true                ],
@@ -42,7 +41,6 @@ const PRO_FEATURES: Array<[string, string | boolean]> = [
   ['Languages supported',                '50+'                       ],
   ['Web chat interface',                 true                        ],
   ['Email interface',                    true                        ],
-  ['WhatsApp interface',                 true                        ],
   ['Voice input',                        true                        ],
   ['External regulatory knowledge base', true                        ],
   ['Document versioning',                true                        ],
@@ -59,11 +57,7 @@ const PRO_FEATURES: Array<[string, string | boolean]> = [
 const FAQS = [
   {
     q: 'What counts as a query?',
-    a: 'Any message sent to CareStreamAI counts as one query, regardless of channel. This includes web chat messages, emails, WhatsApp messages, and WhatsApp voice notes. Follow-up messages in the same session or thread each count as one query.',
-  },
-  {
-    q: 'How does WhatsApp access work?',
-    a: 'Staff message your dedicated CareStreamAI WhatsApp number exactly as they would text a colleague. The manager adds staff phone numbers to the allowlist from the admin dashboard. No app download or login is needed for frontline staff. Voice notes sent via WhatsApp are also fully supported and answered automatically.',
+    a: 'Any message sent to CareStreamAI counts as one query, regardless of channel. This includes web chat messages, emails, and voice questions. Follow-up messages in the same session or thread each count as one query.',
   },
   {
     q: 'What happens if I reach my query limit?',
@@ -171,7 +165,7 @@ export default function PricingPage() {
               '14-day free trial on any plan',
               'No charge until day 14',
               'No per-user fees',
-              'All four channels included',
+              'All three channels included',
               'Cancel any time',
               'UK data residency',
             ].map(item => (

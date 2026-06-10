@@ -69,10 +69,9 @@ export function MockDashboard() {
         <Stat value="68" label="Registered staff" />
         <Stat value="1,204" label="Questions this month" />
       </div>
-      <div className="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded-lg bg-teal/10 py-2 font-medium text-teal">Web chat</div>
         <div className="rounded-lg bg-indigo-50 py-2 font-medium text-indigo-600">Email</div>
-        <div className="rounded-lg bg-green-50 py-2 font-medium text-green-700">WhatsApp</div>
         <div className="rounded-lg bg-purple-50 py-2 font-medium text-purple-600">Voice</div>
       </div>
       <div className="mt-4 flex h-20 items-end gap-1.5">
@@ -203,30 +202,6 @@ export function MockChat() {
   )
 }
 
-export function MockWhatsApp() {
-  return (
-    <MockFrame label="WhatsApp · CareStreamAI">
-      <div className="space-y-3">
-        <div className="ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-green-500 px-4 py-2.5 text-sm text-white">
-          What should I do if a resident has a fall?
-        </div>
-        <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-neutral-light px-4 py-2.5 text-sm text-neutral-dark">
-          <p>Your Falls Policy says to:</p>
-          <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-neutral-mid">
-            <li>Keep the person still and check for injury</li>
-            <li>Call the nurse in charge before moving them</li>
-            <li>Record the fall on an incident form</li>
-          </ul>
-          <p className="mt-2 text-xs text-teal">Source: Falls Policy, Section 3.1</p>
-        </div>
-      </div>
-      <div className="mt-4 flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm text-neutral-mid">
-        Message...
-      </div>
-    </MockFrame>
-  )
-}
-
 export function MockEmail() {
   return (
     <MockFrame label="Email · CareStreamAI">
@@ -260,7 +235,7 @@ export function MockAnalytics() {
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded-lg bg-teal/10 py-2"><span className="block font-bold text-teal">54%</span>Web chat</div>
         <div className="rounded-lg bg-indigo-50 py-2"><span className="block font-bold text-indigo-600">31%</span>Email</div>
-        <div className="rounded-lg bg-green-50 py-2"><span className="block font-bold text-green-700">15%</span>WhatsApp</div>
+        <div className="rounded-lg bg-purple-50 py-2"><span className="block font-bold text-purple-600">15%</span>Voice</div>
       </div>
     </MockFrame>
   )

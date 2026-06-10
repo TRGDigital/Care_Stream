@@ -184,7 +184,6 @@ export function CredentialsPanel({
             {[
               { label: 'Log in',  value: contact.login_url,        field: 'login'   },
               ...(contact.inbound_email   ? [{ label: 'Email questions to', value: contact.inbound_email,   field: 'inbound' }] : []),
-              ...(contact.whatsapp_number ? [{ label: 'WhatsApp',           value: contact.whatsapp_number, field: 'wa'      }] : []),
             ].map(({ label, value, field }) => (
               <div key={field}>
                 <p className="mb-1 text-xs font-medium text-neutral-mid">{label}</p>
@@ -197,9 +196,6 @@ export function CredentialsPanel({
                 </div>
               </div>
             ))}
-            {!contact.whatsapp_number && (
-              <p className="text-xs text-neutral-mid">WhatsApp number not set up for this home yet.</p>
-            )}
           </div>
         </div>
       )}

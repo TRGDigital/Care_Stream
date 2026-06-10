@@ -150,7 +150,7 @@ function SidebarGuide() {
         <>
           <p><strong className="text-neutral-dark">Onboarding</strong> — build structured induction flows for new starters. Assign policies to read and questions to answer; the system tracks completion and reminds staff of outstanding steps. Ideal for evidencing induction for CQC purposes.</p>
           <p><strong className="text-neutral-dark">Billing</strong> — manage your subscription plan, view your current usage against plan limits, and update payment details. You can see how many queries and staff users you have used out of your plan allowance.</p>
-          <p><strong className="text-neutral-dark">Settings</strong> — configure your organisation name, inbound email domain, WhatsApp sender number, staff job role list, branding sign-off, and notification preferences. Changes here affect how staff interact with the AI across all channels.</p>
+          <p><strong className="text-neutral-dark">Settings</strong> — configure your organisation name, inbound email domain, staff job role list, branding sign-off, and notification preferences. Changes here affect how staff interact with the AI across all channels.</p>
         </>
       ),
     },

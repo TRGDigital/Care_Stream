@@ -8,7 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
   title:       'Business Continuity Planning | CareStreamAI',
-  description: 'Ensure your care home can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via WhatsApp, email, and chat, at any time.',
+  description: 'Ensure your care home can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via the hub, email, and voice, at any time.',
   openGraph: {
     title: 'Business Continuity Planning | CareStreamAI',
     description: 'Your business continuity plan, instantly queryable by every staff member, any time.',
@@ -153,7 +153,7 @@ export default function BusinessContinuityPage() {
                 {
                   icon: '💬',
                   label: 'CareStreamAI BC plan',
-                  text: 'Your business continuity procedures are uploaded as knowledge and instantly queryable by any staff member via WhatsApp, email, or chat, even when other systems are unavailable.',
+                  text: 'Your business continuity procedures are uploaded as knowledge and instantly queryable by any staff member via the hub, email, or voice, even when other systems are unavailable.',
                   dim: false,
                 },
               ].map(({ icon, label, text, dim }) => (
@@ -182,7 +182,7 @@ export default function BusinessContinuityPage() {
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
             No new system. No login. No session to attend. Your business continuity plan becomes
-            a live, queryable resource that any staff member can access via WhatsApp or email,
+            a live, queryable resource that any staff member can access via the hub or email,
             even when your care management system or internet connection is unavailable.
           </p>
           <div className="grid gap-6 md:grid-cols-3">
@@ -197,7 +197,7 @@ export default function BusinessContinuityPage() {
                 step: '02',
                 Icon: MessageSquare,
                 title: 'Staff ask what to do in any scenario',
-                body: 'During a disruption, any staff member can ask CareStreamAI exactly what the procedure is for their specific situation. Via WhatsApp, email, or the chat portal, they get an answer drawn from your actual plan, not a generic response.',
+                body: 'During a disruption, any staff member can ask CareStreamAI exactly what the procedure is for their specific situation. Via the hub, email, or voice, they get an answer drawn from your actual plan, not a generic response.',
               },
               {
                 step: '03',
@@ -240,7 +240,7 @@ export default function BusinessContinuityPage() {
                 procedures, not a generic guide.
               </p>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Because the response comes via WhatsApp or email, staff can access it on any
+                Because the response comes via the hub or email, staff can access it on any
                 device, even when your care management system or internet connection is down.
               </p>
               <div className="space-y-3">
@@ -319,8 +319,8 @@ export default function BusinessContinuityPage() {
             {[
               {
                 Icon: Zap,
-                title: 'Accessible via WhatsApp when other systems are down',
-                body: 'WhatsApp operates independently of your care management system, your local network, and your building infrastructure. Staff can access your BC plan procedures even when everything else is unavailable.',
+                title: 'Accessible on any device when other systems are down',
+                body: 'The hub runs on any phone or browser, independently of your care management system, your local network, and your building infrastructure. Staff can access your BC plan procedures even when everything else is unavailable.',
               },
               {
                 Icon: ShieldAlert,
@@ -409,8 +409,8 @@ export default function BusinessContinuityPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: BookOpen,    label: 'Queryable BC plan',               desc: 'Upload your business continuity plan to the knowledge base and make every procedure instantly accessible to any staff member on any channel.',               iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
-              { icon: MessageSquare, label: 'WhatsApp, email and chat access', desc: 'Staff query the plan on the same channels they use for policy questions. No new system and no separate login.',                                              iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
-              { icon: Zap,         label: 'Offline-resilient delivery',       desc: 'WhatsApp operates independently of your care management system. The plan remains accessible even when other systems are unavailable.',                         iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
+              { icon: MessageSquare, label: 'Hub, email and voice access',     desc: 'Staff query the plan on the same channels they use for policy questions. No new system and no separate login.',                                              iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
+              { icon: Zap,         label: 'Offline-resilient delivery',       desc: 'The hub runs on any internet-connected device, independently of your care management system. The plan remains accessible even when other systems are unavailable.', iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
               { icon: ShieldAlert, label: 'Automatic gap detection',          desc: 'Questions staff ask that the plan cannot answer are surfaced in the policy gaps report, helping you identify and fix weaknesses proactively.',                iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
               { icon: Brain,       label: 'Staff familiarisation testing',    desc: 'Send scenario-based questions about BC procedures to staff as part of onboarding or annual review. Build genuine familiarity.',                               iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
               { icon: RefreshCw,   label: 'Instant plan updates',             desc: 'When you revise the plan, the updated version is available immediately to all staff. No printing and no distribution required.',                               iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
@@ -436,7 +436,7 @@ export default function BusinessContinuityPage() {
             <div className="md:pr-12">
               <p className="mb-4 text-5xl font-extrabold text-teal">30 sec</p>
               <p className="mb-3 text-xl font-bold text-neutral-dark">
-                average time for a staff member to get a specific BC procedure via WhatsApp.
+                average time for a staff member to get a specific BC procedure in the hub.
               </p>
               <p className="text-base leading-relaxed text-neutral-mid">
                 The same time it takes to find the right person to call, your staff already have

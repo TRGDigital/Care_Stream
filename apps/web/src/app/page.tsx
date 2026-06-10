@@ -835,7 +835,7 @@ function RegulationLayerSection() {
           </div>
         </div>
 
-        {/* Main visual: breakdown left + WhatsApp mockup right */}
+        {/* Main visual: breakdown left + hub chat mockup right */}
         <div className="mb-14 grid items-center gap-10 lg:grid-cols-2">
 
           {/* Left: example breakdown */}
@@ -882,7 +882,7 @@ function RegulationLayerSection() {
             </div>
           </div>
 
-          {/* Right: WhatsApp conversation mockup */}
+          {/* Right: hub conversation mockup */}
           <div className="flex justify-center lg:justify-end">
             <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-elevated">
               {/* Header */}
@@ -1162,126 +1162,6 @@ function FeaturesOverview() {
           <Link href="/care-policies" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
             See all features <ArrowRight size={16} />
           </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function WhatsAppSection() {
-  const chatMessages = [
-    {
-      side: 'right',
-      bg: '#0d9488',
-      text: 'Maaari mo bang ipadaan ang patakaran sa pagbagsak?',
-      meta: '22:14 ✓✓',
-    },
-    {
-      side: 'left',
-      bg: '#202c33',
-      label: '🇵🇭 Tagalog detected',
-      text: 'Manatili kasama ang residente. Huwag ilipat kung may suspetsa ng pinsala sa gulugod. Tawagan ang senior carer agad.',
-      source: 'Falls Policy v3.2 · Seksyon 4.1',
-      meta: '22:14',
-    },
-    {
-      side: 'right',
-      bg: '#0d9488',
-      text: 'Who is the on-call manager tonight?',
-      meta: '22:15 ✓✓',
-    },
-    {
-      side: 'left',
-      bg: '#202c33',
-      text: 'Sarah Ambridge is on call tonight. Duty number is on the medication room door.',
-      source: 'On-Call Rota · Updated 6 Nov',
-      meta: '22:15',
-    },
-  ]
-
-  return (
-    <section className="bg-white py-24">
-      <div className="mx-auto max-w-content px-6">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
-
-          {/* Left, text */}
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-teal-light px-4 py-2 border border-teal/20">
-              <Smartphone size={16} className="text-teal" />
-              <span className="text-sm font-semibold text-teal">The Hub</span>
-            </div>
-            <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Everything in one place, on the app your staff install.
-            </h2>
-            <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-              The hub is where your whole team works. They install it on their phone like any app, sign
-              in once with a one-tap link, and can ask your policies a question in any language, at any
-              hour, by typing or speaking.
-            </p>
-            <ul className="mb-10 space-y-4">
-              {[
-                'Installs like an app on any phone, with a passwordless sign-in link.',
-                'Ask by typing or speaking, and hear the answer read back.',
-                'Every conversation logged for your CQC audit trail.',
-                'Push notifications bring training and reminders to staff in the hub.',
-              ].map((point) => (
-                <li key={point} className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                    <Check size={11} className="text-green-600" />
-                  </div>
-                  <span className="text-neutral-dark">{point}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/demo"
-              className="btn-amber inline-flex items-center gap-2 rounded-btn px-8 py-4 text-sm font-bold text-white"
-            >
-              See it in action <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          {/* Right, WhatsApp chat mockup */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-elevated">
-              {/* Header */}
-              <div className="flex items-center gap-3 bg-teal px-4 py-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[11px] font-extrabold text-white">CS</div>
-                <div>
-                  <p className="text-sm font-semibold text-white">CareStream</p>
-                  <p className="text-xs text-white/60">Crossways Care Home</p>
-                </div>
-                <div className="ml-auto flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-0.5">
-                  <Smartphone size={11} className="text-white" />
-                  <span className="text-[10px] font-semibold text-white">App</span>
-                </div>
-              </div>
-              {/* Messages */}
-              <div className="space-y-2.5 bg-gray-50 px-3 py-4" style={{ minHeight: 280 }}>
-                {chatMessages.map((msg, i) => {
-                  const isUser = msg.side === 'right'
-                  return (
-                    <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                      <div
-                        className={`max-w-[82%] px-3 py-2 ${isUser ? 'bg-teal' : 'border border-gray-100 bg-white shadow-sm'}`}
-                        style={{ borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px' }}
-                      >
-                        {msg.label && (
-                          <p className="mb-1.5 text-[10px] font-semibold text-teal">{msg.label}</p>
-                        )}
-                        <p className={`text-xs leading-relaxed ${isUser ? 'text-white' : 'text-neutral-dark'}`}>{msg.text}</p>
-                        {msg.source && (
-                          <p className="mt-1 text-[10px] text-neutral-mid">{msg.source}</p>
-                        )}
-                        <p className={`mt-0.5 text-right text-[10px] ${isUser ? 'text-white/60' : 'text-gray-400'}`}>{msg.meta}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>
@@ -1771,7 +1651,6 @@ export default async function HomePage() {
         <RegulationLayerSection />
         <HomeKnowledgeCallout />
         <FeaturesOverview />
-        <WhatsAppSection />
         <VoiceSection />
         <PolicyGapsSection />
         <HomeBlogSection posts={featuredPosts} />

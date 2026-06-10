@@ -8,7 +8,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
-  Mail, MessageSquare, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
+  Mail, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
 
 // ─── Email preference definitions ─────────────────────────────────────────────
@@ -84,9 +84,6 @@ export default function SettingsPage() {
   const [inboundEmail,   setInboundEmail]   = useState('')
   const [accountNumber,  setAccountNumber]  = useState('')
   const [allowlist,      setAllowlist]      = useState<string[]>([])
-  const [phoneAllowlist, setPhoneAllowlist] = useState<string[]>([])
-  const [newPhone,       setNewPhone]       = useState('')
-  const [savingPhone,    setSavingPhone]    = useState(false)
   const [facilityType,   setFacilityType]   = useState('')
   const [roomCount,      setRoomCount]      = useState<number>(0)
   const [savingRooms,    setSavingRooms]    = useState(false)
@@ -138,7 +135,6 @@ export default function SettingsPage() {
       setInboundEmail(data.inbound_email ?? '')
       setAccountNumber(data.account_number ?? '')
       setAllowlist(data.email_allowlist ?? [])
-      setPhoneAllowlist(data.phone_allowlist ?? [])
       setFacilityType(data.facility_type ?? '')
       setRoomCount(data.room_count ?? 0)
       setLogoUrl(data.logo_url ?? null)
@@ -155,7 +151,7 @@ export default function SettingsPage() {
     setLoading(false)
   }, [userId])
 
-  // Staff directory — used to label approved-sender / WhatsApp entries with the
+  // Staff directory — used to label approved-sender entries with the
   // staff member's name + role for quick admin reference.
   useEffect(() => {
     if (!session?.accessToken) return
@@ -165,7 +161,6 @@ export default function SettingsPage() {
   }, [session?.accessToken])
 
   const userByEmail = new Map(staffDir.filter(u => u.email).map(u => [u.email.toLowerCase(), u]))
-  const userByPhone = new Map(staffDir.filter(u => u.phone_number).map(u => [u.phone_number as string, u]))
   const staffSuffix = (u?: { name: string; job_role: string | null }) =>
     u ? ` — ${u.name}${u.job_role ? ` (${u.job_role})` : ''}` : ''
 
@@ -181,7 +176,6 @@ export default function SettingsPage() {
         setInboundEmail(data.inbound_email)
         setAccountNumber((data as any).account_number ?? '')
         setAllowlist(data.email_allowlist)
-        setPhoneAllowlist((data as any).phone_allowlist ?? [])
         setFacilityType((data as any).facility_type ?? 'care home')
         setRoomCount((data as any).room_count ?? 0)
         setLogoUrl((data as any).logo_url ?? null)
@@ -387,30 +381,6 @@ export default function SettingsPage() {
     setAllowlist(updated); save(updated)
   }
 
-  async function savePhoneAllowlist(updated: string[]) {
-    if (!session?.accessToken) return
-    setSavingPhone(true); setError('')
-    try {
-      const data = await createApiClient(session.accessToken).settings.update({ phone_allowlist: updated })
-      setPhoneAllowlist(data.phone_allowlist ?? updated)
-    } catch (e: any) { setError(e.message ?? 'Failed to save') }
-    finally { setSavingPhone(false) }
-  }
-
-  function addPhone() {
-    const phone = newPhone.trim().replace(/\s/g, '')
-    if (!phone) return
-    if (!/^\+[1-9]\d{6,14}$/.test(phone)) { setError('Enter a valid number in international format, e.g. +447700900123'); return }
-    if (phoneAllowlist.includes(phone)) { setError('That number is already on the list.'); return }
-    setError('')
-    const updated = [...phoneAllowlist, phone]
-    setPhoneAllowlist(updated); setNewPhone(''); savePhoneAllowlist(updated)
-  }
-
-  function removePhone(phone: string) {
-    const updated = phoneAllowlist.filter(p => p !== phone)
-    setPhoneAllowlist(updated); savePhoneAllowlist(updated)
-  }
 
   async function addSite() {
     if (!session?.accessToken || !newSiteName.trim()) return
@@ -559,7 +529,7 @@ export default function SettingsPage() {
         {/* ── Response detail level ─────────────────────────────────────────── */}
         <SettingSection icon={SlidersHorizontal} title="Response detail level" description="Choose how much detail CareStream includes in its responses.">
           <p className="mb-5 text-sm text-neutral-mid">
-            Controls the length and depth of AI responses across all channels. WhatsApp responses are always concise regardless of this setting.
+            Controls the length and depth of AI responses across all channels.
           </p>
           <div className="space-y-3">
             {([
@@ -779,43 +749,6 @@ export default function SettingsPage() {
           {saving && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
-        {/* ── WhatsApp access ───────────────────────────────────────────────── */}
-        <SettingSection icon={MessageSquare} title="WhatsApp access" description="Add staff mobile numbers to enable WhatsApp queries.">
-          <p className="mb-5 text-sm text-neutral-mid">
-            Staff on this list can send policy questions directly to the CareStreamAI WhatsApp number. Numbers must be in international format (e.g. +447700900123).
-          </p>
-          <div className="mb-5 flex gap-2">
-            <input type="tel" value={newPhone} onChange={e => { setNewPhone(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addPhone()} placeholder="+447700900123" className={INPUT} />
-            <Button onClick={addPhone} disabled={savingPhone || !newPhone.trim()} size="md">
-              <Plus size={14} className="mr-1.5" />Add
-            </Button>
-          </div>
-          {loading ? (
-            <div className="space-y-2">{[1, 2].map(i => <div key={i} className="h-10 animate-pulse rounded-md bg-gray-100" />)}</div>
-          ) : phoneAllowlist.length === 0 ? (
-            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No numbers added yet — add staff mobile numbers above to enable WhatsApp access.</p>
-          ) : (
-            <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
-              {phoneAllowlist.map(phone => {
-                const u = userByPhone.get(phone)
-                return (
-                  <li key={phone} className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare size={13} className="shrink-0 text-neutral-mid" />
-                      <span className="text-sm text-neutral-dark">
-                        {phone}
-                        {u && <span className="text-neutral-mid">{staffSuffix(u)}</span>}
-                      </span>
-                    </div>
-                    <button onClick={() => removePhone(phone)} disabled={savingPhone} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600 disabled:opacity-40" title="Remove"><Trash2 size={14} /></button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-          {savingPhone && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
-        </SettingSection>
-
         {/* ── Sites ─────────────────────────────────────────────────────────── */}
         <SettingSection icon={Building2} title="Sites" description="Manage multiple care homes or locations under one account.">
           <p className="mb-4 text-sm text-neutral-mid">
@@ -907,7 +840,7 @@ export default function SettingsPage() {
         {/* ── Training renewal notifications ────────────────────────────────── */}
         <SettingSection icon={ShieldCheck} title="Training renewal notifications" description="Automatically remind staff when their annual training is due for renewal.">
           <p className="mb-5 text-sm text-neutral-mid">
-            Notifications are sent via the staff member's preferred channel (WhatsApp or email). Off by default — managers must opt in.
+            Notifications are sent to the staff member by email. Off by default — managers must opt in.
           </p>
           {savingTraining && <p className="mb-3 text-xs text-neutral-mid">Saving…</p>}
 

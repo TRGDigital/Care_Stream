@@ -291,7 +291,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* ── 3. The four channels ───────────────────────────────────────────── */}
+      {/* ── 3. The channels (hub, email, voice) ────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>The Hub</SectionLabel>

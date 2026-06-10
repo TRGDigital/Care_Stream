@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Phone, Plus, X } from 'lucide-react'
+import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from 'lucide-react'
 import {
   CommsLanguageToggle,
   CredentialsPanel,
@@ -369,7 +369,7 @@ export function InviteModal({
   const [step,      setStep]      = useState<ModalStep>('form')
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
-  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
+  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
   const [auditIds,  setAuditIds]  = useState<string[]>([])
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
@@ -387,12 +387,6 @@ export function InviteModal({
     e.preventDefault()
     setError('')
 
-    // Basic E.164 check before hitting the API
-    if (form.phone_number && !/^\+[1-9]\d{7,14}$/.test(form.phone_number)) {
-      setError('WhatsApp number must be in international format, e.g. +447911123456')
-      return
-    }
-
     setLoading(true)
 
     const res = await createApiClient(token).users.invite({
@@ -402,7 +396,6 @@ export function InviteModal({
       job_role:        form.job_role || undefined,
       specialisms:     hasSpecialism ? specialisms : [],
       audit_template_ids: form.role === 'admin' ? [] : auditIds,
-      phone_number:    form.phone_number || undefined,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
       second_language: form.second_language || undefined,
@@ -478,28 +471,6 @@ export function InviteModal({
                   {form.staff_type === 'new'
                     ? 'Automatically enrols them in the onboarding flow(s) matching their job role.'
                     : 'No onboarding is assigned automatically.'}
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
-                  WhatsApp number
-                  <span className="ml-1.5 text-xs font-normal text-neutral-mid">(optional)</span>
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="+447911123456"
-                    value={form.phone_number}
-                    onChange={update('phone_number')}
-                    className="w-full rounded-md border border-gray-300 py-2 pl-8 pr-3 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-neutral-mid">
-                  Include the country code. Enables policy questions via WhatsApp.
                 </p>
               </div>
               <div>
@@ -655,7 +626,6 @@ export function EditModal({
     name:            user.name            ?? '',
     job_role:        user.job_role        ?? '',
     role:            user.role            ?? 'staff',
-    phone_number:    user.phone_number    ?? '',
     shift_type:      user.shift_type      ?? 'any',
     first_language:  user.first_language  ?? 'eng',
     second_language: user.second_language ?? '',
@@ -676,11 +646,6 @@ export function EditModal({
     e.preventDefault()
     setError('')
 
-    if (form.phone_number && !/^\+[1-9]\d{7,14}$/.test(form.phone_number)) {
-      setError('WhatsApp number must be in international format, e.g. +447911123456')
-      return
-    }
-
     setLoading(true)
     const res = await createApiClient(token).users.update(user.id, {
       name:            form.name || undefined,
@@ -688,7 +653,6 @@ export function EditModal({
       specialisms:     hasSpecialism ? specialisms : [],
       role:            form.role,
       audit_template_ids: form.role === 'admin' ? [] : auditIds,
-      phone_number:    form.phone_number || null,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
       second_language: form.second_language || null,
@@ -775,28 +739,6 @@ export function EditModal({
             auditIds={auditIds}
             onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
           />
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
-              WhatsApp number
-              <span className="ml-1.5 text-xs font-normal text-neutral-mid">(optional)</span>
-            </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              </div>
-              <input
-                type="tel"
-                placeholder="+447911123456"
-                value={form.phone_number}
-                onChange={update('phone_number')}
-                className="w-full rounded-md border border-gray-300 py-2 pl-8 pr-3 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              />
-            </div>
-            <p className="mt-1 text-xs text-neutral-mid">
-              Include the country code. Leave blank to remove WhatsApp access.
-            </p>
-          </div>
 
           <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-4 space-y-3">
             <p className="text-xs font-semibold text-teal-dark">Language preferences</p>
@@ -968,11 +910,6 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
             <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
               <Field label="Position">{user.job_role || <span className="italic text-neutral-mid/60">Not set</span>}</Field>
               <Field label="Shift">{user.shift_type === 'day' ? 'Day shift' : user.shift_type === 'night' ? 'Night shift' : 'Flexible'}</Field>
-              <Field label="WhatsApp">
-                {user.phone_number
-                  ? <span className="inline-flex items-center gap-1.5"><Phone size={12} className="text-green-600" />{user.phone_number}</span>
-                  : <span className="italic text-neutral-mid/60">Not set</span>}
-              </Field>
               <Field label="Email questions">
                 <span className="inline-flex items-center gap-1.5"><Mail size={12} className="text-neutral-mid" />Enabled</span>
               </Field>

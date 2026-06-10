@@ -728,7 +728,6 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/help/languages/how-it-works',          title: 'Help · How multilingual support works' },
   { path: '/help/languages/supported-languages',   title: 'Help · Which languages are supported' },
   { path: '/help/languages/channels',              title: 'Help · Email versus web chat, which to use' },
-  { path: '/help/languages/whatsapp',              title: 'Help · Using CareStreamAI on WhatsApp' },
   { path: '/help/languages/email',                 title: 'Help · Asking questions by email' },
   { path: '/help/languages/staff-access',          title: 'Help · How staff access CareStreamAI' },
 

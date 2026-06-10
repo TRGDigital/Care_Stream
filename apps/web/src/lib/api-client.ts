@@ -14,7 +14,6 @@ export function apiAssetUrl(path?: string | null): string | null {
 export interface StaffContact {
   login_url:       string
   inbound_email:   string | null
-  whatsapp_number: string | null
 }
 
 export interface Citation {

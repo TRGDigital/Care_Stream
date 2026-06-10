@@ -365,10 +365,10 @@ export default function AnalyticsPage() {
       )}
 
       {tab === 'engagement' && (<>
-      {/* ── WhatsApp → Hub migration scoreboard ─────────────────────────────── */}
+      {/* ── Staff engagement scoreboard ─────────────────────────────────────── */}
       <SectionDivider
         title="Staff engagement"
-        subtitle="The scoreboard for moving staff onto the hub — weekly active staff, the trend, and the channel mix"
+        subtitle="How your team is using the hub — weekly active staff, the trend, and the channel mix"
       />
       {!engagementData ? (
         <div className="mb-6 rounded-card border border-gray-100 bg-white p-6 shadow-card">
@@ -381,7 +381,7 @@ export default function AnalyticsPage() {
               label="Weekly active staff"
               value={engagementData.wau.pct == null ? '—' : `${engagementData.wau.pct}`}
               suffix={engagementData.wau.pct == null ? '' : '%'}
-              info="Share of active staff who opened the hub, asked a question, or read a policy in the last 7 days. This is the leading indicator for the WhatsApp→hub migration — watch it hold as WhatsApp ramps down."
+              info="Share of active staff who opened the hub, asked a question, or read a policy in the last 7 days. This is the leading indicator for staff adoption of the hub."
             />
             <StatCard label="Active this week" value={engagementData.wau.active} info="Distinct staff active in the hub in the last 7 days." />
             <StatCard label="Team size" value={engagementData.wau.total_staff} info="Active staff accounts — the denominator for weekly active %." />
@@ -389,7 +389,7 @@ export default function AnalyticsPage() {
               label="Hub share of questions"
               value={engagementData.channels.hub_pct == null ? '—' : `${engagementData.channels.hub_pct}`}
               suffix={engagementData.channels.hub_pct == null ? '' : '%'}
-              info="Share of all questions in the last 30 days that came through the hub vs WhatsApp/email/voice. Should rise toward 100% as you move off WhatsApp."
+              info="Share of all questions in the last 30 days that came through the hub vs email/voice."
             />
           </div>
 
@@ -408,14 +408,13 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="mb-6">
-            <Card title="Channel mix (last 30 days)" info="Where staff questions are coming in. Watch WhatsApp shrink and the hub grow as you migrate. Email questions from unknown addresses aren't attributed to a staff member.">
+            <Card title="Channel mix (last 30 days)" info="Where staff questions are coming in. Email questions from unknown addresses aren't attributed to a staff member.">
               {engagementData.channels.total === 0 ? (
                 <p className="text-sm text-neutral-mid">No questions in the last 30 days yet.</p>
               ) : (
                 <div className="space-y-2.5">
                   {([
                     ['Hub (chat)', 'chat',     'bg-teal'],
-                    ['WhatsApp',   'whatsapp', 'bg-green-500'],
                     ['Email',      'email',    'bg-blue-500'],
                     ['Voice',      'voice',    'bg-purple-500'],
                   ] as const).map(([label, key, color]) => {

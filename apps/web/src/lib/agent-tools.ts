@@ -50,12 +50,12 @@ export const PUBLIC_AGENT_TOOLS: AgentToolDef[] = [
       'Explain what CareStreamAI is, who it is for, and the core capabilities. Use this to answer "what is CareStream / what does it do / who is it for".',
     annotations: { readOnlyHint: true },
     execute: () => ({
-      what: 'CareStreamAI is an AI policy-access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies — in 50+ languages — via web chat, email and WhatsApp.',
+      what: 'CareStreamAI is an AI policy-access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies — in 50+ languages — via web chat, email and voice.',
       grounding:
         'Answers are grounded only in the customer’s uploaded documents and a curated UK regulatory knowledge base (RAG). It does not invent content.',
       whoFor: 'Care homes, domiciliary care, supported living, and other regulated health & social care settings.',
       data: 'Per-client isolated, processed in the UK/EEA, encrypted at rest and in transit, never used to train AI models.',
-      channels: ['Web chat', 'Email', 'WhatsApp'],
+      channels: ['Web chat', 'Email', 'Voice'],
       url: SITE_URL,
     }),
   },

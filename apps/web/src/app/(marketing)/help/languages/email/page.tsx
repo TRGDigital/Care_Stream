@@ -36,7 +36,6 @@ export default function Page() {
       ]}
       related={[
         { title: 'Setting up email access', href: '/help/getting-started/email-setup' },
-        { title: 'Using CareStreamAI on WhatsApp', href: '/help/languages/whatsapp' },
         { title: 'Email versus web chat, which to use', href: '/help/languages/channels' },
       ]}
     />

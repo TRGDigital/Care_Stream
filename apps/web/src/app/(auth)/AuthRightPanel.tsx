@@ -24,7 +24,7 @@ const COVERAGES = [
   { text: 'HR Policies — staff handbook access for every team member' },
   { text: 'Care Audits — guided digital audits with AI recommendations' },
   { text: 'CQC Compliance — readiness tracking and evidence management' },
-  { text: 'CQC Staff Questions — KLOE preparation for your whole team' },
+  { text: 'CQC Staff Questions — inspection preparation for your whole team' },
   { text: 'Business Continuity — plans accessible to every staff member' },
   { text: 'CQC Report Chat — chat directly with your inspection reports' },
   { text: 'Care Policies — digital policy management and distribution' },

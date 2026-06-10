@@ -20,6 +20,7 @@ export function LogoMarquee() {
                 <SiteImage
                   src={logo.src}
                   alt={logo.name}
+                  loading="lazy"
                   className="max-h-full max-w-full object-contain opacity-70 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
                 />
               </div>

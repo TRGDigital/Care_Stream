@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
+import { DemoModalRoot } from '@/components/marketing/demo-modal'
 import { AltMapProvider } from '@/components/alt-map-provider'
 import { getSiteAltMap } from '@/lib/image-alts'
 import { JsonLd } from '@/components/json-ld'
@@ -79,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
         </AltMapProvider>
         <CookieConsent />
+        <DemoModalRoot />
       </body>
     </html>
   )

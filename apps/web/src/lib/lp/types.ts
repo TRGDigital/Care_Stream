@@ -18,6 +18,20 @@ export type LpContent = {
     primaryCta: { label: string; anchor?: string }
     heroImage?: { src: string; alt: string; width?: number; height?: number }
     trustRibbon?: { label?: string; stat?: string; logos?: { src: string; alt: string }[] }
+    ticks?: string[]
+  }
+  stats?: { items: { value: string; label: string }[] }
+  whyUs?: {
+    eyebrow?: string
+    headline: string
+    intro?: string
+    points: { title: string; body: string }[]
+    image?: { src: string; alt: string }
+  }
+  services?: {
+    headline: string
+    intro?: string
+    items: { title: string; description: string; href?: string }[]
   }
   problem: { eyebrow?: string; headline: string; body: string[] }
   howItWorks: { eyebrow?: string; headline: string; subheadline?: string; steps: { number: string; title: string; body: string }[] }

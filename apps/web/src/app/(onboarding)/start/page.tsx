@@ -29,6 +29,15 @@ function StartInner() {
   const trialEndLabel = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
     .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  // Already subscribed (gate not needed) and not mid-checkout — don't show the
+  // picker (avoids a second subscription); send them into the hub.
+  useEffect(() => {
+    if (checkout) return
+    if (session?.user && (session.user as any).needsBilling === false) {
+      window.location.href = '/chat'
+    }
+  }, [session, checkout])
+
   // Load the available plans.
   useEffect(() => {
     if (!session?.accessToken) return

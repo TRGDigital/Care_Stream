@@ -99,7 +99,9 @@ function AnswerForm({ delivery, token, onAnswered }: {
         rows={6}
         value={answer}
         onChange={e => setAnswer(e.target.value)}
-        placeholder="Write your answer here. Think about what a CQC inspector would want to hear — be specific and practical. There are no trick questions; they want to understand what you would actually do."
+        onPaste={e => e.preventDefault()}
+        onDrop={e => e.preventDefault()}
+        placeholder="Write your answer here. Think about what a CQC inspector would want to hear, be specific and practical. There are no trick questions; they want to understand what you would actually do."
         className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
       />
       <p className="text-xs text-gray-400">
@@ -191,7 +193,14 @@ function ResultCard({ delivery, token, onUpdated }: {
       )}
 
       {delivery.question?.model_answer && (
-        <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+        <div
+          className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 select-none"
+          style={{ WebkitTouchCallout: 'none' }}
+          onCopy={e => e.preventDefault()}
+          onCut={e => e.preventDefault()}
+          onContextMenu={e => e.preventDefault()}
+          onDragStart={e => e.preventDefault()}
+        >
           <p className="flex items-center gap-1.5 text-xs font-medium text-green-700 uppercase tracking-wide mb-1">
             <Star className="w-3.5 h-3.5" /> Model answer — what a strong answer covers
           </p>
@@ -215,6 +224,8 @@ function ResultCard({ delivery, token, onUpdated }: {
             rows={5}
             value={answer}
             onChange={e => setAnswer(e.target.value)}
+            onPaste={e => e.preventDefault()}
+            onDrop={e => e.preventDefault()}
             placeholder="Write your improved answer here…"
             className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
           />

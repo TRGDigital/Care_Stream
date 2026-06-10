@@ -116,7 +116,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             {[
               ['Policies & Procedures', 'Your internal care setting policies, SOPs, and risk assessments'],
               ['Staff Handbook',        'Employee handbook, HR policies, and onboarding documents'],
-              ['External Regulation',   'Legislation or external guidance (e.g. CQC Key Lines of Enquiry)'],
+              ['External Regulation',   'Legislation or external guidance (e.g. CQC Key Questions)'],
               ['Training Module',       'Training materials and learning resources for staff'],
               ['CQC Report',            'Your most recent CQC inspection report. Enables CQC Report Chat.'],
             ].map(([cat, desc]) => (
@@ -593,7 +593,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Built-in CQC knowledge">
           <p className="text-sm text-neutral-mid">
-            CareStream also includes a built-in library of CQC Key Lines of Enquiry covering all five domains. These are pre-loaded compliance frameworks that help answer general CQC questions even before your report is uploaded.
+            CareStream also includes a built-in library of CQC Key Questions covering all five domains. These are pre-loaded compliance frameworks that help answer general CQC questions even before your report is uploaded.
           </p>
         </SectionBlock>
         <Tip>Re-upload your new report after each inspection. Delete the old one first so CareStream uses your most recent findings.</Tip>
@@ -695,7 +695,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Asking questions about training topics">
           <p className="text-sm text-neutral-mid">
-            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or WhatsApp. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Lines of Enquiry or inspection framework so staff understand the regulatory context behind what they are learning.
+            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or WhatsApp. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Questions or inspection framework so staff understand the regulatory context behind what they are learning.
           </p>
           <p className="text-sm text-neutral-mid">
             For example, a staff member asking about moving and handling will receive guidance drawing from your internal manual handling policy, any relevant training module you have uploaded, the applicable health and safety regulations, and any CQC Safe domain guidance that relates to that topic.
@@ -788,7 +788,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Platform knowledge">
           <p className="text-sm text-neutral-mid">
-            CareStream also comes pre-loaded with a library of regulatory knowledge covering CQC Key Lines of Enquiry, health and safety legislation, infection control guidance, medication regulations, and more. This is available to all care settings on the platform and does not count against your document limit.
+            CareStream also comes pre-loaded with a library of regulatory knowledge covering CQC Key Questions, health and safety legislation, infection control guidance, medication regulations, and more. This is available to all care settings on the platform and does not count against your document limit.
           </p>
         </SectionBlock>
         <Tip>Use the knowledge base for things that change less often than policies, such as your registration number, registered manager, bed capacity, or emergency escalation contacts. Categorising entries correctly ensures staff can find them in the right chat channel.</Tip>
@@ -1085,7 +1085,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="AI recommendations">
           <p className="text-sm text-neutral-mid">
-            On completion, CareStream analyses every answer against CQC Key Lines of Enquiry and generates a structured report covering: immediate actions required, priority improvements, CQC compliance notes across the five KLOEs (Safe, Effective, Caring, Responsive, Well-Led), commendations, and recommended focus areas for the next cycle.
+            On completion, CareStream analyses every answer against CQC Key Questions and generates a structured report covering: immediate actions required, priority improvements, CQC compliance notes across the five key questions (Safe, Effective, Caring, Responsive, Well-Led), commendations, and recommended focus areas for the next cycle.
           </p>
           <Tip>The AI recommendations prompt can be customised in the Platform Console under AI Prompts → Audit Recommendations, so you can tailor the output style for your organisation.</Tip>
         </SectionBlock>

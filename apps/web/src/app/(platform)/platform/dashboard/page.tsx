@@ -2389,7 +2389,7 @@ function SystemReference() {
           <RefRow label="Adding more" value="To require shift/room for a different template, add its name to the relevant constant in apps/api/src/services/audit/conversation.ts" />
         </div>
         <div className="mt-3 space-y-1">
-          <RefRow label="AI recommendations" value="Generated on completion via audit_recommendations prompt slot — maps findings to CQC KLOEs, produces six structured sections including a Quality Rating" />
+          <RefRow label="AI recommendations" value="Generated on completion via audit_recommendations prompt slot — maps findings to the CQC key questions, produces six structured sections including a Quality Rating" />
           <RefRow label="AI prompt slot"      value="audit_recommendations — editable at /platform/prompts" />
           <RefRow label="Routes"              value="GET /audits/templates, POST /audits/runs, GET/PATCH /audits/runs/:id, POST /audits/runs/:id/complete" />
         </div>
@@ -3242,7 +3242,7 @@ const QA_TESTS: TestItem[] = [
     category: 'Monthly Audits',
     name: 'Complete an audit and get AI recommendations',
     steps: 'Answer all required questions in an audit. Navigate to the Summary tab. Fill in strengths, areas for improvement, and a deadline. Click "Complete & get AI recommendations".',
-    expected: 'The audit status changes to Completed. An AI-generated report appears with sections: Immediate Actions Required, Priority Improvements, CQC KLOE Analysis, Commendations, Next Audit Cycle Focus, and a Quality Rating.',
+    expected: 'The audit status changes to Completed. An AI-generated report appears with sections: Immediate Actions Required, Priority Improvements, CQC Key Questions Analysis, Commendations, Next Audit Cycle Focus, and a Quality Rating.',
   },
   {
     id: 'audits-whatsapp-flow',

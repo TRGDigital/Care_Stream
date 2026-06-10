@@ -11,7 +11,7 @@ export const metadata = {
   description: 'Prepare your care staff to answer CQC inspector questions with confidence. CareStream sends open-ended, inspector-style questions in the hub, scores each free-text answer with AI feedback, and lets staff review the model answer and try again.',
   openGraph: {
     title: 'CQC Staff Preparation Questions | CareStreamAI',
-    description: 'Open-ended, inspector-style practice questions across the five key lines of enquiry, AI-scored with feedback, completed in the CareStream hub.',
+    description: 'Open-ended, inspector-style practice questions across the five key questions, AI-scored with feedback, completed in the CareStream hub.',
     url: 'https://carestreamai.com/cqc-staff-questions',
   },
 }
@@ -53,7 +53,7 @@ function CQCReadinessMockup() {
         ))}
       </div>
       <div className="px-5 py-4">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Average score by key line of enquiry</p>
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-mid">Average score by key question</p>
         <div className="space-y-3">
           {categories.map(({ name, score, color }) => (
             <div key={name}>
@@ -153,7 +153,7 @@ export default function CQCStaffQuestionsPage() {
                 {
                   icon: '✅',
                   label: 'With CareStream',
-                  text: 'Staff have practised answering inspector-style questions across all five key lines of enquiry in the hub, with an AI score and feedback on every answer. Their answers are confident, consistent, and accurate.',
+                  text: 'Staff have practised answering inspector-style questions across all five key questions in the hub, with an AI score and feedback on every answer. Their answers are confident, consistent, and accurate.',
                   dim: false,
                 },
               ].map(({ icon, label, text, dim }) => (
@@ -181,7 +181,7 @@ export default function CQCStaffQuestionsPage() {
             Inspector-style questions, answered in their own words, scored instantly.
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            No training day and no classroom. Questions aligned to the five CQC key lines of enquiry
+            No training day and no classroom. Questions aligned to the five CQC key questions
             are sent to each staff member in the hub. They answer in their own words, the AI scores
             the answer and gives feedback, and their readiness is tracked in real time.
           </p>
@@ -190,8 +190,8 @@ export default function CQCStaffQuestionsPage() {
               {
                 step: '01',
                 Icon: ClipboardList,
-                title: 'Questions mapped to every KLOE',
-                body: 'CareStream ships with a bank of open-ended, inspector-style questions covering all five CQC key lines of enquiry: Safe, Effective, Caring, Responsive, and Well-led. Each one comes with a best-practice model answer, and you can generate more questions with AI whenever you need them.',
+                title: 'Questions mapped to every key question',
+                body: 'CareStream ships with a bank of open-ended, inspector-style questions covering all five CQC key questions: Safe, Effective, Caring, Responsive, and Well-led. Each one comes with a best-practice model answer, and you can generate more questions with AI whenever you need them.',
               },
               {
                 step: '02',
@@ -231,7 +231,7 @@ export default function CQCStaffQuestionsPage() {
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Open-ended, scenario-based questions across all five key lines of enquiry.
+                Open-ended, scenario-based questions across all five key questions.
               </h3>
               <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
                 CareStream does not send multiple-choice quizzes. It sends open-ended, scenario-based
@@ -240,17 +240,17 @@ export default function CQCStaffQuestionsPage() {
                 with an inspector.
               </p>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Questions are spread across all five KLOE categories, so every member of the team
+                Questions are spread across all five key questions, so every member of the team
                 builds familiarity with the full range of topics an inspector might raise.
               </p>
               <div className="space-y-3">
                 {[
-                  { kloe: 'Safe',       q: 'A resident shows you an unexplained bruise and seems distressed. You are alone with them. What is your immediate responsibility?' },
-                  { kloe: 'Caring',     q: 'A resident tells you they feel their preferences about personal care are not being respected. How do you respond?' },
-                  { kloe: 'Responsive', q: 'A family member tells you their relative has been waiting three weeks to see a GP. What steps do you take?' },
-                ].map(({ kloe, q }) => (
-                  <div key={kloe} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <span className="mb-1.5 inline-block rounded-full bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-teal">{kloe}</span>
+                  { domain: 'Safe',       q: 'A resident shows you an unexplained bruise and seems distressed. You are alone with them. What is your immediate responsibility?' },
+                  { domain: 'Caring',     q: 'A resident tells you they feel their preferences about personal care are not being respected. How do you respond?' },
+                  { domain: 'Responsive', q: 'A family member tells you their relative has been waiting three weeks to see a GP. What steps do you take?' },
+                ].map(({ domain, q }) => (
+                  <div key={domain} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <span className="mb-1.5 inline-block rounded-full bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-teal">{domain}</span>
                     <p className="text-sm font-medium leading-snug text-neutral-dark">{q}</p>
                   </div>
                 ))}
@@ -263,7 +263,7 @@ export default function CQCStaffQuestionsPage() {
                 <div className="flex items-center justify-between bg-teal px-4 py-3">
                   <div>
                     <p className="text-sm font-bold text-white">CQC Practice</p>
-                    <p className="text-[11px] text-white/70">Key line of enquiry: Safe</p>
+                    <p className="text-[11px] text-white/70">Key question: Safe</p>
                   </div>
                   <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white">Answered</span>
                 </div>
@@ -405,19 +405,19 @@ export default function CQCStaffQuestionsPage() {
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
             CQC inspections are rarely announced with much notice. CareStream keeps your team in a
             state of continuous readiness, with a live picture of how everyone is performing across
-            all five key lines of enquiry.
+            all five key questions.
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 Icon: BarChart2,
                 title: 'Live readiness dashboard',
-                body: 'See the team average and the average score for each KLOE category at any time, so you know which areas are strong and which need attention before the next inspection.',
+                body: 'See the team average and the average score for each key question at any time, so you know which areas are strong and which need attention before the next inspection.',
               },
               {
                 Icon: Users,
                 title: 'Individual staff scores',
-                body: 'Every staff member has their own score in each KLOE category. A new starter or recently returned member of staff is clearly visible and can be prioritised for catch-up practice.',
+                body: 'Every staff member has their own score in each key question. A new starter or recently returned member of staff is clearly visible and can be prioritised for catch-up practice.',
               },
               {
                 Icon: RefreshCw,
@@ -427,7 +427,7 @@ export default function CQCStaffQuestionsPage() {
               {
                 Icon: Target,
                 title: 'Send practice to weaker areas',
-                body: 'When the dashboard shows a KLOE category is weak across the team, push a focused batch of practice questions to the staff who need it most, ahead of an inspection.',
+                body: 'When the dashboard shows a key question is weak across the team, push a focused batch of practice questions to the staff who need it most, ahead of an inspection.',
               },
               {
                 Icon: Brain,
@@ -472,10 +472,10 @@ export default function CQCStaffQuestionsPage() {
               <span>What this shows an inspector</span>
             </div>
             {[
-              ['Average score per KLOE, per staff member', 'Each staff member has a tracked score against every key line of enquiry, showing how their knowledge compares across all five inspection categories.'],
+              ['Average score per key question, per staff member', 'Each staff member has a tracked score against every key question, showing how their knowledge compares across all five inspection categories.'],
               ['Every question, answer, score and feedback', 'The exact question asked, the answer the staff member wrote, the AI score out of 100, and the feedback given. Evidence that staff knowledge is actively tested, not only supervised.'],
               ['Improvement from first attempt to latest', 'Where a staff member reviewed the model answer and tried again, the record shows their score improving, demonstrating learning rather than a one-off result.'],
-              ['A live readiness dashboard', 'Team-wide and per-staff readiness across all five KLOE categories, available at any point, showing inspection preparation is a structured, ongoing process.'],
+              ['A live readiness dashboard', 'Team-wide and per-staff readiness across all five key questions, available at any point, showing inspection preparation is a structured, ongoing process.'],
               ['Targeted practice to weaker areas', 'When a category is weak, the record shows the manager sent focused practice to the staff who needed it, which is exactly the type of active oversight inspectors look for.'],
             ].map(([what, why], i) => (
               <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 4 ? 'border-b border-gray-100' : ''}`}>
@@ -499,12 +499,12 @@ export default function CQCStaffQuestionsPage() {
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: ClipboardList, label: 'KLOE-mapped question bank',     desc: 'Open-ended, inspector-style questions across all five key lines of enquiry, each with a model answer. Generate more with AI whenever you need them.',  iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
+              { icon: ClipboardList, label: 'Question bank mapped to the key questions',     desc: 'Open-ended, inspector-style questions across all five key questions, each with a model answer. Generate more with AI whenever you need them.',  iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
               { icon: PenLine,       label: 'Answers in their own words',     desc: 'Staff write a real answer rather than picking from options, exactly as they would in conversation with an inspector.',                              iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
               { icon: Gauge,         label: 'AI scoring with feedback',       desc: 'Every answer is scored out of 100 against the model answer, with clear feedback on what was strong and what to improve.',                          iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
               { icon: RefreshCw,     label: 'Review and retry',               desc: 'Staff see the model answer after answering, then try again. The improvement from first attempt to latest is tracked.',                          iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-              { icon: BarChart2,     label: 'Readiness scores per KLOE',      desc: 'Track each staff member and the whole team across Safe, Effective, Caring, Responsive, and Well-led. See gaps at a glance.',                    iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
-              { icon: Target,        label: 'Targeted practice delivery',     desc: 'Send a focused batch of questions to any KLOE category that is weak across the team, to the staff who need it most.',                          iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+              { icon: BarChart2,     label: 'Readiness scores per key question',      desc: 'Track each staff member and the whole team across Safe, Effective, Caring, Responsive, and Well-led. See gaps at a glance.',                    iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
+              { icon: Target,        label: 'Targeted practice delivery',     desc: 'Send a focused batch of questions to any key question that is weak across the team, to the staff who need it most.',                          iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
               { icon: Languages,     label: 'In their first language',         desc: 'Staff see the question, the model answer, and the feedback in their own language, and answer in their own words, just like the rest of CareStream.', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
               { icon: Sparkles,      label: 'Notified in the hub',            desc: 'Staff are nudged with a notification when a new question is waiting, and answer in the hub on any device whenever it suits them.',           iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
             ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
@@ -527,10 +527,10 @@ export default function CQCStaffQuestionsPage() {
             <div className="md:px-12">
               <p className="mb-6 text-5xl font-extrabold leading-none text-teal">5</p>
               <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
-                CQC key lines of enquiry that inspectors use to assess every care service.
+                CQC key questions that inspectors use to assess every care service.
               </p>
               <p className="text-base leading-loose text-neutral-mid">
-                CareStream maps every practice question to a specific KLOE, so you always know
+                CareStream maps every practice question to a specific key question, so you always know
                 where your team is strong and where they need more work.
               </p>
             </div>

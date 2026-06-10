@@ -22,7 +22,7 @@ const SERVICES: MenuItem[] = [
   { href: '/hr-policies',          label: 'HR Policies',          desc: 'Staff handbook access in any language',                  Icon: Users },
   { href: '/care-audits',          label: 'Care Audits',          desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
   { href: '/cqc-compliance',       label: 'CQC & Compliance',     desc: 'Readiness tracking and evidence management',             Icon: Shield },
-  { href: '/cqc-staff-questions',  label: 'CQC Staff Questions',  desc: 'KLOE preparation for your whole team',                   Icon: HelpCircle },
+  { href: '/cqc-staff-questions',  label: 'CQC Staff Questions',  desc: 'inspection preparation for your whole team',                   Icon: HelpCircle },
   { href: '/business-continuity',  label: 'Business Continuity',  desc: 'Plans accessible to every staff member, any time',       Icon: RefreshCw },
   { href: '/cqc-report-chat',      label: 'CQC Report Chat',      desc: 'Chat directly with your inspection reports',             Icon: MessageSquare },
   { href: '/care-policies',        label: 'Care Policies',        desc: 'Digital policy management and distribution',             Icon: FileText },

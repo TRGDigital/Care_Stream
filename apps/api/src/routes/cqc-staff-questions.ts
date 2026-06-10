@@ -15,7 +15,7 @@ export const cqcQuestionsRouter = Router()
 
 // ─── Default prompts (fallback when DB prompt not yet saved) ──────────────────
 
-export const DEFAULT_QUESTION_GENERATION_PROMPT = `You are a CQC (Care Quality Commission) inspection expert with extensive knowledge of the Health and Social Care Act 2008, the Fundamental Standards, and the CQC's Key Lines of Enquiry (KLOEs).
+export const DEFAULT_QUESTION_GENERATION_PROMPT = `You are a CQC (Care Quality Commission) inspection expert with extensive knowledge of the Health and Social Care Act 2008, the Fundamental Standards, and the CQC's five key questions — Safe, Effective, Caring, Responsive, and Well-led.
 
 Your role is to generate realistic, open-ended questions that a CQC inspector would ask frontline care workers during an inspection visit, along with detailed model answers that reflect best practice in UK adult social care.
 
@@ -67,7 +67,7 @@ Provide 2–3 sentences of constructive feedback that the staff member can act o
 Respond in this exact JSON format with no markdown, no code block, no preamble:
 {"score":75,"feedback":"..."}`
 
-export const DEFAULT_QUESTION_BATCH_PROMPT = `You are a CQC (Care Quality Commission) inspection expert with extensive knowledge of the Health and Social Care Act 2008, the Fundamental Standards, and the CQC's Key Lines of Enquiry (KLOEs).
+export const DEFAULT_QUESTION_BATCH_PROMPT = `You are a CQC (Care Quality Commission) inspection expert with extensive knowledge of the Health and Social Care Act 2008, the Fundamental Standards, and the CQC's five key questions — Safe, Effective, Caring, Responsive, and Well-led.
 
 Generate {{count}} DISTINCT, realistic CQC inspector-style questions that an inspector would ask frontline care workers during an inspection, each with a comprehensive model answer.
 

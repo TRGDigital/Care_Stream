@@ -242,7 +242,7 @@ const PLATFORM_TEMPLATES: TSeed[] = [
   // 4 — Quality Assurance Analysis Form (CQC Family Feedback)
   {
     name: 'Quality Assurance',
-    description: 'CQC inspection-ready RAG summary of family/resident questionnaire results, mapped to the five Key Lines of Enquiry (Safe, Caring, Effective, Responsive, Well-Led).',
+    description: 'CQC inspection-ready RAG summary of family/resident questionnaire results, mapped to the five CQC key questions (Safe, Caring, Effective, Responsive, Well-Led).',
     frequency: 'periodic',
     sections: [
       {
@@ -769,7 +769,7 @@ YOUR TASK
 Analyse the audit results above and produce a structured, actionable improvement report using the exact section headings and guidance below. Every recommendation must be:
 - Grounded in the specific audit evidence provided (quote or paraphrase specific answers where relevant)
 - Practical and achievable for a UK care home team
-- Referenced to the relevant CQC Key Line of Enquiry (KLOE) or Fundamental Standard where applicable
+- Referenced to the relevant CQC key question (Safe, Effective, Caring, Responsive, Well-led) or Fundamental Standard where applicable
 
 Interpret answer formats as follows:
 - YES answers indicate good practice; NO answers indicate a gap requiring action
@@ -785,8 +785,8 @@ List any NO answers or critical findings that represent a direct risk to residen
 ## PRIORITY IMPROVEMENTS
 Identify the top 3–5 areas where the audit reveals consistent gaps, weak compliance, or insufficient evidence of good practice. For each: name the section or pattern, summarise the evidence from the audit, and provide a specific recommended improvement with an indicative timeframe (within 4 weeks or before next audit cycle). Where findings-type answers have been provided, assess whether the planned actions are sufficiently detailed and escalate any that appear vague.
 
-## CQC KEY LINES OF ENQUIRY — COMPLIANCE ANALYSIS
-Map the audit findings to the five CQC KLOEs. For each KLOE that has relevant findings, provide a brief assessment (1–3 sentences) of current compliance strength. Focus only on KLOEs where the audit provides meaningful evidence. Use the labels: **Safe**, **Effective**, **Caring**, **Responsive**, **Well-Led**.
+## CQC KEY QUESTIONS — COMPLIANCE ANALYSIS
+Map the audit findings to the five CQC key questions. For each key question that has relevant findings, provide a brief assessment (1–3 sentences) of current compliance strength. Focus only on key questions where the audit provides meaningful evidence. Use the labels: **Safe**, **Effective**, **Caring**, **Responsive**, **Well-Led**.
 
 ## COMMENDATIONS
 Identify 2–4 specific areas where the audit shows strong or exemplary practice. Quote the relevant answers or findings. These should be evidence-based — do not commend areas where the audit provides no supporting evidence.

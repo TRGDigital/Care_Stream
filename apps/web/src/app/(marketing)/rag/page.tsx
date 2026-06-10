@@ -2,6 +2,7 @@ import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { CheckCircle2, FileText, GraduationCap, Search, ShieldCheck, Zap } from 'lucide-react'
 import { pageMetadata } from '@/lib/page-meta'
 import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
+import { RagEngineMockup } from '@/components/marketing/rag-engine-mockup'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/rag', {
@@ -234,22 +235,29 @@ export default function RagPage() {
 
       {/* ── What we don't tell you ────────────────────────────────────────────── */}
       <section className="bg-white py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <SectionLabel>A Note on Transparency</SectionLabel>
-          <h2 className="mb-6 text-3xl font-extrabold text-neutral-dark">
-            We explain the principle. We protect the craft.
-          </h2>
-          <p className="mb-5 text-lg leading-relaxed text-neutral-mid">
-            This page explains how CareStreamAI's AI architecture works at the level that matters for your
-            governance, your compliance teams, and your staff. We believe you deserve to understand what
-            the system is doing with your data and why its answers can be trusted.
-          </p>
-          <p className="text-lg leading-relaxed text-neutral-mid">
-            We do not publish the specific technical implementation that makes CareStreamAI work as well as
-            it does, the retrieval design, the knowledge structures, the prompt engineering, and the quality
-            controls that have been built and refined for care settings specifically. That work is what
-            differentiates CareStreamAI, and it is what we continue to invest in on your behalf.
-          </p>
+        <div className="mx-auto max-w-content px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <SectionLabel>A Note on Transparency</SectionLabel>
+              <h2 className="mb-6 text-3xl font-extrabold text-neutral-dark">
+                We explain the principle. We protect the craft.
+              </h2>
+              <p className="mb-5 text-lg leading-relaxed text-neutral-mid">
+                This page explains how CareStreamAI's AI architecture works at the level that matters for your
+                governance, your compliance teams, and your staff. We believe you deserve to understand what
+                the system is doing with your data and why its answers can be trusted.
+              </p>
+              <p className="text-lg leading-relaxed text-neutral-mid">
+                We do not publish the specific technical implementation that makes CareStreamAI work as well as
+                it does, the retrieval design, the knowledge structures, the prompt engineering, and the quality
+                controls that have been built and refined for care settings specifically. That work is what
+                differentiates CareStreamAI, and it is what we continue to invest in on your behalf.
+              </p>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <RagEngineMockup />
+            </div>
+          </div>
         </div>
       </section>
 

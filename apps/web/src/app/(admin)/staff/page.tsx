@@ -8,7 +8,7 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
+import { KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
 import { LANGUAGES, CredentialsPanel, InitialAvatar, fmtDate } from '@/components/admin/staff/staff-shared'
 
 // Staff modals are lazy-loaded — only fetched when a dialog is opened.
@@ -83,7 +83,7 @@ function ActionMenu({
 
   async function handleDeactivate() {
     setOpen(false)
-    if (!confirm(`Remove access for ${user.name}? They will no longer be able to log in.`)) return
+    if (!confirm(`Archive ${user.name}? They’ll move to Archived staff and can no longer log in. Their records are kept for compliance.`)) return
     setWorking(true)
     try {
       await createApiClient(token).users.deactivate(user.id)
@@ -148,7 +148,7 @@ function ActionMenu({
               className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
             >
               <UserMinus size={14} />
-              Remove access
+              Archive staff member
             </button>
           ) : (
             <button
@@ -156,7 +156,7 @@ function ActionMenu({
               className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-green-700 hover:bg-green-50"
             >
               <UserPlus size={14} />
-              Restore access
+              Restore to active staff
             </button>
           )}
         </div>
@@ -176,7 +176,7 @@ export default function StaffPage() {
   const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(LANGUAGES)
   const [loading,      setLoading]     = useState(true)
   const [showInvite,   setShowInvite]  = useState(false)
-  const [showInactive, setShowInactive] = useState(false)
+  const [tab,          setTab]         = useState<'active' | 'archived'>('active')
   const [editUser,     setEditUser]    = useState<any | null>(null)
   const [detailUserId, setDetailUserId] = useState<string | null>(null)
   const [resetCreds,   setResetCreds]  = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
@@ -212,7 +212,7 @@ export default function StaffPage() {
 
   const activeUsers   = users.filter(u => u.is_active !== false)
   const inactiveUsers = users.filter(u => u.is_active === false)
-  const displayUsers  = showInactive ? users : activeUsers
+  const displayUsers  = tab === 'archived' ? inactiveUsers : activeUsers
 
   function handleDeactivate(id: string) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, is_active: false } : u))
@@ -224,25 +224,40 @@ export default function StaffPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-dark">Staff</h1>
-          {!loading && inactiveUsers.length > 0 && (
-            <button
-              onClick={() => setShowInactive(v => !v)}
-              className="mt-1 flex items-center gap-1 text-xs text-neutral-mid hover:text-neutral-dark"
-            >
-              <UserX size={12} />
-              {showInactive ? 'Hide' : 'Show'} {inactiveUsers.length} deactivated account{inactiveUsers.length !== 1 ? 's' : ''}
-              <ChevronDown size={12} className={`transition-transform ${showInactive ? 'rotate-180' : ''}`} />
-            </button>
-          )}
-        </div>
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-neutral-dark">Staff</h1>
         <Button onClick={() => setShowInvite(true)} size="md">
           <UserPlus size={15} className="mr-2" />
           Add staff member
         </Button>
       </div>
+
+      {/* Active / Archived tabs */}
+      <div className="mb-5 flex gap-6 border-b border-gray-200">
+        {([
+          { key: 'active',   label: 'Active staff',   count: activeUsers.length   },
+          { key: 'archived', label: 'Archived staff', count: inactiveUsers.length },
+        ] as const).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`-mb-px flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
+              tab === t.key ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'
+            }`}
+          >
+            {t.key === 'archived' && <UserX size={14} />}
+            {t.label}
+            <span className={`rounded-full px-2 py-0.5 text-xs ${tab === t.key ? 'bg-teal/10 text-teal' : 'bg-gray-100 text-neutral-mid'}`}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {tab === 'archived' && (
+        <p className="mb-4 flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <UserX size={14} className="mt-0.5 shrink-0" />
+          Archived staff have left but their records are retained for compliance. Their training, induction and audit history is preserved — open “View” to see it, or restore them to active staff at any time.
+        </p>
+      )}
 
       {/* Invite modal */}
       {showInvite && (
@@ -310,7 +325,9 @@ export default function StaffPage() {
           <p className="px-6 py-6 text-sm text-neutral-mid">Loading…</p>
         ) : displayUsers.length === 0 ? (
           <p className="px-6 py-6 text-sm text-neutral-mid">
-            No staff yet — add your team so they can access the chat system.
+            {tab === 'archived'
+              ? 'No archived staff — when you remove someone, they’ll appear here with their records kept.'
+              : 'No staff yet — add your team so they can access the chat system.'}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -334,9 +351,7 @@ export default function StaffPage() {
                 {displayUsers.map((u: any) => (
                   <tr
                     key={u.id}
-                    className={`border-b border-gray-50 last:border-0 ${
-                      u.is_active === false ? 'opacity-50' : 'hover:bg-neutral-light/50'
-                    }`}
+                    className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50"
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2.5">
@@ -349,11 +364,6 @@ export default function StaffPage() {
                           >
                             {u.name}
                           </button>
-                          {u.is_active === false && (
-                            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                              Deactivated
-                            </span>
-                          )}
                         </div>
                       </div>
                     </td>

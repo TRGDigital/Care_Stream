@@ -2,7 +2,7 @@
 
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
-import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices, reconcileTenantBilling } from '../services/billing/stripe'
+import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices, reconcileTenantBilling, cancelTenantSubscription } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 
@@ -53,6 +53,16 @@ billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) =>
   })
   const needsBilling = t ? (t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
   ok(res, { needs_billing: needsBilling, subscription_status: t?.subscription_status ?? null })
+})
+
+// ─── POST /billing/cancel — cancel this tenant's subscription immediately ──────
+billingRouter.post('/cancel', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const cancelled = await cancelTenantSubscription(req.user!.tenant_id)
+    ok(res, { cancelled })
+  } catch (e: any) {
+    err(res, 'CANCEL_FAILED', e.message ?? 'Could not cancel subscription.', 500)
+  }
 })
 
 // ─── GET /billing/summary ─────────────────────────────────────────────────────

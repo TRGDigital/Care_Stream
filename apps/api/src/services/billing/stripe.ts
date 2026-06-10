@@ -122,6 +122,20 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
   return session.url
 }
 
+// ─── Cancel ───────────────────────────────────────────────────────────────────
+// Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
+// Used for in-app cancellation and for cleaning up test accounts before deletion.
+export async function cancelTenantSubscription(tenantId: string): Promise<boolean> {
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_subscription_id: true } })
+  if (!tenant?.stripe_subscription_id) return false
+  await getStripe().subscriptions.cancel(String(tenant.stripe_subscription_id)).catch((e: any) => {
+    // Already cancelled or gone — fine to proceed.
+    console.warn('[stripe] cancel subscription:', e?.message)
+  })
+  await (prisma as any).tenant.update({ where: { id: tenantId }, data: { subscription_status: 'cancelled' } })
+  return true
+}
+
 // ─── Reconcile (source of truth = Stripe) ─────────────────────────────────────
 // Pulls a tenant's current subscription straight from Stripe and writes it onto
 // the tenant. This is the primary way the billing gate releases after checkout —

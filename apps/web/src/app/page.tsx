@@ -14,6 +14,7 @@ import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
 import { HomeBlogSection, type HomeBlogPost } from '@/components/marketing/home-blog-section'
 import { SettingsCarousel } from '@/components/marketing/settings-carousel'
+import { LogoMarquee } from '@/components/marketing/logo-marquee'
 import { SiteImage } from '@/components/site-image'
 import { JsonLd } from '@/components/json-ld'
 import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
@@ -1637,6 +1638,7 @@ export default async function HomePage() {
         <Hero />
         <StatsStrip />
         <TheProblem />
+        <LogoMarquee />
         <CareSettings />
         <PolicyBurdenBand />
         <ValueProposition />
@@ -1656,7 +1658,7 @@ export default async function HomePage() {
         <HomeBlogSection posts={featuredPosts} />
         <PricingSnapshot />
         <HomeFaq faqs={faqs} />
-        <Testimonials />
+        {/* Reviews hidden until we have real testimonials. Re-instate <Testimonials /> when ready. */}
         <FinalCta />
       </main>
       <MarketingFooter />

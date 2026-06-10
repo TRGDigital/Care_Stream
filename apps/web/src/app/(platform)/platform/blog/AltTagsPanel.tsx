@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Loader2, Check } from 'lucide-react'
 import { fetchTrainingSeoIndex, platformAssetUrl } from '@/lib/platform-api'
 import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
+import { CUSTOMER_LOGOS } from '@/lib/customer-logos'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -37,7 +38,11 @@ export function AltTagsPanel({ token }: { token: string }) {
         const settingVirtual: ImageAlt[] = SETTINGS_LIST
           .map(s => ({ id: '', src: SETTING_IMAGES[s.slug], alt: `CareStream for ${s.label}` }))
           .filter(im => im.src && !haveSrc.has(im.src))
-        const merged = [...dbImgs, ...virtual, ...settingVirtual]
+        // Customer logos (homepage marquee), keyed by their plain /images/logos path.
+        const logoVirtual: ImageAlt[] = CUSTOMER_LOGOS
+          .map(l => ({ id: '', src: l.src, alt: l.name }))
+          .filter(im => !haveSrc.has(im.src))
+        const merged = [...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual]
         setImages(merged)
         setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {

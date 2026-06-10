@@ -166,3 +166,10 @@ a, button { transition: all 0.18s ease; }
     -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-shadow: none !important;
   }
 }
+
+/* Customer logo marquee (homepage). Track holds two copies of the logos, so
+   translating to -50% loops seamlessly. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}

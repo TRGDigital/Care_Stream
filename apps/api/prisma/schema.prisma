@@ -1160,3 +1160,87 @@ model AuditAnswer {
   @@index([run_id])
   @@map("audit_answers")
 }
+
+// ─── Landing page system (B2B PPC) ────────────────────────────────────────────
+// Data-driven conversion landing pages served on demos.carestreamai.com.
+// Guarded by the API layer (public read of active pages; management via the
+// platform-admin token), not Supabase RLS.
+model LandingPage {
+  id                             String   @id @default(uuid())
+  product_slug                   String                              // 'carestream'
+  campaign_slug                  String
+  is_active                      Boolean  @default(false)
+  noindex                        Boolean  @default(true)
+  content                        Json                                // LP content (validated app-side)
+  variant_group                  String?
+  variant_label                  String?
+  traffic_allocation             Int      @default(100)
+  conversion_type                String   @default("demo_booking")   // demo_booking|contact|download|trial_signup
+  conversion_value_pennies       Int?
+  additional_notification_emails String[] @default([])
+  google_ads_conversion_id       String?
+  google_ads_conversion_label    String?
+  meta_pixel_id                  String?
+  meta_event_name                String?
+  linkedin_partner_id            String?
+  linkedin_conversion_id         String?
+  ga4_measurement_id             String?
+  meta_title                     String?
+  meta_description               String?
+  og_image_url                   String?
+  created_at                     DateTime @default(now())
+  updated_at                     DateTime @updatedAt
+  submissions                    LpSubmission[]
+  events                         LpEvent[]
+
+  @@unique([product_slug, campaign_slug])
+  @@index([variant_group])
+  @@map("landing_pages")
+}
+
+model LpSubmission {
+  id                   String      @id @default(uuid())
+  landing_page_id      String
+  data                 Json
+  utm_source           String?
+  utm_medium           String?
+  utm_campaign         String?
+  utm_term             String?
+  utm_content          String?
+  gclid                String?
+  fbclid               String?
+  referrer             String?
+  page_url             String?
+  user_agent           String?
+  ip_address           String?
+  viewport             String?
+  device_type          String?
+  time_on_page_seconds Int?
+  scroll_depth_pct     Int?
+  variant_group        String?
+  variant_label        String?
+  status               String      @default("new")  // new|contacted|qualified|disqualified|converted|lost
+  qualified_at         DateTime?
+  converted_at         DateTime?
+  created_at           DateTime    @default(now())
+  landing_page         LandingPage @relation(fields: [landing_page_id], references: [id])
+
+  @@index([landing_page_id, created_at])
+  @@index([variant_group, variant_label])
+  @@map("lp_submissions")
+}
+
+model LpEvent {
+  id              String      @id @default(uuid())
+  landing_page_id String
+  session_id      String
+  event_type      String      // page_view|form_start|field_focus|field_blur|field_error|form_submit|phone_click|cta_click|scroll_*
+  field_name      String?
+  metadata        Json?
+  created_at      DateTime    @default(now())
+  landing_page    LandingPage @relation(fields: [landing_page_id], references: [id])
+
+  @@index([landing_page_id, session_id])
+  @@index([event_type, created_at])
+  @@map("lp_events")
+}

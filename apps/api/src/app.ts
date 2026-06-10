@@ -28,6 +28,7 @@ import { publicTrainingReviewRouter } from './routes/training-review-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
+import { lpPublicRouter } from './routes/lp-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { standardTrainingRouter } from './routes/standard-training'
@@ -117,6 +118,9 @@ app.use('/public/image-alts', publicImageAltsRouter)
 // Public marketing leads (contact/demo forms) + WebMCP agent-event tracking, no auth.
 // Must be mounted BEFORE requireAuth.
 app.use('/public/marketing', marketingPublicRouter)
+
+// Public landing page system (demos.carestreamai.com), no auth. BEFORE requireAuth.
+app.use('/public/lp', lpPublicRouter)
 
 // Vercel Cron jobs — self-authorise via x-vercel-cron header / CRON_SECRET.
 // Must be mounted BEFORE requireAuth.

@@ -658,3 +658,57 @@ export async function sendLeadNotificationEmail(opts: SendLeadNotificationOption
     html,
   })
 }
+
+// ─── Landing page (PPC) submission notification ───────────────────────────────
+export interface SendLpSubmissionOptions {
+  campaignSlug:     string
+  additionalEmails: string[]
+  data:             Record<string, any>
+  attribution:      { utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; gclid?: string | null; page_url?: string | null }
+  submissionId:     string
+}
+
+export async function sendLpSubmissionEmail(opts: SendLpSubmissionOptions): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const from  = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const owner = process.env.OWNER_NOTIFICATION_EMAIL ?? process.env.DEMO_NOTIFICATION_EMAIL ?? 'len@carestreamai.com'
+  const to    = Array.from(new Set([owner, ...(opts.additionalEmails ?? [])].filter(Boolean)))
+
+  const name    = String(opts.data?.fullName ?? opts.data?.name ?? 'Unknown')
+  const company = String(opts.data?.organisation ?? opts.data?.company ?? 'Unknown')
+
+  const dataRows = Object.entries(opts.data ?? {})
+    .filter(([k, v]) => k !== 'company_website' && v != null && String(v).trim() !== '')
+    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:${NEUTRAL_MID};font-size:13px;vertical-align:top"><strong>${esc(k)}</strong></td><td style="padding:6px 0;color:${NEUTRAL_DARK};font-size:13px">${esc(String(v))}</td></tr>`)
+    .join('')
+
+  const attr = opts.attribution ?? {}
+  const attrRows = ([
+    ['Campaign (UTM)', attr.utm_campaign],
+    ['Source',         attr.utm_source],
+    ['Medium',         attr.utm_medium],
+    ['gclid',          attr.gclid],
+    ['Page',           attr.page_url],
+  ] as Array<[string, string | null | undefined]>)
+    .filter(([, v]) => v != null && String(v).trim() !== '')
+    .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:${NEUTRAL_MID};font-size:12px"><strong>${k}</strong></td><td style="padding:4px 0;color:${NEUTRAL_MID};font-size:12px">${esc(String(v))}</td></tr>`)
+    .join('')
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 4px">New landing page enquiry</p>
+    <p style="color:${NEUTRAL_MID};font-size:13px;margin:0 0 18px">Campaign: ${esc(opts.campaignSlug)}</p>
+    <table style="border-collapse:collapse;width:100%">${dataRows}</table>
+    ${attrRows ? `<p style="color:${NEUTRAL_MID};font-size:12px;margin:18px 0 4px"><strong>Attribution</strong></p><table style="border-collapse:collapse;width:100%">${attrRows}</table>` : ''}
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to,
+    from,
+    replyTo: String(opts.data?.workEmail ?? opts.data?.email ?? from),
+    subject: `[LP] CareStream ${opts.campaignSlug} — submission from ${name} at ${company}`,
+    html,
+  })
+}

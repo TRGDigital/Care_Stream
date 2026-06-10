@@ -43,7 +43,10 @@ export function AuthRightPanel() {
       <SiteImage
         src={imageSrc}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        fill
+        priority
+        sizes="54vw"
+        className="object-cover object-center"
       />
 
       {/* Gradient overlay */}

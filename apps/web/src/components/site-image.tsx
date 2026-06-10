@@ -10,6 +10,9 @@ type SiteImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'alt' | 'w
   /** Pass natural width+height to render an optimised, responsive next/image. */
   width?: number
   height?: number
+  /** Render an optimised next/image that fills its (positioned) parent — use for
+   *  `object-cover` images in an aspect-ratio/inset box where intrinsic dims aren't known. */
+  fill?: boolean
   /** Mark the LCP / above-the-fold image so it isn't lazy-loaded. */
   priority?: boolean
   /** Responsive sizes hint for next/image (e.g. "(max-width:1024px) 100vw, 50vw"). */
@@ -20,8 +23,21 @@ type SiteImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'alt' | 'w
 // Alt Tags). When width+height are supplied it renders an optimised next/image
 // (AVIF/WebP + responsive srcset + lazy below the fold); otherwise it falls back
 // to a plain <img>, lazy-loaded by default so off-screen images don't block load.
-export function SiteImage({ src, alt = '', width, height, priority, sizes, className, ...rest }: SiteImageProps) {
+export function SiteImage({ src, alt = '', width, height, fill, priority, sizes, className, ...rest }: SiteImageProps) {
   const resolved = useImageAlt(src, alt)
+
+  if (fill) {
+    return (
+      <NextImage
+        src={src}
+        alt={resolved}
+        fill
+        priority={priority}
+        sizes={sizes ?? '100vw'}
+        className={className}
+      />
+    )
+  }
 
   if (width && height) {
     return (

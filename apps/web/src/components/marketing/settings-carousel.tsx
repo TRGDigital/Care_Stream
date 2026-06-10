@@ -69,7 +69,9 @@ export function SettingsCarousel() {
                   <SiteImage
                     src={image}
                     alt={label}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="300px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <>

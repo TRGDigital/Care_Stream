@@ -158,8 +158,8 @@ export function SettingPage({ config }: { config: SettingPageConfig }) {
                 <>
                   {/* Photo gets a generous fixed height on desktop so the floating
                       mock-up always tucks inside it rather than spilling above. */}
-                  <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10">
-                    <SiteImage src={image} alt={`CareStream for ${c.label}`} className="aspect-[4/3] w-full object-cover lg:aspect-auto lg:h-[560px]" />
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10 lg:aspect-auto lg:h-[560px]">
+                    <SiteImage src={image} alt={`CareStream for ${c.label}`} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
                   </div>
                   {/* Scaled down (not just narrowed) so the text doesn't re-wrap
                       taller, and dropped low so it clears most of the photo with

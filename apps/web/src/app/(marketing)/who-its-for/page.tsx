@@ -40,11 +40,13 @@ function SettingImage({ slug, alt }: { slug: string; alt: string }) {
 
   if (src) {
     return (
-      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-elevated">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-elevated">
         <SiteImage
           src={src}
           alt={alt}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover"
         />
       </div>
     )

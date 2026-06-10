@@ -290,6 +290,64 @@ function CareSettings() {
   )
 }
 
+// Yellow band echoing the Free Trial band, highlighting the policy burden.
+function PolicyBurdenBand() {
+  return (
+    <section className="bg-[#fce4a3]">
+      <div className="mx-auto grid max-w-content items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-20">
+        {/* Left — the stat, in the playful circular treatment */}
+        <div className="flex justify-center">
+          <div className="relative h-72 w-72">
+            {/* rotated square behind the circle */}
+            <div className="absolute inset-0 rotate-45 rounded-[2.25rem] bg-[#f4bf43]" />
+            {/* circle with the headline stat */}
+            <div className="absolute inset-2 flex flex-col items-center justify-center rounded-full bg-white text-center ring-8 ring-[#fce4a3]">
+              <p className="text-7xl font-extrabold leading-none text-neutral-dark">200+</p>
+              <p className="mt-3 px-10 text-sm font-semibold leading-snug text-neutral-mid">policies and procedures, per care setting</p>
+            </div>
+            {/* AVG starburst badge */}
+            <div className="absolute -left-3 top-2 z-20 h-16 w-16">
+              <span className="absolute inset-0 rounded-[22%] bg-white shadow-md" />
+              <span className="absolute inset-0 rotate-45 rounded-[22%] bg-white shadow-md" />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-neutral-dark">AVG</span>
+            </div>
+            {/* sparkles */}
+            <svg className="absolute -right-1 top-7 h-7 w-7 text-neutral-dark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2z" />
+            </svg>
+            <svg className="absolute right-7 top-1 h-4 w-4 text-neutral-dark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 4l1 4 4 1-4 1-1 4-1-4-4-1 4-1 1-4z" />
+            </svg>
+            {/* squiggle */}
+            <svg className="absolute -bottom-1 left-3 h-5 w-24 text-neutral-dark" viewBox="0 0 100 20" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+              <path d="M3 12 Q 14 2 25 12 T 47 12 T 69 12 T 91 12" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Right — message and CTA */}
+        <div>
+          <p className="mb-4 text-lg font-medium text-neutral-dark/80">Hundreds of policies to manage</p>
+          <h2 className="text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+            The average care setting must keep{' '}
+            <span className="box-decoration-clone rounded-md bg-[#5eead4] px-2 py-0.5">over 200 policies</span>
+            {' '}current. Your team can find any of them in seconds.
+          </h2>
+          <div className="mt-8 flex flex-col items-start gap-3">
+            <Link
+              href="/care-policies"
+              className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            >
+              See how CareStream helps <span aria-hidden="true">→</span>
+            </Link>
+            <p className="text-sm text-neutral-dark/70">In any language, on any device, grounded in your own documents.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ValueProposition() {
   const points = [
     {
@@ -1697,6 +1755,7 @@ export default async function HomePage() {
         <StatsStrip />
         <TheProblem />
         <CareSettings />
+        <PolicyBurdenBand />
         <ValueProposition />
         <TheSolution />
         <OurServices />

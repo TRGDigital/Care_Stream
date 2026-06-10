@@ -12,9 +12,10 @@ import { authLimiter } from '../middleware/rateLimiter'
 import { isAccountLocked } from '../middleware/auth'
 import { seedTenantKnowledge } from '../services/knowledge/seeder'
 import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail, sendNewTenantNotification } from '../services/email/outbound'
-import { createLoginLink, consumeLoginToken } from '../lib/login-tokens'
+import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login-tokens'
 
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+const AUTO_LOGIN_TTL_MS      = 15 * 60 * 1000       // verify-email auto-login token: 15 min
 
 function generateVerificationToken(): string {
   return crypto.randomBytes(32).toString('hex')
@@ -167,7 +168,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
   const user = await (prisma as any).user.findUnique({
     where: { email },
-    include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true } } },
+    include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true, stripe_subscription_id: true } } },
   })
 
   // Return generic message — do not reveal whether the email exists
@@ -282,9 +283,13 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
     data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(user.first_login_at ? {} : { first_login_at: now }) },
   })
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
+  // Hard gate for the card-up-front trial: a tenant that hasn't started a Stripe
+  // subscription yet (and isn't already active) must add a card before using the app.
+  const needsBilling = user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
   ok(res, {
     access_token:  generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role }),
     refresh_token: await issueRefreshToken(user.id),
+    needs_billing: needsBilling,
     user:   { id: user.id, name: user.name, email: user.email, role: user.role, tenant_id: user.tenant_id },
     tenant: { id: user.tenant.id, name: user.tenant.name, slug: user.tenant.slug, subscription_status: user.tenant.subscription_status },
   })
@@ -315,7 +320,7 @@ authRouter.post('/magic-link/verify', async (req: Request, res: Response) => {
   if (!consumed) { err(res, 'INVALID_TOKEN', 'This sign-in link is invalid or has expired.', 401); return }
   const user = await (prisma as any).user.findUnique({
     where:   { id: consumed.user_id },
-    include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true } } },
+    include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true, stripe_subscription_id: true } } },
   })
   if (!user || user.is_active === false) { err(res, 'INVALID_TOKEN', 'This sign-in link is no longer valid.', 401); return }
   await respondWithSession(res, user)
@@ -358,7 +363,10 @@ authRouter.get('/verify-email', async (req: Request, res: Response) => {
     },
   })
 
-  ok(res, { verified: true })
+  // Mint a short-lived one-time login token so the web app can log the user straight
+  // in (no separate password step). Consumed via POST /auth/magic-link/verify.
+  const loginToken = await mintLoginToken(user.id, user.tenant_id, AUTO_LOGIN_TTL_MS)
+  ok(res, { verified: true, login_token: loginToken })
 })
 
 // ─── POST /auth/resend-verification ──────────────────────────────────────────
@@ -511,7 +519,10 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   // Confirm the user still exists and isn't locked.
   const user = await (prisma as any).user.findUnique({
     where: { id: rotated.userId },
-    select: { id: true, tenant_id: true, role: true, locked_until: true },
+    select: {
+      id: true, tenant_id: true, role: true, locked_until: true,
+      tenant: { select: { subscription_status: true, stripe_subscription_id: true } },
+    },
   })
 
   if (!user || isAccountLocked(user.locked_until)) {
@@ -525,7 +536,10 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
     role: user.role,
   })
 
-  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken })
+  // Re-evaluate the billing gate on every refresh so it clears once a card is added.
+  const needsBilling = user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
+
+  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling })
 })
 
 // ─── POST /auth/switch-site ───────────────────────────────────────────────────

@@ -149,6 +149,7 @@ model Plan {
   monthly_ai_credit_limit      Int?     // AI generation credits/month (training, CQC, onboarding…); null = unlimited
   price_monthly_pence          Int                       // stored in pence (UK)
   is_active                    Boolean  @default(true)
+  is_public                    Boolean  @default(true)    // false = internal-only (hidden from the /billing chooser)
   tenants                      Tenant[]
 
   @@map("plans")
@@ -165,6 +166,7 @@ model Tenant {
   stripe_customer_id  String?            @unique
   stripe_subscription_id String?                              // active Stripe subscription (set via checkout/webhook)
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
+  trial_ends_at       DateTime?                                // when the Stripe trial ends (card-up-front trial)
   plan_id             String?
   branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
   facility_type       String             @default("care home")              // e.g. nursing home, residential home

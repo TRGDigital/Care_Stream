@@ -11,7 +11,7 @@ export const billingRouter = Router()
 // ─── GET /billing/plans — active plans for the subscribe chooser ──────────────
 billingRouter.get('/plans', async (_req: Request, res: Response) => {
   const plans = await (prisma as any).plan.findMany({
-    where:   { is_active: true },
+    where:   { is_active: true, is_public: true }, // internal plans (e.g. £1 Sandbox) are hidden
     orderBy: { price_monthly_pence: 'asc' },
     select: {
       id: true, name: true, price_monthly_pence: true, monthly_query_limit: true,

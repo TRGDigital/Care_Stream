@@ -16,6 +16,8 @@ import { prisma } from '../../db/client'
 const MANAGED_PAYMENTS_API_VERSION = '2026-02-25.preview'
 // Stripe Tax product tax code: "Software as a service (SaaS) — business use".
 const PLAN_TAX_CODE = 'txcd_10103100'
+// Card-up-front trial: card captured at checkout, £0 due now, auto-charged after this many days.
+const TRIAL_DAYS = 14
 
 let _stripe: Stripe | null = null
 function getStripe(): Stripe {
@@ -104,7 +106,9 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
       : { customer_email: admin?.email }),
     client_reference_id:   tenantId,
     metadata:              { tenant_id: tenantId, plan_id: planId },
-    subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId } },
+    // 14-day free trial with the card captured up front; Stripe auto-charges at trial end.
+    subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId }, trial_period_days: TRIAL_DAYS },
+    payment_method_collection: 'always',
     allow_promotion_codes: true,
     billing_address_collection: 'required',
     success_url: `${webUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -221,6 +225,7 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
           stripe_customer_id:     String(sub.customer),
           stripe_subscription_id: sub.id,
           subscription_status:    mapStatus(sub.status),
+          trial_ends_at:          sub.trial_end ? new Date(sub.trial_end * 1000) : null,
           ...(sub.metadata?.plan_id ? { plan_id: sub.metadata.plan_id } : {}),
         },
       })

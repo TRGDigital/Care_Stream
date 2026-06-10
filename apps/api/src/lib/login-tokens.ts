@@ -10,12 +10,20 @@ function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
 }
 
-// Mint a one-time sign-in link for a user. Returns the full URL to send/show.
-export async function createLoginLink(userId: string, tenantId: string, ttlMs: number): Promise<string> {
+// Mint a one-time sign-in token for a user. Returns the raw token (only ever lives
+// in the link / response — it's hashed at rest). Used directly for auto-login after
+// email verification, or wrapped into a link by createLoginLink.
+export async function mintLoginToken(userId: string, tenantId: string, ttlMs: number): Promise<string> {
   const token = crypto.randomBytes(24).toString('base64url')
   await (prisma as any).loginToken.create({
     data: { token_hash: hashToken(token), user_id: userId, tenant_id: tenantId, expires_at: new Date(Date.now() + ttlMs) },
   })
+  return token
+}
+
+// Mint a one-time sign-in link for a user. Returns the full URL to send/show.
+export async function createLoginLink(userId: string, tenantId: string, ttlMs: number): Promise<string> {
+  const token = await mintLoginToken(userId, tenantId, ttlMs)
   return `${siteUrl()}/auth/link?token=${token}`
 }
 

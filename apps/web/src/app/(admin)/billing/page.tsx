@@ -81,7 +81,7 @@ export default function BillingPage() {
       tries++
       const r = await api.billing.sync().catch(() => null)
       await update().catch(() => null)
-      if (r && !r.needs_billing) { window.location.href = '/chat'; return }
+      if (r && !r.needs_billing) { window.location.href = '/dashboard'; return }
       if (tries < 6) setTimeout(tick, 2000)
     }
     tick()

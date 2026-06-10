@@ -34,7 +34,7 @@ function StartInner() {
   useEffect(() => {
     if (checkout) return
     if (session?.user && (session.user as any).needsBilling === false) {
-      window.location.href = '/chat'
+      window.location.href = (session.user as any)?.role === 'admin' ? '/dashboard' : '/chat'
     }
   }, [session, checkout])
 
@@ -55,12 +55,14 @@ function StartInner() {
     if (syncRan.current || checkout !== 'success' || !session?.accessToken) return
     syncRan.current = true
     const api = createApiClient(session.accessToken)
+    // Admins (the usual sign-up) land on the dashboard; staff land in the hub.
+    const dest = (session.user as any)?.role === 'admin' ? '/dashboard' : '/chat'
     let tries = 0
     const tick = async () => {
       tries++
       const r = await api.billing.sync().catch(() => null)
       await update().catch(() => null)
-      if (r && !r.needs_billing) { window.location.href = '/chat'; return }
+      if (r && !r.needs_billing) { window.location.href = dest; return }
       if (tries < 6) setTimeout(tick, 2000)
     }
     tick()

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
+import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -263,6 +264,10 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
+
+      {session?.accessToken && (session.user as any)?.tenantId && (
+        <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} />
+      )}
 
       <SidebarGuide />
 

@@ -59,7 +59,7 @@ const FAQ_GROUPS = [
     title: 'Pricing & Plans',
     items: [
       { q: 'What plans are available?', a: 'CareStreamAI is available on two plans: Starter (£49/month) and Professional (£129/month). Both include full policy library, 50+ language support, email and chat channels, and full audit logging. Professional adds CQC Readiness Reports, policy gap detection, language analytics, and individual staff engagement data.' },
-      { q: 'Is there a free trial?', a: 'Yes. A 14-day free trial is available on either plan. No credit card is required.' },
+      { q: 'Is there a free trial?', a: 'Yes. A 14-day free trial is available on either plan. You add your card to start the trial, but you are not charged until day 14 — cancel anytime before then and you pay nothing.' },
       { q: 'Can I switch plans?', a: 'Yes. You can upgrade or downgrade at any time. Changes take effect at the next billing cycle.' },
       { q: 'Do you offer discounts for multiple homes?', a: 'Yes. Group pricing is available for organisations operating multiple homes. Contact us for a quote.' },
       { q: 'Is there a per-user charge?', a: 'No. CareStreamAI is priced per-home, not per-user. Your entire team can use it without per-seat fees.' },
@@ -72,7 +72,7 @@ const FAQ_GROUPS = [
       { q: 'Do we need IT support to set it up?', a: 'No. CareStreamAI is a browser-based web application. There is no software to install, no integration required, and no technical skills needed to get started.' },
       { q: 'What formats do you accept for policy uploads?', a: 'PDF, Microsoft Word (.docx), and plain text (.txt). Most policy libraries are in one of these formats.' },
       { q: 'Do we need to prepare our policies before uploading?', a: 'No. CareStreamAI automatically strips headers, footers, version numbers, and page numbers so the AI only processes the substantive content.' },
-      { q: 'What happens after the free trial?', a: 'At the end of your 14-day trial, you choose a plan and enter your payment details. If you choose not to continue, your account is closed and your data is deleted.' },
+      { q: 'What happens after the free trial?', a: 'You choose your plan and add a card when you start the trial. At the end of the 14 days your plan begins automatically on that card. If you cancel before day 14 you are not charged, your account is closed and your data is deleted.' },
     ],
   },
 ]

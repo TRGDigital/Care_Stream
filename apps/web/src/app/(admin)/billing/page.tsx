@@ -42,8 +42,11 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BillingPage() {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
   const userId = session?.user?.email ?? 'guest'
+  // 14 days from now — shown so the user knows exactly when the first charge falls.
+  const trialEndLabel = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   const [summary,  setSummary]  = useState<any>(null)
   const [invoices, setInvoices] = useState<any[]>([])
@@ -62,7 +65,21 @@ export default function BillingPage() {
     if (p === 'success' || p === 'cancelled') {
       setBanner(p)
       window.history.replaceState({}, '', '/billing')
+      if (p === 'success') {
+        // Refresh the NextAuth session so the billing gate (needsBilling) clears once
+        // the Stripe webhook lands, then drop the user into the hub. Retry to beat the
+        // webhook race (sequential awaits — never double-spend the refresh token).
+        let tries = 0
+        const tick = async () => {
+          tries++
+          const s = await update().catch(() => null)
+          if (s && !(s.user as any)?.needsBilling) { window.location.href = '/chat'; return }
+          if (tries < 6) setTimeout(tick, 2000)
+        }
+        setTimeout(tick, 1500)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
@@ -113,7 +130,7 @@ export default function BillingPage() {
       {banner === 'success' && (
         <div className="mb-6 flex items-start gap-2 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
           <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-          <span>Thank you — your subscription is being activated. It may take a few seconds to appear below.</span>
+          <span>Thank you — your 14-day free trial is starting. Taking you into CareStream…</span>
         </div>
       )}
       {banner === 'cancelled' && (
@@ -204,10 +221,12 @@ export default function BillingPage() {
         <div className="mb-6 rounded-card bg-white shadow-card">
           <div className="border-b border-gray-100 px-6 py-4">
             <h2 className="text-sm font-semibold text-neutral-dark">
-              {summary.has_stripe ? 'Reactivate your subscription' : 'Choose a plan to go live'}
+              {summary.has_stripe ? 'Reactivate your subscription' : 'Start your 14-day free trial'}
             </h2>
             <p className="mt-0.5 text-xs text-neutral-mid">
-              Secure payment is handled by Stripe — we never see or store your card details.
+              {summary.has_stripe
+                ? 'Secure payment is handled by Stripe — we never see or store your card details.'
+                : `Pick a plan to start your free trial. A card is required, but you won't be charged until ${trialEndLabel} — cancel anytime before then. Payment is handled by Stripe; we never see or store your card details.`}
             </p>
           </div>
           <div className="px-6 py-5">
@@ -248,7 +267,7 @@ export default function BillingPage() {
                       className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                     >
                       {checkoutPlan === p.id ? <Loader2 size={14} className="animate-spin" /> : null}
-                      {checkoutPlan === p.id ? 'Redirecting to Stripe…' : 'Subscribe'}
+                      {checkoutPlan === p.id ? 'Redirecting to Stripe…' : summary.has_stripe ? 'Subscribe' : 'Start free trial'}
                     </button>
                   </div>
                 )

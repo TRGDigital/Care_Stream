@@ -107,7 +107,7 @@ export default function CaseStudiesPage() {
 
       <PageCta
         heading="Want to see results like these in your organisation?"
-        sub="14-day free trial. No credit card required."
+        sub="14-day free trial. No charge until day 14."
         primary={{ href: '/demo', label: 'Book a Free Demo' }}
         secondary={{ href: '/register', label: 'Start Free Trial' }}
       />

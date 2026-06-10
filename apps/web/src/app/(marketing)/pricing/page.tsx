@@ -4,10 +4,10 @@ import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
   title: 'Pricing',
-  description: 'Simple, transparent pricing for CareStreamAI. From Starter plans for smaller homes to Enterprise for multi-site providers. 14-day free trial, no credit card required.',
+  description: 'Simple, transparent pricing for CareStreamAI. From Starter plans for smaller homes to Enterprise for multi-site providers. 14-day free trial, no charge until day 14.',
   openGraph: {
     title: 'CareStreamAI Pricing',
-    description: 'Simple, transparent pricing. 14-day free trial, no credit card required.',
+    description: 'Simple, transparent pricing. 14-day free trial, no charge until day 14.',
     url: 'https://carestreamai.com/pricing',
   },
 }
@@ -83,7 +83,7 @@ const FAQS = [
   },
   {
     q: 'Is the free trial the full product?',
-    a: 'Yes. The 14-day trial gives you full access to the Professional plan, all features, no restrictions. No credit card is required to start.',
+    a: 'Yes. The 14-day trial gives you full access to the Professional plan, all features, no restrictions. You add a card to start the trial, but you are not charged until day 14 — cancel anytime before then.',
   },
   {
     q: 'Is my data kept separate from other organisations?',
@@ -103,7 +103,7 @@ export default function PricingPage() {
       <PageHero
         label="Pricing"
         title="Simple pricing. No surprises."
-        subtitle="Both plans include a 14-day free trial. No credit card required to start."
+        subtitle="Both plans include a 14-day free trial. No charge until day 14 — cancel anytime."
         centered
       />
 
@@ -169,7 +169,7 @@ export default function PricingPage() {
           <div className="flex flex-wrap items-center justify-center gap-10 text-sm text-neutral-mid">
             {[
               '14-day free trial on any plan',
-              'No credit card required',
+              'No charge until day 14',
               'No per-user fees',
               'All four channels included',
               'Cancel any time',
@@ -209,7 +209,7 @@ export default function PricingPage() {
 
       <PageCta
         heading="Start your free 14-day trial today."
-        sub="No credit card. No commitment. Your first policy answer in under an hour."
+        sub="No charge until day 14. No commitment. Your first policy answer in under an hour."
         primary={{ href: '/register', label: 'Start Free Trial' }}
         secondary={{ href: '/demo', label: 'Talk to Sales First' }}
       />

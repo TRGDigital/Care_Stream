@@ -68,7 +68,7 @@ export const PUBLIC_AGENT_TOOLS: AgentToolDef[] = [
     execute: () => ({
       currency: 'GBP',
       plans: PLANS,
-      freeTrial: '14-day free trial, no credit card required.',
+      freeTrial: '14-day free trial. A card is required to start, but you are not charged until day 14 — cancel anytime before then.',
       perUser: 'Priced per home, not per user — the whole team is included.',
       groupPricing: 'Discounts available for multiple homes — contact sales.',
       url: `${SITE_URL}/pricing`,

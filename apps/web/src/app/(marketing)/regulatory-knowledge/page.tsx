@@ -188,7 +188,7 @@ export default function RegulatoryKnowledgePage() {
 
       <PageCta
         heading="Give your team the full picture, policy and regulation, together."
-        sub="14-day free trial. No credit card required."
+        sub="14-day free trial. No charge until day 14."
         primary={{ href: '/demo', label: 'Book a Free Demo' }}
         secondary={{ href: '/register', label: 'Start Free Trial' }}
       />

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -11,48 +12,43 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
 
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'already' | 'expired' | 'error'>('idle')
+  const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'expired' | 'error'>('loading')
+  const ranRef = useRef(false)
 
-  async function handleVerify() {
-    if (!token) { setStatus('error'); return }
-    setStatus('loading')
-    try {
-      const res  = await fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`)
-      const body = await res.json()
-      if (!body.success) {
-        setStatus(body?.error?.code === 'TOKEN_EXPIRED' ? 'expired' : 'error')
-        return
+  // Verify automatically on load (the email click IS the confirmation — no extra
+  // button; email scanners don't run JS, so the single-use token stays safe). On
+  // success, auto-login with the one-time token the API returns and drop the user
+  // into the trial/card step.
+  useEffect(() => {
+    if (ranRef.current) return
+    ranRef.current = true
+
+    ;(async () => {
+      if (!token) { setStatus('error'); return }
+      try {
+        const res  = await fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`)
+        const body = await res.json()
+        if (!body.success) {
+          setStatus(body?.error?.code === 'TOKEN_EXPIRED' ? 'expired' : 'error')
+          return
+        }
+        if (body.data?.login_token) {
+          const r = await signIn('credentials', { mode: 'magic', token: body.data.login_token, redirect: false })
+          if (r?.ok) { window.location.href = '/billing'; return }
+        }
+        // Verified, but auto-login unavailable (e.g. link re-used) — fall back to manual.
+        setStatus(body.data?.already_verified ? 'already' : 'success')
+      } catch {
+        setStatus('error')
       }
-      setStatus(body.data?.already_verified ? 'already' : 'success')
-    } catch {
-      setStatus('error')
-    }
-  }
-
-  if (status === 'idle') {
-    return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-teal/10">
-          <svg className="h-8 w-8 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Verify your email</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
-          Click the button below to confirm your email address and activate your account.
-        </p>
-        <Button className="w-full" size="lg" onClick={handleVerify}>
-          Confirm my email address
-        </Button>
-      </div>
-    )
-  }
+    })()
+  }, [token])
 
   if (status === 'loading') {
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-teal border-t-transparent" />
-        <p className="text-sm text-neutral-mid">Verifying your email address…</p>
+        <p className="text-sm text-neutral-mid">Verifying your email and signing you in…</p>
       </div>
     )
   }

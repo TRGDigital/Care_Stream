@@ -16,6 +16,7 @@ declare module 'next-auth' {
     tenantName:   string
     accessToken:  string
     refreshToken: string
+    needsBilling?: boolean
   }
   interface Session {
     accessToken: string
@@ -27,6 +28,7 @@ declare module 'next-auth' {
       role:       'admin' | 'staff'
       tenantId:   string
       tenantName: string
+      needsBilling?: boolean
     }
   }
 }
@@ -38,6 +40,7 @@ declare module 'next-auth/jwt' {
     role:         'admin' | 'staff'
     tenantId:     string
     tenantName:   string
+    needsBilling?: boolean
   }
 }
 
@@ -75,6 +78,7 @@ export const authOptions: NextAuthOptions = {
               tenantName:   credentials.tenant_name as string,
               accessToken:  credentials.access_token as string,
               refreshToken: credentials.refresh_token as string,
+              needsBilling: false, // site-switch is only for existing active group admins
             }
           } catch { return null }
         }
@@ -90,7 +94,7 @@ export const authOptions: NextAuthOptions = {
             })
             const body = await res.json()
             if (!res.ok || !body.success) return null
-            const { user, tenant, access_token, refresh_token } = body.data
+            const { user, tenant, access_token, refresh_token, needs_billing } = body.data
             return {
               id:           user.id,
               name:         user.name,
@@ -100,6 +104,7 @@ export const authOptions: NextAuthOptions = {
               tenantName:   tenant.name,
               accessToken:  access_token,
               refreshToken: refresh_token,
+              needsBilling: !!needs_billing,
             }
           } catch { return null }
         }
@@ -125,7 +130,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const { user, tenant, access_token, refresh_token } = body.data
+        const { user, tenant, access_token, refresh_token, needs_billing } = body.data
         return {
           id:           user.id,
           name:         user.name,
@@ -135,6 +140,7 @@ export const authOptions: NextAuthOptions = {
           tenantName:   tenant.name,
           accessToken:  access_token,
           refreshToken: refresh_token,
+          needsBilling: !!needs_billing,
         }
       },
     }),
@@ -143,7 +149,7 @@ export const authOptions: NextAuthOptions = {
   // refresh token) rather than being logged out after a week.
   session:  { strategy: 'jwt', maxAge: 90 * 24 * 60 * 60 },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // Initial sign-in: store tokens and decode expiry from the JWT
       if (user) {
         token.accessToken  = user.accessToken
@@ -151,6 +157,7 @@ export const authOptions: NextAuthOptions = {
         token.role         = user.role
         token.tenantId     = user.tenantId
         token.tenantName   = user.tenantName
+        token.needsBilling = user.needsBilling ?? false
         // Decode expiry so we can proactively refresh before it hits
         try {
           const payload = JSON.parse(Buffer.from(user.accessToken.split('.')[1], 'base64').toString())
@@ -159,8 +166,12 @@ export const authOptions: NextAuthOptions = {
         return token
       }
 
-      // Subsequent calls: refresh if within 5 minutes of expiry
-      if (Date.now() < ((token.accessTokenExpiry as number) - 5 * 60 * 1000)) {
+      // Force a refresh when the client calls update() (e.g. right after checkout) so
+      // needsBilling re-reads from the server and the billing gate releases at once.
+      const forceRefresh = trigger === 'update'
+
+      // Subsequent calls: refresh if within 5 minutes of expiry (or forced)
+      if (!forceRefresh && Date.now() < ((token.accessTokenExpiry as number) - 5 * 60 * 1000)) {
         return token
       }
 
@@ -179,6 +190,7 @@ export const authOptions: NextAuthOptions = {
         // Rotation: the backend returns a fresh refresh token each time — keep it,
         // or the next refresh would replay a now-consumed token and get rejected.
         if (body.data.refresh_token) token.refreshToken = body.data.refresh_token
+        if (typeof body.data.needs_billing === 'boolean') token.needsBilling = body.data.needs_billing
       } catch {
         // Refresh failed — force re-login by clearing the token
         return { ...token, error: 'RefreshAccessTokenError' }
@@ -190,6 +202,7 @@ export const authOptions: NextAuthOptions = {
       session.user.role          = token.role
       session.user.tenantId      = token.tenantId
       session.user.tenantName    = token.tenantName
+      session.user.needsBilling  = token.needsBilling
       return session
     },
   },

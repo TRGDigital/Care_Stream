@@ -55,7 +55,7 @@ export default function RegisterPage() {
   return (
     <>
       <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Start your 14-day free trial</h1>
-      <p className="mb-7 text-sm text-neutral-mid">No credit card required. Up and running in minutes.</p>
+      <p className="mb-7 text-sm text-neutral-mid">Card required to start — no charge until day 14, cancel anytime. Up and running in minutes.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {FIELDS.map(({ key, label, type, placeholder }) => (
           <div key={key}>

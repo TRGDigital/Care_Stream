@@ -112,7 +112,7 @@ function Hero() {
 
             <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50 md:flex-nowrap md:whitespace-nowrap">
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> 14-day free trial</span>
-              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> No credit card required</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> No charge until day 14</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> Set up in under an hour</span>
               <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> GDPR Compliant</span>
             </div>
@@ -555,7 +555,7 @@ function FreeTrialBand() {
             >
               Start Your Free Trial <span aria-hidden="true">→</span>
             </Link>
-            <p className="text-sm text-neutral-dark/70">No card needed. Full access for 14 days.</p>
+            <p className="text-sm text-neutral-dark/70">Full access for 14 days. No charge until day 14 — cancel anytime.</p>
           </div>
         </div>
       </div>
@@ -1616,7 +1616,7 @@ function FinalCta() {
           Give your whole team the policy access they deserve.
         </h2>
         <p className="mb-12 text-xl leading-relaxed text-white/70">
-          14-day free trial. No credit card required. Set up in under an hour.
+          14-day free trial. No charge until day 14. Set up in under an hour.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link href="/demo" className="btn-amber rounded-btn px-10 py-4 text-base">
@@ -1691,7 +1691,7 @@ const DEFAULT_HOME_FAQS: Faq[] = [
   { question: 'Does CareStream help with CQC inspections?', answer: 'Yes. It records how your team engages with your policies and can produce a CQC Readiness Report, giving you helpful evidence to prepare for inspection.' },
   { question: 'Is our data kept private and secure?', answer: 'Yes. Your information is private to your organisation, is stored within the UK and EEA, and is never used to train AI models. A Data Processing Agreement is available to every subscriber.' },
   { question: 'How long does it take to get started?', answer: 'Most homes are up and running the same day. You upload your first policy, invite your team, and staff can begin asking questions straight away.' },
-  { question: 'How much does CareStream cost?', answer: 'Pricing is per home with unlimited staff users, so there are no per user fees. You can start with a free 14 day trial, and no card is needed to begin.' },
+  { question: 'How much does CareStream cost?', answer: 'Pricing is per home with unlimited staff users, so there are no per user fees. You can start with a free 14 day trial. We take your card to begin the trial, but you are not charged until day 14 — cancel anytime before then.' },
 ]
 
 async function getFeaturedPosts(): Promise<HomeBlogPost[]> {

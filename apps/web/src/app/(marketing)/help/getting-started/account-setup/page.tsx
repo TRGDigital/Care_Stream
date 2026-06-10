@@ -29,7 +29,7 @@ export default function Page() {
         ] },
         { type: 'subheading', text: 'Who should set up the account' },
         { type: 'p', text: 'The first account is usually created by a manager or administrator. This person becomes the admin and can invite other staff, upload policies and view reports. You can add more admins later if you want to share these tasks.' },
-        { type: 'note', text: 'You can explore the whole portal during your free trial. Nothing is charged until you choose a plan.' },
+        { type: 'note', text: 'You can explore the whole portal during your free trial. You add a card to start, but nothing is charged until day 14.' },
       ]}
       related={[
         { title: 'Uploading your first policy', href: '/help/getting-started/upload-policy' },

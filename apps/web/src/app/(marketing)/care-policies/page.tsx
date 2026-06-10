@@ -640,7 +640,7 @@ export default function FeaturesPage() {
 
       <PageCta
         heading="Try every feature free for 14 days."
-        sub="No credit card required. No commitment. Cancel any time."
+        sub="No charge until day 14. No commitment. Cancel any time."
         primary={{ href: '/register', label: 'Start Free Trial' }}
         secondary={{ href: '/demo', label: 'Book a Demo' }}
       />

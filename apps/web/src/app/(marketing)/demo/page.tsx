@@ -48,10 +48,10 @@ export default function DemoPage() {
               <div className="mt-10 rounded-2xl bg-teal-light p-6">
                 <p className="mb-2 font-bold text-teal">Prefer to try it yourself first?</p>
                 <p className="text-sm leading-relaxed text-neutral-mid">
-                  Start a free 14-day trial, no credit card required. You can still book a demo any time during or after the trial.
+                  Start a free 14-day trial — no charge until day 14. You can still book a demo any time during or after the trial.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm text-neutral-mid">
-                  {['14-day free trial', 'No credit card', 'Set up in under an hour'].map(item => (
+                  {['14-day free trial', 'No charge until day 14', 'Set up in under an hour'].map(item => (
                     <span key={item} className="flex items-center gap-1.5">
                       <Check size={13} className="text-teal" /> {item}
                     </span>

@@ -116,10 +116,17 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
   const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && outstanding(e)).length
   const followup = (tWrong as number) + (oWrong as number)
-  // Admins get an audits badge: recurring audits due to start + any in progress.
+  // Audits badge: admins see all due audits; "Staff + Audits" members see only
+  // those due among their allocated templates.
   let audits = 0
   if ((req as any).user.role === 'admin') {
     try { const a = await getAuditsDue(tenantId); audits = a.due.length + a.inProgress } catch { /* ignore */ }
+  } else {
+    try {
+      const u = await (prisma as any).user.findUnique({ where: { id: (req as any).user.sub }, select: { audit_template_ids: true } })
+      const ids: string[] = u?.audit_template_ids ?? []
+      if (ids.length) { const a = await getAuditsDue(tenantId, ids); audits = a.due.length + a.inProgress }
+    } catch { /* ignore */ }
   }
   ok(res, { training, induction, cqc, followup, annual, audits })
 })

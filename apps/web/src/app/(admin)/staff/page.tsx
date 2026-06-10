@@ -369,7 +369,9 @@ export default function StaffPage() {
                     <td className="px-6 py-3 text-neutral-mid">{u.email}</td>
                     <td className="px-6 py-3">
                       <Badge variant={u.role === 'admin' ? 'admin' : 'staff'}>
-                        {u.role === 'admin' ? 'Admin' : 'Staff'}
+                        {u.role === 'admin'
+                          ? 'Admin'
+                          : (Array.isArray(u.audit_template_ids) && u.audit_template_ids.length > 0 ? 'Staff + Audits' : 'Staff')}
                       </Badge>
                     </td>
                     <td className="px-6 py-3 text-xs text-neutral-mid">

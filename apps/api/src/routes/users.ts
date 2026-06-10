@@ -42,7 +42,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
   const users = await (prisma as any).user.findMany({
     where:   { tenant_id: tenantId },
     select:  {
-      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
+      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
       shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
@@ -62,7 +62,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.findUnique({
     where:  { id },
     select: {
-      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
+      id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
       shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
     },
@@ -201,7 +201,19 @@ const InviteSchema = z.object({
   second_language: z.string().length(3).optional(),
   comms_always_first_language: z.boolean().optional(),   // default true (DB) — translate outbound comms into first_language
   new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
+  audit_template_ids: z.array(z.string().uuid()).optional(),  // "Staff + Audits": audits this member can conduct in the hub
 })
+
+// Return the subset of ids that are real active audit templates for this tenant
+// (tenant-owned or platform defaults). Admins implicitly have all → stored empty.
+async function resolveAuditTemplateIds(tenantId: string, role: string, ids?: string[]): Promise<string[]> {
+  if (role === 'admin' || !ids || ids.length === 0) return []
+  const rows = await (prisma as any).auditTemplate.findMany({
+    where:  { id: { in: ids }, is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] },
+    select: { id: true },
+  })
+  return (rows as any[]).map(r => r.id)
+}
 
 usersRouter.post('/invite', async (req: Request, res: Response) => {
   const parsed = InviteSchema.safeParse(req.body)
@@ -212,6 +224,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
 
   const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, comms_always_first_language, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
+  const auditTemplateIds = await resolveAuditTemplateIds(tenantId, role, parsed.data.audit_template_ids)
 
   try {
     await checkUserLimit(tenantId)
@@ -251,6 +264,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       role,
       job_role:        job_role ?? null,
       specialisms:     Array.isArray(specialisms) ? specialisms : [],
+      audit_template_ids: auditTemplateIds,
       phone_number:    phone_number ?? null,
       shift_type:      shift_type ?? 'any',
       first_language:  first_language ?? 'eng',
@@ -263,7 +277,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       // staff receive no verification email). Without this, invited staff cannot log in.
       email_verified:  true,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -347,6 +361,7 @@ const UpdateSchema = z.object({
   first_language:  z.string().length(3).optional(),
   second_language: z.string().length(3).nullable().optional(),
   comms_always_first_language: z.boolean().optional(),
+  audit_template_ids: z.array(z.string().uuid()).optional(),
 })
 
 usersRouter.patch('/:id', async (req: Request, res: Response) => {
@@ -361,7 +376,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
 
   const existing = await (prisma as any).user.findUnique({
     where:  { id },
-    select: { id: true, tenant_id: true, phone_number: true },
+    select: { id: true, tenant_id: true, phone_number: true, role: true },
   })
   if (!existing || existing.tenant_id !== tenantId) {
     err(res, 'NOT_FOUND', 'User not found.', 404)
@@ -410,10 +425,19 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.second_language !== undefined) updateData.second_language = parsed.data.second_language
   if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
 
+  // Audit allocation: admins implicitly have all (store empty); for staff, persist the
+  // validated allocation when provided (sent as [] to downgrade to plain staff).
+  const effectiveRole = parsed.data.role ?? existing.role
+  if (parsed.data.role === 'admin') {
+    updateData.audit_template_ids = []
+  } else if (parsed.data.audit_template_ids !== undefined) {
+    updateData.audit_template_ids = await resolveAuditTemplateIds(tenantId, effectiveRole, parsed.data.audit_template_ids)
+  }
+
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

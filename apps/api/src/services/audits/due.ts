@@ -11,14 +11,18 @@ import { prisma } from '../../db/client'
 
 export interface DueAudit { id: string; name: string; frequency: string }
 
-export async function getAuditsDue(tenantId: string): Promise<{ due: DueAudit[]; inProgress: number }> {
+// `allowedTemplateIds` scopes the result to a "Staff + Audits" member's allocated
+// templates (omit / undefined = all of the tenant's audits, i.e. the admin view).
+export async function getAuditsDue(tenantId: string, allowedTemplateIds?: string[]): Promise<{ due: DueAudit[]; inProgress: number }> {
+  const scope = allowedTemplateIds && allowedTemplateIds.length ? { id: { in: allowedTemplateIds } } : {}
+  const runScope = allowedTemplateIds && allowedTemplateIds.length ? { template_id: { in: allowedTemplateIds } } : {}
   const [templates, runs] = await Promise.all([
     (prisma as any).auditTemplate.findMany({
-      where:  { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] },
+      where:  { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }], ...scope },
       select: { id: true, name: true, frequency: true },
     }),
     (prisma as any).auditRun.findMany({
-      where:  { tenant_id: tenantId },
+      where:  { tenant_id: tenantId, ...runScope },
       select: { template_id: true, status: true, audit_month: true },
     }),
   ])

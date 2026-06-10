@@ -330,6 +330,8 @@ function ChatPageInner() {
 
   const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
+  // Admins + "Staff + Audits" members can see the hub Audits section.
+  const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
@@ -452,7 +454,7 @@ function ChatPageInner() {
       warm('induction',   () => api.onboarding.myEnrollments().then(d => d.enrollments))
       warm('my-training', () => api.training.myEnrollments().then(d => d.enrollments))
       warm('annual',      () => api.me.annualTraining.list().then(d => d.items))
-      if (isAdmin) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
+      if (canAudit) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
     }, 500)
     return () => clearTimeout(t)
   }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -731,7 +733,7 @@ function ChatPageInner() {
             Follow-up
             {navCounts.followup > 0 && <NavBadge count={navCounts.followup} className="bg-red-500" />}
           </button>
-          {isAdmin && (
+          {canAudit && (
             <button
               onClick={() => setView('audits')}
               className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audits' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -875,7 +877,7 @@ function ChatPageInner() {
         )}
 
         {/* Audits view (admin-role staff only) */}
-        {view === 'audits' && isAdmin && session?.accessToken && (
+        {view === 'audits' && canAudit && session?.accessToken && (
           <AuditsView token={session.accessToken} userId={userId} />
         )}
 

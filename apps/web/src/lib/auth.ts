@@ -17,6 +17,7 @@ declare module 'next-auth' {
     accessToken:  string
     refreshToken: string
     needsBilling?: boolean
+    auditAccess?: boolean
   }
   interface Session {
     accessToken: string
@@ -29,6 +30,7 @@ declare module 'next-auth' {
       tenantId:   string
       tenantName: string
       needsBilling?: boolean
+      auditAccess?: boolean
     }
   }
 }
@@ -41,6 +43,7 @@ declare module 'next-auth/jwt' {
     tenantId:     string
     tenantName:   string
     needsBilling?: boolean
+    auditAccess?: boolean
   }
 }
 
@@ -79,6 +82,7 @@ export const authOptions: NextAuthOptions = {
               accessToken:  credentials.access_token as string,
               refreshToken: credentials.refresh_token as string,
               needsBilling: false, // site-switch is only for existing active group admins
+              auditAccess:  payload.role === 'admin',
             }
           } catch { return null }
         }
@@ -94,7 +98,7 @@ export const authOptions: NextAuthOptions = {
             })
             const body = await res.json()
             if (!res.ok || !body.success) return null
-            const { user, tenant, access_token, refresh_token, needs_billing } = body.data
+            const { user, tenant, access_token, refresh_token, needs_billing, audit_access } = body.data
             return {
               id:           user.id,
               name:         user.name,
@@ -105,6 +109,7 @@ export const authOptions: NextAuthOptions = {
               accessToken:  access_token,
               refreshToken: refresh_token,
               needsBilling: !!needs_billing,
+              auditAccess:  !!audit_access,
             }
           } catch { return null }
         }
@@ -130,7 +135,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const { user, tenant, access_token, refresh_token, needs_billing } = body.data
+        const { user, tenant, access_token, refresh_token, needs_billing, audit_access } = body.data
         return {
           id:           user.id,
           name:         user.name,
@@ -141,6 +146,7 @@ export const authOptions: NextAuthOptions = {
           accessToken:  access_token,
           refreshToken: refresh_token,
           needsBilling: !!needs_billing,
+          auditAccess:  !!audit_access,
         }
       },
     }),
@@ -158,6 +164,7 @@ export const authOptions: NextAuthOptions = {
         token.tenantId     = user.tenantId
         token.tenantName   = user.tenantName
         token.needsBilling = user.needsBilling ?? false
+        token.auditAccess  = user.auditAccess ?? false
         // Decode expiry so we can proactively refresh before it hits
         try {
           const payload = JSON.parse(Buffer.from(user.accessToken.split('.')[1], 'base64').toString())
@@ -191,6 +198,7 @@ export const authOptions: NextAuthOptions = {
         // or the next refresh would replay a now-consumed token and get rejected.
         if (body.data.refresh_token) token.refreshToken = body.data.refresh_token
         if (typeof body.data.needs_billing === 'boolean') token.needsBilling = body.data.needs_billing
+        if (typeof body.data.audit_access === 'boolean') token.auditAccess = body.data.audit_access
       } catch {
         // Refresh failed — force re-login by clearing the token
         return { ...token, error: 'RefreshAccessTokenError' }
@@ -203,6 +211,7 @@ export const authOptions: NextAuthOptions = {
       session.user.tenantId      = token.tenantId
       session.user.tenantName    = token.tenantName
       session.user.needsBilling  = token.needsBilling
+      session.user.auditAccess   = token.auditAccess
       return session
     },
   },

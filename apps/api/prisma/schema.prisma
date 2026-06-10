@@ -218,6 +218,7 @@ model User {
   password_hash          String
   job_role               String?                            // position — drives onboarding/training
   specialisms            String[]       @default([])         // specialist roles (e.g. Infection Control, Night Staff)
+  audit_template_ids     String[]       @default([])         // "Staff + Audits": audit templates this staff member can conduct in the hub
   phone_number           String?                            // E.164 format (+447...) — enables WhatsApp access
   is_active              Boolean        @default(true)      // false = deactivated (access revoked)
   email_verified                Boolean   @default(false)

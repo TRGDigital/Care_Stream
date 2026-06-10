@@ -286,10 +286,13 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
   // Hard gate for the card-up-front trial: a tenant that hasn't started a Stripe
   // subscription yet (and isn't already active) must add a card before using the app.
   const needsBilling = user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
+  // "Staff + Audits": this member can conduct audits in the hub.
+  const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
   ok(res, {
     access_token:  generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role }),
     refresh_token: await issueRefreshToken(user.id),
     needs_billing: needsBilling,
+    audit_access:  auditAccess,
     user:   { id: user.id, name: user.name, email: user.email, role: user.role, tenant_id: user.tenant_id },
     tenant: { id: user.tenant.id, name: user.tenant.name, slug: user.tenant.slug, subscription_status: user.tenant.subscription_status },
   })
@@ -520,7 +523,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.findUnique({
     where: { id: rotated.userId },
     select: {
-      id: true, tenant_id: true, role: true, locked_until: true,
+      id: true, tenant_id: true, role: true, locked_until: true, audit_template_ids: true,
       tenant: { select: { subscription_status: true, stripe_subscription_id: true } },
     },
   })
@@ -538,8 +541,9 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
 
   // Re-evaluate the billing gate on every refresh so it clears once a card is added.
   const needsBilling = user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
+  const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
 
-  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling })
+  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling, audit_access: auditAccess })
 })
 
 // ─── POST /auth/switch-site ───────────────────────────────────────────────────

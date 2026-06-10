@@ -45,10 +45,24 @@ export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent
       if (!due.length && !inProgress) continue
 
       const admins = await (prisma as any).user.findMany({ where: { tenant_id: t.id, role: { in: ['admin', 'manager'] }, is_active: true }, select: { id: true } })
-      if (!admins.length) continue
-      const html = reminderHtml(t.name, due, inProgress)
-      await notifyUsers(t.id, 'audit_updates', admins.map((a: any) => a.id), (email) => sendEmail(email, `Audits to complete — ${t.name}`, html))
-      sent += 1
+      if (admins.length) {
+        const html = reminderHtml(t.name, due, inProgress)
+        await notifyUsers(t.id, 'audit_updates', admins.map((a: any) => a.id), (email) => sendEmail(email, `Audits to complete — ${t.name}`, html))
+        sent += 1
+      }
+
+      // "Staff + Audits" members: nudge each for THEIR allocated due audits only.
+      const auditors = await (prisma as any).user.findMany({
+        where:  { tenant_id: t.id, is_active: true, role: { notIn: ['admin', 'manager'] }, audit_template_ids: { isEmpty: false } },
+        select: { id: true, audit_template_ids: true },
+      })
+      for (const a of auditors as any[]) {
+        const scoped = await getAuditsDue(t.id, a.audit_template_ids)
+        if (!scoped.due.length && !scoped.inProgress) continue
+        const html = reminderHtml(t.name, scoped.due, scoped.inProgress)
+        await notifyUsers(t.id, 'audit_updates', [a.id], (email) => sendEmail(email, `Audits to complete — ${t.name}`, html))
+        sent += 1
+      }
     } catch (e: any) {
       console.error('[audit-reminders] tenant failed', t.id, e?.message ?? e)
     }

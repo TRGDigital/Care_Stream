@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
-import { requireAdmin } from '../middleware/auth'
+import { requireAdmin, requireAuditAccess, auditTemplateAllowed } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
 import { trackAiAction } from '../lib/plan-limits'
@@ -851,7 +851,7 @@ export function isRoomBasedAudit(name: string): boolean {
   return /bedroom/i.test(name ?? '')
 }
 
-auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Response) => {
   await ensurePlatformTemplatesSeeded()
   const tenantId = req.user!.tenant_id
 
@@ -876,7 +876,12 @@ auditsRouter.get('/templates', requireAdmin, async (req: Request, res: Response)
   const custom   = (Array.isArray(tenant?.rooms) ? tenant.rooms : []).filter((r: string) => !numbered.includes(r))
   const rooms    = [...numbered, ...custom]
 
-  const withFlags = (templates as any[]).map(t => ({ ...t, room_based: isRoomBasedAudit(t.name) }))
+  let withFlags = (templates as any[]).map(t => ({ ...t, room_based: isRoomBasedAudit(t.name) }))
+  // "Staff + Audits" members only see their allocated templates.
+  if (req.auditAllowed !== 'all') {
+    const allowed = req.auditAllowed as string[]
+    withFlags = withFlags.filter(t => allowed.includes(t.id))
+  }
   ok(res, { templates: withFlags, rooms })
 })
 
@@ -935,11 +940,12 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
 
 // ─── GET /audits/stats ───────────────────────────────────────────────────────
 
-auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.get('/stats', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
+  const scopeIds = req.auditAllowed === 'all' ? null : (req.auditAllowed as string[])
 
   const runs = await (prisma as any).auditRun.findMany({
-    where:  { tenant_id: tenantId },
+    where:  { tenant_id: tenantId, ...(scopeIds ? { template_id: { in: scopeIds } } : {}) },
     select: { status: true, completed_at: true, audit_month: true, template: { select: { frequency: true, name: true } } },
   })
 
@@ -961,8 +967,8 @@ auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => 
     }
   }
 
-  // "Due to start" — same logic as the reminder email / hub badge.
-  const { due } = await getAuditsDue(tenantId)
+  // "Due to start" — same logic as the reminder email / hub badge (scoped for staff).
+  const { due } = await getAuditsDue(tenantId, scopeIds ?? undefined)
 
   const now = new Date()
   const completed_this_month = runs.filter((r: any) =>
@@ -984,13 +990,19 @@ auditsRouter.get('/stats', requireAdmin, async (req: Request, res: Response) => 
 
 // ─── GET /audits/runs ─────────────────────────────────────────────────────────
 
-auditsRouter.get('/runs', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.get('/runs', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { status, template_id } = req.query
 
   const where: any = { tenant_id: tenantId }
   if (status)      where.status      = status
   if (template_id) where.template_id = template_id
+  // Scope "Staff + Audits" members to their allocated templates.
+  if (req.auditAllowed !== 'all') {
+    const allowed = req.auditAllowed as string[]
+    if (template_id) { if (!allowed.includes(String(template_id))) return ok(res, { runs: [] }) }
+    else where.template_id = { in: allowed }
+  }
 
   const runs = await (prisma as any).auditRun.findMany({
     where,
@@ -1006,12 +1018,13 @@ auditsRouter.get('/runs', requireAdmin, async (req: Request, res: Response) => {
 
 // ─── POST /audits/runs ────────────────────────────────────────────────────────
 
-auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId                                    = req.user!.tenant_id
   const { template_id, audit_month, auditor_name, auditor_role, room_number } = req.body
 
   if (!template_id)  return err(res, 'MISSING_TEMPLATE', 'template_id is required', 400)
   if (!audit_month)  return err(res, 'MISSING_MONTH',    'audit_month is required', 400)
+  if (!auditTemplateAllowed(req, template_id)) return err(res, 'FORBIDDEN', 'You are not allocated this audit.', 403)
 
   const template = await (prisma as any).auditTemplate.findFirst({
     where: { id: template_id, is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] },
@@ -1058,7 +1071,7 @@ auditsRouter.post('/runs', requireAdmin, async (req: Request, res: Response) => 
 
 // ─── GET /audits/runs/:id ─────────────────────────────────────────────────────
 
-auditsRouter.get('/runs/:id', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
@@ -1081,20 +1094,20 @@ auditsRouter.get('/runs/:id', requireAdmin, async (req: Request, res: Response) 
     },
   })
 
-  if (!run) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
   ok(res, { run })
 })
 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────
 
-auditsRouter.put('/runs/:id', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { auditor_name, auditor_role, strengths, improvements, actions_deadline } = req.body
 
   const existing = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
   })
-  if (!existing) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!existing || !auditTemplateAllowed(req, existing.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
 
   const run = await (prisma as any).auditRun.update({
     where: { id: req.params.id },
@@ -1112,7 +1125,7 @@ auditsRouter.put('/runs/:id', requireAdmin, async (req: Request, res: Response) 
 
 // ─── POST /audits/runs/:id/answers ───────────────────────────────────────────
 
-auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { answers } = req.body  // Array<{ question_id, answer_yn?, outcome_text?, actions_text? }>
 
@@ -1122,7 +1135,7 @@ auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: R
   const run = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId, status: 'in_progress' },
   })
-  if (!run) return err(res, 'NOT_FOUND', 'In-progress audit run not found', 404)
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'In-progress audit run not found', 404)
 
   // Upsert all answers in a single transaction — one round-trip, atomic
   // (no half-saved audit state) instead of N sequential awaits.
@@ -1154,7 +1167,7 @@ auditsRouter.post('/runs/:id/answers', requireAdmin, async (req: Request, res: R
 
 // ─── POST /audits/runs/:id/complete ──────────────────────────────────────────
 
-auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
@@ -1172,7 +1185,7 @@ auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: 
       tenant:  { select: { name: true } },
     },
   })
-  if (!run) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
 
   // Build audit results summary for AI
   const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
@@ -1261,7 +1274,7 @@ auditsRouter.post('/runs/:id/complete', requireAdmin, async (req: Request, res: 
 
 // ─── GET /audits/runs/:id/report ──────────────────────────────────────────────
 
-auditsRouter.get('/runs/:id/report', requireAdmin, async (req: Request, res: Response) => {
+auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
   const run = await (prisma as any).auditRun.findFirst({
@@ -1279,7 +1292,7 @@ auditsRouter.get('/runs/:id/report', requireAdmin, async (req: Request, res: Res
       tenant:  { select: { name: true } },
     },
   })
-  if (!run) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
 
   const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
 

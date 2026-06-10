@@ -271,6 +271,75 @@ function OnboardingAssignStep({ token, userId, userName, alreadyFlowIds, onDone 
   )
 }
 
+// ─── Access level + audit allocation ─────────────────────────────────────────
+// Shared by the invite + edit modals. Presents the 3-way access dropdown
+// (Staff / Staff + Audits / Admin) and, for "Staff + Audits", a checklist of the
+// tenant's audit types to allocate. Reports back { role, auditIds }.
+function AccessLevelField({ token, role, auditIds, onChange }: {
+  token:     string
+  role:      string          // 'admin' | 'staff'
+  auditIds:  string[]
+  onChange:  (v: { role: string; auditIds: string[] }) => void
+}) {
+  const [templates, setTemplates] = useState<{ id: string; name: string; frequency: string }[]>([])
+  useEffect(() => {
+    createApiClient(token).audits.templates()
+      .then(r => setTemplates(r.templates ?? []))
+      .catch(() => {})
+  }, [token])
+
+  const level = role === 'admin' ? 'admin' : (auditIds.length ? 'staff_audits' : 'staff')
+
+  function setLevel(l: string) {
+    if (l === 'admin')           onChange({ role: 'admin', auditIds: [] })
+    else if (l === 'staff')      onChange({ role: 'staff', auditIds: [] })
+    else                         onChange({ role: 'staff', auditIds }) // staff_audits — keep current picks
+  }
+  function toggle(id: string) {
+    onChange({ role: 'staff', auditIds: auditIds.includes(id) ? auditIds.filter(x => x !== id) : [...auditIds, id] })
+  }
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Access level</label>
+      <select
+        value={level}
+        onChange={e => setLevel(e.target.value)}
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+      >
+        <option value="staff">Staff — chat only</option>
+        <option value="staff_audits">Staff + Audits — chat &amp; allocated audits</option>
+        <option value="admin">Admin — full access</option>
+      </select>
+      {level === 'staff_audits' && (
+        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+          <p className="mb-2 text-xs font-medium text-neutral-mid">Audits this member can conduct in the hub</p>
+          {templates.length === 0 ? (
+            <p className="text-xs text-neutral-mid">No audit types set up yet.</p>
+          ) : (
+            <div className="max-h-44 space-y-1.5 overflow-auto">
+              {templates.map(t => (
+                <label key={t.id} className="flex items-center gap-2 text-sm text-neutral-dark">
+                  <input
+                    type="checkbox"
+                    checked={auditIds.includes(t.id)}
+                    onChange={() => toggle(t.id)}
+                    className="rounded border-gray-300 text-teal focus:ring-teal"
+                  />
+                  {t.name} <span className="text-xs text-neutral-mid">({t.frequency})</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {auditIds.length === 0 && (
+            <p className="mt-2 text-xs text-amber-600">Select at least one audit — otherwise they’ll just be a normal staff member.</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Invite modal ─────────────────────────────────────────────────────────────
 
 type ModalStep = 'form' | 'credentials' | 'training'
@@ -294,6 +363,7 @@ export function InviteModal({
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
   const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', phone_number: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
+  const [auditIds,  setAuditIds]  = useState<string[]>([])
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
   const [commsFirstLang, setCommsFirstLang] = useState(true)
@@ -324,6 +394,7 @@ export function InviteModal({
       role:            form.role,
       job_role:        form.job_role || undefined,
       specialisms:     hasSpecialism ? specialisms : [],
+      audit_template_ids: form.role === 'admin' ? [] : auditIds,
       phone_number:    form.phone_number || undefined,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
@@ -437,17 +508,12 @@ export function InviteModal({
                     <option value="night">Night shift</option>
                   </select>
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Access level</label>
-                  <select
-                    value={form.role}
-                    onChange={update('role')}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                  >
-                    <option value="staff">Staff — chat only</option>
-                    <option value="admin">Admin — full access</option>
-                  </select>
-                </div>
+                <AccessLevelField
+                  token={token}
+                  role={form.role}
+                  auditIds={auditIds}
+                  onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
+                />
               </div>
             </div>
 
@@ -589,6 +655,7 @@ export function EditModal({
   })
   const [specialisms, setSpecialisms]     = useState<string[]>(Array.isArray(user.specialisms) ? user.specialisms : [])
   const [hasSpecialism, setHasSpecialism] = useState<boolean>(Array.isArray(user.specialisms) && user.specialisms.length > 0)
+  const [auditIds, setAuditIds]           = useState<string[]>(Array.isArray(user.audit_template_ids) ? user.audit_template_ids : [])
   const [commsFirstLang, setCommsFirstLang] = useState<boolean>(user.comms_always_first_language !== false)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
@@ -613,6 +680,7 @@ export function EditModal({
       job_role:        form.job_role || null,
       specialisms:     hasSpecialism ? specialisms : [],
       role:            form.role,
+      audit_template_ids: form.role === 'admin' ? [] : auditIds,
       phone_number:    form.phone_number || null,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
       first_language:  form.first_language,
@@ -696,15 +764,12 @@ export function EditModal({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">System access level</label>
-              <select
-                value={form.role}
-                onChange={update('role')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="staff">Staff — chat access only</option>
-                <option value="admin">Admin — full dashboard access</option>
-              </select>
+              <AccessLevelField
+                token={token}
+                role={form.role}
+                auditIds={auditIds}
+                onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
+              />
             </div>
           </div>
 

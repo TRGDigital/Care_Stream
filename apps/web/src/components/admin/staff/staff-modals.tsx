@@ -288,9 +288,15 @@ function AccessLevelField({ token, role, auditIds, onChange }: {
       .catch(() => {})
   }, [token])
 
-  const level = role === 'admin' ? 'admin' : (auditIds.length ? 'staff_audits' : 'staff')
+  // The chosen level is its OWN state — it can't be derived from {role, auditIds},
+  // because "Staff + Audits" with nothing ticked yet looks identical to plain Staff
+  // (and would snap back the moment you select it).
+  const [level, setLevel] = useState<'staff' | 'staff_audits' | 'admin'>(
+    role === 'admin' ? 'admin' : (auditIds.length ? 'staff_audits' : 'staff')
+  )
 
-  function setLevel(l: string) {
+  function changeLevel(l: 'staff' | 'staff_audits' | 'admin') {
+    setLevel(l)
     if (l === 'admin')           onChange({ role: 'admin', auditIds: [] })
     else if (l === 'staff')      onChange({ role: 'staff', auditIds: [] })
     else                         onChange({ role: 'staff', auditIds }) // staff_audits — keep current picks
@@ -304,7 +310,7 @@ function AccessLevelField({ token, role, auditIds, onChange }: {
       <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Access level</label>
       <select
         value={level}
-        onChange={e => setLevel(e.target.value)}
+        onChange={e => changeLevel(e.target.value as 'staff' | 'staff_audits' | 'admin')}
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
       >
         <option value="staff">Staff — chat only</option>

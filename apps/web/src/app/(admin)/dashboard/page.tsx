@@ -259,7 +259,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken, chartDays])
 
-  const totalChannelQueries = channels.chat + channels.email + channels.whatsapp + channels.voice
+  const totalChannelQueries = channels.chat + channels.email + channels.voice
 
   return (
     <div>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
       </HelpAccordion>
 
       {/* Channel breakdown */}
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {/* Chat */}
         <div className="rounded-card overflow-hidden border border-gray-100 bg-white shadow-card">
           <div className="h-1 bg-teal" />
@@ -399,36 +399,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* WhatsApp */}
-        <div className="rounded-card overflow-hidden border border-gray-100 bg-white shadow-card">
-          <div className="h-1 bg-green-500" />
-          <div className="px-5 py-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#16a34a"><path d={whatsappIconPath}/></svg>
-              </div>
-              <p className="text-sm font-semibold text-neutral-dark">WhatsApp</p>
-            </div>
-            <p className="text-3xl font-bold text-green-600">{channels.whatsapp}</p>
-            <p className="mt-1 text-xs text-neutral-mid">queries this month</p>
-            {totalChannelQueries > 0 && (
-              <div className="mt-3 flex items-center gap-2">
-                <div className="h-1.5 flex-1 rounded-full bg-gray-100">
-                  <div className="h-1.5 rounded-full bg-green-500" style={{ width: `${Math.round((channels.whatsapp / totalChannelQueries) * 100)}%` }} />
-                </div>
-                <span className="text-xs text-neutral-mid">{Math.round((channels.whatsapp / totalChannelQueries) * 100)}%</span>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       <HelpAccordion title="About channels">
-        <p>These cards show how many questions were asked through each access channel during the current month. CareStreamAI supports four channels — staff can use whichever suits them best:</p>
+        <p>These cards show how many questions were asked through each access channel during the current month. CareStreamAI supports three channels — staff can use whichever suits them best:</p>
         <p><strong className="text-neutral-dark">Chat</strong> — the web portal at your CareStreamAI login. Staff type questions and receive instant written responses. Best for detailed or sensitive queries.</p>
         <p><strong className="text-neutral-dark">Voice</strong> — staff speak their question and receive a spoken response. Ideal for on-the-go use, particularly for care assistants who are not at a desk.</p>
-        <p><strong className="text-neutral-dark">Email</strong> — staff email a question to your organisation's dedicated inbound address. The AI replies directly to their inbox. Good for non-urgent queries and those who prefer written records.</p>
-        <p><strong className="text-neutral-dark">WhatsApp</strong> — staff message your organisation's WhatsApp number. Convenient for staff who already use WhatsApp and are away from a computer. The progress bar shows each channel's share of this month's total.</p>
+        <p><strong className="text-neutral-dark">Email</strong> — staff email a question to your organisation's dedicated inbound address. The AI replies directly to their inbox. Good for non-urgent queries and those who prefer written records. The progress bar shows each channel's share of this month's total.</p>
       </HelpAccordion>
 
       {/* Daily activity chart */}
@@ -436,7 +413,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div>
             <h2 className="font-semibold text-neutral-dark">Daily interactions</h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">Queries by channel — Chat, Voice, Email, WhatsApp</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">Queries by channel — Chat, Voice, Email</p>
           </div>
           <div className="flex gap-1 rounded-md border border-gray-200 p-0.5 text-xs font-medium">
             {[7, 30, 90].map(d => (
@@ -466,7 +443,7 @@ export default function DashboardPage() {
       <HelpAccordion title="About the daily interactions chart">
         <p>Each line tracks how many queries came in per day through that channel. Use the <strong className="text-neutral-dark">7d / 30d / 90d</strong> buttons to zoom in or out on the time range.</p>
         <p>What to look for: a steady upward trend means staff are adopting the system well. Spikes often coincide with new staff starting, a policy update being published, or a CQC inspection being announced. Flat periods may indicate staff need a reminder that the tool is available.</p>
-        <p>If one channel dominates, consider whether the less-used channels are set up and communicated to staff — for example, some teams only discover WhatsApp access after it is mentioned in a team meeting.</p>
+        <p>If one channel dominates, consider whether the less-used channels are set up and communicated to staff — for example, some teams only discover email or voice access after it is mentioned in a team meeting.</p>
       </HelpAccordion>
 
       {/* Recent queries */}

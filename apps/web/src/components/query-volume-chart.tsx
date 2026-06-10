@@ -33,18 +33,17 @@ export default function QueryVolumeChart({ data, days }: { data: any[]; days: nu
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           labelFormatter={d => new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-          formatter={(value: any, name: any) => [value, name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp']}
+          formatter={(value: any, name: any) => [value, name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : 'Email']}
         />
         <Legend
           iconType="circle"
           iconSize={8}
-          formatter={name => name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : name === 'email' ? 'Email' : 'WhatsApp'}
+          formatter={name => name === 'chat' ? 'Chat' : name === 'voice' ? 'Voice' : 'Email'}
           wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
         />
         <Line type="monotone" dataKey="chat"     stroke="#0d9488" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
         <Line type="monotone" dataKey="voice"    stroke="#9333ea" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
         <Line type="monotone" dataKey="email"    stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-        <Line type="monotone" dataKey="whatsapp" stroke="#16a34a" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
       </LineChart>
     </ResponsiveContainer>
   )

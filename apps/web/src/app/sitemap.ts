@@ -33,12 +33,6 @@ const MARKETING: Entry[] = [
   { url: '/trust',                                 changeFrequency: 'monthly', priority: 0.7 },
   { url: '/case-studies',                          changeFrequency: 'monthly', priority: 0.7 },
   { url: '/blog',                                  changeFrequency: 'weekly',  priority: 0.8 },
-  { url: '/blog/riddor-reporting-care-homes',      changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/blog/rag-ai-care-compliance',           changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/blog/overseas-care-workers-policy-access', changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/blog/night-shift-policy-access',        changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/blog/cqc-readiness-report-what-it-is', changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/blog/cqc-equality-diversity-evidence',  changeFrequency: 'monthly', priority: 0.7 },
   { url: '/faq',                                   changeFrequency: 'monthly', priority: 0.6 },
   { url: '/demo',                                  changeFrequency: 'monthly', priority: 0.8 },
   { url: '/contact',                               changeFrequency: 'monthly', priority: 0.6 },
@@ -64,11 +58,29 @@ async function trainingPages(): Promise<Entry[]> {
   return []
 }
 
+// Blog posts are DB-driven (published in the platform admin), so pull their slugs
+// from the public API rather than hard-coding them. Falls back to none on error.
+async function blogPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/blog/posts`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const posts = (await res.json())?.data?.posts ?? []
+      return (posts as Array<{ slug?: string }>)
+        .filter((p) => p.slug)
+        .map((p) => ({ url: `/blog/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const entries = [...MARKETING, ...SETTINGS, ...(await trainingPages())].filter((e) => {
+  const [training, blog] = await Promise.all([trainingPages(), blogPages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

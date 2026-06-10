@@ -318,27 +318,28 @@ function AccessLevelField({ token, role, auditIds, onChange }: {
         <option value="admin">Admin — full access</option>
       </select>
       {level === 'staff_audits' && (
-        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
-          <p className="mb-2 text-xs font-medium text-neutral-mid">Audits this member can conduct in the hub</p>
+        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+          <p className="mb-3 text-sm font-medium text-neutral-dark">Audits this member can conduct in the hub</p>
           {templates.length === 0 ? (
             <p className="text-xs text-neutral-mid">No audit types set up yet.</p>
           ) : (
-            <div className="max-h-44 space-y-1.5 overflow-auto">
+            <div className="grid max-h-56 grid-cols-1 gap-x-6 gap-y-2 overflow-auto sm:grid-cols-2">
               {templates.map(t => (
-                <label key={t.id} className="flex items-center gap-2 text-sm text-neutral-dark">
+                <label key={t.id} className="flex cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-sm text-neutral-dark hover:bg-white">
                   <input
                     type="checkbox"
                     checked={auditIds.includes(t.id)}
                     onChange={() => toggle(t.id)}
-                    className="rounded border-gray-300 text-teal focus:ring-teal"
+                    className="h-4 w-4 shrink-0 rounded border-gray-300 text-teal focus:ring-teal"
                   />
-                  {t.name} <span className="text-xs text-neutral-mid">({t.frequency})</span>
+                  <span className="flex-1">{t.name}</span>
+                  <span className="text-xs capitalize text-neutral-mid">{t.frequency}</span>
                 </label>
               ))}
             </div>
           )}
           {auditIds.length === 0 && (
-            <p className="mt-2 text-xs text-amber-600">Select at least one audit — otherwise they’ll just be a normal staff member.</p>
+            <p className="mt-3 text-xs text-amber-600">Select at least one audit — otherwise they’ll just be a normal staff member.</p>
           )}
         </div>
       )}
@@ -501,19 +502,19 @@ export function InviteModal({
                   Include the country code. Enables policy questions via WhatsApp.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
-                  <select
-                    value={form.shift_type}
-                    onChange={update('shift_type')}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-                  >
-                    <option value="any">Flexible</option>
-                    <option value="day">Day shift</option>
-                    <option value="night">Night shift</option>
-                  </select>
-                </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
+                <select
+                  value={form.shift_type}
+                  onChange={update('shift_type')}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                >
+                  <option value="any">Flexible</option>
+                  <option value="day">Day shift</option>
+                  <option value="night">Night shift</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2">
                 <AccessLevelField
                   token={token}
                   role={form.role}
@@ -756,28 +757,24 @@ export function EditModal({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
-              <select
-                value={form.shift_type}
-                onChange={update('shift_type')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="any">Flexible / not specified</option>
-                <option value="day">Day shift</option>
-                <option value="night">Night shift</option>
-              </select>
-            </div>
-            <div>
-              <AccessLevelField
-                token={token}
-                role={form.role}
-                auditIds={auditIds}
-                onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
-              />
-            </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
+            <select
+              value={form.shift_type}
+              onChange={update('shift_type')}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            >
+              <option value="any">Flexible / not specified</option>
+              <option value="day">Day shift</option>
+              <option value="night">Night shift</option>
+            </select>
           </div>
+          <AccessLevelField
+            token={token}
+            role={form.role}
+            auditIds={auditIds}
+            onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
+          />
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">

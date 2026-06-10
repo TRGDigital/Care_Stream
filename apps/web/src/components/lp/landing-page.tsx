@@ -11,11 +11,12 @@ export function LandingPage({ page }: { page: LpPage }) {
   return (
     <LpFormOverlayProvider page={page}>
       <LpTracking pageId={page.id} />
-      <div className="bg-neutral-light">
-        {/* Desktop: content column (left) + sticky form rail (right). Mobile: single
-            column, no inline form — CTAs open the form as an overlay. */}
-        <div className="mx-auto max-w-[1240px] lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6 lg:px-6 lg:py-8">
-          <div className="overflow-hidden bg-white lg:rounded-2xl lg:shadow-card">
+      <div className="bg-neutral-light lg:py-8">
+        {/* One unified card: content (left) + sticky bare form rail (right), divided
+            by a hairline so it reads as a single page. Mobile: single column, no
+            inline form — CTAs open the form as an overlay. */}
+        <div className="mx-auto max-w-[1240px] overflow-hidden bg-white lg:rounded-2xl lg:shadow-card lg:grid lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div>
             {/* Hero (content only — the form lives in the rail / overlay) */}
             <section className="relative overflow-hidden bg-hero-gradient">
               <div className="absolute inset-0 dot-mesh" />
@@ -54,10 +55,10 @@ export function LandingPage({ page }: { page: LpPage }) {
             <LpFinalCta data={c.finalCta} />
           </div>
 
-          {/* Sticky booking rail (desktop only) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-8">
-              <LpForm page={page} withAnchor />
+          {/* Sticky booking rail (desktop only) — part of the same card */}
+          <aside className="hidden lg:block lg:border-l lg:border-gray-100 lg:bg-neutral-light/40">
+            <div className="sticky top-6 p-6 lg:p-7">
+              <LpForm page={page} withAnchor bare />
             </div>
           </aside>
         </div>

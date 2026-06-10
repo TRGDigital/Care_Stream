@@ -32,8 +32,9 @@ function fireConversions(page: LpPage) {
   }
 }
 
-export function LpForm({ page, withAnchor = false }: { page: LpPage; withAnchor?: boolean }) {
+export function LpForm({ page, withAnchor = false, bare = false }: { page: LpPage; withAnchor?: boolean; bare?: boolean }) {
   const f = page.content.form
+  const cardCls = bare ? '' : 'rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:p-8'
   const [values, setValues]       = useState<Record<string, string>>({})
   const [errors, setErrors]       = useState<Record<string, string>>({})
   const [emailWarn, setEmailWarn] = useState(false)
@@ -110,7 +111,7 @@ export function LpForm({ page, withAnchor = false }: { page: LpPage; withAnchor?
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-elevated">
+      <div className={`text-center ${bare ? 'py-6' : 'rounded-2xl border border-gray-100 bg-white p-8 shadow-elevated'}`}>
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
           <CheckCircle2 className="text-green-600" size={28} />
         </div>
@@ -124,7 +125,7 @@ export function LpForm({ page, withAnchor = false }: { page: LpPage; withAnchor?
   const labelClass = 'mb-1.5 block text-sm font-semibold text-neutral-dark'
 
   return (
-    <div id={withAnchor ? 'form' : undefined} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:p-8">
+    <div id={withAnchor ? 'form' : undefined} className={cardCls}>
       {f.headline && <h2 className="text-2xl font-extrabold leading-tight text-neutral-dark">{f.headline}</h2>}
       {f.subheadline && <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{f.subheadline}</p>}
       <form onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>

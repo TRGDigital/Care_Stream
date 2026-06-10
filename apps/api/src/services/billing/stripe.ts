@@ -1,9 +1,21 @@
 // §10.6 — Stripe integration: Checkout, Customer Portal, live summary/invoices,
 // and webhook event handling. Card data never touches our servers — all payment
 // capture happens on Stripe-hosted Checkout / Portal (PCI SAQ A).
+//
+// Managed Payments: subscription Checkout runs with `managed_payments.enabled`
+// so Stripe acts as merchant of record and handles tax. Plan products carry a
+// SaaS tax code. These two operations are pinned to the preview API version
+// Managed Payments requires (`2026-02-25.preview`) per-request — the client
+// itself is left un-pinned. Toggle off with STRIPE_MANAGED_PAYMENTS=false.
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
+
+// API version Managed Payments requires. Applied per-request to product/price
+// creation and Checkout Session creation only — NOT to the client globally.
+const MANAGED_PAYMENTS_API_VERSION = '2026-02-25.preview'
+// Stripe Tax product tax code: "Software as a service (SaaS) — business use".
+const PLAN_TAX_CODE = 'txcd_10103100'
 
 let _stripe: Stripe | null = null
 function getStripe(): Stripe {
@@ -12,6 +24,18 @@ function getStripe(): Stripe {
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   }
   return _stripe
+}
+
+function managedPaymentsEnabled(): boolean {
+  return (process.env.STRIPE_MANAGED_PAYMENTS ?? 'true').toLowerCase() !== 'false'
+}
+
+// Per-request options pinning the preview API version Managed Payments needs.
+// Undefined when Managed Payments is off, so calls use the account default.
+function managedPaymentsRequestOptions(): Stripe.RequestOptions | undefined {
+  return managedPaymentsEnabled()
+    ? ({ apiVersion: MANAGED_PAYMENTS_API_VERSION } as any)
+    : undefined
 }
 
 // First configured WEB_URL origin (the env may hold a comma-separated CORS allowlist).
@@ -38,17 +62,19 @@ function mapStatus(s: Stripe.Subscription.Status): string {
 async function ensurePlanPrice(plan: any): Promise<string> {
   if (plan.stripe_price_id_monthly) return plan.stripe_price_id_monthly
   const stripe = getStripe()
+  const opts = managedPaymentsRequestOptions()
   const product = await stripe.products.create({
     name:     `CareStreamAI — ${plan.name}`,
+    tax_code: PLAN_TAX_CODE,
     metadata: { plan_id: plan.id },
-  })
+  }, opts)
   const price = await stripe.prices.create({
     product:    product.id,
     currency:   'gbp',
     unit_amount: plan.price_monthly_pence,
     recurring:  { interval: 'month' },
     metadata:   { plan_id: plan.id },
-  })
+  }, opts)
   await (prisma as any).plan.update({ where: { id: plan.id }, data: { stripe_price_id_monthly: price.id } })
   return price.id
 }
@@ -68,12 +94,14 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
     orderBy: { created_at: 'asc' }, select: { email: true },
   })
 
-  const session = await stripe.checkout.sessions.create({
+  // `customer_creation` is not valid in subscription mode — Stripe always
+  // creates the customer; passing only customer_email is correct.
+  const params: Stripe.Checkout.SessionCreateParams = {
     mode:        'subscription',
     line_items:  [{ price: priceId, quantity: 1 }],
     ...(tenant.stripe_customer_id
       ? { customer: tenant.stripe_customer_id }
-      : { customer_email: admin?.email, customer_creation: 'always' }),
+      : { customer_email: admin?.email }),
     client_reference_id:   tenantId,
     metadata:              { tenant_id: tenantId, plan_id: planId },
     subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId } },
@@ -81,7 +109,11 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
     billing_address_collection: 'required',
     success_url: `${webUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:  `${webUrl()}/billing?checkout=cancelled`,
-  })
+  }
+  // Managed Payments: Stripe becomes merchant of record and settles tax.
+  if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
+
+  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return session.url
 }

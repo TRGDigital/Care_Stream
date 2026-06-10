@@ -5,7 +5,9 @@ import { SectionLabel } from './ui'
 
 export type Faq = { question: string; answer: string }
 
-export function HomeFaq({ faqs }: { faqs: Faq[] }) {
+// Headless accordion list + FAQ schema, for dropping into a page's own section
+// (keeps that page's heading). HomeFaq wraps this in the standard FAQ section.
+export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
   if (!faqs || faqs.length === 0) return null
 
   const jsonLd = {
@@ -19,6 +21,22 @@ export function HomeFaq({ faqs }: { faqs: Faq[] }) {
   }
 
   return (
+    <div className="space-y-3 text-left">
+      {faqs.map((f) => (
+        <Item key={f.question} q={f.question} a={f.answer} />
+      ))}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+    </div>
+  )
+}
+
+export function HomeFaq({ faqs }: { faqs: Faq[] }) {
+  if (!faqs || faqs.length === 0) return null
+
+  return (
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
         <div className="text-center">
@@ -27,16 +45,8 @@ export function HomeFaq({ faqs }: { faqs: Faq[] }) {
             Frequently asked questions.
           </h2>
         </div>
-        <div className="space-y-3 text-left">
-          {faqs.map((f) => (
-            <Item key={f.question} q={f.question} a={f.answer} />
-          ))}
-        </div>
+        <FaqAccordion faqs={faqs} />
       </div>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
     </section>
   )
 }

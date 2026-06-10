@@ -1,6 +1,7 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { CheckCircle2, FileText, GraduationCap, Search, ShieldCheck, Zap } from 'lucide-react'
 import { pageMetadata } from '@/lib/page-meta'
+import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/rag', {
@@ -101,24 +102,29 @@ export default function RagPage() {
                 </p>
               </div>
             </div>
-            <div className="space-y-4">
-              {[
-                { step: '01', label: 'Staff member asks a question',          detail: 'In the hub or by email, in any language.' },
-                { step: '02', label: 'System searches your policy library',   detail: 'Only your uploaded documents are searched. Nothing else.' },
-                { step: '03', label: 'Relevant sections are identified',       detail: 'The most applicable content is retrieved from your policies.' },
-                { step: '04', label: 'AI composes a response from the source', detail: 'The answer is drawn directly from the retrieved content.' },
-                { step: '05', label: 'Response delivered with citation',        detail: 'Staff receive the answer and a reference to the source policy.' },
-              ].map(({ step, label, detail }) => (
-                <div key={step} className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-card">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal text-xs font-extrabold text-white">
-                    {step}
-                  </span>
-                  <div>
-                    <p className="font-semibold text-neutral-dark">{label}</p>
-                    <p className="mt-0.5 text-sm text-neutral-mid">{detail}</p>
+            <div className="space-y-6">
+              <div className="flex justify-center lg:justify-start">
+                <HubChatMockup />
+              </div>
+              <div className="space-y-4">
+                {[
+                  { step: '01', label: 'Staff member asks a question',          detail: 'In the hub or by email, in any language.' },
+                  { step: '02', label: 'System searches your policy library',   detail: 'Only your uploaded documents are searched. Nothing else.' },
+                  { step: '03', label: 'Relevant sections are identified',       detail: 'The most applicable content is retrieved from your policies.' },
+                  { step: '04', label: 'AI composes a response from the source', detail: 'The answer is drawn directly from the retrieved content.' },
+                  { step: '05', label: 'Response delivered with citation',        detail: 'Staff receive the answer and a reference to the source policy.' },
+                ].map(({ step, label, detail }) => (
+                  <div key={step} className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-card">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal text-xs font-extrabold text-white">
+                      {step}
+                    </span>
+                    <div>
+                      <p className="font-semibold text-neutral-dark">{label}</p>
+                      <p className="mt-0.5 text-sm text-neutral-mid">{detail}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>

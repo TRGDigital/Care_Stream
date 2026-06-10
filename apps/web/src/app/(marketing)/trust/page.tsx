@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { pageMetadata } from '@/lib/page-meta'
+import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
+import { FaqAccordion } from '@/components/marketing/home-faq'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/trust', {
@@ -17,6 +19,27 @@ export default function TrustPage() {
         title="Powered by your policies. Nothing else."
         subtitle="Not the internet. Not another organisation's documents. Not guesswork. Here is exactly how CareStreamAI works, and why you can trust it with your compliance-critical information."
       />
+
+      {/* What staff see */}
+      <section className="bg-neutral-light py-20">
+        <div className="mx-auto max-w-content px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <SectionLabel>Answers You Can Trust</SectionLabel>
+              <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
+                Every answer cites the policy it came from.
+              </h2>
+              <p className="text-lg leading-relaxed text-neutral-mid">
+                Staff ask in the hub, in their own language, and get the answer with a reference to the
+                exact policy and section. Nothing is invented, and everything is traceable.
+              </p>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <HubChatMockup />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* How the AI works */}
       <section className="bg-white py-24">
@@ -85,21 +108,14 @@ export default function TrustPage() {
         <div className="mx-auto max-w-2xl px-6">
           <SectionLabel>Common Questions</SectionLabel>
           <h2 className="mb-12 text-3xl font-extrabold text-neutral-dark">Security questions, answered.</h2>
-          <div className="space-y-4">
-            {[
-              { q: 'Will the AI make things up?', a: 'No. CareStreamAI is explicitly designed to prevent this. If no relevant policy is found, it says so, it does not generate content from general knowledge.' },
-              { q: 'Can other organisations see our policies?', a: 'No. Your policy library is completely isolated. No other subscriber can access it in any form.' },
-              { q: 'Is our data used to train AI models?', a: 'No. Your data is never used to train AI models, by us or by the AI providers we use, and this is set out in our Data Processing Agreement.' },
-              { q: 'Where is our data stored and processed?', a: 'Your documents, records and logs are stored in the UK/EEA. AI processing is carried out by vetted providers under data processing agreements that prohibit using your data to train their models. We are happy to share the detail in our DPA.' },
-              { q: 'What if our policy has an error in it?', a: "CareStreamAI will accurately reflect what your policy says. This surfaces the need to keep policies accurate, which is the right incentive in a compliance setting." },
-              { q: 'What happens when we update a policy?', a: 'The old version is immediately retired from the retrieval system. All subsequent queries return answers based on the new version. The old version is retained in your audit archive.' },
-            ].map(({ q, a }) => (
-              <div key={q} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
-                <p className="mb-2 font-bold text-neutral-dark">{q}</p>
-                <p className="leading-relaxed text-neutral-mid">{a}</p>
-              </div>
-            ))}
-          </div>
+          <FaqAccordion faqs={[
+            { question: 'Will the AI make things up?', answer: 'No. CareStreamAI is explicitly designed to prevent this. If no relevant policy is found, it says so, it does not generate content from general knowledge.' },
+            { question: 'Can other organisations see our policies?', answer: 'No. Your policy library is completely isolated. No other subscriber can access it in any form.' },
+            { question: 'Is our data used to train AI models?', answer: 'No. Your data is never used to train AI models, by us or by the AI providers we use, and this is set out in our Data Processing Agreement.' },
+            { question: 'Where is our data stored and processed?', answer: 'Your documents, records and logs are stored in the UK/EEA. AI processing is carried out by vetted providers under data processing agreements that prohibit using your data to train their models. We are happy to share the detail in our DPA.' },
+            { question: 'What if our policy has an error in it?', answer: 'CareStreamAI will accurately reflect what your policy says. This surfaces the need to keep policies accurate, which is the right incentive in a compliance setting.' },
+            { question: 'What happens when we update a policy?', answer: 'The old version is immediately retired from the retrieval system. All subsequent queries return answers based on the new version. The old version is retained in your audit archive.' },
+          ]} />
         </div>
       </section>
 

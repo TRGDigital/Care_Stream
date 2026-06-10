@@ -27,7 +27,7 @@ import { hashPassword } from '../services/auth/password'
 import { sendStaffWelcomeEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
 import { cloneTenant } from '../services/tenant/clone'
-import { reconcileTenantBilling } from '../services/billing/stripe'
+import { reconcileTenantBilling, listInvoices, getSubscriptionInfo } from '../services/billing/stripe'
 import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
@@ -463,6 +463,47 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   }
 
   ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage })
+})
+
+// ─── GET /admin/tenants/:id/invoices ─────────────────────────────────────────
+// A tenant's Stripe invoices + revenue summary, for the platform clients view
+// (track monthly revenue per tenant). Reuses the billing service.
+adminRouter.get('/tenants/:id/invoices', async (req: Request, res: Response) => {
+  const tenant = await (prisma as any).tenant.findUnique({
+    where:  { id: req.params.id },
+    select: { stripe_customer_id: true, stripe_subscription_id: true, subscription_status: true, trial_ends_at: true, plan: { select: { price_monthly_pence: true, name: true } } },
+  })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  if (!tenant.stripe_customer_id) {
+    ok(res, {
+      invoices: [], next_billing_date: null, billing_interval: null,
+      total_paid_pence: 0, monthly_pence: tenant.plan?.price_monthly_pence ?? null,
+      currency: 'gbp', subscription_status: tenant.subscription_status, trial_ends_at: tenant.trial_ends_at, plan_name: tenant.plan?.name ?? null,
+    })
+    return
+  }
+
+  const [invoices, sub] = await Promise.all([
+    listInvoices(tenant.stripe_customer_id).catch(() => [] as any[]),
+    getSubscriptionInfo(tenant).catch(() => null),
+  ])
+  const paid             = (invoices as any[]).filter(i => i.status === 'paid')
+  const total_paid_pence = paid.reduce((s, i) => s + (i.amount_pence || 0), 0)
+  // "Monthly" figure = most recent paid invoice (real charge incl. VAT), else the plan price.
+  const monthly_pence    = paid[0]?.amount_pence ?? tenant.plan?.price_monthly_pence ?? null
+
+  ok(res, {
+    invoices,
+    next_billing_date:   sub?.next_billing_date ?? null,
+    billing_interval:    sub?.billing_interval ?? null,
+    total_paid_pence,
+    monthly_pence,
+    currency:            'gbp',
+    subscription_status: tenant.subscription_status,
+    trial_ends_at:       tenant.trial_ends_at,
+    plan_name:           tenant.plan?.name ?? null,
+  })
 })
 
 // ─── GET /admin/tenants/:id/staff ────────────────────────────────────────────

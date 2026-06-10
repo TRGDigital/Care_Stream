@@ -451,6 +451,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ tenants: TenantSummary[]; total: number }>('/tenants', token),
       get: (id: string) =>
         adminFetch<TenantDetail>(`/tenants/${id}`, token),
+      invoices: (id: string) => adminFetch<{
+        invoices: Array<{ id: string; date: string; description: string; amount_pence: number; status: string; pdf_url: string | null; hosted_url: string | null }>
+        next_billing_date: string | null
+        billing_interval: string | null
+        total_paid_pence: number
+        monthly_pence: number | null
+        currency: string
+        subscription_status: string
+        trial_ends_at: string | null
+        plan_name: string | null
+      }>(`/tenants/${id}/invoices`, token),
       aiUsage: (id: string) => adminFetch<{
         credits: { used: number; limit: number | null; remaining: number | null; resets_at: string; by_action: Record<string, number> }
         other_ai: Record<string, number>

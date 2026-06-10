@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
   ClipboardCheck, Copy, ExternalLink, KeyRound, Loader2, Mail, MoreVertical, Plus,
-  Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw,
+  Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw, Receipt,
 } from 'lucide-react'
 
 const fmtUsd = (n: number) => n <= 0 ? '$0.00' : n < 0.01 ? '<$0.01' : `$${n.toFixed(2)}`
+const gbp = (pence: number) => `£${((pence ?? 0) / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 function fmtBytes(n: number): string {
   if (!n) return '0 B'
   if (n < 1024) return `${n} B`
@@ -392,6 +393,17 @@ export default function ClientDetailPage() {
   }
   useEffect(() => { loadInsights() /* eslint-disable-next-line */ }, [token, id])
 
+  // Stripe invoices + per-tenant revenue
+  const [billing, setBilling] = useState<any | null>(null)
+  const [billingLoading, setBillingLoading] = useState(true)
+  useEffect(() => {
+    if (!token || !id) return
+    setBillingLoading(true)
+    createPlatformClient(token).tenants.invoices(id)
+      .then(setBilling).catch(() => setBilling(null))
+      .finally(() => setBillingLoading(false))
+  }, [token, id])
+
   // Sub-tenants state
   const [subTenants,     setSubTenants]     = useState<any[]>([])
   const [showAddSubSite, setShowAddSubSite] = useState(false)
@@ -718,6 +730,79 @@ export default function ClientDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Billing & revenue */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Receipt size={15} className="text-teal" />
+                <h2 className="text-sm font-semibold text-neutral-dark">Billing &amp; revenue</h2>
+                {billing?.subscription_status && (
+                  <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    billing.subscription_status === 'active'    ? 'bg-green-100 text-green-700'
+                    : billing.subscription_status === 'trialling' ? 'bg-blue-100 text-blue-700'
+                    : billing.subscription_status === 'past_due'  ? 'bg-amber-100 text-amber-700'
+                    : 'bg-gray-100 text-gray-500'
+                  }`}>{billing.subscription_status}</span>
+                )}
+              </div>
+
+              {billingLoading ? (
+                <p className="text-sm text-neutral-mid">Loading…</p>
+              ) : !billing || (!billing.invoices?.length && billing.monthly_pence == null) ? (
+                <p className="text-sm text-neutral-mid">No billing set up for this client yet.</p>
+              ) : (
+                <>
+                  <div className="mb-4 grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-xs text-neutral-mid">Monthly</p>
+                      <p className="text-lg font-bold text-neutral-dark">{billing.monthly_pence != null ? gbp(billing.monthly_pence) : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-mid">Total paid</p>
+                      <p className="text-lg font-bold text-teal">{gbp(billing.total_paid_pence)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-mid">Next charge</p>
+                      <p className="text-sm font-semibold text-neutral-dark">
+                        {billing.next_billing_date
+                          ? new Date(billing.next_billing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : billing.trial_ends_at
+                            ? `Trial ends ${new Date(billing.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                            : '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {billing.invoices?.length ? (
+                    <div className="divide-y divide-gray-100 border-t border-gray-100">
+                      {billing.invoices.map((inv: any) => (
+                        <div key={inv.id} className="flex items-center justify-between py-2.5">
+                          <div className="min-w-0">
+                            <p className="text-sm text-neutral-dark">{new Date(inv.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                            <p className="truncate text-xs text-neutral-mid">{inv.description}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-3">
+                            <span className="text-sm font-semibold text-neutral-dark">{gbp(inv.amount_pence)}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              inv.status === 'paid' ? 'bg-green-100 text-green-700'
+                              : inv.status === 'open' ? 'bg-amber-100 text-amber-700'
+                              : 'bg-gray-100 text-gray-500'
+                            }`}>{inv.status}</span>
+                            {inv.pdf_url && (
+                              <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-teal hover:underline">PDF</a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="border-t border-gray-100 pt-3 text-xs text-neutral-mid">
+                      No invoices yet{billing.trial_ends_at ? ' — first charge falls at trial end' : ''}.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Audit activity */}
             <div className="rounded-xl border border-gray-200 bg-white p-5">

@@ -1,5 +1,6 @@
-import { CheckCircle2, ArrowRight } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import type { LpContent } from '@/lib/lp/types'
+import { LpCta } from './lp-form-overlay'
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -8,13 +9,13 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 // Minimal header (logo + single CTA), rendered inside the gradient hero. No nav.
-export function LpHeader({ ctaLabel, anchor }: { ctaLabel: string; anchor: string }) {
+export function LpHeader({ ctaLabel }: { ctaLabel: string }) {
   return (
     <div className="mb-8 flex items-center justify-between">
-      <img src="/logo-white.png" alt="CareStreamAI" className="h-9 w-auto" />
-      <a href={anchor} className="hidden rounded-full border border-white/30 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-block">
+      <img src="/logo-white.png" alt="CareStreamAI" className="h-14 w-auto" />
+      <LpCta className="hidden rounded-full border border-white/30 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-block">
         {ctaLabel}
-      </a>
+      </LpCta>
     </div>
   )
 }
@@ -78,13 +79,10 @@ export function LpServices({ data }: { data: NonNullable<LpContent['services']> 
         {data.intro && <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">{data.intro}</p>}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {data.items.map(item => (
-            <a key={item.title} href="#form" className="card-lift group flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-card transition hover:border-teal/40">
-              <h3 className="mb-2 font-bold text-neutral-dark group-hover:text-teal">{item.title}</h3>
-              <p className="flex-1 text-sm leading-relaxed text-neutral-mid">{item.description}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-teal">
-                See it in a demo <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
-              </span>
-            </a>
+            <div key={item.title} className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+              <h3 className="mb-2 font-bold text-neutral-dark">{item.title}</h3>
+              <p className="text-sm leading-relaxed text-neutral-mid">{item.description}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -110,7 +108,7 @@ function BandDecorations() {
 }
 
 // Yellow "200+ policies" band, CTA to the form.
-export function LpPolicyBand({ anchor }: { anchor: string }) {
+export function LpPolicyBand() {
   return (
     <section className="bg-[#fce4a3]">
       <div className="mx-auto grid max-w-content items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-20">
@@ -136,9 +134,9 @@ export function LpPolicyBand({ anchor }: { anchor: string }) {
             {' '}current. Your team can find any of them in seconds.
           </h2>
           <div className="mt-8 flex flex-col items-start gap-3">
-            <a href={anchor} className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
+            <LpCta className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
               Book my demo <span aria-hidden="true">→</span>
-            </a>
+            </LpCta>
             <p className="text-sm text-neutral-dark/70">In any language, on any device, grounded in your own documents.</p>
           </div>
         </div>
@@ -148,7 +146,7 @@ export function LpPolicyBand({ anchor }: { anchor: string }) {
 }
 
 // Yellow "free for 14 days" band, CTA to the form.
-export function LpTrialBand({ anchor }: { anchor: string }) {
+export function LpTrialBand() {
   return (
     <section className="bg-[#fce4a3]">
       <div className="mx-auto grid max-w-content items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-20">
@@ -175,9 +173,9 @@ export function LpTrialBand({ anchor }: { anchor: string }) {
             for your whole team.
           </h2>
           <div className="mt-8 flex flex-col items-start gap-3">
-            <a href={anchor} className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
+            <LpCta className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
               Book my demo <span aria-hidden="true">→</span>
-            </a>
+            </LpCta>
             <p className="text-sm text-neutral-dark/70">No card needed. Full access for 14 days.</p>
           </div>
         </div>

@@ -32,7 +32,7 @@ function fireConversions(page: LpPage) {
   }
 }
 
-export function LpForm({ page }: { page: LpPage }) {
+export function LpForm({ page, withAnchor = false }: { page: LpPage; withAnchor?: boolean }) {
   const f = page.content.form
   const [values, setValues]       = useState<Record<string, string>>({})
   const [errors, setErrors]       = useState<Record<string, string>>({})
@@ -124,7 +124,7 @@ export function LpForm({ page }: { page: LpPage }) {
   const labelClass = 'mb-1.5 block text-sm font-semibold text-neutral-dark'
 
   return (
-    <div id="form" className="rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:p-8">
+    <div id={withAnchor ? 'form' : undefined} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:p-8">
       {f.headline && <h2 className="text-2xl font-extrabold leading-tight text-neutral-dark">{f.headline}</h2>}
       {f.subheadline && <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{f.subheadline}</p>}
       <form onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>

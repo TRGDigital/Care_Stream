@@ -5,6 +5,8 @@ import {
 } from 'lucide-react'
 import type { LpContent } from '@/lib/lp/types'
 import { FaqAccordion } from '@/components/marketing/home-faq'
+import { HubMultilingualMockup } from './hub-multilingual-mockup'
+import { LpCta } from './lp-form-overlay'
 
 const ICONS: Record<string, LucideIcon> = {
   Globe, FileText, Smartphone, ShieldCheck, Mic, GraduationCap, Check, CheckCircle2,
@@ -18,11 +20,18 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 export function LpProblem({ data }: { data: LpContent['problem'] }) {
   return (
     <section className="bg-white py-20">
-      <div className="mx-auto max-w-3xl px-6">
-        <Eyebrow>{data.eyebrow ?? 'The problem'}</Eyebrow>
-        <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">{data.headline}</h2>
-        <div className="space-y-5 text-lg leading-relaxed text-neutral-mid">
-          {data.body.map((p, i) => <p key={i}>{p}</p>)}
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div>
+            <Eyebrow>{data.eyebrow ?? 'The problem'}</Eyebrow>
+            <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">{data.headline}</h2>
+            <div className="space-y-5 text-lg leading-relaxed text-neutral-mid">
+              {data.body.map((p, i) => <p key={i}>{p}</p>)}
+            </div>
+          </div>
+          <div className="flex justify-center lg:justify-end">
+            <HubMultilingualMockup />
+          </div>
         </div>
       </div>
     </section>
@@ -121,7 +130,7 @@ export function LpFinalCta({ data }: { data: LpContent['finalCta'] }) {
       <div className="mx-auto max-w-content px-6 text-center">
         <h2 className="mb-4 text-3xl font-extrabold leading-tight text-white md:text-4xl">{data.headline}</h2>
         {data.subheadline && <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-white/85">{data.subheadline}</p>}
-        <a href={data.ctaAnchor ?? '#form'} className="btn-amber inline-block rounded-btn px-10 py-4 text-base">{data.ctaLabel}</a>
+        <LpCta className="btn-amber inline-block rounded-btn px-10 py-4 text-base">{data.ctaLabel}</LpCta>
       </div>
     </section>
   )

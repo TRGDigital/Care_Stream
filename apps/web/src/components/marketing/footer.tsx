@@ -139,7 +139,7 @@ export async function MarketingFooter() {
               hello@carestreamai.com
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/company/carestreamai/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:text-white transition-colors"

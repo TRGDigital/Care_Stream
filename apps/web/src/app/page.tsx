@@ -124,6 +124,10 @@ function Hero() {
               <SiteImage
                 src="/images/hero.jpg"
                 alt="Care worker reviewing policies on a tablet in a residential care home"
+                width={1600}
+                height={1179}
+                priority
+                sizes="(max-width: 1024px) 100vw, 45vw"
                 className="w-full object-cover"
               />
             </div>
@@ -306,6 +310,9 @@ function PolicyBurdenBand() {
               <SiteImage
                 src="/images/care-manager.jpg"
                 alt="A care manager using CareStream on a tablet in a care home"
+                width={1400}
+                height={1140}
+                sizes="320px"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -405,6 +412,9 @@ function ValueProposition() {
               <SiteImage
                 src="/images/care-provider-hero.jpg"
                 alt="Care worker using CareStreamAI on a tablet in a residential care home"
+                width={1600}
+                height={1438}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="w-full object-cover"
               />
             </div>
@@ -492,6 +502,9 @@ function GroupLevel() {
             <SiteImage
               src="/images/group-care.jpg"
               alt="Care team delivering group-level care across a residential setting"
+              width={1600}
+              height={1132}
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="w-full object-cover"
             />
           </div>
@@ -517,6 +530,9 @@ function FreeTrialBand() {
               <SiteImage
                 src="/images/free-trial.jpg"
                 alt="A care worker chatting warmly with a resident over a cup of tea"
+                width={1100}
+                height={751}
+                sizes="320px"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -610,6 +626,9 @@ function OperateAtScale() {
             <SiteImage
               src="/images/operate-at-scale.jpg"
               alt="Care manager reviewing policy compliance on screen"
+              width={1600}
+              height={1409}
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="w-full object-cover"
             />
           </div>
@@ -779,6 +798,9 @@ function CareSectorAiSection() {
                 <SiteImage
                   src="/images/care-sector-ai.jpg"
                   alt="A care professional reading policies on a tablet in a care home lounge"
+                  width={1400}
+                  height={1036}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="aspect-[4/3] w-full object-cover"
                 />
                 <div className="pointer-events-none absolute inset-5 rounded-xl border-2 border-cyan-300 shadow-[0_0_24px_4px_rgba(56,189,248,0.55)]" />

@@ -61,13 +61,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
-        {/* Google Tag Manager */}
-        <Script id="gtm" strategy="afterInteractive">
+        {/* Speed up the analytics handshake without blocking the main thread. */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        {/* Google Tag Manager — deferred to idle (lazyOnload) so it doesn't add
+            to mobile Total Blocking Time during load. */}
+        <Script id="gtm" strategy="lazyOnload">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-MZ4DJVLH');`}
         </Script>
-        {/* Google Analytics (gtag.js) */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-KGFBN80R3W" strategy="afterInteractive" />
-        <Script id="ga4" strategy="afterInteractive">
+        {/* Google Analytics (gtag.js) — also deferred to idle. */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-KGFBN80R3W" strategy="lazyOnload" />
+        <Script id="ga4" strategy="lazyOnload">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());

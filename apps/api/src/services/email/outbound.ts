@@ -608,13 +608,16 @@ export async function sendLeadNotificationEmail(opts: SendLeadNotificationOption
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
 
+  const isDemo = opts.type === 'demo'
   const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
-  const to =
-    process.env.SALES_NOTIFICATION_EMAIL ??
-    (process.env.PLATFORM_ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)[0] ??
-    'hello@carestreamai.com'
+  // Demo requests go to len@carestreamai.com (overridable); contact enquiries to sales.
+  const to = isDemo
+    ? (process.env.DEMO_NOTIFICATION_EMAIL ?? 'len@carestreamai.com')
+    : (process.env.SALES_NOTIFICATION_EMAIL ??
+       (process.env.PLATFORM_ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)[0] ??
+       'hello@carestreamai.com')
 
-  const heading = opts.type === 'demo' ? 'New demo request' : 'New contact enquiry'
+  const heading = isDemo ? 'New demo request' : 'New contact enquiry'
   const via = opts.source === 'agent' ? ' (submitted by an AI agent via WebMCP)' : ''
 
   const rows: Array<[string, string | null | undefined]> = [
@@ -645,11 +648,13 @@ export async function sendLeadNotificationEmail(opts: SendLeadNotificationOption
     ${emailFooter()}
   `)
 
+  const subjectTag = isDemo ? 'Demo Request' : 'Contact Enquiry'
+  const subjectWho = `${opts.name}${opts.organisation ? `, ${opts.organisation}` : ''}`
   await sgMail.send({
     to,
     from,
     replyTo: opts.email,
-    subject: `${heading}: ${opts.name}${opts.organisation ? ` — ${opts.organisation}` : ''}`,
+    subject: `${subjectTag}: ${subjectWho}`,
     html,
   })
 }

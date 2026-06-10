@@ -34,7 +34,7 @@ function VerifyEmailContent() {
         }
         if (body.data?.login_token) {
           const r = await signIn('credentials', { mode: 'magic', token: body.data.login_token, redirect: false })
-          if (r?.ok) { window.location.href = '/billing'; return }
+          if (r?.ok) { window.location.href = '/start'; return }
         }
         // Verified, but auto-login unavailable (e.g. link re-used) — fall back to manual.
         setStatus(body.data?.already_verified ? 'already' : 'success')

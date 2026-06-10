@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   if (token?.needsBilling) {
     const url = req.nextUrl.clone()
-    url.pathname = '/billing'
+    url.pathname = '/start'
     url.search = ''
     return NextResponse.redirect(url)
   }

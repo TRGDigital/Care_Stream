@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import { PageHero } from '@/components/marketing/ui'
-import { DemoForm } from './demo-form'
+import { DemoForm } from '@/components/marketing/demo-form'
 
 export const metadata = {
   title: 'Book a Demo',

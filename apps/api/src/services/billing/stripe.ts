@@ -111,8 +111,8 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
     payment_method_collection: 'always',
     allow_promotion_codes: true,
     billing_address_collection: 'required',
-    success_url: `${webUrl()}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${webUrl()}/billing?checkout=cancelled`,
+    success_url: `${webUrl()}/start?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/start?checkout=cancelled`,
   }
   // Managed Payments: Stripe becomes merchant of record and settles tax.
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }

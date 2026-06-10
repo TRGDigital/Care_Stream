@@ -1,16 +1,13 @@
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
-  title: 'Trust & Security',
+// Overridable from the platform console (Blog → Pages / site_pages).
+export const generateMetadata = () => pageMetadata('/trust', {
+  title:       'Trust & Security | CareStreamAI',
   description: 'CareStreamAI only ever answers from your uploaded documents. No internet searches, no hallucinations, no cross-contamination. Here is how we keep your compliance data safe.',
-  openGraph: {
-    title: 'Trust & Security | CareStreamAI',
-    description: 'Answers from your documents only. How CareStreamAI keeps your compliance data safe.',
-    url: 'https://carestreamai.com/trust',
-  },
-}
+})
 
 export default function TrustPage() {
   return (
@@ -41,7 +38,7 @@ export default function TrustPage() {
               {
                 audience: 'For boards and legal leads',
                 icon: '⚖️',
-                content: "CareStreamAI's architecture eliminates the primary governance risk of AI in professional settings: confident but incorrect answers. Every response is bounded by your approved documents and logged in an immutable audit trail. The system cannot contradict your policies. It cannot extend beyond them.",
+                content: "CareStreamAI's architecture eliminates the primary governance risk of AI in professional settings: confident but incorrect answers. Every response is bounded by your approved documents and logged in an append-only audit trail. The system cannot contradict your policies. It cannot extend beyond them.",
               },
             ].map(({ audience, icon, content }) => (
               <div key={audience} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
@@ -61,13 +58,13 @@ export default function TrustPage() {
           <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark">Your data, seven commitments.</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {[
-              { commitment: 'Complete data isolation', detail: 'Your policy library, query history, and staff data are in a private environment that no other subscriber can access, ever.' },
-              { commitment: 'Never used for AI training', detail: 'Your documents and query data are never used to improve AI models. This is a contractual commitment.' },
-              { commitment: 'Encrypted at rest and in transit', detail: 'All data encrypted using AES-256 at rest and TLS 1.3 in transit.' },
-              { commitment: 'UK data residency', detail: 'All data stored within UK/EEA regions. No transfer outside these regions.' },
+              { commitment: 'Complete data isolation', detail: 'Your policy library, query history, training records and staff data are logically isolated, so no other subscriber can access them in any form.' },
+              { commitment: 'Never used to train AI', detail: 'Your documents and data are never used to train AI models, by us or by the providers we use. This is set out in our Data Processing Agreement.' },
+              { commitment: 'Encrypted at rest and in transit', detail: 'All data is encrypted at rest (AES-256) and in transit (TLS), using industry-standard encryption.' },
+              { commitment: 'UK/EEA data storage', detail: 'Your documents, records and logs are stored in the UK/EEA. AI processing is carried out by vetted providers under agreements that forbid training on your data.' },
               { commitment: 'UK GDPR compliant', detail: 'CareStreamAI operates in full compliance with UK GDPR. A Data Processing Agreement is provided to all subscribers.' },
-              { commitment: 'Immutable audit log', detail: 'Every query and every system action is logged in an append-only format. Logs cannot be edited or deleted.' },
-              { commitment: '12-month retention default', detail: 'Query logs retained for 12 months by default, then auto-deleted. Retention period is configurable.' },
+              { commitment: 'Append-only audit log', detail: 'Every query and every system action is recorded in an append-only, tamper-evident audit log.' },
+              { commitment: 'Configurable data retention', detail: 'Query logs are retained in line with your configured retention policy, then securely deleted.' },
             ].map(({ commitment, detail }) => (
               <div key={commitment} className="card-lift flex gap-4 rounded-2xl bg-white p-6 shadow-card">
                 <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
@@ -92,7 +89,8 @@ export default function TrustPage() {
             {[
               { q: 'Will the AI make things up?', a: 'No. CareStreamAI is explicitly designed to prevent this. If no relevant policy is found, it says so, it does not generate content from general knowledge.' },
               { q: 'Can other organisations see our policies?', a: 'No. Your policy library is completely isolated. No other subscriber can access it in any form.' },
-              { q: 'Is our data used to train AI models?', a: 'No. Your data is never used for AI training. This is a contractual commitment.' },
+              { q: 'Is our data used to train AI models?', a: 'No. Your data is never used to train AI models, by us or by the AI providers we use, and this is set out in our Data Processing Agreement.' },
+              { q: 'Where is our data stored and processed?', a: 'Your documents, records and logs are stored in the UK/EEA. AI processing is carried out by vetted providers under data processing agreements that prohibit using your data to train their models. We are happy to share the detail in our DPA.' },
               { q: 'What if our policy has an error in it?', a: "CareStreamAI will accurately reflect what your policy says. This surfaces the need to keep policies accurate, which is the right incentive in a compliance setting." },
               { q: 'What happens when we update a policy?', a: 'The old version is immediately retired from the retrieval system. All subsequent queries return answers based on the new version. The old version is retained in your audit archive.' },
             ].map(({ q, a }) => (

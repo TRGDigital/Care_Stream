@@ -1,15 +1,12 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { CheckCircle2, FileText, GraduationCap, Search, ShieldCheck, Zap } from 'lucide-react'
+import { pageMetadata } from '@/lib/page-meta'
 
-export const metadata = {
+// Overridable from the platform console (Blog → Pages / site_pages).
+export const generateMetadata = () => pageMetadata('/rag', {
   title:       'How Our AI Works | CareStreamAI',
   description: 'CareStreamAI uses Retrieval Augmented Generation to ground every answer and training question in verified source material. Here is what that means and why it matters for care compliance.',
-  openGraph: {
-    title: 'How Our AI Works | CareStreamAI',
-    description: 'Retrieval Augmented Generation: every answer grounded in verified source material.',
-    url: 'https://carestreamai.com/rag',
-  },
-}
+})
 
 export default function RagPage() {
   return (
@@ -42,9 +39,9 @@ export default function RagPage() {
               and summarising verified source material.
             </p>
             <p>
-              CareStreamAI uses RAG as the foundation for both of its core functions: answering policy questions
-              from your uploaded documents, and generating training assessment questions from specialist care knowledge.
-              In both cases, the AI is explicitly bounded by the source material it is given. It cannot go beyond it.
+              CareStreamAI uses RAG across the platform: answering policy questions from your uploaded documents,
+              generating training from specialist care knowledge, and grounding the CQC prep and audit tools in real
+              guidance. In every case, the AI is explicitly bounded by the source material it is given. It cannot go beyond it.
             </p>
           </div>
 
@@ -89,7 +86,7 @@ export default function RagPage() {
               </h2>
               <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
                 <p>
-                  When a staff member asks a question via WhatsApp, email, or the chat portal, CareStreamAI
+                  When a staff member asks a question in the hub or by email, CareStreamAI
                   searches your organisation's uploaded policy library. Only your documents are searched.
                   Not the internet. Not another organisation's policies. Not a generic care knowledge base.
                 </p>
@@ -106,7 +103,7 @@ export default function RagPage() {
             </div>
             <div className="space-y-4">
               {[
-                { step: '01', label: 'Staff member asks a question',          detail: 'Via WhatsApp, email, or the chat portal, in any language.' },
+                { step: '01', label: 'Staff member asks a question',          detail: 'In the hub or by email, in any language.' },
                 { step: '02', label: 'System searches your policy library',   detail: 'Only your uploaded documents are searched. Nothing else.' },
                 { step: '03', label: 'Relevant sections are identified',       detail: 'The most applicable content is retrieved from your policies.' },
                 { step: '04', label: 'AI composes a response from the source', detail: 'The answer is drawn directly from the retrieved content.' },

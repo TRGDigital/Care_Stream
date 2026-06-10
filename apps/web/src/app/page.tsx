@@ -300,16 +300,19 @@ function PolicyBurdenBand() {
           <div className="relative h-72 w-72">
             {/* rotated square behind the circle */}
             <div className="absolute inset-0 rotate-45 rounded-[2.25rem] bg-[#f4bf43]" />
-            {/* circle with the headline stat */}
-            <div className="absolute inset-2 flex flex-col items-center justify-center rounded-full bg-white text-center ring-8 ring-[#fce4a3]">
-              <p className="text-7xl font-extrabold leading-none text-neutral-dark">200+</p>
-              <p className="mt-3 px-10 text-sm font-semibold leading-snug text-neutral-mid">policies and procedures, per care setting</p>
+            {/* circular photo */}
+            <div className="absolute inset-2 overflow-hidden rounded-full ring-8 ring-[#fce4a3]">
+              <SiteImage
+                src="/images/care-manager.jpg"
+                alt="A care manager using CareStream on a tablet in a care home"
+                className="h-full w-full object-cover"
+              />
             </div>
-            {/* AVG starburst badge */}
+            {/* 200+ starburst badge */}
             <div className="absolute -left-3 top-2 z-20 h-16 w-16">
               <span className="absolute inset-0 rounded-[22%] bg-white shadow-md" />
               <span className="absolute inset-0 rotate-45 rounded-[22%] bg-white shadow-md" />
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-neutral-dark">AVG</span>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-extrabold text-neutral-dark">200+</span>
             </div>
             {/* sparkles */}
             <svg className="absolute -right-1 top-7 h-7 w-7 text-neutral-dark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

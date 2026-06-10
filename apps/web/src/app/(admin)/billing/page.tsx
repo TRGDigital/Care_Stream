@@ -3,7 +3,7 @@
 // §10.6 — Billing: plan summary, invoice history, Stripe portal link.
 // Summary + invoices endpoints return stubs until Stripe integration is wired.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
@@ -65,22 +65,28 @@ export default function BillingPage() {
     if (p === 'success' || p === 'cancelled') {
       setBanner(p)
       window.history.replaceState({}, '', '/billing')
-      if (p === 'success') {
-        // Refresh the NextAuth session so the billing gate (needsBilling) clears once
-        // the Stripe webhook lands, then drop the user into the hub. Retry to beat the
-        // webhook race (sequential awaits — never double-spend the refresh token).
-        let tries = 0
-        const tick = async () => {
-          tries++
-          const s = await update().catch(() => null)
-          if (s && !(s.user as any)?.needsBilling) { window.location.href = '/chat'; return }
-          if (tries < 6) setTimeout(tick, 2000)
-        }
-        setTimeout(tick, 1500)
-      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // On a successful return, reconcile the subscription straight from Stripe (so we
+  // don't depend on the webhook), refresh the session to release the billing gate,
+  // then drop the user into the hub. Retry briefly in case Stripe is a beat behind.
+  const syncRanRef = useRef(false)
+  useEffect(() => {
+    if (syncRanRef.current || banner !== 'success' || !session?.accessToken) return
+    syncRanRef.current = true
+    const api = createApiClient(session.accessToken)
+    let tries = 0
+    const tick = async () => {
+      tries++
+      const r = await api.billing.sync().catch(() => null)
+      await update().catch(() => null)
+      if (r && !r.needs_billing) { window.location.href = '/chat'; return }
+      if (tries < 6) setTimeout(tick, 2000)
+    }
+    tick()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [banner, session?.accessToken])
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.

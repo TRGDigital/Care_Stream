@@ -27,6 +27,7 @@ import { hashPassword } from '../services/auth/password'
 import { sendStaffWelcomeEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
 import { cloneTenant } from '../services/tenant/clone'
+import { reconcileTenantBilling } from '../services/billing/stripe'
 import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
@@ -644,6 +645,23 @@ adminRouter.post('/tenants/:id/clone', async (req: Request, res: Response) => {
     ok(res, { ...result, temp_password: admin.password ? undefined : password })
   } catch (e: any) {
     err(res, 'CLONE_FAILED', e.message ?? 'Clone failed', 500)
+  }
+})
+
+// ─── POST /admin/tenants/:id/sync-billing ────────────────────────────────────
+// Ops: pull a tenant's subscription straight from Stripe and write it onto the
+// tenant (un-stick a tenant whose webhook never landed). Returns the new state.
+adminRouter.post('/tenants/:id/sync-billing', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  try {
+    const synced = await reconcileTenantBilling(tenantId)
+    const t = await (prisma as any).tenant.findUnique({
+      where: { id: tenantId },
+      select: { account_number: true, subscription_status: true, stripe_customer_id: true, stripe_subscription_id: true, trial_ends_at: true, plan_id: true },
+    })
+    ok(res, { synced, tenant: t })
+  } catch (e: any) {
+    err(res, 'SYNC_FAILED', e.message ?? 'Billing sync failed', 500)
   }
 })
 

@@ -202,6 +202,8 @@ export function createApiClient(token: string) {
       }> }>('/billing/plans', token),
       checkout: (plan_id: string) =>
         apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id }) }),
+      sync: () =>
+        apiFetch<{ needs_billing: boolean; subscription_status: string | null }>('/billing/sync', token, { method: 'POST' }),
     },
 
     settings: {

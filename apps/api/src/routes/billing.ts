@@ -2,7 +2,7 @@
 
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
-import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices } from '../services/billing/stripe'
+import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices, reconcileTenantBilling } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 
@@ -35,6 +35,24 @@ billingRouter.post('/checkout', requireAdmin, async (req: Request, res: Response
   } catch (e: any) {
     err(res, 'CHECKOUT_FAILED', e.message ?? 'Could not start checkout.', 500)
   }
+})
+
+// ─── POST /billing/sync — reconcile this tenant's subscription from Stripe ─────
+// Called by the web app when the user returns from Checkout, so the billing gate
+// releases immediately without waiting on the webhook. Returns the live needs_billing.
+billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await reconcileTenantBilling(tenantId)
+  } catch (e: any) {
+    console.error('[billing] sync error:', e?.message)
+  }
+  const t = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId },
+    select: { subscription_status: true, stripe_subscription_id: true },
+  })
+  const needsBilling = t ? (t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
+  ok(res, { needs_billing: needsBilling, subscription_status: t?.subscription_status ?? null })
 })
 
 // ─── GET /billing/summary ─────────────────────────────────────────────────────

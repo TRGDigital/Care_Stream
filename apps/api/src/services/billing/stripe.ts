@@ -122,6 +122,55 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
   return session.url
 }
 
+// ─── Reconcile (source of truth = Stripe) ─────────────────────────────────────
+// Pulls a tenant's current subscription straight from Stripe and writes it onto
+// the tenant. This is the primary way the billing gate releases after checkout —
+// we do NOT rely on the webhook arriving (it can be delayed or misconfigured).
+// Finds the customer by stored id, else by the admin's email, matching on the
+// subscription's tenant_id metadata. Returns true if a subscription was synced.
+export async function reconcileTenantBilling(tenantId: string): Promise<boolean> {
+  const stripe = getStripe()
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { id: true, stripe_customer_id: true } })
+  if (!tenant) return false
+
+  let customerId: string | null = tenant.stripe_customer_id ?? null
+  if (!customerId) {
+    const admin = await (prisma as any).user.findFirst({
+      where: { tenant_id: tenantId, role: 'admin', is_active: true },
+      orderBy: { created_at: 'asc' }, select: { email: true },
+    })
+    if (admin?.email) {
+      const customers = await stripe.customers.list({ email: admin.email, limit: 10 })
+      for (const c of customers.data) {
+        const subs = await stripe.subscriptions.list({ customer: c.id, status: 'all', limit: 10 })
+        if (subs.data.some(s => s.metadata?.tenant_id === tenantId)) { customerId = c.id; break }
+      }
+      if (!customerId && customers.data.length === 1) customerId = customers.data[0].id
+    }
+  }
+  if (!customerId) return false
+
+  const subs = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 10 })
+  const sub = subs.data.find(s => s.metadata?.tenant_id === tenantId) ?? subs.data[0]
+  if (!sub) {
+    await (prisma as any).tenant.update({ where: { id: tenantId }, data: { stripe_customer_id: customerId } })
+    return false
+  }
+
+  await (prisma as any).tenant.update({
+    where: { id: tenantId },
+    data: {
+      stripe_customer_id:     customerId,
+      stripe_subscription_id: sub.id,
+      subscription_status:    mapStatus(sub.status),
+      trial_ends_at:          sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+      ...(sub.metadata?.plan_id ? { plan_id: sub.metadata.plan_id } : {}),
+    },
+  })
+  console.log(`[stripe] reconciled tenant=${tenantId} customer=${customerId} sub=${sub.id} status=${sub.status}`)
+  return true
+}
+
 // ─── Customer Portal ──────────────────────────────────────────────────────────
 export async function createPortalSession(stripeCustomerId: string): Promise<string> {
   const session = await getStripe().billingPortal.sessions.create({
@@ -199,17 +248,23 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
       const tenantId = session.metadata?.tenant_id || session.client_reference_id || undefined
-      if (tenantId && session.customer) {
+      if (tenantId && session.subscription) {
+        // Use the subscription's real status (trialing → trialling) rather than
+        // assuming 'active' — a card-up-front trial completes as 'trialing'.
+        const sub = await getStripe().subscriptions.retrieve(String(session.subscription)).catch(() => null)
         await (prisma as any).tenant.update({
           where: { id: tenantId },
           data: {
-            stripe_customer_id:     String(session.customer),
-            stripe_subscription_id: session.subscription ? String(session.subscription) : undefined,
-            subscription_status:    'active',
+            ...(session.customer ? { stripe_customer_id: String(session.customer) } : {}),
+            stripe_subscription_id: String(session.subscription),
+            subscription_status:    sub ? mapStatus(sub.status) : 'trialling',
+            ...(sub?.trial_end ? { trial_ends_at: new Date(sub.trial_end * 1000) } : {}),
             ...(session.metadata?.plan_id ? { plan_id: session.metadata.plan_id } : {}),
           },
         })
-        console.log(`[stripe] checkout.session.completed: tenant=${tenantId}`)
+        console.log(`[stripe] checkout.session.completed: tenant=${tenantId} status=${sub?.status}`)
+      } else if (tenantId) {
+        await reconcileTenantBilling(tenantId).catch(() => {})
       }
       break
     }

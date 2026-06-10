@@ -8,6 +8,7 @@ import { AltMapProvider } from '@/components/alt-map-provider'
 import { getSiteAltMap } from '@/lib/image-alts'
 import { JsonLd } from '@/components/json-ld'
 import { organizationSchema, webSiteSchema, siteNavigationSchema } from '@/lib/schema'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
@@ -89,6 +90,7 @@ gtag('config', 'G-KGFBN80R3W');`}
         </AltMapProvider>
         <CookieConsent />
         <DemoModalRoot />
+        <SpeedInsights />
       </body>
     </html>
   )

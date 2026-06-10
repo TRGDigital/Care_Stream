@@ -2293,16 +2293,18 @@ function SystemReference() {
       {/* Billing & Subscriptions */}
       <RefSection icon={CreditCard} title="Billing & Subscriptions">
         <p className="leading-relaxed text-neutral-mid">
-          Stripe-hosted Checkout + Customer Portal. Card data never touches our servers (PCI SAQ A).
+          Stripe-hosted Checkout + Customer Portal, with <strong>Managed Payments</strong> (Stripe is the
+          merchant of record and settles tax). Card data never touches our servers (PCI SAQ A).
           Tenant admins subscribe from <code className="text-xs bg-gray-100 px-1 rounded">/billing</code>.
         </p>
         <div className="mt-2 space-y-1">
           <RefRow label="Subscribe flow"   value="POST /billing/checkout (admin only) → creates a hosted Stripe Checkout Session (mode: subscription) for the chosen plan and redirects. On first use it lazily creates the Stripe Product + recurring GBP Price for the plan and stores plans.stripe_price_id_monthly — no manual dashboard price setup needed." />
+          <RefRow label="Managed Payments" value="Checkout runs with managed_payments.enabled = true → Stripe acts as merchant of record and settles tax. Plan products carry the SaaS tax code txcd_10103100 (business use). Product/price creation AND the Checkout Session are pinned per-request to the preview API version 2026-02-25.preview (the Stripe client itself stays un-pinned). Kill switch: env STRIPE_MANAGED_PAYMENTS=false reverts to standard checkout. services/billing/stripe.ts → managedPaymentsRequestOptions()." />
           <RefRow label="Plan chooser"     value="GET /billing/plans lists active plans; the /billing page shows the chooser until subscription_status = 'active'." />
           <RefRow label="Manage / invoices" value="GET /billing/portal → Stripe Customer Portal (update card, cancel, invoices). GET /billing/summary + /billing/invoices pull live data from Stripe (next billing date, period, interval, invoice PDFs)." />
           <RefRow label="Webhook"          value="POST /billing/webhook — raw body, signature-verified (STRIPE_WEBHOOK_SECRET). Mounted before express.json + before rate-limiting so events are never dropped. services/billing/stripe.ts → handleWebhook." />
           <RefRow label="Events to register" value="checkout.session.completed · customer.subscription.created · customer.subscription.updated · customer.subscription.deleted · invoice.paid · invoice.payment_failed → keep tenants.subscription_status / plan_id / stripe_customer_id / stripe_subscription_id in sync." />
-          <RefRow label="Go-live checklist" value="(1) STRIPE_SECRET_KEY = sk_live_… (2) register the live webhook at /billing/webhook + set its STRIPE_WEBHOOK_SECRET (3) enable the Customer Portal in the Stripe Dashboard (4) complete the PCI SAQ A questionnaire (5) if you tested in TEST mode first, null out plans.stripe_price_id_monthly so LIVE Prices are created on first live checkout (a test price id won't work in live mode). SCA/3-D Secure is handled automatically by hosted Checkout." />
+          <RefRow label="Go-live checklist" value="(1) STRIPE_SECRET_KEY = sk_live_… (2) enrol the Stripe account in Managed Payments (preview / limited-access — until then the checkout call errors; set STRIPE_MANAGED_PAYMENTS=false to fall back) (3) register the live webhook at /billing/webhook + set its STRIPE_WEBHOOK_SECRET (4) enable the Customer Portal in the Stripe Dashboard (5) complete the PCI SAQ A questionnaire (6) if you tested in TEST mode first, null out plans.stripe_price_id_monthly so LIVE Prices are created on first live checkout (a test price id won't work in live mode). SCA/3-D Secure is handled automatically by hosted Checkout." />
           <RefRow label="Test before live" value="With test keys, do one subscription using card 4242 4242 4242 4242 (any future expiry / CVC) and confirm the webhook flips the tenant to subscription_status = 'active'." />
           <RefRow label="Plans" value="plans table — Starter £49/mo (price 4900p), Professional £129/mo (12900p). Prices in pence (GBP). stripe_price_id_monthly auto-filled on first checkout." />
         </div>
@@ -2320,7 +2322,8 @@ function SystemReference() {
           <RefRow label="Secrets handling"   value="No sk_/whsec_ keys in source; .env git-ignored (only .env.example tracked); keys read from env only. Logs contain customer/tenant IDs only — never card or PII." />
           <RefRow label="Transport + headers" value="HTTPS/TLS enforced by Vercel; helmet() sets HSTS + X-Frame-Options etc.; CORS is an allowlist (WEB_URL), not '*'; trust proxy = 1 for correct IP behind Vercel." />
           <RefRow label="SCA / 3-D Secure"   value="Required in UK/EEA — handled automatically by hosted Checkout. (If raw PaymentIntents are ever used directly, SCA must be handled manually — don't.)" />
-          <RefRow label="Optional hardening" value="Webhook event de-duplication by event.id (current handlers are already idempotent, so low priority); pin the Stripe API version in new Stripe(key, { apiVersion }) for stability." />
+          <RefRow label="API version" value="Client is left un-pinned (new Stripe(key)) so it uses the account default; Managed Payments product/price + Checkout calls override per-request to the preview version 2026-02-25.preview that feature requires. Don't pin a global apiVersion — it would override the per-request preview version." />
+          <RefRow label="Optional hardening" value="Webhook event de-duplication by event.id (current handlers are already idempotent, so low priority)." />
         </div>
       </RefSection>
 

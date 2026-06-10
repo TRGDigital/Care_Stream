@@ -26,7 +26,7 @@ export default function RagPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
             AI that is anchored to facts, not free to guess.
           </h2>
-          <div className="mb-14 max-w-3xl mx-auto space-y-5 text-lg leading-relaxed text-neutral-mid">
+          <div className="mb-14 max-w-3xl space-y-5 text-lg leading-relaxed text-neutral-mid">
             <p>
               The most widely reported problem with AI is hallucination, where a system produces a confident,
               plausible-sounding answer that is simply wrong. In most general-purpose AI tools, the model draws

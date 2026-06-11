@@ -19,6 +19,7 @@ export type LpContent = {
     heroImage?: { src: string; alt: string; width?: number; height?: number }
     trustRibbon?: { label?: string; stat?: string; logos?: { src: string; alt: string }[] }
     ticks?: string[]
+    bullets?: string[]
   }
   stats?: { items: { value: string; label: string }[] }
   whyUs?: {

@@ -28,7 +28,7 @@ export function LpStats({ data }: { data: NonNullable<LpContent['stats']> }) {
         <div className="grid gap-8 sm:grid-cols-3">
           {data.items.map(s => (
             <div key={s.label} className="text-center">
-              <p className="text-4xl font-extrabold text-white md:text-5xl">{s.value}</p>
+              <p className="font-display text-5xl text-white md:text-6xl">{s.value}</p>
               <p className="mx-auto mt-2 max-w-[14rem] text-sm leading-relaxed text-white/70">{s.label}</p>
             </div>
           ))}
@@ -40,7 +40,7 @@ export function LpStats({ data }: { data: NonNullable<LpContent['stats']> }) {
 
 export function LpWhyUs({ data }: { data: NonNullable<LpContent['whyUs']> }) {
   return (
-    <section className="bg-white py-20">
+    <section className="bg-cream py-20">
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <div>
@@ -73,13 +73,13 @@ export function LpWhyUs({ data }: { data: NonNullable<LpContent['whyUs']> }) {
 export function LpServices({ data }: { data: NonNullable<LpContent['services']> }) {
   if (!data.items?.length) return null
   return (
-    <section className="bg-neutral-light py-20">
+    <section className="bg-cream-warm py-20">
       <div className="mx-auto max-w-content px-6">
         <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">{data.headline}</h2>
         {data.intro && <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">{data.intro}</p>}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {data.items.map(item => (
-            <div key={item.title} className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+            <div key={item.title} className="flex flex-col rounded-2xl border border-cream-line bg-white p-6 shadow-card">
               <h3 className="mb-2 font-bold text-neutral-dark">{item.title}</h3>
               <p className="text-sm leading-relaxed text-neutral-mid">{item.description}</p>
             </div>

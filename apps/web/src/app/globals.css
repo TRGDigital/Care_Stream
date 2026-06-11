@@ -173,3 +173,16 @@ a, button { transition: all 0.18s ease; }
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* Editorial landing-page theme: serif (Fraunces) headlines over Inter body. */
+.lp-editorial h1,
+.lp-editorial h2,
+.lp-editorial h3 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.lp-editorial .lp-num {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+}

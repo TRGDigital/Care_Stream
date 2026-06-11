@@ -28,10 +28,18 @@ const config: Config = {
           warning: '#C96B00',
           error: '#C0392B',
         },
+        // Warm editorial neutrals (landing page theme)
+        cream: {
+          DEFAULT: '#faf7f3',
+          warm:    '#f3ede5',
+          line:    '#e7ddcf',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans:    ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+        serif:   ['var(--font-lora)', 'Georgia', 'serif'],
+        mono:    ['JetBrains Mono', 'monospace'],
       },
       spacing: {
         // Base unit 8px (§14.4)

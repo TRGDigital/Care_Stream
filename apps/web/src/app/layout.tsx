@@ -10,7 +10,10 @@ import { JsonLd } from '@/components/json-ld'
 import { organizationSchema, webSiteSchema, siteNavigationSchema } from '@/lib/schema'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
-const inter = Inter({ subsets: ['latin'], display: 'swap' })
+// `variable` exposes the self-hosted font as a CSS var so Tailwind's `font-sans`
+// (and the html-level default) resolve to it — removing any reliance on a
+// runtime Google Fonts load for the literal "Inter" family.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://carestreamai.com'),
@@ -59,7 +62,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const altMap = await getSiteAltMap()
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
         {/* Speed up the analytics handshake without blocking the main thread. */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />

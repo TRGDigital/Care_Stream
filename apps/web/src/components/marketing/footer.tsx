@@ -85,7 +85,7 @@ export async function MarketingFooter() {
         {/* Brand + tagline */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-10 w-auto" />
+            <SiteImage src="/logo-white.png" alt="CareStreamAI" width={4336} height={1301} sizes="140px" className="h-10 w-auto" />
             <p className="mt-1 text-sm italic text-gray-400">Policy access for every voice in your team.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

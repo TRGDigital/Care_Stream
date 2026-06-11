@@ -42,15 +42,26 @@ export function Typewriter({ words, rounds = 2 }: { words: string[]; rounds?: nu
     return () => clearTimeout(timeout)
   }, [text, phase, index, loops, done, rounds, words])
 
+  // Reserve the widest word's width so the rest of the sentence never re-wraps
+  // as the word animates (the main source of hero layout shift / CLS). The hidden
+  // sizer and the live text occupy the same grid cell, so the slot is always as
+  // wide as the longest word and the surrounding text stays put.
+  const longest = words.reduce((a, b) => (b.length > a.length ? b : a), words[0] ?? '')
+
   return (
-    <span>
-      {text}
-      {!done && (
-        <span
-          aria-hidden="true"
-          className="ml-1 inline-block h-[0.8em] w-[3px] translate-y-[0.04em] animate-pulse bg-current align-baseline"
-        />
-      )}
+    <span className="relative inline-grid align-baseline">
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1 whitespace-nowrap">
+        {longest}
+      </span>
+      <span className="col-start-1 row-start-1 justify-self-start whitespace-nowrap">
+        {text}
+        {!done && (
+          <span
+            aria-hidden="true"
+            className="ml-1 inline-block h-[0.8em] w-[3px] translate-y-[0.04em] animate-pulse bg-current align-baseline"
+          />
+        )}
+      </span>
     </span>
   )
 }

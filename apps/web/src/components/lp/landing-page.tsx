@@ -8,7 +8,7 @@ import { LpTracking } from './lp-tracking'
 import { LpFormOverlayProvider, LpCta } from './lp-form-overlay'
 import { LpHowItWorks, LpFooter } from './sections'
 import { LpStats } from './lp-extras'
-import { LpAbout, LpTestimonial, LpFaqEditorial, LpFinalCtaEditorial } from './editorial-sections'
+import { LpAbout, LpPlatform, LpStatementBand, LpTestimonial, LpFaqEditorial, LpFinalCtaEditorial } from './editorial-sections'
 
 export function LandingPage({ page }: { page: LpPage }) {
   const c = page.content
@@ -29,7 +29,7 @@ export function LandingPage({ page }: { page: LpPage }) {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <header className="border-b border-cream-line bg-cream">
           <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
-            <img src="/logo-color.png" alt="CareStreamAI" className="h-10 w-auto" />
+            <img src="/logo-color.png" alt="CareStreamAI" className="h-16 w-auto md:h-20" />
             <div className="hidden items-center gap-2 text-[13px] text-neutral-mid sm:flex">
               <span className="rounded bg-teal px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">GDPR</span>
               <span>Data hosted in the UK &amp; EEA</span>
@@ -85,12 +85,40 @@ export function LandingPage({ page }: { page: LpPage }) {
         {/* ── Flowing full-width sections ─────────────────────────────────── */}
         {c.stats && <LpStats data={c.stats} />}
         <LpHowItWorks data={c.howItWorks} />
-        <LpAbout
-          eyebrow={c.whyUs?.eyebrow ?? 'Inside the hub'}
-          headline={c.whyUs?.headline ?? c.features.headline}
-          intro={c.whyUs?.intro}
-          items={c.features.items}
+
+        <LpStatementBand
+          tone="cream"
+          label="Hundreds of policies to manage"
+          statement="The average care setting keeps *over 200 policies* current. Your team can find any of them in seconds."
+          sub="In any language, on any device, grounded in your own documents."
+          badge="200+"
+          image="/images/care-manager.jpg"
+          imageAlt="A care manager using CareStream on a tablet"
+          imageSide="left"
         />
+
+        {c.services && <LpPlatform data={c.services} />}
+
+        {c.whyUs && (
+          <LpAbout
+            eyebrow={c.whyUs.eyebrow ?? 'Why CareStreamAI'}
+            headline={c.whyUs.headline}
+            intro={c.whyUs.intro}
+            items={c.whyUs.points.map(p => ({ title: p.title, description: p.body }))}
+          />
+        )}
+
+        <LpStatementBand
+          tone="warm"
+          label="A risk-free way to get started"
+          statement="CareStream is *free for 14 days*, for your whole team."
+          sub="No card needed. Full access for fourteen days."
+          badge="FREE"
+          image="/images/free-trial.jpg"
+          imageAlt="A care worker chatting warmly with a resident over a cup of tea"
+          imageSide="right"
+        />
+
         {testimonial && <LpTestimonial quote={testimonial.quote} attribution={[testimonial.name, testimonial.role, testimonial.company].filter(Boolean).join(', ')} />}
         {c.faq && <LpFaqEditorial data={c.faq} />}
         <LpFinalCtaEditorial data={c.finalCta} />

@@ -7,7 +7,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-amber-brand">{children}</p>
 }
 
-// About / features — image (the hub mockup) beside a serif feature list.
+// Why CareStreamAI — the hub mockup beside a serif value-prop list.
 export function LpAbout({ eyebrow, headline, intro, items }: {
   eyebrow?: string
   headline: string
@@ -15,7 +15,7 @@ export function LpAbout({ eyebrow, headline, intro, items }: {
   items: { title: string; description: string }[]
 }) {
   return (
-    <section className="bg-cream-warm py-20">
+    <section className="bg-cream py-20">
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <div className="order-2 flex justify-center lg:order-1">
@@ -37,6 +37,66 @@ export function LpAbout({ eyebrow, headline, intro, items }: {
               ))}
             </ul>
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* eslint-disable @next/next/no-img-element */
+
+// "One platform" — the full module range as quiet editorial cards (no links).
+export function LpPlatform({ data }: { data: NonNullable<LpContent['services']> }) {
+  if (!data.items?.length) return null
+  return (
+    <section className="bg-cream-warm py-20">
+      <div className="mx-auto max-w-content px-6">
+        <Eyebrow>What's included</Eyebrow>
+        <h2 className="mb-4 text-3xl font-normal leading-tight text-neutral-dark md:text-4xl">{withAccents(data.headline)}</h2>
+        {data.intro && <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">{data.intro}</p>}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {data.items.map(it => (
+            <div key={it.title} className="rounded-lg border border-cream-line bg-white p-6 shadow-card">
+              <h3 className="font-display text-lg font-medium leading-snug text-neutral-dark">{it.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{it.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Editorial statement band (the home-page yellow blocks, reskinned): photo +
+// a serif statement with an accent badge and a CTA.
+export function LpStatementBand({ tone = 'warm', label, statement, sub, badge, image, imageAlt, imageSide = 'left' }: {
+  tone?: 'cream' | 'warm'
+  label?: string
+  statement: string
+  sub?: string
+  badge?: string
+  image: string
+  imageAlt: string
+  imageSide?: 'left' | 'right'
+}) {
+  return (
+    <section className={tone === 'warm' ? 'bg-cream-warm py-16 md:py-20' : 'bg-cream py-16 md:py-20'}>
+      <div className="mx-auto grid max-w-content items-center gap-12 px-6 md:grid-cols-2">
+        <div className={imageSide === 'right' ? 'md:order-2' : ''}>
+          <div className="relative mx-auto max-w-sm">
+            <div className="overflow-hidden rounded-lg border border-cream-line shadow-card">
+              <img src={image} alt={imageAlt} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+            </div>
+            {badge && (
+              <span className="absolute -left-3 -top-3 flex h-16 w-16 items-center justify-center rounded-full bg-teal font-display text-base font-semibold text-white shadow-teal-glow">{badge}</span>
+            )}
+          </div>
+        </div>
+        <div className={imageSide === 'right' ? 'md:order-1' : ''}>
+          {label && <Eyebrow>{label}</Eyebrow>}
+          <h2 className="text-3xl font-normal leading-tight text-neutral-dark md:text-4xl">{withAccents(statement)}</h2>
+          {sub && <p className="mt-4 text-lg leading-relaxed text-neutral-mid">{sub}</p>}
+          <LpCta className="mt-7 inline-block rounded-btn bg-teal px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">Book a demo</LpCta>
         </div>
       </div>
     </section>

@@ -33,7 +33,7 @@ export async function ensureTrainingTopicsSeeded(): Promise<void> {
     .map((t, i) => ({ ...t, sort_order: i + 1 }))
     .filter(t => !have.has(t.title))
     .map(t => ({
-      tenant_id: null, title: t.title, group_key: t.group_key,
+      tenant_id: null, title: t.title, group_key: t.group_key, care_setting: t.care_setting ?? null,
       default_frequency: t.default_frequency, requires_practical: !!t.requires_practical,
       image_key: t.group_key, aliases: t.aliases ?? [], sort_order: t.sort_order,
     }))

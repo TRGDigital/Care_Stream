@@ -5,7 +5,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { callClaude } from '../services/ai/claude'
 import { DEFAULT_POLICY_SECTIONS } from '../lib/policy-sections'
 import { PRIMARY_ROLES, SECONDARY_ROLES } from '../data/onboarding-roles'
-import { isCareSetting, settingFallbackOrder } from '../lib/care-setting'
+import { isCareSetting, settingFallbackOrder, settingLabelForPrompt } from '../lib/care-setting'
 
 // Platform-owner management of shared onboarding flow TEMPLATES (tenant_id = NULL).
 // Tenants adopt these (cloned into editable copies) on the tenant side.
@@ -289,15 +289,6 @@ AVOID: overly academic language, ambiguous answers, trick questions, unsafe advi
 
 Output ONLY valid JSON in exactly this shape — no markdown, no commentary:
 {"areas":[{"policy_section":"<exact area name from POLICY_AREAS>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
-
-function settingLabelForPrompt(s: string | null): string {
-  switch (s) {
-    case 'nursing_home': return 'Nursing Home'
-    case 'care_home':    return 'Care Home'
-    case 'home_care':    return 'Home Care Agency'
-    default:             return 'Care Home'
-  }
-}
 
 const PROMPT_VAR_LABELS: Record<string, string> = {
   JOB_ROLE:           'Role or specialism',

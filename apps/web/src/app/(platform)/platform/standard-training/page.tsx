@@ -24,6 +24,8 @@ export default function StandardTrainingPage() {
   const token = usePlatformAuth()
   const api = token ? createPlatformClient(token) : null
   const [groups, setGroups] = useState<Record<string, string>>({})
+  const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
+  const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base
   const [topics, setTopics] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export default function StandardTrainingPage() {
   function load() {
     if (!api) return
     setLoading(true)
-    api.standardTraining.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(() => {}).finally(() => setLoading(false))
+    api.standardTraining.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics); setSettings(d.settings ?? []) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -49,17 +51,56 @@ export default function StandardTrainingPage() {
     </PlatformShell>
   )
 
-  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g) })).filter(g => g.items.length)
+  // Universal (care_setting = null) topics form the cross-over base shown under every
+  // setting; a setting tab shows only that setting's own topics. Count both for tabs.
+  const settingCount = (key: string | null) => topics.filter(t => key ? t.care_setting === key : !t.care_setting).length
+  const visibleTopics = topics.filter(t => activeSetting ? t.care_setting === activeSetting : !t.care_setting)
+  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: visibleTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
+  const activeLabel = settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
 
   return (
     <PlatformShell>
       <h1 className="text-2xl font-bold text-neutral-dark">Standard Training</h1>
-      <p className="mb-6 mt-1 max-w-3xl text-sm text-neutral-mid">
+      <p className="mb-5 mt-1 max-w-3xl text-sm text-neutral-mid">
         Generate standard annual-training modules (grounded in the anonymised <strong>policy seeds</strong>). Review and <strong>publish</strong> them, and every tenant can assign them to staff at <strong>no AI-generation cost</strong>. Tenants who want policy-specific versions use &ldquo;Tailor to our policies&rdquo; (metered).
       </p>
 
+      {/* Setting tabs — "All settings" is the universal cross-over base; each setting
+          tab holds only that setting's specific modules. */}
+      {!loading && (
+        <div className="mb-5 flex flex-wrap gap-1.5 border-b border-gray-200 pb-3">
+          {[{ key: null as string | null, label: 'All settings' }, ...settings].map(tab => {
+            const active = activeSetting === tab.key
+            const count = settingCount(tab.key)
+            return (
+              <button
+                key={tab.key ?? 'all'}
+                onClick={() => setActiveSetting(tab.key)}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${active ? 'bg-teal text-white' : 'bg-gray-100 text-neutral-mid hover:bg-gray-200'}`}
+              >
+                {tab.label}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? 'bg-white/20' : 'bg-white text-neutral-mid'}`}>{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {!loading && (
+        <p className="mb-5 text-xs text-neutral-mid">
+          {activeSetting
+            ? <>Showing modules specific to <strong>{activeLabel}</strong>. The universal modules under <strong>All settings</strong> also apply here.</>
+            : <>Universal (cross-over) modules — these apply to <strong>every</strong> setting. Setting-specific modules live under each setting tab.</>}
+        </p>
+      )}
+
       {loading ? (
         <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100" />)}</div>
+      ) : byGroup.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+          <p className="text-sm font-medium text-neutral-dark">No {activeLabel}-specific modules yet</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-neutral-mid">The universal modules under <strong>All settings</strong> already apply to {activeLabel}. Setting-specific topics for {activeLabel} will appear here once added.</p>
+        </div>
       ) : (
         <div className="space-y-7">
           {byGroup.map(group => (

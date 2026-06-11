@@ -15,6 +15,7 @@ import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standa
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 
 const REVIEW_LINK_DAYS = 30
 
@@ -102,7 +103,11 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
         ...(reviewByModule.get(m.id) ?? { review_status: null, review_changes_open: 0 }),
       })
     }
-    ok(res, { groups: TOPIC_GROUP_LABELS, topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })) })
+    ok(res, {
+      groups: TOPIC_GROUP_LABELS,
+      settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })),
+      topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })),
+    })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }
@@ -139,6 +144,7 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
       policy_refs: draft.policy_refs,
       topic_id: topic.id,
       group_key: topic.group_key,
+      care_setting: topic.care_setting ?? null,  // inherit the topic's setting (NULL = universal)
     }
     const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', topic_id: topic.id } })
     const module = existing

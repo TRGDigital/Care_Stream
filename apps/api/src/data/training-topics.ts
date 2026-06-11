@@ -8,6 +8,9 @@ export type TrainingTopicSeed = {
   default_frequency: 'annual' | 'biennial' | 'triennial' | 'once' | 'adhoc'
   requires_practical?: boolean
   aliases?: string[]
+  /** /who-we-serve slug. Omit (undefined → NULL) for universal cross-over topics
+   *  shown under every setting; set it for setting-specific topics (e.g. dental). */
+  care_setting?: string
 }
 
 // requires_practical = the knowledge module is only part of the requirement;

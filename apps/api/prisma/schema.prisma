@@ -499,6 +499,7 @@ model TrainingTopic {
   tenant_id          String?                          // null = platform seed catalogue
   title              String
   group_key          String                           // core_mandatory|health_safety|care_clinical|conduct_governance|role_specific
+  care_setting       String?                          // /who-we-serve slug; NULL = universal (shown under every setting)
   default_frequency  String   @default("annual")      // annual|biennial|triennial|once|adhoc
   requires_practical Boolean  @default(false)
   image_key          String?

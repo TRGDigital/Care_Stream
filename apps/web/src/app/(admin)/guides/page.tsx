@@ -78,7 +78,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <strong>Add your staff.</strong> Go to <em>Staff</em> and add each team member with their name, email address, and role. This lets CareStream personalise responses and track training progress.
           </Step>
           <Step n={3}>
-            <strong>Configure your settings.</strong> Go to <em>Settings</em> and set up your dedicated email address (for email queries) and configure any access restrictions you need.
+            <strong>Configure your settings.</strong> Go to <em>Settings</em> and set up your dedicated email address (for email queries), configure any access restrictions you need, and set your <strong>AI sign-off message</strong> — the line every answer ends with (e.g. &ldquo;The Crossways Care Team&rdquo;). Until you set it, answers sign off as &ldquo;The CareStream Team&rdquo;.
           </Step>
           <Step n={4}>
             <strong>Tell your team.</strong> Share the portal link or email address with your staff so they can start asking questions.

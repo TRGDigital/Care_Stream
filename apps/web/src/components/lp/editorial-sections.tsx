@@ -1,7 +1,7 @@
 import type { LpContent } from '@/lib/lp/types'
 import { withAccents } from './accents'
 import { LpCta } from './lp-form-overlay'
-import { HubMultilingualMockup } from './hub-multilingual-mockup'
+import { HubDashboardMockup } from './hub-dashboard-mockup'
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-amber-brand">{children}</p>
@@ -19,7 +19,7 @@ export function LpAbout({ eyebrow, headline, intro, items }: {
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <div className="order-2 flex justify-center lg:order-1">
-            <HubMultilingualMockup />
+            <HubDashboardMockup />
           </div>
           <div className="order-1 lg:order-2">
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}

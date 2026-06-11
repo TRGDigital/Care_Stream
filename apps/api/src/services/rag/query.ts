@@ -1170,7 +1170,7 @@ async function getTenantBrandingSignoff(tenantId: string): Promise<string> {
     where:  { id: tenantId },
     select: { branding_signoff: true },
   })
-  return tenant?.branding_signoff ?? 'The CareStreamAI Team'
+  return tenant?.branding_signoff ?? 'The CareStream Team'
 }
 
 interface SaveQueryParams {

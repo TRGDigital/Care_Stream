@@ -810,7 +810,7 @@ adminRouter.post('/tenants/:id/sub-tenants', async (req: Request, res: Response)
       email_domain:        slug,
       parent_tenant_id:    req.params.id,
       subscription_status: 'active',
-      branding_signoff:    `The ${name.trim()} Team`,
+      branding_signoff:    'The CareStream Team',
     },
   })
 

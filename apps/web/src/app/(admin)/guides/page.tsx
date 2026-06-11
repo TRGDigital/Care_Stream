@@ -446,6 +446,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Staff visit your portal URL (shown in Settings under <em>Portal access</em>). They enter their name and ask their question. No login is required unless you have enabled access restrictions.
           </p>
         </SectionBlock>
+        <SectionBlock title="Personalise the AI sign-off">
+          <p className="text-sm text-neutral-mid">
+            Every answer CareStream gives your staff ends with a short sign-off line. To set your own, go to <strong>Settings → AI sign-off message</strong>, type the line you&apos;d like (for example <em>&ldquo;The Crossways Care Team&rdquo;</em> or <em>&ldquo;Kind regards, the Management Team&rdquo;</em>) and click <strong>Save</strong>. It applies to the next answer. Until you set your own, answers sign off as <em>&ldquo;The CareStream Team&rdquo;</em>.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Replying in the staff member's language">
           <p className="text-sm text-neutral-mid">
             The <strong>“Reply in”</strong> picker under the message box now <strong>defaults to each staff member&apos;s own first language</strong> (the one set on their profile), so a Polish-speaking carer gets Polish answers straight away. They can still change it on the device, or leave it on a language of their choice; the picker lists all your available languages, including any you&apos;ve added in <strong>Settings → Languages</strong>.

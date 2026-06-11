@@ -80,7 +80,7 @@ sitesRouter.post('/', async (req: Request, res: Response) => {
       email_domain:        slug,
       parent_tenant_id:    groupRootId,
       subscription_status: 'active',
-      branding_signoff:    `The ${name.trim()} Team`,
+      branding_signoff:    'The CareStream Team',
     },
   })
 

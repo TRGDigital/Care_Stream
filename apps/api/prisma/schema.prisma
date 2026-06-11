@@ -168,7 +168,7 @@ model Tenant {
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   trial_ends_at       DateTime?                                // when the Stripe trial ends (card-up-front trial)
   plan_id             String?
-  branding_signoff    String             @default("The CareStreamAI Team") // §4.3.4
+  branding_signoff    String             @default("The CareStream Team") // §4.3.4
   facility_type       String             @default("care home")              // e.g. nursing home, residential home
   response_style      String             @default("standard")               // "standard" | "concise"
   email_allowlist        String[]           @default([])                       // approved inbound sender addresses

@@ -92,7 +92,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         email_domain: slug,
         subscription_status: 'trialling',
         plan_id: plan_id ?? null,
-        branding_signoff: `The ${org_name} Team`,
+        branding_signoff: 'The CareStream Team',
       },
     })
 

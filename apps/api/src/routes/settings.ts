@@ -66,7 +66,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -79,6 +79,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     phone_allowlist:    (tenant.phone_allowlist as string[]) ?? [],
     facility_type:      tenant.facility_type as string,
     response_style:     (tenant.response_style as string) ?? 'standard',
+    branding_signoff:   (tenant.branding_signoff as string) ?? '',
     logo_url:           tenant.logo_url as string | null,
     email_preferences:  mergePrefs(tenant.email_preferences),
     staff_roles:        effectiveStaffRoles(tenant.staff_roles as string[]),
@@ -100,7 +101,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language, room_count } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language, room_count } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -157,6 +158,17 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
       return err(res, 'INVALID_INPUT', 'response_style must be "standard" or "concise"', 400)
     }
     updateData.response_style = response_style
+  }
+
+  // Sign-off line the AI uses to close its responses, e.g. "The Crossways Care Team".
+  if (branding_signoff !== undefined) {
+    if (typeof branding_signoff !== 'string' || !branding_signoff.trim()) {
+      return err(res, 'INVALID_INPUT', 'branding_signoff must be a non-empty string', 400)
+    }
+    if (branding_signoff.trim().length > 120) {
+      return err(res, 'INVALID_INPUT', 'branding_signoff must be 120 characters or fewer', 400)
+    }
+    updateData.branding_signoff = branding_signoff.trim()
   }
 
   if (staff_roles !== undefined) {

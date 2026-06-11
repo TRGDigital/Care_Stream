@@ -124,6 +124,9 @@ export default function SettingsPage() {
   const [switchingTo,    setSwitchingTo]    = useState<string | null>(null)
   const [responseStyle,  setResponseStyle]  = useState<'standard' | 'concise'>('standard')
   const [savingStyle,    setSavingStyle]    = useState(false)
+  const [signoff,        setSignoff]        = useState('')
+  const [savingSignoff,  setSavingSignoff]  = useState(false)
+  const [signoffSaved,   setSignoffSaved]   = useState(false)
   const [staffDir,       setStaffDir]       = useState<Array<{ email: string; name: string; job_role: string | null; phone_number?: string | null }>>([])
 
   // Hydrate instantly from the last-loaded snapshot (survives full reloads).
@@ -145,6 +148,7 @@ export default function SettingsPage() {
       setDefaultLangCodes(data.default_language_codes ?? [])
       setPolicySections(data.policy_sections ?? [])
       setResponseStyle(data.response_style ?? 'standard')
+      setSignoff(data.branding_signoff ?? '')
     }
     setSites(cached.sites ?? [])
     setTrainingSettings(cached.training?.settings ?? {})
@@ -186,6 +190,7 @@ export default function SettingsPage() {
         setDefaultLangCodes((data as any).default_language_codes ?? [])
         setPolicySections((data as any).policy_sections ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
+        setSignoff((data as any).branding_signoff ?? '')
         setSites(sitesData.sites)
         setTrainingSettings(trainingData.settings ?? {})
         persistentCache.set(`admin-settings-${userId}`, { data, sites: sitesData.sites, training: trainingData })
@@ -217,6 +222,17 @@ export default function SettingsPage() {
     try { await createApiClient(session.accessToken).settings.update({ response_style: value }) }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingStyle(false) }
+  }
+
+  async function saveSignoff() {
+    if (!session?.accessToken || !signoff.trim()) return
+    setSavingSignoff(true)
+    try {
+      await createApiClient(session.accessToken).settings.update({ branding_signoff: signoff.trim() })
+      setSignoffSaved(true); setTimeout(() => setSignoffSaved(false), 2500)
+    }
+    catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingSignoff(false) }
   }
 
   async function saveStaffRoles(updated: string[]) {
@@ -560,6 +576,28 @@ export default function SettingsPage() {
             })}
           </div>
           {savingStyle && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── AI sign-off message ───────────────────────────────────────────── */}
+        <SettingSection icon={Mail} title="AI sign-off message" description="The line CareStream signs off with at the end of its answers to your staff.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            Every AI answer ends with this line. For example <strong>The Crossways Care Team</strong>, <strong>Kind regards, the Management Team</strong>, or simply your organisation name.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={signoff}
+              onChange={e => setSignoff(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveSignoff()}
+              placeholder="e.g. The Crossways Care Team"
+              maxLength={120}
+              className={INPUT}
+            />
+            <Button onClick={saveSignoff} disabled={savingSignoff || !signoff.trim()} size="md">
+              {savingSignoff ? 'Saving…' : 'Save'}
+            </Button>
+            {signoffSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
+          </div>
         </SettingSection>
 
         {/* ── Organisation logo ─────────────────────────────────────────────── */}

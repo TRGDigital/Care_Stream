@@ -30,8 +30,10 @@ publicBlogRouter.get('/posts', async (_req: Request, res: Response) => {
       author: { select: { name: true, photo_url: true } },
     },
   })
-  // Public, rarely-changing content — let Vercel's edge cache it (stale-while-revalidate).
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  // Edge-cache briefly for perf, but keep the stale window short so edits in the
+  // admin appear on /blog within ~1-2 min (was s-maxage=300 + SWR=86400, which
+  // could serve a stale listing for up to 24h on a low-traffic blog).
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
   ok(res, { posts })
 })
 
@@ -42,7 +44,7 @@ publicBlogRouter.get('/posts/:slug', async (req: Request, res: Response) => {
     include: { author: { select: { name: true, title: true, photo_url: true, bio: true } } },
   })
   if (!post) { err(res, 'NOT_FOUND', 'Post not found.', 404); return }
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
   ok(res, { post })
 })
 

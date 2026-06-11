@@ -1,0 +1,96 @@
+import type { LpContent } from '@/lib/lp/types'
+import { withAccents } from './accents'
+import { LpCta } from './lp-form-overlay'
+import { HubMultilingualMockup } from './hub-multilingual-mockup'
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-amber-brand">{children}</p>
+}
+
+// About / features — image (the hub mockup) beside a serif feature list.
+export function LpAbout({ eyebrow, headline, intro, items }: {
+  eyebrow?: string
+  headline: string
+  intro?: string
+  items: { title: string; description: string }[]
+}) {
+  return (
+    <section className="bg-cream-warm py-20">
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+          <div className="order-2 flex justify-center lg:order-1">
+            <HubMultilingualMockup />
+          </div>
+          <div className="order-1 lg:order-2">
+            {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+            <h2 className="mb-4 text-3xl font-normal leading-tight text-neutral-dark md:text-4xl">{withAccents(headline)}</h2>
+            {intro && <p className="mb-8 text-lg leading-relaxed text-neutral-mid">{intro}</p>}
+            <ul>
+              {items.map(it => (
+                <li key={it.title} className="grid grid-cols-[40px_1fr] items-start gap-4 border-b border-cream-line py-5 last:border-b-0">
+                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full border border-cream-line bg-white font-display text-lg text-teal">✦</span>
+                  <div>
+                    <p className="font-display text-lg font-medium text-neutral-dark">{it.title}</p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-neutral-mid">{it.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Dark testimonial with an oversized quote mark.
+export function LpTestimonial({ quote, attribution }: { quote: string; attribution: string }) {
+  return (
+    <section className="relative overflow-hidden bg-neutral-dark py-20 text-cream">
+      <span aria-hidden className="pointer-events-none absolute -top-16 left-[5%] select-none font-display text-[300px] italic leading-none text-teal/20">&ldquo;</span>
+      <div className="relative mx-auto max-w-3xl px-6">
+        <blockquote className="font-display text-2xl italic leading-relaxed md:text-[32px]">{quote}</blockquote>
+        <cite className="mt-8 block text-sm not-italic tracking-wide text-amber-brand">— {attribution}</cite>
+      </div>
+    </section>
+  )
+}
+
+// FAQ — native <details> accordion (styling in globals.css under .lp-editorial .lp-faq).
+export function LpFaqEditorial({ data }: { data: NonNullable<LpContent['faq']> }) {
+  if (!data.items?.length) return null
+  return (
+    <section className="bg-cream py-20">
+      <div className="mx-auto max-w-3xl px-6">
+        <Eyebrow>Common questions</Eyebrow>
+        <h2 className="mb-10 text-3xl font-normal leading-tight text-neutral-dark md:text-4xl">{withAccents(data.headline ?? 'The things *most teams* want to know.')}</h2>
+        <div>
+          {data.items.map((f, i) => (
+            <details key={i} className="lp-faq border-b border-cream-line py-5" {...(i === 0 ? { open: true } : {})}>
+              <summary className="flex cursor-pointer items-center justify-between gap-4 font-display text-lg font-medium text-neutral-dark">
+                {f.question}
+              </summary>
+              <div className="mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-mid">{f.answer}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Final CTA — accent band with a primary (book a demo) + ghost (email) action.
+export function LpFinalCtaEditorial({ data }: { data: LpContent['finalCta'] }) {
+  return (
+    <section className="bg-teal py-20 text-center text-cream">
+      <div className="mx-auto max-w-content px-6">
+        <h2 className="mx-auto max-w-2xl text-3xl font-normal leading-tight text-cream md:text-4xl">{data.headline}</h2>
+        {data.subheadline && <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-cream/85">{data.subheadline}</p>}
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <LpCta className="rounded-btn bg-cream px-8 py-4 text-sm font-semibold text-teal transition-colors hover:bg-white">{data.ctaLabel}</LpCta>
+          <a href="mailto:hello@carestreamai.com" className="rounded-btn border border-cream/40 px-8 py-4 text-sm font-semibold text-cream transition-colors hover:bg-white/10">Email the team</a>
+        </div>
+      </div>
+    </section>
+  )
+}

@@ -186,3 +186,16 @@ a, button { transition: all 0.18s ease; }
   font-family: var(--font-fraunces), Georgia, serif;
   font-style: italic;
 }
+/* Native <details> FAQ rows */
+.lp-editorial .lp-faq summary { list-style: none; }
+.lp-editorial .lp-faq summary::-webkit-details-marker { display: none; }
+.lp-editorial .lp-faq summary::after {
+  content: "+";
+  margin-left: 16px;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  color: #9B52B5;
+  transition: transform 0.2s;
+}
+.lp-editorial .lp-faq[open] summary::after { content: "\2212"; }

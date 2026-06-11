@@ -29,7 +29,7 @@ export function LandingPage({ page }: { page: LpPage }) {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <header className="border-b border-cream-line bg-cream">
           <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
-            <img src="/logo-color.png" alt="CareStreamAI" className="h-16 w-auto md:h-20" />
+            <img src="/logo-color.svg" alt="CareStreamAI" className="h-16 w-auto md:h-20" />
             <div className="hidden items-center gap-2 text-[13px] text-neutral-mid sm:flex">
               <span className="rounded bg-teal px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">GDPR</span>
               <span>Data hosted in the UK &amp; EEA</span>

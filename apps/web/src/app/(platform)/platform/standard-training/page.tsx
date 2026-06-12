@@ -20,6 +20,34 @@ function fmtDate(d?: string | null): string {
   try { return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) } catch { return '—' }
 }
 
+// Standard modules are re-approved on a 6-monthly cycle. A module's renewal falls
+// due 6 months after its last approval (approved_at).
+const RENEWAL_MONTHS = 6
+const RENEWAL_HORIZON_DAYS = 60 // count renewals coming up within this window (or overdue)
+function renewalDueMs(approvedAt: string): number {
+  const d = new Date(approvedAt)
+  d.setMonth(d.getMonth() + RENEWAL_MONTHS)
+  return d.getTime()
+}
+
+function StatBox({ label, value, sub, tone, Icon }: {
+  label: string; value: number; sub?: string
+  tone: 'green' | 'amber' | 'red' | 'gray'; Icon: React.ElementType
+}) {
+  const accent = { green: 'text-green-600', amber: 'text-amber-600', red: 'text-red-600', gray: 'text-neutral-dark' }[tone]
+  const ring   = { green: 'border-green-200', amber: 'border-amber-200', red: 'border-red-200', gray: 'border-gray-200' }[tone]
+  return (
+    <div className={`rounded-xl border ${ring} bg-white p-4`}>
+      <div className="mb-1.5 flex items-center gap-1.5 text-neutral-mid">
+        <Icon size={13} className={accent} />
+        <p className="text-xs font-medium leading-tight">{label}</p>
+      </div>
+      <p className={`text-2xl font-bold ${accent}`}>{value}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-neutral-mid">{sub}</p>}
+    </div>
+  )
+}
+
 export default function StandardTrainingPage() {
   const token = usePlatformAuth()
   const api = token ? createPlatformClient(token) : null
@@ -79,6 +107,16 @@ export default function StandardTrainingPage() {
   // Universal (care_setting = null) topics form the cross-over base shown under every
   // setting; a setting tab shows only that setting's own topics. Count both for tabs.
   const settingCount = (key: string | null) => topics.filter(t => key ? t.care_setting === key : !t.care_setting).length
+
+  // Library-wide governance summary (across every setting).
+  const allModules = topics.map(t => t.module).filter(Boolean) as any[]
+  const approvedCount = allModules.filter(m => m.approved).length
+  const outstandingCount = allModules.filter(m => !m.approved).length
+  const notGeneratedCount = topics.filter(t => !t.module).length
+  const renewalHorizonMs = Date.now() + RENEWAL_HORIZON_DAYS * 86_400_000
+  const renewalModules = allModules.filter(m => m.approved && m.approved_at && renewalDueMs(m.approved_at) <= renewalHorizonMs)
+  const overdueCount = renewalModules.filter(m => renewalDueMs(m.approved_at) <= Date.now()).length
+
   const visibleTopics = topics.filter(t => activeSetting ? t.care_setting === activeSetting : !t.care_setting)
   const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: visibleTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
   const activeLabel = settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
@@ -89,6 +127,22 @@ export default function StandardTrainingPage() {
       <p className="mb-5 mt-1 max-w-3xl text-sm text-neutral-mid">
         Generate standard annual-training modules (grounded in the anonymised <strong>policy seeds</strong>). Review and <strong>publish</strong> them, and every tenant can assign them to staff at <strong>no AI-generation cost</strong>. Tenants who want policy-specific versions use &ldquo;Tailor to our policies&rdquo; (metered).
       </p>
+
+      {/* Library governance summary — across every setting. */}
+      {!loading && (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatBox label="Signed off & approved" value={approvedCount} tone="green" Icon={ShieldCheck} sub="published to all tenants" />
+          <StatBox label="Outstanding" value={outstandingCount} tone="amber" Icon={FileText} sub="generated, awaiting sign-off" />
+          <StatBox
+            label="Due for 6-monthly renewal"
+            value={renewalModules.length}
+            tone={overdueCount ? 'red' : renewalModules.length ? 'amber' : 'gray'}
+            Icon={RefreshCw}
+            sub={overdueCount ? `${overdueCount} overdue · within 60 days` : 'within the next 60 days'}
+          />
+          <StatBox label="Not yet generated" value={notGeneratedCount} tone="gray" Icon={Circle} sub="topics with no module" />
+        </div>
+      )}
 
       {/* Setting tabs — "All settings" is the universal cross-over base; each setting
           tab holds only that setting's specific modules. */}

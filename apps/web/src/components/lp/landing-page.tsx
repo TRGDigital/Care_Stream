@@ -6,7 +6,8 @@ import { withAccents } from './accents'
 import { LpForm } from './lp-form'
 import { LpTracking } from './lp-tracking'
 import { LpFormOverlayProvider, LpCta } from './lp-form-overlay'
-import { LpHowItWorks, LpFooter } from './sections'
+import { LpHowItWorks } from './sections'
+import { LpFooter } from './lp-legal'
 import { LpStats } from './lp-extras'
 import { LpAbout, LpPlatform, LpStatementBand, LpTestimonial, LpFaqEditorial, LpFinalCtaEditorial } from './editorial-sections'
 
@@ -123,7 +124,7 @@ export function LandingPage({ page }: { page: LpPage }) {
         {c.faq && <LpFaqEditorial data={c.faq} />}
         <LpFinalCtaEditorial data={c.finalCta} />
 
-        <LpFooter privacyLinkUrl={c.form.privacyLinkUrl} />
+        <LpFooter />
       </div>
     </LpFormOverlayProvider>
   )

@@ -322,6 +322,17 @@ export function createApiClient(token: string) {
       enroll: (data: { user_ids: string[]; module_ids: string[]; due_date?: string }) =>
         apiFetch<{ enrolled: number }>('/training/enroll', token, { method: 'POST', body: JSON.stringify(data) }),
 
+      // ── Training licences (training-only tier) ──
+      licences: () => apiFetch<{
+        licences: Array<{ id: string; module_slug: string; module_name: string; price_pence: number; currency: string; purchased_at: string; renewal_due_at: string; status: string; allocated_to: { id: string; name: string; email: string } | null }>
+        staff: Array<{ id: string; name: string; email: string }>
+        summary: { total: number; allocated: number; available: number; spent_pence: number }
+      }>('/training/licences', token),
+      allocateLicence: (id: string, userId: string) =>
+        apiFetch<{ allocated: boolean }>(`/training/licences/${id}/allocate`, token, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
+      deallocateLicence: (id: string) =>
+        apiFetch<{ deallocated: boolean }>(`/training/licences/${id}/deallocate`, token, { method: 'POST' }),
+
       // ── Annual training (AI catalogue) ──
       catalogue: () => apiFetch<{
         groups: Record<string, string>

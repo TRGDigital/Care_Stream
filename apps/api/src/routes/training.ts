@@ -408,6 +408,78 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
   }
 })
 
+// ─── Training licences (training-only gateway tier) ───────────────────────────
+
+// GET /training/licences — purchased licences + summary + the staff they can go to.
+trainingRouter.get('/licences', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const [licences, staff, users] = await Promise.all([
+      (prisma as any).trainingLicense.findMany({ where: { tenant_id: tenantId }, orderBy: [{ module_name: 'asc' }, { purchased_at: 'asc' }] }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, role: 'staff', is_active: true }, select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true, email: true } }),
+    ])
+    const userById = new Map((users as any[]).map(u => [u.id, u]))
+    const items = (licences as any[]).map(l => ({
+      id: l.id, module_slug: l.module_slug, module_name: l.module_name,
+      price_pence: l.price_pence, currency: l.currency,
+      purchased_at: l.purchased_at, renewal_due_at: l.renewal_due_at, status: l.status,
+      allocated_to: l.user_id ? (userById.get(l.user_id) ?? null) : null,
+    }))
+    const total = items.length
+    const allocated = items.filter(l => l.allocated_to).length
+    ok(res, { licences: items, staff, summary: { total, allocated, available: total - allocated, spent_pence: items.reduce((s, l) => s + (l.price_pence || 0), 0) } })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+// POST /training/licences/:id/allocate { user_id } — allocate a pooled licence to a
+// staff member + enrol them on that module.
+trainingRouter.post('/licences/:id/allocate', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const adminId  = (req as any).user.sub
+  const userId   = String(req.body?.user_id ?? '')
+  try {
+    const lic = await (prisma as any).trainingLicense.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+    if (!lic) { err(res, 'NOT_FOUND', 'Licence not found', 404); return }
+    if (lic.user_id) { err(res, 'INVALID', 'This licence is already allocated.', 400); return }
+    const staff = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true } })
+    if (!staff) { err(res, 'INVALID', 'Unknown staff member', 400); return }
+
+    await (prisma as any).trainingLicense.update({ where: { id: lic.id }, data: { user_id: userId } })
+
+    // Enrol them on the published standard module for the licence's topic.
+    if (lic.topic_id) {
+      const module = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', approved: true, is_active: true, topic_id: lic.topic_id }, select: { id: true } })
+      if (module) {
+        const exists = await (prisma as any).trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: userId, module_id: module.id, status: { not: 'expired' } }, select: { id: true } })
+        if (!exists) {
+          await (prisma as any).trainingEnrollment.create({ data: { tenant_id: tenantId, user_id: userId, module_id: module.id, status: 'not_started', assigned_by: adminId } })
+        }
+      }
+    }
+    ok(res, { allocated: true })
+  } catch (e: any) { err(res, 'ALLOCATE_FAILED', e.message, 500) }
+})
+
+// POST /training/licences/:id/deallocate — return a licence to the pool (unassign).
+trainingRouter.post('/licences/:id/deallocate', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const lic = await (prisma as any).trainingLicense.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+    if (!lic) { err(res, 'NOT_FOUND', 'Licence not found', 404); return }
+    const priorUser = lic.user_id
+    await (prisma as any).trainingLicense.update({ where: { id: lic.id }, data: { user_id: null } })
+    // Expire the (incomplete) enrolment so it leaves their list, keeping any completed record.
+    if (priorUser && lic.topic_id) {
+      const module = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', approved: true, topic_id: lic.topic_id }, select: { id: true } })
+      if (module) {
+        await (prisma as any).trainingEnrollment.updateMany({ where: { tenant_id: tenantId, user_id: priorUser, module_id: module.id, status: { not: 'complete' } }, data: { status: 'expired' } })
+      }
+    }
+    ok(res, { deallocated: true })
+  } catch (e: any) { err(res, 'DEALLOCATE_FAILED', e.message, 500) }
+})
+
 // GET /training/enrollments/:id — single enrollment with answers
 trainingRouter.get('/enrollments/:id', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

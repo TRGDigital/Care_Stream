@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
-  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock,
+  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -73,7 +73,7 @@ const NAV_SECTIONS = [
 // Nav a training-only (gateway-tier) tenant can use. Everything else is shown
 // greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
 // once that page exists.
-const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings'])
+const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings', '/licences'])
 
 interface AdminShellProps {
   userName:   string
@@ -268,7 +268,13 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
 function SidebarContent({ pathname, trainingOnly, onNavigate }: { pathname: string; trainingOnly?: boolean; onNavigate?: () => void }) {
-  const allHrefs = NAV_SECTIONS.flatMap(s => s.items.map(i => i.href))
+  // Training-only tenants get a Licences item (where they allocate what they bought).
+  const sections = trainingOnly
+    ? NAV_SECTIONS.map(s => s.heading === 'Admin'
+        ? { ...s, items: [{ href: '/licences', label: 'Licences', Icon: KeyRound }, ...s.items] }
+        : s)
+    : NAV_SECTIONS
+  const allHrefs = sections.flatMap(s => s.items.map(i => i.href))
   const hasExactMatch = allHrefs.some(href => href === pathname)
   return (
     <>
@@ -282,7 +288,7 @@ function SidebarContent({ pathname, trainingOnly, onNavigate }: { pathname: stri
 
       {/* Nav */}
       <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
-        {NAV_SECTIONS.map(({ heading, iconColor, items }) => (
+        {sections.map(({ heading, iconColor, items }) => (
           <div key={heading} className="mb-4">
             <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
               {heading}

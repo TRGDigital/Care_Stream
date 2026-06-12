@@ -76,6 +76,58 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Dental Radiography and IR(ME)R', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'dental-practices', aliases: ['radiography', 'IRMER', 'IR(ME)R', 'IRR17', 'x-ray', 'radiation protection'] },
   { title: 'Medical Emergencies in the Dental Practice', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'dental-practices', aliases: ['medical emergencies', 'resuscitation', 'anaphylaxis', 'collapse'] },
   { title: 'GDC Standards and Scope of Practice', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'dental-practices', aliases: ['GDC standards', 'scope of practice', 'professionalism'] },
+
+  // ── Domiciliary care (setting-specific overlay) ──
+  { title: 'Medication Support in the Community', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'domiciliary-care', aliases: ['medication at home', 'MAR domiciliary'] },
+  { title: 'Working Safely in People’s Homes', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['home environment risk', 'lone working in homes'] },
+  { title: 'Missed Visits and Welfare Checks', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['missed call', 'no reply protocol'] },
+  { title: 'Keys, Entry and Home Security', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['key safe', 'entry to home'] },
+  { title: 'Travelling and Driving for Work', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['driving at work', 'travel safety'] },
+
+  // ── Live-in care (setting-specific overlay) ──
+  { title: 'Living and Working in a Client’s Home', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['boundaries live-in', 'sharing a home'] },
+  { title: 'Professional Boundaries in Live-in Care', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['boundaries', 'over-familiarity'] },
+  { title: 'Rest, Breaks and Working Time (Live-in)', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['working time', 'rest breaks'] },
+
+  // ── Complex care (setting-specific overlay) ──
+  { title: 'Tracheostomy Care', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['tracheostomy', 'trache'] },
+  { title: 'Ventilation and Respiratory Support', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['ventilator', 'respiratory support', 'NIV'] },
+  { title: 'Airway Suctioning', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['suctioning', 'airway'] },
+  { title: 'Enteral Feeding and Stoma Care', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['PEG', 'enteral feeding', 'stoma'] },
+  { title: 'Cough Assist', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['cough assist', 'mechanical insufflation'] },
+
+  // ── Shared lives (setting-specific overlay) ──
+  { title: 'Shared Lives Arrangements and Matching', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['matching', 'shared lives agreement'] },
+  { title: 'Boundaries in a Family-Home Setting', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['family home boundaries'] },
+  { title: 'Promoting Ordinary Living and Independence', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['ordinary living', 'independence'] },
+
+  // ── Substance misuse & rehabilitation (setting-specific overlay) ──
+  { title: 'Substance Withdrawal and Detoxification', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'substance-misuse', aliases: ['detox', 'withdrawal', 'alcohol withdrawal'] },
+  { title: 'Overdose Response and Naloxone', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'substance-misuse', aliases: ['naloxone', 'overdose', 'narcan'] },
+  { title: 'Blood-Borne Viruses Awareness', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['BBV', 'hepatitis', 'HIV'] },
+  { title: 'Harm Reduction', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['harm reduction', 'needle exchange'] },
+  { title: 'Dual Diagnosis Awareness', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['dual diagnosis', 'co-occurring'] },
+
+  // ── Hospices (setting-specific overlay) ──
+  { title: 'Verification of Expected Death', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'hospices', aliases: ['verification of death', 'expected death'] },
+  { title: 'Syringe Drivers and Subcutaneous Medication', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'hospices', aliases: ['syringe driver', 'subcutaneous', 'T34'] },
+  { title: 'Symptom Management in Palliative Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'hospices', aliases: ['symptom control', 'palliative symptoms'] },
+  { title: 'Bereavement and Family Support', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'hospices', aliases: ['bereavement', 'family support'] },
+  { title: 'Children’s Palliative Care', group_key: 'role_specific', default_frequency: 'annual', care_setting: 'hospices', aliases: ['children palliative', 'paediatric palliative'] },
+
+  // ── Independent hospitals & clinics (setting-specific overlay) ──
+  { title: 'Surgical Safety and the WHO Checklist', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['WHO checklist', 'surgical safety', 'never events'] },
+  { title: 'Consent for Procedures', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['consent', 'informed consent'] },
+  { title: 'Venous Thromboembolism (VTE) Prevention', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['VTE', 'DVT', 'thromboprophylaxis'] },
+  { title: 'Sterile Services and Instrument Decontamination', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'independent-hospitals', aliases: ['sterile services', 'CSSD', 'decontamination'] },
+  { title: 'Clinical Governance', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['clinical governance', 'quality assurance'] },
+
+  // ── GP practices & primary care (setting-specific overlay) ──
+  { title: 'Vaccine Storage and Cold Chain', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'gp-practices', aliases: ['cold chain', 'vaccine fridge', 'immunisation storage'] },
+  { title: 'Chaperoning', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['chaperone', 'intimate examination'] },
+  { title: 'Repeat Prescribing and Medicines Safety', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['repeat prescribing', 'prescribing safety'] },
+  { title: 'Test Results Handling and Failsafe', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['results handling', 'failsafe', 'pathology'] },
+  { title: 'Telephone Triage and Care Navigation', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['triage', 'care navigation', 'signposting'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {

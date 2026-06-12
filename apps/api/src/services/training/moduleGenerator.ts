@@ -101,7 +101,7 @@ async function getPrompt(): Promise<string> {
 
 // Gather grounding: tenant policy chunks (RAG) + matching reference seeds.
 // tenantId null → platform/standard module: ground in reference seeds only.
-async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[] }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
+async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[]; care_setting?: string | null }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
   const query = `${topic.title} ${(topic.aliases ?? []).join(' ')}`.trim()
   let chunks: any[] = []
   if (tenantId) {
@@ -123,12 +123,34 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
     }
   }
 
+  // Structured training-seed reference for this topic (curated in the console →
+  // Training Seeds). This is the primary grounding for standard modules — it lets a
+  // setting-specific module (e.g. dental) be grounded in that setting's own facts
+  // rather than care-home policy text. Prepended so it leads the grounding.
+  try {
+    const seedRef = await (prisma as any).trainingSeed.findFirst({
+      where: { is_active: true, training_type: { equals: topic.title, mode: 'insensitive' } },
+    })
+    if (seedRef && (seedRef.summary || seedRef.care_context || seedRef.practical_meaning)) {
+      parts.unshift([
+        `Authoritative reference for "${seedRef.training_type}":`,
+        seedRef.summary && `Overview: ${seedRef.summary}`,
+        seedRef.care_context && `How it applies in this care setting: ${seedRef.care_context}`,
+        seedRef.care_company_interaction && `What the service must do: ${seedRef.care_company_interaction}`,
+        seedRef.practical_meaning && `What it means for staff in practice: ${seedRef.practical_meaning}`,
+      ].filter(Boolean).join('\n'))
+    }
+  } catch { /* training-seed grounding is best-effort */ }
+
   // Reference seeds for the topic (anonymised best-practice policies). These are the
   // evidence base/provenance for standard (platform) modules — record them as refs.
+  // For a setting-specific topic, only pull seeds from THAT setting so e.g. dental
+  // generation isn't grounded in nursing-home policy text.
   const kw = topic.title.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4)
   if (kw.length) {
+    const keywordOr = { OR: kw.map(k => ({ OR: [{ section: { contains: k, mode: 'insensitive' } }, { title: { contains: k, mode: 'insensitive' } }] })) }
     const seeds = await (prisma as any).policySeed.findMany({
-      where:  { OR: kw.map(k => ({ OR: [{ section: { contains: k, mode: 'insensitive' } }, { title: { contains: k, mode: 'insensitive' } }] })) },
+      where:  topic.care_setting ? { AND: [keywordOr, { care_setting: topic.care_setting }] } : keywordOr,
       select: { id: true, title: true, section: true, content: true }, orderBy: { reviewed: 'desc' }, take: 3,
     }).catch(() => [])
     for (const s of (seeds as any[])) {

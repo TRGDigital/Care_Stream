@@ -40,6 +40,28 @@ export async function ensureTrainingTopicsSeeded(): Promise<void> {
   if (toCreate.length) {
     await (prisma as any).trainingTopic.createMany({ data: toCreate }).catch((e: any) => console.error('[training-topics] seed failed:', e?.message ?? e))
   }
+  await ensureSettingTrainingSeeds()
+}
+
+function seedSlug(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
+}
+
+// Ensure a blank, inactive TrainingSeed placeholder exists for every setting-specific
+// topic, so platform admins can fill the reference detail (console → Training Seeds)
+// and have it ground that setting's standard-module generation. Idempotent by slug.
+export async function ensureSettingTrainingSeeds(): Promise<void> {
+  const settingTopics = TRAINING_TOPICS.filter(t => t.care_setting)
+  if (!settingTopics.length) return
+  const existing = await (prisma as any).trainingSeed.findMany({ select: { slug: true } }).catch(() => [])
+  const have = new Set((existing as any[]).map(s => s.slug))
+  const toCreate = settingTopics
+    .map(t => ({ slug: seedSlug(t.title), training_type: t.title, also_known_as: t.aliases ?? [] }))
+    .filter(s => !have.has(s.slug))
+    .map(s => ({ ...s, summary: '', care_context: '', care_company_interaction: '', practical_meaning: '', source_urls: [], is_active: false }))
+  if (toCreate.length) {
+    await (prisma as any).trainingSeed.createMany({ data: toCreate, skipDuplicates: true }).catch((e: any) => console.error('[training-seeds] placeholder seed failed:', e?.message ?? e))
+  }
 }
 
 // GET /training/catalogue — topics to generate AI modules from + this tenant's modules

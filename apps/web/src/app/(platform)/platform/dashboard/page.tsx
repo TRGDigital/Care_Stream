@@ -2563,6 +2563,26 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* RalfyIndex auto-indexing */}
+      <RefSection icon={Search} title="RalfyIndex — Auto Search Indexing">
+        <p className="leading-relaxed text-neutral-mid">
+          New public pages are pushed to <a href="https://ralfyindex.com" target="_blank" rel="noopener noreferrer" className="text-teal underline">ralfyindex.com</a> for
+          automatic search-engine indexing the moment they go live — no manual submission. The
+          <strong> Pages auto-indexed</strong> card on the Overview tab shows the running total plus credits remaining.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Triggers"       value="A blog post published (status=published) → carestreamai.com/blog/<slug>. A marketing/SEO site page published (Pages tab) → its path, e.g. /staff-training/<slug>." />
+          <RefRow label="Excluded"       value="Landing pages (demos.carestreamai.com /lp/*) are noindex by design, so they are never submitted." />
+          <RefRow label="Mode"           value="Standard indexing — 1 credit per URL (instant_index=false). Instant Indexer (10 credits/URL) is available via the instant_index flag but off by default." />
+          <RefRow label="Dedupe"         value="Each URL is submitted at most once (filters URLs already logged as 'submitted'), so re-saving or editing a post never spends extra credits." />
+          <RefRow label="Service"        value="apps/api/src/services/ralfyindex — client.ts (POST /status, /balance, /project; 8s timeout) + indexer.ts submitUrlsForIndexing(). Fire-and-forget safe: never throws into the blog/page save." />
+          <RefRow label="Hooks"          value="routes/admin.ts — POST/PATCH /admin/blog/posts and POST/PATCH /admin/site-pages, after the write when status=published." />
+          <RefRow label="Config"         value="ralfyindex_config (singleton row): api_key, enabled, instant_index, project_prefix. API key lives in the DB (not in git); can be toggled off via enabled=false." />
+          <RefRow label="Tracking"       value="ralfyindex_submissions logs every push (url, source blog|page, project_name, status, credits_used). GET /admin/stats returns indexedPageCount + indexBalance for the dashboard card." />
+          <RefRow label="Project names"  value="Auto-named '<project_prefix>_<UTC timestamp>' (default prefix 'CareStream'), sanitised to RalfyIndex's allowed characters." />
+        </div>
+      </RefSection>
+
       {/* GDPR / Cookie Consent */}
       <RefSection icon={Shield} title="GDPR & Cookie Consent">
         <p className="leading-relaxed text-neutral-mid">

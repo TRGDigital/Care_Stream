@@ -17,6 +17,13 @@ import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from 
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
+import { siteUrl } from '../lib/urls'
+import { submitUrlsForIndexing } from '../services/ralfyindex/indexer'
+
+// Public /staff-training/<slug> is keyed by slugify(topic.title) (mirrors training-public.ts).
+function trainingPageSlug(title: string): string {
+  return title.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
 
 const REVIEW_LINK_DAYS = 30
 
@@ -364,6 +371,15 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
       independently_reviewed: independent,
     },
   })
+
+  // Auto-index the public training page for this topic (RalfyIndex). Deduped, fire-and-forget safe.
+  try {
+    if (module.topic_id) {
+      const topic = await (prisma as any).trainingTopic.findUnique({ where: { id: module.topic_id }, select: { title: true } })
+      if (topic?.title) await submitUrlsForIndexing([`${siteUrl()}/staff-training/${trainingPageSlug(topic.title)}`], { source: 'page' })
+    }
+  } catch { /* never block publish on an indexing hiccup */ }
+
   ok(res, { module: updated })
 })
 

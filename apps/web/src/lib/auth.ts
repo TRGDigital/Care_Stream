@@ -18,6 +18,7 @@ declare module 'next-auth' {
     refreshToken: string
     needsBilling?: boolean
     auditAccess?: boolean
+    tier?: string
   }
   interface Session {
     accessToken: string
@@ -31,6 +32,7 @@ declare module 'next-auth' {
       tenantName: string
       needsBilling?: boolean
       auditAccess?: boolean
+      tier?: string
     }
   }
 }
@@ -44,6 +46,7 @@ declare module 'next-auth/jwt' {
     tenantName:   string
     needsBilling?: boolean
     auditAccess?: boolean
+    tier?: string
   }
 }
 
@@ -83,6 +86,7 @@ export const authOptions: NextAuthOptions = {
               refreshToken: credentials.refresh_token as string,
               needsBilling: false, // site-switch is only for existing active group admins
               auditAccess:  payload.role === 'admin',
+              tier:         'full',
             }
           } catch { return null }
         }
@@ -98,7 +102,7 @@ export const authOptions: NextAuthOptions = {
             })
             const body = await res.json()
             if (!res.ok || !body.success) return null
-            const { user, tenant, access_token, refresh_token, needs_billing, audit_access } = body.data
+            const { user, tenant, access_token, refresh_token, needs_billing, audit_access, tier } = body.data
             return {
               id:           user.id,
               name:         user.name,
@@ -110,6 +114,7 @@ export const authOptions: NextAuthOptions = {
               refreshToken: refresh_token,
               needsBilling: !!needs_billing,
               auditAccess:  !!audit_access,
+              tier:         (tier as string) ?? 'full',
             }
           } catch { return null }
         }
@@ -135,7 +140,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const { user, tenant, access_token, refresh_token, needs_billing, audit_access } = body.data
+        const { user, tenant, access_token, refresh_token, needs_billing, audit_access, tier } = body.data
         return {
           id:           user.id,
           name:         user.name,
@@ -147,6 +152,7 @@ export const authOptions: NextAuthOptions = {
           refreshToken: refresh_token,
           needsBilling: !!needs_billing,
           auditAccess:  !!audit_access,
+          tier:         (tier as string) ?? 'full',
         }
       },
     }),
@@ -165,6 +171,7 @@ export const authOptions: NextAuthOptions = {
         token.tenantName   = user.tenantName
         token.needsBilling = user.needsBilling ?? false
         token.auditAccess  = user.auditAccess ?? false
+        token.tier         = user.tier ?? 'full'
         // Decode expiry so we can proactively refresh before it hits
         try {
           const payload = JSON.parse(Buffer.from(user.accessToken.split('.')[1], 'base64').toString())
@@ -199,6 +206,7 @@ export const authOptions: NextAuthOptions = {
         if (body.data.refresh_token) token.refreshToken = body.data.refresh_token
         if (typeof body.data.needs_billing === 'boolean') token.needsBilling = body.data.needs_billing
         if (typeof body.data.audit_access === 'boolean') token.auditAccess = body.data.audit_access
+        if (typeof body.data.tier === 'string') token.tier = body.data.tier
       } catch {
         // Refresh failed — force re-login by clearing the token
         return { ...token, error: 'RefreshAccessTokenError' }
@@ -212,6 +220,7 @@ export const authOptions: NextAuthOptions = {
       session.user.tenantName    = token.tenantName
       session.user.needsBilling  = token.needsBilling
       session.user.auditAccess   = token.auditAccess
+      session.user.tier          = token.tier
       return session
     },
   },

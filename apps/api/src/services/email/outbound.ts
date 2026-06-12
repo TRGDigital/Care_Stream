@@ -232,6 +232,50 @@ export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; 
   await sgMail.send({ to: opts.to, from, subject: 'Your CareStream sign-in link', html })
 }
 
+// ─── Training licence renewal reminder (training-only tier) ─────────────────────
+
+export async function sendTrainingRenewalEmail(opts: {
+  to: string; name: string; manageUrl: string
+  items: Array<{ module: string; count: number; due: Date }>
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping licence renewal email')
+    return
+  }
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const fmt = (d: Date) => { try { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) } catch { return '' } }
+  const rows = opts.items.map(i => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;color:${NEUTRAL_DARK};font-size:14px">${i.module}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#6b7280;font-size:14px;text-align:center">${i.count}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#6b7280;font-size:14px;text-align:right">${fmt(i.due)}</td>
+    </tr>`).join('')
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      Some of your CareStream training licences are coming up for renewal. Renew them to keep your team's training and compliance records active and up to date.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
+      <tr>
+        <td style="padding:8px 12px;border-bottom:2px solid #eee;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af">Module</td>
+        <td style="padding:8px 12px;border-bottom:2px solid #eee;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;text-align:center">Licences</td>
+        <td style="padding:8px 12px;border-bottom:2px solid #eee;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;text-align:right">Renews</td>
+      </tr>
+      ${rows}
+    </table>
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${opts.manageUrl}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Manage your licences</a>
+    </div>
+    <p style="color:#9ca3af;font-size:12px;margin:0">If you've already renewed, you can ignore this reminder.</p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: 'Your CareStream training licences are due for renewal', html })
+}
+
 // ─── Password reset ───────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<void> {

@@ -1041,6 +1041,7 @@ function DeliveryTab({ api, modules, staff }: {
 
 export default function TrainingPage() {
   const { data: session } = useSession()
+  const trainingOnly = session?.user?.tier === 'training_only'
   const userId = session?.user?.email ?? 'guest'
   const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery'>('compliance')
   const [staff,       setStaff]       = useState<Staff[]>([])
@@ -1133,6 +1134,12 @@ export default function TrainingPage() {
 
   return (
     <div>
+      {trainingOnly && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <p className="text-sm text-blue-900">You assign training by allocating a purchased licence to a staff member.</p>
+          <Link href="/licences" className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Go to Licences</Link>
+        </div>
+      )}
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark">Training &amp; Compliance</h1>
@@ -1142,7 +1149,7 @@ export default function TrainingPage() {
           <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
             Annual training modules
           </Link>
-          {tab === 'compliance' && (
+          {tab === 'compliance' && !trainingOnly && (
             <button
               onClick={() => setShowAssign(true)}
               className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90"

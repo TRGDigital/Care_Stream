@@ -6,6 +6,7 @@ import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
+import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 
 export const cronRouter = Router()
 
@@ -37,6 +38,19 @@ cronRouter.get('/audit-reminders', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/audit-reminders] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Daily: email training-only admins when their training licences are within 30 days
+// of renewal (one reminder per licence, idempotent via renewal_reminded_at).
+cronRouter.get('/licence-renewals', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await sendLicenceRenewalReminders()
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/licence-renewals] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

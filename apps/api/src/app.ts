@@ -50,6 +50,9 @@ const allowedOrigins = (process.env.WEB_URL ?? '')
   .map(o => o.trim())
   .filter(Boolean)
 
+// Any carestreamai.com origin (apex + subdomains: www, demos, etc.)
+const CARESTREAM_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?carestreamai\.com$/
+
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no origin (server-to-server, curl)
@@ -57,6 +60,8 @@ app.use(cors({
     // In development, allow any localhost port
     if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true)
     if (allowedOrigins.includes(origin)) return cb(null, true)
+    // Allow first-party subdomains (e.g. demos.carestreamai.com landing pages)
+    if (CARESTREAM_ORIGIN.test(origin)) return cb(null, true)
     cb(new Error(`CORS: origin not allowed — ${origin}`))
   },
   credentials: true,

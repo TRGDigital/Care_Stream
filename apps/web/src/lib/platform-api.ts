@@ -89,6 +89,8 @@ export interface PlatformStats {
   regulationCount:   number
   queriesLast7Days:  number
   queriesLast30Days: number
+  indexedPageCount?: number
+  indexBalance?:     number | null
 }
 
 export interface AgentEventsData {
@@ -298,6 +300,8 @@ export interface TrainingSeed {
   practical_meaning:        string
   source_urls:              string[]
   is_active:                boolean
+  care_setting:             string | null   // setting of the matching topic (NULL = universal)
+  care_setting_label:       string | null   // human label for the setting tag
   created_at:               string
   updated_at:               string
 }

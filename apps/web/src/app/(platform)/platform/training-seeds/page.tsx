@@ -270,8 +270,11 @@ function SeedRow({ seed, token, isEditing, onEdit, onCancelEdit, onSaved, onDele
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="flex items-start gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="font-medium text-neutral-dark text-sm">{seed.training_type}</p>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${seed.care_setting_label ? 'bg-blue-50 text-blue-700' : 'bg-teal/10 text-teal-dark'}`}>
+              {seed.care_setting_label ?? 'All settings'}
+            </span>
             <span className="text-xs text-neutral-mid font-mono">{seed.slug}</span>
             {!seed.is_active && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Inactive</span>

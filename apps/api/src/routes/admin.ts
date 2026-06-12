@@ -12,6 +12,8 @@ import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText } from '../services/storage/s3'
 import { formatPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
+import { TRAINING_TOPICS } from '../data/training-topics'
+import { SETTING_LABELS } from '../lib/care-setting'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
@@ -19,6 +21,7 @@ import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyV
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
+import { submitUrlsForIndexing, countIndexedPages, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { PLATFORM_KNOWLEDGE_SEEDS, type SeedEntry } from '../data/platform-knowledge-seeds'
@@ -123,6 +126,11 @@ adminRouter.get('/stats', async (_req: Request, res: Response) => {
     }),
   ])
 
+  const [indexedPageCount, indexBalance] = await Promise.all([
+    countIndexedPages(),
+    ralfyIndexBalance(),
+  ])
+
   ok(res, {
     tenantCount,
     activePolicyCount,
@@ -131,6 +139,8 @@ adminRouter.get('/stats', async (_req: Request, res: Response) => {
     regulationCount,
     queriesLast7Days,
     queriesLast30Days,
+    indexedPageCount,
+    indexBalance,
   })
 })
 
@@ -1592,7 +1602,17 @@ adminRouter.delete('/regulations/:id', async (req: Request, res: Response) => {
 adminRouter.get('/training-seeds', async (_req: Request, res: Response) => {
   try {
     const seeds = await (prisma as any).trainingSeed.findMany({ orderBy: { training_type: 'asc' } })
-    ok(res, { seeds, total: seeds.length })
+    // Tag each seed with the care setting of its matching topic (by title; NULL =
+    // universal/cross-over) so the console shows which setting each seed grounds.
+    const settingByTitle = new Map(
+      TRAINING_TOPICS.filter(t => t.care_setting).map(t => [t.title.toLowerCase(), t.care_setting as string]),
+    )
+    const labels = SETTING_LABELS as Record<string, string>
+    const withSetting = (seeds as any[]).map(s => {
+      const cs = settingByTitle.get(String(s.training_type).toLowerCase()) ?? null
+      return { ...s, care_setting: cs, care_setting_label: cs ? (labels[cs] ?? cs) : null }
+    })
+    ok(res, { seeds: withSetting, total: withSetting.length })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }
@@ -2237,6 +2257,9 @@ adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
   if (existing) { err(res, 'CONFLICT', `A post with slug "${slug}" already exists.`, 409); return }
 
   const post = await (prisma as any).blogPost.create({ data: buildPostData(req.body) })
+  if (post.status === 'published' && post.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
+  }
   ok(res, { post })
 })
 
@@ -2250,6 +2273,9 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data:  buildPostData(req.body),
   })
+  if (post.status === 'published' && post.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
+  }
   ok(res, { post })
 })
 
@@ -2308,6 +2334,9 @@ adminRouter.post('/site-pages', async (req: Request, res: Response) => {
     update: buildPageData(rest),
     create: { path: path.trim(), ...buildPageData(rest) },
   })
+  if (page.status === 'published' && page.path?.startsWith('/')) {
+    await submitUrlsForIndexing([`${siteUrl()}${page.path}`], { source: 'page' })
+  }
   ok(res, { page })
 })
 
@@ -2316,6 +2345,9 @@ adminRouter.patch('/site-pages/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data:  buildPageData(req.body),
   })
+  if (page.status === 'published' && page.path?.startsWith('/')) {
+    await submitUrlsForIndexing([`${siteUrl()}${page.path}`], { source: 'page' })
+  }
   ok(res, { page })
 })
 

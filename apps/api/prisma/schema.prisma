@@ -155,6 +155,32 @@ model Plan {
   @@map("plans")
 }
 
+// ─── Training licences (training-only gateway tier) ─────────────────────────────
+// One row = one staff seat × one standard module, bought one-off at £25.99. The
+// admin allocates a licence to a staff member (user_id) for a module (topic). A
+// further module for the same staff member is a separate licence (another £25.99).
+model TrainingLicense {
+  id                  String    @id @default(uuid())
+  tenant_id           String
+  user_id             String?                              // staff member it's allocated to; null = bought but not yet allocated
+  topic_id            String?                              // the standard topic/module licensed
+  module_slug         String                               // snapshot (survives topic edits)
+  module_name         String                               // snapshot for display + renewal emails
+  price_pence         Int       @default(2599)
+  currency            String    @default("gbp")
+  stripe_payment_id   String?                              // Stripe Checkout session / payment-intent ref
+  purchased_at        DateTime  @default(now())
+  renewal_due_at      DateTime                             // purchased_at + 1 year
+  renewal_reminded_at DateTime?                            // last renewal reminder sent (SendGrid)
+  status              String    @default("active")         // active | expired | refunded
+  created_at          DateTime  @default(now())
+
+  @@index([tenant_id])
+  @@index([tenant_id, user_id])
+  @@index([renewal_due_at])
+  @@map("training_licenses")
+}
+
 // ─── Tenants ──────────────────────────────────────────────────────────────────
 
 model Tenant {
@@ -168,6 +194,7 @@ model Tenant {
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
   trial_ends_at       DateTime?                                // when the Stripe trial ends (card-up-front trial)
   plan_id             String?
+  tier                String             @default("full")                   // "full" = full CareStream | "training_only" = standard-training-only gateway tier
   branding_signoff    String             @default("The CareStream Team") // §4.3.4
   facility_type       String             @default("care home")              // e.g. nursing home, residential home
   response_style      String             @default("standard")               // "standard" | "concise"

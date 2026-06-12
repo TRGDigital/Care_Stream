@@ -21,7 +21,7 @@ import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
-  GraduationCap, HelpCircle, FileText, Smartphone,
+  GraduationCap, HelpCircle, FileText, Smartphone, LayoutGrid,
 } from 'lucide-react'
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
@@ -1580,6 +1580,154 @@ function OurServices() {
   )
 }
 
+// ── Sits below the logo marquee: image + "diverse workforce" message ──────────
+function DiverseWorkforce() {
+  return (
+    <section className="bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+          {/* Image with a brand-gradient glow, echoing the reference layout */}
+          <div className="relative">
+            <div className="pointer-events-none absolute -bottom-10 -left-10 -z-0 h-64 w-64 rounded-full bg-gradient-to-tr from-[#9B52B5] via-[#5eead4] to-[#E8850A] opacity-60 blur-3xl" />
+            <div className="relative z-10 overflow-hidden rounded-2xl shadow-elevated">
+              <SiteImage
+                src="/images/group-care.jpg"
+                alt="A diverse care team reviewing policies together in a care setting"
+                width={1600}
+                height={1132}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="w-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Text */}
+          <div>
+            <SectionLabel>A diverse workforce</SectionLabel>
+            <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+              Everything you need to manage a{' '}
+              <span className="gradient-text-teal">diverse workforce</span>
+            </h2>
+            <div className="space-y-5 text-lg leading-relaxed text-neutral-mid">
+              <p>
+                Care teams are more diverse than ever. Overseas recruits, bank staff and night-shift
+                workers all need to understand your policies, training and procedures, and many of them
+                think in a language other than English.
+              </p>
+              <p>
+                CareStream gives every member of your team instant, cited answers from your own
+                documents, in over 60 languages, on any device. Policies, training, audits and CQC
+                preparation all run on one hub your team signs into once, so everyone stays confident,
+                capable and compliant.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Sits below "View all settings we serve": two product blocks (training + hub) ──
+function HubAndTraining() {
+  return (
+    <section className="bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+        <SectionLabel>Explore CareStream</SectionLabel>
+        <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+          Two ways your whole team gets more from your policies
+        </h2>
+        <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">
+          Everything runs on one engine, grounded in your own documents. Turn your policies into
+          training your team completes, and give every member of staff a single hub for policies,
+          audits and CQC preparation.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Training */}
+          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-teal-light to-purple-50 p-8 md:p-10">
+            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
+              <GraduationCap size={24} className="text-teal" />
+            </div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-teal">CareStream Training</p>
+            <h3 className="mb-3 text-2xl font-bold text-neutral-dark">
+              Training modules built from your own policies
+            </h3>
+            <p className="mb-8 flex-1 leading-relaxed text-neutral-mid">
+              Turn your policies into staff training delivered in the hub, in any language, with
+              renewal reminders and completion tracking that becomes inspection-ready CQC evidence.
+            </p>
+            <Link
+              href="/staff-training"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-teal px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            >
+              Learn more about training <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          {/* Hub */}
+          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 to-teal-light p-8 md:p-10">
+            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
+              <LayoutGrid size={24} className="text-amber-brand" />
+            </div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-brand">CareStream Hub</p>
+            <h3 className="mb-3 text-2xl font-bold text-neutral-dark">
+              Policies, audits and CQC in one hub
+            </h3>
+            <p className="mb-8 flex-1 leading-relaxed text-neutral-mid">
+              Every policy, your staff handbook, training, audits and CQC preparation, answerable in
+              seconds from your own documents. One hub your whole team signs into once, on any device.
+            </p>
+            <Link
+              href="/how-it-works"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-neutral-dark px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            >
+              Explore the hub <ArrowRight size={15} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Sits above "How CareStreamAI Helps": three reasons to choose CareStream ────
+function WhyChooseCareStream() {
+  const cols = [
+    { Icon: FileText, title: 'Grounded in your documents', body: 'Every answer comes only from your own approved policies, cited to the source. Never the internet, never guesswork.' },
+    { Icon: Globe,    title: 'In every language, on any device', body: 'Staff ask and read in the language they think in, across 60+ languages, in the hub or by email, with no app to download.' },
+    { Icon: Shield,   title: 'Compliance that builds itself', body: 'Every query is logged. Policy access, language activity and staff engagement become CQC evidence automatically.' },
+  ]
+  return (
+    <section className="bg-white py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+            Why care providers choose CareStreamAI
+          </h2>
+          <p className="text-lg leading-relaxed text-neutral-mid">
+            We do not just answer questions. We become a trusted extension of your team, combining your
+            own documents with smart technology so every member of staff can act with confidence, in any
+            language, at any hour.
+          </p>
+        </div>
+
+        <div className="grid gap-12 md:grid-cols-3">
+          {cols.map(({ Icon, title, body }) => (
+            <div key={title} className="text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-light">
+                <Icon size={28} className="text-teal" />
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-neutral-dark">{title}</h3>
+              <p className="mx-auto max-w-xs leading-relaxed text-neutral-mid">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export const revalidate = 60
 
 // Code fallback. The live FAQs are managed in the platform Pages tab (home page),
@@ -1661,9 +1809,12 @@ export default async function HomePage() {
         <StatsStrip />
         <TheProblem />
         <LogoMarquee />
+        <DiverseWorkforce />
         <CareSettings />
+        <HubAndTraining />
         <PolicyBurdenBand />
         <ValueProposition />
+        <WhyChooseCareStream />
         <TheSolution />
         <OurServices />
         <GroupLevel />

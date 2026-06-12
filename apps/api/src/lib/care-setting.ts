@@ -90,3 +90,30 @@ export function settingFallbackOrder(setting: CareSetting): CareSetting[] {
   const chain: CareSetting[] = [setting, ...(SETTING_NEIGHBOURS[setting] ?? []), 'nursing-homes', 'residential-care']
   return [...new Set(chain)]
 }
+
+// Per-setting voice/scenario/regulatory guidance, appended to the training-module
+// generation prompt so a generated module fits the setting (right terminology,
+// scenarios and standards). Enriched per setting as each one is built out.
+type SettingGuidance = { audience: string; scenarios: string; standards: string }
+
+const SETTING_GUIDANCE: Partial<Record<CareSetting, SettingGuidance>> = {
+  'dental-practices': {
+    audience: "the dental team (dentists, dental nurses, hygienists, therapists, receptionists) in a dental practice; call the people served “patients” (never “residents”) and refer to “our practice”",
+    scenarios: "realistic dental-practice situations — between patients, in the decontamination/local decontamination unit (LDU), in surgery, at reception, during recall appointments",
+    standards: "GDC Standards for the Dental Team, CQC fundamental standards, HTM 01-05 (decontamination), IR(ME)R 2017 and IRR17 (dental radiography), COSHH (mercury/amalgam) and RIDDOR",
+  },
+}
+
+// Returns a SETTING CONTEXT block to append to the generation prompt. NULL/unknown
+// produces a setting-NEUTRAL block (the universal cross-over voice).
+export function settingGenerationContext(setting: string | null | undefined): string {
+  if (!setting || !isCareSetting(setting)) {
+    return `\n\nSETTING CONTEXT — write for a general UK health & social care service, setting-NEUTRAL. Refer to “our service” and “the people we support” rather than “care home”/“residents” or any one setting's terminology. Use scenarios and wording that apply across care settings. Ground regulatory content in CQC fundamental standards and broadly-applicable UK good practice.`
+  }
+  const label = SETTING_LABELS[setting]
+  const g = SETTING_GUIDANCE[setting]
+  if (!g) {
+    return `\n\nSETTING CONTEXT — write specifically for ${label}. Use the voice, terminology, scenarios and regulatory framework appropriate to ${label}; do NOT use generic care-home language (“our home”, “residents”) unless it genuinely applies to ${label}.`
+  }
+  return `\n\nSETTING CONTEXT — write specifically for ${label}. Audience and voice: ${g.audience}. Scenarios: ${g.scenarios}. Ground regulatory and clinical content in: ${g.standards}. Do NOT use care-home language (“our home”, “residents”) — this is ${label}.`
+}

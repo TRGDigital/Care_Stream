@@ -70,6 +70,12 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Catheter Care', group_key: 'role_specific', default_frequency: 'annual', requires_practical: true, aliases: ['catheter'] },
   { title: 'PEG Feeding Care', group_key: 'role_specific', default_frequency: 'annual', requires_practical: true, aliases: ['PEG', 'enteral feeding'] },
   { title: 'Challenging Behaviour Management', group_key: 'role_specific', default_frequency: 'annual', aliases: ['challenging behaviour'] },
+
+  // ── Dental practices (setting-specific overlay) ──
+  { title: 'Dental Decontamination and HTM 01-05', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'dental-practices', aliases: ['decontamination', 'HTM 01-05', 'instrument reprocessing', 'LDU'] },
+  { title: 'Dental Radiography and IR(ME)R', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'dental-practices', aliases: ['radiography', 'IRMER', 'IR(ME)R', 'IRR17', 'x-ray', 'radiation protection'] },
+  { title: 'Medical Emergencies in the Dental Practice', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'dental-practices', aliases: ['medical emergencies', 'resuscitation', 'anaphylaxis', 'collapse'] },
+  { title: 'GDC Standards and Scope of Practice', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'dental-practices', aliases: ['GDC standards', 'scope of practice', 'professionalism'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {

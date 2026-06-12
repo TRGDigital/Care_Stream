@@ -8,6 +8,7 @@ import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { embedText } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
+import { settingGenerationContext } from '../../lib/care-setting'
 
 export const TRAINING_MODULE_PROMPT_USAGE = 'training_module_generation'
 
@@ -154,7 +155,7 @@ export function normaliseQuestion(text: string): string {
 
 export async function generateAnnualModuleDraft(
   tenantId: string | null,
-  topic: { title: string; aliases?: string[]; requires_practical?: boolean },
+  topic: { title: string; aliases?: string[]; requires_practical?: boolean; care_setting?: string | null },
   opts: { excludeQuestions?: string[] } = {},
 ): Promise<GeneratedModule> {
   const { text, refs } = await buildGrounding(tenantId, topic)
@@ -169,6 +170,10 @@ export async function generateAnnualModuleDraft(
     .replace('{{practical_note}}', practicalNote)
     .replace('{{grounding}}', grounding)
     .replace('{{lang_note}}', '')
+
+  // Append setting voice/scenario/regulatory guidance (appended, not templated, so
+  // it applies regardless of any console-edited prompt). NULL = setting-neutral.
+  system += settingGenerationContext(topic.care_setting ?? null)
 
   // Avoid repeating questions used in previous versions of this module. Appended
   // after the (editable) template so it always applies on a regeneration.

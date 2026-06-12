@@ -9,6 +9,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { generateAnnualModuleDraft, normaliseQuestion } from '../services/training/moduleGenerator'
+import { neutraliseModuleVoice } from '../services/training/neutraliseVoice'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { runModuleQa } from '../services/training/moduleQa'
 import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
@@ -121,7 +122,7 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
     const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, tenant_id: null } })
     if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
 
-    const draft = await generateAnnualModuleDraft(null, { title: topic.title, aliases: topic.aliases, requires_practical: topic.requires_practical })
+    const draft = await generateAnnualModuleDraft(null, { title: topic.title, aliases: topic.aliases, requires_practical: topic.requires_practical, care_setting: topic.care_setting })
     if (!draft.questions.length) { err(res, 'GENERATION_FAILED', 'No questions were generated — try again.', 502); return }
 
     const data = {
@@ -155,6 +156,33 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
   } catch (e: any) {
     console.error('[standard-training/generate] failed:', e?.message ?? e)
     err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/standard-training/modules/:id/neutralise — rewrite the wording to
+// setting-neutral voice (for the universal cross-over modules), keeping structure,
+// answers AND images intact. Content changes, so it un-publishes + supersedes any
+// external review (same as a regenerate), needing a fresh review/publish.
+standardTrainingRouter.post('/modules/:id/neutralise', async (req: Request, res: Response) => {
+  try {
+    const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null, source: 'ai_generated' } })
+    if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    const result = await neutraliseModuleVoice({ name: module.name, learning_content: module.learning_content, questions: module.questions })
+    if (!result) { err(res, 'GENERATION_FAILED', 'Could not neutralise safely (structure mismatch) — left unchanged. Try again.', 502); return }
+    const updated = await (prisma as any).trainingModule.update({
+      where: { id: module.id },
+      data: {
+        learning_content: result.learning_content,
+        questions: result.questions,
+        approved: false, approved_at: null, approved_by: null,
+        attested_by_name: null, attested_by_role: null, attested_at: null, independently_reviewed: false,
+      },
+    })
+    await supersedeReviewLinks(module.id)
+    ok(res, { module: updated })
+  } catch (e: any) {
+    console.error('[standard-training/neutralise] failed:', e?.message ?? e)
+    err(res, 'GENERATION_FAILED', e?.message ?? 'Neutralise failed', 502)
   }
 })
 

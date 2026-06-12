@@ -9,7 +9,7 @@ import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2 } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -30,6 +30,8 @@ export default function StandardTrainingPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [reviewId, setReviewId] = useState<string | null>(null)
+  const [neutralising, setNeutralising] = useState<string | null>(null) // a module id, or 'all'
+  const [neutProgress, setNeutProgress] = useState<{ done: number; total: number } | null>(null)
 
   function load() {
     if (!api) return
@@ -43,6 +45,29 @@ export default function StandardTrainingPage() {
     setBusy(topicId)
     try { const { module } = await api.standardTraining.generate(topicId); load(); setReviewId(module.id) }
     catch (e: any) { alert(e?.message ?? 'Generation failed — the AI may have timed out. Please try again.') } finally { setBusy(null) }
+  }
+
+  // Rewrite a module's wording to setting-neutral voice (images + answers kept).
+  async function neutralise(moduleId: string) {
+    if (!api || neutralising) return
+    setNeutralising(moduleId)
+    try { await api.standardTraining.neutralise(moduleId); load() }
+    catch (e: any) { alert(e?.message ?? 'Neutralise failed — please try again.') }
+    finally { setNeutralising(null) }
+  }
+
+  // Bulk-neutralise every universal (cross-over) module, one at a time with progress.
+  async function neutraliseAll() {
+    if (!api || neutralising) return
+    const ids = topics.filter(t => !t.care_setting && t.module).map(t => t.module.id)
+    if (!ids.length) return
+    if (!confirm(`Neutralise the voice of ${ids.length} universal module(s)? Their wording is rewritten to be setting-neutral — images and answers are kept — and they are un-published for re-approval.`)) return
+    setNeutralising('all'); setNeutProgress({ done: 0, total: ids.length })
+    for (let i = 0; i < ids.length; i++) {
+      try { await api.standardTraining.neutralise(ids[i]) } catch { /* skip failures, continue */ }
+      setNeutProgress({ done: i + 1, total: ids.length })
+    }
+    setNeutralising(null); setNeutProgress(null); load()
   }
 
   if (reviewId && token) return (
@@ -87,11 +112,25 @@ export default function StandardTrainingPage() {
       )}
 
       {!loading && (
-        <p className="mb-5 text-xs text-neutral-mid">
-          {activeSetting
-            ? <>Showing modules specific to <strong>{activeLabel}</strong>. The universal modules under <strong>All settings</strong> also apply here.</>
-            : <>Universal (cross-over) modules — these apply to <strong>every</strong> setting. Setting-specific modules live under each setting tab.</>}
-        </p>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-neutral-mid">
+            {activeSetting
+              ? <>Showing modules specific to <strong>{activeLabel}</strong>. The universal modules under <strong>All settings</strong> also apply here.</>
+              : <>Universal (cross-over) modules — these apply to <strong>every</strong> setting. Setting-specific modules live under each setting tab.</>}
+          </p>
+          {!activeSetting && topics.some(t => !t.care_setting && t.module) && (
+            <button
+              onClick={neutraliseAll}
+              disabled={!!neutralising}
+              title="Rewrite every universal module's wording to be setting-neutral. Images and answers are kept; modules are un-published for re-approval."
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-50"
+            >
+              {neutralising === 'all'
+                ? <><Loader2 size={13} className="animate-spin" /> Neutralising {neutProgress ? `${neutProgress.done}/${neutProgress.total}` : ''}…</>
+                : <><Wand2 size={13} /> Neutralise voice (all)</>}
+            </button>
+          )}
+        </div>
       )}
 
       {loading ? (
@@ -132,9 +171,22 @@ export default function StandardTrainingPage() {
                           </p>
                         )}
                       </div>
-                      {!m
-                        ? <button onClick={() => generate(t.id)} disabled={busy === t.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> Generate</>}</button>
-                        : <button onClick={() => setReviewId(m.id)} className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Pencil size={12} /> {m.approved ? 'Edit' : 'Review'}</button>}
+                      <div className="flex items-center gap-1.5">
+                        {/* Per-module neutralise — only for universal modules (the cross-over base). */}
+                        {m && !t.care_setting && (
+                          <button
+                            onClick={() => neutralise(m.id)}
+                            disabled={!!neutralising}
+                            title="Rewrite this module's wording to be setting-neutral (images and answers kept; un-publishes for re-approval)."
+                            className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50"
+                          >
+                            {neutralising === m.id ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                          </button>
+                        )}
+                        {!m
+                          ? <button onClick={() => generate(t.id)} disabled={busy === t.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> Generate</>}</button>
+                          : <button onClick={() => setReviewId(m.id)} className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Pencil size={12} /> {m.approved ? 'Edit' : 'Review'}</button>}
+                      </div>
                     </div>
                   )
                 })}

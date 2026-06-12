@@ -430,6 +430,7 @@ export function createPlatformClient(token: string) {
         topics: Array<{ id: string; title: string; group_key: string; care_setting: string | null; default_frequency: string; requires_practical: boolean; aliases: string[]; module: null | { id: string; name: string; approved: boolean; approved_at: string | null; created_at: string; frequency: string; requires_practical: boolean; pass_mark: number; duration_minutes: number | null; question_count: number; illustration_url: string | null; image_count: number; image_slots: number; standards_count: number; attested_by_name: string | null; attested_by_role: string | null; attested_at: string | null; qa_hard_fails: number; qa_warnings: number; review_status: string | null; review_changes_open: number } }>
       }>('/standard-training', token),
       generate: (topicId: string) => adminFetch<{ module: any }>('/standard-training/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
+      neutralise: (moduleId: string) => adminFetch<{ module: any }>(`/standard-training/modules/${moduleId}/neutralise`, token, { method: 'POST' }),
       moduleFull: (id: string) => adminFetch<{
         module: any
         question_history: { used_count: number; prior_versions: number; last_regenerated_at: string | null; review_due: boolean; review_due_at: string | null; interval_months: number }

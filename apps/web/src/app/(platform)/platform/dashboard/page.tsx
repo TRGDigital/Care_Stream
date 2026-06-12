@@ -2164,6 +2164,42 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      <RefSection icon={GraduationCap} title="Per-Setting Standard Training Library">
+        <p className="mb-2 text-sm text-neutral-mid">
+          The standard training library is built per regulated setting (the 11 /who-we-serve slugs), using a
+          <strong> universal base + per-setting overlay</strong> model, so each kind of provider (care home, dental, GP, hospice…)
+          gets training that fits it.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1">
+          <RefTag color="teal">universal = care_setting NULL</RefTag>
+          <RefTag color="blue">overlay = care_setting set</RefTag>
+          <RefTag color="purple">11 settings</RefTag>
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Model</p>
+          <RefRow label="Taxonomy"        value="apps/api/src/lib/care-setting.ts — CARE_SETTINGS = the 11 /who-we-serve slugs (residential-care, nursing-homes, domiciliary-care, live-in-care, complex-care, shared-lives, substance-misuse, hospices, independent-hospitals, gp-practices, dental-practices). NULL = universal." />
+          <RefRow label="Universal base"  value="TrainingTopic/Module with care_setting = NULL — cross-over subjects (safeguarding, fire, IPC…) shown under every setting, written once, setting-neutral voice." />
+          <RefRow label="Setting overlay" value="TrainingTopic with care_setting = a slug — only that setting's specific topics (e.g. dental: HTM 01-05 decontamination, IR(ME)R radiography, medical emergencies, GDC standards). Seeded in apps/api/src/data/training-topics.ts." />
+          <RefRow label="Tenant mapping"  value="facilityTypeToSetting(tenant.facility_type) → a slug (default residential-care); settingFallbackOrder() for content fallback." />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Console — /platform/standard-training</p>
+          <RefRow label="Setting tabs"    value="“All settings” tab = the universal base; each setting tab shows only that setting's overlay modules (with counts). Review + send for external approval per setting." />
+          <RefRow label="Neutralise voice" value="Per-module wand + bulk 'Neutralise voice (all)' on the All-settings tab. POST /standard-training/modules/:id/neutralise rewrites wording setting-neutral, PRESERVING section/question counts, every correct index, and every image_key (neutraliseVoice.ts). Un-publishes + supersedes review (like a regenerate)." />
+          <RefRow label="Setting-aware gen" value="generateAnnualModuleDraft appends settingGenerationContext(care_setting) — per-setting voice/scenarios/regulators (NULL = neutral). Generated module inherits the topic's care_setting." />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Grounding — Training Seeds</p>
+          <RefRow label="Training Seeds"  value="console → /training-seeds (TrainingSeed model). buildGrounding() now LEADS generation grounding with the topic's TrainingSeed (matched by training_type = topic title). Blank, inactive placeholders auto-create for every setting-specific topic (ensureSettingTrainingSeeds) — fill + activate to ground that module." />
+          <RefRow label="Policy seeds"     value="PolicySeed grounding is setting-aware: a setting-specific topic only pulls same-setting policy seeds (dental no longer grounds in nursing-home policy text)." />
+        </div>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Tenant-facing</p>
+          <RefRow label="Catalogue scope" value="GET /training/catalogue filters topics + standard library to the tenant's setting + universal — a dental practice sees universal + dental only, not other settings' overlays." />
+          <RefRow label="Marketing"        value="TODO (Phase 3): setting tabs on /staff-training 'Annual Mandatory Training Library' + care_setting on /public/training/standard-modules." />
+        </div>
+      </RefSection>
+
       <RefSection icon={ClipboardList} title="CQC Staff Prep">
         <p className="leading-relaxed text-neutral-mid">
           Inspector-style practice questions sent to staff, evaluated by AI against a model answer. Free-text answers only — no multiple choice.

@@ -1599,19 +1599,22 @@ adminRouter.delete('/regulations/:id', async (req: Request, res: Response) => {
 
 // ─── Training Seeds CRUD ─────────────────────────────────────────────────────
 
+// A seed's care setting is derived from its matching topic (by title; NULL =
+// universal). Tag the seed so the console shows which setting it grounds — applied
+// on every read AND write, so the tag survives an edit (not just a full reload).
+const SEED_SETTING_BY_TITLE = new Map(
+  TRAINING_TOPICS.filter(t => t.care_setting).map(t => [t.title.toLowerCase(), t.care_setting as string]),
+)
+function withSettingTag(seed: any) {
+  const labels = SETTING_LABELS as Record<string, string>
+  const cs = SEED_SETTING_BY_TITLE.get(String(seed?.training_type).toLowerCase()) ?? null
+  return { ...seed, care_setting: cs, care_setting_label: cs ? (labels[cs] ?? cs) : null }
+}
+
 adminRouter.get('/training-seeds', async (_req: Request, res: Response) => {
   try {
     const seeds = await (prisma as any).trainingSeed.findMany({ orderBy: { training_type: 'asc' } })
-    // Tag each seed with the care setting of its matching topic (by title; NULL =
-    // universal/cross-over) so the console shows which setting each seed grounds.
-    const settingByTitle = new Map(
-      TRAINING_TOPICS.filter(t => t.care_setting).map(t => [t.title.toLowerCase(), t.care_setting as string]),
-    )
-    const labels = SETTING_LABELS as Record<string, string>
-    const withSetting = (seeds as any[]).map(s => {
-      const cs = settingByTitle.get(String(s.training_type).toLowerCase()) ?? null
-      return { ...s, care_setting: cs, care_setting_label: cs ? (labels[cs] ?? cs) : null }
-    })
+    const withSetting = (seeds as any[]).map(withSettingTag)
     ok(res, { seeds: withSetting, total: withSetting.length })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -1651,7 +1654,7 @@ adminRouter.post('/training-seeds', async (req: Request, res: Response) => {
         updated_at:               new Date(),
       },
     })
-    ok(res, seed, 201)
+    ok(res, withSettingTag(seed), 201)
   } catch (e: any) {
     err(res, 'CREATE_FAILED', e.message, 500)
   }
@@ -1688,7 +1691,7 @@ adminRouter.patch('/training-seeds/:id', async (req: Request, res: Response) => 
         updated_at: new Date(),
       },
     })
-    ok(res, updated)
+    ok(res, withSettingTag(updated))
   } catch (e: any) {
     err(res, 'UPDATE_FAILED', e.message, 500)
   }

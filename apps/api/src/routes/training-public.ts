@@ -4,6 +4,7 @@ import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
+import { createTrainingCheckoutSession, TRAINING_LICENCE_PENCE } from '../services/billing/stripe'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -231,5 +232,38 @@ publicTrainingRouter.get('/seo-index', async (_req: Request, res: Response) => {
     res.json({ data: { pages, images } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
+
+// GET /public/training/licence-price — unit price (pence) for the buy page total.
+publicTrainingRouter.get('/licence-price', (_req: Request, res: Response) => {
+  res.json({ data: { unit_pence: TRAINING_LICENCE_PENCE, currency: 'gbp' } })
+})
+
+// POST /public/training/checkout — start a one-off purchase of N training licences
+// for one module (training-only gateway tier). Returns the Stripe Checkout URL.
+// Public + unauthenticated: the buyer is usually a brand-new prospect; the account
+// is provisioned on return (reconcile), not before payment.
+publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
+  try {
+    const { module_slug, quantity, email, org_name } = req.body ?? {}
+    const slug = String(module_slug ?? '').trim()
+    const qty  = Math.floor(Number(quantity))
+    const mail = String(email ?? '').trim().toLowerCase()
+    const org  = String(org_name ?? '').trim()
+    if (!slug || !org || !Number.isFinite(qty) || qty < 1) {
+      res.status(400).json({ error: 'module_slug, quantity and org_name are required' }); return
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { res.status(400).json({ error: 'A valid email is required' }); return }
+
+    // Resolve the module name from its topic (snapshot for the receipt + licence).
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { title: true } })
+    const topic = (topics as any[]).find(t => slugify(t.title) === slug)
+    if (!topic) { res.status(404).json({ error: 'Unknown training module' }); return }
+
+    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org })
+    res.json({ data: { url } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'checkout failed' })
   }
 })

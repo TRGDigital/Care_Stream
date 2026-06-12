@@ -122,6 +122,57 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
   return session.url
 }
 
+// ─── Training licence checkout (one-off, training-only gateway tier) ───────────
+// One row of the cart = one staff seat × one module (£25.99). The price is resolved
+// from the configured training Product so there's no separate price-id to manage.
+export const TRAINING_LICENCE_PENCE = 2599
+
+async function trainingPriceId(): Promise<string> {
+  const productId = process.env.STRIPE_TRAINING_PRODUCT_ID
+  if (!productId) throw new Error('STRIPE_TRAINING_PRODUCT_ID is not configured')
+  const stripe = getStripe()
+  const prices = await stripe.prices.list({ product: productId, active: true, limit: 20 }, managedPaymentsRequestOptions())
+  const price = prices.data.find(p => p.currency === 'gbp' && p.type === 'one_time') ?? prices.data[0]
+  if (!price) throw new Error('No active price on the training product — add a £25.99 one-off GBP price in Stripe')
+  return price.id
+}
+
+export interface TrainingCheckoutInput {
+  moduleSlug: string
+  moduleName: string
+  quantity: number
+  email: string
+  orgName: string
+}
+
+// Hosted one-off Checkout for N training licences. Provisioning happens on return
+// (reconcile-on-return) — see reconcileTrainingCheckout — not via webhook.
+export async function createTrainingCheckoutSession(input: TrainingCheckoutInput): Promise<string> {
+  const stripe = getStripe()
+  const priceId = await trainingPriceId()
+  const qty = Math.max(1, Math.min(500, Math.floor(input.quantity || 1)))
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode:         'payment',
+    line_items:   [{ price: priceId, quantity: qty }],
+    customer_email: input.email,
+    metadata: {
+      kind:        'training_licence',
+      module_slug: input.moduleSlug,
+      module_name: input.moduleName.slice(0, 250),
+      quantity:    String(qty),
+      org_name:    input.orgName.slice(0, 250),
+      email:       input.email,
+    },
+    billing_address_collection: 'required',
+    success_url: `${webUrl()}/buy/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/staff-training/${input.moduleSlug}?buy=cancelled`,
+  }
+  if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
+  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  if (!session.url) throw new Error('Stripe did not return a checkout URL')
+  return session.url
+}
+
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 // Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
 // Used for in-app cancellation and for cleaning up test accounts before deletion.

@@ -332,6 +332,13 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     err(res, 'INVALID', 'module_ids required', 400); return
   }
 
+  // Training-only tenants assign modules by allocating a purchased licence, not by
+  // free bulk-enrol — otherwise they'd bypass the per-module charge.
+  const enrollTenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { tier: true } })
+  if (enrollTenant?.tier === 'training_only') {
+    err(res, 'TRAINING_ONLY', 'Assign training by allocating a licence on the Licences page.', 403); return
+  }
+
   try {
     // Restrict to user_ids that actually belong to this tenant, and module_ids that
     // exist and are active — prevents injecting foreign/arbitrary UUIDs into this

@@ -120,13 +120,13 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
         {activeLabel ? (
           <>
             <strong>{activeLabel}</strong> teams get the full core library that every CQC-regulated service needs,
-            <strong className="text-blue-700"> plus the modules built specifically for {activeLabel}</strong> — shown
+            <strong className="text-blue-700"> plus the modules built specifically for {activeLabel}</strong>, shown
             first below, in blue. Every module is a complete teach-then-assess course delivered in the hub in any
             language, with an assessment and automatic renewal reminders at 90, 30 and 7 days.
           </>
         ) : (
           <>
-            The core mandatory library every care service needs — ready to assign to your whole team. Choose your
+            The core mandatory library every care service needs, ready to assign to your whole team. Choose your
             setting above to see the extra modules we&apos;ve built specifically for it.
           </>
         )}
@@ -140,7 +140,7 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
             <h3 className="text-xs font-bold uppercase tracking-widest text-blue-700">Built specifically for {activeLabel}</h3>
           </div>
           <p className="mb-6 max-w-2xl text-sm leading-relaxed text-neutral-mid">
-            These modules cover the topics and regulations unique to {activeLabel} — written for this setting, not adapted from a generic course.
+            These modules cover the topics and regulations unique to {activeLabel}. They are written for this setting, not adapted from a generic course.
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {settingSpecific.map((t) => <ModuleCard key={t.slug} t={t} accent settingLabel={activeLabel} />)}
@@ -150,7 +150,7 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
 
       {/* Universal core — grouped by subject */}
       {hasSpecific && (
-        <h3 className="mb-8 text-sm font-bold uppercase tracking-widest text-neutral-mid">Core modules — every service gets these</h3>
+        <h3 className="mb-8 text-sm font-bold uppercase tracking-widest text-neutral-mid">The core library every service gets</h3>
       )}
       <div className="space-y-16">
         {GROUP_ORDER.filter((g) => universal.some((t) => t.group_key === g)).map((g) => (

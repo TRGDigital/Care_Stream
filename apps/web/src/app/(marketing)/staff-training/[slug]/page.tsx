@@ -20,6 +20,8 @@ type ModuleDetail = {
   title: string
   group_key: string
   group_label: string
+  care_setting: string | null
+  built: boolean
   frequency: string
   requires_practical: boolean
   description: string | null
@@ -104,6 +106,34 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const sections = m.sections.map((s) => ({ heading: careSetting(s.heading), body: careSetting(s.body), image_url: s.image_url })).filter((s) => s.body)
   const hasSectionImages = sections.some((s) => s.image_url)
 
+  // Modules not yet generated still get a full-shaped page (with image slots) using
+  // sensible placeholders, so the framework is visible across every setting.
+  const tLc = m.title.toLowerCase()
+  const placeholderOutcomes = [
+    `Explain what ${tLc} means and why it matters in your service`,
+    `Apply ${tLc} correctly in everyday situations`,
+    `Recognise the risks and know the right action to take`,
+    `Understand your responsibilities and when to escalate a concern`,
+  ]
+  const placeholderSections: ModuleSection[] = [
+    { heading: `Understanding ${tLc}`,        body: `An introduction to ${tLc}: the key principles and why they matter for the people you support.`, image_url: null },
+    { heading: 'Your responsibilities',        body: 'What every member of the team must do, and the standards expected across your service.', image_url: null },
+    { heading: 'Applying it in practice',      body: `Realistic scenarios that show ${tLc} in action, with the right course of action explained.`, image_url: null },
+    { heading: 'Getting it right, and escalating', body: 'Common pitfalls, how to avoid them, and when and how to raise a concern.', image_url: null },
+  ]
+  const placeholderKeyPoints = [
+    `${m.title} is part of the mandatory training expected in CQC-regulated services`,
+    'It applies to every member of the team whose role requires it',
+    `Refreshed ${freqWord(m.frequency)}, with renewal reminders handled automatically`,
+    'Completed in the hub, in any language, with an assessment at the end',
+  ]
+  const outcomesToShow  = outcomes.length  ? outcomes  : placeholderOutcomes
+  const sectionsToShow  = sections.length  ? sections  : placeholderSections
+  const keyPointsToShow = keyPoints.length ? keyPoints : placeholderKeyPoints
+  const showSectionImages = hasSectionImages || !m.built // image-slot layout for placeholders too
+
+  const buyHref = `/register?buy=${encodeURIComponent(m.slug)}`
+
   const faqs = [
     { question: `Is ${m.title} training mandatory in care settings?`, answer: `${m.title} is part of the training that CQC-regulated care settings are expected to provide. CareStream includes it in the standard library so you can assign it to your whole team.` },
     { question: `How often should staff complete ${m.title} training?`, answer: `Most services refresh ${m.title} training ${freqWord(m.frequency)}. CareStream tracks each person's renewal date and sends automatic reminders at 90, 30 and 7 days.` },
@@ -137,8 +167,14 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
                 {m.requires_practical && (
                   <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white"><CheckCircle2 size={13} /> Practical sign-off</span>
                 )}
+                {!m.built && (
+                  <span className="flex items-center gap-1.5 rounded-full bg-amber-brand/90 px-3 py-1.5 text-xs font-semibold text-white"><RefreshCw size={13} /> In preparation</span>
+                )}
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
+                  Buy Training Module
+                </Link>
                 <Link href="/demo" className="btn-amber rounded-btn px-8 py-4 text-sm">Book a Demo</Link>
                 <Link href="/register" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
               </div>
@@ -170,28 +206,25 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
       </section>
 
       {/* ── Outcomes ──────────────────────────────────────────────────────── */}
-      {outcomes.length > 0 && (
-        <section className="bg-neutral-light py-24">
-          <div className="mx-auto max-w-content px-6">
-            <SectionLabel>Learning Outcomes</SectionLabel>
-            <h2 className="mb-12 text-4xl font-extrabold leading-tight text-neutral-dark">
-              By the end, your staff will be able to:
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {outcomes.map((o) => (
-                <div key={o} className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-5 shadow-card">
-                  <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0 text-teal" />
-                  <span className="leading-relaxed text-neutral-dark">{o}</span>
-                </div>
-              ))}
-            </div>
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Learning Outcomes</SectionLabel>
+          <h2 className="mb-12 text-4xl font-extrabold leading-tight text-neutral-dark">
+            By the end, your staff will be able to:
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {outcomesToShow.map((o) => (
+              <div key={o} className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-5 shadow-card">
+                <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0 text-teal" />
+                <span className="leading-relaxed text-neutral-dark">{o}</span>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── What your team will learn (section by section) ────────────────── */}
-      {sections.length > 0 && (
-        <section className="bg-white py-24">
+      <section className="bg-white py-24">
           <div className="mx-auto max-w-content px-6">
             <SectionLabel>What Your Team Will Learn</SectionLabel>
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
@@ -201,9 +234,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
               The module is built in short, practical sections. Each one teaches a part of the topic,
               then applies it to a real care scenario and checks understanding before moving on.
             </p>
-            {hasSectionImages ? (
+            {showSectionImages ? (
               <div className="space-y-14 lg:space-y-20">
-                {sections.map((s, i) => {
+                {sectionsToShow.map((s, i) => {
                   const flip = i % 2 === 1
                   return (
                     <div key={s.heading} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
@@ -233,7 +266,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
               </div>
             ) : (
               <div className="space-y-8">
-                {sections.map((s, i) => (
+                {sectionsToShow.map((s, i) => (
                   <div key={s.heading} className="flex gap-5">
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
                       {String(i + 1).padStart(2, '0')}
@@ -248,26 +281,23 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
             )}
           </div>
         </section>
-      )}
 
       {/* ── Key points + who/how often + standards ────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-12 lg:grid-cols-3">
-            {keyPoints.length > 0 && (
-              <div className="lg:col-span-2">
-                <SectionLabel>Key Points Covered</SectionLabel>
-                <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark">The things your team must remember.</h2>
-                <ul className="space-y-3">
-                  {keyPoints.map((k) => (
-                    <li key={k} className="flex items-start gap-3 text-lg leading-relaxed text-neutral-mid">
-                      <span className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-teal" />
-                      <span>{k}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div className="lg:col-span-2">
+              <SectionLabel>Key Points Covered</SectionLabel>
+              <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark">The things your team must remember.</h2>
+              <ul className="space-y-3">
+                {keyPointsToShow.map((k) => (
+                  <li key={k} className="flex items-start gap-3 text-lg leading-relaxed text-neutral-mid">
+                    <span className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-teal" />
+                    <span>{k}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <div className="space-y-4">
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className="mb-3 flex items-center gap-2"><Calendar size={18} className="text-teal" /><p className="font-bold text-neutral-dark">Who and how often</p></div>

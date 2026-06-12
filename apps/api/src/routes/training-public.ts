@@ -145,6 +145,8 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       title:              topic.title,
       group_key:          topic.group_key,
       group_label:        TOPIC_GROUP_LABELS[topic.group_key] ?? topic.group_key,
+      care_setting:       topic.care_setting ?? null,
+      built:              !!m,
       frequency:          m?.frequency ?? topic.default_frequency,
       requires_practical: topic.requires_practical,
       description:        m?.description ?? null,

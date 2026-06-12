@@ -51,40 +51,35 @@ type Props = {
 export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
   const [active, setActive] = useState<string | null>(null) // null = All settings (universal base)
 
-  const built = topics.filter((t) => t.built)
-  const settingsWithContent = settings.filter((s) => built.some((t) => t.care_setting === s.key))
-  const showTabs = settingsWithContent.length > 0
-
-  const visible = built.filter((t) => (active ? !t.care_setting || t.care_setting === active : !t.care_setting))
   const activeLabel = settings.find((s) => s.key === active)?.label ?? null
+  // All settings tab = the universal cross-over modules; a setting tab = universal +
+  // that setting's specific modules. Tabs for every sector are always shown so the
+  // full framework is visible (modules still being built show a "Coming soon" badge).
+  const visible = topics.filter((t) => (active ? !t.care_setting || t.care_setting === active : !t.care_setting))
 
   return (
     <div>
-      {showTabs && (
-        <div className="mb-10 flex flex-wrap gap-2">
-          {[{ key: null as string | null, label: 'All settings' }, ...settingsWithContent].map((tab) => {
-            const on = active === tab.key
-            return (
-              <button
-                key={tab.key ?? 'all'}
-                type="button"
-                onClick={() => setActive(tab.key)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${on ? 'bg-teal text-white' : 'bg-white text-neutral-mid shadow-card hover:text-teal'}`}
-              >
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <div className="mb-10 flex flex-wrap gap-2">
+        {[{ key: null as string | null, label: 'All settings' }, ...settings].map((tab) => {
+          const on = active === tab.key
+          return (
+            <button
+              key={tab.key ?? 'all'}
+              type="button"
+              onClick={() => setActive(tab.key)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${on ? 'bg-teal text-white' : 'bg-white text-neutral-mid shadow-card hover:text-teal'}`}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
 
-      {showTabs && (
-        <p className="mb-10 -mt-4 text-sm text-neutral-mid">
-          {activeLabel
-            ? <>The modules every team gets, plus the ones specific to <strong>{activeLabel}</strong>.</>
-            : <>The core modules every care service gets. Pick your setting to see the modules built specifically for it.</>}
-        </p>
-      )}
+      <p className="mb-10 -mt-4 text-sm text-neutral-mid">
+        {activeLabel
+          ? <>The modules every team gets, plus the ones specific to <strong>{activeLabel}</strong>.</>
+          : <>The core modules every care service gets. Pick your setting to see the modules built specifically for it.</>}
+      </p>
 
       <div className="space-y-16">
         {GROUP_ORDER.filter((g) => visible.some((t) => t.group_key === g)).map((g) => (

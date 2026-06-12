@@ -7,7 +7,7 @@ import { LpForm } from './lp-form'
 import { LpTracking } from './lp-tracking'
 import { LpFormOverlayProvider, LpCta } from './lp-form-overlay'
 import { LpHowItWorks } from './sections'
-import { LpFooter } from './lp-legal'
+import { LpFooter, LpLegalProvider } from './lp-legal'
 import { LpStats } from './lp-extras'
 import { LpAbout, LpPlatform, LpStatementBand, LpTestimonial, LpFaqEditorial, LpFinalCtaEditorial } from './editorial-sections'
 
@@ -15,6 +15,7 @@ export function LandingPage({ page }: { page: LpPage }) {
   const c = page.content
   const testimonial = c.socialProof?.testimonials?.[0]
   return (
+    <LpLegalProvider>
     <LpFormOverlayProvider page={page}>
       <div className={`${fraunces.variable} lp-editorial bg-cream`}>
         <LpTracking pageId={page.id} />
@@ -127,5 +128,6 @@ export function LandingPage({ page }: { page: LpPage }) {
         <LpFooter />
       </div>
     </LpFormOverlayProvider>
+    </LpLegalProvider>
   )
 }

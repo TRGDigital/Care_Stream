@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 import type { LpField, LpPage } from '@/lib/lp/types'
 import { track, getAttribution } from '@/lib/lp/tracker'
+import { useLpLegal } from './lp-legal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const FREE_EMAIL = /@(gmail|googlemail|yahoo|ymail|hotmail|outlook|live|msn|aol|icloud|me|mac|proton|protonmail|gmx|mail\.com|yandex|zoho)\./i
@@ -34,6 +34,7 @@ function fireConversions(page: LpPage) {
 
 export function LpForm({ page, withAnchor = false, bare = false }: { page: LpPage; withAnchor?: boolean; bare?: boolean }) {
   const f = page.content.form
+  const { openLegal } = useLpLegal()
   const cardCls = bare ? '' : 'rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:p-8'
   const [values, setValues]       = useState<Record<string, string>>({})
   const [errors, setErrors]       = useState<Record<string, string>>({})
@@ -201,7 +202,7 @@ export function LpForm({ page, withAnchor = false, bare = false }: { page: LpPag
 
         <p className="text-center text-xs leading-relaxed text-gray-400">
           {f.consentText}{' '}
-          <Link href={f.privacyLinkUrl} className="underline hover:text-neutral-mid">Privacy policy</Link>.
+          <button type="button" onClick={() => openLegal('/privacy')} className="underline hover:text-neutral-mid">Privacy policy</button>.
         </p>
       </form>
     </div>

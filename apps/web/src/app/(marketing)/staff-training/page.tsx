@@ -2,10 +2,10 @@ import Link from 'next/link'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
-  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, ArrowRight,
+  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
-import { SiteImage } from '@/components/site-image'
+import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
 
 export const revalidate = 60
 
@@ -15,6 +15,7 @@ type CatalogueTopic = {
   slug: string
   title: string
   group_key: string
+  care_setting: string | null
   frequency: string
   requires_practical: boolean
   built: boolean
@@ -24,32 +25,19 @@ type CatalogueTopic = {
   illustration_url: string | null
 }
 
-type Catalogue = { groups: Record<string, string>; topics: CatalogueTopic[] }
+type Catalogue = { groups: Record<string, string>; settings: Array<{ key: string; label: string }>; topics: CatalogueTopic[] }
 
 async function getCatalogue(): Promise<Catalogue> {
   try {
     const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 60 } })
     if (res.ok) {
       const d = (await res.json())?.data
-      if (Array.isArray(d?.topics)) return { groups: d.groups ?? {}, topics: d.topics as CatalogueTopic[] }
+      if (Array.isArray(d?.topics)) return { groups: d.groups ?? {}, settings: d.settings ?? [], topics: d.topics as CatalogueTopic[] }
     }
   } catch {
     // fall through to an empty catalogue
   }
-  return { groups: {}, topics: [] }
-}
-
-const GROUP_ORDER = ['core_mandatory', 'health_safety', 'care_clinical', 'conduct_governance', 'role_specific']
-const GROUP_BLURB: Record<string, string> = {
-  core_mandatory:     'A core mandatory subject every care worker must complete.',
-  health_safety:      'A statutory health and safety subject for your team.',
-  care_clinical:      'A care and clinical subject for hands-on staff.',
-  conduct_governance: 'A conduct and governance subject for a well-run service.',
-  role_specific:      'A role or resident-specific subject, assigned where needed.',
-}
-function frequencyLabel(f: string): string {
-  return f === 'annual' ? 'Annual' : f === 'biennial' ? 'Biennial' : f === 'triennial' ? 'Triennial'
-    : f === 'once' ? 'One-off' : f === 'adhoc' ? 'Ad-hoc' : f
+  return { groups: {}, settings: [], topics: [] }
 }
 
 export const metadata = {
@@ -340,47 +328,7 @@ export default async function StaffTrainingPage() {
               best practice for UK adult social care. Each one becomes a complete teach-then-assess
               module with its own cover, learning sections, a real care scenario, and an assessment.
             </p>
-            <div className="space-y-16">
-              {GROUP_ORDER.filter((g) => catalogue.topics.some((t) => t.group_key === g)).map((g) => (
-                <div key={g}>
-                  <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-teal">{catalogue.groups[g] ?? g}</h3>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {catalogue.topics.filter((t) => t.group_key === g).map((t) => (
-                      <Link
-                        key={t.slug}
-                        href={`/staff-training/${t.slug}`}
-                        className="card-lift group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card transition hover:border-teal/40"
-                      >
-                        <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
-                          {t.illustration_url ? (
-                            <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-teal-gradient">
-                              <GraduationCap size={40} className="text-white/80" />
-                            </div>
-                          )}
-                          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
-                            {frequencyLabel(t.frequency)}
-                          </span>
-                        </div>
-                        <div className="flex flex-1 flex-col p-5">
-                          <h4 className="mb-2 font-bold leading-snug text-neutral-dark group-hover:text-teal">{t.title}</h4>
-                          <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">
-                            {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
-                          </p>
-                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-neutral-mid">
-                            {t.requires_practical ? <span>Practical sign-off</span> : <span />}
-                            <span className="inline-flex items-center gap-1 font-semibold text-teal">
-                              Read guide <ArrowRight size={13} className="transition group-hover:translate-x-0.5" />
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <TrainingLibraryTabs groups={catalogue.groups} settings={catalogue.settings} topics={catalogue.topics} />
             <p className="mt-12 text-sm text-neutral-mid">
               Every subject is part of your standard library. You can also generate tailored modules
               from your own policies.

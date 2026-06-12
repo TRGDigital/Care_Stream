@@ -3,6 +3,7 @@ import { downloadFile } from '../services/storage/s3'
 import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -84,6 +85,7 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         slug:               slugify(t.title),
         title:              t.title,
         group_key:          t.group_key,
+        care_setting:       t.care_setting ?? null,
         frequency:          txt?.frequency ?? t.default_frequency,
         requires_practical: t.requires_practical,
         built:              !!txt,
@@ -93,7 +95,7 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
       }
     })
-    res.json({ data: { groups: TOPIC_GROUP_LABELS, topics: items } })
+    res.json({ data: { groups: TOPIC_GROUP_LABELS, settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })), topics: items } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })
   }

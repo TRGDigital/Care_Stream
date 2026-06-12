@@ -285,6 +285,8 @@ export default function PlatformDashboard() {
     { label: 'Queries (all time)',  value: stats.queryCount,        Icon: MessageSquare, accent: false },
     { label: 'Queries (last 7d)',   value: stats.queriesLast7Days,  Icon: TrendingUp,    accent: false },
     { label: 'Regulations (live)',  value: stats.regulationCount,   Icon: BookOpen,      accent: false },
+    { label: 'Pages auto-indexed',  value: stats.indexedPageCount ?? 0, Icon: Search,    accent: true,
+      sub: stats.indexBalance != null ? `${stats.indexBalance.toLocaleString()} RalfyIndex credits left` : 'RalfyIndex' },
   ] : []
 
   return (
@@ -324,7 +326,7 @@ export default function PlatformDashboard() {
             {tab === 'overview' && (
               <div className="space-y-8">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                  {OVERVIEW_CARDS.map(({ label, value, Icon, accent }) => (
+                  {OVERVIEW_CARDS.map(({ label, value, Icon, accent, sub }: { label: string; value: number; Icon: typeof Search; accent: boolean; sub?: string }) => (
                     <div
                       key={label}
                       className={`rounded-xl border p-4 ${accent ? 'border-teal/30 bg-teal-light' : 'border-gray-200 bg-white'}`}
@@ -336,6 +338,7 @@ export default function PlatformDashboard() {
                       <p className={`text-2xl font-bold ${accent ? 'text-teal' : 'text-neutral-dark'}`}>
                         {value.toLocaleString()}
                       </p>
+                      {sub && <p className="mt-0.5 text-xs text-neutral-mid">{sub}</p>}
                     </div>
                   ))}
                 </div>

@@ -1245,3 +1245,34 @@ model LpEvent {
   @@index([event_type, created_at])
   @@map("lp_events")
 }
+
+// ─── RalfyIndex auto-indexing ──────────────────────────────────────────────────
+// Pushes new public pages (blog posts, marketing/SEO pages) to ralfyindex.com for
+// automatic search-engine indexing. Tables created via manual_ralfyindex.sql.
+
+model RalfyIndexConfig {
+  id             String   @id @default("singleton")
+  api_key        String?
+  enabled        Boolean  @default(true)
+  instant_index  Boolean  @default(false)
+  project_prefix String   @default("CareStream")
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("ralfyindex_config")
+}
+
+model RalfyIndexSubmission {
+  id           String   @id @default(uuid())
+  url          String
+  source       String   @default("blog") // blog|page
+  blog_post_id String?
+  project_name String?
+  status       String   @default("submitted") // submitted|failed
+  credits_used Int?
+  error        String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([status, created_at])
+  @@index([url])
+  @@map("ralfyindex_submissions")
+}

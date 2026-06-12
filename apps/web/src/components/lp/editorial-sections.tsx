@@ -146,9 +146,8 @@ export function LpFinalCtaEditorial({ data }: { data: LpContent['finalCta'] }) {
       <div className="mx-auto max-w-content px-6">
         <h2 className="mx-auto max-w-2xl text-3xl font-normal leading-tight text-cream md:text-4xl">{data.headline}</h2>
         {data.subheadline && <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-cream/85">{data.subheadline}</p>}
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-8 flex justify-center">
           <LpCta className="rounded-btn bg-cream px-8 py-4 text-sm font-semibold text-teal transition-colors hover:bg-white">{data.ctaLabel}</LpCta>
-          <a href="mailto:hello@carestreamai.com" className="rounded-btn border border-cream/40 px-8 py-4 text-sm font-semibold text-cream transition-colors hover:bg-white/10">Email the team</a>
         </div>
       </div>
     </section>

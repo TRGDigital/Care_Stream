@@ -69,12 +69,18 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
   const tenantId = (req as any).user.tenant_id
   try {
     await ensureTrainingTopicsSeeded()
+    // Only show this tenant the universal (cross-over) catalogue + the topics/modules
+    // for THEIR care setting — e.g. a dental practice sees universal + dental, not the
+    // nursing-home or GP overlays.
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+    const setting = facilityTypeToSetting(tenant?.facility_type)
+    const settingOr = [{ care_setting: null }, { care_setting: setting }]
     const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true, created_at: true }
     const [topics, modules, standard] = await Promise.all([
-      (prisma as any).trainingTopic.findMany({ where: { OR: [{ tenant_id: null }, { tenant_id: tenantId }], is_active: true }, orderBy: { sort_order: 'asc' } }),
+      (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
-      // Platform standard library — published modules shared to all tenants.
-      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true }, select: sel }),
+      // Platform standard library — published modules shared to all tenants, scoped to this tenant's setting (+ universal).
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: sel }),
     ])
     const slim = (m: any) => ({ ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
     const moduleByTopic = new Map<string, any>()

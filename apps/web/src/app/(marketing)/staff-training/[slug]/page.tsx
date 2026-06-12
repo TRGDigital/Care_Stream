@@ -132,7 +132,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const keyPointsToShow = keyPoints.length ? keyPoints : placeholderKeyPoints
   const showSectionImages = hasSectionImages || !m.built // image-slot layout for placeholders too
 
-  const buyHref = `/register?buy=${encodeURIComponent(m.slug)}`
+  const buyHref = `/buy/${encodeURIComponent(m.slug)}`
 
   const faqs = [
     { question: `Is ${m.title} training mandatory in care settings?`, answer: `${m.title} is part of the training that CQC-regulated care settings are expected to provide. CareStream includes it in the standard library so you can assign it to your whole team.` },

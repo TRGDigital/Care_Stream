@@ -4,7 +4,11 @@ import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
-import { createTrainingCheckoutSession, TRAINING_LICENCE_PENCE } from '../services/billing/stripe'
+import { createTrainingCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
+import { createLoginLink } from '../lib/login-tokens'
+import { sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { hashPassword } from '../services/auth/password'
+import crypto from 'crypto'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -265,5 +269,80 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
+  }
+})
+
+// A URL-safe, unique tenant slug from an org name (mirrors auth.ts registration).
+async function uniqueTrainingSlug(orgName: string): Promise<string> {
+  const base = (orgName || 'service').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'service'
+  for (let i = 0; i < 50; i++) {
+    const slug = i === 0 ? base : `${base}-${i + 1}`
+    const clash = await (prisma as any).tenant.findFirst({ where: { OR: [{ slug }, { email_domain: slug }] }, select: { id: true } })
+    if (!clash) return slug
+  }
+  return `${base}-${Date.now().toString(36)}`
+}
+
+// POST /public/training/checkout/reconcile — after the Stripe return, verify the
+// payment and provision: a training-only tenant + admin user + N licences (pooled,
+// unallocated) + a passwordless login email. Idempotent on the Stripe payment id.
+publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Response) => {
+  try {
+    const sessionId = String(req.body?.session_id ?? '').trim()
+    if (!sessionId) { res.status(400).json({ error: 'session_id is required' }); return }
+
+    const s = await retrieveTrainingCheckoutSession(sessionId)
+    if (!s) { res.status(404).json({ error: 'Checkout session not found' }); return }
+    if (!s.paid) { res.status(402).json({ error: 'Payment not complete yet' }); return }
+
+    // Idempotent: if licences already exist for this payment, just report success.
+    const existing = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: s.paymentId }, select: { id: true } })
+    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email } }); return }
+
+    const moduleSlug = s.metadata.module_slug || ''
+    const moduleName = s.metadata.module_name || moduleSlug
+    const qty        = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
+    const orgName    = s.metadata.org_name || 'Your service'
+    const email      = (s.email || s.metadata.email || '').toLowerCase()
+    const adminName  = s.customerName || orgName
+    if (!email) { res.status(400).json({ error: 'No email on the payment' }); return }
+
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true } })
+    const topicId = (topics as any[]).find(t => slugify(t.title) === moduleSlug)?.id ?? null
+    const renewalDue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+
+    // Attach to an existing account if the email is already known, else create a
+    // new training-only tenant + admin.
+    let user = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } })
+    let tenantId: string
+    if (user) {
+      tenantId = user.tenant_id
+    } else {
+      const slug = await uniqueTrainingSlug(orgName)
+      const tenant = await (prisma as any).tenant.create({
+        data: { name: orgName, slug, email_domain: slug, tier: 'training_only', subscription_status: 'active', branding_signoff: 'The CareStream Team' },
+      })
+      // Passwordless: a random hash satisfies the non-null column; they sign in via
+      // the magic login link (and can set a password later if they want).
+      const tempHash = await hashPassword(crypto.randomBytes(12).toString('base64url'))
+      user = await (prisma as any).user.create({
+        data: { tenant_id: tenant.id, email, name: adminName, role: 'admin', email_verified: true, password_hash: tempHash },
+      })
+      tenantId = tenant.id
+    }
+
+    await (prisma as any).trainingLicense.createMany({
+      data: Array.from({ length: qty }, () => ({
+        tenant_id: tenantId, topic_id: topicId, module_slug: moduleSlug, module_name: moduleName,
+        price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
+      })),
+    })
+
+    const link = await createLoginLink(user.id, tenantId, 14 * 24 * 60 * 60 * 1000)
+    await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
+
+    res.json({ data: { provisioned: true, email, licences: qty, module: moduleName } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'reconcile failed' })
   }
 })

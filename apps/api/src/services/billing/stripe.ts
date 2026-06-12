@@ -173,6 +173,32 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   return session.url
 }
 
+export interface TrainingCheckoutResult {
+  paid:         boolean
+  paymentId:    string | null
+  email:        string | null
+  customerName: string | null
+  metadata:     Record<string, string>
+}
+
+// Retrieve a training Checkout session to verify payment + read its metadata
+// (used by reconcile-on-return provisioning).
+export async function retrieveTrainingCheckoutSession(sessionId: string): Promise<TrainingCheckoutResult | null> {
+  const stripe = getStripe()
+  const session = await stripe.checkout.sessions.retrieve(sessionId, managedPaymentsRequestOptions())
+  if (!session) return null
+  const paymentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : (session.payment_intent?.id ?? session.id)
+  return {
+    paid:         session.payment_status === 'paid',
+    paymentId,
+    email:        session.customer_details?.email ?? session.customer_email ?? null,
+    customerName: session.customer_details?.name ?? null,
+    metadata:     (session.metadata ?? {}) as Record<string, string>,
+  }
+}
+
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 // Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
 // Used for in-app cancellation and for cleaning up test accounts before deletion.

@@ -21,7 +21,7 @@ import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
-  GraduationCap, HelpCircle, FileText, Smartphone, LayoutGrid,
+  GraduationCap, HelpCircle, FileText, Smartphone, LayoutGrid, Headset, ShieldCheck,
 } from 'lucide-react'
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
@@ -1591,10 +1591,10 @@ function DiverseWorkforce() {
             <div className="pointer-events-none absolute -bottom-10 -left-10 -z-0 h-64 w-64 rounded-full bg-gradient-to-tr from-[#9B52B5] via-[#5eead4] to-[#E8850A] opacity-60 blur-3xl" />
             <div className="relative z-10 overflow-hidden rounded-2xl shadow-elevated">
               <SiteImage
-                src="/images/group-care.jpg"
-                alt="A diverse care team reviewing policies together in a care setting"
+                src="/images/diverse-workforce.jpg"
+                alt="A diverse care team and residents together in the lounge of a nursing and care home"
                 width={1600}
-                height={1132}
+                height={879}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="w-full object-cover"
               />
@@ -1645,21 +1645,21 @@ function HubAndTraining() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Training */}
-          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-teal-light to-purple-50 p-8 md:p-10">
-            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
-              <GraduationCap size={24} className="text-teal" />
+          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-teal-gradient p-8 shadow-teal-glow md:p-10">
+            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+              <GraduationCap size={24} className="text-white" />
             </div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-teal">CareStream Training</p>
-            <h3 className="mb-3 text-2xl font-bold text-neutral-dark">
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/70">CareStream Training</p>
+            <h3 className="mb-3 text-2xl font-bold text-white">
               Training modules built from your own policies
             </h3>
-            <p className="mb-8 flex-1 leading-relaxed text-neutral-mid">
+            <p className="mb-8 flex-1 leading-relaxed text-white/80">
               Turn your policies into staff training delivered in the hub, in any language, with
               renewal reminders and completion tracking that becomes inspection-ready CQC evidence.
             </p>
             <Link
               href="/staff-training"
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-teal px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-teal transition-transform hover:scale-[1.02]"
             >
               Learn more about training <ArrowRight size={15} />
             </Link>
@@ -1694,9 +1694,9 @@ function HubAndTraining() {
 // ── Sits above "How CareStreamAI Helps": three reasons to choose CareStream ────
 function WhyChooseCareStream() {
   const cols = [
-    { Icon: FileText, title: 'Grounded in your documents', body: 'Every answer comes only from your own approved policies, cited to the source. Never the internet, never guesswork.' },
-    { Icon: Globe,    title: 'In every language, on any device', body: 'Staff ask and read in the language they think in, across 60+ languages, in the hub or by email, with no app to download.' },
-    { Icon: Shield,   title: 'Compliance that builds itself', body: 'Every query is logged. Policy access, language activity and staff engagement become CQC evidence automatically.' },
+    { Icon: Users,       title: 'Trusted expertise', body: 'Policies, training, audits and CQC preparation, brought together with one trusted partner built for the care sector.' },
+    { Icon: Headset,     title: 'Personal support',  body: 'Work with a team that understands your service, your staff and your goals, and is there when you need them.' },
+    { Icon: ShieldCheck, title: 'Complete confidence', body: 'From day-to-day questions to inspection day, we help you stay compliant, reduce risk and make informed decisions.' },
   ]
   return (
     <section className="bg-white py-24">
@@ -1706,17 +1706,17 @@ function WhyChooseCareStream() {
             Why care providers choose CareStreamAI
           </h2>
           <p className="text-lg leading-relaxed text-neutral-mid">
-            We do not just answer questions. We become a trusted extension of your team, combining your
-            own documents with smart technology so every member of staff can act with confidence, in any
-            language, at any hour.
+            At CareStream, we do not just answer questions. We become a trusted extension of your team,
+            combining your own documents with smart technology to help you manage policies, training and
+            CQC readiness with confidence.
           </p>
         </div>
 
         <div className="grid gap-12 md:grid-cols-3">
           {cols.map(({ Icon, title, body }) => (
             <div key={title} className="text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-light">
-                <Icon size={28} className="text-teal" />
+              <div className="mx-auto mb-6 flex justify-center">
+                <Icon size={44} strokeWidth={1.75} className="text-teal" />
               </div>
               <h3 className="mb-3 text-xl font-bold text-neutral-dark">{title}</h3>
               <p className="mx-auto max-w-xs leading-relaxed text-neutral-mid">{body}</p>

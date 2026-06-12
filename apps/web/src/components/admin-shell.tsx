@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
-  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X,
+  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -70,6 +70,11 @@ const NAV_SECTIONS = [
   },
 ]
 
+// Nav a training-only (gateway-tier) tenant can use. Everything else is shown
+// greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
+// once that page exists.
+const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings'])
+
 interface AdminShellProps {
   userName:   string
   tenantName: string
@@ -80,6 +85,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const pathname        = usePathname()
   const router          = useRouter()
   const { data: session } = useSession()
+  const trainingOnly = session?.user?.tier === 'training_only'
 
   const [sites,      setSites]      = useState<any[]>([])
   const [dropOpen,   setDropOpen]   = useState(false)
@@ -145,7 +151,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 
       {/* Sidebar (desktop / tablet ≥ md) */}
       <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
-        <SidebarContent pathname={pathname} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -160,7 +166,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} onNavigate={() => setMobileNav(false)} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} onNavigate={() => setMobileNav(false)} />
           </aside>
         </div>
       )}
@@ -261,7 +267,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, onNavigate }: { pathname: string; trainingOnly?: boolean; onNavigate?: () => void }) {
   const allHrefs = NAV_SECTIONS.flatMap(s => s.items.map(i => i.href))
   const hasExactMatch = allHrefs.some(href => href === pathname)
   return (
@@ -282,6 +288,20 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
               {heading}
             </p>
             {items.map(({ href, label, Icon }) => {
+              // Training-only tenants see non-training features greyed (upsell), not gone.
+              if (trainingOnly && !TRAINING_ONLY_NAV.has(href)) {
+                return (
+                  <div
+                    key={href}
+                    title="Upgrade to full CareStream to unlock this"
+                    className="mb-0.5 flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/30"
+                  >
+                    <Icon size={16} className="text-white/20" />
+                    <span className="flex-1">{label}</span>
+                    <Lock size={12} className="text-white/30" />
+                  </div>
+                )
+              }
               const active = pathname === href || (!hasExactMatch && pathname.startsWith(href + '/'))
               return (
                 <Link

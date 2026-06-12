@@ -17,6 +17,14 @@ const GATED = [
   '/queries', '/settings', '/staff', '/training',
 ]
 
+// Console routes a training-only (gateway-tier) tenant cannot use — the full-CareStream
+// features. They keep Dashboard, Staff, Training, Analytics, Settings + the hub.
+const TRAINING_ONLY_BLOCKED = [
+  '/policies', '/knowledge', '/queries', '/cqc-questions', '/audits', '/gaps',
+  '/onboarding', '/guides', '/billing', '/analytics/cqc-report',
+]
+const matches = (path: string, list: string[]) => list.some(p => path === p || path.startsWith(p + '/'))
+
 export async function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').toLowerCase()
   const path = req.nextUrl.pathname
@@ -35,12 +43,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // ── Card-up-front trial hard gate (existing behaviour, gated app routes only).
-  if (GATED.some(p => path === p || path.startsWith(p + '/'))) {
+  // ── Auth-gated routes: card-up-front billing gate + training-only tier gate.
+  if (matches(path, GATED) || matches(path, TRAINING_ONLY_BLOCKED)) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    if (token?.needsBilling) {
+    // Card-up-front trial hard gate (existing behaviour, gated app routes only).
+    if (token?.needsBilling && matches(path, GATED)) {
       const url = req.nextUrl.clone()
       url.pathname = '/start'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    // Training-only tenants can't reach the full-CareStream console routes.
+    if (token?.tier === 'training_only' && matches(path, TRAINING_ONLY_BLOCKED)) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/dashboard'
       url.search = ''
       return NextResponse.redirect(url)
     }

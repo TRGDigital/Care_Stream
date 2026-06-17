@@ -1,6 +1,5 @@
 import multer from 'multer'
 import { Request, Response, NextFunction } from 'express'
-import { isSupportedMimeType } from '../services/rag/extractor'
 import { err } from '../lib/response'
 
 // §7 Admin Dashboard — "Supported formats: PDF, DOCX, TXT"
@@ -9,14 +8,32 @@ import { err } from '../lib/response'
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.docx', '.odt', '.txt'])
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  // 50 MB
 
+// Canonical MIME type for each accepted extension. The browser-reported MIME is
+// unreliable for office formats — .odt and .docx are ZIP containers, so many
+// systems (especially Windows) send them as application/octet-stream or
+// application/zip rather than the canonical type. We therefore gate on the
+// extension and DERIVE the canonical MIME from it, so the rest of the pipeline
+// (S3, ingestion, text extraction) routes the file correctly.
+const EXT_TO_MIME: Record<string, string> = {
+  '.pdf':  'application/pdf',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.odt':  'application/vnd.oasis.opendocument.text',
+  '.txt':  'text/plain',
+}
+
+function extensionOf(filename: string): string {
+  return '.' + (filename.split('.').pop()?.toLowerCase() ?? '')
+}
+
 const multerInstance = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_SIZE_BYTES },
   fileFilter: (_req, file, cb) => {
-    const ext = '.' + file.originalname.split('.').pop()?.toLowerCase()
-
-    // Validate both MIME type and extension — MIME can be spoofed
-    if (!isSupportedMimeType(file.mimetype) || !ALLOWED_EXTENSIONS.has(ext)) {
+    // Gate on the extension only. The browser MIME is too unreliable for office
+    // formats to use as a hard filter (it produced false "invalid file type"
+    // rejections for valid .odt/.docx uploads). The file's actual content is
+    // validated downstream during text extraction.
+    if (!ALLOWED_EXTENSIONS.has(extensionOf(file.originalname))) {
       cb(new Error('INVALID_FILE_TYPE'))
       return
     }
@@ -72,10 +89,24 @@ function fixUtf8Filename(name: string): string {
   }
 }
 
-function fixUploadedFilenames(req: Request): void {
-  if (req.file) req.file.originalname = fixUtf8Filename(req.file.originalname)
+// Overwrite the (unreliable) browser MIME with the canonical type for the file's
+// extension, so downstream isSupportedMimeType()/extractText() switch correctly
+// even when the browser sent application/octet-stream or application/zip.
+function normalizeMime(file: Express.Multer.File): void {
+  const canonical = EXT_TO_MIME[extensionOf(file.originalname)]
+  if (canonical) file.mimetype = canonical
+}
+
+function postProcessUploadedFiles(req: Request): void {
+  if (req.file) {
+    req.file.originalname = fixUtf8Filename(req.file.originalname)
+    normalizeMime(req.file)
+  }
   if (Array.isArray(req.files)) {
-    for (const f of req.files as Express.Multer.File[]) f.originalname = fixUtf8Filename(f.originalname)
+    for (const f of req.files as Express.Multer.File[]) {
+      f.originalname = fixUtf8Filename(f.originalname)
+      normalizeMime(f)
+    }
   }
 }
 
@@ -99,7 +130,7 @@ function handleMulterError(multerErr: any, res: Response, next: NextFunction): v
 
 export function uploadMiddleware(req: Request, res: Response, next: NextFunction): void {
   multerInstance.single('file')(req, res, (multerErr) => {
-    if (!multerErr) fixUploadedFilenames(req)
+    if (!multerErr) postProcessUploadedFiles(req)
     handleMulterError(multerErr, res, next)
   })
 }
@@ -108,7 +139,7 @@ export function bulkUploadMiddleware(req: Request, res: Response, next: NextFunc
   // The client uploads in size-bounded batches (≤20 files each), so this
   // per-request cap is generous headroom rather than a user-facing limit.
   multerInstance.array('files', 200)(req, res, (multerErr) => {
-    if (!multerErr) fixUploadedFilenames(req)
+    if (!multerErr) postProcessUploadedFiles(req)
     handleMulterError(multerErr, res, next)
   })
 }

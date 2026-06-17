@@ -479,21 +479,21 @@ policiesRouter.get('/:id', async (req: Request, res: Response) => {
     }
 
     const buffer = await downloadFile(policy.s3_key)
-    if (!isSupportedMimeType(policy.s3_key.split('.').pop()!)) {
-      err(res, 'EXTRACTION_FAILED', 'Policy text could not be extracted.', 500)
-      return
-    }
-    // Derive MIME from filename extension for the fallback path
+    // Derive MIME from the filename extension (the original browser MIME isn't
+    // stored, and is unreliable for office formats anyway).
     const ext = policy.filename.split('.').pop()?.toLowerCase()
     const mimeMap: Record<string, string> = {
       pdf:  'application/pdf',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      odt:  'application/vnd.oasis.opendocument.text',
       txt:  'text/plain',
     }
-    const mime = mimeMap[ext ?? ''] ?? 'text/plain'
-    if (isSupportedMimeType(mime)) {
-      text = await extractText(buffer, mime)
+    const mime = mimeMap[ext ?? '']
+    if (!mime || !isSupportedMimeType(mime)) {
+      err(res, 'EXTRACTION_FAILED', 'Policy text could not be extracted.', 500)
+      return
     }
+    text = await extractText(buffer, mime)
   }
 
   ok(res, { policy, text })

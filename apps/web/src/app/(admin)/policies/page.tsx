@@ -16,12 +16,6 @@ const UploadModal = dynamic(() => import('@/components/admin/policies/policy-mod
 const BulkUploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.BulkUploadModal), { ssr: false })
 const NewVersionModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.NewVersionModal), { ssr: false })
 
-const CATEGORY_LABELS: Record<string, string> = {
-  internal_policy: 'Internal policy',
-  staff_handbook:  'Staff handbook',
-  cqc_report:      'CQC Report',
-}
-
 function statusVariant(s: string): 'active' | 'processing' | 'archived' | 'superseded' | 'failed' {
   if (s === 'active')     return 'active'
   if (s === 'processing') return 'processing'
@@ -77,6 +71,7 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
+  const [customCategories, setCustomCategories] = useState<string[]>([])
 
   function load() {
     if (!session?.accessToken) return
@@ -94,13 +89,22 @@ export default function PoliciesPage() {
 
   useEffect(load, [session?.accessToken])
 
-  // The tenant's configurable internal-policy sections (for the upload dropdowns).
+  // The tenant's configurable internal-policy sections + custom document
+  // categories (both drive the upload dropdowns).
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).settings.get()
-      .then(s => setSections(s.policy_sections ?? []))
+      .then(s => { setSections(s.policy_sections ?? []); setCustomCategories(s.policy_categories ?? []) })
       .catch(() => {})
   }, [session?.accessToken])
+
+  // Built-in categories (fixed) + the tenant's custom ones, as { value, label }.
+  const categoryOptions = [
+    { value: 'internal_policy', label: 'Internal policy' },
+    { value: 'staff_handbook',  label: 'Staff handbook' },
+    { value: 'cqc_report',      label: 'CQC Report' },
+    ...customCategories.map(c => ({ value: c, label: c })),
+  ]
 
   const activePolicies   = policies.filter(p => ACTIVE_STATUSES.has(p.status))
   const archivedPolicies = policies.filter(p => ARCHIVED_STATUSES.has(p.status))
@@ -198,6 +202,7 @@ export default function PoliciesPage() {
         <UploadModal
           token={session?.accessToken ?? ''}
           sections={sections}
+          categories={categoryOptions}
           onClose={() => setShowUpload(false)}
           onUploaded={() => { setShowUpload(false); setLoading(true); load() }}
         />
@@ -206,6 +211,7 @@ export default function PoliciesPage() {
         <BulkUploadModal
           token={session?.accessToken ?? ''}
           sections={sections}
+          categories={categoryOptions}
           onClose={() => setShowBulkUpload(false)}
           onUploaded={() => { setShowBulkUpload(false); setLoading(true); load() }}
         />
@@ -295,6 +301,22 @@ export default function PoliciesPage() {
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
           />
+          {/* Custom categories — shown only when they actually contain documents. */}
+          {Array.from(new Set(visiblePolicies.map(p => p.document_category as string)))
+            .filter(cat => !['internal_policy', 'staff_handbook', 'cqc_report'].includes(cat))
+            .sort((a, b) => a.localeCompare(b))
+            .map(cat => (
+              <PolicyGroup
+                key={cat}
+                heading={cat}
+                policies={visiblePolicies.filter(p => p.document_category === cat)}
+                emptyText=""
+                onNewVersion={p => setVersionTarget({ id: p.id, name: p.name })}
+                onRetry={p => retry(p.id)}
+                onArchive={p => archive(p.id, p.name)}
+                onDelete={p => permanentDelete(p.id, p.name)}
+              />
+            ))}
         </div>
       )}
     </div>

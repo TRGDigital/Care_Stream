@@ -1180,7 +1180,7 @@ interface SaveQueryParams {
   queryText:               string
   responseHtml:            string
   intentType:              IntentType
-  documentCategoryQueried: DocumentCategory | null
+  documentCategoryQueried: string | null  // built-in key or a tenant custom category
   policyIdsCited:          string[]
   noMatch:                 boolean
   languageDetected:        string

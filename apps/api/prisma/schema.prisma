@@ -206,6 +206,7 @@ model Tenant {
   staff_roles            String[]           @default([])                       // configurable position list (default: PRIMARY_ROLES)
   specialist_roles       String[]           @default([])                       // configurable specialist-role list (default: SECONDARY_ROLES)
   policy_sections        String[]           @default([])                       // configurable internal-policy sections (empty → API default set)
+  policy_categories      String[]           @default([])                       // tenant-added document categories (on top of the built-in 3)
   parent_tenant_id       String?                                               // null = root/standalone; set = sub-tenant
   created_at             DateTime           @default(now())
   plan                   Plan?              @relation(fields: [plan_id], references: [id])

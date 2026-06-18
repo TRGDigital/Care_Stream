@@ -52,7 +52,7 @@ export const PLATFORM_REGULATIONS_NAMESPACE = 'platform_regulations'
 export interface PolicyVectorMetadata extends Record<string, unknown> {
   policy_id:          string
   tenant_id:          string
-  document_category:  DocumentCategory
+  document_category:  string  // built-in key or a tenant custom category
   chunk_index:        number
   source_filename:    string
   chunk_text:         string

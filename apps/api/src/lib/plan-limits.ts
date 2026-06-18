@@ -144,7 +144,7 @@ export async function checkQueryLimit(tenantId: string): Promise<void> {
 // Check whether the tenant can upload another policy of the given category.
 export async function checkPolicyLimit(
   tenantId: string,
-  documentCategory: 'internal_policy' | 'staff_handbook',
+  documentCategory: string,  // 'staff_handbook' uses the handbook limit; everything else (incl. custom categories) uses the policy limit
 ): Promise<void> {
   const { plan, subscription_status } = await loadTenantPlan(tenantId)
   assertNotCancelled(subscription_status)
@@ -185,7 +185,7 @@ export async function checkPolicyLimit(
 // capacity before processing any files.
 export async function remainingPolicySlots(
   tenantId: string,
-  documentCategory: 'internal_policy' | 'staff_handbook',
+  documentCategory: string,  // 'staff_handbook' uses the handbook limit; everything else uses the policy limit
 ): Promise<number | null> {
   const { plan, subscription_status } = await loadTenantPlan(tenantId)
   assertNotCancelled(subscription_status)

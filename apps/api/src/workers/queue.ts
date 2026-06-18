@@ -1,5 +1,3 @@
-import type { DocumentCategory } from '../types'
-
 // §13.1 — BullMQ + Redis: async document processing so large uploads never block the API
 // When REDIS_URL is not set (Vercel / local dev), ingestion runs inline — awaited before response.
 // BullMQ and IORedis are loaded dynamically only when Redis is actually needed, so they
@@ -11,7 +9,7 @@ export interface IngestionJobData {
   policy_id:                    string
   tenant_id:                    string
   s3_key:                       string
-  document_category:            DocumentCategory
+  document_category:            string  // built-in key or a tenant custom category
   filename:                     string
   mime_type:                    string
   version:                      number

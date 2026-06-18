@@ -8,6 +8,7 @@ import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
+import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories'
 import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
@@ -19,11 +20,21 @@ export const policiesRouter = Router()
 
 const UploadSchema = z.object({
   name:                z.string().min(1).max(200),
-  document_category:   z.enum(['internal_policy', 'staff_handbook']),  // tenants never upload external_regulation (§4.5)
+  document_category:   z.string().min(1).max(60),  // built-in key or a tenant custom category — validated against the tenant below
   tags:                z.string().optional(),                           // JSON array string
   section:             z.string().max(100).optional(),                 // internal-policy section
   review_interval_days: z.coerce.number().int().min(1).optional(),
 })
+
+// Resolve the tenant's custom categories and confirm the submitted category is
+// allowed (a built-in key, or one the tenant added in Settings).
+async function assertValidCategory(tenantId: string, category: string): Promise<boolean> {
+  if (BUILTIN_CATEGORY_KEYS.includes(category)) return true
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId }, select: { policy_categories: true },
+  })
+  return isValidCategory(category, (tenant?.policy_categories as string[]) ?? [])
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -144,6 +155,11 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
   const { name, document_category, tags: rawTags, section, review_interval_days } = parsed.data
   const tenantId = req.user!.tenant_id
   const policyId = uuidv4()
+
+  if (!(await assertValidCategory(tenantId, document_category))) {
+    err(res, 'INVALID_CATEGORY', 'That category is not available. Add it in Settings first.', 400)
+    return
+  }
 
   try {
     await checkPolicyLimit(tenantId, document_category)
@@ -329,7 +345,12 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   // multer's async callbacks can break AsyncLocalStorage propagation, so read
   // tenant_id from the JWT payload directly and re-enter the context explicitly.
   const tenantId = req.user!.tenant_id
-  const category = req.body.document_category === 'staff_handbook' ? 'staff_handbook' : 'internal_policy'
+  const rawCategory = typeof req.body.document_category === 'string' ? req.body.document_category : 'internal_policy'
+  if (!(await assertValidCategory(tenantId, rawCategory))) {
+    err(res, 'INVALID_CATEGORY', 'That category is not available. Add it in Settings first.', 400)
+    return
+  }
+  const category = rawCategory
   // Section applies to internal policies only; one section per bulk batch.
   const section  = category === 'internal_policy' && typeof req.body.section === 'string'
     ? (req.body.section.trim().slice(0, 100) || null)

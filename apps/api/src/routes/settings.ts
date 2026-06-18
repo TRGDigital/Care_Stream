@@ -4,6 +4,7 @@ import sharp from 'sharp'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { effectiveSections } from '../lib/policy-sections'
+import { normaliseCategories } from '../lib/policy-categories'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
@@ -66,7 +67,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, room_count: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -75,6 +76,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     inbound_email:      `policies@${tenant.slug}.${INBOUND_DOMAIN}`,
     account_number:     tenant.account_number as string,
     policy_sections:    effectiveSections(tenant.policy_sections as string[]),
+    policy_categories:  (tenant.policy_categories as string[]) ?? [],
     email_allowlist:    tenant.email_allowlist as string[],
     phone_allowlist:    (tenant.phone_allowlist as string[]) ?? [],
     facility_type:      tenant.facility_type as string,
@@ -101,7 +103,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, add_language, remove_language, room_count } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, policy_categories, add_language, remove_language, room_count } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -209,6 +211,13 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.policy_sections = normalised
   }
 
+  if (policy_categories !== undefined) {
+    if (!Array.isArray(policy_categories)) {
+      return err(res, 'INVALID_INPUT', 'policy_categories must be an array', 400)
+    }
+    updateData.policy_categories = normaliseCategories(policy_categories as unknown[])
+  }
+
   if (email_preferences !== undefined) {
     if (typeof email_preferences !== 'object' || Array.isArray(email_preferences)) {
       return err(res, 'INVALID_INPUT', 'email_preferences must be an object', 400)
@@ -271,7 +280,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, custom_languages: true, room_count: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, room_count: true },
   })
 
   ok(res, {
@@ -282,6 +291,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     staff_roles:       effectiveStaffRoles(updated.staff_roles),
     specialist_roles:  effectiveSpecialistRoles(updated.specialist_roles),
     policy_sections:   effectiveSections(updated.policy_sections),
+    policy_categories: (updated.policy_categories as string[]) ?? [],
     languages:         effectiveLanguages(updated.custom_languages),
     added_language:    addedLanguage,
     room_count:        (updated.room_count as number) ?? 0,

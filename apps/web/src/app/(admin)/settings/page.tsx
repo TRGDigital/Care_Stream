@@ -104,6 +104,9 @@ export default function SettingsPage() {
   const [policySections, setPolicySections] = useState<string[]>([])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
+  const [policyCategories, setPolicyCategories] = useState<string[]>([])
+  const [newCategory,      setNewCategory]      = useState('')
+  const [savingCategories, setSavingCategories] = useState(false)
   const [loading,        setLoading]        = useState(true)
   const [loadError,      setLoadError]      = useState('')
   const [saving,         setSaving]         = useState(false)
@@ -147,6 +150,7 @@ export default function SettingsPage() {
       setLanguages(data.languages ?? [])
       setDefaultLangCodes(data.default_language_codes ?? [])
       setPolicySections(data.policy_sections ?? [])
+      setPolicyCategories(data.policy_categories ?? [])
       setResponseStyle(data.response_style ?? 'standard')
       setSignoff(data.branding_signoff ?? '')
     }
@@ -189,6 +193,7 @@ export default function SettingsPage() {
         setLanguages((data as any).languages ?? [])
         setDefaultLangCodes((data as any).default_language_codes ?? [])
         setPolicySections((data as any).policy_sections ?? [])
+        setPolicyCategories((data as any).policy_categories ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
         setSignoff((data as any).branding_signoff ?? '')
         setSites(sitesData.sites)
@@ -336,6 +341,35 @@ export default function SettingsPage() {
   function removeSection(s: string) {
     const updated = policySections.filter(x => x !== s)
     setPolicySections(updated); saveSections(updated)
+  }
+
+  // The 3 built-in categories are fixed and always present; tenants add their own.
+  const BUILTIN_CATEGORY_LABELS = ['Internal policy', 'Staff handbook', 'CQC Report']
+
+  async function saveCategories(updated: string[]) {
+    if (!session?.accessToken) return
+    setSavingCategories(true)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ policy_categories: updated })
+      setPolicyCategories(data.policy_categories)
+    } catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingCategories(false) }
+  }
+
+  function addCategory() {
+    const c = newCategory.trim()
+    if (!c) return
+    if (BUILTIN_CATEGORY_LABELS.some(x => x.toLowerCase() === c.toLowerCase())) { setError('That is a built-in category.'); return }
+    if (policyCategories.some(x => x.toLowerCase() === c.toLowerCase())) { setError('That category already exists.'); return }
+    setError('')
+    const updated = [...policyCategories, c]
+    setPolicyCategories(updated); setNewCategory('')
+    saveCategories(updated)
+  }
+
+  function removeCategory(c: string) {
+    const updated = policyCategories.filter(x => x !== c)
+    setPolicyCategories(updated); saveCategories(updated)
   }
 
   async function uploadLogo(file: File) {
@@ -750,6 +784,42 @@ export default function SettingsPage() {
             </div>
           )}
           {savingSections && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── Document categories ───────────────────────────────────────────── */}
+        <SettingSection icon={SlidersHorizontal} title="Document categories" description="The categories you can choose when uploading documents.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            Every account has three built-in categories — <strong>Internal policy</strong>, <strong>Staff handbook</strong> and <strong>CQC Report</strong>. Add your own here (e.g. Risk Assessments, Newsletters) and they will appear in the Category dropdown when uploading.
+          </p>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {BUILTIN_CATEGORY_LABELS.map(c => (
+              <span key={c} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white py-1 px-3 text-sm text-neutral-mid">
+                {c}
+                <span className="text-xs text-neutral-mid/70">built-in</span>
+              </span>
+            ))}
+          </div>
+          <div className="mb-4 flex gap-2">
+            <input type="text" value={newCategory} onChange={e => { setNewCategory(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="e.g. Risk Assessments" className={INPUT} />
+            <Button onClick={addCategory} disabled={savingCategories || !newCategory.trim()} size="md">
+              <Plus size={14} className="mr-1.5" />Add
+            </Button>
+          </div>
+          {policyCategories.length === 0 ? (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No custom categories yet.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {policyCategories.map(c => (
+                <span key={c} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
+                  {c}
+                  <button onClick={() => removeCategory(c)} disabled={savingCategories} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {savingCategories && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
         {/* ── Approved sender addresses ─────────────────────────────────────── */}

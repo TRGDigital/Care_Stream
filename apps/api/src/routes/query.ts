@@ -7,6 +7,7 @@ import { runQueryPipeline } from '../services/rag/query'
 import { ok, err } from '../lib/response'
 import { checkQueryLimit, PlanLimitError } from '../lib/plan-limits'
 import { languageNameForCode } from '../data/languages'
+import { translateTextsBatch } from '../lib/translate'
 
 export const queryRouter = Router()
 
@@ -52,11 +53,26 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     select: { response_style: true, custom_languages: true },
   })
 
-  // Resolve the staff-chosen reply language (if any) to a {code, name} pair,
-  // honouring the tenant's custom languages for private-use codes.
-  const forcedLanguage = language
+  // Reply-language priority:
+  //  1. An explicit language sent with the request (e.g. a language picker in the chat).
+  //  2. Otherwise the staff member's own first language — answering in the staff member's
+  //     set language is a core promise of the system (honours comms_always_first_language,
+  //     matching the email/WhatsApp/proactive flows). Only forced when they have actually
+  //     chosen a non-English first language; English-default staff still get auto-detection.
+  //  3. Otherwise undefined → the pipeline detects the language from the question text.
+  let forcedLanguage = language
     ? { code: language, name: languageNameForCode(language, tenantSettings?.custom_languages) }
     : undefined
+  if (!forcedLanguage) {
+    const me = await (prisma as any).user.findUnique({
+      where:  { id: req.user!.sub },
+      select: { first_language: true, comms_always_first_language: true },
+    })
+    const staffLang = me?.comms_always_first_language === false ? 'eng' : ((me?.first_language as string) ?? 'eng')
+    if (staffLang && staffLang !== 'eng') {
+      forcedLanguage = { code: staffLang, name: languageNameForCode(staffLang, tenantSettings?.custom_languages) }
+    }
+  }
 
   let result
   try {
@@ -89,6 +105,35 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     responseTimeMs:     result.responseTimeMs,
     suggestedQuestions: result.suggestedQuestions,
   })
+})
+
+// ─── POST /query/suggested ───────────────────────────────────────────────────
+// Translate the chat's starter questions into the staff member's first language,
+// so the suggested prompts shown on a new chat are in the same language the
+// answers come back in. Cached, so it costs nothing after the first time.
+
+const SuggestedSchema = z.object({ questions: z.array(z.string().min(1).max(300)).min(1).max(8) })
+
+queryRouter.post('/suggested', async (req: Request, res: Response) => {
+  const parsed = SuggestedSchema.safeParse(req.body)
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', 'Invalid questions'); return }
+  const { questions } = parsed.data
+  const tenantId = getTenantId()
+
+  const [tenantSettings, me] = await Promise.all([
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+    (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { first_language: true, comms_always_first_language: true } }),
+  ])
+  const lang = me?.comms_always_first_language === false ? 'eng' : ((me?.first_language as string) ?? 'eng')
+  if (!lang || lang === 'eng') { ok(res, { questions }); return }
+
+  try {
+    const translated = await translateTextsBatch(questions, lang, languageNameForCode(lang, tenantSettings?.custom_languages))
+    ok(res, { questions: translated })
+  } catch (e) {
+    console.error('[query/suggested] translate failed:', e)
+    ok(res, { questions }) // fall back to English rather than break the chat
+  }
 })
 
 // ─── POST /query/:id/feedback ────────────────────────────────────────────────

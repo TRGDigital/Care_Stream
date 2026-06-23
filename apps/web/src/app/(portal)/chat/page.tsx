@@ -346,6 +346,8 @@ function ChatPageInner() {
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [firstLang,    setFirstLang]                    = useState<string>('eng') // the staff member's own language (from their profile)
+  const [localizedStarters, setLocalizedStarters]       = useState<Partial<Record<DocumentCategory, string[]>>>({})
+  const startersFetched = useRef<Set<string>>(new Set())
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
   // Voice: dictate in the chosen reply language, else the staff member's own language.
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
@@ -416,6 +418,18 @@ function ChatPageInner() {
       })
       .catch(() => { /* falls back to auto-detect */ })
   }, [session?.accessToken, userId])
+
+  // Translate the starter questions into the staff member's first language (cached
+  // server-side, so this is cheap). English-default staff keep the English defaults.
+  useEffect(() => {
+    if (!category || !session?.accessToken || !firstLang || firstLang === 'eng') return
+    const key = `${firstLang}:${category}`
+    if (startersFetched.current.has(key)) return
+    startersFetched.current.add(key)
+    createApiClient(session.accessToken).query.suggested(SUGGESTED[category])
+      .then(d => { if (Array.isArray(d.questions) && d.questions.length) setLocalizedStarters(prev => ({ ...prev, [category]: d.questions })) })
+      .catch(() => { startersFetched.current.delete(key) })
+  }, [category, firstLang, session?.accessToken])
 
 
   // Sidebar badge counts — shown instantly from a localStorage cache, then
@@ -951,7 +965,7 @@ function ChatPageInner() {
           ) : pinnedPolicy && isEmpty ? (
             <PolicyChatIntro title={pinnedPolicy.title} questions={policyQuestions} onSelect={sendMessage} />
           ) : isEmpty ? (
-            <EmptyState category={category} onSelect={sendMessage} />
+            <EmptyState category={category} onSelect={sendMessage} questions={localizedStarters[category]} />
           ) : (
             <div className="mx-auto max-w-6xl space-y-6">
               {messages.map(msg => (
@@ -1176,8 +1190,9 @@ function CategorySelect({ onSelect }: { onSelect: (c: DocumentCategory) => void 
   )
 }
 
-function EmptyState({ category, onSelect }: { category: DocumentCategory; onSelect: (q: string) => void }) {
+function EmptyState({ category, onSelect, questions }: { category: DocumentCategory; onSelect: (q: string) => void; questions?: string[] }) {
   const label = CATEGORY_LABELS[category]
+  const starters = questions && questions.length ? questions : SUGGESTED[category]
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 text-center">
       <div>
@@ -1188,7 +1203,7 @@ function EmptyState({ category, onSelect }: { category: DocumentCategory; onSele
         <p className="mt-2 text-sm text-neutral-mid">{label.subtitle}</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        {SUGGESTED[category].map(q => (
+        {starters.map(q => (
           <button
             key={q}
             onClick={() => onSelect(q)}

@@ -94,6 +94,9 @@ export function createApiClient(token: string) {
         apiFetch<{ deleted: boolean }>(`/query/session/${sessionId}/delete`, token, { method: 'PATCH' }),
       feedback: (queryId: string, rating: 'positive' | 'negative') =>
         apiFetch<{ saved: boolean }>(`/query/${queryId}/feedback`, token, { method: 'POST', body: JSON.stringify({ rating }) }),
+      // Translate the starter questions into the staff member's first language.
+      suggested: (questions: string[]) =>
+        apiFetch<{ questions: string[] }>('/query/suggested', token, { method: 'POST', body: JSON.stringify({ questions }) }),
     },
 
     policies: {

@@ -995,6 +995,24 @@ function ChatPageInner() {
 
         {/* Input bar */}
         {view === 'chat' && <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4">
+          {/* Colour key for the suggested follow-up questions */}
+          {!isEmpty && (
+            <div className="mx-auto mb-2.5 flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
+              <span className="font-medium">Suggested questions:</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full border border-teal bg-teal-light" />
+                Your policies
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full border border-blue-400 bg-blue-50" />
+                Regulations &amp; legislation
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full border border-orange-400 bg-orange-50" />
+                Read the full policy
+              </span>
+            </div>
+          )}
           <form
             onSubmit={handleSubmit}
             className="mx-auto flex max-w-6xl items-center gap-3"

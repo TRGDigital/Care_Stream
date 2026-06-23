@@ -167,6 +167,60 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
   }
 })
 
+// ─── Password-protected module share (external validation) ───────────────────
+// GET returns just the module name (to render the unlock prompt). POST checks the
+// password and returns the full module, including questions + correct answers, for review.
+
+publicTrainingRouter.get('/shared/:token', async (req: Request, res: Response) => {
+  const token = String(req.params.token ?? '')
+  const mod = await (prisma as any).trainingModule.findFirst({
+    where:  { share_token: token, share_enabled: true },
+    select: { name: true },
+  })
+  if (!mod) { res.status(404).json({ error: 'not found' }); return }
+  res.json({ data: { name: mod.name } })
+})
+
+publicTrainingRouter.post('/shared/:token/unlock', async (req: Request, res: Response) => {
+  const token = String(req.params.token ?? '')
+  const password = String(req.body?.password ?? '')
+  const mod = await (prisma as any).trainingModule.findFirst({
+    where:  { share_token: token, share_enabled: true },
+    select: { name: true, share_password: true, description: true, frequency: true, pass_mark: true, requires_practical: true, learning_content: true, questions: true, standards: true, illustration_key: true },
+  })
+  if (!mod) { res.status(404).json({ error: 'not found' }); return }
+  if (!mod.share_password || password !== mod.share_password) { res.status(401).json({ error: 'Incorrect password' }); return }
+
+  const lc = (mod.learning_content ?? {}) as any
+  const sections = Array.isArray(lc.sections)
+    ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: s?.image_key ? illustrationUrl(s.image_key) : null })).filter((s: any) => s.heading || s.body)
+    : []
+  const questions = Array.isArray(mod.questions)
+    ? (mod.questions as any[]).map((q) => ({
+        text:        String(q?.text ?? ''),
+        options:     Array.isArray(q?.options) ? q.options.map(String) : [],
+        correct:     typeof q?.correct === 'number' ? q.correct : null,
+        explanation: q?.explanation ? String(q.explanation) : null,
+      })).filter((q) => q.text)
+    : []
+  const standards = Array.isArray(mod.standards) ? (mod.standards as any[]).map(s => s?.label).filter(Boolean) : []
+
+  res.json({ data: { module: {
+    name:               mod.name,
+    description:        mod.description ?? null,
+    frequency:          mod.frequency ?? null,
+    pass_mark:          mod.pass_mark ?? null,
+    requires_practical: mod.requires_practical ?? false,
+    summary:            typeof lc.summary === 'string' ? lc.summary : null,
+    outcomes:           Array.isArray(lc.outcomes) ? lc.outcomes.map(String) : [],
+    key_points:         Array.isArray(lc.key_points) ? lc.key_points.map(String) : [],
+    sections,
+    questions,
+    standards,
+    illustration_url:   mod.illustration_key ? illustrationUrl(mod.illustration_key) : null,
+  } } })
+})
+
 // Public SEO index for the standard training module pages. Feeds the platform
 // console (Blog → Pages and → Alt Tags) so meta and image alt text are editable,
 // and the marketing sitemap. Returns one page per built module, plus every image

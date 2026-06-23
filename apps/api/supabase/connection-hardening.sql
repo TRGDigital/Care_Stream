@@ -1,0 +1,49 @@
+-- =============================================================================
+-- CareStreamAI — Connection-pool hardening
+-- Run this in Supabase Dashboard > SQL Editor (idempotent, safe to re-run).
+-- =============================================================================
+--
+-- WHY THIS EXISTS
+-- ---------------
+-- Recurring production outage: the platform dashboard (and other authed pages)
+-- would load their shell but never populate, because the Postgres connection
+-- pool was exhausted. The cause is serverless instances on Vercel being frozen
+-- or timing out *mid-transaction*: Prisma sends BEGIN, the instance is suspended
+-- before COMMIT/ROLLBACK, and the connection is left "idle in transaction"
+-- holding a pool slot. A handful of these (we have seen 16 at once, all stuck
+-- the same ~5 minutes) exhausts the direct-connection slots and the app stops
+-- being able to query at all.
+--
+-- THE FIX (safety net)
+-- --------------------
+-- Tell Postgres to auto-terminate any session left idle INSIDE a transaction
+-- for more than 2 minutes. This only ever targets abandoned transactions, a
+-- healthy pooled connection sits in state 'idle' (between transactions), never
+-- 'idle in transaction', so it is untouched. Applied to the `postgres` role,
+-- which is the role the app's pooled (Supavisor) backends connect as.
+--
+-- Rescue, if it ever happens again before/without this: kill the stuck sessions
+--   SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+--   WHERE datname = current_database()
+--     AND state = 'idle in transaction'
+--     AND now() - state_change > interval '1 minute';
+
+ALTER ROLE postgres SET idle_in_transaction_session_timeout = '120000'; -- 120s, in ms
+
+-- Verify:
+--   SELECT rolname, rolconfig FROM pg_roles WHERE rolname = 'postgres';
+
+-- =============================================================================
+-- DURABLE FOLLOW-UP (config, not SQL) — recommended
+-- =============================================================================
+-- Point the app's DATABASE_URL at the Supabase *transaction* pooler (port 6543)
+-- rather than a direct/session connection, so a frozen instance cannot pin a
+-- real Postgres backend for long. In Vercel set:
+--
+--   DATABASE_URL = postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+--
+-- Keep DATABASE_DIRECT_URL on the direct connection (5432) for `prisma migrate`.
+-- Do NOT add libpq `options=-c ...` to a transaction-pooler URL: the pooler
+-- rejects custom startup parameters. The role-level GUC above is the right place
+-- for the idle timeout.
+-- =============================================================================

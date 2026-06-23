@@ -363,6 +363,21 @@ function PostForm({
   return (
     <div className="space-y-3 rounded-xl border border-gray-200 bg-neutral-light p-4">
 
+      {/* Open the live page in a new window (handy for the meta-tag tool) */}
+      {initial?.id && form.slug && (
+        <div className="flex items-center justify-end">
+          <a
+            href={`/blog/${form.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal transition hover:bg-teal hover:text-white"
+          >
+            Open page in new window
+            <span aria-hidden>↗</span>
+          </a>
+        </div>
+      )}
+
       {/* ── Core Details ─────────────────────────────────── */}
       <AccordionSection title="Core Details" description="Title, slug, excerpt, author, dates and publishing status" defaultOpen>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

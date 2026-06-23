@@ -263,6 +263,9 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
   const [newLink, setNewLink] = useState<any>(null)
   const [creatingLink, setCreatingLink] = useState(false)
   const [copied, setCopied] = useState<'link' | 'password' | null>(null)
+  const [shareBusy, setShareBusy] = useState(false)
+  const [sharePw, setSharePw] = useState('')
+  const [shareCopied, setShareCopied] = useState<'link' | 'pw' | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -330,6 +333,25 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch (e: any) { alert(e?.message ?? 'Could not publish.') } finally { setSaving(false) }
   }
   function reviewUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : ''}/review/${token}` }
+  function validateUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : ''}/validate/${token}` }
+  function copyShare(which: 'link' | 'pw', text: string) { navigator.clipboard?.writeText(text); setShareCopied(which); setTimeout(() => setShareCopied(c => c === which ? null : c), 1500) }
+  async function setShare(enabled: boolean) {
+    setShareBusy(true)
+    try {
+      const r = await api.standardTraining.setShare(id, { enabled, password: enabled && sharePw.trim() ? sharePw.trim() : undefined })
+      setM((p: any) => ({ ...p, share_enabled: r.share_enabled, share_token: r.share_token, share_password: r.share_password }))
+      setSharePw('')
+    } catch (e: any) { alert(e?.message ?? 'Could not update sharing.') } finally { setShareBusy(false) }
+  }
+  async function updateSharePw() {
+    if (!sharePw.trim()) return
+    setShareBusy(true)
+    try {
+      const r = await api.standardTraining.setShare(id, { enabled: true, password: sharePw.trim() })
+      setM((p: any) => ({ ...p, share_enabled: r.share_enabled, share_token: r.share_token, share_password: r.share_password }))
+      setSharePw('')
+    } catch (e: any) { alert(e?.message ?? 'Could not update the password.') } finally { setShareBusy(false) }
+  }
   function copy(which: 'link' | 'password', text: string) { navigator.clipboard?.writeText(text); setCopied(which); setTimeout(() => setCopied(c => c === which ? null : c), 1500) }
   function toggleStandard(framework: string, code: string, label: string) {
     const cur: any[] = Array.isArray(m.standards) ? m.standards : []
@@ -619,6 +641,43 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* External validation share — a password-protected /validate link that plays the module
+            step-by-step, exactly as staff see it. For sharing with outside companies to validate. */}
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Share for external validation</p>
+            <button
+              onClick={() => setShare(!m.share_enabled)}
+              disabled={shareBusy}
+              role="switch"
+              aria-checked={!!m.share_enabled}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${m.share_enabled ? 'bg-teal' : 'bg-gray-300'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${m.share_enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-gray-400">Generates a password-protected public link that plays this module step-by-step (lesson sections then the assessment, with the correct answers shown) — exactly how staff experience it. Use it to let an outside company review the module without a CareStream login.</p>
+
+          {m.share_enabled && m.share_token && (
+            <div className="mt-3 rounded-lg border border-teal/30 bg-teal-light/20 p-3">
+              <p className="mb-2 text-xs font-semibold text-teal-dark">Link is live — share the link and password with the company:</p>
+              <div className="mb-1.5 flex items-center gap-2">
+                <input readOnly value={validateUrl(m.share_token)} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px]" />
+                <button onClick={() => copyShare('link', validateUrl(m.share_token))} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-white transition-colors ${shareCopied === 'link' ? 'bg-green-500' : 'bg-teal'}`}>{shareCopied === 'link' ? <><CheckCircle2 size={11} /> Copied</> : 'Copy link'}</button>
+              </div>
+              <div className="mb-2 flex items-center gap-2">
+                <input readOnly value={m.share_password ?? ''} className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-mono tracking-wider" />
+                <button onClick={() => copyShare('pw', m.share_password ?? '')} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-white transition-colors ${shareCopied === 'pw' ? 'bg-green-500' : 'bg-teal'}`}>{shareCopied === 'pw' ? <><CheckCircle2 size={11} /> Copied</> : 'Copy password'}</button>
+              </div>
+              <div className="flex items-center gap-2 border-t border-teal/20 pt-2">
+                <input value={sharePw} onChange={e => setSharePw(e.target.value)} placeholder="Set a new password" className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px]" />
+                <button onClick={updateSharePw} disabled={shareBusy || !sharePw.trim()} className="rounded-md border border-teal/30 bg-white px-2 py-1 text-[11px] font-semibold text-teal hover:bg-teal hover:text-white disabled:opacity-50">{shareBusy ? 'Saving…' : 'Update password'}</button>
+              </div>
+              <p className="mt-1.5 text-[10px] text-gray-400">Turning the toggle off disables the link immediately. The same link returns when you turn it back on.</p>
             </div>
           )}
         </div>

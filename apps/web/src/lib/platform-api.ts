@@ -450,6 +450,7 @@ export function createPlatformClient(token: string) {
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
       generateSectionImage: (id: string, index: number) => adminFetch<{ image_url: string | null }>(`/standard-training/modules/${id}/sections/${index}/generate-image`, token, { method: 'POST' }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
+      setShare: (id: string, data: { enabled: boolean; password?: string }) => adminFetch<{ share_enabled: boolean; share_token: string | null; share_password: string | null; share_url: string | null }>(`/standard-training/modules/${id}/share`, token, { method: 'POST', body: JSON.stringify(data) }),
     },
 
     tenants: {

@@ -75,7 +75,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true },
+        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true, share_enabled: true, share_token: true, share_password: true },
       }),
     ])
     // Latest external review status per module (so the catalogue can flag reviewer changes).
@@ -287,6 +287,37 @@ standardTrainingRouter.post('/modules/:id/generate-image', async (req: Request, 
     console.error('[standard-training/generate-image] failed:', e?.message ?? e)
     err(res, 'IMAGE_FAILED', e.message ?? 'Image generation failed', 500)
   }
+})
+
+// POST /admin/standard-training/modules/:id/share — enable/disable the password-protected
+// external validation link, and set/change its password.
+standardTrainingRouter.post('/modules/:id/share', async (req: Request, res: Response) => {
+  const enabled = !!req.body?.enabled
+  const password = typeof req.body?.password === 'string' ? req.body.password.trim() : ''
+
+  const module = await (prisma as any).trainingModule.findFirst({
+    where:  { id: req.params.id, tenant_id: null },
+    select: { id: true, share_token: true, share_password: true },
+  })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+
+  const data: Record<string, unknown> = { share_enabled: enabled }
+  if (enabled && !module.share_token) data.share_token = genToken()
+  if (password) data.share_password = password
+  else if (enabled && !module.share_password) data.share_password = genPassword()
+
+  const updated = await (prisma as any).trainingModule.update({
+    where:  { id: module.id },
+    data,
+    select: { share_enabled: true, share_token: true, share_password: true },
+  })
+
+  ok(res, {
+    share_enabled:  updated.share_enabled,
+    share_token:    updated.share_token,
+    share_password: updated.share_password,
+    share_url:      updated.share_token ? `${siteUrl()}/validate/${updated.share_token}` : null,
+  })
 })
 
 // POST /admin/standard-training/modules/:id/sections/:index/generate-image — section image (free)

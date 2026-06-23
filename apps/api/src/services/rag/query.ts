@@ -28,7 +28,7 @@ import type { PolicyVectorMetadata } from '../vector/pinecone'
 import { routeQuery } from './router'
 import { detectRegulations } from './regulation-detector'
 import { detectLanguage, resolveLanguagePattern } from '../language/detector'
-import { callClaude, callClaudeWithHistory } from '../ai/claude'
+import { callClaude, callClaudeWithHistory, callClaudeStream } from '../ai/claude'
 import { buildPromptA, appendLanguageInstruction, PROMPT_B } from '../ai/prompts'
 import type { DocumentCategory, IntentType, QueryChannel } from '../../types'
 
@@ -80,6 +80,8 @@ export interface QueryInput {
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
   // Staff explicitly chose a reply language in the portal — overrides detection
   forcedLanguage?:      { code: string; name: string }
+  // When set, the answer generation streams text deltas through this callback (chat streaming).
+  onText?:              (delta: string) => void
 }
 
 export interface Citation {
@@ -132,6 +134,23 @@ function extractSuggestions(html: string): { html: string; suggestions: string[]
     if (Array.isArray(parsed)) suggestions = parsed.slice(0, 3).map(String)
   } catch { /* malformed JSON — skip */ }
   return { html: html.replace(/<!--FOLLOWUP:[\s\S]*?-->/, '').trimEnd(), suggestions }
+}
+
+// Generate the answer, streaming text deltas through `onText` when provided (chat streaming),
+// otherwise a normal blocking call. Same prompt/messages either way.
+async function generateAnswer(
+  onText: ((d: string) => void) | undefined,
+  systemPrompt: string,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> | undefined,
+  context: string,
+  opts: { maxTokens?: number; temperature?: number },
+): Promise<string> {
+  const hasHistory = !!(conversationHistory && conversationHistory.length > 0)
+  const messages = hasHistory
+    ? [...conversationHistory!.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })), { role: 'user' as const, content: context }]
+    : [{ role: 'user' as const, content: context }]
+  if (onText) return callClaudeStream(systemPrompt, messages, opts, onText)
+  return hasHistory ? callClaudeWithHistory(systemPrompt, messages, opts) : callClaude(systemPrompt, context, opts)
 }
 
 // ─── Intent classification ────────────────────────────────────────────────────
@@ -349,7 +368,7 @@ export function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
 
 async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
   const start = Date.now()
-  const { queryText, tenantId, userId, staffName, channel, responseStyle, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory, forcedLanguage } = input
+  const { queryText, tenantId, userId, staffName, channel, responseStyle, policyId, priorCategory, selectedCategory, chatSessionId, conversationHistory, forcedLanguage, onText } = input
   const verbosity = resolveVerbosity(channel, responseStyle)
 
   // 1. Detect language (§5.1)
@@ -549,16 +568,7 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
       langResolution.requestedLanguage,
     )
 
-    let responseHtml: string
-    if (conversationHistory && conversationHistory.length > 0) {
-      const messages = [
-        ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user' as const, content: context },
-      ]
-      responseHtml = await callClaudeWithHistory(systemPrompt, messages, { maxTokens: 4096, temperature: 0.3 })
-    } else {
-      responseHtml = await callClaude(systemPrompt, context, { maxTokens: 4096, temperature: 0.3 })
-    }
+    const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 4096, temperature: 0.3 })
 
     const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
 
@@ -751,16 +761,7 @@ At the end of your response, append this comment (do not display it):
       langResolution.requestedLanguage,
     )
 
-    let responseHtml: string
-    if (conversationHistory && conversationHistory.length > 0) {
-      const messages = [
-        ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user' as const, content: context },
-      ]
-      responseHtml = await callClaudeWithHistory(systemPrompt, messages, { maxTokens: 4096, temperature: 0.3 })
-    } else {
-      responseHtml = await callClaude(systemPrompt, context, { maxTokens: 4096, temperature: 0.3 })
-    }
+    const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 4096, temperature: 0.3 })
 
     const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
 
@@ -854,16 +855,7 @@ At the end of your response, append this comment (do not display it to the user)
       langResolution.requestedLanguage,
     )
 
-    let responseHtml: string
-    if (conversationHistory && conversationHistory.length > 0) {
-      const messages = [
-        ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user' as const, content: context },
-      ]
-      responseHtml = await callClaudeWithHistory(systemPrompt, messages, { maxTokens: 4096, temperature: 0.3 })
-    } else {
-      responseHtml = await callClaude(systemPrompt, context, { maxTokens: 4096, temperature: 0.3 })
-    }
+    const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 4096, temperature: 0.3 })
 
     const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
 
@@ -941,16 +933,7 @@ At the end of your response, append this comment (do not display it to the user)
       langResolution.requestedLanguage,
     )
 
-    let responseHtml: string
-    if (conversationHistory && conversationHistory.length > 0) {
-      const messages = [
-        ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user' as const, content: context },
-      ]
-      responseHtml = await callClaudeWithHistory(systemPrompt, messages, { maxTokens: 4096, temperature: 0.3 })
-    } else {
-      responseHtml = await callClaude(systemPrompt, context, { maxTokens: 4096, temperature: 0.3 })
-    }
+    const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 4096, temperature: 0.3 })
 
     const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
 
@@ -1101,22 +1084,7 @@ At the end of your response, append this comment (do not display it to the user)
   )
 
   // Call Claude — use multi-turn when the caller supplies conversation history (§8.2)
-  let responseHtml: string
-  if (conversationHistory && conversationHistory.length > 0) {
-    const messages = [
-      ...conversationHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-      { role: 'user' as const, content: context },
-    ]
-    responseHtml = await callClaudeWithHistory(systemPrompt, messages, {
-      maxTokens:   4096,
-      temperature: 0.3,
-    })
-  } else {
-    responseHtml = await callClaude(systemPrompt, context, {
-      maxTokens:   4096,
-      temperature: 0.3,
-    })
-  }
+  const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 4096, temperature: 0.3 })
 
   // 11. Extract suggested questions, build citations, and save record
   const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)

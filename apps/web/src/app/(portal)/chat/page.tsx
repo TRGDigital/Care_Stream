@@ -631,28 +631,46 @@ function ChatPageInner() {
         }))
         .slice(-10)
 
-      const result = await api.query.send({
-        query_text:           trimmed,
-        staff_name:           session.user?.name ?? undefined,
-        document_category:    category ?? undefined,
-        policy_id:            pinnedPolicy?.id,
-        chat_session_id:      sessionId,
-        language:             replyLang || undefined,
-        conversation_history: history.length > 0 ? history : undefined,
-      })
-
-      setMessages(prev => prev.map(m =>
-        m.id === placeholderId ? {
-          ...m,
-          content:            result.responseHtml,
-          timestamp:          new Date().toISOString(),
-          citations:          result.citations?.length ? result.citations : undefined,
-          language:           result.languageDetected !== 'eng' ? result.languageDetected : undefined,
-          loading:            false,
-          suggestedQuestions: result.suggestedQuestions?.length ? result.suggestedQuestions : undefined,
-          queryId:            result.queryId ?? null,
-        } : m,
-      ))
+      // Stream the answer in, paragraph by paragraph.
+      let streamed = ''
+      await api.query.stream(
+        {
+          query_text:           trimmed,
+          staff_name:           session.user?.name ?? undefined,
+          document_category:    category ?? undefined,
+          policy_id:            pinnedPolicy?.id,
+          chat_session_id:      sessionId,
+          language:             replyLang || undefined,
+          conversation_history: history.length > 0 ? history : undefined,
+        },
+        {
+          onParagraph: (html) => {
+            streamed += (streamed ? '\n' : '') + html
+            setMessages(prev => prev.map(m =>
+              m.id === placeholderId ? { ...m, content: streamed, loading: false } : m,
+            ))
+          },
+          onDone: (d) => {
+            setMessages(prev => prev.map(m =>
+              m.id === placeholderId ? {
+                ...m,
+                content:            d.html || streamed,
+                timestamp:          new Date().toISOString(),
+                citations:          d.citations?.length ? d.citations : undefined,
+                language:           d.languageDetected && d.languageDetected !== 'eng' ? d.languageDetected : undefined,
+                loading:            false,
+                suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
+                queryId:            d.queryId ?? null,
+              } : m,
+            ))
+          },
+          onError: (msg) => {
+            setMessages(prev => prev.map(m =>
+              m.id === placeholderId ? { ...m, content: `<p>${msg}</p>`, loading: false } : m,
+            ))
+          },
+        },
+      )
     } catch {
       setMessages(prev => prev.map(m =>
         m.id === placeholderId ? {

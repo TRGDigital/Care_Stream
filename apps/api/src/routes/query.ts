@@ -136,6 +136,91 @@ queryRouter.post('/suggested', async (req: Request, res: Response) => {
   }
 })
 
+// ─── POST /query/stream ──────────────────────────────────────────────────────
+// Same as POST /query but streams the answer paragraph by paragraph over SSE, so the
+// staff member sees it build up rather than waiting for the whole thing.
+
+queryRouter.post('/stream', async (req: Request, res: Response) => {
+  const parsed = QuerySchema.safeParse(req.body)
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', parsed.error.issues.map(i => i.message).join(', ')); return }
+  const { query_text, policy_id, staff_name, document_category, chat_session_id, conversation_history, language } = parsed.data
+  const tenantId = getTenantId()
+
+  try {
+    await checkQueryLimit(tenantId)
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, e.code === 'SUBSCRIPTION_CANCELLED' ? 403 : 429); return }
+    throw e
+  }
+
+  const tenantSettings = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { response_style: true, custom_languages: true } })
+
+  // Same reply-language resolution as POST /query (staff member's first language by default).
+  let forcedLanguage = language
+    ? { code: language, name: languageNameForCode(language, tenantSettings?.custom_languages) }
+    : undefined
+  if (!forcedLanguage) {
+    const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { first_language: true, comms_always_first_language: true } })
+    const staffLang = me?.comms_always_first_language === false ? 'eng' : ((me?.first_language as string) ?? 'eng')
+    if (staffLang && staffLang !== 'eng') forcedLanguage = { code: staffLang, name: languageNameForCode(staffLang, tenantSettings?.custom_languages) }
+  }
+
+  // SSE setup
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+  ;(res as any).flushHeaders?.()
+  const send = (obj: unknown) => res.write(`data: ${JSON.stringify(obj)}\n\n`)
+
+  // Buffer streamed text and emit each complete block (paragraph/list/heading) as it closes.
+  let buf = ''
+  let flushed = 0
+  const CLOSE = /<\/(p|ul|ol|h[1-6]|blockquote|table|pre)>/gi
+  const onText = (delta: string) => {
+    buf += delta
+    CLOSE.lastIndex = flushed
+    let m: RegExpExecArray | null
+    while ((m = CLOSE.exec(buf)) !== null) {
+      const end = m.index + m[0].length
+      const chunk = buf.slice(flushed, end).replace(/<!--FOLLOWUP:[\s\S]*?-->/g, '').trim()
+      if (chunk) send({ type: 'paragraph', html: chunk })
+      flushed = end
+    }
+  }
+
+  try {
+    const result = await runQueryPipeline({
+      queryText:           query_text,
+      tenantId,
+      userId:              req.user!.sub,
+      staffName:           staff_name,
+      channel:             'chat',
+      policyId:            policy_id,
+      selectedCategory:    document_category,
+      chatSessionId:       chat_session_id,
+      conversationHistory: conversation_history,
+      responseStyle:       (tenantSettings?.response_style as 'standard' | 'concise') ?? 'standard',
+      forcedLanguage,
+      onText,
+    })
+    send({
+      type:               'done',
+      queryId:            result.queryId,
+      html:               result.responseHtml,
+      citations:          result.citations,
+      noMatch:            result.noMatch,
+      intentType:         result.intentType,
+      languageDetected:   result.languageDetected,
+      suggestedQuestions: result.suggestedQuestions,
+    })
+  } catch (e) {
+    console.error('[query/stream] Pipeline error:', e)
+    send({ type: 'error', error: 'Failed to process query. Please try again.' })
+  }
+  res.end()
+})
+
 // ─── POST /query/:id/feedback ────────────────────────────────────────────────
 // Staff rates a response (chat channel) — authenticated
 

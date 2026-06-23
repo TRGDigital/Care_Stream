@@ -40,6 +40,30 @@ export async function callClaude(
   return block.text
 }
 
+// Streaming variant — emits text deltas via onText as they arrive, and resolves with the
+// full text once complete. Used by the chat to stream the answer paragraph by paragraph.
+export async function callClaudeStream(
+  systemPrompt: string,
+  messages:     Anthropic.Messages.MessageParam[],
+  options:      ClaudeOptions | undefined,
+  onText:       (delta: string) => void,
+): Promise<string> {
+  const model = options?.model ?? MODEL
+  const stream = client.messages.stream({
+    model,
+    max_tokens: options?.maxTokens ?? 4096,
+    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+    system:   systemPrompt,
+    messages,
+  })
+  stream.on('text', (delta) => onText(delta))
+  const final = await stream.finalMessage()
+  recordUsage(model, final.usage)
+  const block = final.content[0]
+  if (!block || block.type !== 'text') throw new Error('Claude returned no text content')
+  return block.text
+}
+
 // §8.2 — Multi-turn variant for email conversation threads.
 // Accepts a full messages array so prior turns are visible to Claude.
 export async function callClaudeWithHistory(

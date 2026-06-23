@@ -97,6 +97,39 @@ export function createApiClient(token: string) {
       // Translate the starter questions into the staff member's first language.
       suggested: (questions: string[]) =>
         apiFetch<{ questions: string[] }>('/query/suggested', token, { method: 'POST', body: JSON.stringify({ questions }) }),
+      // Stream the answer paragraph by paragraph (SSE). Calls onParagraph as each block
+      // arrives, then onDone with the final payload (citations, suggestions, etc.).
+      stream: async (
+        data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> },
+        handlers: { onParagraph: (html: string) => void; onDone: (d: { html: string; citations?: Citation[]; suggestedQuestions?: string[]; queryId?: string; languageDetected?: string; noMatch?: boolean }) => void; onError: (msg: string) => void },
+      ): Promise<void> => {
+        const res = await fetch(`${API_URL}/query/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(data),
+        })
+        if (res.status === 401) { if (typeof window !== 'undefined') window.location.href = '/login'; throw new Error('Session expired.') }
+        if (!res.ok || !res.body) { handlers.onError('Could not start the answer.'); return }
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+          let i: number
+          while ((i = buf.indexOf('\n\n')) !== -1) {
+            const raw = buf.slice(0, i); buf = buf.slice(i + 2)
+            const line = raw.startsWith('data: ') ? raw.slice(6) : raw.trim()
+            if (!line) continue
+            let ev: { type?: string; html?: string; error?: string; [k: string]: unknown }
+            try { ev = JSON.parse(line) } catch { continue }
+            if (ev.type === 'paragraph' && ev.html) handlers.onParagraph(ev.html)
+            else if (ev.type === 'done') handlers.onDone(ev as never)
+            else if (ev.type === 'error') handlers.onError(String(ev.error ?? 'Something went wrong.'))
+          }
+        }
+      },
     },
 
     policies: {

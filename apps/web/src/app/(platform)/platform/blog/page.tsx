@@ -1020,9 +1020,10 @@ export default function BlogPage() {
   const pageEditRef = useRef<HTMLDivElement>(null)
 
   // When a page is opened for editing (including from the Footer Links tab),
-  // scroll the editor into view so it is obvious that it opened.
+  // The editor opens inline under the clicked row, so only nudge it into view if it is
+  // off-screen ('nearest' never jumps the page to the top).
   useEffect(() => {
-    if (editPage) pageEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (editPage) pageEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [editPage])
 
   const [loading, setLoading] = useState(true)
@@ -1445,32 +1446,6 @@ export default function BlogPage() {
                   />
                 )}
 
-                {editPage && (
-                  <div ref={pageEditRef} className="scroll-mt-4 rounded-xl border-2 border-teal/30 bg-teal-light/10 p-4">
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-neutral-dark">
-                        Editing <span className="font-mono text-teal">{editPage.path}</span>
-                      </p>
-                      <a
-                        href={editPage.path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal transition hover:bg-teal hover:text-white"
-                      >
-                        Open page in new window
-                        <span aria-hidden>↗</span>
-                      </a>
-                    </div>
-                    <PageForm
-                      initial={editPage}
-                      onSave={savePage}
-                      onCancel={() => setEditPage(null)}
-                      saving={savingPage}
-                      saveError={pageError}
-                    />
-                  </div>
-                )}
-
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   {loading ? (
                     <div className="flex justify-center py-10">
@@ -1524,6 +1499,31 @@ export default function BlogPage() {
                                 )}
                               </div>
                             </div>
+                          {editPage?.path === page.path && (
+                            <div ref={pageEditRef} className="scroll-mt-4 border-t border-teal/30 bg-teal-light/10 px-5 py-4">
+                              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                <p className="text-sm font-semibold text-neutral-dark">
+                                  Editing <span className="font-mono text-teal">{editPage.path}</span>
+                                </p>
+                                <a
+                                  href={editPage.path}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal transition hover:bg-teal hover:text-white"
+                                >
+                                  Open page in new window
+                                  <span aria-hidden>↗</span>
+                                </a>
+                              </div>
+                              <PageForm
+                                initial={editPage}
+                                onSave={savePage}
+                                onCancel={() => setEditPage(null)}
+                                saving={savingPage}
+                                saveError={pageError}
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

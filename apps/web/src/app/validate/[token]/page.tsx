@@ -60,7 +60,8 @@ export default function ValidatePage({ params }: { params: { token: string } }) 
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-bold text-teal">CareStream</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-color.png" alt="CareStream" className="h-7 w-auto" />
           <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Training module · for validation</span>
         </div>
       </header>
@@ -171,7 +172,7 @@ export default function ValidatePage({ params }: { params: { token: string } }) 
             )}
 
             <p className="border-t border-gray-200 pt-6 text-center text-xs text-gray-400">
-              Shared for validation by CareStream. This content is confidential.
+              Shared for validation. This content is confidential.
             </p>
           </article>
         )}

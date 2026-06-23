@@ -34,16 +34,17 @@ ALTER ROLE postgres SET idle_in_transaction_session_timeout = '120000'; -- 120s,
 --   SELECT rolname, rolconfig FROM pg_roles WHERE rolname = 'postgres';
 
 -- =============================================================================
--- DURABLE FOLLOW-UP (config, not SQL) — recommended
+-- CONTEXT — the transaction pooler was already in place, and was NOT enough
 -- =============================================================================
--- Point the app's DATABASE_URL at the Supabase *transaction* pooler (port 6543)
--- rather than a direct/session connection, so a frozen instance cannot pin a
--- real Postgres backend for long. In Vercel set:
+-- DATABASE_URL already points at the Supabase *transaction* pooler (Supavisor,
+-- port 6543, ?pgbouncer=true) — switched 2026-06-08. That alone did NOT prevent
+-- this outage: in transaction mode a pooled backend is pinned to the client for
+-- the life of an open transaction, so a frozen serverless instance still leaves
+-- its backend "idle in transaction" until something kills it. The role-level
+-- idle_in_transaction_session_timeout above is that "something", and is the fix
+-- that was actually missing. No env change is needed.
 --
---   DATABASE_URL = postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
---
--- Keep DATABASE_DIRECT_URL on the direct connection (5432) for `prisma migrate`.
--- Do NOT add libpq `options=-c ...` to a transaction-pooler URL: the pooler
--- rejects custom startup parameters. The role-level GUC above is the right place
--- for the idle timeout.
+-- Note: do NOT add libpq `options=-c ...` to a transaction-pooler URL (the pooler
+-- rejects custom startup parameters) — the role-level GUC above is the right place.
+-- DATABASE_DIRECT_URL stays on the direct connection (5432) for `prisma migrate`.
 -- =============================================================================

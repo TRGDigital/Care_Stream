@@ -7,12 +7,13 @@ import { SiteImage } from '@/components/site-image'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-const GROUP_ORDER = ['core_mandatory', 'health_safety', 'care_clinical', 'conduct_governance', 'role_specific']
+const GROUP_ORDER = ['core_mandatory', 'health_safety', 'care_clinical', 'conduct_governance', 'data_technology', 'role_specific']
 const GROUP_BLURB: Record<string, string> = {
   core_mandatory:    'A core mandatory subject every care worker must complete.',
   health_safety:     'A statutory health and safety subject for your team.',
   care_clinical:     'A clinical care subject for staff who deliver hands-on care.',
   conduct_governance: 'A professional conduct and governance subject.',
+  data_technology:   'A data protection, cyber and information-governance subject.',
   role_specific:     'A role- or service-specific subject.',
 }
 

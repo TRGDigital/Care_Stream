@@ -4,7 +4,7 @@
 
 export type TrainingTopicSeed = {
   title: string
-  group_key: 'core_mandatory' | 'health_safety' | 'care_clinical' | 'conduct_governance' | 'role_specific'
+  group_key: 'core_mandatory' | 'health_safety' | 'care_clinical' | 'conduct_governance' | 'role_specific' | 'data_technology'
   default_frequency: 'annual' | 'biennial' | 'triennial' | 'once' | 'adhoc'
   requires_practical?: boolean
   aliases?: string[]
@@ -27,7 +27,7 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Mental Capacity Act and DoLS', group_key: 'core_mandatory', default_frequency: 'biennial', aliases: ['MCA', 'DoLS', 'deprivation of liberty'] },
   { title: 'Equality, Diversity and Inclusion', group_key: 'core_mandatory', default_frequency: 'triennial', aliases: ['EDI', 'equality'] },
   { title: 'Food Hygiene', group_key: 'core_mandatory', default_frequency: 'triennial', aliases: ['food safety', 'level 2 food hygiene'] },
-  { title: 'GDPR / Data Protection', group_key: 'core_mandatory', default_frequency: 'annual', aliases: ['data protection', 'information governance'] },
+  // GDPR / Data Protection moved to the Data & technology group below.
   // Oliver McGowan Mandatory Training is intentionally NOT offered here — it is
   // tightly regulated (accredited Tier 1/2 delivery with lived-experience trainers)
   // and not appropriate to AI-generate or self-certify.
@@ -59,7 +59,7 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Duty of Candour', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['duty of candour'] },
   { title: 'Whistleblowing', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['whistleblowing', 'speaking up'] },
   { title: 'Complaints Handling', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['complaints'] },
-  { title: 'Documentation and Record Keeping', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['record keeping', 'documentation'] },
+  // Documentation and Record Keeping moved to the Data & technology group below.
   { title: 'Prevent Duty (Counter-Terrorism Awareness)', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['prevent', 'radicalisation'] },
   { title: 'Communication / Professional Behaviour', group_key: 'conduct_governance', default_frequency: 'annual', aliases: ['professional behaviour', 'communication'] },
 
@@ -70,6 +70,13 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Catheter Care', group_key: 'role_specific', default_frequency: 'annual', requires_practical: true, aliases: ['catheter'] },
   { title: 'PEG Feeding Care', group_key: 'role_specific', default_frequency: 'annual', requires_practical: true, aliases: ['PEG', 'enteral feeding'] },
   { title: 'Challenging Behaviour Management', group_key: 'role_specific', default_frequency: 'annual', aliases: ['challenging behaviour'] },
+
+  // ── Data & technology (universal) ──
+  { title: 'Cyber Security', group_key: 'data_technology', default_frequency: 'annual', aliases: ['cyber security', 'cyber awareness', 'phishing', 'ransomware', 'passwords'] },
+  { title: 'GDPR / Data Protection', group_key: 'data_technology', default_frequency: 'annual', aliases: ['data protection', 'information governance', 'GDPR'] },
+  { title: 'National Data Opt-out', group_key: 'data_technology', default_frequency: 'annual', aliases: ['national data opt-out', 'national opt-out', 'type 1 opt-out', 'data opt out'] },
+  { title: 'Documentation and Record Keeping', group_key: 'data_technology', default_frequency: 'annual', aliases: ['record keeping', 'documentation'] },
+  { title: 'ICO Training', group_key: 'data_technology', default_frequency: 'annual', aliases: ['ICO', 'information commissioner', 'data breach reporting', 'reporting a breach'] },
 
   // ── Dental practices (setting-specific overlay) ──
   { title: 'Dental Decontamination and HTM 01-05', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'dental-practices', aliases: ['decontamination', 'HTM 01-05', 'instrument reprocessing', 'LDU'] },
@@ -128,6 +135,20 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Repeat Prescribing and Medicines Safety', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['repeat prescribing', 'prescribing safety'] },
   { title: 'Test Results Handling and Failsafe', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['results handling', 'failsafe', 'pathology'] },
   { title: 'Telephone Triage and Care Navigation', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'gp-practices', aliases: ['triage', 'care navigation', 'signposting'] },
+
+  // ── Residential care homes (setting-specific overlay) ──
+  { title: 'Person-Centred Care Planning', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'residential-care', aliases: ['care planning', 'person centred care', 'care plans'] },
+  { title: 'Activities, Wellbeing and Meaningful Occupation', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'residential-care', aliases: ['activities', 'wellbeing', 'meaningful occupation', 'social engagement'] },
+  { title: 'Privacy, Dignity and Respect in a Care Home', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'residential-care', aliases: ['privacy', 'dignity', 'respect'] },
+  { title: 'Supporting Residents’ Finances and Personal Allowances', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'residential-care', aliases: ['resident finances', 'personal allowance', 'appointeeship', 'financial abuse'] },
+  { title: 'Admissions, Settling In and Transitions', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'residential-care', aliases: ['admissions', 'settling in', 'transitions', 'moving in'] },
+
+  // ── Nursing homes (setting-specific overlay) ── registered-nurse clinical skills (knowledge + observed competency)
+  { title: 'Wound Care and Dressings', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['wound care', 'dressings', 'wound management'] },
+  { title: 'Pressure Ulcer Categorisation and Tissue Viability Management', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['pressure ulcer categorisation', 'tissue viability', 'wound grading'] },
+  { title: 'Subcutaneous, Intramuscular and Insulin Injections', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['injections', 'subcutaneous', 'intramuscular', 'insulin administration'] },
+  { title: 'Syringe Drivers and Anticipatory (End of Life) Medicines', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['syringe driver', 'anticipatory medicines', 'just in case', 'T34'] },
+  { title: 'Venepuncture and Cannulation', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['venepuncture', 'cannulation', 'phlebotomy', 'bloods'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {
@@ -139,5 +160,6 @@ export const TOPIC_GROUP_LABELS: Record<string, string> = {
   health_safety:       'Health & safety / statutory',
   care_clinical:       'Care & clinical',
   conduct_governance:  'Conduct & governance',
+  data_technology:     'Data & technology',
   role_specific:       'Role- or resident-specific',
 }

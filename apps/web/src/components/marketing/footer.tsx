@@ -151,6 +151,22 @@ export async function MarketingFooter() {
             </a>
           </div>
         </div>
+
+        {/* Built by TRG Digital */}
+        <div className="mt-10 border-t border-white/8 pt-6 text-center">
+          <a
+            href="https://www.trgdigital.co.uk/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-500 transition-colors hover:text-gray-300"
+          >
+            <span>This site was built by</span>
+            <span className="inline-flex items-center rounded bg-white px-2 py-1">
+              <SiteImage src="/trg-digital.png" alt="TRG Digital" width={900} height={209} sizes="84px" className="h-4 w-auto" />
+            </span>
+            <span>a specialist care sector marketing agency</span>
+          </a>
+        </div>
       </div>
     </footer>
   )

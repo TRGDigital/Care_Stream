@@ -139,6 +139,34 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   ok(res, { training, induction, cqc, followup, annual, audits })
 })
 
+// Normalise a module name so "Fire Safety" matches "Fire Safety Annual Refresher"
+// and "Moving & Handling" matches "Moving and Handling".
+const normModuleName = (s: string) => String(s ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '')
+
+// Pick an already-generated image for a training module's follow-up thumbnail,
+// reusing what we have rather than showing a placeholder:
+//   1. the module's own AI cover illustration, then any lesson section image;
+//   2. failing that, borrow the cover from a related module that has one
+//      (same topic, or a normalised-name match — e.g. the "Fire Safety" gap
+//      reuses the "Fire Safety Annual Refresher" cover).
+// `imaged` is the pool of modules (this tenant + standard library) that have a
+// cover image. Null = the client shows its default illustration.
+function resolveFollowUpImage(m: any, imaged: any[]): string | null {
+  if (m?.illustration_key) return illustrationUrl(m.illustration_key)
+  const sections = Array.isArray(m?.learning_content?.sections) ? m.learning_content.sections : []
+  const ownSection = sections.find((s: any) => s?.image_key)
+  if (ownSection) return illustrationUrl(ownSection.image_key)
+
+  const mname   = normModuleName(m?.name)
+  const byTopic = m?.topic_id ? imaged.find(c => c.topic_id && c.topic_id === m.topic_id) : null
+  const byName  = imaged.find(c => {
+    const cn = normModuleName(c.name)
+    return cn === mname || (!!mname && (cn.includes(mname) || mname.includes(cn)))
+  })
+  const match = byTopic ?? byName
+  return match ? illustrationUrl(match.illustration_key) : null
+}
+
 // ─── GET /me/follow-up ────────────────────────────────────────────────────────
 // The exact questions the staff member currently has wrong (training + induction
 // MCQs), so they can re-answer just those. Questions translated to their language.
@@ -147,10 +175,10 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
 
-  const [tEnr, oEnr, user, tenant] = await Promise.all([
+  const [tEnr, oEnr, user, tenant, imaged] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:  { tenant_id: tenantId, user_id: userId },
-      select: { id: true, module: { select: { name: true, questions: true, illustration_url: true } }, answers: { where: { is_correct: false }, select: { question_id: true } } },
+      select: { id: true, module: { select: { name: true, topic_id: true, questions: true, illustration_key: true, learning_content: true } }, answers: { where: { is_correct: false }, select: { question_id: true } } },
     }),
     (prisma as any).onboardingEnrollment.findMany({
       where:  { tenant_id: tenantId, user_id: userId },
@@ -158,6 +186,12 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+    // Modules (this tenant + standard library) that already have a cover image, so
+    // a gap module without its own can borrow a related module's illustration.
+    (prisma as any).trainingModule.findMany({
+      where:  { OR: [{ tenant_id: tenantId }, { tenant_id: null }], illustration_key: { not: null }, is_active: true },
+      select: { name: true, topic_id: true, illustration_key: true },
+    }).catch(() => []),
   ])
 
   const items: any[] = []
@@ -167,7 +201,7 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
       if (!wrong.has(q.id)) continue
       const options = Array.isArray(q.options) ? q.options : []
       if (options.length === 0) continue
-      items.push({ source: 'training', enrollment_id: e.id, ref: q.id, topic: e.module?.name, text: q.text, options, image_url: illustrationUrl(e.module?.illustration_url) })
+      items.push({ source: 'training', enrollment_id: e.id, ref: q.id, topic: e.module?.name, text: q.text, options, image_url: resolveFollowUpImage(e.module, imaged as any[]) })
     }
   }
   for (const e of oEnr as any[]) {

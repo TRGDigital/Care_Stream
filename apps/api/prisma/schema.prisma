@@ -794,6 +794,47 @@ model LanguageSwitchEvent {
   @@map("language_switch_events")
 }
 
+// Face-to-face (group/in-person) training the home runs each month. Admins log the
+// session (topic, date, who delivered it), allocate who should attend, then mark who
+// attended/missed. This is a separate attendance/evidence record — it does NOT change
+// the digital training matrix; admins choose who to send the digital module to.
+// Supports backfilling past sessions and planning future ones (calendar view).
+model FaceToFaceSession {
+  id                   String   @id @default(uuid())
+  tenant_id            String
+  module_id            String?                          // training module the session covers; null if it was later deleted
+  title                String                           // snapshot of the topic name (evidence stability)
+  session_date         DateTime                         // the day the session runs (date semantics; backfill = past dates)
+  delivered_by_user_id String?                          // internal trainer (a staff member)
+  delivered_by_name    String?                          // external / free-text trainer name
+  notes                String?
+  created_by           String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  attendance           FaceToFaceAttendance[]
+
+  @@index([tenant_id, session_date])
+  @@map("face_to_face_sessions")
+}
+
+// One allocated staff member for a session, with their attendance outcome and whether
+// the digital catch-up module was sent to them as a result.
+model FaceToFaceAttendance {
+  id                 String   @id @default(uuid())
+  tenant_id          String
+  session_id         String
+  user_id            String
+  status             String   @default("allocated")    // allocated | attended | absent
+  module_assigned_at DateTime?                          // set when the digital module was sent to them off the back of this session
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  session            FaceToFaceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@unique([session_id, user_id])
+  @@index([tenant_id, user_id])
+  @@map("face_to_face_attendance")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

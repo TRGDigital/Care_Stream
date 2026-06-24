@@ -584,6 +584,31 @@ export function createApiClient(token: string) {
       unsavePolicy: (policyId: string) => apiFetch<{ removed: boolean }>(`/me/saved-policies/${policyId}`, token, { method: 'DELETE' }),
     },
 
+    faceToFace: {
+      modules: () => apiFetch<{ modules: Array<{ id: string; name: string; category: string }> }>('/face-to-face/modules', token),
+      sessions: (from?: string, to?: string) => {
+        const qs = new URLSearchParams()
+        if (from) qs.set('from', from)
+        if (to)   qs.set('to', to)
+        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
+      },
+      session: (id: string) => apiFetch<{ session: any }>(`/face-to-face/sessions/${id}`, token),
+      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; notes?: string; attendee_ids?: string[] }) =>
+        apiFetch<{ session: { id: string } }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
+      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; notes?: string | null; attendee_ids?: string[] }) =>
+        apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      deleteSession: (id: string) =>
+        apiFetch<{ deleted: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'DELETE' }),
+      markAttendance: (id: string, marks: Array<{ user_id: string; status: 'allocated' | 'attended' | 'absent' }>) =>
+        apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}/attendance`, token, { method: 'POST', body: JSON.stringify({ marks }) }),
+      assignModule: (id: string, user_ids: string[]) =>
+        apiFetch<{ assigned: number; newly_enrolled: number }>(`/face-to-face/sessions/${id}/assign-module`, token, { method: 'POST', body: JSON.stringify({ user_ids }) }),
+      analytics: () => apiFetch<{
+        summary: { sessions: number; allocations: number; attended: number; missed: number; modules_assigned: number; assigned_incomplete: number }
+        by_staff: Array<{ user_id: string; name: string; job_role: string | null; allocated: number; attended: number; missed: number; assigned: number; assigned_incomplete: number; missed_sessions: Array<{ session_id: string; title: string; date: string; module_assigned: boolean; completion: string | null }> }>
+      }>('/face-to-face/analytics', token),
+    },
+
     analytics: {
       get: () => apiFetch<any>('/analytics', token),
       training: () => apiFetch<any>('/analytics/training', token),

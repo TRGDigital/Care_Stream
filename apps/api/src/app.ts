@@ -20,6 +20,7 @@ import { knowledgeRouter } from './routes/knowledge'
 import { sitesRouter } from './routes/sites'
 import { onboardingRouter } from './routes/onboarding'
 import { trainingRouter } from './routes/training'
+import { faceToFaceRouter } from './routes/face-to-face'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { publicBlogRouter } from './routes/blog-public'
@@ -150,6 +151,7 @@ app.use('/knowledge', knowledgeRouter)
 app.use('/sites', sitesRouter)
 app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)
+app.use('/face-to-face', faceToFaceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/agent-actions', agentActionsRouter)

@@ -251,6 +251,7 @@ export default function AnalyticsPage() {
   const [kgaps,        setKgaps]    = useState<any>(null)
   const [annual,       setAnnual]   = useState<any>(null)
   const [langSwitch,   setLangSwitch] = useState<any>(null)
+  const [f2f,          setF2f]      = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -259,9 +260,9 @@ export default function AnalyticsPage() {
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
   useEffect(() => {
-    const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any }>(`admin-analytics-${userId}`)
+    const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -282,10 +283,11 @@ export default function AnalyticsPage() {
       api.analytics.annualTraining().catch(() => null),
       api.analytics.engagement().catch(() => null),
       api.analytics.languageSwitches().catch(() => null),
+      api.faceToFace.analytics().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -669,6 +671,54 @@ export default function AnalyticsPage() {
               </div>
             ))}
           </div>
+        </>
+      )}
+
+      {/* ── Face-to-face training ────────────────────────────────────────────── */}
+      {tab === 'staff' && f2f && f2f.summary.sessions > 0 && (
+        <>
+          <SectionDivider
+            title="Face-to-face training"
+            subtitle="Group / in-person sessions: who missed them, who was sent the digital module as a catch-up, and whether they've completed it."
+          />
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Sessions logged" value={f2f.summary.sessions} Icon={ClipboardCheck} iconBg="bg-teal-light" iconColor="text-teal" info="Face-to-face training sessions recorded, including any backfilled history." />
+            <StatCard label="Marked missed" value={f2f.summary.missed} Icon={AlertCircle} iconBg="bg-amber-50" iconColor="text-amber-500" info="Allocations where the staff member was marked absent from the session." />
+            <StatCard label="Digital modules sent" value={f2f.summary.modules_assigned} Icon={GraduationCap} iconBg="bg-indigo-50" iconColor="text-indigo-500" info="Catch-up modules sent to staff off the back of a face-to-face session." />
+            <StatCard label="Not yet completed" value={f2f.summary.assigned_incomplete} Icon={AlertCircle} iconBg="bg-orange-50" iconColor="text-orange-400" info="Of the catch-up modules sent, how many the staff member still hasn't completed." />
+          </div>
+          {f2f.by_staff.length > 0 && (
+            <div className="mb-6 space-y-3">
+              {f2f.by_staff.map((s: any) => (
+                <div key={s.user_id} className="rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-neutral-dark">{s.name}</p>
+                      <p className="text-xs text-neutral-mid">{s.job_role || 'Staff member'} · attended {s.attended}/{s.allocated}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      {s.missed > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">{s.missed} missed</span>}
+                      {s.assigned_incomplete > 0 && <span className="rounded-full bg-orange-50 px-2.5 py-1 font-semibold text-orange-600">{s.assigned_incomplete} to complete</span>}
+                    </div>
+                  </div>
+                  {s.missed_sessions.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {s.missed_sessions.map((ms: any, i: number) => (
+                        <span key={i} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-neutral-light/40 px-2 py-1 text-xs text-neutral-dark">
+                          {ms.title}
+                          {ms.module_assigned
+                            ? (ms.completion === 'complete'
+                                ? <span className="rounded-full bg-green-50 px-1.5 text-[10px] font-medium text-green-600">completed</span>
+                                : <span className="rounded-full bg-orange-50 px-1.5 text-[10px] font-medium text-orange-600">{ms.completion === 'in_progress' ? 'in progress' : 'not started'}</span>)
+                            : <span className="rounded-full bg-gray-100 px-1.5 text-[10px] font-medium text-neutral-mid">not sent</span>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -1377,7 +1427,7 @@ export default function AnalyticsPage() {
       ))}
 
       {/* ── Per-tab empty states ─────────────────────────────────────────────── */}
-      {tab === 'staff' && !(riskData?.staff?.length || readingData?.summary?.total_sessions) && (
+      {tab === 'staff' && !(riskData?.staff?.length || readingData?.summary?.total_sessions || langSwitch?.by_staff?.length || f2f?.summary?.sessions) && (
         <EmptyTab>No staff alerts or policy-reading activity yet. Flags appear here when training is overdue, induction stalls, or someone hasn&apos;t logged in.</EmptyTab>
       )}
       {tab === 'gaps' && !((inductionPerf?.summary?.total_answered) || (kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0)) || (gapsData && (gapsData.question_gaps.length > 0 || gapsData.module_summary.length > 0))) && (

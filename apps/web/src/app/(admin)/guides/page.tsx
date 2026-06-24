@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -845,6 +845,55 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
         </SectionBlock>
         <Tip>Business Continuity entries are not used in any other chat channel, they are kept separate so staff always get focused, relevant answers in an emergency situation.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'face-to-face',
+    icon:    CalendarDays,
+    title:   'Face-to-face training',
+    summary: 'Log your in-person group sessions, mark attendance, and send the digital module to anyone who missed',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it's for">
+          <p className="text-sm text-neutral-mid">
+            Most homes run <strong>in-person group training</strong> each month. The <strong>Face-to-face</strong> page lets you record those sessions in a <strong>calendar</strong>, mark who attended and who missed, and keep evidence of both. It sits alongside the digital training, it does <strong>not</strong> change anyone&apos;s training matrix on its own; instead you decide who should also complete the module digitally.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Logging a session">
+          <div className="space-y-3">
+            <Step n={1}>Open <strong>Face-to-face</strong> in the sidebar and click <strong>New session</strong> (or click a day in the calendar to pre-fill its date).</Step>
+            <Step n={2}>Choose the <strong>training topic</strong> from the dropdown (the same modules you can assign digitally). The title fills in from the module; you can edit it.</Step>
+            <Step n={3}>Set the <strong>date</strong>, and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer.</Step>
+            <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend, then <strong>Create session</strong>. Add notes if useful.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Marking attendance">
+          <p className="text-sm text-neutral-mid">
+            Open a session from the calendar and mark each person <strong>attended</strong>, <strong>missed</strong>, or leave them <strong>unmarked</strong>. Use <strong>All attended</strong> / <strong>All missed</strong> to set everyone at once, then adjust. This is your evidence of who was at each formal session.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Sending the digital module to anyone who missed">
+          <p className="text-sm text-neutral-mid">
+            In the session, the <strong>Send the digital module</strong> panel lets you pick exactly who should complete the training digitally, click <strong>Select those who missed</strong> for the obvious case, or choose anyone. They get the module in their hub <strong>My Training</strong>, and the session shows a <strong>sent</strong> marker against them.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Backfilling the last 12 months">
+          <p className="text-sm text-neutral-mid">
+            To get started, add your <strong>past sessions</strong>: create a session as normal but set a <strong>past date</strong>, pick the topic and trainer, and mark who attended/missed. This builds up your history so the record and analytics reflect the training you&apos;ve already delivered.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Planning ahead">
+          <p className="text-sm text-neutral-mid">
+            Use the calendar arrows to move into next year and schedule future sessions. From <strong>October</strong> each year, a reminder appears prompting you to start planning the following year if nothing is booked yet.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Seeing it in analytics">
+          <p className="text-sm text-neutral-mid">
+            <strong>Analytics → Staff</strong> has a <strong>Face-to-face training</strong> section: who missed sessions, who was sent the digital module as a result, and whether they&apos;ve completed it, so you can chase the gaps.
+          </p>
+        </SectionBlock>
+        <Tip>Face-to-face is admin-only. Staff don&apos;t see the calendar; they only receive the digital module if you choose to send it to them.</Tip>
       </div>
     ),
   },

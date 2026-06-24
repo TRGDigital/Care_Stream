@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
-  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound,
+  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, CalendarDays,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
@@ -54,6 +54,7 @@ const NAV_SECTIONS = [
     iconColor: 'text-green-400',
     items: [
       { href: '/training',      label: 'Training',         Icon: ShieldCheck    },
+      { href: '/face-to-face',  label: 'Face-to-face',     Icon: CalendarDays   },
       { href: '/cqc-questions', label: 'CQC Staff Prep',   Icon: ClipboardList  },
       { href: '/audits',        label: 'Monthly Audits',   Icon: ClipboardCheck },
       { href: '/onboarding',    label: 'Staff Onboarding', Icon: GraduationCap  },

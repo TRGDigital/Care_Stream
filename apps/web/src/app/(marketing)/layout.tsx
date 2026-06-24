@@ -4,6 +4,7 @@ import { AltMapProvider } from '@/components/alt-map-provider'
 import { getSiteAltMap } from '@/lib/image-alts'
 import { BreadcrumbsJsonLd } from '@/components/breadcrumbs-json-ld'
 import { MarketingAgentTools } from '@/components/agent/marketing-agent-tools'
+import { PopEmbed } from '@/components/marketing/pop-embed'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const altMap = await getSiteAltMap()
@@ -11,6 +12,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
     <AltMapProvider map={altMap}>
       <BreadcrumbsJsonLd />
       <MarketingAgentTools />
+      <PopEmbed />
       <div className="flex min-h-screen flex-col">
         <MarketingNav />
         <main className="flex-1">{children}</main>

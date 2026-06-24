@@ -106,7 +106,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [savedQuestions, setSavedQuestions] = useState<Record<string, Question[]>>({})
   const [saving,         setSaving]         = useState<string | null>(null)
   const [saved,          setSaved]          = useState<string | null>(null)
-  const [genLoading,    setGenLoading]    = useState<Record<string, 'questions' | 'answers' | null>>({})
+  const [genLoading,    setGenLoading]    = useState<Record<string, 'questions' | 'answers' | 'lesson' | null>>({})
   const [genError,      setGenError]      = useState<Record<string, string>>({})
   const [lockLoading,   setLockLoading]   = useState<string | null>(null)
   const [localLock,     setLocalLock]     = useState<Record<string, { locked: boolean; locked_at: string | null }>>({})
@@ -188,6 +188,21 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
       setOpen(m.id)
     } catch (e: any) {
       setGenError(p => ({ ...p, [m.id]: e.message ?? 'Generation failed' }))
+    } finally {
+      setGenLoading(p => ({ ...p, [m.id]: null }))
+    }
+  }
+
+  async function generateLesson(m: Module) {
+    if (!confirm('Build a full scenario-based lesson (teach → real care scenario → quick check) and a fresh question bank for this module, grounded in your policies?\n\nIt reuses the matching standard module\'s images where available. Your current questions will be replaced. Uses 1 AI credit.')) return
+    setGenLoading(p => ({ ...p, [m.id]: 'lesson' }))
+    setGenError(p => ({ ...p, [m.id]: '' }))
+    try {
+      const r = await api.training.generateLesson(m.id)
+      onAssigned() // reload modules so the new lesson + image show
+      alert(`Built a scenario-based lesson with ${Array.isArray(r.module?.learning_content?.sections) ? r.module.learning_content.sections.length : 0} sections and ${Array.isArray(r.module?.questions) ? r.module.questions.length : 0} questions${r.reused_images ? ', reusing existing images' : ''}. Use "View training" / the preview to review it.`)
+    } catch (e: any) {
+      setGenError(p => ({ ...p, [m.id]: e.message ?? 'Lesson generation failed' }))
     } finally {
       setGenLoading(p => ({ ...p, [m.id]: null }))
     }
@@ -317,13 +332,23 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                     {/* AI generation buttons — disabled when locked */}
                     <div className="mb-4 flex flex-wrap items-center gap-2">
                       <button
+                        onClick={() => generateLesson(m)}
+                        disabled={!!genLoading[m.id] || isLocked}
+                        className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40"
+                      >
+                        {genLoading[m.id] === 'lesson'
+                          ? <><Loader2 size={12} className="animate-spin" /> Building lesson…</>
+                          : <><Sparkles size={12} /> Generate lesson &amp; questions</>
+                        }
+                      </button>
+                      <button
                         onClick={() => generateQuestions(m)}
                         disabled={!!genLoading[m.id] || isLocked}
                         className="flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-40"
                       >
                         {genLoading[m.id] === 'questions'
                           ? <><Loader2 size={12} className="animate-spin" /> Generating questions…</>
-                          : <><Sparkles size={12} /> Generate questions</>
+                          : <><Sparkles size={12} /> Questions only</>
                         }
                       </button>
                       <button

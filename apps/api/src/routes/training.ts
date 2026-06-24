@@ -1095,6 +1095,65 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
   }
 })
 
+// POST /training/modules/:id/generate-lesson — build a full SCENARIO-BASED lesson
+// (teach → real care scenario → quick check) PLUS an assessment question bank for a
+// statutory module, grounded in the tenant's policies. Reuses the matching published
+// standard module's cover + section images (no image regeneration). Returns the module.
+trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Response) => {
+  if ((req as any).user.role !== 'admin') { err(res, 'FORBIDDEN', 'Admin access required', 403); return }
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+    if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    if (module.questions_locked) { err(res, 'LOCKED', 'Unlock the module before regenerating its content.', 400); return }
+
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
+    const draft = await generateAnnualModuleDraft(tenantId, { title: module.name, requires_practical: module.requires_practical })
+    if (!draft.questions.length || !Array.isArray(draft.learning_content?.sections)) {
+      err(res, 'GENERATION_FAILED', 'No lesson content was generated — please try again.', 502); return
+    }
+
+    // Reuse images from the matching published standard module (same subject) instead
+    // of regenerating: cover always; section images by position where they line up.
+    const sections = draft.learning_content.sections as any[]
+    let illustration_key: string | null = module.illustration_key
+    const candidates = await (prisma as any).trainingModule.findMany({
+      where:  { tenant_id: null, source: 'ai_generated', approved: true, is_active: true },
+      select: { name: true, topic_id: true, illustration_key: true, learning_content: true },
+    })
+    const norm  = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+    const mname = norm(module.name)
+    const match = (module.topic_id && (candidates as any[]).find(c => c.topic_id === module.topic_id))
+      || (candidates as any[]).find(c => norm(c.name) === mname)
+      || (candidates as any[]).find(c => mname && (norm(c.name).includes(mname) || mname.includes(norm(c.name))))
+    if (match) {
+      if (!illustration_key && match.illustration_key) illustration_key = match.illustration_key
+      const stdSecs = Array.isArray(match.learning_content?.sections) ? match.learning_content.sections : []
+      sections.forEach((sec: any, i: number) => { if (!sec.image_key && stdSecs[i]?.image_key) sec.image_key = stdSecs[i].image_key })
+    }
+
+    const updated = await (prisma as any).trainingModule.update({
+      where: { id: module.id },
+      data:  {
+        learning_content:  draft.learning_content,
+        questions:         draft.questions,
+        duration_minutes:  draft.estimated_minutes,
+        description:       (draft.learning_content.summary || module.name).slice(0, 500),
+        illustration_key,
+        questions_version: (module.questions_version ?? 0) + 1,
+        questions_locked:  false,
+        questions_locked_at: null,
+      },
+    })
+    await logAiCredit(tenantId, 'training_lesson', module.id)
+    ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key), reused_images: !!match } })
+  } catch (e: any) {
+    err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
 // POST /training/modules/:id/generate-answers — generate A/B/C/D options for existing question texts
 trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: Response) => {
   if ((req as any).user.role !== 'admin') {

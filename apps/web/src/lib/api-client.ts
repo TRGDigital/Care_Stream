@@ -441,6 +441,11 @@ export function createApiClient(token: string) {
           `/training/modules/${moduleId}/generate-questions`, token, { method: 'POST', body: JSON.stringify({ count }) }
         ),
 
+      generateLesson: (moduleId: string) =>
+        apiFetch<{ module: any; reused_images: boolean }>(
+          `/training/modules/${moduleId}/generate-lesson`, token, { method: 'POST' }
+        ),
+
       generateAnswers: (moduleId: string, questions: Array<{ id: string; text: string }>) =>
         apiFetch<{ questions: Array<{ id: string; text: string; options: string[]; correct: number }> }>(
           `/training/modules/${moduleId}/generate-answers`, token, { method: 'POST', body: JSON.stringify({ questions }) }

@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
+import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -22,7 +23,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -329,7 +330,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
@@ -780,6 +781,15 @@ function ChatPageInner() {
               {navCounts.audits > 0 && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
             </button>
           )}
+          {isAdmin && (
+            <button
+              onClick={() => setView('f2f')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'f2f' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <CalendarDays size={15} />
+              F2F Training
+            </button>
+          )}
           <button
             onClick={() => setView('cqc')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'cqc' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -942,6 +952,11 @@ function ChatPageInner() {
         {/* My Progress view */}
         {view === 'progress' && session?.accessToken && (
           <ProgressView token={session.accessToken} />
+        )}
+
+        {/* F2F Training (admin-only) */}
+        {view === 'f2f' && isAdmin && session?.accessToken && (
+          <F2FAdminView token={session.accessToken} />
         )}
 
         {/* Active category badge */}

@@ -113,11 +113,12 @@ export default function AnnualTrainingPage() {
               <div className="overflow-hidden rounded-card border border-gray-100 bg-white shadow-card">
                 {group.items.map((t, i) => {
                   const m = t.module
+                  const hero = m?.illustration_url ?? t.standard_module?.illustration_url ?? null
                   return (
-                    <div key={t.id} className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
-                      {m?.approved ? <CheckCircle2 size={16} className="shrink-0 text-green-500" />
-                        : m ? <FileText size={16} className="shrink-0 text-amber-500" />
-                        : <Circle size={16} className="shrink-0 text-gray-300" />}
+                    <div key={t.id} className={`flex flex-wrap items-start gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                      {m?.approved ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-500" />
+                        : m ? <FileText size={16} className="mt-0.5 shrink-0 text-amber-500" />
+                        : <Circle size={16} className="mt-0.5 shrink-0 text-gray-300" />}
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-neutral-dark">{t.title}</p>
                         <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-neutral-mid">
@@ -127,6 +128,10 @@ export default function AnnualTrainingPage() {
                           {m && <span>· {m.question_count} questions</span>}
                           {!m && t.standard_module && <span className="rounded-full bg-teal/10 px-1.5 py-0.5 font-medium text-teal">Standard available — free</span>}
                         </p>
+                        {hero && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={apiAssetUrl(hero) ?? ''} alt={`${t.title} cover`} className="mt-2 aspect-[16/9] w-full max-w-xs rounded-lg border border-gray-100 object-cover" />
+                        )}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {!m && (

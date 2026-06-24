@@ -1466,16 +1466,29 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
   const cached = persistentCache.get<any[]>(ck)
   const [items,   setItems]   = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)
-  // Session-only second-language switch for the whole follow-up list (each card is a
-  // single question, so one toggle flips them all rather than one per micro-card).
-  const [lang, setLang] = useState<'1' | '2'>('1')
-
-  function load() {
-    api.me.followUp(lang === '2' ? '2' : undefined).then(d => { setItems(d.items); if (lang === '1') persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
-  }
-  useEffect(() => { load() }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Per-card second-language switch: the list stays in the first language; the
+  // translated copy is fetched once, lazily, the first time any card is flipped —
+  // so flipping a card never reloads the whole follow-up page.
+  const [secondItems,  setSecondItems]  = useState<Record<string, any> | null>(null)
+  const [loadingSecond, setLoadingSecond] = useState(false)
 
   const keyOf = (it: any) => `${it.source}:${it.enrollment_id}:${it.ref}`
+
+  function load() {
+    api.me.followUp().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function ensureSecond() {
+    if (secondItems || loadingSecond) return
+    setLoadingSecond(true)
+    try {
+      const d = await api.me.followUp('2')
+      const map: Record<string, any> = {}
+      for (const x of d.items) map[keyOf(x)] = x
+      setSecondItems(map)
+    } catch { /* keep first language */ } finally { setLoadingSecond(false) }
+  }
 
   if (loading) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-36 animate-pulse rounded-xl bg-gray-100" />)}</div>
 
@@ -1492,26 +1505,18 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-bold text-neutral-dark">Follow-up</h2>
-          {secondLang && (
-            <button
-              onClick={() => { setLoading(true); setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') api.me.recordLanguageSwitch({ area: 'followup' }).catch(() => {}); return next }) }}
-              title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read these in ${secondLang.name} instead of English`}
-              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
-            >
-              <Globe size={12} /> {lang === '2' ? '1st language' : secondLang.name}
-            </button>
-          )}
-        </div>
-        <p className="mb-5 text-sm text-neutral-mid">A few things to revisit. Learn the point, then answer — or just retry. Either way it clears from here.</p>
+        <h2 className="mb-1 text-xl font-bold text-neutral-dark">Follow-up</h2>
+        <p className="mb-5 text-sm text-neutral-mid">A few things to revisit. Learn the point, then answer — or just retry. Either way it clears from here.{secondLang ? ' Use the language button on a card to read just that one in your second language.' : ''}</p>
         <div className="space-y-4">
           {items.map(it => (
             <GapCard
               key={keyOf(it)}
               it={it}
               token={token}
-              lang={lang === '2' ? '2' : undefined}
+              secondLang={secondLang}
+              secondIt={secondItems?.[keyOf(it)] ?? null}
+              onNeedSecond={ensureSecond}
+              loadingSecond={loadingSecond}
               onTalkToPolicy={onTalkToPolicy}
               onResolved={() => { setTimeout(() => { load(); onChange?.() }, 2200) }}
             />
@@ -1523,9 +1528,12 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
 }
 
 // One knowledge gap: choose "Learn & retry" or "Just retry".
-function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; lang?: '2' }) {
+function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, secondIt = null, onNeedSecond, loadingSecond = false }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null; secondIt?: any; onNeedSecond?: () => void | Promise<void>; loadingSecond?: boolean }) {
   const api = createApiClient(token)
   const [mode,        setMode]        = useState<'choose' | 'retry' | 'learn'>('choose')
+  // Per-card second-language switch (session-only). Flips just this card — its
+  // question, options and the lesson — without reloading the whole follow-up page.
+  const [showSecond,  setShowSecond]  = useState(false)
   // "Learn & retry" plays as a stepped lesson, like My Training / Annual: an intro
   // screen with the thumbnail, then the lesson, then the check question.
   const [learnStep,   setLearnStep]   = useState<'intro' | 'lesson' | 'check'>('intro')
@@ -1541,15 +1549,41 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
     ? <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal">Training</span>
     : <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-500">Induction</span>
 
-  async function openLesson(startStep: 'intro' | 'lesson' = 'intro') {
+  async function openLesson(startStep: 'intro' | 'lesson' = 'intro', useSecond = showSecond, force = false) {
     setMode('learn'); setLearnStep(startStep); setShowAnswer(false); setSel(null); setResult(null); setCorrectOpt(null)
-    if (lesson || lessonState === 'loading') return
+    if (!force && (lesson || lessonState === 'loading')) return
     setLessonState('loading')
     try {
-      const d = await api.me.followUpLesson({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id, lang })
+      const d = await api.me.followUpLesson({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id, lang: useSecond ? '2' : undefined })
       setLesson(d.lesson); setLessonState('idle')
     } catch { setLessonState('error') }
   }
+
+  // The item to display — the second-language copy when this card is flipped. The
+  // question/options/topic come from here; ids and answers stay language-independent.
+  const view = showSecond && secondIt ? secondIt : it
+
+  async function toggleSecond() {
+    const next = !showSecond
+    setShowSecond(next)
+    setLesson(null); setLessonState('idle')   // lesson text is language-specific
+    if (next) {
+      api.me.recordLanguageSwitch({ area: 'followup', set_ref: it.ref, set_name: it.topic }).catch(() => {})
+      if (!secondIt) await onNeedSecond?.()
+    }
+    if (mode === 'learn') openLesson(learnStep === 'intro' ? 'intro' : 'lesson', next, true)
+  }
+
+  const langBtn = secondLang ? (
+    <button
+      onClick={toggleSecond}
+      disabled={loadingSecond}
+      title={showSecond ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read this one in ${secondLang.name} instead of English`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-medium disabled:opacity-50 ${showSecond ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+    >
+      <Globe size={11} /> {showSecond ? '1st language' : secondLang.name}
+    </button>
+  ) : null
 
   // Thumbnail: the source training module's cover, or a friendly fallback for
   // induction follow-ups (which have no module image).
@@ -1624,8 +1658,8 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
             <div>
               <Thumb className="aspect-[16/9] w-full" iconSize={44} />
               <div className="p-5 text-center">
-                <div className="mb-2 flex items-center justify-center gap-2">{badge}</div>
-                <h3 className="text-base font-bold text-neutral-dark">{it.topic}</h3>
+                <div className="mb-2 flex items-center justify-center gap-2">{badge}{langBtn}</div>
+                <h3 className="text-base font-bold text-neutral-dark">{view.topic}</h3>
                 <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-mid">A quick lesson to put this right, then one question to check you&apos;ve got it.</p>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <button onClick={() => setLearnStep('lesson')} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal/90"><GraduationCap size={15} /> Start lesson</button>
@@ -1638,7 +1672,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
           {/* Lesson */}
           {learnStep === 'lesson' && (
             <div className="p-5">
-              <div className="mb-3 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+              <div className="mb-3 flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2">{badge}<span className="truncate text-xs text-neutral-mid">{view.topic}</span></div>{langBtn}</div>
               {lessonState === 'loading' && (
                 <div className="flex items-center gap-2 py-6 text-sm text-neutral-mid"><Sparkles size={15} className="animate-pulse text-teal" /> Preparing your lesson…</div>
               )}
@@ -1698,7 +1732,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
           {/* Check */}
           {learnStep === 'check' && (
             <div className="p-5">
-              <div className="mb-3 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+              <div className="mb-3 flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2">{badge}<span className="truncate text-xs text-neutral-mid">{view.topic}</span></div>{langBtn}</div>
               {lesson?.check?.question ? (
                 <div className="rounded-lg border border-teal/30 bg-teal-light/10 p-4">
                   <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Sparkles size={13} /> Check your understanding</p>
@@ -1727,11 +1761,11 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
           <div className="flex gap-3">
             <Thumb className="h-14 w-14 shrink-0 rounded-lg" iconSize={22} />
             <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+              <div className="mb-2 flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2">{badge}<span className="truncate text-xs text-neutral-mid">{view.topic}</span></div>{langBtn}</div>
 
               {mode === 'choose' && (
                 <>
-                  <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+                  <p className="mb-3 text-sm font-medium text-neutral-dark">{view.text}</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <button onClick={() => openLesson()} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
                       <GraduationCap size={14} /> Learn &amp; retry
@@ -1745,8 +1779,8 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
 
               {mode === 'retry' && (
                 <>
-                  <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
-                  <div className="space-y-1.5">{it.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
+                  <p className="mb-3 text-sm font-medium text-neutral-dark">{view.text}</p>
+                  <div className="space-y-1.5">{view.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
                   {result !== 'correct' && (
                     <button onClick={submitRetry} disabled={sel == null || submitting} className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
                       {submitting ? 'Checking…' : result === 'wrong' ? 'Try again' : 'Submit answer'}

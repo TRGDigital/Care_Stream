@@ -1039,6 +1039,95 @@ function DeliveryTab({ api, modules, staff }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// ── Training-only clients: show ONLY the modules they bought, plus the rest of the
+// library greyed out with a Buy-now button. (Full-suite tenants keep the grid below.)
+const PUBLIC_API = process.env.NEXT_PUBLIC_API_URL ?? ''
+type CatalogueModule = { slug: string; title: string; description: string | null; illustration_url: string | null }
+
+function TrainingOnlyTraining({ token }: { token: string | null }) {
+  const [licences,  setLicences]  = useState<any[]>([])
+  const [catalogue, setCatalogue] = useState<CatalogueModule[]>([])
+  const [loading,   setLoading]   = useState(true)
+
+  useEffect(() => {
+    if (!token) return
+    const api = createApiClient(token)
+    Promise.allSettled([
+      api.training.licences(),
+      fetch(`${PUBLIC_API}/public/training/standard-modules`).then(r => (r.ok ? r.json() : Promise.reject())),
+    ]).then(([l, c]) => {
+      if (l.status === 'fulfilled') setLicences((l.value as any)?.licences ?? [])
+      if (c.status === 'fulfilled') setCatalogue(((c.value as any)?.data?.topics ?? []) as CatalogueModule[])
+    }).finally(() => setLoading(false))
+  }, [token])
+
+  const owned = new Map<string, { name: string; total: number; allocated: number }>()
+  for (const l of licences) {
+    const g = owned.get(l.module_slug) ?? { name: l.module_name, total: 0, allocated: 0 }
+    g.total += 1
+    if (l.allocated_to) g.allocated += 1
+    owned.set(l.module_slug, g)
+  }
+  const ownedSlugs = new Set(owned.keys())
+  const purchased  = catalogue.filter(m => ownedSlugs.has(m.slug))
+  const others     = catalogue.filter(m => !ownedSlugs.has(m.slug))
+  const img = (u: string | null) => (!u ? null : u.startsWith('http') ? u : `${PUBLIC_API}${u}`)
+
+  if (loading) {
+    return <div className="space-y-4"><div className="h-8 w-64 animate-pulse rounded bg-gray-100" /><div className="h-32 animate-pulse rounded-xl bg-gray-100" /></div>
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-neutral-dark">Your training</h1>
+        <p className="mt-1 text-sm text-neutral-mid">The modules you&rsquo;ve purchased, plus the rest of the library you can add.</p>
+      </div>
+
+      {purchased.length === 0 ? (
+        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 text-sm text-neutral-mid">You haven&rsquo;t purchased any training yet. Choose a module below to get started.</div>
+      ) : (
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+          {purchased.map(m => {
+            const o = owned.get(m.slug)!
+            return (
+              <div key={m.slug} className="overflow-hidden rounded-xl border-2 border-blue-600 bg-white shadow-card">
+                {img(m.illustration_url) && /* eslint-disable-next-line @next/next/no-img-element */ <img src={img(m.illustration_url)!} alt="" className="aspect-[16/9] w-full object-cover" />}
+                <div className="p-4">
+                  <div className="mb-1 flex items-center gap-2"><ShieldCheck size={15} className="text-blue-600" /><p className="font-semibold text-neutral-dark">{m.title}</p></div>
+                  <p className="text-xs text-neutral-mid">{o.total} licence{o.total === 1 ? '' : 's'} &middot; {o.allocated} allocated &middot; {o.total - o.allocated} available</p>
+                  <Link href="/licences" className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <>
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-neutral-mid">More training to add</h2>
+          <p className="mb-4 text-xs text-neutral-mid">Buy any of these modules to unlock them for your team.</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {others.map(m => (
+              <div key={m.slug} className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-card">
+                {img(m.illustration_url)
+                  ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={img(m.illustration_url)!} alt="" className="aspect-[16/9] w-full object-cover opacity-50 grayscale" />
+                  : <div className="flex aspect-[16/9] w-full items-center justify-center bg-gray-100"><GraduationCap size={28} className="text-gray-300" /></div>}
+                <div className="p-4">
+                  <div className="mb-1 flex items-center gap-2"><Lock size={13} className="text-gray-400" /><p className="font-semibold text-neutral-mid">{m.title}</p></div>
+                  {m.description && <p className="mb-3 line-clamp-2 text-xs text-gray-400">{m.description}</p>}
+                  <Link href={`/buy/${m.slug}`} className="inline-flex items-center gap-1 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-600 hover:text-white">Buy now</Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function TrainingPage() {
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
@@ -1122,6 +1211,12 @@ export default function TrainingPage() {
     e.status === 'complete' && e.daysUntilExpiry !== null && e.daysUntilExpiry <= 90 && e.daysUntilExpiry > 0
   ).length
   const expiredCount = enrollments.filter(e => e.status === 'expired').length
+
+  // Training-only clients get a restricted view: only the modules they purchased,
+  // plus the rest of the library greyed out with a Buy-now button.
+  if (trainingOnly) {
+    return <TrainingOnlyTraining token={session?.accessToken ?? null} />
+  }
 
   if (loading) {
     return (

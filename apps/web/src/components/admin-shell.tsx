@@ -73,7 +73,7 @@ const NAV_SECTIONS = [
 // Nav a training-only (gateway-tier) tenant can use. Everything else is shown
 // greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
 // once that page exists.
-const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings', '/licences'])
+const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
 
 interface AdminShellProps {
   userName:   string

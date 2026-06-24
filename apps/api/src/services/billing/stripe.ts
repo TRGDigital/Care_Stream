@@ -199,6 +199,21 @@ export async function retrieveTrainingCheckoutSession(sessionId: string): Promis
   }
 }
 
+// Best-effort Stripe receipt URL for a one-off training payment, from the
+// PaymentIntent's latest charge. Returns null if unavailable (never throws), so
+// the Billing "your purchases" view degrades gracefully.
+export async function getTrainingReceiptUrl(paymentIntentId: string | null): Promise<string | null> {
+  if (!paymentIntentId || !paymentIntentId.startsWith('pi_')) return null
+  try {
+    const stripe = getStripe()
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] }, managedPaymentsRequestOptions())
+    const charge = pi.latest_charge as Stripe.Charge | null
+    return charge?.receipt_url ?? null
+  } catch {
+    return null
+  }
+}
+
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 // Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
 // Used for in-app cancellation and for cleaning up test accounts before deletion.

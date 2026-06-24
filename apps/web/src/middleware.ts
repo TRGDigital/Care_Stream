@@ -19,9 +19,11 @@ const GATED = [
 
 // Console routes a training-only (gateway-tier) tenant cannot use — the full-CareStream
 // features. They keep Dashboard, Staff, Training, Analytics, Settings + the hub.
+// NB: /billing is intentionally NOT blocked — training-only clients use it to see
+// what they've purchased and download receipts.
 const TRAINING_ONLY_BLOCKED = [
   '/policies', '/knowledge', '/queries', '/cqc-questions', '/audits', '/gaps',
-  '/onboarding', '/guides', '/billing', '/analytics/cqc-report',
+  '/onboarding', '/guides', '/analytics/cqc-report',
 ]
 const matches = (path: string, list: string[]) => list.some(p => path === p || path.startsWith(p + '/'))
 

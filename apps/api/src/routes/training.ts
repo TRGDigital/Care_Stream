@@ -8,6 +8,7 @@ import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
 import { notifyAdmin, notifyStaffAllocation, notifyFollowUp } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
+import { getTrainingReceiptUrl } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
@@ -436,6 +437,38 @@ trainingRouter.get('/licences', requireAdmin, async (req: Request, res: Response
     const total = items.length
     const allocated = items.filter(l => l.allocated_to).length
     ok(res, { licences: items, staff, summary: { total, allocated, available: total - allocated, spent_pence: items.reduce((s, l) => s + (l.price_pence || 0), 0) } })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+// GET /training/purchases — one-off training-licence purchases grouped by payment,
+// each with its Stripe receipt link. Powers the Billing page for training-only clients.
+trainingRouter.get('/purchases', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const licences = await (prisma as any).trainingLicense.findMany({
+      where:   { tenant_id: tenantId },
+      orderBy: { purchased_at: 'desc' },
+      select:  { module_name: true, module_slug: true, price_pence: true, currency: true, purchased_at: true, renewal_due_at: true, status: true, stripe_payment_id: true },
+    })
+    // One Checkout (one payment) buys N licences → one receipt row showing the quantity.
+    const groups = new Map<string, any>()
+    for (const l of licences as any[]) {
+      const key = l.stripe_payment_id || `${l.module_slug}-${new Date(l.purchased_at).getTime()}`
+      const g = groups.get(key) ?? {
+        stripe_payment_id: l.stripe_payment_id ?? null,
+        module_name: l.module_name, module_slug: l.module_slug, currency: l.currency,
+        unit_pence: l.price_pence, quantity: 0, total_pence: 0,
+        purchased_at: l.purchased_at, renewal_due_at: l.renewal_due_at, status: l.status,
+      }
+      g.quantity    += 1
+      g.total_pence += (l.price_pence || 0)
+      if (new Date(l.purchased_at) < new Date(g.purchased_at)) g.purchased_at = l.purchased_at
+      groups.set(key, g)
+    }
+    const purchases = Array.from(groups.values())
+      .sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime())
+    await Promise.all(purchases.map(async p => { p.receipt_url = await getTrainingReceiptUrl(p.stripe_payment_id) }))
+    ok(res, { purchases })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 

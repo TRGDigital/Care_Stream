@@ -364,6 +364,9 @@ export function createApiClient(token: string) {
         staff: Array<{ id: string; name: string; email: string }>
         summary: { total: number; allocated: number; available: number; spent_pence: number }
       }>('/training/licences', token),
+      purchases: () => apiFetch<{
+        purchases: Array<{ stripe_payment_id: string | null; module_slug: string; module_name: string; currency: string; unit_pence: number; quantity: number; total_pence: number; purchased_at: string; renewal_due_at: string; status: string; receipt_url: string | null }>
+      }>('/training/purchases', token),
       allocateLicence: (id: string, userId: string) =>
         apiFetch<{ allocated: boolean }>(`/training/licences/${id}/allocate`, token, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
       deallocateLicence: (id: string) =>

@@ -266,7 +266,7 @@ export default function DashboardPage() {
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
 
       {session?.accessToken && (session.user as any)?.tenantId && (
-        <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} />
+        <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />
       )}
 
       <SidebarGuide />

@@ -10,9 +10,11 @@ import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { CheckCircle2, Circle, X, FileText, Users, GraduationCap, MessageSquare, ArrowRight } from 'lucide-react'
 
-type Status = { policies: boolean; staff: boolean; training: boolean; query: boolean }
+type Status = { policies: boolean; staff: boolean; training: boolean; query: boolean; allocated: boolean }
+type Step = { done: boolean; Icon: typeof FileText; title: string; desc: string; href: string; cta: string }
 
-export function SetupChecklist({ token, tenantId }: { token: string; tenantId: string }) {
+export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: string; tenantId: string; tier?: string }) {
+  const trainingOnly = tier === 'training_only'
   const [status, setStatus]       = useState<Status | null>(null)
   const [dismissed, setDismissed] = useState(true) // hidden until we've checked localStorage
 
@@ -24,6 +26,19 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
 
   useEffect(() => {
     const api = createApiClient(token)
+    // Training-only clients have a different starting setup: add staff, then allocate the
+    // licences they bought. No policies / hub / full-training assignment applies to them.
+    if (trainingOnly) {
+      Promise.allSettled([api.users.list(), api.training.licences()]).then(([u, l]) => {
+        const lic = l.status === 'fulfilled' ? ((l.value as any)?.licences ?? []) : []
+        setStatus({
+          policies: false, training: false, query: false,
+          staff:     u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
+          allocated: Array.isArray(lic) && lic.some((x: any) => x?.user_id),
+        })
+      }).catch(() => {})
+      return
+    }
     Promise.allSettled([
       api.policies.list({ limit: '1' }),
       api.users.list(),
@@ -35,18 +50,24 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
         staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
         query:    q.status === 'fulfilled' && Number((q.value as any)?.total ?? 0) > 0,
         training: t.status === 'fulfilled' && (((t.value as any)?.enrollments ?? []).length > 0),
+        allocated: false,
       })
     }).catch(() => {})
-  }, [token])
+  }, [token, trainingOnly])
 
   if (!status || dismissed) return null
 
-  const steps = [
-    { done: status.policies, Icon: FileText,      title: 'Upload your policies',    desc: 'Add your policies & procedures so the AI answers from your own content.', href: '/policies', cta: 'Upload policies' },
-    { done: status.staff,    Icon: Users,         title: 'Add your team',           desc: 'Invite staff so they can ask questions and complete training.',          href: '/staff',    cta: 'Add staff' },
-    { done: status.training, Icon: GraduationCap, title: 'Set up staff training',   desc: 'Assign statutory & specialist training to your team.',                   href: '/training', cta: 'Assign training' },
-    { done: status.query,    Icon: MessageSquare, title: 'Ask your first question', desc: 'Try it out — ask a policy question in the staff hub.',                   href: '/chat',     cta: 'Open the hub' },
-  ]
+  const steps: Step[] = trainingOnly
+    ? [
+        { done: status.staff,     Icon: Users,         title: 'Add your team',                   desc: 'Invite the staff who need to complete this training.',                  href: '/staff',    cta: 'Add staff' },
+        { done: status.allocated, Icon: GraduationCap, title: 'Allocate your training licences', desc: 'Assign the licences you bought to staff so they can start the module.', href: '/licences', cta: 'Allocate licences' },
+      ]
+    : [
+        { done: status.policies, Icon: FileText,      title: 'Upload your policies',    desc: 'Add your policies & procedures so the AI answers from your own content.', href: '/policies', cta: 'Upload policies' },
+        { done: status.staff,    Icon: Users,         title: 'Add your team',           desc: 'Invite staff so they can ask questions and complete training.',          href: '/staff',    cta: 'Add staff' },
+        { done: status.training, Icon: GraduationCap, title: 'Set up staff training',   desc: 'Assign statutory & specialist training to your team.',                   href: '/training', cta: 'Assign training' },
+        { done: status.query,    Icon: MessageSquare, title: 'Ask your first question', desc: 'Try it out — ask a policy question in the staff hub.',                   href: '/chat',     cta: 'Open the hub' },
+      ]
   const doneCount = steps.filter(s => s.done).length
   if (doneCount === steps.length) return null // fully set up — hide automatically
 
@@ -66,8 +87,8 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
       </button>
 
       <div className="px-6 pt-5">
-        <h2 className="text-lg font-bold text-neutral-dark">Welcome to CareStream — let’s get you set up</h2>
-        <p className="mt-0.5 text-sm text-neutral-mid">A few quick steps to get the most from your account.</p>
+        <h2 className="text-lg font-bold text-neutral-dark">{trainingOnly ? 'Welcome to CareStream — let’s get your training going' : 'Welcome to CareStream — let’s get you set up'}</h2>
+        <p className="mt-0.5 text-sm text-neutral-mid">{trainingOnly ? 'A couple of quick steps to get your team into their training.' : 'A few quick steps to get the most from your account.'}</p>
         <div className="mt-3 flex items-center gap-3">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
             <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} />

@@ -4,6 +4,7 @@
 // Summary + invoices endpoints return stubs until Stripe integration is wired.
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
@@ -44,12 +45,16 @@ function StatusBadge({ status }: { status: string }) {
 export default function BillingPage() {
   const { data: session, update } = useSession()
   const userId = session?.user?.email ?? 'guest'
+  // Training-only clients bought one-off licences (no subscription); their Billing page
+  // shows what they purchased + receipts instead of a plan summary / plan chooser.
+  const trainingOnly = (session?.user as any)?.tier === 'training_only'
   // 14 days from now — shown so the user knows exactly when the first charge falls.
   const trialEndLabel = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
     .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   const [summary,  setSummary]  = useState<any>(null)
   const [invoices, setInvoices] = useState<any[]>([])
+  const [purchases, setPurchases] = useState<any[]>([])
   const [plans,    setPlans]    = useState<any[]>([])
   const [loading,  setLoading]  = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
@@ -98,11 +103,18 @@ export default function BillingPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
+    if (trainingOnly) {
+      api.training.purchases()
+        .then(d => setPurchases(d.purchases))
+        .catch((e: any) => setError(e.message ?? 'Failed to load your purchases.'))
+        .finally(() => setLoading(false))
+      return
+    }
     Promise.all([api.billing.summary(), api.billing.invoices(), api.billing.plans()])
       .then(([s, inv, pl]) => { setSummary(s); setInvoices(inv.invoices); setPlans(pl.plans); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
       .catch((e: any) => setError(e.message ?? 'Failed to load billing information.'))
       .finally(() => setLoading(false))
-  }, [session?.accessToken])
+  }, [session?.accessToken, trainingOnly])
 
   async function subscribe(planId: string) {
     if (!session?.accessToken) return
@@ -123,6 +135,44 @@ export default function BillingPage() {
     const res = await api.billing.portal().catch((e: Error) => { setPortalError(e.message); return null })
     setPortalLoading(false)
     if (res?.url) window.open(res.url, '_blank', 'noopener')
+  }
+
+  if (trainingOnly) {
+    return (
+      <div className="max-w-3xl">
+        <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Billing</h1>
+        {error && <div className="mb-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        <div className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+          <div className="border-b border-gray-100 px-6 py-4">
+            <h2 className="text-sm font-semibold text-neutral-dark">What you&rsquo;ve purchased</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">Your training licences and receipts. Each licence covers one staff member for one year.</p>
+          </div>
+          {loading ? (
+            <div className="px-6 py-8 text-sm text-neutral-mid">Loading&hellip;</div>
+          ) : purchases.length === 0 ? (
+            <div className="px-6 py-8 text-sm text-neutral-mid">No purchases yet. <Link href="/training" className="font-semibold text-blue-600 hover:underline">Browse training modules</Link>.</div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {purchases.map((p, i) => (
+                <div key={i} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-neutral-dark">{p.module_name}</p>
+                    <p className="mt-0.5 text-xs text-neutral-mid">{p.quantity} licence{p.quantity === 1 ? '' : 's'} &middot; purchased {fmtDate(p.purchased_at)} &middot; renews {fmtDate(p.renewal_due_at)}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold text-neutral-dark">{pence(p.total_pence)}</span>
+                    {p.receipt_url
+                      ? <a href={p.receipt_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"><FileText size={12} /> View receipt</a>
+                      : <span className="text-xs text-neutral-mid">&mdash;</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <p className="mt-4 text-sm text-neutral-mid">Need another module? <Link href="/training" className="font-semibold text-blue-600 hover:underline">Browse the training library</Link>.</p>
+      </div>
+    )
   }
 
   return (

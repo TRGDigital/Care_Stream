@@ -199,3 +199,38 @@ a, button { transition: all 0.18s ease; }
   transition: transform 0.2s;
 }
 .lp-editorial .lp-faq[open] summary::after { content: "\2212"; }
+
+/* Blog Table of Contents — generated at render time (lib/blog-toc.ts) and
+   injected above the first H2 of each post. */
+.cs-toc {
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(155, 82, 181, 0.2);
+  border-radius: 0.75rem;
+  background: #F5EEFA;
+}
+.cs-toc-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7A3D9A;
+}
+.cs-toc-list { margin: 0; padding: 0; list-style: none; }
+.cs-toc-item { margin: 0.3rem 0; line-height: 1.4; }
+.cs-toc-item a {
+  color: #5E4D70;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cs-toc-item a:hover {
+  color: #9B52B5;
+  border-bottom-color: #9B52B5;
+}
+.cs-toc-l1 { padding-left: 1rem; font-size: 0.95em; }
+.cs-toc-l2 { padding-left: 2rem; font-size: 0.9em; }
+/* Offset anchored headings so they don't hide under the sticky nav. */
+.prose :is(h2, h3, h4)[id] { scroll-margin-top: 6rem; }
+html { scroll-behavior: smooth; }

@@ -5,6 +5,7 @@ import { ArticleLayout } from '@/components/marketing/article-layout'
 import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
 import { blogPostingSchema, faqPageSchema } from '@/lib/schema'
+import { withTableOfContents } from '@/lib/blog-toc'
 
 export const revalidate = 60
 
@@ -111,8 +112,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* Main body — stored as HTML in the admin editor */}
-      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+      {/* Main body — stored as HTML in the admin editor. A linked Table of
+          Contents is generated at render time and injected above the first H2. */}
+      <div dangerouslySetInnerHTML={{ __html: withTableOfContents(post.content) }} />
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
 

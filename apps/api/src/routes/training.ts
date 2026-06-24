@@ -16,6 +16,7 @@ import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hu
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
+import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, PlanLimitError } from '../lib/plan-limits'
 
@@ -335,6 +336,9 @@ trainingRouter.get('/modules', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
     await ensureTenantModules(tenantId)
+    // Pre-load each module's hero from the library (backfills existing + any newly
+    // created, self-healing). Cheap once filled; never overwrites an existing cover.
+    await fillModuleCovers(tenantId)
     const modules = await (prisma as any).trainingModule.findMany({
       where:   { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } },
       orderBy: { sort_order: 'asc' },
@@ -1149,36 +1153,16 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
       err(res, 'GENERATION_FAILED', 'No lesson content was generated — please try again.', 502); return
     }
 
-    // Reuse images from the matching published standard module (same subject) instead
-    // of regenerating: cover always; section images by position where they line up.
+    // Reuse images from the matching library module (same subject) instead of
+    // regenerating: cover always; section images by position where they line up.
     const sections = draft.learning_content.sections as any[]
     let illustration_key: string | null = module.illustration_key
-    // The standard library modules are the image source. They are often DRAFTS
-    // (approved=false), so do NOT filter on approved here.
-    const candidates = await (prisma as any).trainingModule.findMany({
-      where:  { tenant_id: null, source: 'ai_generated', is_active: true },
-      select: { name: true, topic_id: true, illustration_key: true, learning_content: true },
-    })
-    // Match on shared significant words (order-independent) so "Data Protection &
-    // GDPR" still matches "GDPR and Data Protection Annual Refresher", and prefer a
-    // candidate that actually carries images.
-    const STOP = new Set(['annual', 'refresher', 'refreshers', 'training', 'course', 'module', 'modules', 'update', 'updates', 'awareness', 'level', 'part', 'staff', 'care', 'home', 'and', 'the', 'for', 'of', 'to', 'in', 'a', 'an'])
-    const tokensOf = (s: string) => new Set(String(s ?? '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !STOP.has(w)))
-    const mtok = tokensOf(module.name)
-    const hasSectionImg = (c: any) => Array.isArray(c?.learning_content?.sections) && c.learning_content.sections.some((s: any) => s?.image_key)
-    const scored = (candidates as any[]).map(c => {
-      const ct = tokensOf(c.name)
-      let overlap = 0; for (const t of mtok) if (ct.has(t)) overlap++
-      return { c, overlap, contained: mtok.size > 0 && overlap === mtok.size, hasImg: !!c.illustration_key || hasSectionImg(c) }
-    }).filter(s => s.overlap >= 2 || (mtok.size <= 2 && s.overlap === mtok.size && s.overlap > 0))
-    // Prefer: has images → same topic → all the module's words present → most overlap.
-    scored.sort((a, b) =>
-      (Number(b.hasImg) - Number(a.hasImg)) ||
-      (Number(!!module.topic_id && b.c.topic_id === module.topic_id) - Number(!!module.topic_id && a.c.topic_id === module.topic_id)) ||
-      (Number(b.contained) - Number(a.contained)) ||
-      (b.overlap - a.overlap)
-    )
-    const match = scored[0]?.c ?? null
+    // Source pool = any module (tenant or library) that already carries images.
+    const candidates = await imagedSourceModules(tenantId)
+    // If this module already has a cover (pre-loaded), anchor section images to the
+    // SAME source it came from — deterministic, no re-guessing. Otherwise match by name.
+    let match = module.illustration_key ? (candidates.find((c: any) => c.illustration_key === module.illustration_key) ?? null) : null
+    if (!match) match = pickImageSource(module.name, module.topic_id, candidates)
     if (match) {
       if (!illustration_key && match.illustration_key) illustration_key = match.illustration_key
       const stdSecs = Array.isArray(match.learning_content?.sections) ? match.learning_content.sections : []

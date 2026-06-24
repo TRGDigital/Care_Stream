@@ -341,7 +341,7 @@ export function createApiClient(token: string) {
 
     training: {
       modules: () =>
-        apiFetch<{ modules: Array<{ id: string; slug: string; name: string; description: string; category: string; sort_order: number; questions: Array<{ id: string; text: string }> }> }>('/training/modules', token),
+        apiFetch<{ modules: Array<{ id: string; slug: string; name: string; description: string; category: string; sort_order: number; illustration_url: string | null; questions: Array<{ id: string; text: string }> }> }>('/training/modules', token),
 
       compliance: () =>
         apiFetch<{

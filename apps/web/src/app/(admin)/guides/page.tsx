@@ -652,40 +652,48 @@ const GUIDE_SECTIONS: GuideSection[] = [
     summary: 'Track staff training completion, send quiz questions, and answer training queries',
     content: (
       <div className="space-y-5">
-        <SectionBlock title="How it works">
+        <SectionBlock title="Two kinds of training module">
           <p className="text-sm text-neutral-mid">
-            CareStream sends training questions directly to staff by email or in the hub. Staff answer by replying with A, B, C, or D. Results are tracked on the Training dashboard and Analytics page. Training questions are always a separate delivery, they are never mixed into policy or CQC conversations.
+            A module can be a <strong>full scenario-based lesson</strong> (a short lesson that teaches each point through a real care-home scenario, then a quick check, followed by an assessment) or a simpler <strong>assessment-only question set</strong>. Both are built on the <strong>Training → Modules &amp; Questions</strong> tab and taken by staff in the hub, in their first language.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Building a module — Modules & Questions tab">
+          <p className="mb-2 text-sm text-neutral-mid">Open <strong>Training → Modules &amp; Questions</strong> and use the buttons on each module:</p>
+          <ul className="space-y-1.5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">Generate lesson &amp; questions</strong> (recommended) — the AI writes a full scenario lesson <em>and</em> a fresh assessment, grounded in your own policies, and reuses the matching standard module&rsquo;s images. The questions then open in the editor so you can review and <strong>Save</strong>.</li>
+            <li><strong className="text-neutral-dark">Questions only</strong> — generates just the assessment questions, with no lesson.</li>
+            <li><strong className="text-neutral-dark">Generate answer options</strong> — if you wrote your own question texts, this fills the A/B/C/D options.</li>
+            <li><strong className="text-neutral-dark">Preview</strong> — step through the lesson and questions read-only, exactly as staff will see it (appears once a module has a lesson).</li>
+            <li><strong className="text-neutral-dark">Save changes</strong> — saves your edits as a new version (kept in Question History).</li>
+            <li><strong className="text-neutral-dark">Lock / Unlock</strong> — date-stamps the exact questions in use, as CQC evidence of what was assessed and when.</li>
+          </ul>
+        </SectionBlock>
+        <SectionBlock title="What staff see (the hub)">
+          <p className="text-sm text-neutral-mid">
+            Once you assign a module, it appears in the staff member&rsquo;s <strong>My Training</strong> in the hub. A module with a lesson plays <strong>step by step</strong>, the same way Annual training does: they read the lesson, work through the scenarios, then take the assessment, and a <strong>certificate</strong> is issued when they pass. An assessment-only module shows as a simple question list. Everything is in their first language.
           </p>
         </SectionBlock>
         <SectionBlock title="Training in your team's language">
           <p className="text-sm text-neutral-mid">
-            Training questions are automatically delivered in each staff member's first language. If a staff member's first language is set to Romanian, their quiz questions and answer options arrive in Romanian. No manual translation is needed.
+            Lessons and questions are automatically delivered in each staff member&rsquo;s first language. If their first language is set to Romanian, the lesson and answer options arrive in Romanian. No manual translation is needed.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            You set the language when adding a staff member on the Staff page. It can be changed at any time. A second language can also be recorded for reference. The language setting applies to training questions and automated renewal reminders.
+            You set the language when adding a staff member on the Staff page; it can be changed at any time. It also applies to automated renewal reminders.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Scheduling question delivery">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Schedule Training Questions Delivery</strong> tab lets you set when training questions are sent out to staff (for example, a few questions a week), so training is drip-fed rather than landing all at once.
           </p>
         </SectionBlock>
         <SectionBlock title="Asking questions about training topics">
           <p className="text-sm text-neutral-mid">
-            Staff are not limited to answering quiz questions. They can also ask open questions about any training topic at any time, through the Chat Hub, email, or voice. CareStream will respond by drawing on your uploaded training materials and internal policies, and will bring in relevant external regulatory guidance where it applies. Where a training topic overlaps with a CQC inspection area, the response will reference the relevant Key Questions or inspection framework so staff understand the regulatory context behind what they are learning.
-          </p>
-          <p className="text-sm text-neutral-mid">
-            For example, a staff member asking about moving and handling will receive guidance drawing from your internal manual handling policy, any relevant training module you have uploaded, the applicable health and safety regulations, and any CQC Safe domain guidance that relates to that topic.
-          </p>
-        </SectionBlock>
-        <SectionBlock title="Training modules">
-          <p className="text-sm text-neutral-mid">
-            Upload training documents in the <strong>Policies</strong> section using the <em>Training Module</em> category. CareStream uses these documents as the source for quiz questions and for answering staff training queries.
-          </p>
-        </SectionBlock>
-        <SectionBlock title="What staff see">
-          <p className="text-sm text-neutral-mid">
-            When a training module is assigned, CareStream sends the first question directly to the staff member as a standalone message on their preferred channel (email or the hub). After each answer, the next question follows automatically. The training flow is completely separate from policy and CQC conversations.
+            Staff are not limited to the assessment. They can ask open questions about any training topic at any time, through the Chat Hub, email, or voice. CareStream answers from your uploaded training materials and internal policies, bringing in relevant external regulatory guidance, and referencing the relevant CQC Key Questions where a topic overlaps an inspection area.
           </p>
         </SectionBlock>
         <SectionBlock title="Viewing results">
           <p className="text-sm text-neutral-mid">
-            Go to <strong>Training</strong> in the sidebar to see individual staff completion rates, correct and incorrect responses, and which modules have been covered.
+            Go to <strong>Training → Compliance</strong> to see the live grid of every staff member against every assigned module (complete, in progress, expired), each person&rsquo;s score, and what&rsquo;s overdue. Individual records and the Analytics page give the same detail per person.
           </p>
         </SectionBlock>
       </div>

@@ -11,6 +11,8 @@ import { Trash2 } from 'lucide-react'
 export type Module = {
   id: string; slug: string; name: string; description: string
   category: string; sort_order: number
+  illustration_url?:   string | null
+  learning_content?:   any
   questions:           Array<{ id: string; text: string }>
   questions_locked:    boolean
   questions_locked_at: string | null

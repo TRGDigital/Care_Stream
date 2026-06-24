@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { AiCreditsBar } from '@/components/ai-usage'
 import { persistentCache } from '@/lib/page-cache'
 import {
@@ -298,6 +298,10 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                     }`}>
                       {m.category === 'statutory' ? 'S' : 'Sp'}
                     </span>
+                    {m.illustration_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="h-10 w-16 shrink-0 rounded-md border border-gray-100 object-cover" />
+                    )}
                     <div>
                       <p className="text-sm font-medium text-neutral-dark">{m.name}</p>
                       <p className="text-xs text-neutral-mid">

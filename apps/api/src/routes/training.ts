@@ -339,7 +339,7 @@ trainingRouter.get('/modules', async (req: Request, res: Response) => {
       where:   { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } },
       orderBy: { sort_order: 'asc' },
     })
-    ok(res, { modules })
+    ok(res, { modules: (modules as any[]).map(m => ({ ...m, illustration_url: illustrationUrl(m.illustration_key) })) })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }
@@ -1154,15 +1154,24 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
     // of regenerating: cover always; section images by position where they line up.
     const sections = draft.learning_content.sections as any[]
     let illustration_key: string | null = module.illustration_key
+    // The standard library modules are the image source. They are often DRAFTS
+    // (approved=false), so do NOT filter on approved here.
     const candidates = await (prisma as any).trainingModule.findMany({
-      where:  { tenant_id: null, source: 'ai_generated', approved: true, is_active: true },
+      where:  { tenant_id: null, source: 'ai_generated', is_active: true },
       select: { name: true, topic_id: true, illustration_key: true, learning_content: true },
     })
-    const norm  = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+    // Normalise names so "Moving & Handling" matches "Moving and Handling … : Annual Refresher".
+    const norm  = (s: string) => String(s ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '')
     const mname = norm(module.name)
-    const match = (module.topic_id && (candidates as any[]).find(c => c.topic_id === module.topic_id))
-      || (candidates as any[]).find(c => norm(c.name) === mname)
-      || (candidates as any[]).find(c => mname && (norm(c.name).includes(mname) || mname.includes(norm(c.name))))
+    const nameMatches = (candidates as any[]).filter(c => {
+      const cn = norm(c.name)
+      return cn === mname || (mname && (cn.includes(mname) || mname.includes(cn)))
+    })
+    const topicMatch = module.topic_id ? (candidates as any[]).find(c => c.topic_id === module.topic_id) : null
+    const pool = topicMatch ? [topicMatch, ...nameMatches] : nameMatches
+    // Prefer a candidate that actually has images.
+    const hasSectionImg = (c: any) => Array.isArray(c?.learning_content?.sections) && c.learning_content.sections.some((s: any) => s?.image_key)
+    const match = pool.find(c => c.illustration_key) ?? pool.find(hasSectionImg) ?? pool[0]
     if (match) {
       if (!illustration_key && match.illustration_key) illustration_key = match.illustration_key
       const stdSecs = Array.isArray(match.learning_content?.sections) ? match.learning_content.sections : []

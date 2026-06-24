@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget } from '../lib/translate'
+import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
@@ -62,15 +62,23 @@ const UI_STRINGS: Record<string, string> = {
 // Lightweight profile for the hub: the staff member's own language so the chat can
 // default the "Reply in" picker and dictate voice input in their language.
 meRouter.get('/profile', async (req: Request, res: Response) => {
-  const userId = (req as any).user.sub
-  const user = await (prisma as any).user.findUnique({
-    where:  { id: userId },
-    select: { first_language: true, second_language: true, comms_always_first_language: true },
-  }).catch(() => null)
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const [user, tenant] = await Promise.all([
+    (prisma as any).user.findUnique({
+      where:  { id: userId },
+      select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true },
+    }).catch(() => null),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  const second = (user?.second_language as string) ?? null
   ok(res, {
     first_language:              (user?.first_language as string) ?? 'eng',
-    second_language:             (user?.second_language as string) ?? null,
+    second_language:             second,
+    second_language_name:        second ? languageNameForCode(second, tenant?.custom_languages) : null,
     comms_always_first_language: user?.comms_always_first_language !== false,
+    // Whether this staff member may flip a single hub set into their second language.
+    allow_language_switching:    !!user?.allow_language_switching && !!second,
   })
 })
 
@@ -148,7 +156,7 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
       where:  { tenant_id: tenantId, user_id: userId },
       select: { id: true, flow: { select: { name: true, steps: { select: { id: true, type: true, question: true, options: true } } } }, progress: { where: { answer_correct: false }, select: { step_id: true } } },
     }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
 
@@ -202,7 +210,7 @@ meRouter.get('/follow-up/lesson', async (req: Request, res: Response) => {
   }
 
   const [user, tenant] = await Promise.all([
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
@@ -234,7 +242,7 @@ meRouter.post('/follow-up/lesson/answer', async (req: Request, res: Response) =>
   }
 
   const [user, tenant] = await Promise.all([
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
@@ -302,7 +310,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
       where:   { tenant_id: tenantId, user_id: userId },
       include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true } } },
     }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   let items = (enrollments as any[])
@@ -316,9 +324,8 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
       state: annualState(e, now),
     }))
 
-  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng' && items.length) {
-    const langName = languageNameForCode(lang, tenant?.custom_languages)
     items = await withTranslationBudget(
       translateTextsBatch(items.map((it: any) => it.name), lang, langName)
         .then(names => items.map((it: any, i: number) => ({ ...it, name: names[i] }))),
@@ -337,7 +344,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
       include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true, illustration_key: true, duration_minutes: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
     }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
@@ -368,9 +375,8 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
 
-  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng') {
-    const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget((async () => {
       // Flatten every plain string and every question across the whole module into
       // two batches → one cache read + one bulk write each, instead of dozens of
@@ -512,7 +518,7 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
 
   const [policy, user, tenant] = await Promise.all([
     (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true, filename: true, status: true } }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   if (!policy) { err(res, 'NOT_FOUND', 'Policy not found.', 404); return }
@@ -573,7 +579,7 @@ meRouter.get('/policy/:policyId/questions', async (req: Request, res: Response) 
 
   const [policy, user, tenant] = await Promise.all([
     (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true } }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
   if (!policy) { err(res, 'NOT_FOUND', 'Policy not found.', 404); return }

@@ -8,7 +8,7 @@ import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
 import { sendPushToUsers } from '../lib/push'
 import { sendCqcPrepEmail } from '../services/email/outbound'
-import { translateText, translateTextsBatch, withTranslationBudget } from '../lib/translate'
+import { translateText, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
 export const cqcQuestionsRouter = Router()
@@ -487,7 +487,7 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
         include: { question: { select: { domain: true, model_answer: true } } },
         orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
       }),
-      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
     ])
 
@@ -596,7 +596,7 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
     let outFeedback = feedback
     let outModelAnswer = delivery.question.model_answer as string | null
     try {
-      const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } })
+      const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } })
       const lang = u?.comms_always_first_language === false ? 'eng' : ((u?.first_language as string) ?? 'eng')
       if (lang !== 'eng') {
         const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null)

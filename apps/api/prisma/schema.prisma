@@ -263,6 +263,7 @@ model User {
   first_language         String         @default("eng")     // ISO 639-3 — primary language for outbound comms
   second_language        String?                            // optional secondary language
   comms_always_first_language Boolean   @default(true)      // true → translate outbound comms into first_language; false → English
+  allow_language_switching Boolean      @default(false)     // staff may flip a single hub set into their second_language (session-only)
   created_at             DateTime       @default(now())
   tenant                 Tenant         @relation(fields: [tenant_id], references: [id])
   queries                QueryRecord[]

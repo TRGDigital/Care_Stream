@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from 'lucide-react'
 import {
   CommsLanguageToggle,
+  LanguageSwitchToggle,
   CredentialsPanel,
   InitialAvatar,
   fmtDate,
@@ -374,6 +375,7 @@ export function InviteModal({
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
   const [commsFirstLang, setCommsFirstLang] = useState(true)
+  const [allowSwitch, setAllowSwitch] = useState(false)
   const [error,     setError]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [onboardingNote, setOnboardingNote] = useState('')
@@ -400,6 +402,7 @@ export function InviteModal({
       first_language:  form.first_language,
       second_language: form.second_language || undefined,
       comms_always_first_language: commsFirstLang,
+      allow_language_switching: allowSwitch && !!form.second_language,
       new_starter:     form.staff_type === 'new',
     }).catch((err: Error) => { setError(err.message); return null })
 
@@ -561,6 +564,7 @@ export function InviteModal({
                 </div>
               </div>
               <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
+              <LanguageSwitchToggle on={allowSwitch} onChange={setAllowSwitch} secondLangName={form.second_language ? langNameOf(form.second_language, languages) : null} />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -634,6 +638,7 @@ export function EditModal({
   const [hasSpecialism, setHasSpecialism] = useState<boolean>(Array.isArray(user.specialisms) && user.specialisms.length > 0)
   const [auditIds, setAuditIds]           = useState<string[]>(Array.isArray(user.audit_template_ids) ? user.audit_template_ids : [])
   const [commsFirstLang, setCommsFirstLang] = useState<boolean>(user.comms_always_first_language !== false)
+  const [allowSwitch, setAllowSwitch] = useState<boolean>((user as any).allow_language_switching === true)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -657,6 +662,7 @@ export function EditModal({
       first_language:  form.first_language,
       second_language: form.second_language || null,
       comms_always_first_language: commsFirstLang,
+      allow_language_switching: allowSwitch && !!form.second_language,
     }).catch((err: Error) => { setError(err.message); return null })
     setLoading(false)
     if (res) onSaved(res.user)
@@ -777,6 +783,7 @@ export function EditModal({
               </div>
             </div>
             <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
+            <LanguageSwitchToggle on={allowSwitch} onChange={setAllowSwitch} secondLangName={form.second_language ? langNameOf(form.second_language, languages) : null} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

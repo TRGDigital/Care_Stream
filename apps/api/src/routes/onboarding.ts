@@ -9,7 +9,7 @@ import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { siteUrl } from '../lib/urls'
-import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget } from '../lib/translate'
+import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
 export const onboardingRouter = Router()
@@ -257,7 +257,7 @@ onboardingRouter.get('/my', async (req, res) => {
         },
         orderBy: { enrolled_at: 'asc' },
       }),
-      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
     ])
 

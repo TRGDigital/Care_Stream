@@ -43,7 +43,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     where:   { tenant_id: tenantId },
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
+      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
     orderBy: { created_at: 'asc' },
@@ -63,7 +63,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     where:  { id },
     select: {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
+      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
     },
   })
@@ -199,7 +199,8 @@ const InviteSchema = z.object({
   shift_type:      z.enum(['any', 'day', 'night']).default('any'),
   first_language:  z.string().length(3).default('eng'),
   second_language: z.string().length(3).optional(),
-  comms_always_first_language: z.boolean().optional(),   // default true (DB) — translate outbound comms into first_language
+  comms_always_first_language: z.boolean().optional(),
+  allow_language_switching: z.boolean().optional(),
   new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
   audit_template_ids: z.array(z.string().uuid()).optional(),  // "Staff + Audits": audits this member can conduct in the hub
 })
@@ -222,7 +223,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, comms_always_first_language, new_starter } = parsed.data
+  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
   const auditTemplateIds = await resolveAuditTemplateIds(tenantId, role, parsed.data.audit_template_ids)
 
@@ -270,6 +271,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       first_language:  first_language ?? 'eng',
       second_language: second_language ?? null,
       comms_always_first_language: comms_always_first_language ?? true,
+      allow_language_switching: allow_language_switching ?? false,
       password_hash:   passwordHash,
       // Manager-provisioned accounts are trusted at creation — the admin vouches for
       // the staff member. Auto-verify so they aren't blocked by the email-verification
@@ -277,7 +279,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       // staff receive no verification email). Without this, invited staff cannot log in.
       email_verified:  true,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -361,6 +363,7 @@ const UpdateSchema = z.object({
   first_language:  z.string().length(3).optional(),
   second_language: z.string().length(3).nullable().optional(),
   comms_always_first_language: z.boolean().optional(),
+  allow_language_switching: z.boolean().optional(),
   audit_template_ids: z.array(z.string().uuid()).optional(),
 })
 
@@ -424,6 +427,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.first_language  !== undefined) updateData.first_language  = parsed.data.first_language
   if (parsed.data.second_language !== undefined) updateData.second_language = parsed.data.second_language
   if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
+  if (parsed.data.allow_language_switching !== undefined) updateData.allow_language_switching = parsed.data.allow_language_switching
 
   // Audit allocation: admins implicitly have all (store empty); for staff, persist the
   // validated allocation when provided (sent as [] to downgrade to plain staff).
@@ -437,7 +441,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

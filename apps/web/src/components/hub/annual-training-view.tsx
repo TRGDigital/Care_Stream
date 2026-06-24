@@ -10,7 +10,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
-  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText, Lightbulb,
+  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText, Lightbulb, Globe,
 } from 'lucide-react'
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D']
@@ -27,7 +27,15 @@ function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-
 
 export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string }>({ mode: 'list' })
-  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
+  // If the admin enabled per-set language switching for this staff member, offer the
+  // "read in <second language>" toggle inside each module.
+  const [secondLang, setSecondLang] = useState<{ name: string } | null>(null)
+  useEffect(() => {
+    createApiClient(token).me.profile()
+      .then(p => { if (p.allow_language_switching && p.second_language_name) setSecondLang({ name: p.second_language_name }) })
+      .catch(() => {})
+  }, [token])
+  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
   return <AnnualList token={token} userId={userId} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
 }
@@ -133,9 +141,10 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, initialLang = '1' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; initialLang?: '1' | '2' }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)
+  const [lang, setLang] = useState<'1' | '2'>(initialLang === '2' && secondLang ? '2' : '1')
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState<'learn' | 'assess'>('learn')
   const [policiesOpen, setPoliciesOpen] = useState(false)
@@ -177,13 +186,13 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   }
 
   useEffect(() => {
-    api.me.annualTraining.get(id).then(d => {
+    api.me.annualTraining.get(id, lang === '2' ? '2' : undefined).then(d => {
       setData(d)
       const s: Record<string, number> = {}
       for (const a of (d.answers ?? [])) { const idx = OPTION_LETTERS.indexOf(a.answer_text); if (idx >= 0) s[a.question_id] = idx }
       setSel(s)
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, lang]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function pick(qid: string, oi: number) {
     setSel(prev => ({ ...prev, [qid]: oi }))
@@ -253,7 +262,19 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-2xl">
-        <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <button onClick={() => onExit(false)} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
+          {secondLang && (
+            <button
+              type="button"
+              onClick={() => setLang(l => (l === '2' ? '1' : '2'))}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${lang === '2' ? 'border-teal bg-teal text-white' : 'border-teal/40 text-teal hover:bg-teal-light/40'}`}
+              title={`Show this module in ${secondLang.name}`}
+            >
+              <Globe size={12} /> {lang === '2' ? `Reading in ${secondLang.name}` : `Read in ${secondLang.name}`}
+            </button>
+          )}
+        </div>
         <h2 className="text-lg font-bold text-neutral-dark">{data.name || name}</h2>
 
         {data.requires_practical && (

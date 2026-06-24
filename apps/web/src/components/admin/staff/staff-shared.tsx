@@ -93,6 +93,41 @@ export function CommsLanguageToggle({ on, onChange, langName, disabled }: {
   )
 }
 
+// Lets a staff member flip a single hub set (training/induction/CQC) into their
+// SECOND language for that set only. Disabled until a second language is set.
+export function LanguageSwitchToggle({ on, onChange, secondLangName, disabled }: {
+  on: boolean
+  onChange: (v: boolean) => void
+  secondLangName: string | null
+  disabled?: boolean
+}) {
+  const active = on && !!secondLangName
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-neutral-dark">Allow switching a set to their second language</p>
+        <p className="mt-0.5 text-xs text-neutral-mid">
+          {!secondLangName
+            ? 'Set a second language above to enable this.'
+            : active
+              ? `In the hub they can flip any single training, induction or CQC set into ${secondLangName}, just for that set, if they're struggling in their first language.`
+              : 'Training is always shown in their first language.'}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={active}
+        disabled={disabled || !secondLangName}
+        onClick={() => onChange(!on)}
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${active ? 'bg-teal' : 'bg-gray-300'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${active ? 'translate-x-4' : 'translate-x-0.5'}`} />
+      </button>
+    </div>
+  )
+}
+
 export function InitialAvatar({ name, role }: { name: string; role: string }) {
   const initial = (name ?? '?').charAt(0).toUpperCase()
   const bg = role === 'admin' ? 'bg-teal' : 'bg-purple-500'

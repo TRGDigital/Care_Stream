@@ -180,12 +180,12 @@ export function createApiClient(token: string) {
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
       markPractical: (id: string, enrollmentId: string, data: { signed: boolean; note?: string }) =>
         apiFetch<{ practical: { practical_signed: boolean; practical_signed_by: string | null; practical_signed_at: string | null; practical_note: string | null } }>(`/users/${id}/annual-training/${enrollmentId}/practical`, token, { method: 'POST', body: JSON.stringify(data) }),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; new_starter?: boolean }) =>
+      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean }) =>
+      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),
@@ -552,15 +552,15 @@ export function createApiClient(token: string) {
 
     me: {
       progress: () => apiFetch<any>('/me/progress', token),
-      profile: () => apiFetch<{ first_language: string; second_language: string | null; comms_always_first_language: boolean }>('/me/profile', token),
+      profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean }>('/me/profile', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number }>('/me/counts', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),
       pushUnsubscribe: (endpoint: string) =>
         apiFetch<{ subscribed: boolean }>('/me/push/unsubscribe', token, { method: 'POST', body: JSON.stringify({ endpoint }) }),
       annualTraining: {
-        list: () => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>('/me/annual-training', token),
-        get: (id: string) => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; duration_minutes: number | null; illustration_url: string | null; learning: { summary: string; outcomes: string[]; key_points: string[]; sections: Array<{ id: string; heading: string; body: string; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[]; correct: number } }> }; questions: Array<{ id: string; text: string; options: string[] }>; policies: Array<{ policy_id: string; title: string }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string }>(`/me/annual-training/${id}`, token),
+        list: (lang?: '2') => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>(`/me/annual-training${lang ? `?lang=${lang}` : ''}`, token),
+        get: (id: string, lang?: '2') => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; duration_minutes: number | null; illustration_url: string | null; learning: { summary: string; outcomes: string[]; key_points: string[]; sections: Array<{ id: string; heading: string; body: string; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[]; correct: number } }> }; questions: Array<{ id: string; text: string; options: string[] }>; policies: Array<{ policy_id: string; title: string }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string }>(`/me/annual-training/${id}${lang ? `?lang=${lang}` : ''}`, token),
         submit: (id: string) => apiFetch<{ passed: boolean; score: number; correct: number; total: number; pass_mark: number }>(`/me/annual-training/${id}/submit`, token, { method: 'POST' }),
         certificate: (id: string) => apiFetch<{ staff_name: string; module_name: string; org_name: string; logo_url: string | null; completed_at: string; expires_at: string | null; frequency: string; requires_practical: boolean; score: number; independently_reviewed: boolean; cpd: { accredited: boolean; hours: number | null; provider_number: string | null } }>(`/me/annual-training/${id}/certificate`, token),
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),

@@ -30,6 +30,23 @@ export function langName(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// Decide the target language for a hub content request (training / induction / CQC /
+// follow-ups). Honours a `?lang=2` (or `?lang=second`) override that flips a single set
+// into the staff member's SECOND language — but only when an admin enabled switching for
+// them and a second language is set. Otherwise the normal first-language logic applies.
+export function hubContentLang(
+  user: { first_language?: string | null; second_language?: string | null; comms_always_first_language?: boolean | null; allow_language_switching?: boolean | null } | null | undefined,
+  query: { lang?: unknown } | undefined,
+  customLangs?: any,
+): { code: string; name: string } {
+  const wantSecond = query?.lang === '2' || query?.lang === 'second'
+  if (wantSecond && user?.allow_language_switching && user?.second_language) {
+    return { code: user.second_language, name: languageNameForCode(user.second_language, customLangs) }
+  }
+  const code = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  return { code, name: languageNameForCode(code, customLangs) }
+}
+
 export async function translateTrainingQuestion(
   question: { text: string; options: string[] },
   targetLang: string,

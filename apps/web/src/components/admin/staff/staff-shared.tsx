@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Check, Copy, Loader2, Mail } from 'lucide-react'
+import { InfoTip } from '@/components/info-tip'
 
 // ─── Language options ─────────────────────────────────────────────────────────
 
@@ -105,7 +106,10 @@ export function LanguageSwitchToggle({ on, onChange, secondLangName, disabled }:
   return (
     <div className="flex items-start justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2.5">
       <div className="min-w-0">
-        <p className="text-xs font-medium text-neutral-dark">Allow switching a set to their second language</p>
+        <p className="flex items-center gap-1 text-xs font-medium text-neutral-dark">
+          Allow switching a set to their second language
+          <InfoTip text="When on, this staff member sees a 'Read in their second language' button on each individual training, induction and CQC set in their hub. It flips just that one set (the lesson, the questions and the multiple-choice answers) into their second language so they can understand it, then resets to their first language next time. Ideal for staff who learn in English but occasionally need their own language for a tricky set." align="right" />
+        </p>
         <p className="mt-0.5 text-xs text-neutral-mid">
           {!secondLangName
             ? 'Set a second language above to enable this.'

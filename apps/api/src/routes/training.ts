@@ -1159,18 +1159,26 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
       where:  { tenant_id: null, source: 'ai_generated', is_active: true },
       select: { name: true, topic_id: true, illustration_key: true, learning_content: true },
     })
-    // Normalise names so "Moving & Handling" matches "Moving and Handling … : Annual Refresher".
-    const norm  = (s: string) => String(s ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '')
-    const mname = norm(module.name)
-    const nameMatches = (candidates as any[]).filter(c => {
-      const cn = norm(c.name)
-      return cn === mname || (mname && (cn.includes(mname) || mname.includes(cn)))
-    })
-    const topicMatch = module.topic_id ? (candidates as any[]).find(c => c.topic_id === module.topic_id) : null
-    const pool = topicMatch ? [topicMatch, ...nameMatches] : nameMatches
-    // Prefer a candidate that actually has images.
+    // Match on shared significant words (order-independent) so "Data Protection &
+    // GDPR" still matches "GDPR and Data Protection Annual Refresher", and prefer a
+    // candidate that actually carries images.
+    const STOP = new Set(['annual', 'refresher', 'refreshers', 'training', 'course', 'module', 'modules', 'update', 'updates', 'awareness', 'level', 'part', 'staff', 'care', 'home', 'and', 'the', 'for', 'of', 'to', 'in', 'a', 'an'])
+    const tokensOf = (s: string) => new Set(String(s ?? '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !STOP.has(w)))
+    const mtok = tokensOf(module.name)
     const hasSectionImg = (c: any) => Array.isArray(c?.learning_content?.sections) && c.learning_content.sections.some((s: any) => s?.image_key)
-    const match = pool.find(c => c.illustration_key) ?? pool.find(hasSectionImg) ?? pool[0]
+    const scored = (candidates as any[]).map(c => {
+      const ct = tokensOf(c.name)
+      let overlap = 0; for (const t of mtok) if (ct.has(t)) overlap++
+      return { c, overlap, contained: mtok.size > 0 && overlap === mtok.size, hasImg: !!c.illustration_key || hasSectionImg(c) }
+    }).filter(s => s.overlap >= 2 || (mtok.size <= 2 && s.overlap === mtok.size && s.overlap > 0))
+    // Prefer: has images → same topic → all the module's words present → most overlap.
+    scored.sort((a, b) =>
+      (Number(b.hasImg) - Number(a.hasImg)) ||
+      (Number(!!module.topic_id && b.c.topic_id === module.topic_id) - Number(!!module.topic_id && a.c.topic_id === module.topic_id)) ||
+      (Number(b.contained) - Number(a.contained)) ||
+      (b.overlap - a.overlap)
+    )
+    const match = scored[0]?.c ?? null
     if (match) {
       if (!illustration_key && match.illustration_key) illustration_key = match.illustration_key
       const stdSecs = Array.isArray(match.learning_content?.sections) ? match.learning_content.sections : []

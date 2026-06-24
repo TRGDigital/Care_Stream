@@ -139,9 +139,12 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   ok(res, { training, induction, cqc, followup, annual, audits })
 })
 
-// Normalise a module name so "Fire Safety" matches "Fire Safety Annual Refresher"
-// and "Moving & Handling" matches "Moving and Handling".
-const normModuleName = (s: string) => String(s ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '')
+// The significant words of a module name, so two names can be matched regardless of
+// word order or filler words ("Data Protection & GDPR" ↔ "GDPR and Data Protection
+// Annual Refresher").
+const F2F_STOP = new Set(['annual', 'refresher', 'refreshers', 'training', 'course', 'module', 'modules', 'update', 'updates', 'awareness', 'level', 'part', 'staff', 'care', 'home', 'and', 'the', 'for', 'of', 'to', 'in', 'a', 'an'])
+const subjectTokens = (s: string) => new Set(String(s ?? '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !F2F_STOP.has(w)))
+const countOverlap = (a: Set<string>, b: Set<string>) => { let n = 0; for (const t of a) if (b.has(t)) n++; return n }
 
 // Pick an already-generated image for a training module's follow-up thumbnail,
 // reusing what we have rather than showing a placeholder:
@@ -157,12 +160,14 @@ function resolveFollowUpImage(m: any, imaged: any[]): string | null {
   const ownSection = sections.find((s: any) => s?.image_key)
   if (ownSection) return illustrationUrl(ownSection.image_key)
 
-  const mname   = normModuleName(m?.name)
   const byTopic = m?.topic_id ? imaged.find(c => c.topic_id && c.topic_id === m.topic_id) : null
-  const byName  = imaged.find(c => {
-    const cn = normModuleName(c.name)
-    return cn === mname || (!!mname && (cn.includes(mname) || mname.includes(cn)))
-  })
+  // Order-independent: share enough significant words (so "Data Protection & GDPR"
+  // matches "GDPR and Data Protection Annual Refresher").
+  const mtok = subjectTokens(m?.name)
+  const byName = imaged
+    .map(c => ({ c, overlap: countOverlap(mtok, subjectTokens(c.name)) }))
+    .filter(s => s.overlap >= 2 || (mtok.size <= 2 && s.overlap === mtok.size && s.overlap > 0))
+    .sort((a, b) => b.overlap - a.overlap)[0]?.c
   const match = byTopic ?? byName
   return match ? illustrationUrl(match.illustration_key) : null
 }

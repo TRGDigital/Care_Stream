@@ -216,9 +216,17 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
 
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng' && items.length > 0) {
+    // Translate the question + options AND the topic/title (so the lesson intro
+    // title isn't left in English). Topics repeat across gaps, so dedupe them.
+    const uniqTopics = [...new Set(items.map((it: any) => it.topic ?? '').filter(Boolean))]
     const translated = await withTranslationBudget(
-      translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName)
-        .then(ts => items.map((it: any, i: number) => ({ ...it, text: ts[i].text, options: ts[i].options }))),
+      Promise.all([
+        translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName),
+        uniqTopics.length ? translateTextsBatch(uniqTopics, lang, langName) : Promise.resolve([] as string[]),
+      ]).then(([qs, tts]) => {
+        const tmap = new Map(uniqTopics.map((t, i) => [t, tts[i] ?? t]))
+        return items.map((it: any, i: number) => ({ ...it, text: qs[i].text, options: qs[i].options, topic: tmap.get(it.topic ?? '') ?? it.topic }))
+      }),
       18_000, items,
     )
     ok(res, { items: translated })

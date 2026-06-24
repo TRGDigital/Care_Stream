@@ -1653,18 +1653,16 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
       {/* ── Learn & retry: stepped lesson (intro → lesson → check), styled like My Training / Annual ── */}
       {mode === 'learn' ? (
         <>
-          {/* Intro: thumbnail + title + Start */}
+          {/* Intro: small thumbnail + title + Start (text follows the card's language) */}
           {learnStep === 'intro' && (
-            <div>
-              <Thumb className="aspect-[16/9] w-full" iconSize={44} />
-              <div className="p-5 text-center">
-                <div className="mb-2 flex items-center justify-center gap-2">{badge}{langBtn}</div>
-                <h3 className="text-base font-bold text-neutral-dark">{view.topic}</h3>
-                <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-mid">A quick lesson to put this right, then one question to check you&apos;ve got it.</p>
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <button onClick={() => setLearnStep('lesson')} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal/90"><GraduationCap size={15} /> Start lesson</button>
-                  <button onClick={() => setMode('choose')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Back</button>
-                </div>
+            <div className="p-5 text-center">
+              <div className="mb-3 flex items-center justify-center gap-2">{badge}{langBtn}</div>
+              <Thumb className="mx-auto mb-3 h-24 w-24 rounded-2xl" iconSize={34} />
+              <h3 className="text-base font-bold text-neutral-dark">{view.topic}</h3>
+              <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-mid">{view.text}</p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <button onClick={() => setLearnStep('lesson')} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal/90"><GraduationCap size={15} /> Start lesson</button>
+                <button onClick={() => setMode('choose')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Back</button>
               </div>
             </div>
           )}

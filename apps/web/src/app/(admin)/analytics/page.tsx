@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb, Globe } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
 
@@ -250,6 +250,7 @@ export default function AnalyticsPage() {
   const [inductionPerf, setInductionPerf] = useState<any>(null)
   const [kgaps,        setKgaps]    = useState<any>(null)
   const [annual,       setAnnual]   = useState<any>(null)
+  const [langSwitch,   setLangSwitch] = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -258,9 +259,9 @@ export default function AnalyticsPage() {
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
   useEffect(() => {
-    const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any }>(`admin-analytics-${userId}`)
+    const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -280,10 +281,11 @@ export default function AnalyticsPage() {
       api.analytics.knowledgeGaps().catch(() => null),
       api.analytics.annualTraining().catch(() => null),
       api.analytics.engagement().catch(() => null),
+      api.analytics.languageSwitches().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -547,6 +549,75 @@ export default function AnalyticsPage() {
           </Card>
         </div>
       )}
+
+      {/* ── Second-language switching (aggregate) ────────────────────────────── */}
+      {langSwitch && langSwitch.summary.total_switches > 0 && (
+        <div className="mb-6">
+          <Card
+            title="Second-language switching"
+            info="How often staff flip a training, induction or CQC set out of English into their second language. A signal of where extra language or training support helps. Last 180 days. The per-staff breakdown is on the Staff tab."
+          >
+            <div className="mb-5 grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-gray-100 bg-neutral-light/40 p-3 text-center">
+                <p className="text-2xl font-bold text-teal">{langSwitch.summary.total_switches}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Switches</p>
+              </div>
+              <div className="rounded-xl border border-gray-100 bg-neutral-light/40 p-3 text-center">
+                <p className="text-2xl font-bold text-neutral-dark">{langSwitch.summary.staff_count}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Staff using it</p>
+              </div>
+              <div className="rounded-xl border border-gray-100 bg-neutral-light/40 p-3 text-center">
+                <p className="text-2xl font-bold text-neutral-dark">{langSwitch.summary.set_count}</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Sets switched</p>
+              </div>
+            </div>
+
+            {langSwitch.by_language.length > 0 && (
+              <div className="mb-5">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-mid">By language</p>
+                {langSwitch.by_language.map((l: any) => (
+                  <HBar key={l.lang} label={`${l.lang_name} · ${l.staff_count} staff`} count={l.count} total={langSwitch.by_language[0].count} color="bg-teal" />
+                ))}
+              </div>
+            )}
+
+            {langSwitch.by_area.length > 0 && (
+              <div className="mb-5">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-mid">By area</p>
+                {langSwitch.by_area.map((a: any) => (
+                  <HBar key={a.area} label={a.label} count={a.count} total={langSwitch.by_area[0].count} color="bg-teal-light border border-teal/30" />
+                ))}
+              </div>
+            )}
+
+            {langSwitch.by_set.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-mid">Most switched sets</p>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-left">
+                      <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Set</th>
+                      <th className="pb-2 pr-4 text-xs font-medium text-neutral-mid">Area</th>
+                      <th className="pb-2 pr-4 text-right text-xs font-medium text-neutral-mid">Staff</th>
+                      <th className="pb-2 text-right text-xs font-medium text-neutral-mid">Switches</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {langSwitch.by_set.slice(0, 12).map((s: any, i: number) => (
+                      <tr key={`${s.area}-${s.set_name}-${i}`} className="border-b border-gray-50 last:border-0">
+                        <td className="py-2 pr-4 font-medium text-neutral-dark"><span className="mr-2 text-xs text-neutral-mid">{i + 1}.</span>{s.set_name}</td>
+                        <td className="py-2 pr-4 text-xs text-neutral-mid">{s.area_label}</td>
+                        <td className="py-2 pr-4 text-right text-neutral-mid">{s.staff_count}</td>
+                        <td className="py-2 text-right font-medium text-teal">{s.switch_count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
       </>)}
 
       {/* ── Policy reading engagement ───────────────────────────────────────── */}
@@ -561,6 +632,42 @@ export default function AnalyticsPage() {
             <StatCard label="Avg time per read" value={fmtSecs(readingData.summary.avg_seconds)} info="Average active time spent reading a policy (paused when the tab is hidden)." Icon={Clock} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
             <StatCard label="Avg scrolled" value={readingData.summary.avg_scroll_pct ?? 0} suffix="%" info="How far down the policy staff scroll on average — a proxy for how much they actually read." Icon={Activity} iconBg="bg-amber-50" iconColor="text-amber-500" />
             <StatCard label="Read to the end" value={readingData.summary.pct_reached_end ?? 0} suffix="%" info="Share of reading sessions where the staff member scrolled (almost) to the end of the policy." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+          </div>
+        </>
+      )}
+
+      {/* ── Second-language switching by staff member ───────────────────────── */}
+      {tab === 'staff' && langSwitch && langSwitch.by_staff.length > 0 && (
+        <>
+          <SectionDivider
+            title="Second-language switching by staff member"
+            subtitle="Who flips their training, induction or CQC sets into their second language — and which sets. A signal of where language or training support is needed (last 180 days)."
+          />
+          <div className="mb-6 space-y-3">
+            {langSwitch.by_staff.map((s: any) => (
+              <div key={s.user_id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-neutral-dark">{s.name}</p>
+                    <p className="text-xs text-neutral-mid">
+                      {s.job_role || 'Staff member'} · {s.languages.join(', ')}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-teal-light/60 px-2.5 py-1 text-xs font-semibold text-teal">
+                    {s.total} switch{s.total === 1 ? '' : 'es'}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {s.sets.map((set: any, i: number) => (
+                    <span key={`${set.area}-${i}`} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-neutral-light/40 px-2 py-1 text-xs text-neutral-dark">
+                      <Globe size={11} className="text-teal" />
+                      {set.set_name}
+                      {set.count > 1 && <span className="text-neutral-mid">×{set.count}</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}

@@ -773,6 +773,27 @@ model AgentEvent {
   @@map("agent_events")
 }
 
+// One staff member flipping a single hub set into their second language. The switch
+// itself is session-only; this records that it happened so admins can see where
+// staff lean on their own language (a training/language gap signal). One row per
+// toggle-on.
+model LanguageSwitchEvent {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  area       String                                // training | annual | induction | followup | cqc
+  set_ref    String?                               // enrolment/flow id when the set has one
+  set_name   String?                               // human label shown to admins
+  lang       String                                // second-language code flipped into
+  lang_name  String?                               // resolved display name at the time
+  created_at DateTime @default(now())
+
+  @@index([tenant_id, created_at])
+  @@index([tenant_id, user_id])
+  @@index([tenant_id, area])
+  @@map("language_switch_events")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

@@ -1189,6 +1189,84 @@ analyticsRouter.get('/engagement', requireAdmin, async (_req: Request, res: Resp
   }
 })
 
+// ─── GET /analytics/language-switches ─────────────────────────────────────────
+// Where staff lean on their second language: which sets they flip out of English.
+// A training/language gap signal. Returns an aggregate (generalist) view plus a
+// per-staff breakdown for the Staff tab.
+
+const SWITCH_AREA_LABELS: Record<string, string> = {
+  training: 'My Training', annual: 'Annual Training', induction: 'Induction',
+  followup: 'Follow-up', cqc: 'CQC Prep',
+}
+
+analyticsRouter.get('/language-switches', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const DAY = 86_400_000
+  try {
+    const since = new Date(Date.now() - 180 * DAY)
+    const [events, users] = await Promise.all([
+      (prisma as any).languageSwitchEvent.findMany({
+        where: { tenant_id: tenantId, created_at: { gte: since } },
+        select: { user_id: true, area: true, set_ref: true, set_name: true, lang: true, lang_name: true, created_at: true },
+        orderBy: { created_at: 'desc' },
+      }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true, job_role: true } }),
+    ])
+
+    const userMap = new Map<string, { name: string; job_role: string | null }>()
+    for (const u of users as any[]) userMap.set(u.id, { name: u.name, job_role: u.job_role })
+
+    const setLabel = (area: string, setName: string | null) => setName || SWITCH_AREA_LABELS[area] || area
+
+    // ── Aggregate (generalist) ────────────────────────────────────────────────
+    const byAreaMap = new Map<string, number>()
+    const byLangMap = new Map<string, { lang: string; lang_name: string; count: number; staff: Set<string> }>()
+    const bySetMap  = new Map<string, { area: string; set_name: string; switch_count: number; staff: Set<string>; last_at: string }>()
+    const byStaff   = new Map<string, { user_id: string; name: string; job_role: string | null; total: number; languages: Set<string>; sets: Map<string, { area: string; set_name: string; count: number; last_at: string }> }>()
+    const staffSet  = new Set<string>()
+
+    for (const ev of events as any[]) {
+      const whenIso = new Date(ev.created_at).toISOString()
+      staffSet.add(ev.user_id)
+      byAreaMap.set(ev.area, (byAreaMap.get(ev.area) ?? 0) + 1)
+
+      const lname = ev.lang_name || ev.lang
+      const lkey  = ev.lang
+      if (!byLangMap.has(lkey)) byLangMap.set(lkey, { lang: ev.lang, lang_name: lname, count: 0, staff: new Set() })
+      const lrow = byLangMap.get(lkey)!; lrow.count++; lrow.staff.add(ev.user_id)
+
+      const label = setLabel(ev.area, ev.set_name)
+      const skey  = `${ev.area}::${label}`
+      if (!bySetMap.has(skey)) bySetMap.set(skey, { area: ev.area, set_name: label, switch_count: 0, staff: new Set(), last_at: whenIso })
+      const srow = bySetMap.get(skey)!; srow.switch_count++; srow.staff.add(ev.user_id)
+
+      // ── Per-staff ──
+      const u = userMap.get(ev.user_id)
+      if (!byStaff.has(ev.user_id)) byStaff.set(ev.user_id, { user_id: ev.user_id, name: u?.name ?? 'Unknown', job_role: u?.job_role ?? null, total: 0, languages: new Set(), sets: new Map() })
+      const st = byStaff.get(ev.user_id)!
+      st.total++; st.languages.add(lname)
+      if (!st.sets.has(skey)) st.sets.set(skey, { area: ev.area, set_name: label, count: 0, last_at: whenIso })
+      st.sets.get(skey)!.count++
+    }
+
+    const by_area = [...byAreaMap.entries()].map(([area, count]) => ({ area, label: SWITCH_AREA_LABELS[area] || area, count })).sort((a, b) => b.count - a.count)
+    const by_language = [...byLangMap.values()].map(l => ({ lang: l.lang, lang_name: l.lang_name, count: l.count, staff_count: l.staff.size })).sort((a, b) => b.count - a.count)
+    const by_set = [...bySetMap.values()].map(s => ({ area: s.area, area_label: SWITCH_AREA_LABELS[s.area] || s.area, set_name: s.set_name, switch_count: s.switch_count, staff_count: s.staff.size, last_at: s.last_at })).sort((a, b) => b.switch_count - a.switch_count)
+    const by_staff = [...byStaff.values()].map(s => ({
+      user_id: s.user_id, name: s.name, job_role: s.job_role, total: s.total,
+      languages: [...s.languages],
+      sets: [...s.sets.values()].sort((a, b) => b.count - a.count),
+    })).sort((a, b) => b.total - a.total)
+
+    ok(res, {
+      summary: { total_switches: (events as any[]).length, staff_count: staffSet.size, set_count: bySetMap.size, days: 180 },
+      by_area, by_language, by_set, by_staff,
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
 // ─── GET /analytics/staff-risk ────────────────────────────────────────────────
 // Staff who need attention: overdue/expired training, overdue or stalled
 // induction, or never logged in. Powers the "Staff needing attention" panel.

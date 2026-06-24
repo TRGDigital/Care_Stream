@@ -99,11 +99,16 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
         <div className="flex shrink-0 items-center gap-2">
           {secondLang && (!isDone || it.state === 'overdue' || it.state === 'due_soon') && (
             <button
-              onClick={() => setCardLang(prev => { const next = { ...prev }; if (next[it.enrollment_id]) delete next[it.enrollment_id]; else next[it.enrollment_id] = '2'; return next })}
-              title={cardLang[it.enrollment_id] ? `This set will open in ${secondLang.name}. Tap to keep English.` : `Read this set in ${secondLang.name} instead of English`}
+              onClick={() => setCardLang(prev => {
+                const next = { ...prev }
+                if (next[it.enrollment_id]) { delete next[it.enrollment_id] }
+                else { next[it.enrollment_id] = '2'; api.me.recordLanguageSwitch({ area: 'annual', set_ref: it.enrollment_id, set_name: it.name }).catch(() => {}) }
+                return next
+              })}
+              title={cardLang[it.enrollment_id] ? `This set will open in ${secondLang.name}. Tap to switch back to your first language.` : `Read this set in ${secondLang.name} instead of English`}
               className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${cardLang[it.enrollment_id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
             >
-              <Globe size={12} /> {secondLang.name}
+              <Globe size={12} /> {cardLang[it.enrollment_id] ? '1st language' : secondLang.name}
             </button>
           )}
           {isDone && <button onClick={() => onCert(it.enrollment_id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
@@ -147,7 +152,7 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, initialLang = '1' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; initialLang?: '1' | '2' }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, initialLang = '1', switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; initialLang?: '1' | '2'; switchArea?: 'annual' | 'training' }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)
   const [lang, setLang] = useState<'1' | '2'>(initialLang === '2' && secondLang ? '2' : '1')
@@ -273,11 +278,11 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
           {secondLang && (
             <button
               type="button"
-              onClick={() => setLang(l => (l === '2' ? '1' : '2'))}
+              onClick={() => setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') createApiClient(token).me.recordLanguageSwitch({ area: switchArea, set_ref: id, set_name: name }).catch(() => {}); return next })}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${lang === '2' ? 'border-teal bg-teal text-white' : 'border-teal/40 text-teal hover:bg-teal-light/40'}`}
-              title={`Show this module in ${secondLang.name}`}
+              title={lang === '2' ? 'Switch back to your first language' : `Show this module in ${secondLang.name}`}
             >
-              <Globe size={12} /> {lang === '2' ? `Reading in ${secondLang.name}` : `Read in ${secondLang.name}`}
+              <Globe size={12} /> {lang === '2' ? '1st language' : `Read in ${secondLang.name}`}
             </button>
           )}
         </div>

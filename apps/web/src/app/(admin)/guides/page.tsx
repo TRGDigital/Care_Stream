@@ -208,6 +208,20 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, add it in <strong>Settings → Languages</strong> (type its English name, e.g. “Shona”) and it appears in the first &amp; second language dropdowns straight away.
           </p>
         </SectionBlock>
+        <SectionBlock title="Letting staff switch a set into their second language">
+          <p className="text-sm text-neutral-mid">
+            Some staff have good English but a different native tongue. The idea is that everyone learns in English, but when a particular set is hard to follow they can read just that one in their own language. To allow this, set the staff member up with a <strong>first language</strong> of English and their native tongue as the <strong>second language</strong>, then turn on <strong>“Allow switching a set to their second language”</strong> (in the Add / Edit forms and on their detail card, just below the communication toggle). Hover the <strong>i</strong> next to it for a reminder of what it does.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            With it on, that staff member sees a small <strong>language button</strong> on each individual set in their hub, across <strong>My Training</strong>, <strong>Annual Training</strong>, <strong>Induction</strong>, <strong>Follow-up</strong> and <strong>CQC Prep</strong>. Tapping it flips just that one set (the lesson, the questions and the multiple-choice answers) into their second language so they can understand it. The button then reads <strong>“1st language”</strong> so they can flip straight back.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            The switch is <strong>session only</strong>: nothing is remembered, so every visit starts in their first language. It only changes what they read, their answers, scores and progress are unaffected. The toggle stays hidden unless the staff member has a second language set.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Every time a staff member flips a set, CareStream records it so you can see where the language and training gaps are. The team-wide picture is on <strong>Analytics → Overview</strong> (“Second-language switching”) and the per-staff breakdown is on <strong>Analytics → Staff</strong>. If you see the same set switched often, it is a good prompt to offer extra support or simplify the wording.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Approved senders (added automatically)">
           <p className="text-sm text-neutral-mid">
             When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list in <em>Settings</em>. You don't need to add them in two places.
@@ -285,6 +299,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li><strong>On the staff record</strong>: an <strong>Induction questions</strong> section listing every question that person has answered, with a ✓ or ✗, their answer, and the correct answer where they got it wrong. A quick way to spot exactly where an individual needs support. Included in the CQC evidence PDF.</li>
             <li><strong>On the Analytics page</strong>: an <strong>Induction question performance</strong> section: the percentage answered correctly across the team, plus a <strong>“Most-missed induction questions”</strong> list that highlights the topics where knowledge is weakest, so you know what to reinforce in supervision or training.</li>
             <li><strong>CQC Staff Prep</strong>: each staff record also has a <strong>CQC Staff Prep</strong> section showing every prep question that person was assigned, their AI score, and any improvement after reviewing the model answer and retrying. The team-wide view (including the review-and-retry improvement) is in <strong>Analytics → CQC Staff Prep</strong>. Both feed the CQC evidence PDF.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Second-language switching">
+          <p className="text-sm text-neutral-mid">
+            If you let a staff member switch a set into their second language (see <strong>Managing staff → Language preferences</strong>), CareStream records each time they do it, so you can see where the language and training gaps are. You can read this two ways:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Analytics → Overview</strong>: a <strong>“Second-language switching”</strong> card with the team-wide picture, total switches, how many staff use it, a breakdown by language and by area, and the most switched sets. No individual names, this is the generalist view.</li>
+            <li><strong>Analytics → Staff</strong>: a per-staff breakdown showing exactly who switched, which sets they flipped, and how often. A set that is switched again and again is a good prompt to offer extra support or to simplify its wording.</li>
           </ul>
         </SectionBlock>
 

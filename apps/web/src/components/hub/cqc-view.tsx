@@ -311,11 +311,11 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
         </div>
         {secondLang && (
           <button
-            onClick={() => { setLoading(true); setLang(l => l === '2' ? '1' : '2') }}
-            title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read these questions in ${secondLang.name} instead of English`}
+            onClick={() => { setLoading(true); setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') createApiClient(token).me.recordLanguageSwitch({ area: 'cqc' }).catch(() => {}); return next }) }}
+            title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read these questions in ${secondLang.name} instead of English`}
             className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-700'}`}
           >
-            <Globe className="w-3 h-3" /> {secondLang.name}
+            <Globe className="w-3 h-3" /> {lang === '2' ? '1st language' : secondLang.name}
           </button>
         )}
       </div>

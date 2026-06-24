@@ -1496,11 +1496,11 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
           <h2 className="text-xl font-bold text-neutral-dark">Follow-up</h2>
           {secondLang && (
             <button
-              onClick={() => { setLoading(true); setLang(l => l === '2' ? '1' : '2') }}
-              title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read these in ${secondLang.name} instead of English`}
+              onClick={() => { setLoading(true); setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') api.me.recordLanguageSwitch({ area: 'followup' }).catch(() => {}); return next }) }}
+              title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read these in ${secondLang.name} instead of English`}
               className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
             >
-              <Globe size={12} /> {secondLang.name}
+              <Globe size={12} /> {lang === '2' ? '1st language' : secondLang.name}
             </button>
           )}
         </div>
@@ -1746,7 +1746,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   function viewOf(enr: any) {
     return langByEnr[enr.id] && secondEnr?.[enr.id] ? secondEnr[enr.id] : enr
   }
-  async function toggleLang(enrollmentId: string) {
+  async function toggleLang(enrollmentId: string, setName?: string) {
     if (langByEnr[enrollmentId]) {
       setLangByEnr(prev => { const n = { ...prev }; delete n[enrollmentId]; return n })
       return
@@ -1765,6 +1765,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
       setLoadingLang(false)
     }
     setLangByEnr(prev => ({ ...prev, [enrollmentId]: '2' }))
+    api.me.recordLanguageSwitch({ area: 'training', set_ref: enrollmentId, set_name: setName }).catch(() => {})
   }
 
   async function load() {
@@ -1815,7 +1816,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     })
   }
 
-  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} initialLang={taking.lang ?? '1'} onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
+  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} initialLang={taking.lang ?? '1'} switchArea="training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
   if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} backLabel="My Training" onExit={() => { setTaking(null); load() }} />
 
   if (loading) {
@@ -1927,12 +1928,12 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                   <div className="flex shrink-0 items-center gap-2">
                     {secondLang && (
                       <button
-                        onClick={() => toggleLang(enrollment.id)}
+                        onClick={() => toggleLang(enrollment.id, enrollment.module.name)}
                         disabled={loadingLang}
-                        title={langByEnr[enrollment.id] ? `This set will open in ${secondLang.name}. Tap to keep English.` : `Read this set in ${secondLang.name} instead of English`}
+                        title={langByEnr[enrollment.id] ? `This set will open in ${secondLang.name}. Tap to switch back to your first language.` : `Read this set in ${secondLang.name} instead of English`}
                         className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium disabled:opacity-50 ${langByEnr[enrollment.id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
                       >
-                        <Globe size={12} /> {secondLang.name}
+                        <Globe size={12} /> {langByEnr[enrollment.id] ? '1st language' : secondLang.name}
                       </button>
                     )}
                     {isDone && <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
@@ -1968,12 +1969,12 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                     <div className="flex items-center gap-2">
                       {secondLang && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); toggleLang(enrollment.id) }}
+                          onClick={(e) => { e.stopPropagation(); toggleLang(enrollment.id, enrollment.module.name) }}
                           disabled={loadingLang}
-                          title={langByEnr[enrollment.id] ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read this set in ${secondLang.name} instead of English`}
+                          title={langByEnr[enrollment.id] ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read this set in ${secondLang.name} instead of English`}
                           className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${langByEnr[enrollment.id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
                         >
-                          <Globe size={12} /> {secondLang.name}
+                          <Globe size={12} /> {langByEnr[enrollment.id] ? '1st language' : secondLang.name}
                         </button>
                       )}
                       <span className="text-sm text-neutral-mid">{answeredQs}/{totalQs} answered</span>
@@ -2179,7 +2180,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
   function viewOf(e: any) {
     return langByEnr[e.enrollment_id] && secondEnr?.[e.enrollment_id] ? secondEnr[e.enrollment_id] : e
   }
-  async function toggleLang(enrollmentId: string) {
+  async function toggleLang(enrollmentId: string, setName?: string) {
     if (langByEnr[enrollmentId]) {
       setLangByEnr(prev => { const n = { ...prev }; delete n[enrollmentId]; return n })
       return
@@ -2195,6 +2196,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
       setLoadingLang(false)
     }
     setLangByEnr(prev => ({ ...prev, [enrollmentId]: '2' }))
+    api.me.recordLanguageSwitch({ area: 'induction', set_ref: enrollmentId, set_name: setName }).catch(() => {})
   }
 
   async function savePolicy(policyId: string) {
@@ -2263,12 +2265,12 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
                     <div className="flex shrink-0 items-center gap-2">
                       {secondLang && (
                         <button
-                          onClick={() => toggleLang(e.enrollment_id)}
+                          onClick={() => toggleLang(e.enrollment_id, e.flow_name)}
                           disabled={loadingLang}
-                          title={langByEnr[e.enrollment_id] ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read this induction in ${secondLang.name} instead of English`}
+                          title={langByEnr[e.enrollment_id] ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read this induction in ${secondLang.name} instead of English`}
                           className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${langByEnr[e.enrollment_id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
                         >
-                          <Globe size={12} /> {secondLang.name}
+                          <Globe size={12} /> {langByEnr[e.enrollment_id] ? '1st language' : secondLang.name}
                         </button>
                       )}
                       {e.completed_at

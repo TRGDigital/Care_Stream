@@ -280,6 +280,36 @@ meRouter.post('/follow-up/resolved', async (req: Request, res: Response) => {
   ok(res, { logged: true })
 })
 
+// ─── POST /me/language-switch ─────────────────────────────────────────────────
+// Records that a staff member flipped one hub set into their second language. The
+// switch is session-only; this is just a usage signal for admins (training/language
+// gaps). Guarded so we only log staff who actually have the feature + a 2nd language.
+meRouter.post('/language-switch', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const b = req.body ?? {}
+  const AREAS = ['training', 'annual', 'induction', 'followup', 'cqc']
+  const area = String(b.area ?? '')
+  if (!AREAS.includes(area)) { err(res, 'VALIDATION_ERROR', 'A valid area is required.'); return }
+
+  const [user, tenant] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { second_language: true, allow_language_switching: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+  ])
+  // Only log when the feature is genuinely enabled for this staff member.
+  if (!user?.allow_language_switching || !user?.second_language) { ok(res, { logged: false }); return }
+
+  const lang     = String(user.second_language)
+  const langName = languageNameForCode(lang, tenant?.custom_languages)
+  const setRef   = typeof b.set_ref === 'string' ? b.set_ref.slice(0, 120) : null
+  const setName  = typeof b.set_name === 'string' ? b.set_name.slice(0, 200) : null
+
+  await (prisma as any).languageSwitchEvent.create({
+    data: { tenant_id: tenantId, user_id: userId, area, set_ref: setRef, set_name: setName, lang, lang_name: langName },
+  }).catch(() => {})
+  ok(res, { logged: true })
+})
+
 // ─── Annual training (AI modules) ─────────────────────────────────────────────
 
 function annualState(e: any, now: Date): string {

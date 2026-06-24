@@ -573,6 +573,8 @@ export function createApiClient(token: string) {
         apiFetch<{ correct: boolean; resolved?: boolean; correct_option: number }>('/me/follow-up/lesson/answer', token, { method: 'POST', body: JSON.stringify(data) }),
       followUpResolved: (data: { source: string; ref: string; method: 'learn' | 'retry'; label?: string }) =>
         apiFetch<{ logged: boolean }>('/me/follow-up/resolved', token, { method: 'POST', body: JSON.stringify(data) }),
+      recordLanguageSwitch: (data: { area: 'training' | 'annual' | 'induction' | 'followup' | 'cqc'; set_ref?: string; set_name?: string }) =>
+        apiFetch<{ logged: boolean }>('/me/language-switch', token, { method: 'POST', body: JSON.stringify(data) }),
       policy: (policyId: string, lang?: '2') => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}${lang ? `?lang=${lang}` : ''}`, token),
       policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>
@@ -645,6 +647,13 @@ export function createApiClient(token: string) {
         trend: Array<{ week_start: string; active: number; pct: number; channels: { chat: number; whatsapp: number; email: number; voice: number } }>
         channels: { chat: number; whatsapp: number; email: number; voice: number; total: number; hub_pct: number | null }
       }>('/analytics/engagement', token),
+      languageSwitches: () => apiFetch<{
+        summary: { total_switches: number; staff_count: number; set_count: number; days: number }
+        by_area: Array<{ area: string; label: string; count: number }>
+        by_language: Array<{ lang: string; lang_name: string; count: number; staff_count: number }>
+        by_set: Array<{ area: string; area_label: string; set_name: string; switch_count: number; staff_count: number; last_at: string }>
+        by_staff: Array<{ user_id: string; name: string; job_role: string | null; total: number; languages: string[]; sets: Array<{ area: string; set_name: string; count: number; last_at: string }> }>
+      }>('/analytics/language-switches', token),
     },
   }
 }

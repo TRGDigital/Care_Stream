@@ -491,6 +491,33 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
   await sgMail.send({ to: opts.to, from, subject: `New ${c.noun} assigned to you — ${opts.orgName}`, html })
 }
 
+// ─── Face-to-face session reminder (admin-triggered) ─────────────────────────
+
+export async function sendFaceToFaceReminderEmail(opts: { to: string; name: string; orgName: string; title: string; dateLabel: string; trainerLabel?: string | null }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      This is a reminder that you&rsquo;re booked into a <strong>face-to-face training session</strong>:
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:90px">Training</td><td style="padding:6px 0;color:${NEUTRAL_DARK};font-size:15px;font-weight:600">${opts.title}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Date</td><td style="padding:6px 0;color:${NEUTRAL_DARK};font-size:15px;font-weight:600">${opts.dateLabel}</td></tr>
+      ${opts.trainerLabel ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Delivered by</td><td style="padding:6px 0;color:${NEUTRAL_DARK};font-size:15px">${opts.trainerLabel}</td></tr>` : ''}
+    </table>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Please make sure you attend. If you can&rsquo;t make it, let your manager know as soon as possible.
+    </p>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `Reminder: ${opts.title} on ${opts.dateLabel} — ${opts.orgName}`, html })
+}
+
 // ─── Staff welcome / credentials email ───────────────────────────────────────
 
 export interface SendWelcomeEmailOptions {

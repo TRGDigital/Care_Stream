@@ -8,7 +8,7 @@ import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import {
-  ArrowLeft, Award, Bell, BookOpen, Brain, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
+  ArrowLeft, Award, Bell, BookOpen, Brain, CalendarDays, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
@@ -514,6 +514,29 @@ export default function StaffRecordPage() {
             </div>
           )}
         </div>
+
+        {/* Face-to-face training */}
+        {rec.face_to_face && rec.face_to_face.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><CalendarDays size={15} className="text-teal" /> Face-to-face training <InfoTip text="In-person group sessions this person was allocated to: whether they attended or missed, and (if they were sent the digital catch-up module) whether they've completed it." /></p>
+              <p className="text-xs text-neutral-mid">{rec.face_to_face.summary.attended}/{rec.face_to_face.summary.allocated} attended{rec.face_to_face.summary.missed > 0 ? ` · ${rec.face_to_face.summary.missed} missed` : ''}</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {rec.face_to_face.items.map((s: any) => (
+                <div key={s.session_id} className="flex items-center justify-between gap-2 px-5 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-neutral-dark">{s.title}</p>
+                    <p className="text-xs text-neutral-mid">{fmtDate(s.date)}{s.module_assigned ? ` · catch-up module sent${s.completion ? ` (${s.completion === 'complete' ? 'completed' : s.completion === 'in_progress' ? 'in progress' : 'not started'})` : ''}` : ''}</p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${s.status === 'attended' ? 'bg-green-50 text-green-600' : s.status === 'absent' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-neutral-mid'}`}>
+                    {s.status === 'attended' ? 'Attended' : s.status === 'absent' ? 'Missed' : 'Allocated'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Induction questions */}
         {rec.induction_questions && rec.induction_questions.items.length > 0 && (

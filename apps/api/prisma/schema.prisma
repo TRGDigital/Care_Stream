@@ -808,6 +808,7 @@ model FaceToFaceSession {
   delivered_by_user_id String?                          // internal trainer (a staff member)
   delivered_by_name    String?                          // external / free-text trainer name
   notes                String?
+  reminder_sent_at     DateTime?                        // last time the admin emailed allocated staff a reminder
   created_by           String?
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt

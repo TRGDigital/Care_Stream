@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
-  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info,
+  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail,
 } from 'lucide-react'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -181,7 +181,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const effectiveTitle = title.trim() || moduleName || ''
   const shownStaff = staff.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()))
 
-  async function save() {
+  async function save(sendReminder = false) {
     if (!date || !effectiveTitle || saving) return
     setSaving(true)
     const payload: any = {
@@ -194,8 +194,12 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       attendee_ids: [...attendees],
     }
     try {
-      if (initial) await api.faceToFace.updateSession(initial.id, payload)
-      else await api.faceToFace.createSession(payload)
+      if (initial) {
+        await api.faceToFace.updateSession(initial.id, payload)
+      } else {
+        const r = await api.faceToFace.createSession(payload)
+        if (sendReminder && r?.session?.id) await api.faceToFace.remind(r.session.id).catch(() => {})
+      }
       onSaved()
     } catch { setSaving(false) }
   }
@@ -252,9 +256,14 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
 
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Cancel</button>
-          <button onClick={save} disabled={!date || !effectiveTitle || saving} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? 'Saving…' : initial ? 'Save changes' : 'Create session'}</button>
+          {!initial && (
+            <button onClick={() => save(true)} disabled={!date || !effectiveTitle || saving || attendees.size === 0} title={attendees.size === 0 ? 'Allocate staff first' : 'Create the session and email the allocated staff a reminder now'} className="inline-flex items-center gap-1.5 rounded-lg border border-teal px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40 disabled:opacity-50">
+              <Mail size={14} /> Create &amp; email reminder
+            </button>
+          )}
+          <button onClick={() => save(false)} disabled={!date || !effectiveTitle || saving} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? 'Saving…' : initial ? 'Save changes' : 'Create session'}</button>
         </div>
       </div>
     </div>
@@ -270,9 +279,18 @@ function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [assignMsg, setAssignMsg] = useState('')
+  const [reminding, setReminding] = useState(false)
+  const [remindMsg, setRemindMsg] = useState('')
 
   function load() { api.faceToFace.session(sessionId).then(d => setData(d.session)).catch(() => {}) }
   useEffect(() => { load() }, [sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function remind() {
+    if (reminding || (data?.attendance ?? []).length === 0) return
+    setReminding(true); setRemindMsg('')
+    try { const r = await api.faceToFace.remind(sessionId); setRemindMsg(`Reminder emailed to ${r.sent} staff.`); load(); onChanged() }
+    catch (e: any) { setRemindMsg(e?.message ?? 'Could not send the reminder.') } finally { setReminding(false) }
+  }
 
   async function mark(userId: string, status: 'attended' | 'absent' | 'allocated') {
     setData((d: any) => ({ ...d, attendance: d.attendance.map((a: any) => a.user_id === userId ? { ...a, status } : a) }))
@@ -339,6 +357,17 @@ function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
           ))}
           {att.length === 0 && <p className="text-sm text-neutral-mid">No staff allocated. Use Edit to add attendees.</p>}
         </div>
+
+        {/* Email reminder (admin-triggered) */}
+        {att.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button onClick={remind} disabled={reminding} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 disabled:opacity-50">
+              <Mail size={14} /> {reminding ? 'Sending…' : 'Email reminder to allocated staff'}
+            </button>
+            {data.reminder_sent_at && <span className="text-xs text-neutral-mid">Last sent {prettyDate(data.reminder_sent_at)}</span>}
+            {remindMsg && <span className="text-xs text-teal">{remindMsg}</span>}
+          </div>
+        )}
 
         {/* Send the digital module */}
         {data.module_id ? (

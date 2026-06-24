@@ -72,7 +72,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     return
   }
 
-  const [training, onboarding] = await Promise.all([
+  const [training, onboarding, faceToFace] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: id },
       select:  {
@@ -90,6 +90,12 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
       },
       orderBy: { enrolled_at: 'asc' },
     }).catch(() => [] as any[]),
+    // Face-to-face sessions this staff member is allocated to (attendance + any
+    // catch-up module they were sent).
+    (prisma as any).faceToFaceAttendance.findMany({
+      where:  { tenant_id: tenantId, user_id: id },
+      select: { status: true, module_assigned_at: true, session: { select: { id: true, title: true, session_date: true, module_id: true } } },
+    }).catch(() => [] as any[]),
   ])
 
   const trainingOut = (training as any[]).map(t => ({
@@ -102,8 +108,23 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     total_steps: o.flow?._count?.steps ?? 0, completed_steps: o._count?.progress ?? 0,
   }))
 
+  // Completion of any catch-up module is the staff member's enrollment status for it.
+  const statusByModule = new Map<string, string>()
+  for (const t of trainingOut) if (t.module_id) statusByModule.set(t.module_id, t.status)
+  const faceToFaceOut = (faceToFace as any[])
+    .filter(a => a.session)
+    .map(a => ({
+      session_id:      a.session.id,
+      title:           a.session.title,
+      date:            a.session.session_date,
+      status:          a.status,                              // allocated | attended | absent
+      module_assigned: !!a.module_assigned_at,
+      completion:      a.session.module_id ? (statusByModule.get(a.session.module_id) ?? null) : null,
+    }))
+    .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
+
   const { tenant_id, ...profile } = user
-  ok(res, { user: profile, training: trainingOut, onboarding: onboardingOut })
+  ok(res, { user: profile, training: trainingOut, onboarding: onboardingOut, face_to_face: faceToFaceOut })
 })
 
 // ─── GET /users/:id/record ────────────────────────────────────────────────────

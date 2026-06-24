@@ -357,6 +357,30 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }
   }
 
+  // ── Face-to-face training (group/in-person sessions allocated to this person) ──
+  const f2fAttendance = await (prisma as any).faceToFaceAttendance.findMany({
+    where:  { tenant_id: tenantId, user_id: userId },
+    select: { status: true, module_assigned_at: true, session: { select: { id: true, title: true, session_date: true, module_id: true } } },
+  }).catch(() => [] as any[])
+  const f2fStatusByModule = new Map<string, string>()
+  for (const t of allTrainingItems) if (t.module_id) f2fStatusByModule.set(t.module_id, t.status)
+  const f2fItems = (f2fAttendance as any[]).filter(a => a.session).map(a => ({
+    session_id:      a.session.id,
+    title:           a.session.title,
+    date:            a.session.session_date,
+    status:          a.status,                                // allocated | attended | absent
+    module_assigned: !!a.module_assigned_at,
+    completion:      a.session.module_id ? (f2fStatusByModule.get(a.session.module_id) ?? null) : null,
+  })).sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
+  const faceToFace = {
+    items: f2fItems,
+    summary: {
+      allocated: f2fItems.length,
+      attended:  f2fItems.filter(i => i.status === 'attended').length,
+      missed:    f2fItems.filter(i => i.status === 'absent').length,
+    },
+  }
+
   return {
     user: {
       id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role,
@@ -368,6 +392,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     training: { items: training, summary: trainingSummary },
     annual_training: { items: annualTraining, summary: annualSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
+    face_to_face: faceToFace,
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,
     cqc_prep: cqcPrep,

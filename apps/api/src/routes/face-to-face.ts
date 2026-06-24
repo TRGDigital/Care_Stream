@@ -12,7 +12,8 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
-import { notifyStaffAllocation } from '../lib/notify'
+import { notifyStaffAllocation, getUsers } from '../lib/notify'
+import { sendFaceToFaceReminderEmail } from '../services/email/outbound'
 
 export const faceToFaceRouter = Router()
 
@@ -55,6 +56,7 @@ function summariseSession(s: any) {
     delivered_by_user_id: s.delivered_by_user_id,
     delivered_by_name: s.delivered_by_name,
     notes: s.notes ?? null,
+    reminder_sent_at: s.reminder_sent_at ?? null,
     allocated: att.length,
     attended: att.filter((a: any) => a.status === 'attended').length,
     absent:   att.filter((a: any) => a.status === 'absent').length,
@@ -278,6 +280,44 @@ faceToFaceRouter.post('/sessions/:id/assign-module', requireAdmin, async (req: R
     }
     ok(res, { assigned: validUserIds.length, newly_enrolled: toCreate.length })
   } catch (e: any) { err(res, 'ASSIGN_FAILED', e.message, 500) }
+})
+
+// ─── POST /face-to-face/sessions/:id/remind ───────────────────────────────────
+// Admin-triggered (never automatic): email the allocated staff a reminder that
+// they're booked into this session. Optional user_ids to limit who's emailed.
+faceToFaceRouter.post('/sessions/:id/remind', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const only: string[] = Array.isArray(req.body?.user_ids) ? req.body.user_ids.map(String) : []
+  try {
+    const session = await (prisma as any).faceToFaceSession.findFirst({
+      where: { id: String(req.params.id), tenant_id: tenantId },
+      include: { attendance: { select: { user_id: true } } },
+    })
+    if (!session) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
+
+    let recipientIds: string[] = (session.attendance ?? []).map((a: any) => a.user_id)
+    if (only.length) recipientIds = recipientIds.filter(id => only.includes(id))
+    if (recipientIds.length === 0) { err(res, 'NO_RECIPIENTS', 'No allocated staff to remind.', 400); return }
+
+    const [tenant, users] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null),
+      getUsers(recipientIds),
+    ])
+    // Resolve trainer + date labels for the email.
+    const dateLabel = new Date(session.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    let trainerLabel: string | null = session.delivered_by_name ?? null
+    if (session.delivered_by_user_id) {
+      const t = await (prisma as any).user.findUnique({ where: { id: session.delivered_by_user_id }, select: { name: true } }).catch(() => null)
+      trainerLabel = t?.name ?? trainerLabel
+    }
+
+    await Promise.allSettled((users as any[]).map(u =>
+      sendFaceToFaceReminderEmail({ to: u.email, name: u.name, orgName: tenant?.name ?? '', title: session.title, dateLabel, trainerLabel })
+        .catch(e => console.error('[face-to-face/remind] email error:', e))
+    ))
+    await (prisma as any).faceToFaceSession.update({ where: { id: session.id }, data: { reminder_sent_at: new Date() } }).catch(() => {})
+    ok(res, { sent: (users as any[]).length, reminder_sent_at: new Date().toISOString() })
+  } catch (e: any) { err(res, 'REMIND_FAILED', e.message, 500) }
 })
 
 // ─── GET /face-to-face/analytics ──────────────────────────────────────────────

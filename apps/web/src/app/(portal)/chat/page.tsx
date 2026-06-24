@@ -1526,6 +1526,9 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
 function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; lang?: '2' }) {
   const api = createApiClient(token)
   const [mode,        setMode]        = useState<'choose' | 'retry' | 'learn'>('choose')
+  // "Learn & retry" plays as a stepped lesson, like My Training / Annual: an intro
+  // screen with the thumbnail, then the lesson, then the check question.
+  const [learnStep,   setLearnStep]   = useState<'intro' | 'lesson' | 'check'>('intro')
   const [lesson,      setLesson]      = useState<any>(null)
   const [lessonState, setLessonState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [showAnswer,  setShowAnswer]  = useState(false)
@@ -1538,8 +1541,8 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
     ? <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal">Training</span>
     : <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-500">Induction</span>
 
-  async function openLesson() {
-    setMode('learn')
+  async function openLesson(startStep: 'intro' | 'lesson' = 'intro') {
+    setMode('learn'); setLearnStep(startStep); setShowAnswer(false); setSel(null); setResult(null); setCorrectOpt(null)
     if (lesson || lessonState === 'loading') return
     setLessonState('loading')
     try {
@@ -1547,6 +1550,15 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
       setLesson(d.lesson); setLessonState('idle')
     } catch { setLessonState('error') }
   }
+
+  // Thumbnail: the source training module's cover, or a friendly fallback for
+  // induction follow-ups (which have no module image).
+  const thumbSrc = it.image_url ? (apiAssetUrl(it.image_url) ?? '') : ''
+  const Thumb = ({ className, iconSize }: { className: string; iconSize: number }) => (
+    thumbSrc
+      ? <img src={thumbSrc} alt="" className={`${className} object-cover`} />
+      : <div className={`${className} flex items-center justify-center bg-gradient-to-br from-teal-light/70 to-teal/10`}><GraduationCap size={iconSize} className="text-teal" /></div>
+  )
 
   // "Just retry" — re-answer the original question (existing grading path).
   async function submitRetry() {
@@ -1602,91 +1614,92 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
   }
 
   return (
-    <div className={`rounded-xl border bg-white p-5 shadow-sm ${result === 'wrong' ? 'border-red-200' : result === 'correct' ? 'border-green-200' : 'border-gray-200'}`}>
-      <div className="mb-2 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+    <div className={`overflow-hidden rounded-xl border bg-white shadow-sm ${result === 'wrong' ? 'border-red-200' : result === 'correct' ? 'border-green-200' : 'border-gray-200'}`}>
 
-      {/* ── Choose how to tackle it ── */}
-      {mode === 'choose' && (
+      {/* ── Learn & retry: stepped lesson (intro → lesson → check), styled like My Training / Annual ── */}
+      {mode === 'learn' ? (
         <>
-          <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <button onClick={openLesson} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
-              <GraduationCap size={14} /> Learn &amp; retry
-            </button>
-            <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-              Just retry
-            </button>
-          </div>
-        </>
-      )}
+          {/* Intro: thumbnail + title + Start */}
+          {learnStep === 'intro' && (
+            <div>
+              <Thumb className="aspect-[16/9] w-full" iconSize={44} />
+              <div className="p-5 text-center">
+                <div className="mb-2 flex items-center justify-center gap-2">{badge}</div>
+                <h3 className="text-base font-bold text-neutral-dark">{it.topic}</h3>
+                <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-mid">A quick lesson to put this right, then one question to check you&apos;ve got it.</p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button onClick={() => setLearnStep('lesson')} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal/90"><GraduationCap size={15} /> Start lesson</button>
+                  <button onClick={() => setMode('choose')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Back</button>
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* ── Just retry: original question ── */}
-      {mode === 'retry' && (
-        <>
-          <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
-          <div className="space-y-1.5">{it.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
-          {result !== 'correct' && (
-            <button onClick={submitRetry} disabled={sel == null || submitting} className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-              {submitting ? 'Checking…' : result === 'wrong' ? 'Try again' : 'Submit answer'}
-            </button>
-          )}
-          {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
-          {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite. <button onClick={openLesson} className="inline-flex items-center gap-1 font-semibold underline"><Lightbulb size={13} /> Learn the point</button></div>}
-        </>
-      )}
-
-      {/* ── Learn & retry: micro-lesson then a fresh check ── */}
-      {mode === 'learn' && (
-        <>
-          {lessonState === 'loading' && (
-            <div className="flex items-center gap-2 py-6 text-sm text-neutral-mid"><Sparkles size={15} className="animate-pulse text-teal" /> Preparing your lesson…</div>
-          )}
-          {lessonState === 'error' && (
-            <div className="py-4 text-sm text-neutral-mid">Couldn&apos;t build a lesson right now. <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="font-medium text-teal hover:underline">Just retry instead</button>.</div>
-          )}
-          {lesson && lessonState !== 'loading' && (
-            <div className="space-y-4">
-              {/* Why */}
-              {lesson.why && (
-                <div className="flex gap-2.5 rounded-lg bg-amber-50 p-3.5">
-                  <Lightbulb size={16} className="mt-0.5 shrink-0 text-amber-500" />
-                  <div>
-                    <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-amber-600">Why this matters</p>
-                    <p className="text-sm text-neutral-dark">{lesson.why}</p>
+          {/* Lesson */}
+          {learnStep === 'lesson' && (
+            <div className="p-5">
+              <div className="mb-3 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+              {lessonState === 'loading' && (
+                <div className="flex items-center gap-2 py-6 text-sm text-neutral-mid"><Sparkles size={15} className="animate-pulse text-teal" /> Preparing your lesson…</div>
+              )}
+              {lessonState === 'error' && (
+                <div className="py-4 text-sm text-neutral-mid">Couldn&apos;t build a lesson right now. <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="font-medium text-teal hover:underline">Just retry instead</button>.</div>
+              )}
+              {lesson && lessonState !== 'loading' && (
+                <div className="space-y-4">
+                  {/* Why */}
+                  {lesson.why && (
+                    <div className="flex gap-2.5 rounded-lg bg-amber-50 p-3.5">
+                      <Lightbulb size={16} className="mt-0.5 shrink-0 text-amber-500" />
+                      <div>
+                        <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-amber-600">Why this matters</p>
+                        <p className="text-sm text-neutral-dark">{lesson.why}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Key points */}
+                  {Array.isArray(lesson.key_points) && lesson.key_points.length > 0 && (
+                    <div>
+                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Remember</p>
+                      <ul className="space-y-1.5">
+                        {lesson.key_points.map((p: string, i: number) => (
+                          <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {/* Scenario */}
+                  {lesson.scenario?.situation && (
+                    <div className="rounded-lg border border-gray-200 p-3.5">
+                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Picture this</p>
+                      <p className="text-sm text-neutral-dark">{lesson.scenario.situation}</p>
+                      {lesson.scenario.prompt && <p className="mt-2 text-sm font-medium text-neutral-dark">{lesson.scenario.prompt}</p>}
+                      {!showAnswer
+                        ? <button onClick={() => setShowAnswer(true)} className="mt-2 flex items-center gap-1 text-xs font-medium text-teal hover:underline"><ChevronDown size={13} /> Show the right approach</button>
+                        : lesson.scenario.answer && <p className="mt-2 rounded-md bg-teal-light/30 p-2.5 text-sm text-neutral-dark">{lesson.scenario.answer}</p>}
+                    </div>
+                  )}
+                  {/* Ask about this policy */}
+                  {lesson.policy_id && onTalkToPolicy && (
+                    <button onClick={() => onTalkToPolicy(lesson.policy_id, lesson.policy_title || 'this policy')} className="flex items-center gap-1.5 text-xs font-medium text-teal hover:underline">
+                      <MessageSquare size={13} /> Ask about {lesson.policy_title || 'this policy'}
+                    </button>
+                  )}
+                  {/* Step nav */}
+                  <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                    <button onClick={() => setLearnStep('intro')} className="text-xs text-neutral-mid hover:text-teal">Back</button>
+                    <button onClick={() => setLearnStep('check')} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal/90">Continue to the question</button>
                   </div>
                 </div>
               )}
-              {/* Key points */}
-              {Array.isArray(lesson.key_points) && lesson.key_points.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Remember</p>
-                  <ul className="space-y-1.5">
-                    {lesson.key_points.map((p: string, i: number) => (
-                      <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {/* Scenario */}
-              {lesson.scenario?.situation && (
-                <div className="rounded-lg border border-gray-200 p-3.5">
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Picture this</p>
-                  <p className="text-sm text-neutral-dark">{lesson.scenario.situation}</p>
-                  {lesson.scenario.prompt && <p className="mt-2 text-sm font-medium text-neutral-dark">{lesson.scenario.prompt}</p>}
-                  {!showAnswer
-                    ? <button onClick={() => setShowAnswer(true)} className="mt-2 flex items-center gap-1 text-xs font-medium text-teal hover:underline"><ChevronDown size={13} /> Show the right approach</button>
-                    : lesson.scenario.answer && <p className="mt-2 rounded-md bg-teal-light/30 p-2.5 text-sm text-neutral-dark">{lesson.scenario.answer}</p>}
-                </div>
-              )}
-              {/* Ask about this policy */}
-              {lesson.policy_id && onTalkToPolicy && (
-                <button onClick={() => onTalkToPolicy(lesson.policy_id, lesson.policy_title || 'this policy')} className="flex items-center gap-1.5 text-xs font-medium text-teal hover:underline">
-                  <MessageSquare size={13} /> Ask about {lesson.policy_title || 'this policy'}
-                </button>
-              )}
+            </div>
+          )}
 
-              {/* Fresh check question */}
-              {lesson.check?.question && (
+          {/* Check */}
+          {learnStep === 'check' && (
+            <div className="p-5">
+              <div className="mb-3 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+              {lesson?.check?.question ? (
                 <div className="rounded-lg border border-teal/30 bg-teal-light/10 p-4">
                   <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Sparkles size={13} /> Check your understanding</p>
                   <p className="mb-3 text-sm font-medium text-neutral-dark">{lesson.check.question}</p>
@@ -1699,10 +1712,53 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; tok
                   {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
                   {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite — the correct answer is highlighted in green. Have another go.</div>}
                 </div>
+              ) : (
+                <div className="py-4 text-sm text-neutral-mid">No check question available. <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="font-medium text-teal hover:underline">Just retry instead</button>.</div>
+              )}
+              {result !== 'correct' && lesson?.check?.question && (
+                <button onClick={() => setLearnStep('lesson')} className="mt-3 text-xs text-neutral-mid hover:text-teal">Back to the lesson</button>
               )}
             </div>
           )}
         </>
+      ) : (
+        /* ── Choose / Just-retry (thumbnail beside the question) ── */
+        <div className="p-5">
+          <div className="flex gap-3">
+            <Thumb className="h-14 w-14 shrink-0 rounded-lg" iconSize={22} />
+            <div className="min-w-0 flex-1">
+              <div className="mb-2 flex items-center gap-2">{badge}<span className="text-xs text-neutral-mid">{it.topic}</span></div>
+
+              {mode === 'choose' && (
+                <>
+                  <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button onClick={() => openLesson()} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                      <GraduationCap size={14} /> Learn &amp; retry
+                    </button>
+                    <button onClick={() => { setMode('retry'); setResult(null); setSel(null) }} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                      Just retry
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {mode === 'retry' && (
+                <>
+                  <p className="mb-3 text-sm font-medium text-neutral-dark">{it.text}</p>
+                  <div className="space-y-1.5">{it.options.map((opt: string, oi: number) => optionRow(opt, oi, `retry-${it.ref}`))}</div>
+                  {result !== 'correct' && (
+                    <button onClick={submitRetry} disabled={sel == null || submitting} className="mt-3 rounded-lg bg-teal px-4 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                      {submitting ? 'Checking…' : result === 'wrong' ? 'Try again' : 'Submit answer'}
+                    </button>
+                  )}
+                  {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
+                  {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite. <button onClick={() => openLesson('lesson')} className="inline-flex items-center gap-1 font-semibold underline"><Lightbulb size={13} /> Learn the point</button></div>}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

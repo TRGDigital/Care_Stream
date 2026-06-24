@@ -150,7 +150,7 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
   const [tEnr, oEnr, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:  { tenant_id: tenantId, user_id: userId },
-      select: { id: true, module: { select: { name: true, questions: true } }, answers: { where: { is_correct: false }, select: { question_id: true } } },
+      select: { id: true, module: { select: { name: true, questions: true, illustration_url: true } }, answers: { where: { is_correct: false }, select: { question_id: true } } },
     }),
     (prisma as any).onboardingEnrollment.findMany({
       where:  { tenant_id: tenantId, user_id: userId },
@@ -167,7 +167,7 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
       if (!wrong.has(q.id)) continue
       const options = Array.isArray(q.options) ? q.options : []
       if (options.length === 0) continue
-      items.push({ source: 'training', enrollment_id: e.id, ref: q.id, topic: e.module?.name, text: q.text, options })
+      items.push({ source: 'training', enrollment_id: e.id, ref: q.id, topic: e.module?.name, text: q.text, options, image_url: illustrationUrl(e.module?.illustration_url) })
     }
   }
   for (const e of oEnr as any[]) {
@@ -176,7 +176,7 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
       if (s.type !== 'answer_question' || !wrong.has(s.id)) continue
       const options = Array.isArray(s.options) ? s.options : []
       if (options.length === 0) continue
-      items.push({ source: 'induction', enrollment_id: e.id, ref: s.id, topic: e.flow?.name, text: s.question, options })
+      items.push({ source: 'induction', enrollment_id: e.id, ref: s.id, topic: e.flow?.name, text: s.question, options, image_url: null })
     }
   }
 

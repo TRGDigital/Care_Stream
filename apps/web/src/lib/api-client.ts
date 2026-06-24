@@ -566,7 +566,7 @@ export function createApiClient(token: string) {
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),
         evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
       },
-      followUp: (lang?: '2') => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>(`/me/follow-up${lang ? `?lang=${lang}` : ''}`, token),
+      followUp: (lang?: '2') => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[]; image_url: string | null }> }>(`/me/follow-up${lang ? `?lang=${lang}` : ''}`, token),
       followUpLesson: (p: { source: string; ref: string; enrollment_id: string; lang?: '2' }) =>
         apiFetch<{ lesson: { why: string; key_points: string[]; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[] }; policy_id?: string | null; policy_title?: string | null }; lang: string }>(`/me/follow-up/lesson?source=${encodeURIComponent(p.source)}&ref=${encodeURIComponent(p.ref)}&enrollment_id=${encodeURIComponent(p.enrollment_id)}${p.lang ? `&lang=${p.lang}` : ''}`, token),
       followUpLessonAnswer: (data: { source: string; ref: string; enrollment_id: string; selected: number }) =>

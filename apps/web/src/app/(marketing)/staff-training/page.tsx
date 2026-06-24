@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
-  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck,
+  MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, CalendarDays,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
@@ -747,6 +747,63 @@ export default async function StaffTrainingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Face-to-face training tracking ────────────────────────────────── */}
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Face-to-face Training</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Track your in-person training too, in the same place.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            Most homes still run group sessions in the room every month. CareStream gives you a simple
+            calendar to log those sessions, mark who attended, and keep the evidence, so your digital and
+            face-to-face training live in one record.
+          </p>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                step: '01',
+                Icon: CalendarDays,
+                title: 'Log the session on a calendar',
+                body: 'Record each in-person session: the topic, the date, and who delivered it (a staff member or an external trainer). Allocate who should attend, and backfill the last twelve months so your history is complete.',
+              },
+              {
+                step: '02',
+                Icon: CheckCircle2,
+                title: 'Mark who attended',
+                body: 'After the session, mark who came and who missed it in a couple of taps. That gives you clear evidence of attendance at every formal training session you run.',
+              },
+              {
+                step: '03',
+                Icon: GraduationCap,
+                title: 'Send a digital catch-up',
+                body: 'Anyone who missed can be sent the matching digital module to complete in the hub, so a missed session never becomes a training gap. You choose exactly who receives it.',
+              },
+            ].map(({ step, Icon, title, body }) => (
+              <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
+                    {step}
+                  </span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light">
+                    <Icon size={18} className="text-teal" />
+                  </div>
+                </div>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
+            Managers see it all in the analytics and in the hub: who missed which sessions, who was sent the
+            catch-up module, and whether they have completed it. From October each year, CareStream nudges you
+            to start planning the following year&apos;s sessions.
+          </p>
         </div>
       </section>
 

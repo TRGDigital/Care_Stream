@@ -873,9 +873,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Open a session from the calendar and mark each person <strong>attended</strong>, <strong>missed</strong>, or leave them <strong>unmarked</strong>. Use <strong>All attended</strong> / <strong>All missed</strong> to set everyone at once, then adjust. This is your evidence of who was at each formal session.
           </p>
         </SectionBlock>
+        <SectionBlock title="Reminding allocated staff by email">
+          <p className="text-sm text-neutral-mid">
+            Reminders are <strong>never sent automatically</strong>, you decide when. While creating a session, use <strong>Create &amp; email reminder</strong> to create it and email the allocated staff that they&apos;re booked in. For an existing session, open it and click <strong>Email reminder to allocated staff</strong> (handy to send again closer to the date). The session shows when a reminder was <strong>last sent</strong>.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Sending the digital module to anyone who missed">
           <p className="text-sm text-neutral-mid">
             In the session, the <strong>Send the digital module</strong> panel lets you pick exactly who should complete the training digitally, click <strong>Select those who missed</strong> for the obvious case, or choose anyone. They get the module in their hub <strong>My Training</strong>, and the session shows a <strong>sent</strong> marker against them.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            A module can only be sent once it has been <strong>built</strong> (it has a lesson or questions). If it hasn&apos;t, you&apos;ll see a prompt to add a lesson or questions in <strong>Training → Modules &amp; Questions</strong> first, and unbuilt topics are marked <strong>&ldquo;not built yet&rdquo;</strong> in the session form.
           </p>
         </SectionBlock>
         <SectionBlock title="Backfilling the last 12 months">
@@ -888,10 +896,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Use the calendar arrows to move into next year and schedule future sessions. From <strong>October</strong> each year, a reminder appears prompting you to start planning the following year if nothing is booked yet.
           </p>
         </SectionBlock>
-        <SectionBlock title="Seeing it in analytics">
-          <p className="text-sm text-neutral-mid">
-            <strong>Analytics → Staff</strong> has a <strong>Face-to-face training</strong> section: who missed sessions, who was sent the digital module as a result, and whether they&apos;ve completed it, so you can chase the gaps.
-          </p>
+        <SectionBlock title="Seeing it across the platform">
+          <p className="text-sm text-neutral-mid">You can review face-to-face training in three places:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Analytics → Staff</strong>: a <strong>Face-to-face training</strong> section showing who missed sessions, who was sent the digital module as a result, and whether they&apos;ve completed it.</li>
+            <li><strong>The hub</strong>: an admin-only <strong>F2F Training</strong> tab gives you the same picture on your phone.</li>
+            <li><strong>Each staff record</strong>: a <strong>Face-to-face training</strong> section listing the sessions that person was allocated to, whether they attended or missed, and the status of any catch-up module. It&apos;s part of their record for CQC evidence.</li>
+          </ul>
         </SectionBlock>
         <Tip>Face-to-face is admin-only. Staff don&apos;t see the calendar; they only receive the digital module if you choose to send it to them.</Tip>
       </div>

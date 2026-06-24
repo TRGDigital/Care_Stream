@@ -122,7 +122,7 @@ export default function CareAuditsPage() {
             <div>
               <SectionLabel>The Problem With Manual Audits</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                Most care home audits take too long, read differently every time, and rarely lead to action.
+                Most care setting audits take too long, read differently every time, and rarely lead to action.
               </h2>
               <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
                 <p>

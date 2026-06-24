@@ -352,7 +352,7 @@ export default async function StaffTrainingPage() {
               <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
                 CareStream can generate a full training module from your own policy documents. It reads
                 the relevant policies, then writes a module that teaches the topic in short sections,
-                walks staff through a real care home scenario, and checks understanding as it goes,
+                walks staff through a real care setting scenario, and checks understanding as it goes,
                 finishing with a full assessment.
               </p>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">

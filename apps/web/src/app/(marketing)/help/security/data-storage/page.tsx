@@ -15,7 +15,7 @@ export default function Page() {
     <HelpArticle
       category="Data and Security"
       title="Where is our data stored"
-      intro="Your information is kept securely and stored within the UK and EEA. Here is what that means for your care home."
+      intro="Your information is kept securely and stored within the UK and EEA. Here is what that means for your care setting."
       mockup={<MockSecurity />}
       mockupCaption="Your trust and security commitments"
       blocks={[

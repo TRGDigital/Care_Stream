@@ -8,7 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
   title:       'Business Continuity Planning | CareStreamAI',
-  description: 'Ensure your care home can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via the hub, email, and voice, at any time.',
+  description: 'Ensure your care setting can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via the hub, email, and voice, at any time.',
   openGraph: {
     title: 'Business Continuity Planning | CareStreamAI',
     description: 'Your business continuity plan, instantly queryable by every staff member, any time.',
@@ -130,7 +130,7 @@ export default function BusinessContinuityPage() {
               </h2>
               <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
                 <p>
-                  Care home managers spend hours writing business continuity plans that cover power
+                  Care setting managers spend hours writing business continuity plans that cover power
                   failures, staff shortages, IT outages, severe weather, and supply disruptions.
                   Those plans are filed, reviewed at the annual inspection, and rarely opened again.
                 </p>

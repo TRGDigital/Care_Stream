@@ -6,7 +6,7 @@ export const revalidate = 60
 export async function generateMetadata() {
   return pageMetadata('/help/getting-started/account-setup', {
     title: 'Setting Up Your CareStream Account | CareStream',
-    description: 'How to set up your CareStream account after you sign up. Sign in, add your care home details, upload a policy and invite your team in minutes.',
+    description: 'How to set up your CareStream account after you sign up. Sign in, add your care setting details, upload a policy and invite your team in minutes.',
   })
 }
 
@@ -15,7 +15,7 @@ export default function Page() {
     <HelpArticle
       category="Getting Started"
       title="Setting up your account"
-      intro="Getting your care home set up on CareStreamAI takes only a few minutes. Here is what to do after you sign up."
+      intro="Getting your care setting set up on CareStreamAI takes only a few minutes. Here is what to do after you sign up."
       mockup={<MockDashboard />}
       mockupCaption="Your dashboard once your account is set up"
       blocks={[
@@ -23,7 +23,7 @@ export default function Page() {
         { type: 'subheading', text: 'First steps' },
         { type: 'steps', items: [
           'Sign in using the link in your welcome email and set your password.',
-          'Add your care home name and a few basic details so your portal is ready for your team.',
+          'Add your care setting name and a few basic details so your portal is ready for your team.',
           'Upload your first policy so staff have something to ask about straight away.',
           'Invite your team so they can begin asking questions.',
         ] },

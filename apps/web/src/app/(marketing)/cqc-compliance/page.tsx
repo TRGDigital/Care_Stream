@@ -172,7 +172,7 @@ export default function CqcCompliancePage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>The Gap Most Care Homes Have</SectionLabel>
+              <SectionLabel>The Gap Most Care Settings Have</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
                 Policies exist. Evidence of use does not.
               </h2>

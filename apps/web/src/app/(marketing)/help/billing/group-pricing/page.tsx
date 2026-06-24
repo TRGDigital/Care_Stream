@@ -6,7 +6,7 @@ export const revalidate = 60
 export async function generateMetadata() {
   return pageMetadata('/help/billing/group-pricing', {
     title: 'Group Pricing for Multiple Homes | CareStream',
-    description: 'How group pricing works for providers running more than one care home. Per home pricing with unlimited staff users, and help setting up each location.',
+    description: 'How group pricing works for providers running more than one care setting. Per home pricing with unlimited staff users, and help setting up each location.',
   })
 }
 

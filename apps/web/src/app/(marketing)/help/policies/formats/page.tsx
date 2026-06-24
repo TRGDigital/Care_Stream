@@ -15,7 +15,7 @@ export default function Page() {
     <HelpArticle
       category="Policy Management"
       title="Supported document formats"
-      intro="CareStreamAI accepts the document types most care homes already use. Here is what you can upload."
+      intro="CareStreamAI accepts the document types most care settings already use. Here is what you can upload."
       mockup={<MockUpload />}
       mockupCaption="Uploading a document in your portal"
       blocks={[

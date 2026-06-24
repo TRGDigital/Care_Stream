@@ -100,7 +100,7 @@ export default function HRPoliciesPage() {
                 Every staff member deserves to know their rights. In their own language. Right now.
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                Care home workforces are multilingual, work across multiple shifts, and rarely have
+                Care setting workforces are multilingual, work across multiple shifts, and rarely have
                 access to HR during the moments when they need it most. CareStream gives every
                 member of your team instant, accurate answers to employment questions from your
                 actual staff handbook, in the hub or by email, in any language, at any hour.
@@ -253,7 +253,7 @@ export default function HRPoliciesPage() {
               <div className="rounded-xl border border-teal/20 bg-teal/5 px-4 py-3">
                 <div className="mb-2.5 flex items-center gap-2">
                   <Globe size={15} className="flex-shrink-0 text-teal" />
-                  <p className="text-sm font-medium text-neutral-dark">Languages used by care home workforces across the UK.</p>
+                  <p className="text-sm font-medium text-neutral-dark">Languages used by care setting workforces across the UK.</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
@@ -394,7 +394,7 @@ export default function HRPoliciesPage() {
               {
                 Icon: Clock,
                 title: 'Annual leave and holiday pay',
-                body: 'How much leave staff are entitled to, how to book it, the notice required, what happens to unused leave, and how bank holidays are treated. Questions that come up every single week in every care home.',
+                body: 'How much leave staff are entitled to, how to book it, the notice required, what happens to unused leave, and how bank holidays are treated. Questions that come up every single week in every care setting.',
               },
               {
                 Icon: ShieldCheck,

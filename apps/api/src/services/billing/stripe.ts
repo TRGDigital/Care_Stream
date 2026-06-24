@@ -125,14 +125,9 @@ export async function createCheckoutSession(tenantId: string, planId: string): P
 // ─── Training licence checkout (one-off, training-only gateway tier) ───────────
 // One row of the cart = one staff seat × one module (£25.99). The price is resolved
 // from the configured training Product so there's no separate price-id to manage.
-export const TRAINING_LICENCE_PENCE = 100 // TEMPORARY (2026-06-24): £1.00 for buy-flow testing. Revert to 2599 after.
+export const TRAINING_LICENCE_PENCE = 2599
 
 async function trainingPriceId(): Promise<string> {
-  // ── TEMPORARY (2026-06-24): force the £1.00 test price for end-to-end buy-flow testing.
-  //    Revert by deleting these two lines to restore the normal product-based price lookup. ──
-  const TEST_OVERRIDE_PRICE_ID = process.env.STRIPE_TRAINING_PRICE_ID || 'price_1TlUuIHRDUuy2Xla2Y2NtyLY'
-  if (TEST_OVERRIDE_PRICE_ID) return TEST_OVERRIDE_PRICE_ID
-
   const productId = process.env.STRIPE_TRAINING_PRODUCT_ID
   if (!productId) throw new Error('STRIPE_TRAINING_PRODUCT_ID is not configured')
   const stripe = getStripe()

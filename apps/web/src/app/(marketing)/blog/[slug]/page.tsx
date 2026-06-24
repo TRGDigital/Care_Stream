@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 import { ArticleLayout } from '@/components/marketing/article-layout'
 import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
-import { blogPostingSchema, faqPageSchema } from '@/lib/schema'
-import { withTableOfContents } from '@/lib/blog-toc'
+import { blogPostingSchema, faqPageSchema, hyperTocSchema } from '@/lib/schema'
+import { buildBlogToc } from '@/lib/blog-toc'
 
 export const revalidate = 60
 
@@ -79,10 +79,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     ? new Date(post.publication_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : ''
   const faqs = (post.faqs ?? []).filter(f => f?.question?.trim() && f?.answer?.trim())
+  const { html: bodyHtml, headings } = buildBlogToc(post.content)
 
   return (
     <>
-      <JsonLd data={faqs.length > 0 ? [blogPostingSchema(post), faqPageSchema(faqs)] : [blogPostingSchema(post)]} />
+      <JsonLd data={[
+        blogPostingSchema(post, headings.length > 0),
+        ...(headings.length > 0 ? [hyperTocSchema(post.slug, headings)] : []),
+        ...(faqs.length > 0 ? [faqPageSchema(faqs)] : []),
+      ]} />
       <ArticleLayout
       category={post.category}
       date={date}
@@ -113,8 +118,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* Main body — stored as HTML in the admin editor. A linked Table of
-          Contents is generated at render time and injected above the first H2. */}
-      <div dangerouslySetInnerHTML={{ __html: withTableOfContents(post.content) }} />
+          Contents is generated at render time and injected above the first H2;
+          the matching HyperToc structured data is emitted above. */}
+      <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
 

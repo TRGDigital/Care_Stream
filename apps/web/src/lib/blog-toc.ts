@@ -1,3 +1,5 @@
+export type TocHeading = { level: number; id: string; text: string }
+
 /**
  * Builds a linked Table of Contents from a blog post's stored HTML body.
  *
@@ -5,17 +7,18 @@
  *    so the ToC links can jump to each section.
  *  - Injects a ToC block (nested list of anchor links) immediately before the
  *    first <h2>, after any intro paragraphs.
+ *  - Returns the same heading list so the page can emit matching HyperToc
+ *    structured data (the ids here are the anchor targets the schema links to).
  *
  * Pure string transform, so it runs in a server component and applies to every
  * current and future post automatically with no data migration. Styling lives
  * in globals.css under `.cs-toc`.
  */
-export function withTableOfContents(html: string): string {
-  if (!html) return html
+export function buildBlogToc(html: string): { html: string; headings: TocHeading[] } {
+  if (!html) return { html, headings: [] }
 
-  type Heading = { level: number; id: string; text: string }
   const used = new Set<string>()
-  const headings: Heading[] = []
+  const headings: TocHeading[] = []
 
   const slugify = (s: string) => {
     const base =
@@ -51,7 +54,7 @@ export function withTableOfContents(html: string): string {
   })
 
   // A ToC only earns its place when there are a couple of sections to jump to.
-  if (headings.length < 2) return withIds
+  if (headings.length < 2) return { html: withIds, headings: [] }
 
   const minLevel = Math.min(...headings.map(h => h.level))
   const items = headings
@@ -66,6 +69,6 @@ export function withTableOfContents(html: string): string {
 
   // Sit the ToC directly above the first <h2> (after the intro copy).
   const firstH2 = withIds.search(/<h2[\s>]/i)
-  if (firstH2 === -1) return toc + withIds
-  return withIds.slice(0, firstH2) + toc + withIds.slice(firstH2)
+  const body = firstH2 === -1 ? toc + withIds : withIds.slice(0, firstH2) + toc + withIds.slice(firstH2)
+  return { html: body, headings }
 }

@@ -99,10 +99,11 @@ export function blogPostingSchema(post: {
   slug: string; title: string; excerpt: string | null; meta_description?: string | null
   feature_image_url: string | null; publication_date: string | null
   author?: { name: string } | null
-}) {
+}, hasToc = false) {
   return {
     '@context':          'https://schema.org',
     '@type':             'BlogPosting',
+    '@id':               `${SITE_URL}/blog/${post.slug}#article`,
     headline:            post.title,
     description:         post.excerpt || post.meta_description || '',
     ...(post.feature_image_url ? { image: [post.feature_image_url] } : {}),
@@ -112,7 +113,35 @@ export function blogPostingSchema(post: {
       : { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },
     publisher:           { '@id': ORG_ID },
     mainEntityOfPage:    `${SITE_URL}/blog/${post.slug}`,
+    ...(hasToc ? { hasPart: { '@id': `${SITE_URL}/blog/${post.slug}#toc` } } : {}),
     inLanguage:          'en-GB',
+  }
+}
+
+/**
+ * HyperToc (schema.org/HyperToc) for a blog post's table of contents. Each
+ * heading becomes a HyperTocEntry with an absolute anchor url and a
+ * tocContinuation pointing to the next entry. The ids must match the anchor
+ * ids injected into the body by lib/blog-toc.ts.
+ */
+export function hyperTocSchema(slug: string, headings: Array<{ id: string; text: string }>) {
+  const postUrl = `${SITE_URL}/blog/${slug}`
+  const tocId    = `${postUrl}#toc`
+  const entryId  = (i: number) => `${tocId}-entry-${i + 1}`
+  return {
+    '@context': 'https://schema.org',
+    '@type':    'HyperToc',
+    '@id':      tocId,
+    name:       'Table of contents',
+    isPartOf:   { '@id': `${postUrl}#article` },
+    tocEntry:   headings.map((h, i) => ({
+      '@type':   'HyperTocEntry',
+      '@id':     entryId(i),
+      position:  i + 1,
+      name:      h.text,
+      url:       `${postUrl}#${h.id}`,
+      ...(i < headings.length - 1 ? { tocContinuation: { '@id': entryId(i + 1) } } : {}),
+    })),
   }
 }
 

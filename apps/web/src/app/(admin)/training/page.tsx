@@ -12,6 +12,7 @@ import {
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
+import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
 import {
   emptyQuestion, isComplete, McqQuestionEditor,
   DAY_NAMES, type Module, type Staff, type Enrollment, type Question,
@@ -1195,7 +1196,7 @@ export default function TrainingPage() {
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
   const userId = session?.user?.email ?? 'guest'
-  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery'>('compliance')
+  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face'>('compliance')
   const [staff,       setStaff]       = useState<Staff[]>([])
   const [modules,     setModules]     = useState<Module[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
@@ -1327,19 +1328,23 @@ export default function TrainingPage() {
           { key: 'modules',    label: 'Modules & Questions' },
           { key: 'history',    label: 'Question History' },
           { key: 'delivery',   label: 'Schedule Training Questions Delivery' },
-        ] as const).map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === t.key
-                ? 'bg-white text-neutral-dark shadow-sm'
-                : 'text-neutral-mid hover:text-neutral-dark'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+          { key: 'face_to_face', label: 'Face-to-face Training' },
+        ] as const).map(t => {
+          const isFtf = t.key === 'face_to_face'   // distinct colour to set it apart
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? (isFtf ? 'bg-teal text-white shadow-sm' : 'bg-white text-neutral-dark shadow-sm')
+                  : (isFtf ? 'text-teal hover:text-teal/80' : 'text-neutral-mid hover:text-neutral-dark')
+              }`}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {error && (
@@ -1349,6 +1354,7 @@ export default function TrainingPage() {
       {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
       {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
+      {tab === 'face_to_face' && <FaceToFaceManager token={session?.accessToken} />}
 
       {tab === 'compliance' && <>
 

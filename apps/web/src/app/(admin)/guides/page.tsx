@@ -857,12 +857,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it's for">
           <p className="text-sm text-neutral-mid">
-            Most homes run <strong>in-person group training</strong> each month. The <strong>Face-to-face</strong> page lets you record those sessions in a <strong>calendar</strong>, mark who attended and who missed, and keep evidence of both. It sits alongside the digital training, it does <strong>not</strong> change anyone&apos;s training matrix on its own; instead you decide who should also complete the module digitally.
+            Most homes run <strong>in-person group training</strong> each month. The <strong>Face-to-face Training</strong> tab (under <strong>Training</strong>) lets you record those sessions in a <strong>calendar</strong>, mark who attended and who missed, and keep evidence of both. It sits alongside the digital training, it does <strong>not</strong> change anyone&apos;s training matrix on its own; instead you decide who should also complete the module digitally.
           </p>
         </SectionBlock>
         <SectionBlock title="Logging a session">
           <div className="space-y-3">
-            <Step n={1}>Open <strong>Face-to-face</strong> in the sidebar and click <strong>New session</strong> (or click a day in the calendar to pre-fill its date).</Step>
+            <Step n={1}>Go to <strong>Training</strong> and open the <strong>Face-to-face Training</strong> tab, then click <strong>New session</strong> (or click a day in the calendar to pre-fill its date).</Step>
             <Step n={2}>Choose the <strong>training topic</strong> from the dropdown (the same modules you can assign digitally). The title fills in from the module; you can edit it.</Step>
             <Step n={3}>Set the <strong>date</strong>, and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer.</Step>
             <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend, then <strong>Create session</strong>. Add notes if useful.</Step>

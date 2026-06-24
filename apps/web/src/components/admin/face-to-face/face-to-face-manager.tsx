@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import {
-  CalendarDays, ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
+  ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
   CheckCircle2, XCircle, Circle, GraduationCap, Send, Info,
 } from 'lucide-react'
 
@@ -19,9 +18,7 @@ type Staff = { id: string; name: string; job_role: string | null; is_active?: bo
 type Module = { id: string; name: string; category: string }
 type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
 
-export default function FaceToFacePage() {
-  const { data: session } = useSession()
-  const token = session?.accessToken as string | undefined
+export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
 
   const today = new Date()
@@ -79,11 +76,10 @@ export default function FaceToFacePage() {
   const todayKey = ymd(new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())))
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-neutral-dark"><CalendarDays size={20} className="text-teal" /> Face-to-face training</h1>
-          <p className="mt-0.5 text-sm text-neutral-mid">Log the in-person sessions you run, mark who attended, and send the digital module to anyone who missed.</p>
+          <p className="text-sm text-neutral-mid">Log the in-person sessions you run, mark who attended, and send the digital module to anyone who missed.</p>
         </div>
         <button onClick={() => setEditing({ mode: 'new' })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={16} /> New session</button>
       </div>

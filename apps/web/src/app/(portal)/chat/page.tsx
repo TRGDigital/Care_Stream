@@ -10,7 +10,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback, Suspense } f
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
-import { AnnualTrainingView } from '@/components/hub/annual-training-view'
+import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
@@ -1709,6 +1709,9 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
   const [retrying,   setRetrying]    = useState<Set<string>>(new Set())
   // enrollmentIds expanded in the module accordion (collapsed by default when >1)
   const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
+  // A statutory module that has a scenario lesson plays through the rich stepped
+  // player (same as Annual training), via the annual TakeModule/CertView.
+  const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string } | null>(null)
   function toggleModule(id: string) {
     setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
@@ -1760,6 +1763,9 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
       return n
     })
   }
+
+  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
+  if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} onExit={() => { setTaking(null); load() }} />
 
   if (loading) {
     return (
@@ -1843,6 +1849,31 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
             const categoryBadge = enrollment.module.category === 'statutory'
               ? 'bg-blue-100 text-blue-700'
               : 'bg-purple-100 text-purple-700'
+
+            // Scenario-based modules play through the rich stepped player (lesson then
+            // assessment), the same as Annual training — not the inline question list.
+            if (enrollment.has_lesson) {
+              return (
+                <div key={enrollment.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <div className="p-5">
+                    <p className="font-semibold text-neutral-dark">{enrollment.module.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${categoryBadge}`}>{enrollment.module.category}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[enrollment.status] ?? STATUS_STYLES.not_started}`}>{STATUS_LABELS[enrollment.status] ?? enrollment.status}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-neutral-mid">A short lesson, then a quick assessment. Work through it at your own pace.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">
+                        {enrollment.status === 'complete' ? 'Review training' : enrollment.status === 'in_progress' ? 'Continue training' : 'Start training'}
+                      </button>
+                      {enrollment.status === 'complete' && (
+                        <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40">View certificate</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            }
 
             return (
               <div key={enrollment.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">

@@ -288,6 +288,10 @@ function annualState(e: any, now: Date): string {
   return 'todo'
 }
 
+// A module is "takeable as a lesson" if it has scenario-based learning_content
+// sections — true for AI annual modules AND statutory modules built with a lesson.
+const moduleHasLesson = (m: any) => Array.isArray(m?.learning_content?.sections) && m.learning_content.sections.length > 0
+
 // GET /me/annual-training — the staff member's assigned annual (AI) modules.
 meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
@@ -336,7 +340,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, comms_always_first_language: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
-  if (!enr || enr.module?.source !== 'ai_generated') { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
   const m = enr.module
 
@@ -415,9 +419,9 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
   const userId   = (req as any).user.sub
   const enr = await (prisma as any).trainingEnrollment.findFirst({
     where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-    include: { module: { select: { source: true, questions: true, pass_mark: true, renewal_months: true } }, answers: { select: { question_id: true, is_correct: true } } },
+    include: { module: { select: { source: true, questions: true, pass_mark: true, renewal_months: true, learning_content: true } }, answers: { select: { question_id: true, is_correct: true } } },
   })
-  if (!enr || enr.module?.source !== 'ai_generated') { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
   const bank = Array.isArray(enr.module.questions) ? enr.module.questions : []
   const bankIds = new Set(bank.map((q: any) => q.id))

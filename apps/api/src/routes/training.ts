@@ -734,7 +734,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       (prisma as any).trainingEnrollment.findMany({
         where:   { tenant_id: tenantId, user_id: userId },
         include: {
-          module:  { select: { id: true, name: true, category: true, description: true, questions: true, source: true } },
+          module:  { select: { id: true, name: true, category: true, description: true, questions: true, source: true, learning_content: true, illustration_key: true } },
           answers: { orderBy: { answered_at: 'asc' } },
         },
         orderBy: { created_at: 'asc' },
@@ -756,8 +756,12 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       .filter((e: any) => e.module?.source !== 'ai_generated') // AI annual modules live in Annual Training
       .map((e: any) => ({
         ...e,
+        // A statutory module built with a scenario lesson plays through the rich
+        // stepped player in the hub (like Annual training), not the question list.
+        has_lesson: Array.isArray(e.module?.learning_content?.sections) && e.module.learning_content.sections.length > 0,
         module: {
           ...e.module,
+          learning_content: undefined, // don't ship the full lesson (with answers) in the list
           questions: (Array.isArray(e.module?.questions) ? e.module.questions : []).map(({ correct: _c, ...q }: any) => q),
         },
       }))

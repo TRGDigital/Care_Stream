@@ -133,7 +133,7 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -446,7 +446,7 @@ function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string
 
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
-function CertView({ token, id, onExit }: { token: string; id: string; onExit: () => void }) {
+export function CertView({ token, id, onExit }: { token: string; id: string; onExit: () => void }) {
   const api = createApiClient(token)
   const [c, setC] = useState<any>(null)
   const [loading, setLoading] = useState(true)

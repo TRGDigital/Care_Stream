@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantSummary, type PlanLimits } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { AlertTriangle, Building2, Loader2, ExternalLink } from 'lucide-react'
+import { AlertTriangle, Building2, Loader2, ExternalLink, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 
 // ─── Usage bar ────────────────────────────────────────────────────────────────
@@ -141,6 +141,12 @@ export default function ClientsPage() {
                             <span className="rounded bg-neutral-light px-1.5 py-0.5 font-mono text-xs font-medium text-neutral-dark">{t.account_number}</span>
                           )}
                           <p className="text-xs text-neutral-mid">{t.slug}</p>
+                          {t.tier === 'training_only' && (
+                            <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                              <GraduationCap size={10} />
+                              Training only
+                            </span>
+                          )}
                           {t.sub_tenant_count > 0 && (
                             <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
                               <Building2 size={10} />
@@ -149,7 +155,7 @@ export default function ClientsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-neutral-mid">{t.plan?.name ?? '—'}</td>
+                      <td className="px-4 py-3 text-neutral-mid">{t.tier === 'training_only' ? 'Training module' : (t.plan?.name ?? '—')}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={t.subscription_status} />
                       </td>

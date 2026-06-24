@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
   ClipboardCheck, Copy, ExternalLink, KeyRound, Loader2, Mail, MoreVertical, Plus,
-  Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw, Receipt,
+  Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw, Receipt, GraduationCap,
 } from 'lucide-react'
 
 const fmtUsd = (n: number) => n <= 0 ? '$0.00' : n < 0.01 ? '<$0.01' : `$${n.toFixed(2)}`
@@ -495,15 +495,22 @@ export default function ClientDetailPage() {
               <ArrowLeft size={18} />
             </Link>
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-dark">
-                {detail?.tenant.name ?? 'Loading…'}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold text-neutral-dark">
+                  {detail?.tenant.name ?? 'Loading…'}
+                </h1>
+                {detail?.tenant.tier === 'training_only' && (
+                  <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    <GraduationCap size={11} /> Training only
+                  </span>
+                )}
+              </div>
               {detail && (
                 <p className="text-xs text-neutral-mid">
                   {detail.tenant.account_number && (
                     <span className="mr-1 font-mono font-medium text-neutral-dark">{detail.tenant.account_number}</span>
                   )}
-                  {detail.tenant.slug} · {(detail.tenant.plan as any)?.name ?? 'No plan'}
+                  {detail.tenant.slug} · {detail.tenant.tier === 'training_only' ? 'Training module client' : ((detail.tenant.plan as any)?.name ?? 'No plan')}
                 </p>
               )}
             </div>
@@ -552,6 +559,38 @@ export default function ClientDetailPage() {
           </div>
         ) : detail && (
           <div className="space-y-6">
+
+            {/* Training modules purchased (training-only clients) — what they bought + allocated */}
+            {detail.training_licences && detail.training_licences.length > 0 && (
+              <div className="rounded-xl border-2 border-blue-200 bg-blue-50/40 p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <GraduationCap size={16} className="text-blue-600" />
+                  <h2 className="text-sm font-semibold text-neutral-dark">Training modules purchased</h2>
+                </div>
+                <div className="space-y-3">
+                  {detail.training_licences.map(m => (
+                    <div key={m.module_slug} className="rounded-lg border border-blue-100 bg-white p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-semibold text-neutral-dark">{m.module_name}</p>
+                        <span className="text-xs text-neutral-mid">
+                          Purchased {new Date(m.purchased_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · renews {new Date(m.renewal_due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-neutral-mid">
+                        <span className="font-semibold text-neutral-dark">{m.total}</span> licence{m.total === 1 ? '' : 's'} · {m.allocated} allocated · {m.total - m.allocated} available
+                      </p>
+                      {m.allocations.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {m.allocations.map((a, i) => (
+                            <span key={i} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700" title={a.email ?? undefined}>{a.name}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

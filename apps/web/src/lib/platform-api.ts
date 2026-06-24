@@ -130,6 +130,7 @@ export interface TenantSummary {
   account_number:      string
   name:                string
   slug:                string
+  tier:                string   // "full" | "training_only"
   subscription_status: string
   created_at:          string
   plan:                PlanLimits | null
@@ -201,6 +202,16 @@ export interface TenantDetail {
     prefix:          string
     policies_prefix: string
   }
+  training_licences?: Array<{
+    module_slug:    string
+    module_name:    string
+    total:          number
+    allocated:      number
+    price_pence:    number
+    purchased_at:   string
+    renewal_due_at: string
+    allocations:    Array<{ name: string; email: string | null }>
+  }>
 }
 
 export interface AuditFreqStats {

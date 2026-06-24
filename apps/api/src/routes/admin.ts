@@ -472,7 +472,41 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     policies_prefix: `tenants/${req.params.id}/policies/`,
   }
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage })
+  // Training-module licences (training-only clients buy these). Grouped per module,
+  // with how many were allocated and to whom — so the platform team can see exactly
+  // what a training client purchased and assigned.
+  const licences = await (prisma as any).trainingLicense.findMany({
+    where:   { tenant_id: req.params.id },
+    orderBy: [{ module_name: 'asc' }, { purchased_at: 'asc' }],
+    select:  { module_slug: true, module_name: true, price_pence: true, purchased_at: true, renewal_due_at: true, status: true, user_id: true },
+  })
+  let training_licences: any[] = []
+  if ((licences as any[]).length) {
+    const userIds = [...new Set((licences as any[]).map(l => l.user_id).filter(Boolean))]
+    const lUsers  = userIds.length
+      ? await (prisma as any).user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } })
+      : []
+    const userById = new Map((lUsers as any[]).map(u => [u.id, u]))
+    const byModule = new Map<string, any>()
+    for (const l of licences as any[]) {
+      const g = byModule.get(l.module_slug) ?? {
+        module_slug: l.module_slug, module_name: l.module_name, total: 0, allocated: 0,
+        price_pence: l.price_pence, purchased_at: l.purchased_at, renewal_due_at: l.renewal_due_at,
+        allocations: [] as any[],
+      }
+      g.total += 1
+      if (l.user_id) {
+        g.allocated += 1
+        const u = userById.get(l.user_id)
+        g.allocations.push({ name: u?.name ?? 'Unknown', email: u?.email ?? null })
+      }
+      if (new Date(l.purchased_at) < new Date(g.purchased_at)) g.purchased_at = l.purchased_at
+      byModule.set(l.module_slug, g)
+    }
+    training_licences = [...byModule.values()]
+  }
+
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences })
 })
 
 // ─── GET /admin/tenants/:id/invoices ─────────────────────────────────────────

@@ -14,7 +14,7 @@ import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annua
 import { CqcView } from '@/components/hub/cqc-view'
 import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
-import { createApiClient, type Citation } from '@/lib/api-client'
+import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 
 // useLayoutEffect runs before the browser paints; on the server it no-ops (and
@@ -22,7 +22,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -1851,25 +1851,29 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
               : 'bg-purple-100 text-purple-700'
 
             // Scenario-based modules play through the rich stepped player (lesson then
-            // assessment), the same as Annual training — not the inline question list.
+            // assessment), the same as Annual training — same card layout (thumbnail +
+            // Start/Continue/Review on the right), not the inline question list.
             if (enrollment.has_lesson) {
+              const isDone = enrollment.status === 'complete'
               return (
-                <div key={enrollment.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
-                  <div className="p-5">
-                    <p className="font-semibold text-neutral-dark">{enrollment.module.name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${categoryBadge}`}>{enrollment.module.category}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[enrollment.status] ?? STATUS_STYLES.not_started}`}>{STATUS_LABELS[enrollment.status] ?? enrollment.status}</span>
+                <div key={enrollment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+                  {enrollment.module.illustration_url && <img src={apiAssetUrl(enrollment.module.illustration_url) ?? ''} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />}
+                  {isDone ? <CheckCircle2 size={18} className="shrink-0 text-green-500" />
+                    : enrollment.status === 'expired' ? <AlertTriangle size={18} className="shrink-0 text-red-500" />
+                    : enrollment.status === 'in_progress' ? <Clock size={18} className="shrink-0 text-amber-500" />
+                    : <Circle size={18} className="shrink-0 text-gray-300" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-neutral-dark">{enrollment.module.name}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium capitalize ${categoryBadge}`}>{enrollment.module.category}</span>
+                      <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLES[enrollment.status] ?? STATUS_STYLES.not_started}`}>{STATUS_LABELS[enrollment.status] ?? enrollment.status}</span>
                     </div>
-                    <p className="mt-2 text-sm text-neutral-mid">A short lesson, then a quick assessment. Work through it at your own pace.</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">
-                        {enrollment.status === 'complete' ? 'Review training' : enrollment.status === 'in_progress' ? 'Continue training' : 'Start training'}
-                      </button>
-                      {enrollment.status === 'complete' && (
-                        <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40">View certificate</button>
-                      )}
-                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {isDone && <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
+                    <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name })} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                      {isDone ? 'Review' : enrollment.status === 'in_progress' ? 'Continue' : 'Start'}
+                    </button>
                   </div>
                 </div>
               )

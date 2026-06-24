@@ -792,6 +792,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
         module: {
           ...e.module,
           learning_content: undefined, // don't ship the full lesson (with answers) in the list
+          illustration_url: illustrationUrl(e.module?.illustration_key),
           questions: (Array.isArray(e.module?.questions) ? e.module.questions : []).map(({ correct: _c, ...q }: any) => q),
         },
       }))

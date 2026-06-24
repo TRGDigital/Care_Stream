@@ -202,8 +202,18 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
     setGenError(p => ({ ...p, [m.id]: '' }))
     try {
       const r = await api.training.generateLesson(m.id)
-      onAssigned() // reload modules so the new lesson + image show
-      alert(`Built a scenario-based lesson with ${Array.isArray(r.module?.learning_content?.sections) ? r.module.learning_content.sections.length : 0} sections and ${Array.isArray(r.module?.questions) ? r.module.questions.length : 0} questions${r.reused_images ? ', reusing existing images' : ''}. Use "View training" / the preview to review it.`)
+      // Load the generated questions into the editor + mark dirty + open, so the Save
+      // button is available to review and save (the lesson sections are already saved).
+      const typed: Question[] = (Array.isArray(r.module?.questions) ? r.module.questions : []).map((q: any) => ({
+        id:      q.id,
+        text:    q.text,
+        options: (q.options ?? ['', '', '', '']).slice(0, 4) as [string, string, string, string],
+        correct: (q.correct ?? 0) as 0 | 1 | 2 | 3,
+      }))
+      setEditing(p => ({ ...p, [m.id]: typed }))
+      setDirty(p => new Set(p).add(m.id))
+      setOpen(m.id)
+      onAssigned() // reload modules so the lesson + Preview button + image appear
     } catch (e: any) {
       setGenError(p => ({ ...p, [m.id]: e.message ?? 'Lesson generation failed' }))
     } finally {
@@ -463,12 +473,23 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   return (
     <div>
       <HelpAccordion title="How Modules &amp; Questions work">
-        <p><strong className="text-neutral-dark">What this tab does</strong> — each training module needs a set of multiple-choice questions before staff can be assessed. This tab lets you create, edit, and manage those questions for every module in your library.</p>
-        <p><strong className="text-neutral-dark">Question format</strong> — every question has four answer options (A, B, C, D). Click the letter circle next to an option to mark it as the correct answer — it will highlight in teal. A question is considered complete when it has a question text and all four options filled in. Incomplete questions are flagged in amber and cannot be locked.</p>
-        <p><strong className="text-neutral-dark">AI generation</strong> — click <strong className="text-neutral-dark">Generate questions</strong> to have the AI create a full set of questions automatically, using CareStreamAI's care sector expertise combined with your <strong className="text-neutral-dark">Knowledge seed</strong> — the information you have added that is specific to your care setting. If you prefer to write your own question texts first, click <strong className="text-neutral-dark">Generate answer options</strong> to have the AI fill in the A/B/C/D choices around your questions.</p>
-        <p><strong className="text-neutral-dark">Saving changes</strong> — once you have edited or generated questions, click <strong className="text-neutral-dark">Save changes</strong>. Each save creates a new version snapshot in the Question History tab. The version number (e.g. v1, v2) is shown next to the module name.</p>
-        <p><strong className="text-neutral-dark">Locking questions</strong> — after saving a complete set (all questions with text and four options), the <strong className="text-neutral-dark">Lock questions</strong> button appears. Locking records a date-stamped audit trail of the exact questions used for that period. Locked questions cannot be edited until you unlock them. This is important for CQC evidence — it proves which questions were in use at any given time.</p>
-        <p><strong className="text-neutral-dark">Unlocking to edit</strong> — if you need to update questions (e.g. a policy changes), click <strong className="text-neutral-dark">Unlock to edit</strong> inside the module panel. After making changes, save and re-lock to create a new version.</p>
+        <p><strong className="text-neutral-dark">What this tab does</strong> — build each training module your staff complete in the hub. A module can be a full scenario-based lesson (a short lesson taught through real care-home scenarios, then an assessment) or just an assessment question set. Staff take it in their first language.</p>
+        <p><strong className="text-neutral-dark">The best way to build a module</strong> — click <strong className="text-blue-700">Generate lesson &amp; questions</strong>. The AI writes a full lesson (each section teaches a point, then applies it through a real scenario and a quick check) plus a fresh assessment bank, grounded in your own policies, and reuses the matching standard module&apos;s images. Staff then play it step by step in <strong className="text-neutral-dark">My Training</strong>, exactly like Annual training. Click <strong className="text-neutral-dark">Preview</strong> to step through it yourself first.</p>
+        <p><strong className="text-neutral-dark">Questions-only modules</strong> — if you just want an assessment with no lesson, use <strong className="text-purple-700">Questions only</strong> (or write your own question texts and use <strong className="text-purple-700">Generate answer options</strong> to fill in the A/B/C/D choices). These appear in My Training as a simple question list.</p>
+        <p><strong className="text-neutral-dark">Question format</strong> — every question has four options (A, B, C, D). Click the letter circle next to an option to mark it correct (it highlights teal). A question is complete when it has a text and all four options. Incomplete questions are flagged in amber.</p>
+        <p><strong className="text-neutral-dark">Saving, versions &amp; locking</strong> — click <strong className="text-neutral-dark">Save changes</strong> to save (each save is a new version in Question History). After saving a complete set, <strong className="text-neutral-dark">Lock questions</strong> records a date-stamped audit trail for CQC evidence; <strong className="text-neutral-dark">Unlock to edit</strong> reopens it.</p>
+
+        <div className="mt-3 rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Button guide</p>
+          <ul className="space-y-1.5 text-xs text-neutral-mid">
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-0.5 font-medium text-blue-700"><Sparkles size={11} /> Generate lesson &amp; questions</span> Builds the full scenario lesson + assessment, reusing images. The recommended way.</li>
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2 py-0.5 font-medium text-purple-700"><Sparkles size={11} /> Questions only</span> Generates just the assessment questions (no lesson).</li>
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2 py-0.5 font-medium text-purple-700"><Sparkles size={11} /> Generate answer options</span> Fills the A/B/C/D options around question texts you&apos;ve written.</li>
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-0.5 font-medium text-neutral-dark"><Eye size={11} /> Preview</span> Steps through the lesson + questions read-only, as staff see it (shows once a lesson exists).</li>
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg bg-teal px-2 py-0.5 font-medium text-white"><Save size={11} /> Save changes</span> Saves your edits as a new version.</li>
+            <li className="flex items-center gap-2"><span className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-0.5 font-medium text-neutral-dark"><Lock size={11} /> Lock / Unlock</span> Date-stamps the exact questions in use for CQC evidence.</li>
+          </ul>
+        </div>
       </HelpAccordion>
 
       {renderGroup('Statutory modules', 'text-teal', statutory)}
@@ -1301,7 +1322,7 @@ export default function TrainingPage() {
           { key: 'compliance', label: 'Compliance' },
           { key: 'modules',    label: 'Modules & Questions' },
           { key: 'history',    label: 'Question History' },
-          { key: 'delivery',   label: 'Delivery' },
+          { key: 'delivery',   label: 'Schedule Training Questions Delivery' },
         ] as const).map(t => (
           <button
             key={t.key}

@@ -56,7 +56,7 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
   }
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-card border border-teal/30 bg-gradient-to-br from-teal/[0.06] to-white shadow-card">
+    <div className="relative mb-6 overflow-hidden rounded-card border-2 border-blue-600 bg-gradient-to-br from-blue-50 to-white shadow-card">
       <button
         onClick={dismiss}
         aria-label="Dismiss setup guide"
@@ -70,7 +70,7 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
         <p className="mt-0.5 text-sm text-neutral-mid">A few quick steps to get the most from your account.</p>
         <div className="mt-3 flex items-center gap-3">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-            <div className="h-full rounded-full bg-teal transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+            <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
           </div>
           <span className="whitespace-nowrap text-xs font-medium text-neutral-mid">{doneCount} of {steps.length} done</span>
         </div>
@@ -80,14 +80,14 @@ export function SetupChecklist({ token, tenantId }: { token: string; tenantId: s
         {steps.map((s, i) => (
           <div key={i} className="flex items-start gap-3 bg-white p-4">
             {s.done
-              ? <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-teal" />
+              ? <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-blue-600" />
               : <Circle size={20} className="mt-0.5 shrink-0 text-gray-300" />}
             <div className="min-w-0 flex-1">
               <p className={`text-sm font-semibold ${s.done ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>{s.title}</p>
               {!s.done && (
                 <>
                   <p className="mt-0.5 text-xs leading-snug text-neutral-mid">{s.desc}</p>
-                  <Link href={s.href} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal hover:underline">
+                  <Link href={s.href} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
                     {s.cta} <ArrowRight size={12} />
                   </Link>
                 </>

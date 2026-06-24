@@ -521,6 +521,7 @@ export function createApiClient(token: string) {
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[] }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),
+      deleteTemplate: (id: string) => apiFetch<{ deleted: boolean }>(`/audits/templates/${id}`, token, { method: 'DELETE' }),
       addRoom: (room: string) => apiFetch<{ rooms: string[] }>('/audits/rooms', token, { method: 'POST', body: JSON.stringify({ room }) }),
       runs: (params?: { status?: string; template_id?: string }) => {
         const qs = new URLSearchParams()

@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { AuditBuilder } from '@/components/admin/audit-builder'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -63,6 +64,8 @@ export default function AuditsPage() {
   const [loading,   setLoading]     = useState(true)
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
+  const [showBuilder, setShowBuilder] = useState(false)
+  const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
   const [selTemplate, setSelTemplate] = useState('')
   const [auditMonth,  setAuditMonth]  = useState(() => {
@@ -89,8 +92,22 @@ export default function AuditsPage() {
       .finally(() => setLoading(false))
   }, [session?.accessToken])
 
+  async function reloadTemplates() {
+    if (!session?.accessToken) return
+    const t = await createApiClient(session.accessToken).audits.templates().catch(() => null)
+    if (t) { setTemplates(t.templates); setRooms(t.rooms ?? []) }
+  }
+  async function removeTemplate(id: string, name: string) {
+    if (!session?.accessToken) return
+    if (!confirm(`Delete the audit "${name}"? Staff allocated to it will no longer see it. Completed audit reports are kept.`)) return
+    setDeleting(id)
+    try { await createApiClient(session.accessToken).audits.deleteTemplate(id); await reloadTemplates() }
+    catch { /* ignore */ } finally { setDeleting(null) }
+  }
+
   const selTpl = templates.find(t => t.id === selTemplate)
   const needsRoom = !!selTpl?.room_based
+  const customTemplates = templates.filter(t => t.tenant_id)
 
   function requestConfirm() {
     if (!selTemplate || (needsRoom && !room.trim())) return
@@ -128,15 +145,48 @@ export default function AuditsPage() {
           <h1 className="text-2xl font-bold text-neutral-dark">Monthly Audits</h1>
           <p className="mt-1 text-sm text-neutral-mid">Complete, store, and review your monthly care audit reports</p>
         </div>
-        <button
-          onClick={() => setShowNew(v => !v)}
-          className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
-        >
-          <Plus size={15} /> New audit
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBuilder(true)}
+            className="flex items-center gap-2 rounded-btn border border-teal/40 bg-white px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/40"
+          >
+            <Wrench size={15} /> Build your own audit
+          </button>
+          <button
+            onClick={() => setShowNew(v => !v)}
+            className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
+          >
+            <Plus size={15} /> New audit
+          </button>
+        </div>
       </div>
 
       <HowToAccordion />
+
+      {showBuilder && session?.accessToken && (
+        <AuditBuilder token={session.accessToken} onClose={() => setShowBuilder(false)} onCreated={reloadTemplates} />
+      )}
+
+      {/* ── Your custom audits ─────────────────────────────────────────────────── */}
+      {customTemplates.length > 0 && (
+        <div className="mb-6 rounded-card bg-white p-5 shadow-card">
+          <p className="mb-3 text-sm font-semibold text-neutral-dark">Your audits</p>
+          <p className="mb-3 text-xs text-neutral-mid">Audits you&rsquo;ve built. Allocate them to staff under <strong>Staff → Access level</strong> and they appear in that person&rsquo;s hub.</p>
+          <div className="space-y-2">
+            {customTemplates.map(t => (
+              <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-100 bg-neutral-light/40 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-dark">{t.name}</p>
+                  <p className="text-xs text-neutral-mid capitalize">{t.frequency}{typeof t._count?.sections === 'number' ? ` · ${t._count.sections} section${t._count.sections === 1 ? '' : 's'}` : ''}</p>
+                </div>
+                <button onClick={() => removeTemplate(t.id, t.name)} disabled={deleting === t.id} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-red-200 hover:text-red-500 disabled:opacity-50">
+                  <Trash2 size={13} /> {deleting === t.id ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── New audit form ─────────────────────────────────────────────────────── */}
       {showNew && (

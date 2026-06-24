@@ -904,36 +904,55 @@ auditsRouter.post('/rooms', requireAdmin, async (req: Request, res: Response) =>
 // ─── POST /audits/templates ───────────────────────────────────────────────────
 
 auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId                  = req.user!.tenant_id
-  const { name, description, sections } = req.body
+  const tenantId = req.user!.tenant_id
+  const { name, description, frequency } = req.body
+  if (!name?.trim()) return err(res, 'MISSING_NAME', 'Audit name is required', 400)
 
-  if (!name?.trim()) return err(res, 'MISSING_NAME', 'Template name is required', 400)
-  if (!Array.isArray(sections) || sections.length === 0)
-    return err(res, 'MISSING_SECTIONS', 'At least one section is required', 400)
+  const VALID_TYPES = new Set(['yes_no', 'yes_no_na', 'findings', 'free_text'])
+  const normQ = (q: any) => (typeof q === 'string' ? { text: q, type: 'yes_no_na' } : { text: String(q?.text ?? ''), type: VALID_TYPES.has(q?.type) ? q.type : 'yes_no_na' })
+
+  // Accept either a flat `questions` array (wrapped into one section) or explicit `sections`.
+  let rawSections: Array<{ title: string; questions: any[] }>
+  if (Array.isArray(req.body.sections) && req.body.sections.length) {
+    rawSections = req.body.sections.map((s: any) => ({ title: String(s?.title ?? '').trim() || 'Questions', questions: Array.isArray(s?.questions) ? s.questions : [] }))
+  } else if (Array.isArray(req.body.questions) && req.body.questions.length) {
+    rawSections = [{ title: 'Questions', questions: req.body.questions }]
+  } else {
+    return err(res, 'MISSING_QUESTIONS', 'Add at least one question', 400)
+  }
+
+  // Clean: drop empty question texts; default each question to yes_no_na (Yes/No/N/A + notes).
+  const sections = rawSections
+    .map(s => ({ title: s.title, questions: s.questions.map(normQ).filter(q => q.text.trim()) }))
+    .filter(s => s.questions.length)
+  if (!sections.length) return err(res, 'MISSING_QUESTIONS', 'Add at least one question', 400)
 
   const template = await (prisma as any).auditTemplate.create({
     data: {
       tenant_id:   tenantId,
       name:        name.trim(),
       description: description?.trim() ?? null,
+      frequency:   ['daily', 'weekly', 'monthly', 'quarterly', 'periodic'].includes(frequency) ? frequency : 'periodic',
       sections: {
-        create: sections.map((s: any, si: number) => ({
+        create: sections.map((s, si) => ({
           title:         s.title,
           section_order: si,
-          questions: {
-            create: (s.questions as string[]).map((q, qi) => ({
-              question_text:  q,
-              question_order: qi,
-              question_type:  'yes_no',
-            })),
-          },
+          questions: { create: s.questions.map((q, qi) => ({ question_text: q.text.trim(), question_order: qi, question_type: q.type })) },
         })),
       },
     },
     include: { sections: { include: { questions: true } } },
   })
-
   ok(res, { template }, 201)
+})
+
+// ─── DELETE /audits/templates/:id — deactivate a tenant's own custom audit ────
+auditsRouter.delete('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const tpl = await (prisma as any).auditTemplate.findFirst({ where: { id: req.params.id, tenant_id: tenantId } })
+  if (!tpl) { err(res, 'NOT_FOUND', 'Audit not found (built-in audits cannot be deleted)', 404); return }
+  await (prisma as any).auditTemplate.update({ where: { id: tpl.id }, data: { is_active: false } })
+  ok(res, { deleted: true })
 })
 
 // ─── GET /audits/runs ─────────────────────────────────────────────────────────

@@ -21,6 +21,16 @@ const tid = (req: Request) => (req as any).user.tenant_id
 const uid = (req: Request) => (req as any).user.sub
 const STATUSES = ['allocated', 'attended', 'absent']
 
+// A module is "ready to send" only once it has been built: either a scenario lesson
+// (learning_content.sections) or at least one question with answer options. Empty
+// My Training shells must not be assignable, or staff get an unusable module.
+function moduleIsReady(m: any): boolean {
+  const hasLesson = Array.isArray(m?.learning_content?.sections) && m.learning_content.sections.length > 0
+  const qs = Array.isArray(m?.questions) ? m.questions : []
+  const hasUsableQuestion = qs.some((q: any) => q && Array.isArray(q.options) && q.options.length > 0)
+  return hasLesson || hasUsableQuestion
+}
+
 // ─── GET /face-to-face/modules ────────────────────────────────────────────────
 // Topic options for the session form: the tenant's own modules plus published
 // platform standard modules (the same set that can be assigned as digital training).
@@ -29,17 +39,18 @@ faceToFaceRouter.get('/modules', requireAdmin, async (req: Request, res: Respons
   try {
     const modules = await (prisma as any).trainingModule.findMany({
       where:  { is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] },
-      select: { id: true, name: true, category: true },
+      select: { id: true, name: true, category: true, questions: true, learning_content: true },
       orderBy: { name: 'asc' },
     })
     // De-duplicate by name (a tenant copy + the standard library can both exist) —
-    // prefer the tenant's own copy.
+    // prefer the tenant's own copy. Flag whether each module is built/ready to send.
     const seen = new Set<string>()
     const out: any[] = []
     for (const m of modules as any[]) {
       const k = (m.name ?? '').toLowerCase().trim()
       if (seen.has(k)) continue
-      seen.add(k); out.push(m)
+      seen.add(k)
+      out.push({ id: m.id, name: m.name, category: m.category, ready: moduleIsReady(m) })
     }
     ok(res, { modules: out })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
@@ -248,10 +259,12 @@ faceToFaceRouter.post('/sessions/:id/assign-module', requireAdmin, async (req: R
     // Only this tenant's staff, and only if the module is still assignable.
     const [members, module] = await Promise.all([
       (prisma as any).user.findMany({ where: { id: { in: userIds }, tenant_id: tenantId }, select: { id: true } }),
-      (prisma as any).trainingModule.findFirst({ where: { id: session.module_id, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true, source: true } }),
+      (prisma as any).trainingModule.findFirst({ where: { id: session.module_id, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true, source: true, questions: true, learning_content: true } }),
     ])
     const validUserIds: string[] = (members as any[]).map(m => m.id)
     if (!module) { err(res, 'NO_MODULE', 'The training module is no longer available to assign.', 400); return }
+    // Block sending a module that hasn't been built yet (no lesson, no usable questions).
+    if (!moduleIsReady(module)) { err(res, 'MODULE_NOT_READY', 'This training module hasn\'t been built yet — add a lesson or questions in Training → Modules & Questions before sending it.', 400); return }
     if (validUserIds.length === 0) { err(res, 'VALIDATION_ERROR', 'No valid recipients for this organisation.'); return }
 
     // Create the missing enrollments (skip those already enrolled and not expired).

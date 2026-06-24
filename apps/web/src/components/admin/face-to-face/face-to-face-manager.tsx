@@ -15,7 +15,7 @@ const keyOf = (iso: string) => iso.slice(0, 10)
 const prettyDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 type Staff = { id: string; name: string; job_role: string | null; is_active?: boolean }
-type Module = { id: string; name: string; category: string }
+type Module = { id: string; name: string; category: string; ready?: boolean }
 type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
 
 export function FaceToFaceManager({ token }: { token?: string }) {
@@ -144,7 +144,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
 
       {viewingId && api && (
         <SessionDetail
-          api={api} staff={staff} sessionId={viewingId}
+          api={api} staff={staff} modules={modules} sessionId={viewingId}
           onClose={() => setViewingId(null)}
           onChanged={loadSessions}
           onEdit={(s) => { setViewingId(null); setEditing({ mode: 'edit', session: s }) }}
@@ -215,8 +215,11 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Training topic</label>
         <select value={moduleId} onChange={e => setModuleId(e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
           <option value="">— Choose a module —</option>
-          {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          {modules.map(m => <option key={m.id} value={m.id}>{m.name}{m.ready === false ? ' (not built yet)' : ''}</option>)}
         </select>
+        {moduleId && modules.find(m => m.id === moduleId)?.ready === false && (
+          <p className="-mt-2 mb-3 text-xs text-amber-600">This module hasn&apos;t been built yet. You can still schedule the session, but you won&apos;t be able to send it digitally until it has a lesson or questions.</p>
+        )}
 
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Title {moduleName ? '(defaults to the module name)' : ''}</label>
         <input value={title} onChange={e => setTitle(e.target.value)} placeholder={moduleName ?? 'e.g. Moving & Handling refresher'} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
@@ -271,8 +274,8 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
 }
 
 // ─── Session detail: attendance + assign the digital module ───────────────────
-function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
-  api: ReturnType<typeof createApiClient>; staff: Staff[]; sessionId: string
+function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onEdit }: {
+  api: ReturnType<typeof createApiClient>; staff: Staff[]; modules: Module[]; sessionId: string
   onClose: () => void; onChanged: () => void; onEdit: (s: Session) => void
 }) {
   const [data, setData] = useState<any>(null)
@@ -321,6 +324,8 @@ function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
   if (!data) return null
   const att = data.attendance ?? []
   const missed = att.filter((a: any) => a.status === 'absent')
+  // Only a built module (lesson or questions) can be sent; an empty shell can't.
+  const moduleReady = data.module_id ? (modules.find(m => m.id === data.module_id)?.ready !== false) : false
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -370,7 +375,11 @@ function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
         )}
 
         {/* Send the digital module */}
-        {data.module_id ? (
+        {!data.module_id ? (
+          <p className="mt-5 rounded-lg bg-neutral-light/50 px-3 py-2 text-xs text-neutral-mid">No training module is linked to this session, so the digital module can&apos;t be sent. Add one via Edit.</p>
+        ) : !moduleReady ? (
+          <p className="mt-5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">This session&apos;s training module hasn&apos;t been built yet, so it can&apos;t be sent. Add a lesson or questions in Training → Modules &amp; Questions first.</p>
+        ) : (
           <div className="mt-5 rounded-xl border border-teal/30 bg-teal-light/10 p-4">
             <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-teal"><GraduationCap size={15} /> Send the digital module</p>
             <p className="mb-2 text-xs text-neutral-mid">Choose who should complete this training digitally (for example, those who missed). They&apos;ll get it in My Training.</p>
@@ -393,8 +402,6 @@ function SessionDetail({ api, staff, sessionId, onClose, onChanged, onEdit }: {
               {assignMsg && <span className="text-xs text-neutral-mid">{assignMsg}</span>}
             </div>
           </div>
-        ) : (
-          <p className="mt-5 rounded-lg bg-neutral-light/50 px-3 py-2 text-xs text-neutral-mid">No training module is linked to this session, so the digital module can&apos;t be sent. Add one via Edit.</p>
         )}
 
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">

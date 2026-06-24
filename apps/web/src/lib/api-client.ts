@@ -585,7 +585,7 @@ export function createApiClient(token: string) {
     },
 
     faceToFace: {
-      modules: () => apiFetch<{ modules: Array<{ id: string; name: string; category: string }> }>('/face-to-face/modules', token),
+      modules: () => apiFetch<{ modules: Array<{ id: string; name: string; category: string; ready: boolean }> }>('/face-to-face/modules', token),
       sessions: (from?: string, to?: string) => {
         const qs = new URLSearchParams()
         if (from) qs.set('from', from)

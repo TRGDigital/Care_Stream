@@ -446,6 +446,14 @@ export function createApiClient(token: string) {
           `/training/modules/${moduleId}/generate-lesson`, token, { method: 'POST' }
         ),
 
+      modulePreview: (id: string) => apiFetch<{ module: {
+        name: string; frequency: string | null; pass_mark: number | null; requires_practical: boolean; duration_minutes: number | null
+        summary: string | null; outcomes: string[]; key_points: string[]
+        sections: Array<{ heading: string; body: string; image_url: string | null }>
+        questions: Array<{ text: string; options: string[]; correct: number | null; explanation: string | null }>
+        standards: string[]; illustration_url: string | null
+      } }>(`/training/modules/${id}/preview`, token),
+
       generateAnswers: (moduleId: string, questions: Array<{ id: string; text: string }>) =>
         apiFetch<{ questions: Array<{ id: string; text: string; options: string[]; correct: number }> }>(
           `/training/modules/${moduleId}/generate-answers`, token, { method: 'POST', body: JSON.stringify({ questions }) }

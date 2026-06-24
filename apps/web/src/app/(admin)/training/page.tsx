@@ -9,8 +9,9 @@ import { AiCreditsBar } from '@/components/ai-usage'
 import { persistentCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
-  Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users,
+  Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
 } from 'lucide-react'
+import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import {
   emptyQuestion, isComplete, McqQuestionEditor,
   DAY_NAMES, type Module, type Staff, type Enrollment, type Question,
@@ -107,6 +108,8 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [saving,         setSaving]         = useState<string | null>(null)
   const [saved,          setSaved]          = useState<string | null>(null)
   const [genLoading,    setGenLoading]    = useState<Record<string, 'questions' | 'answers' | 'lesson' | null>>({})
+  const [preview,       setPreview]       = useState<{ id: string; name: string } | null>(null)
+  const moduleHasLesson = (m: any) => Array.isArray(m?.learning_content?.sections) && m.learning_content.sections.length > 0
   const [genError,      setGenError]      = useState<Record<string, string>>({})
   const [lockLoading,   setLockLoading]   = useState<string | null>(null)
   const [localLock,     setLocalLock]     = useState<Record<string, { locked: boolean; locked_at: string | null }>>({})
@@ -361,6 +364,14 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                           : <><Sparkles size={12} /> Generate answer options</>
                         }
                       </button>
+                      {moduleHasLesson(m) && (
+                        <button
+                          onClick={() => setPreview({ id: m.id, name: m.name })}
+                          className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                        >
+                          <Eye size={12} /> Preview
+                        </button>
+                      )}
                       <button
                         onClick={() => save(m)}
                         disabled={saving === m.id || !isDirty || isLocked}
@@ -446,6 +457,8 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
       </div>
     )
   }
+
+  if (preview) return <StatutoryModulePreview api={api} id={preview.id} name={preview.name} onBack={() => setPreview(null)} />
 
   return (
     <div>
@@ -1498,4 +1511,32 @@ export default function TrainingPage() {
       )}
     </div>
   )
+}
+
+// Admin read-only preview of a tenant statutory module — the same stepped player
+// staff/validators see (lesson sections then questions), not editable.
+function StatutoryModulePreview({ api, id, name, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; onBack: () => void }) {
+  const [m, setM] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    api.training.modulePreview(id)
+      .then(d => setM(d.module))
+      .catch((e: any) => setError(e?.message ?? 'Could not load the preview'))
+      .finally(() => setLoading(false))
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return (
+    <div className="mx-auto max-w-3xl">
+      <button onClick={onBack} className="mb-3 text-sm text-neutral-mid hover:text-teal">&larr; Back</button>
+      <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>
+    </div>
+  )
+  if (error || !m) return (
+    <div className="mx-auto max-w-3xl">
+      <button onClick={onBack} className="mb-3 text-sm text-neutral-mid hover:text-teal">&larr; Back</button>
+      <div className="rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error || 'Module not found'}</div>
+    </div>
+  )
+  return <ModulePreviewPlayer m={m} name={name} onBack={onBack} />
 }

@@ -663,13 +663,14 @@ export function EditModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-card bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
+      <div className="w-full max-w-4xl rounded-card bg-white p-6 shadow-xl">
         <h2 className="mb-5 text-lg font-semibold text-neutral-dark">Edit staff member</h2>
         <p className="mb-5 text-sm text-neutral-mid">Editing <strong className="text-neutral-dark">{user.name}</strong> · {user.email}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Full name</label>
             <input
               type="text"
@@ -693,6 +694,19 @@ export function EditModal({
           </div>
 
           <div>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
+            <select
+              value={form.shift_type}
+              onChange={update('shift_type')}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            >
+              <option value="any">Flexible / not specified</option>
+              <option value="day">Day shift</option>
+              <option value="night">Night shift</option>
+            </select>
+          </div>
+
+          <div className="sm:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Specialist role?</label>
             <div className="flex gap-2">
               <button type="button" onClick={() => setHasSpecialism(true)}
@@ -721,24 +735,15 @@ export function EditModal({
             )}
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
-            <select
-              value={form.shift_type}
-              onChange={update('shift_type')}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
-            >
-              <option value="any">Flexible / not specified</option>
-              <option value="day">Day shift</option>
-              <option value="night">Night shift</option>
-            </select>
+          <div className="sm:col-span-2">
+            <AccessLevelField
+              token={token}
+              role={form.role}
+              auditIds={auditIds}
+              onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
+            />
           </div>
-          <AccessLevelField
-            token={token}
-            role={form.role}
-            auditIds={auditIds}
-            onChange={v => { setForm(prev => ({ ...prev, role: v.role })); setAuditIds(v.auditIds) }}
-          />
+          </div>
 
           <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-4 space-y-3">
             <p className="text-xs font-semibold text-teal-dark">Language preferences</p>

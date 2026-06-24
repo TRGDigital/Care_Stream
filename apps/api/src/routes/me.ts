@@ -180,9 +180,8 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
     }
   }
 
-  const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng' && items.length > 0) {
-    const langName = languageNameForCode(lang, tenant?.custom_languages)
     const translated = await withTranslationBudget(
       translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName)
         .then(ts => items.map((it: any, i: number) => ({ ...it, text: ts[i].text, options: ts[i].options }))),
@@ -213,8 +212,7 @@ meRouter.get('/follow-up/lesson', async (req: Request, res: Response) => {
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
-  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
-  const langName = languageNameForCode(lang, tenant?.custom_languages)
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
 
   const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch((e: any) => {
     console.error('[me/follow-up/lesson] generate failed:', e?.message ?? e); return null
@@ -245,8 +243,7 @@ meRouter.post('/follow-up/lesson/answer', async (req: Request, res: Response) =>
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
   ])
-  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
-  const langName = languageNameForCode(lang, tenant?.custom_languages)
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
 
   const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch(() => null)
   if (!lesson) { err(res, 'NOT_FOUND', 'Lesson not found.', 404); return }
@@ -524,7 +521,7 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   if (!policy) { err(res, 'NOT_FOUND', 'Policy not found.', 404); return }
 
   const title = policyTitle(policy.filename)
-  const lang  = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+  const { code: lang } = hubContentLang(user, req.query, tenant?.custom_languages)
 
   // If the staff member's language version is already cached, serve it.
   const cachedTarget = lang === 'eng' ? null
@@ -587,8 +584,7 @@ meRouter.get('/policy/:policyId/questions', async (req: Request, res: Response) 
   const english = await downloadExtractedText(tenantId, policyId).catch(() => null)
   if (!english) { ok(res, { questions: [] }); return }
 
-  const lang     = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
-  const langName = languageNameForCode(lang, tenant?.custom_languages)
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   const questions = await withTranslationBudget(generatePolicyQuestions(english, lang, langName), 20_000, [] as string[])
   ok(res, { questions })
 })

@@ -186,7 +186,7 @@ function groupSessions(sessions: StoredSession[]): { label: string; items: Store
 // Shows the full policy text (translated into the staff member's first language
 // when their comms toggle is on) and tracks how long and how far they read.
 
-function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarkedRead, onTalk }: {
+function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarkedRead, onTalk, lang }: {
   token:         string
   policyId:      string
   stepId?:       string
@@ -194,6 +194,7 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
   onClose:       () => void
   onMarkedRead?: () => Promise<void> | void
   onTalk?:       (policyId: string, title: string) => void
+  lang?:         '2'
 }) {
   const [data,     setData]     = useState<{ title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean } | null>(null)
   const [loading,  setLoading]  = useState(true)
@@ -207,12 +208,12 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
 
   useEffect(() => {
     let active = true
-    createApiClient(token).me.policy(policyId)
+    createApiClient(token).me.policy(policyId, lang)
       .then(d => { if (active) setData(d) })
       .catch(() => {})
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [policyId, token])
+  }, [policyId, token, lang])
 
   // Accumulate active reading time (paused when the tab is hidden).
   useEffect(() => {
@@ -346,6 +347,9 @@ function ChatPageInner() {
   const [msgFeedback,  setMsgFeedback]                  = useState<Record<string, 'positive' | 'negative'>>({})
   const [replyLang,    setReplyLang]                    = useState<string>('')   // '' = auto-detect
   const [firstLang,    setFirstLang]                    = useState<string>('eng') // the staff member's own language (from their profile)
+  // If the admin enabled per-set language switching, the name of their second language
+  // (else null) — passed to the hub views to offer a "Read in <language>" switch.
+  const [secondLang,   setSecondLang]                   = useState<{ name: string } | null>(null)
   const [localizedStarters, setLocalizedStarters]       = useState<Partial<Record<DocumentCategory, string[]>>>({})
   const startersFetched = useRef<Set<string>>(new Set())
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
@@ -410,6 +414,7 @@ function ChatPageInner() {
     createApiClient(session.accessToken).me.profile()
       .then(p => {
         setFirstLang(p.first_language || 'eng')
+        if (p.allow_language_switching && p.second_language_name) setSecondLang({ name: p.second_language_name })
         let stored: string | null = null
         try { stored = localStorage.getItem(`cs_reply_lang_${userId}`) } catch { /* ignore */ }
         if (!stored && p.comms_always_first_language && p.first_language && p.first_language !== 'eng') {
@@ -900,12 +905,12 @@ function ChatPageInner() {
 
         {/* Induction view */}
         {view === 'induction' && session?.accessToken && (
-          <InductionView token={session.accessToken} userId={userId} onSavedChange={refreshSavedPolicies} onTalkToPolicy={talkToPolicy} />
+          <InductionView token={session.accessToken} userId={userId} secondLang={secondLang} onSavedChange={refreshSavedPolicies} onTalkToPolicy={talkToPolicy} />
         )}
 
         {/* Training view */}
         {view === 'training' && session?.accessToken && (
-          <TrainingView token={session.accessToken} userId={userId} />
+          <TrainingView token={session.accessToken} userId={userId} secondLang={secondLang} />
         )}
 
         {/* Audits view (admin-role staff only) */}
@@ -915,21 +920,21 @@ function ChatPageInner() {
 
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
-          <AnnualTrainingView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
+          <AnnualTrainingView token={session.accessToken} userId={userId} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
-          <FollowUpView token={session.accessToken} userId={userId} onTalkToPolicy={talkToPolicy} onChange={() => {
+          <FollowUpView token={session.accessToken} userId={userId} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
 
         {/* CQC Prep view */}
         {view === 'cqc' && session?.accessToken && (
-          <CqcView token={session.accessToken} onChange={() => {
+          <CqcView token={session.accessToken} secondLang={secondLang} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}
@@ -1455,17 +1460,20 @@ function MessageBubble({
 // "Learn & retry" (a short, policy-grounded micro-lesson then a fresh check
 // question). Closing a gap either way clears it from here.
 
-function FollowUpView({ token, userId, onChange, onTalkToPolicy }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = null }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null }) {
   const api = createApiClient(token)
   const ck = hubKey('followup', userId)
   const cached = persistentCache.get<any[]>(ck)
   const [items,   setItems]   = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)
+  // Session-only second-language switch for the whole follow-up list (each card is a
+  // single question, so one toggle flips them all rather than one per micro-card).
+  const [lang, setLang] = useState<'1' | '2'>('1')
 
   function load() {
-    api.me.followUp().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
+    api.me.followUp(lang === '2' ? '2' : undefined).then(d => { setItems(d.items); if (lang === '1') persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
   }
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const keyOf = (it: any) => `${it.source}:${it.enrollment_id}:${it.ref}`
 
@@ -1484,7 +1492,18 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy }: { token: stri
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-1 text-xl font-bold text-neutral-dark">Follow-up</h2>
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-bold text-neutral-dark">Follow-up</h2>
+          {secondLang && (
+            <button
+              onClick={() => { setLoading(true); setLang(l => l === '2' ? '1' : '2') }}
+              title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read these in ${secondLang.name} instead of English`}
+              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+            >
+              <Globe size={12} /> {secondLang.name}
+            </button>
+          )}
+        </div>
         <p className="mb-5 text-sm text-neutral-mid">A few things to revisit. Learn the point, then answer — or just retry. Either way it clears from here.</p>
         <div className="space-y-4">
           {items.map(it => (
@@ -1492,6 +1511,7 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy }: { token: stri
               key={keyOf(it)}
               it={it}
               token={token}
+              lang={lang === '2' ? '2' : undefined}
               onTalkToPolicy={onTalkToPolicy}
               onResolved={() => { setTimeout(() => { load(); onChange?.() }, 2200) }}
             />
@@ -1503,7 +1523,7 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy }: { token: stri
 }
 
 // One knowledge gap: choose "Learn & retry" or "Just retry".
-function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+function GapCard({ it, token, onResolved, onTalkToPolicy, lang }: { it: any; token: string; onResolved: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; lang?: '2' }) {
   const api = createApiClient(token)
   const [mode,        setMode]        = useState<'choose' | 'retry' | 'learn'>('choose')
   const [lesson,      setLesson]      = useState<any>(null)
@@ -1523,7 +1543,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
     if (lesson || lessonState === 'loading') return
     setLessonState('loading')
     try {
-      const d = await api.me.followUpLesson({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id })
+      const d = await api.me.followUpLesson({ source: it.source, ref: it.ref, enrollment_id: it.enrollment_id, lang })
       setLesson(d.lesson); setLessonState('idle')
     } catch { setLessonState('error') }
   }
@@ -1692,7 +1712,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy }: { it: any; token: st
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const
 
-function TrainingView({ token, userId }: { token: string; userId: string }) {
+function TrainingView({ token, userId, secondLang = null }: { token: string; userId: string; secondLang?: { name: string } | null }) {
   const api = createApiClient(token)
 
   const ck = hubKey('my-training', userId)
@@ -1711,9 +1731,40 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
   const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
   // A statutory module that has a scenario lesson plays through the rich stepped
   // player (same as Annual training), via the annual TakeModule/CertView.
-  const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string } | null>(null)
+  const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string } | null>(null)
+  // Per-set second-language switch (session-only). enrollmentId → '2' when flipped.
+  const [langByEnr,  setLangByEnr]   = useState<Record<string, '2'>>({})
+  // Lazily-fetched second-language copy of the enrollment list, keyed by enrollment id,
+  // so a flipped module shows its lesson/questions/options translated. Answers use
+  // language-independent letters, so submission is unchanged.
+  const [secondEnr,  setSecondEnr]   = useState<Record<string, any> | null>(null)
+  const [loadingLang, setLoadingLang] = useState(false)
   function toggleModule(id: string) {
     setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+  // The enrollment to render for a given row — second-language copy when flipped on.
+  function viewOf(enr: any) {
+    return langByEnr[enr.id] && secondEnr?.[enr.id] ? secondEnr[enr.id] : enr
+  }
+  async function toggleLang(enrollmentId: string) {
+    if (langByEnr[enrollmentId]) {
+      setLangByEnr(prev => { const n = { ...prev }; delete n[enrollmentId]; return n })
+      return
+    }
+    if (!secondEnr) {
+      setLoadingLang(true)
+      try {
+        const d = await api.training.myEnrollments('2')
+        const map: Record<string, any> = {}
+        for (const e of d.enrollments) map[e.id] = e
+        setSecondEnr(map)
+      } catch {
+        setLoadingLang(false)
+        return
+      }
+      setLoadingLang(false)
+    }
+    setLangByEnr(prev => ({ ...prev, [enrollmentId]: '2' }))
   }
 
   async function load() {
@@ -1764,7 +1815,7 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
     })
   }
 
-  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
+  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} initialLang={taking.lang ?? '1'} onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
   if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} backLabel="My Training" onExit={() => { setTaking(null); load() }} />
 
   if (loading) {
@@ -1822,7 +1873,11 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
 
         <div className="space-y-6">
           {enrollments.map(enrollment => {
-            const questions   = (Array.isArray(enrollment.module?.questions) ? enrollment.module.questions : []) as Array<{ id: string; text: string; options: string[] }>
+            // Displayed text (module name, question text + options) comes from the
+            // second-language copy when this module is flipped; progress/answers stay
+            // on the original (letters are language-independent).
+            const view        = viewOf(enrollment)
+            const questions   = (Array.isArray(view.module?.questions) ? view.module.questions : []) as Array<{ id: string; text: string; options: string[] }>
             const answers     = Array.isArray(enrollment.answers) ? enrollment.answers : []
             const totalQs     = questions.length
             const answeredQs  = answers.length
@@ -1870,8 +1925,18 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
+                    {secondLang && (
+                      <button
+                        onClick={() => toggleLang(enrollment.id)}
+                        disabled={loadingLang}
+                        title={langByEnr[enrollment.id] ? `This set will open in ${secondLang.name}. Tap to keep English.` : `Read this set in ${secondLang.name} instead of English`}
+                        className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium disabled:opacity-50 ${langByEnr[enrollment.id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+                      >
+                        <Globe size={12} /> {secondLang.name}
+                      </button>
+                    )}
                     {isDone && <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
-                    <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name })} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                    <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name, lang: langByEnr[enrollment.id] })} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
                       {isDone ? 'Review' : enrollment.status === 'in_progress' ? 'Continue' : 'Start'}
                     </button>
                   </div>
@@ -1890,7 +1955,7 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-neutral-dark">{enrollment.module.name}</p>
+                      <p className="font-semibold text-neutral-dark">{view.module.name}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${categoryBadge}`}>
                           {enrollment.module.category}
@@ -1901,6 +1966,16 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {secondLang && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleLang(enrollment.id) }}
+                          disabled={loadingLang}
+                          title={langByEnr[enrollment.id] ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read this set in ${secondLang.name} instead of English`}
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${langByEnr[enrollment.id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+                        >
+                          <Globe size={12} /> {secondLang.name}
+                        </button>
+                      )}
                       <span className="text-sm text-neutral-mid">{answeredQs}/{totalQs} answered</span>
                       {multi && (isExpanded ? <ChevronUp size={16} className="text-neutral-mid" /> : <ChevronDown size={16} className="text-neutral-mid" />)}
                     </div>
@@ -2087,7 +2162,7 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
 
 // ─── InductionView ────────────────────────────────────────────────────────────
 
-function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token: string; userId: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLang = null }: { token: string; userId: string; onSavedChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null }) {
   const api = createApiClient(token)
   const ck = hubKey('induction', userId)
   const cachedInd = persistentCache.get<any[]>(ck)
@@ -2097,6 +2172,30 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
   const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
   const [savedSet,    setSavedSet]    = useState<Set<string>>(new Set())
+  // Per-flow second-language switch (session-only). enrollment_id → '2' when flipped.
+  const [langByEnr,  setLangByEnr]   = useState<Record<string, '2'>>({})
+  const [secondEnr,  setSecondEnr]   = useState<Record<string, any> | null>(null)
+  const [loadingLang, setLoadingLang] = useState(false)
+  function viewOf(e: any) {
+    return langByEnr[e.enrollment_id] && secondEnr?.[e.enrollment_id] ? secondEnr[e.enrollment_id] : e
+  }
+  async function toggleLang(enrollmentId: string) {
+    if (langByEnr[enrollmentId]) {
+      setLangByEnr(prev => { const n = { ...prev }; delete n[enrollmentId]; return n })
+      return
+    }
+    if (!secondEnr) {
+      setLoadingLang(true)
+      try {
+        const d = await api.onboarding.myEnrollments('2')
+        const map: Record<string, any> = {}
+        for (const e of d.enrollments) map[e.enrollment_id] = e
+        setSecondEnr(map)
+      } catch { setLoadingLang(false); return }
+      setLoadingLang(false)
+    }
+    setLangByEnr(prev => ({ ...prev, [enrollmentId]: '2' }))
+  }
 
   async function savePolicy(policyId: string) {
     setSavedSet(prev => new Set(prev).add(policyId))
@@ -2153,15 +2252,30 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
             const done  = e.steps.filter((s: any) => s.progress?.completed_at).length
             const total = e.steps.length
             const pct   = total > 0 ? Math.round((done / total) * 100) : 0
+            // Displayed step text (questions/options/titles) comes from the second-language
+            // copy when this flow is flipped; progress logic stays on the original.
+            const v = viewOf(e)
             return (
               <div key={e.enrollment_id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div className="border-b border-gray-100 px-5 py-4">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-neutral-dark">{e.flow_name}</p>
-                    {e.completed_at
-                      ? <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Complete</span>
-                      : <span className="text-xs text-neutral-mid">{done}/{total} steps</span>
-                    }
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-neutral-dark">{v.flow_name}</p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {secondLang && (
+                        <button
+                          onClick={() => toggleLang(e.enrollment_id)}
+                          disabled={loadingLang}
+                          title={langByEnr[e.enrollment_id] ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read this induction in ${secondLang.name} instead of English`}
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${langByEnr[e.enrollment_id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+                        >
+                          <Globe size={12} /> {secondLang.name}
+                        </button>
+                      )}
+                      {e.completed_at
+                        ? <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Complete</span>
+                        : <span className="text-xs text-neutral-mid">{done}/{total} steps</span>
+                      }
+                    </div>
                   </div>
                   <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
                     <div className="h-1.5 rounded-full bg-teal transition-all" style={{ width: `${pct}%` }} />
@@ -2177,6 +2291,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
                   {e.steps.map((step: any, i: number) => {
                     const isCompleted = !!step.progress?.completed_at
                     const isLocked    = i > 0 && !e.steps[i - 1].progress?.completed_at
+                    const vstep       = v.steps?.[i] ?? step   // translated text when flow is flipped
                     return (
                       <div key={step.id} className={`py-4 ${isLocked ? 'opacity-40' : ''}`}>
                         <div className="flex items-start gap-3">
@@ -2186,7 +2301,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
                           </div>
                           <div className="flex-1">
                             <p className={`font-medium text-sm ${isCompleted ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>
-                              {step.type === 'answer_question' && step.question ? step.question : step.title}
+                              {step.type === 'answer_question' && vstep.question ? vstep.question : vstep.title}
                             </p>
                             <p className="text-xs text-neutral-mid mt-0.5">
                               {step.type === 'read_policy' ? 'Read policy' : 'Answer question'}
@@ -2223,7 +2338,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
                             {!isCompleted && !isLocked && step.type === 'answer_question' && Array.isArray(step.options) && step.options.length > 0 && (
                               <div className="mt-3 space-y-2">
                                 <div className="space-y-1.5">
-                                  {step.options.map((opt: string, oi: number) => (
+                                  {(vstep.options ?? step.options).map((opt: string, oi: number) => (
                                     <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm
                                       ${String(answers[step.id]) === String(oi) ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
                                       <input
@@ -2302,6 +2417,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy }: { token
           policyId={viewer.policyId}
           stepId={viewer.stepId}
           enrollmentId={viewer.enrollmentId}
+          lang={langByEnr[viewer.enrollmentId] ? '2' : undefined}
           onClose={() => setViewer(null)}
           onMarkedRead={async () => { await completeStep(viewer.enrollmentId, viewer.stepId) }}
           onTalk={onTalkToPolicy ? (id, t) => { setViewer(null); onTalkToPolicy(id, t) } : undefined}

@@ -264,8 +264,7 @@ onboardingRouter.get('/my', async (req, res) => {
     // Deliver the induction in the staff member's first language when their
     // comms toggle is on (default). Step titles and MCQ questions/options are
     // translated; option order is preserved so answer indices stay valid.
-    const langCode = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
-    const langName = languageNameForCode(langCode, tenant?.custom_languages)
+    const { code: langCode, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
     const translate = langCode !== 'eng'
 
     // English baseline — always returned, even if translation fails.

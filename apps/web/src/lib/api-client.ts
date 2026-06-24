@@ -330,8 +330,8 @@ export function createApiClient(token: string) {
         apiFetch<{ enrolled: number }>(`/onboarding/flows/${flowId}/enroll`, token, { method: 'POST', body: JSON.stringify(data) }),
       flowProgress: (flowId: string) =>
         apiFetch<{ flow: any; enrollments: any[] }>(`/onboarding/flows/${flowId}/progress`, token),
-      myEnrollments: () =>
-        apiFetch<{ enrollments: any[] }>('/onboarding/my', token),
+      myEnrollments: (lang?: '2') =>
+        apiFetch<{ enrollments: any[] }>(`/onboarding/my${lang ? `?lang=${lang}` : ''}`, token),
       completeStep: (enrollmentId: string, stepId: string, data?: { answer_text?: string }) =>
         apiFetch<{ progress: any; enrollment_complete: boolean }>(
           `/onboarding/enrollments/${enrollmentId}/steps/${stepId}/complete`,
@@ -408,8 +408,8 @@ export function createApiClient(token: string) {
       complete: (enrollmentId: string, data?: { certificate_url?: string }) =>
         apiFetch<{ enrollment: any }>(`/training/enrollments/${enrollmentId}/complete`, token, { method: 'POST', body: JSON.stringify(data ?? {}) }),
 
-      myEnrollments: () =>
-        apiFetch<{ enrollments: any[] }>('/training/my-enrollments', token),
+      myEnrollments: (lang?: '2') =>
+        apiFetch<{ enrollments: any[] }>(`/training/my-enrollments${lang ? `?lang=${lang}` : ''}`, token),
 
       removeEnrollment: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/training/enrollments/${id}`, token, { method: 'DELETE' }),
@@ -512,8 +512,8 @@ export function createApiClient(token: string) {
         apiFetch<{ delivery: any }>(`/cqc-questions/deliveries/${deliveryId}/retry`, token, { method: 'POST' }),
       deliveries: () =>
         apiFetch<{ deliveries: any[] }>('/cqc-questions/deliveries', token),
-      myDeliveries: () =>
-        apiFetch<{ deliveries: any[] }>('/cqc-questions/my-deliveries', token),
+      myDeliveries: (lang?: '2') =>
+        apiFetch<{ deliveries: any[] }>(`/cqc-questions/my-deliveries${lang ? `?lang=${lang}` : ''}`, token),
       submitAnswer: (deliveryId: string, answer_text: string) =>
         apiFetch<{ delivery: any; score: number; feedback: string; model_answer: string | null }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text }) }),
     },
@@ -566,14 +566,14 @@ export function createApiClient(token: string) {
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),
         evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
       },
-      followUp: () => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>('/me/follow-up', token),
-      followUpLesson: (p: { source: string; ref: string; enrollment_id: string }) =>
-        apiFetch<{ lesson: { why: string; key_points: string[]; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[] }; policy_id?: string | null; policy_title?: string | null }; lang: string }>(`/me/follow-up/lesson?source=${encodeURIComponent(p.source)}&ref=${encodeURIComponent(p.ref)}&enrollment_id=${encodeURIComponent(p.enrollment_id)}`, token),
+      followUp: (lang?: '2') => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[] }> }>(`/me/follow-up${lang ? `?lang=${lang}` : ''}`, token),
+      followUpLesson: (p: { source: string; ref: string; enrollment_id: string; lang?: '2' }) =>
+        apiFetch<{ lesson: { why: string; key_points: string[]; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[] }; policy_id?: string | null; policy_title?: string | null }; lang: string }>(`/me/follow-up/lesson?source=${encodeURIComponent(p.source)}&ref=${encodeURIComponent(p.ref)}&enrollment_id=${encodeURIComponent(p.enrollment_id)}${p.lang ? `&lang=${p.lang}` : ''}`, token),
       followUpLessonAnswer: (data: { source: string; ref: string; enrollment_id: string; selected: number }) =>
         apiFetch<{ correct: boolean; resolved?: boolean; correct_option: number }>('/me/follow-up/lesson/answer', token, { method: 'POST', body: JSON.stringify(data) }),
       followUpResolved: (data: { source: string; ref: string; method: 'learn' | 'retry'; label?: string }) =>
         apiFetch<{ logged: boolean }>('/me/follow-up/resolved', token, { method: 'POST', body: JSON.stringify(data) }),
-      policy: (policyId: string) => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}`, token),
+      policy: (policyId: string, lang?: '2') => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}${lang ? `?lang=${lang}` : ''}`, token),
       policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>
         apiFetch<{ recorded: boolean }>('/me/policy/read', token, { method: 'POST', body: JSON.stringify(data) }),

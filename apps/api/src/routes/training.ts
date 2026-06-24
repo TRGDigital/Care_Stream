@@ -777,8 +777,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
     // on (default) and their first language isn't English, deliver the module
     // name and every question (text + options) translated into it. Option order
     // is preserved, so the A/B/C/D answer mapping stays valid.
-    const langCode = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
-    const langName = languageNameForCode(langCode, tenant?.custom_languages)
+    const { code: langCode, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
     const translate = langCode !== 'eng'
 
     // English baseline — always returned, even if translation fails.

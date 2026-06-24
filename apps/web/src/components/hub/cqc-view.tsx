@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight,
-  ClipboardList, Loader2, RotateCcw, Send, Star,
+  ClipboardList, Globe, Loader2, RotateCcw, Send, Star,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -252,12 +252,15 @@ function ResultCard({ delivery, token, onUpdated }: {
 // Rendered inside the hub (chat) layout so the sidebar persists, and by the
 // standalone /cqc route. onChange lets the host refresh the pending-count badge.
 
-export function CqcView({ token, onChange }: { token: string; onChange?: () => void }) {
+export function CqcView({ token, onChange, secondLang = null }: { token: string; onChange?: () => void; secondLang?: { name: string } | null }) {
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
   const [expanded, setExpanded]     = useState<string | null>(null)        // question card open
   const [openDomains, setOpenDomains] = useState<Set<string>>(new Set())   // domain accordions open
+  // Session-only second-language switch for the whole CQC prep list (each card is a
+  // single question, so one toggle flips them all).
+  const [lang, setLang] = useState<'1' | '2'>('1')
   const toggleDomain = (key: string) =>
     setOpenDomains(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
 
@@ -265,7 +268,7 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
     if (!token) return
     try {
       const api = createApiClient(token)
-      const res = await api.cqcQuestions.myDeliveries()
+      const res = await api.cqcQuestions.myDeliveries(lang === '2' ? '2' : undefined)
       setDeliveries(res.deliveries)
       const first = res.deliveries.find((d: Delivery) => d.status === 'pending')
       if (first) { setExpanded(first.id); setOpenDomains(new Set([`p:${first.question.domain}`])) }
@@ -274,7 +277,7 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, lang])
 
   useEffect(() => { load() }, [load])
 
@@ -299,11 +302,22 @@ export function CqcView({ token, onChange }: { token: string; onChange?: () => v
   return (
     <div className="flex-1 overflow-y-auto">
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Practise answering the kinds of questions a CQC inspector would ask you. Write your answers in your own words — there&apos;s no multiple choice.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Practise answering the kinds of questions a CQC inspector would ask you. Write your answers in your own words — there&apos;s no multiple choice.
+          </p>
+        </div>
+        {secondLang && (
+          <button
+            onClick={() => { setLoading(true); setLang(l => l === '2' ? '1' : '2') }}
+            title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in English.` : `Read these questions in ${secondLang.name} instead of English`}
+            className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-700'}`}
+          >
+            <Globe className="w-3 h-3" /> {secondLang.name}
+          </button>
+        )}
       </div>
 
       {(pending.length > 0 || evaluated.length > 0) && (

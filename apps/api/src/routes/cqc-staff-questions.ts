@@ -500,9 +500,8 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
     // Deliver CQC questions in the staff member's own language (parity with training,
     // induction and chat). Translate the question, the revealed model answer and the
     // AI feedback in batched, cached passes; fall back to English if it runs over budget.
-    const lang = user?.comms_always_first_language === false ? 'eng' : ((user?.first_language as string) ?? 'eng')
+    const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
     if (lang !== 'eng' && safe.length) {
-      const langName = languageNameForCode(lang, tenant?.custom_languages)
       safe = await withTranslationBudget((async () => {
         const [qT, mT, fT] = await Promise.all([
           translateTextsBatch(safe.map(d => d.rephrased_q ?? ''), lang, langName),

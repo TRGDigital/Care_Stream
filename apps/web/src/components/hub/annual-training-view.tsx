@@ -25,30 +25,27 @@ const STATE_META: Record<string, { label: string; cls: string }> = {
 
 function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 
-export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
-  const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string }>({ mode: 'list' })
-  // If the admin enabled per-set language switching for this staff member, offer the
-  // "read in <second language>" toggle inside each module.
-  const [secondLang, setSecondLang] = useState<{ name: string } | null>(null)
-  useEffect(() => {
-    createApiClient(token).me.profile()
-      .then(p => { if (p.allow_language_switching && p.second_language_name) setSecondLang({ name: p.second_language_name }) })
-      .catch(() => {})
-  }, [token])
-  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
+export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy, secondLang = null }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null }) {
+  // If the admin enabled per-set language switching, secondLang is the name of their
+  // second language; modules then offer a "Read in <language>" switch (card + inside).
+  const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string }>({ mode: 'list' })
+  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} initialLang={view.lang ?? '1'} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
-  return <AnnualList token={token} userId={userId} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
+  return <AnnualList token={token} userId={userId} secondLang={secondLang} onOpen={(id, name, lang) => setView({ mode: 'take', id, name, lang })} onCert={(id) => setView({ mode: 'cert', id })} />
 }
 
 // ─── List ─────────────────────────────────────────────────────────────────────
 
-function AnnualList({ token, userId, onOpen, onCert }: { token: string; userId: string; onOpen: (id: string, name: string) => void; onCert: (id: string) => void }) {
+function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { token: string; userId: string; onOpen: (id: string, name: string, lang?: '2') => void; onCert: (id: string) => void; secondLang?: { name: string } | null }) {
   const api = createApiClient(token)
   const ck = hubKey('annual', userId)
   const cached = persistentCache.get<any[]>(ck)
   const [items, setItems] = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)   // instant from cache, revalidate in background
   const [error, setError] = useState(false)
+  // Per-card: which modules the staff member has flipped to their second language
+  // (session-only — resets on revisit). Opening the module uses the chosen language.
+  const [cardLang, setCardLang] = useState<Record<string, '2'>>({})
 
   useEffect(() => {
     api.me.annualTraining.list()
@@ -100,9 +97,18 @@ function AnnualList({ token, userId, onOpen, onCert }: { token: string; userId: 
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {secondLang && (!isDone || it.state === 'overdue' || it.state === 'due_soon') && (
+            <button
+              onClick={() => setCardLang(prev => { const next = { ...prev }; if (next[it.enrollment_id]) delete next[it.enrollment_id]; else next[it.enrollment_id] = '2'; return next })}
+              title={cardLang[it.enrollment_id] ? `This set will open in ${secondLang.name}. Tap to keep English.` : `Read this set in ${secondLang.name} instead of English`}
+              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${cardLang[it.enrollment_id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+            >
+              <Globe size={12} /> {secondLang.name}
+            </button>
+          )}
           {isDone && <button onClick={() => onCert(it.enrollment_id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
           {(!isDone || it.state === 'overdue' || it.state === 'due_soon') && (
-            <button onClick={() => onOpen(it.enrollment_id, it.name)} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+            <button onClick={() => onOpen(it.enrollment_id, it.name, cardLang[it.enrollment_id])} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
               {it.state === 'in_progress' ? 'Continue' : isDone ? 'Renew' : 'Start'}
             </button>
           )}

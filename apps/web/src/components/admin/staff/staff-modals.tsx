@@ -834,6 +834,7 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
   const [loading,     setLoading]     = useState(true)
   const [view,        setView]        = useState<'detail' | 'assign' | 'onboard'>('detail')
   const [savingComms, setSavingComms] = useState(false)
+  const [savingSwitch, setSavingSwitch] = useState(false)
 
   function load() {
     setLoading(true)
@@ -854,6 +855,18 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
     } catch {
       setData(prev => prev ? { ...prev, user: { ...prev.user, comms_always_first_language: !v } } : prev)
     } finally { setSavingComms(false) }
+  }
+
+  async function toggleAllowSwitch(v: boolean) {
+    if (!data) return
+    setSavingSwitch(true)
+    setData(prev => prev ? { ...prev, user: { ...prev.user, allow_language_switching: v } } : prev)
+    try {
+      const res = await createApiClient(token).users.update(userId, { allow_language_switching: v })
+      onChanged(res.user)
+    } catch {
+      setData(prev => prev ? { ...prev, user: { ...prev.user, allow_language_switching: !v } } : prev)
+    } finally { setSavingSwitch(false) }
   }
 
   const user = data?.user
@@ -944,6 +957,9 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
                 <Field label="Second language">{user.second_language ? langNameOf(user.second_language, languages) : <span className="italic text-neutral-mid/60">None</span>}</Field>
                 <div className="col-span-2">
                   <CommsLanguageToggle on={user.comms_always_first_language !== false} onChange={toggleComms} langName={langNameOf(user.first_language, languages)} disabled={savingComms} />
+                </div>
+                <div className="col-span-2">
+                  <LanguageSwitchToggle on={user.allow_language_switching === true} onChange={toggleAllowSwitch} secondLangName={user.second_language ? langNameOf(user.second_language, languages) : null} disabled={savingSwitch} />
                 </div>
               </div>
             </div>

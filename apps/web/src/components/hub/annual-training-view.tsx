@@ -326,6 +326,8 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
           const progressPct = Math.round((idx / totalStages) * 100)
           const sec         = cur.type === 'overview' ? null : sections[cur.i]
           const picked      = sec ? checkSel[sec.id] : undefined
+          // On a quick-check step, the learner must answer before they can move on.
+          const needsAnswer = cur.type === 'check' && picked === undefined
           const isRight     = sec ? picked === sec.check?.correct : false
           const label       = cur.type === 'overview' ? 'Overview'
             : cur.type === 'teach' ? `Section ${cur.i + 1} of ${sections.length}`
@@ -419,8 +421,8 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                   <ChevronLeft size={15} /> {step === 0 ? 'Exit' : 'Back'}
                 </button>
                 {isLastLearn
-                  ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Start assessment ({qs.length}) →</button>
-                  : <button onClick={() => setStep(step + 1)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90">Next →</button>}
+                  ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Start assessment ({qs.length}) →</button>
+                  : <button onClick={() => setStep(step + 1)} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Next →</button>}
               </div>
             </div>
           )

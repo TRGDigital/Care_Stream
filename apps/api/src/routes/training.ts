@@ -165,6 +165,35 @@ trainingRouter.get('/modules/:id/full', requireAdmin, async (req: Request, res: 
   ok(res, { module: { ...module, illustration_url: illustrationUrl(module.illustration_key) } })
 })
 
+// GET /training/standard-modules/:id/full — read-only full content of a standard
+// (platform) module, so a tenant admin can preview exactly what staff will see.
+// View-only: tenant admins have no edit endpoint for tenant_id=null modules.
+trainingRouter.get('/standard-modules/:id/full', requireAdmin, async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: null, source: 'ai_generated' } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const lc = (module.learning_content ?? {}) as any
+  const sections = Array.isArray(lc.sections)
+    ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: s?.image_key ? illustrationUrl(s.image_key) : null })).filter((s: any) => s.heading)
+    : []
+  const questions = Array.isArray(module.questions)
+    ? (module.questions as any[]).map(q => ({ text: String(q?.text ?? ''), options: Array.isArray(q?.options) ? q.options.map(String) : [], correct: typeof q?.correct === 'number' ? q.correct : null, explanation: q?.explanation ?? null }))
+    : []
+  ok(res, { module: {
+    name:               module.name,
+    frequency:          module.frequency,
+    pass_mark:          module.pass_mark,
+    requires_practical: module.requires_practical,
+    duration_minutes:   module.duration_minutes,
+    summary:            typeof lc.summary === 'string' ? lc.summary : null,
+    outcomes:           Array.isArray(lc.outcomes) ? lc.outcomes.map(String) : [],
+    key_points:         Array.isArray(lc.key_points) ? lc.key_points.map(String) : [],
+    sections,
+    questions,
+    standards:          Array.isArray(module.standards) ? (module.standards as any[]).map(s => s?.label).filter(Boolean) : [],
+    illustration_url:   illustrationUrl(module.illustration_key),
+  } })
+})
+
 // POST /training/modules/:id/generate-image — generate a cover illustration (uses 1 AI credit)
 trainingRouter.post('/modules/:id/generate-image', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

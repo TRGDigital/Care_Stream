@@ -381,6 +381,13 @@ export function createApiClient(token: string) {
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       aiUsage: () => apiFetch<{ credits: { used: number; limit: number | null; remaining: number | null; resets_at: string }; queries: { used: number; limit: number | null; remaining: number | null; resets_at: string } }>('/training/ai-usage', token),
       moduleFull: (id: string) => apiFetch<{ module: any }>(`/training/modules/${id}/full`, token),
+      standardModuleFull: (id: string) => apiFetch<{ module: {
+        name: string; frequency: string | null; pass_mark: number | null; requires_practical: boolean; duration_minutes: number | null
+        summary: string | null; outcomes: string[]; key_points: string[]
+        sections: Array<{ heading: string; body: string; image_url: string | null }>
+        questions: Array<{ text: string; options: string[]; correct: number | null; explanation: string | null }>
+        standards: string[]; illustration_url: string | null
+      } }>(`/training/standard-modules/${id}/full`, token),
       updateModule: (id: string, data: any) =>
         apiFetch<{ module: any }>(`/training/modules/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       approveModule: (id: string, approved = true) =>

@@ -7,7 +7,7 @@ import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { Button } from '@/components/ui/button'
 import {
-  ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users,
+  ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users, Eye,
   Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
 } from 'lucide-react'
 
@@ -25,7 +25,7 @@ export default function AnnualTrainingPage() {
   const [busy,    setBusy]    = useState<string | null>(null)   // topic id being generated
   const [helpOpen, setHelpOpen] = useState(false)
   const [usage,   setUsage]   = useState<{ used: number; limit: number | null; remaining: number | null; resets_at: string } | null>(null)
-  const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string }>({ mode: 'list' })
+  const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
 
   function load() {
     if (!api) return
@@ -49,6 +49,7 @@ export default function AnnualTrainingPage() {
 
   if (view.mode === 'review' && api) return <ReviewModule api={api} id={view.id} onBack={() => { load(); setView({ mode: 'list' }) }} onAssign={(id, name) => setView({ mode: 'assign', id, name })} />
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
+  if (view.mode === 'view'   && api) return <ViewStandardModule api={api} id={view.id} name={view.name} onBack={() => setView({ mode: 'list' })} />
 
   const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g) })).filter(g => g.items.length)
   const byGroupEmpty = byGroup.length === 0
@@ -136,6 +137,11 @@ export default function AnnualTrainingPage() {
                       <div className="flex shrink-0 items-center gap-2">
                         {!m && (
                           <>
+                            {t.standard_module && (
+                              <button onClick={() => setView({ mode: 'view', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                                <Eye size={12} /> View training
+                              </button>
+                            )}
                             {t.standard_module && (
                               <button onClick={() => setView({ mode: 'assign', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
                                 <Users size={12} /> Assign standard
@@ -437,6 +443,112 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
         </div>
         <Button onClick={assign} disabled={!sel.size || saving} size="md" className="mt-5">{saving ? 'Assigning…' : `Assign to ${sel.size || 0} staff`}</Button>
       </div>
+    </div>
+  )
+}
+
+// ─── Read-only viewer for a STANDARD module — admins preview what staff will see ──
+function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; onBack: () => void }) {
+  const [m, setM] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.training.standardModuleFull(id)
+      .then(d => setM(d.module))
+      .catch((e: any) => setError(e?.message ?? 'Could not load the module'))
+      .finally(() => setLoading(false))
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="mx-auto max-w-3xl pb-16">
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+
+      {loading ? (
+        <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>
+      ) : error || !m ? (
+        <div className="rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error || 'Module not found'}</div>
+      ) : (
+        <div>
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">Standard module · view only</span>
+          <h1 className="mt-3 text-2xl font-bold text-neutral-dark">{m.name || name}</h1>
+          <div className="mb-5 mt-2 flex flex-wrap gap-2 text-xs">
+            {m.frequency && <span className="rounded-full bg-teal/10 px-2.5 py-1 font-medium text-teal">{FREQ_LABEL[m.frequency] ?? m.frequency}</span>}
+            {m.pass_mark != null && <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-neutral-mid">Pass mark {m.pass_mark}%</span>}
+            {m.duration_minutes != null && <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-neutral-mid">~{m.duration_minutes} min</span>}
+            {m.requires_practical && <span className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-amber-700">Practical assessment also required</span>}
+          </div>
+
+          {m.illustration_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="mb-6 aspect-[16/9] w-full rounded-xl border border-gray-100 object-cover" />
+          )}
+
+          {m.summary && <p className="mb-6 text-sm leading-relaxed text-neutral-dark">{m.summary}</p>}
+
+          {m.outcomes?.length > 0 && (
+            <div className="mb-6 rounded-xl bg-neutral-light/60 p-4">
+              <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What staff will be able to do</p>
+              <ul className="space-y-1">{m.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><span className="text-teal">✓</span>{o}</li>)}</ul>
+            </div>
+          )}
+
+          {m.sections?.length > 0 && (
+            <div className="mb-6 space-y-4">
+              <p className="text-sm font-semibold text-neutral-dark">Lesson</p>
+              {m.sections.map((s: any, i: number) => (
+                <div key={i} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-card">
+                  {s.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={apiAssetUrl(s.image_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
+                  )}
+                  <div className="p-5">
+                    {s.heading && <p className="mb-2 text-base font-bold text-neutral-dark">{s.heading}</p>}
+                    <div className="prose prose-sm max-w-none text-neutral-dark" dangerouslySetInnerHTML={{ __html: s.body }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {m.key_points?.length > 0 && (
+            <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4">
+              <p className="mb-1.5 text-xs font-semibold text-neutral-dark">Key points</p>
+              <ul className="space-y-1.5">{m.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><span className="text-teal">✓</span>{p}</li>)}</ul>
+            </div>
+          )}
+
+          {m.questions?.length > 0 && (
+            <div className="mb-6">
+              <p className="mb-2 text-sm font-semibold text-neutral-dark">Assessment — {m.questions.length} question{m.questions.length === 1 ? '' : 's'}</p>
+              <div className="space-y-3">
+                {m.questions.map((q: any, qi: number) => (
+                  <div key={qi} className="rounded-xl border border-gray-100 bg-white p-4 shadow-card">
+                    <p className="font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
+                    <ul className="mt-2 space-y-1.5">
+                      {q.options.map((o: string, oi: number) => (
+                        <li key={oi} className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${oi === q.correct ? 'border-green-300 bg-green-50 font-medium text-green-800' : 'border-gray-200 text-neutral-dark'}`}>
+                          <span>{String.fromCharCode(65 + oi)}.</span>
+                          <span>{o}</span>
+                          {oi === q.correct && <span className="ml-auto text-xs font-semibold text-green-600">Correct</span>}
+                        </li>
+                      ))}
+                    </ul>
+                    {q.explanation && <p className="mt-2 rounded-lg bg-neutral-light/60 p-2.5 text-xs text-neutral-mid">{q.explanation}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {m.standards?.length > 0 && (
+            <div className="mb-6">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Mapped standards</p>
+              <div className="flex flex-wrap gap-2">{m.standards.map((s: string, i: number) => <span key={i} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-neutral-mid">{s}</span>)}</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

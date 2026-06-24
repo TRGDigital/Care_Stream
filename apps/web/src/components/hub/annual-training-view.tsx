@@ -133,7 +133,7 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -253,7 +253,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token:
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-2xl">
-        <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+        <button onClick={() => onExit(false)} className="mb-3 inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
         <h2 className="text-lg font-bold text-neutral-dark">{data.name || name}</h2>
 
         {data.requires_practical && (
@@ -446,7 +446,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy }: { token:
 
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
-export function CertView({ token, id, onExit }: { token: string; id: string; onExit: () => void }) {
+export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: { token: string; id: string; onExit: () => void; backLabel?: string }) {
   const api = createApiClient(token)
   const [c, setC] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -461,7 +461,7 @@ export function CertView({ token, id, onExit }: { token: string; id: string; onE
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-2xl">
         <div className="mb-3 flex items-center justify-between print:hidden">
-          <button onClick={onExit} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+          <button onClick={onExit} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
           <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-dark hover:border-teal/40 hover:text-teal"><Printer size={14} /> Print / save PDF</button>
         </div>
 

@@ -1764,8 +1764,8 @@ function TrainingView({ token, userId }: { token: string; userId: string }) {
     })
   }
 
-  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
-  if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} onExit={() => { setTaking(null); load() }} />
+  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
+  if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} backLabel="My Training" onExit={() => { setTaking(null); load() }} />
 
   if (loading) {
     return (

@@ -987,8 +987,22 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web or in the <strong>Chat Hub</strong>, and generate CQC-linked AI recommendations on completion.
+            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web or in the <strong>Chat Hub</strong>, and generate CQC-linked AI recommendations on completion. You can also <strong>build your own audits</strong> for anything specific to your service.
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Building your own audit">
+          <p className="text-sm text-neutral-mid">
+            Beyond the ready-made templates, you can create audits tailored to your service, a kitchen hygiene check, a maintenance walk-round, a supervision checklist, anything you audit.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>On the <strong>Monthly Audits</strong> page click <strong>Build your own audit</strong>.</Step>
+            <Step n={2}>Give it a <strong>name</strong> and choose <strong>how often</strong> it runs (Periodic, Daily, Weekly, Monthly or Quarterly).</Step>
+            <Step n={3}>Add your <strong>questions</strong>. For each one, pick the response type: <strong>Yes / No / N/A + notes</strong> (the default), <strong>Yes / No + notes</strong>, or <strong>Free-text findings</strong>. Add as many questions as you need.</Step>
+            <Step n={4}>Click <strong>Create audit</strong>. It now appears under <strong>Your audits</strong> on this page (delete it there if you no longer need it).</Step>
+            <Step n={5}>To put it in front of staff, go to <strong>Staff</strong>, add or edit a person, set <strong>Access level</strong> to <em>Staff + Audits</em>, and tick your new audit. It then shows in that staff member&rsquo;s hub for them to complete, answering each question with the response buttons plus a notes field, exactly like the built-in audits, including the AI recommendations on completion.</Step>
+          </div>
+          <Tip>Your custom audits sit alongside the pre-built ones everywhere, the allocation list, the hub, the repository and the AI recommendations, so there&rsquo;s nothing extra to learn.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Available templates">

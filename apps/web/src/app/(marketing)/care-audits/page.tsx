@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, BarChart2,
   Brain, AlertTriangle, FileText,
-  ClipboardCheck, Printer, Layers, Save,
+  ClipboardCheck, Printer, Layers, Save, Wrench, Users,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
@@ -211,6 +211,51 @@ export default function CareAuditsPage() {
                   </div>
                 </div>
                 <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Build your own audits ─────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Build Your Own Audits</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Not just our templates, your audits too.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            Every service audits things the standard templates do not cover. With CareStream you build your
+            own audit in minutes, name it, add your questions, choose how often it runs, and it works
+            exactly like the built-in ones. No spreadsheets, no setup, no formatting.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                Icon: Wrench,
+                title: 'Audit anything, your way',
+                body: 'Build an audit for whatever matters to your service: kitchen hygiene, a maintenance walk-round, a supervision checklist, medication spot-checks. Add as many questions as you need, each with Yes, No, N/A and notes, or free-text findings.',
+              },
+              {
+                Icon: ClipboardCheck,
+                title: 'The same structured experience',
+                body: 'Custom audits behave exactly like the ready-made ones: clear response buttons and a notes field on every question, answers that save as you go, section-by-section scoring, and a formatted report on completion.',
+              },
+              {
+                Icon: Users,
+                title: 'Allocate to the right people',
+                body: 'Assign each audit to the staff who should carry it out. It appears in their hub on any device, ready to complete while they walk the home, so the right people own the right checks.',
+              },
+              {
+                Icon: Brain,
+                title: 'Inspection-ready, automatically',
+                body: 'Every audit, custom or built-in, generates AI recommendations mapped to the CQC Key Questions and is stored, formatted and ready to show an inspector. One consistent process instead of scattered paper and spreadsheets.',
+              },
+            ].map(({ Icon, title, body }) => (
+              <div key={title} className="card-lift rounded-2xl border border-gray-100 bg-neutral-light/40 p-7 shadow-card">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light"><Icon size={18} className="text-teal" /></div>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
                 <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
               </div>
             ))}

@@ -191,6 +191,22 @@ export const TRAINING_MODULES: TrainingModuleData[] = [
       { id: 'dem5', text: 'A resident with dementia is becoming increasingly distressed and agitated in the late afternoon. What approaches would you use and why?' },
     ],
   },
+  {
+    slug: 'cultural-diversity-in-care',
+    name: 'Cultural Diversity in Care',
+    description: 'Providing culturally sensitive, person-centred care that respects each resident\'s background, beliefs, language, religion and traditions.',
+    category: 'specialist',
+    sort_order: 30,
+    questions: [],   // built by the home in Modules & Questions
+  },
+  {
+    slug: 'cultural-diversity-in-dementia-care',
+    name: 'Cultural Diversity in Dementia Care',
+    description: 'Recognising and responding to cultural, religious and language needs when supporting people living with dementia.',
+    category: 'specialist',
+    sort_order: 31,
+    questions: [],   // built by the home in Modules & Questions
+  },
   // Oliver McGowan Mandatory Training is intentionally NOT offered as a CareStream
   // module — it is tightly regulated (accredited Tier 1/2 delivery with lived-
   // experience trainers) and must be delivered through the official programme.

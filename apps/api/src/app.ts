@@ -106,17 +106,6 @@ app.use('/whatsapp', whatsappRouter)
 // Must be mounted BEFORE requireAuth.
 app.use('/feedback', feedbackRouter)
 
-// TEMP diagnostic: verify each plan's Stripe price interval/amount (no secrets in
-// the response). Remove after the one-off check. Must be BEFORE requireAuth.
-app.get('/public/_price-check', async (_req, res) => {
-  try {
-    const { inspectPlanPrices } = await import('./services/billing/stripe')
-    res.json({ data: await inspectPlanPrices() })
-  } catch (e: any) {
-    res.status(500).json({ error: e?.message ?? 'price check failed' })
-  }
-})
-
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)
 

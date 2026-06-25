@@ -92,38 +92,6 @@ async function ensurePlanPrice(plan: any, interval: BillingInterval = 'month'): 
   return price.id
 }
 
-// ─── Diagnostic: verify each plan's Stripe price interval/amount ──────────────
-// Retrieves every public plan's monthly + annual Stripe price and checks the
-// recurring interval and amount match the DB column. Returns only non-secret
-// metadata. Used by a temporary verification endpoint.
-export async function inspectPlanPrices(): Promise<any[]> {
-  const stripe = getStripe()
-  const opts = managedPaymentsRequestOptions()
-  const plans = await (prisma as any).plan.findMany({
-    where: { is_public: true }, orderBy: { price_monthly_pence: 'asc' },
-    select: { name: true, price_monthly_pence: true, price_annual_pence: true, stripe_price_id_monthly: true, stripe_price_id_annual: true },
-  })
-  const out: any[] = []
-  for (const p of plans as any[]) {
-    const checks: Array<['monthly' | 'annual', string | null, 'month' | 'year', number | null]> = [
-      ['monthly', p.stripe_price_id_monthly, 'month', p.price_monthly_pence],
-      ['annual',  p.stripe_price_id_annual,  'year',  p.price_annual_pence],
-    ]
-    for (const [column, id, expectInterval, expectPence] of checks) {
-      if (!id) { out.push({ plan: p.name, column, id: null, ok: false, note: 'no price id set (auto-creates on first checkout)' }); continue }
-      try {
-        const pr = await stripe.prices.retrieve(id, opts)
-        const interval = pr.recurring?.interval ?? null
-        const ok = interval === expectInterval && pr.active === true && pr.unit_amount === expectPence
-        out.push({ plan: p.name, column, id, interval, expected_interval: expectInterval, amount_pence: pr.unit_amount, expected_pence: expectPence, currency: pr.currency, active: pr.active, livemode: pr.livemode, ok })
-      } catch (e: any) {
-        out.push({ plan: p.name, column, id, ok: false, error: e?.message ?? 'retrieve failed' })
-      }
-    }
-  }
-  return out
-}
-
 // ─── Checkout ─────────────────────────────────────────────────────────────────
 // Creates a hosted Checkout Session for a tenant to subscribe to a plan.
 export async function createCheckoutSession(tenantId: string, planId: string, interval: BillingInterval = 'month'): Promise<string> {

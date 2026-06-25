@@ -46,6 +46,7 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   // ── Care & clinical ──
   { title: 'Dementia Awareness', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['dementia'] },
   { title: 'Mental Health Awareness', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['mental health'] },
+  { title: 'Cultural Diversity in Care', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['cultural diversity', 'cultural competence', 'culturally sensitive care', 'cultural awareness', 'cultural needs'] },
   { title: 'End of Life / Palliative Care', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['palliative', 'end of life'] },
   { title: 'Nutrition and Hydration', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['nutrition', 'hydration'] },
   { title: 'Pressure Ulcer (Tissue Viability) Prevention', group_key: 'care_clinical', default_frequency: 'annual', aliases: ['pressure ulcer', 'tissue viability', 'pressure sore'] },
@@ -150,6 +151,7 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Syringe Drivers and Anticipatory (End of Life) Medicines', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['syringe driver', 'anticipatory medicines', 'just in case', 'T34'] },
   { title: 'Venepuncture and Cannulation', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['venepuncture', 'cannulation', 'phlebotomy', 'bloods'] },
   { title: 'Dementia Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'nursing-homes', aliases: ['dementia care', 'living well with dementia', 'person-centred dementia care', 'BPSD', 'distress reactions', 'cognitive impairment'] },
+  { title: 'Cultural Diversity in Dementia Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'nursing-homes', aliases: ['cultural diversity dementia', 'culturally sensitive dementia care', 'cultural needs in dementia'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {

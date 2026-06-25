@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   CheckCircle2, BarChart2,
   Brain, AlertTriangle, FileText,
-  ClipboardCheck, Printer, Layers, Save, Wrench, Users,
+  ClipboardCheck, Printer, Layers, Save, Wrench, Users, GraduationCap,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 
@@ -260,6 +260,62 @@ export default function CareAuditsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Link audits to training: the closed loop ───────────────────────── */}
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>Link Audits to Training</SectionLabel>
+          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Close the loop, from policy to proven impact.
+          </h2>
+          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            Build your own audit, link it to the training it measures, and CareStream shows you whether that
+            training is actually improving practice. It joins up the whole cycle, in one place.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: '01',
+                Icon: FileText,
+                title: 'Upload your policies',
+                body: 'Add your own policy documents. They become the single source of truth everything else is built from.',
+              },
+              {
+                step: '02',
+                Icon: GraduationCap,
+                title: 'Training generated from them',
+                body: 'CareStream creates training modules grounded in your policies, so staff learn your way of working, not a generic course.',
+              },
+              {
+                step: '03',
+                Icon: ClipboardCheck,
+                title: 'Build an audit, linked to the training',
+                body: 'Create an audit for the practice that training should improve, and link it to the module. The audit becomes your real-world measure of whether it worked.',
+              },
+              {
+                step: '04',
+                Icon: BarChart2,
+                title: 'See the training impact',
+                body: 'CareStream tracks the audit\'s compliance score against training completion over time, so you can see whether the training is landing in practice.',
+              },
+            ].map(({ step, Icon, title, body }) => (
+              <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light"><Icon size={18} className="text-teal" /></div>
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
+            It needs a few monthly audit runs to show a meaningful trend, and it shows a correlation rather than
+            proof of cause. Even so, it is exactly the train, audit, improve and re-audit cycle that CQC&apos;s
+            well-led question looks for.
+          </p>
         </div>
       </section>
 

@@ -94,7 +94,7 @@ export const TRAINING_MODULES: TrainingModuleData[] = [
   },
   {
     slug: 'food-hygiene',
-    name: 'Food Hygiene (Level 2)',
+    name: 'Food Hygiene',
     description: 'Required for all staff involved in food preparation or service. Covers the four Cs, temperature control and allergen awareness.',
     category: 'statutory',
     sort_order: 7,
@@ -164,7 +164,7 @@ export const TRAINING_MODULES: TrainingModuleData[] = [
   },
   {
     slug: 'duty-of-candour',
-    name: 'Duty of Candour (Regulation 20)',
+    name: 'Duty of Candour',
     description: 'The legal duty to be open and honest with service users when things go wrong. Required under CQC Regulation 20.',
     category: 'statutory',
     sort_order: 12,
@@ -179,7 +179,7 @@ export const TRAINING_MODULES: TrainingModuleData[] = [
   // ── Specialist modules ────────────────────────────────────────────
   {
     slug: 'dementia-care',
-    name: 'Dementia Care (Tier 2)',
+    name: 'Dementia Care',
     description: 'Person-centred dementia care aligned to the Dementia Training Standards Framework Tier 2 for hands-on carers.',
     category: 'specialist',
     sort_order: 13,

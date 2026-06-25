@@ -775,6 +775,22 @@ const GUIDE_SECTIONS: GuideSection[] = [
             These measures prove the training is landing, that staff react well to it, learn from it, and put it into practice. Linking training directly to care outcomes such as antipsychotic use, falls or incident rates is a planned next step that needs those outcomes to be recorded in CareStream.
           </p>
         </SectionBlock>
+        <SectionBlock title="Training Impact (does the training change practice?)">
+          <p className="text-sm text-neutral-mid">
+            <strong>Analytics → Training Impact</strong> goes a step further: it shows whether your training is improving real, audited practice, not just quiz scores. You <strong>link an audit to the training module(s)</strong> it measures, and CareStream tracks that audit&apos;s compliance score over time alongside how many staff have completed the training.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid"><strong>How to set it up:</strong></p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>When you <strong>build your own audit</strong> (Monthly Audits, then <strong>Build your own audit</strong>), tick the training module(s) it relates to under <strong>Linked training</strong>.</li>
+            <li>For an audit you&apos;ve already built, go to <strong>Monthly Audits</strong> and use the <strong>Linked training</strong> button on it to choose the modules.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            <strong>What you see:</strong> for each linked audit, the <strong>first</strong> and <strong>latest</strong> compliance score and the change between them, plus a month-by-month trend with two bars, the <strong>audit score</strong> and the <strong>cumulative training completion</strong>. If they rise together as staff complete the training, that is strong evidence the training is landing in practice.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            It needs several monthly audit runs to show a meaningful trend (one run is just a point), and it shows a correlation rather than proof of cause. Even so, it is exactly the continuous-improvement loop, train, audit, improve, re-audit, that CQC&apos;s &ldquo;Well-led&rdquo; question looks for. Linking currently works on your own custom audits.
+          </p>
+        </SectionBlock>
         <Tip>Use the analytics data in your management meetings as evidence of staff engagement with policies. This is useful material for CQC inspections.</Tip>
       </div>
     ),
@@ -1103,8 +1119,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>On the <strong>Monthly Audits</strong> page click <strong>Build your own audit</strong>.</Step>
             <Step n={2}>Give it a <strong>name</strong> and choose <strong>how often</strong> it runs (Periodic, Daily, Weekly, Monthly or Quarterly).</Step>
             <Step n={3}>Add your <strong>questions</strong>. For each one, pick the response type: <strong>Yes / No / N/A + notes</strong> (the default), <strong>Yes / No + notes</strong>, or <strong>Free-text findings</strong>. Add as many questions as you need.</Step>
-            <Step n={4}>Click <strong>Create audit</strong>. It now appears under <strong>Your audits</strong> on this page (delete it there if you no longer need it).</Step>
-            <Step n={5}>To put it in front of staff, go to <strong>Staff</strong>, add or edit a person, set <strong>Access level</strong> to <em>Staff + Audits</em>, and tick your new audit. It then shows in that staff member&rsquo;s hub for them to complete, answering each question with the response buttons plus a notes field, exactly like the built-in audits, including the AI recommendations on completion.</Step>
+            <Step n={4}>Optionally, under <strong>Linked training</strong>, tick the training module(s) this audit measures. CareStream then tracks whether completing that training improves this audit&rsquo;s scores over time, shown in <strong>Analytics → Training Impact</strong>. You can also set this later with the <strong>Linked training</strong> button on the audit under <strong>Your audits</strong>.</Step>
+            <Step n={5}>Click <strong>Create audit</strong>. It now appears under <strong>Your audits</strong> on this page (delete it there if you no longer need it).</Step>
+            <Step n={6}>To put it in front of staff, go to <strong>Staff</strong>, add or edit a person, set <strong>Access level</strong> to <em>Staff + Audits</em>, and tick your new audit. It then shows in that staff member&rsquo;s hub for them to complete, answering each question with the response buttons plus a notes field, exactly like the built-in audits, including the AI recommendations on completion.</Step>
           </div>
           <Tip>Your custom audits sit alongside the pre-built ones everywhere, the allocation list, the hub, the repository and the AI recommendations, so there&rsquo;s nothing extra to learn.</Tip>
         </SectionBlock>

@@ -807,6 +807,50 @@ export default async function StaffTrainingPage() {
         </div>
       </section>
 
+      {/* ── Training matrix ───────────────────────────────────────────────── */}
+      <section className="bg-neutral-light py-24">
+        <div className="mx-auto max-w-content px-6">
+          <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
+            <div>
+              <SectionLabel>Training Matrix</SectionLabel>
+              <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
+                A complete training matrix that builds itself.
+              </h2>
+              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
+                <p>
+                  A training matrix, the grid of who has done what and when it is next due, is one of the first
+                  things an inspector or commissioner asks to see. Most services keep it in a spreadsheet that is
+                  out of date the moment it is printed.
+                </p>
+                <p>
+                  CareStream builds it for you, live. Every <strong className="text-neutral-dark">digital module</strong> a
+                  staff member completes and every <strong className="text-neutral-dark">face-to-face session</strong> you log
+                  flow into one record, so the matrix is always current and always complete, in person and online,
+                  with nothing to keep updated by hand.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">What the matrix captures</p>
+              <ul className="space-y-3">
+                {[
+                  'Digital training completed, with scores and renewal dates',
+                  'Face-to-face sessions, who attended and who missed, with the trainer and the date',
+                  'Up to twelve months of history backfilled, so it is complete from day one',
+                  'Gaps at a glance: who is overdue, and who was sent a catch-up after missing a session',
+                  'CQC-ready evidence for every staff member, ready to show at inspection',
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-neutral-dark">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-teal" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CQC evidence angle ────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">

@@ -1836,8 +1836,6 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   const [retrying,   setRetrying]    = useState<Set<string>>(new Set())
   // enrollmentIds expanded in the module accordion (collapsed by default when >1)
   const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
-  // Enrolments just completed this session — show a one-time rating prompt.
-  const [ratePrompt, setRatePrompt]  = useState<Set<string>>(new Set())
   // A statutory module that has a scenario lesson plays through the rich stepped
   // player (same as Annual training), via the annual TakeModule/CertView.
   const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string } | null>(null)
@@ -1912,7 +1910,6 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
       await api.training.complete(enrollmentId)
       const d = await api.training.myEnrollments()
       setEnrollments(d.enrollments)
-      setRatePrompt(prev => new Set(prev).add(enrollmentId))  // ask for a rating just now
     } finally {
       setCompleting(null)
     }
@@ -2250,7 +2247,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                       </span>
                     )}
                   </div>
-                  {ratePrompt.has(enrollment.id) && (
+                  {!enrollment.rated && (
                     <div className="border-t border-gray-100 px-5 py-4">
                       <TrainingRatingCard token={token} area="training" refId={enrollment.id} />
                     </div>

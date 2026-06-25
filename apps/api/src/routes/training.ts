@@ -764,7 +764,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
   try {
-    const [enrollments, user, tenant] = await Promise.all([
+    const [enrollments, user, tenant, ratings] = await Promise.all([
       (prisma as any).trainingEnrollment.findMany({
         where:   { tenant_id: tenantId, user_id: userId },
         include: {
@@ -775,7 +775,9 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       }),
       (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+      (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId, user_id: userId, area: 'training' }, select: { ref: true } }),
     ])
+    const ratedRefs = new Set((ratings as any[]).map(r => r.ref))
 
     // Honour the staff member's language preference: when their comms toggle is
     // on (default) and their first language isn't English, deliver the module
@@ -789,6 +791,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       .filter((e: any) => e.module?.source !== 'ai_generated') // AI annual modules live in Annual Training
       .map((e: any) => ({
         ...e,
+        rated: ratedRefs.has(e.id),   // already left a rating for this module
         // A statutory module built with a scenario lesson plays through the rich
         // stepped player in the hub (like Annual training), not the question list.
         has_lesson: Array.isArray(e.module?.learning_content?.sections) && e.module.learning_content.sections.length > 0,

@@ -2,18 +2,31 @@
 
 // Internal preview gallery for the plan-specific onboarding email drip.
 // Not linked anywhere; reviewed on a Vercel preview URL. Copy lives in emails-data.ts.
+// Supports client-side reordering (persisted per browser) so the order can be
+// arranged and exported, plus a screenshot slot with "where to click" guidance.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SEQUENCES, PLAN_ORDER, type PlanKey, type OnboardingEmail } from './emails-data'
 
-function EmailFrame({ email, index }: { email: OnboardingEmail; index: number }) {
+const identity = (n: number) => Array.from({ length: n }, (_, i) => i)
+const isPerm = (a: number[], n: number) => a.length === n && [...a].sort((x, y) => x - y).every((v, i) => v === i)
+
+function EmailFrame({
+  email, index, canUp, canDown, onUp, onDown,
+}: {
+  email: OnboardingEmail; index: number; canUp: boolean; canDown: boolean; onUp: () => void; onDown: () => void
+}) {
   return (
     <div className="mx-auto w-full max-w-[640px]">
       {/* Meta strip (not part of the email) */}
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-neutral-500">
         <span className="rounded-full bg-neutral-900 px-2 py-0.5 font-semibold text-white">Working day {index + 1}</span>
-        <span><span className="font-semibold text-neutral-700">Subject:</span> {email.subject}</span>
+        <span className="min-w-0 flex-1 truncate"><span className="font-semibold text-neutral-700">Subject:</span> {email.subject}</span>
         {email.badge && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">{email.badge}</span>}
+        <span className="flex items-center gap-1">
+          <button onClick={onUp} disabled={!canUp} title="Move earlier" className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:border-[#9B52B5] hover:text-[#9B52B5] disabled:opacity-30">↑</button>
+          <button onClick={onDown} disabled={!canDown} title="Move later" className="flex h-6 w-6 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:border-[#9B52B5] hover:text-[#9B52B5] disabled:opacity-30">↓</button>
+        </span>
       </div>
 
       {/* The email itself */}
@@ -33,6 +46,35 @@ function EmailFrame({ email, index }: { email: OnboardingEmail; index: number })
           {email.intro.map((p, i) => (
             <p key={i} className="mb-3 text-[15px] leading-relaxed text-neutral-700">{p}</p>
           ))}
+
+          {/* Screenshot + where to click */}
+          <div className="my-6">
+            <div className="overflow-hidden rounded-lg border border-neutral-200">
+              <div className="flex items-center gap-1.5 bg-neutral-100 px-3 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-neutral-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-neutral-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-neutral-300" />
+                <span className="ml-2 text-[11px] text-neutral-400">CareStream</span>
+              </div>
+              {email.imageSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={email.imageSrc} alt="" className="block w-full" />
+              ) : (
+                <div className="flex h-44 items-center justify-center bg-[repeating-linear-gradient(45deg,#fafafa,#fafafa_10px,#f4f4f5_10px,#f4f4f5_20px)] text-center">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-neutral-400">Platform screenshot</p>
+                    <p className="mt-0.5 text-[11px] text-neutral-400">to be added</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            {email.where && (
+              <p className="mt-2 flex gap-1.5 text-[13px] leading-relaxed text-neutral-600">
+                <span aria-hidden>📍</span>
+                <span><span className="font-bold text-neutral-800">Where to click:</span> {email.where}</span>
+              </p>
+            )}
+          </div>
 
           {/* Steps */}
           <div className="my-6 space-y-3">
@@ -54,11 +96,7 @@ function EmailFrame({ email, index }: { email: OnboardingEmail; index: number })
           )}
 
           {/* CTA */}
-          <a
-            href="#"
-            onClick={e => e.preventDefault()}
-            className="inline-block rounded-lg bg-[#9B52B5] px-6 py-3 text-sm font-bold text-white no-underline"
-          >
+          <a href="#" onClick={e => e.preventDefault()} className="inline-block rounded-lg bg-[#9B52B5] px-6 py-3 text-sm font-bold text-white no-underline">
             {email.ctaLabel}
           </a>
 
@@ -80,8 +118,59 @@ function EmailFrame({ email, index }: { email: OnboardingEmail; index: number })
 }
 
 export default function EmailPreviewsPage() {
-  const [plan, setPlan] = useState<PlanKey>('starter')
-  const seq = SEQUENCES[plan]
+  const [plan, setPlan]   = useState<PlanKey>('starter')
+  const [orders, setOrders] = useState<Record<PlanKey, number[]>>({
+    starter:      identity(SEQUENCES.starter.emails.length),
+    professional: identity(SEQUENCES.professional.emails.length),
+    enterprise:   identity(SEQUENCES.enterprise.emails.length),
+  })
+  const [copied, setCopied] = useState(false)
+
+  // Hydrate any saved orders from this browser after mount (avoids SSR mismatch).
+  useEffect(() => {
+    setOrders(prev => {
+      const next = { ...prev }
+      for (const p of PLAN_ORDER) {
+        try {
+          const raw = localStorage.getItem(`cs-email-order-${p}`)
+          if (!raw) continue
+          const parsed = JSON.parse(raw)
+          if (Array.isArray(parsed) && isPerm(parsed, SEQUENCES[p].emails.length)) next[p] = parsed
+        } catch { /* ignore */ }
+      }
+      return next
+    })
+  }, [])
+
+  const seq   = SEQUENCES[plan]
+  const order = orders[plan]
+
+  function persist(p: PlanKey, next: number[]) {
+    setOrders(prev => ({ ...prev, [p]: next }))
+    try { localStorage.setItem(`cs-email-order-${p}`, JSON.stringify(next)) } catch { /* ignore */ }
+    setCopied(false)
+  }
+
+  function move(pos: number, dir: -1 | 1) {
+    const target = pos + dir
+    if (target < 0 || target >= order.length) return
+    const next = [...order]
+    ;[next[pos], next[target]] = [next[target], next[pos]]
+    persist(plan, next)
+  }
+
+  function reset() {
+    persist(plan, identity(seq.emails.length))
+  }
+
+  function copyOrder() {
+    const text = `${seq.label} email order (${seq.emails.length})\n` +
+      order.map((origIdx, i) => `${i + 1}. ${seq.emails[origIdx].subject}`).join('\n')
+    navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500) }).catch(() => {})
+  }
+
+  const reordered = order !== undefined && !isPerm(order, seq.emails.length) ? identity(seq.emails.length) : order
+  const isChanged = reordered.some((v, i) => v !== i)
 
   return (
     <div className="min-h-screen bg-neutral-100 pb-24">
@@ -91,14 +180,14 @@ export default function EmailPreviewsPage() {
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-teal">Internal preview, for review</p>
           <h1 className="text-2xl font-extrabold text-neutral-900">New-client onboarding emails</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            A plan-specific drip sent on working days after signup, one feature per email, benefit-led. Pick a plan to scroll its full sequence as the client will see it. Copy and order are easy to change, just tell me what to tweak.
+            A plan-specific drip sent on working days after signup, one feature per email, benefit-led. Pick a plan to scroll its full sequence as the admin will see it. Use the ↑ ↓ buttons on any email to change the order, then Copy order to send me the final arrangement.
           </p>
         </div>
       </header>
 
       {/* Plan tabs */}
       <div className="sticky top-0 z-10 border-b border-neutral-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl gap-2 px-6 py-3">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 px-6 py-3">
           {PLAN_ORDER.map(p => {
             const s = SEQUENCES[p]
             const active = p === plan
@@ -124,11 +213,30 @@ export default function EmailPreviewsPage() {
             <span className="text-sm font-semibold text-neutral-700">{seq.emails.length} emails</span>
           </div>
           <p className="mt-1 text-sm text-neutral-600">{seq.blurb}</p>
+
+          {/* Reorder toolbar */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button onClick={copyOrder} className="rounded-lg bg-[#9B52B5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7A3D9A]">
+              {copied ? 'Copied to clipboard' : 'Copy this order'}
+            </button>
+            <button onClick={reset} disabled={!isChanged} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-40">
+              Reset to default
+            </button>
+            {isChanged && <span className="text-xs font-medium text-amber-600">Custom order (saved in this browser)</span>}
+          </div>
         </div>
 
         <div className="space-y-10">
-          {seq.emails.map((email, i) => (
-            <EmailFrame key={i} email={email} index={i} />
+          {reordered.map((origIdx, pos) => (
+            <EmailFrame
+              key={origIdx}
+              email={seq.emails[origIdx]}
+              index={pos}
+              canUp={pos > 0}
+              canDown={pos < reordered.length - 1}
+              onUp={() => move(pos, -1)}
+              onDown={() => move(pos, 1)}
+            />
           ))}
         </div>
       </main>

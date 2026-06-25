@@ -16,6 +16,8 @@ export interface OnboardingEmail {
   ctaLabel:   string
   ctaHref:    string
   badge?:     string        // e.g. "Professional feature"
+  where?:     string        // "where to click" guidance shown with the screenshot
+  imageSrc?:  string        // real platform screenshot (added once captured)
 }
 
 export interface Sequence {
@@ -434,17 +436,45 @@ const ENTERPRISE_FINALE: OnboardingEmail = {
   ctaHref:  '/dashboard',
 }
 
+// "Where to click" guidance, keyed by subject. Shown beside the screenshot so an
+// admin knows exactly where to go. Kept separate so it is easy to tweak.
+const WHERE: Record<string, string> = {
+  'Welcome to CareStream. Let us get your first answer today.': 'In the staff hub, open Chat, type a question in the message box at the bottom, and press the send arrow.',
+  'Upload your policies once, answer questions forever': 'In the console, click Policies in the left sidebar, then the Upload document button at the top right.',
+  'Why CareStream’s answers are ones you can trust': 'In the console sidebar, click Knowledge Base to review the entries and add your own.',
+  'Bring your team into CareStream': 'In the console sidebar, click Staff, then Add staff member at the top right.',
+  'Three ways your staff can ask, no app required': 'In the console sidebar, click Settings, then expand the Dedicated email address and Portal access sections.',
+  'Put CareStream in your team’s pocket': 'On a phone, open your hub link, tap the browser Share or menu icon, and choose Add to Home Screen.',
+  'Every answer, in the language your carer thinks in': 'Console, Staff, open a team member and set their First language. Add new languages under Settings, Languages.',
+  'Annual training that staff actually remember': 'In the console sidebar, click Training, open the Modules and Questions tab, then use Allocate to staff.',
+  'Your statutory training, ready to go': 'Console, Training, browse the standard library and click Assign on the modules you need.',
+  'Turn wrong answers into a stronger team': 'On the Dashboard, find the Needs follow-up panel and click a staff member to review their answers.',
+  'Give every new starter a flawless first week': 'In the console sidebar, click Onboarding, then New flow to build an induction.',
+  'Ask your last CQC report anything': 'Console, Policies, upload your report with the CQC Report category. Then open CQC Prep in the hub to ask questions.',
+  'See how your whole service is really using CareStream': 'In the console sidebar, click Analytics, then explore the Overview and Engagement tabs.',
+  'Inspection evidence, generated in one click': 'Console, Analytics, open the CQC Inspection Evidence Report, choose a date range and click Generate.',
+  'Find the gaps before an inspector does': 'In the console sidebar, click Policy Gaps under Reporting, then Run analysis.',
+  'Bring your in-person training into one clear view': 'Console, Training, open the Face-to-face Training tab, then Add session.',
+  'Audits shaped around your home, not a template': 'In the console sidebar, click Audits, then the Build your own audit button.',
+  'Proof that your training is actually working': 'Console, Analytics, open the Effectiveness of Training tab.',
+  'Close the loop: from training to real-world practice': 'On an audit, use Linked training to connect its modules. Then in Analytics, open the Training Impact tab.',
+  'You are up and running. Here is what is next.': 'In the console sidebar, click Billing to compare plans and upgrade in one click.',
+  'You have the full platform. Let us make you a power user.': 'In the console sidebar, open your Dashboard for the overview. Your account manager’s contact is in your welcome email.',
+}
+
+const withWhere = (e: OnboardingEmail): OnboardingEmail => ({ ...e, where: e.where ?? WHERE[e.subject] })
+
 // ── Compose sequences ──────────────────────────────────────────────────────────
 function build(plan: PlanKey): OnboardingEmail[] {
   const core = coreEmails(plan)
-  if (plan === 'starter') return [...core, STARTER_FINALE]
-  if (plan === 'professional') {
-    return [...core, CQC_REPORT_CHAT, ADVANCED_ANALYTICS, CQC_EVIDENCE, POLICY_GAPS, faceToFace('pro')]
-  }
-  return [
+  let list: OnboardingEmail[]
+  if (plan === 'starter') list = [...core, STARTER_FINALE]
+  else if (plan === 'professional') list = [...core, CQC_REPORT_CHAT, ADVANCED_ANALYTICS, CQC_EVIDENCE, POLICY_GAPS, faceToFace('pro')]
+  else list = [
     ...core, CQC_REPORT_CHAT, ADVANCED_ANALYTICS, CQC_EVIDENCE, POLICY_GAPS, faceToFace('enterprise'),
     BUILD_AUDITS, EFFECTIVENESS, TRAINING_IMPACT, ENTERPRISE_FINALE,
   ]
+  return list.map(withWhere)
 }
 
 export const SEQUENCES: Record<PlanKey, Sequence> = {

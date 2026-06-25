@@ -755,6 +755,26 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Go to <strong>Analytics</strong> and select <strong>CQC Report</strong> to see queries specifically about your inspection report. This shows which CQC domains your staff are most focused on.
           </p>
         </SectionBlock>
+        <SectionBlock title="Effectiveness of Training">
+          <p className="text-sm text-neutral-mid">
+            Go to <strong>Analytics → Effectiveness of Training</strong> for evidence that your training and follow-up are genuinely improving knowledge, not just being completed. It draws entirely on data CareStream already collects, and it&apos;s the report to show CQC, commissioners and families when they ask what measurable difference your training makes.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">What it shows:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Questions put right</strong>: how often a staff member got a question wrong, worked through the follow-up, then answered correctly. The core proof that gaps are being closed.</li>
+            <li><strong>Gaps resolved</strong> and <strong>engaged with learning</strong>: the share of knowledge gaps put right, and how often staff worked through the policy-grounded micro-lesson (&ldquo;Learn &amp; retry&rdquo;) rather than just re-answering.</li>
+            <li><strong>Assessment accuracy</strong> and <strong>training completed</strong>: the team&apos;s current knowledge level and completion rate.</li>
+            <li><strong>Confidence to apply</strong> and <strong>rated useful</strong>: how staff rate the training after finishing it (see below).</li>
+            <li><strong>CQC prep improvement</strong>: the average score before and after a staff member reviews the model answer and retries.</li>
+            <li><strong>Language is not a barrier</strong>: completion and accuracy for staff who use second-language support compared with the rest of the team, an inclusion point for CQC.</li>
+          </ul>
+          <p className="mt-3 text-sm text-neutral-mid">
+            <strong>How staff rate their training:</strong> when a staff member finishes a piece of training, a short optional rating appears, how <strong>confident</strong> they feel applying it and how <strong>useful</strong> it was, with room for a comment. It shows across <strong>My Training</strong>, <strong>Annual Training</strong>, <strong>Follow-up</strong> and <strong>CQC Prep</strong> (on the completed item, or right after they finish it), and feeds the <strong>Confidence to apply</strong> and <strong>Rated useful</strong> figures. It only asks once per item and can always be skipped.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            These measures prove the training is landing, that staff react well to it, learn from it, and put it into practice. Linking training directly to care outcomes such as antipsychotic use, falls or incident rates is a planned next step that needs those outcomes to be recorded in CareStream.
+          </p>
+        </SectionBlock>
         <Tip>Use the analytics data in your management meetings as evidence of staff engagement with policies. This is useful material for CQC inspections.</Tip>
       </div>
     ),

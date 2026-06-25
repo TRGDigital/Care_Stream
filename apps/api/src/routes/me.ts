@@ -389,14 +389,16 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const now = new Date()
-  const [enrollments, user, tenant] = await Promise.all([
+  const [enrollments, user, tenant, ratings] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
       include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
+    (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId, user_id: userId, area: 'annual' }, select: { ref: true } }),
   ])
+  const ratedAnnual = new Set((ratings as any[]).map(r => r.ref))
   let items = (enrollments as any[])
     .filter(e => e.module?.source === 'ai_generated' && e.module?.approved)
     .map(e => ({
@@ -406,6 +408,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
       illustration_url: illustrationUrl(e.module.illustration_key),
       status: e.status, completed_at: e.completed_at, expires_at: e.expires_at, due_date: e.due_date,
       state: annualState(e, now),
+      rated: ratedAnnual.has(e.id) || e.eval_at != null,
     }))
 
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)

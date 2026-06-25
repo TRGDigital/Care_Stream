@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
+import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
@@ -81,7 +82,8 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
     const meta = STATE_META[it.state] ?? STATE_META.todo
     const isDone = it.status === 'complete'
     return (
-      <div key={it.enrollment_id} className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <div key={it.enrollment_id} className="rounded-xl border border-gray-200 bg-white">
+      <div className="flex flex-wrap items-center gap-3 p-4">
         {it.illustration_url && <img src={apiAssetUrl(it.illustration_url) ?? ''} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />}
         {isDone && it.state === 'completed' ? <CheckCircle2 size={18} className="shrink-0 text-green-500" />
           : it.state === 'overdue' ? <AlertTriangle size={18} className="shrink-0 text-red-500" />
@@ -118,6 +120,12 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
             </button>
           )}
         </div>
+      </div>
+      {isDone && !it.rated && (
+        <div className="border-t border-gray-100 p-4">
+          <TrainingRatingCard token={token} area="annual" refId={it.enrollment_id} />
+        </div>
+      )}
       </div>
     )
   }

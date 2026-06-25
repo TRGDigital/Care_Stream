@@ -791,7 +791,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       .filter((e: any) => e.module?.source !== 'ai_generated') // AI annual modules live in Annual Training
       .map((e: any) => ({
         ...e,
-        rated: ratedRefs.has(e.id),   // already left a rating for this module
+        rated: ratedRefs.has(e.id) || e.eval_at != null,   // rated here, or via the in-player feedback
         // A statutory module built with a scenario lesson plays through the rich
         // stepped player in the hub (like Annual training), not the question list.
         has_lesson: Array.isArray(e.module?.learning_content?.sections) && e.module.learning_content.sections.length > 0,

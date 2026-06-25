@@ -2019,7 +2019,8 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
             if (enrollment.has_lesson) {
               const isDone = enrollment.status === 'complete'
               return (
-                <div key={enrollment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+                <div key={enrollment.id} className="rounded-xl border border-gray-200 bg-white">
+                <div className="flex flex-wrap items-center gap-3 p-4">
                   {enrollment.module.illustration_url && <img src={apiAssetUrl(enrollment.module.illustration_url) ?? ''} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />}
                   {isDone ? <CheckCircle2 size={18} className="shrink-0 text-green-500" />
                     : enrollment.status === 'expired' ? <AlertTriangle size={18} className="shrink-0 text-red-500" />
@@ -2048,6 +2049,12 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                       {isDone ? 'Review' : enrollment.status === 'in_progress' ? 'Continue' : 'Start'}
                     </button>
                   </div>
+                </div>
+                {isDone && !enrollment.rated && (
+                  <div className="border-t border-gray-100 p-4">
+                    <TrainingRatingCard token={token} area="training" refId={enrollment.id} />
+                  </div>
+                )}
                 </div>
               )
             }

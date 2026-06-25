@@ -149,6 +149,7 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Subcutaneous, Intramuscular and Insulin Injections', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['injections', 'subcutaneous', 'intramuscular', 'insulin administration'] },
   { title: 'Syringe Drivers and Anticipatory (End of Life) Medicines', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['syringe driver', 'anticipatory medicines', 'just in case', 'T34'] },
   { title: 'Venepuncture and Cannulation', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['venepuncture', 'cannulation', 'phlebotomy', 'bloods'] },
+  { title: 'Dementia Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'nursing-homes', aliases: ['dementia care', 'living well with dementia', 'person-centred dementia care', 'BPSD', 'distress reactions', 'cognitive impairment'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {

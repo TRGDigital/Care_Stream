@@ -13,6 +13,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { F2FAdminView } from '@/components/hub/f2f-admin-view'
+import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -1559,6 +1560,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
   const [submitting,  setSubmitting]  = useState(false)
   const [result,      setResult]      = useState<'correct' | 'wrong' | null>(null)
   const [correctOpt,  setCorrectOpt]  = useState<number | null>(null)
+  const [showRating,  setShowRating]  = useState(false)   // rate the lesson once resolved, before the card clears
 
   const badge = it.source === 'training'
     ? <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal">Training</span>
@@ -1625,7 +1627,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
       setResult(correct ? 'correct' : 'wrong')
       if (correct) {
         api.me.followUpResolved({ source: it.source, ref: it.ref, method: 'retry', label: it.text }).catch(() => {})
-        onResolved()
+        setShowRating(true)
       }
     } catch { /* ignore */ } finally { setSubmitting(false) }
   }
@@ -1640,7 +1642,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
       setResult(r.correct ? 'correct' : 'wrong')
       if (r.correct) {
         api.me.followUpResolved({ source: it.source, ref: it.ref, method: 'learn', label: it.text }).catch(() => {})
-        onResolved()
+        setShowRating(true)
       }
     } catch { /* ignore */ } finally { setSubmitting(false) }
   }
@@ -1757,6 +1759,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
                     </button>
                   )}
                   {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
+                  {result === 'correct' && showRating && <div className="mt-3"><TrainingRatingCard token={token} area="followup" refId={`${it.source}:${it.ref}`} title="Was this helpful?" onDone={onResolved} /></div>}
                   {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite — the correct answer is highlighted in green. Have another go.</div>}
                 </div>
               ) : (
@@ -1800,6 +1803,7 @@ function GapCard({ it, token, onResolved, onTalkToPolicy, secondLang = null, sec
                     </button>
                   )}
                   {result === 'correct' && <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700"><CheckCircle2 size={16} className="shrink-0" /> Correct — well done! This one&apos;s now cleared.</div>}
+                  {result === 'correct' && showRating && <div className="mt-3"><TrainingRatingCard token={token} area="followup" refId={`${it.source}:${it.ref}`} title="Was this helpful?" onDone={onResolved} /></div>}
                   {result === 'wrong'   && <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-700"><XCircle size={16} className="shrink-0" /> Not quite. <button onClick={() => openLesson('lesson')} className="inline-flex items-center gap-1 font-semibold underline"><Lightbulb size={13} /> Learn the point</button></div>}
                 </>
               )}
@@ -1832,6 +1836,8 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   const [retrying,   setRetrying]    = useState<Set<string>>(new Set())
   // enrollmentIds expanded in the module accordion (collapsed by default when >1)
   const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
+  // Enrolments just completed this session — show a one-time rating prompt.
+  const [ratePrompt, setRatePrompt]  = useState<Set<string>>(new Set())
   // A statutory module that has a scenario lesson plays through the rich stepped
   // player (same as Annual training), via the annual TakeModule/CertView.
   const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string } | null>(null)
@@ -1906,6 +1912,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
       await api.training.complete(enrollmentId)
       const d = await api.training.myEnrollments()
       setEnrollments(d.enrollments)
+      setRatePrompt(prev => new Set(prev).add(enrollmentId))  // ask for a rating just now
     } finally {
       setCompleting(null)
     }
@@ -2233,6 +2240,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
 
                 {/* Footer: complete button or completion banner */}
                 {enrollment.status === 'complete' ? (
+                  <>
                   <div className="flex items-center gap-2 border-t border-green-50 bg-green-50/50 px-5 py-3 rounded-b-xl">
                     <CheckCircle2 size={15} className="text-green-500" />
                     <p className="text-sm font-medium text-green-700">Module complete — well done!</p>
@@ -2242,7 +2250,14 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                       </span>
                     )}
                   </div>
-                ) : allAnswered ? (
+                  {ratePrompt.has(enrollment.id) && (
+                    <div className="border-t border-gray-100 px-5 py-4">
+                      <TrainingRatingCard token={token} area="training" refId={enrollment.id} />
+                    </div>
+                  )}
+                  </>
+                ) : null}
+                {enrollment.status !== 'complete' && allAnswered ? (
                   <div className="border-t border-gray-100 px-5 py-4 rounded-b-xl">
                     <p className="mb-2 text-xs text-neutral-mid">You&apos;ve answered all questions — ready to mark this module complete?</p>
                     <button

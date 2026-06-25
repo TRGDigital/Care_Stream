@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight,
   ClipboardList, Globe, Loader2, RotateCcw, Send, Star,
@@ -126,10 +127,11 @@ function AnswerForm({ delivery, token, onAnswered }: {
 
 // ─── Result Card ──────────────────────────────────────────────────────────────
 
-function ResultCard({ delivery, token, onUpdated }: {
+function ResultCard({ delivery, token, onUpdated, showRating = false }: {
   delivery:  Delivery
   token:     string
   onUpdated: (updated: Delivery) => void
+  showRating?: boolean
 }) {
   const score = delivery.score ?? 0
   const [retrying, setRetrying]   = useState(false)
@@ -244,6 +246,7 @@ function ResultCard({ delivery, token, onUpdated }: {
           </div>
         </div>
       )}
+      {showRating && !retrying && <div className="mt-4"><TrainingRatingCard token={token} area="cqc" refId={delivery.id} /></div>}
     </div>
   )
 }
@@ -258,6 +261,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   const [error, setError]           = useState('')
   const [expanded, setExpanded]     = useState<string | null>(null)        // question card open
   const [openDomains, setOpenDomains] = useState<Set<string>>(new Set())   // domain accordions open
+  const [freshlyAnswered, setFreshlyAnswered] = useState<Set<string>>(new Set())  // answered this session → prompt a rating
   // Session-only second-language switch for the whole CQC prep list (each card is a
   // single question, so one toggle flips them all).
   const [lang, setLang] = useState<'1' | '2'>('1')
@@ -380,7 +384,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                             {expanded === d.id && (
                               <div className="pb-4">
                                 <AnswerForm delivery={d} token={token}
-                                  onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setExpanded(null); onChange?.() }} />
+                                  onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); setExpanded(null); onChange?.() }} />
                               </div>
                             )}
                           </div>
@@ -434,8 +438,8 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                             </button>
                             {expanded === d.id && (
                               <div className="pb-4">
-                                <ResultCard delivery={d} token={token}
-                                  onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); onChange?.() }} />
+                                <ResultCard delivery={d} token={token} showRating={freshlyAnswered.has(d.id)}
+                                  onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.() }} />
                               </div>
                             )}
                           </div>

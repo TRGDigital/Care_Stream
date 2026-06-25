@@ -346,6 +346,27 @@ meRouter.post('/language-switch', async (req: Request, res: Response) => {
   ok(res, { logged: true })
 })
 
+// ─── POST /me/training-rating ─────────────────────────────────────────────────
+// Staff rate a completed piece of training (confidence to apply + usefulness),
+// captured in the hub right after finishing. Feeds the Effectiveness analytics.
+meRouter.post('/training-rating', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const b = req.body ?? {}
+  const AREAS = ['training', 'annual', 'followup', 'cqc']
+  const area = String(b.area ?? '')
+  if (!AREAS.includes(area)) { err(res, 'VALIDATION_ERROR', 'A valid area is required.'); return }
+  const clamp = (v: any) => { const n = Number(v); return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null }
+  const confidence = clamp(b.confidence)
+  const usefulness = clamp(b.usefulness)
+  const comment = typeof b.comment === 'string' && b.comment.trim() ? b.comment.trim().slice(0, 500) : null
+  if (confidence == null && usefulness == null && !comment) { ok(res, { saved: false }); return }
+  await (prisma as any).trainingRating.create({
+    data: { tenant_id: tenantId, user_id: userId, area, ref: typeof b.ref === 'string' ? b.ref.slice(0, 120) : null, confidence, usefulness, comment },
+  }).catch(() => {})
+  ok(res, { saved: true })
+})
+
 // ─── Annual training (AI modules) ─────────────────────────────────────────────
 
 function annualState(e: any, now: Date): string {

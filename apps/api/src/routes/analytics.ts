@@ -1478,7 +1478,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
   try {
     const now = Date.now()
     const since7 = new Date(now - 7 * DAY), since30 = new Date(now - 30 * DAY)
-    const [kg, attempts, enrollments, cqc, langEvents] = await Promise.all([
+    const [kg, attempts, enrollments, cqc, langEvents, ratings] = await Promise.all([
       getKnowledgeGapData(tenantId),
       (prisma as any).remediationAttempt.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, method: true, created_at: true } }),
       (prisma as any).trainingEnrollment.findMany({
@@ -1487,6 +1487,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
       }),
       (prisma as any).cqcStaffDelivery.findMany({ where: { tenant_id: tenantId, status: 'evaluated' }, select: { score: true, first_score: true, attempts: true } }),
       (prisma as any).languageSwitchEvent.findMany({ where: { tenant_id: tenantId }, select: { user_id: true } }),
+      (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId }, select: { confidence: true, usefulness: true } }),
     ])
 
     // ── Learning loop: gaps put right via follow-up (uncapped) ──
@@ -1509,8 +1510,13 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
     let totalAns = 0, correctAns = 0
     for (const e of enr) for (const a of (e.answers ?? [])) { totalAns++; if (a.is_correct) correctAns++ }
 
-    // ── Reaction: post-completion annual evaluations (1–5 → %) ──
+    // ── Reaction: post-completion ratings (annual enrolment evals + the new
+    //    My Training / Follow-up / CQC ratings), each 1–5 → %. ──
     const evald = enr.filter(e => e.eval_at && (e.eval_confidence != null || e.eval_usefulness != null))
+    const ratingRows = ratings as any[]
+    const confVals = [...evald.map(e => e.eval_confidence), ...ratingRows.map(r => r.confidence)].filter((v: any) => v != null) as number[]
+    const usefVals = [...evald.map(e => e.eval_usefulness), ...ratingRows.map(r => r.usefulness)].filter((v: any) => v != null) as number[]
+    const responses = evald.length + ratingRows.length
     const avgPct5 = (vals: number[]) => vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length / 5) * 100) : null
 
     // ── CQC prep: improvement after reviewing the model answer and retrying ──
@@ -1538,7 +1544,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
       },
       loop:    { learn, retry, resolved_7d: resolved7, resolved_30d: resolved30, trend },
       mastery: { assigned, completed, completion_pct: assigned ? Math.round((completed / assigned) * 100) : null, avg_assessment_score: totalAns ? Math.round((correctAns / totalAns) * 100) : null, answers: totalAns },
-      reaction:{ responses: evald.length, avg_confidence_pct: avgPct5(evald.map(e => e.eval_confidence).filter((v: any) => v != null)), avg_usefulness_pct: avgPct5(evald.map(e => e.eval_usefulness).filter((v: any) => v != null)) },
+      reaction:{ responses, avg_confidence_pct: avgPct5(confVals), avg_usefulness_pct: avgPct5(usefVals) },
       cqc:     { evaluated: cqcEvald.length, retried: retried.length, avg_first_score: avg(retried.map(d => d.first_score)), avg_latest_score: avg(retried.map(d => d.score)), avg_improvement: retried.length ? Math.round(retried.reduce((s, d) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / retried.length) : null },
       language:{ second_lang_users: langUsers.size, with: groupStats(enr.filter(e => langUsers.has(e.user_id))), without: groupStats(enr.filter(e => !langUsers.has(e.user_id))) },
     })

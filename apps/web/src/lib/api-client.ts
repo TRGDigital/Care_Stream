@@ -575,6 +575,8 @@ export function createApiClient(token: string) {
         apiFetch<{ logged: boolean }>('/me/follow-up/resolved', token, { method: 'POST', body: JSON.stringify(data) }),
       recordLanguageSwitch: (data: { area: 'training' | 'annual' | 'induction' | 'followup' | 'cqc'; set_ref?: string; set_name?: string }) =>
         apiFetch<{ logged: boolean }>('/me/language-switch', token, { method: 'POST', body: JSON.stringify(data) }),
+      rateTraining: (data: { area: 'training' | 'annual' | 'followup' | 'cqc'; ref?: string; confidence?: number; usefulness?: number; comment?: string }) =>
+        apiFetch<{ saved: boolean }>('/me/training-rating', token, { method: 'POST', body: JSON.stringify(data) }),
       policy: (policyId: string, lang?: '2') => apiFetch<{ policy_id: string; title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }>(`/me/policy/${policyId}${lang ? `?lang=${lang}` : ''}`, token),
       policyQuestions: (policyId: string) => apiFetch<{ questions: string[] }>(`/me/policy/${policyId}/questions`, token),
       recordRead: (data: { policy_id: string; step_id?: string; enrollment_id?: string; seconds_spent: number; max_scroll_pct: number; reached_end: boolean; marked_read: boolean; lang: string }) =>

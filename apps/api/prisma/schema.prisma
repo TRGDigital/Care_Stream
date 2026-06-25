@@ -794,6 +794,26 @@ model LanguageSwitchEvent {
   @@map("language_switch_events")
 }
 
+// One staff member's rating of a completed piece of training, captured in the hub
+// right after they finish it. Feeds the "Effectiveness of Training" analytics
+// (confidence to apply + usefulness). Annual modules keep their own enrolment-level
+// eval; this covers My Training, Follow-up and CQC Prep.
+model TrainingRating {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  user_id     String
+  area        String                              // training | annual | followup | cqc
+  ref         String?                             // enrolment / module / delivery / gap ref
+  confidence  Int?                                // 1–5: confidence applying it
+  usefulness  Int?                                // 1–5: usefulness / relevance
+  comment     String?
+  created_at  DateTime @default(now())
+
+  @@index([tenant_id, area])
+  @@index([tenant_id, user_id])
+  @@map("training_ratings")
+}
+
 // Face-to-face (group/in-person) training the home runs each month. Admins log the
 // session (topic, date, who delivered it), allocate who should attend, then mark who
 // attended/missed. This is a separate attendance/evidence record — it does NOT change

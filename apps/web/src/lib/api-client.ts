@@ -261,8 +261,8 @@ export function createApiClient(token: string) {
         has_advanced_analytics: boolean; has_cqc_report: boolean; has_gap_detection: boolean
         has_face_to_face: boolean; has_custom_audits: boolean; has_effectiveness: boolean; has_training_impact: boolean
       }> }>('/billing/plans', token),
-      checkout: (plan_id: string) =>
-        apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id }) }),
+      checkout: (plan_id: string, interval: 'month' | 'year' = 'month') =>
+        apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id, interval }) }),
       sync: () =>
         apiFetch<{ needs_billing: boolean; subscription_status: string | null }>('/billing/sync', token, { method: 'POST' }),
       closeAccount: () =>

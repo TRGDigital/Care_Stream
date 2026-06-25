@@ -57,6 +57,45 @@ function planFeats(p: any): string[] {
   ]
 }
 
+// Annual vs monthly toggle for the plan chooser / upgrade buttons.
+function IntervalToggle({ value, onChange }: { value: 'month' | 'year'; onChange: (v: 'month' | 'year') => void }) {
+  return (
+    <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-sm">
+      {(['month', 'year'] as const).map(v => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={clsx('rounded-md px-3 py-1.5 font-medium transition-colors', value === v ? 'bg-teal text-white' : 'text-neutral-mid hover:text-neutral-dark')}
+        >
+          {v === 'month' ? 'Monthly' : 'Annual'}
+          {v === 'year' && <span className={clsx('ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold', value === v ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700')}>2 months free</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Price line for a plan tile, reflecting the selected billing interval.
+function PlanPrice({ p, interval }: { p: any; interval: 'month' | 'year' }) {
+  if (interval === 'year' && p.price_annual_pence) {
+    const saving = p.price_monthly_pence ? p.price_monthly_pence * 12 - p.price_annual_pence : 0
+    return (
+      <p className="mb-4">
+        <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_annual_pence)}</span>
+        <span className="text-sm text-neutral-mid"> / year</span>
+        {saving > 0 && <span className="ml-2 text-xs font-medium text-teal">save {pence(saving)}</span>}
+      </p>
+    )
+  }
+  return (
+    <p className="mb-4">
+      <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_monthly_pence)}</span>
+      <span className="text-sm text-neutral-mid"> / month</span>
+    </p>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BillingPage() {
@@ -80,6 +119,8 @@ export default function BillingPage() {
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState('')
   const [banner, setBanner] = useState<'success' | 'cancelled' | null>(null)
+  // Monthly vs annual billing for the plan chooser / upgrade buttons.
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month')
 
   // Post-checkout banner (read from the URL, client-only to avoid Suspense needs).
   useEffect(() => {
@@ -137,7 +178,7 @@ export default function BillingPage() {
     if (!session?.accessToken) return
     setCheckoutError(''); setCheckoutPlan(planId)
     try {
-      const { url } = await createApiClient(session.accessToken).billing.checkout(planId)
+      const { url } = await createApiClient(session.accessToken).billing.checkout(planId, billingInterval)
       window.location.href = url   // hand off to Stripe-hosted Checkout
     } catch (e: any) {
       setCheckoutError(e.message ?? 'Could not start checkout.'); setCheckoutPlan(null)
@@ -302,9 +343,12 @@ export default function BillingPage() {
         }
         return (
           <div className="mb-6 rounded-card bg-white shadow-card">
-            <div className="border-b border-gray-100 px-6 py-4">
-              <h2 className="text-sm font-semibold text-neutral-dark">Upgrade your plan</h2>
-              <p className="mt-0.5 text-xs text-neutral-mid">Unlock more features and a bigger monthly allocation. Upgrades take effect immediately; your data is kept exactly as it is.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+              <div>
+                <h2 className="text-sm font-semibold text-neutral-dark">Upgrade your plan</h2>
+                <p className="mt-0.5 text-xs text-neutral-mid">Unlock more features and a bigger monthly allocation. Upgrades take effect immediately; your data is kept exactly as it is.</p>
+              </div>
+              <IntervalToggle value={billingInterval} onChange={setBillingInterval} />
             </div>
             <div className="px-6 py-5">
               {checkoutError && (
@@ -317,13 +361,7 @@ export default function BillingPage() {
                       <h3 className="font-semibold text-neutral-dark">{p.name}</h3>
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Upgrade</span>
                     </div>
-                    <p className="mb-4">
-                      <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_monthly_pence)}</span>
-                      <span className="text-sm text-neutral-mid"> / month</span>
-                      {p.price_annual_pence && (
-                        <span className="ml-2 text-xs text-neutral-mid">or {pence(p.price_annual_pence)} / year</span>
-                      )}
-                    </p>
+                    <PlanPrice p={p} interval={billingInterval} />
                     <ul className="mb-5 space-y-1.5">
                       {planFeats(p).map((f, i) => (
                         <li key={i} className="flex items-center gap-2 text-sm text-neutral-dark">
@@ -350,15 +388,18 @@ export default function BillingPage() {
       {/* ── Plan chooser (shown until a subscription is active) ──────────────── */}
       {!loading && summary && summary.subscription_status !== 'active' && plans.length > 0 && (
         <div className="mb-6 rounded-card bg-white shadow-card">
-          <div className="border-b border-gray-100 px-6 py-4">
-            <h2 className="text-sm font-semibold text-neutral-dark">
-              {summary.has_stripe ? 'Reactivate your subscription' : 'Start your 14-day free trial'}
-            </h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">
-              {summary.has_stripe
-                ? 'Secure payment is handled by Stripe — we never see or store your card details.'
-                : `Pick a plan to start your free trial. A card is required, but you won't be charged until ${trialEndLabel} — cancel anytime before then. Payment is handled by Stripe; we never see or store your card details.`}
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-neutral-dark">
+                {summary.has_stripe ? 'Reactivate your subscription' : 'Start your 14-day free trial'}
+              </h2>
+              <p className="mt-0.5 text-xs text-neutral-mid">
+                {summary.has_stripe
+                  ? 'Secure payment is handled by Stripe — we never see or store your card details.'
+                  : `Pick a plan to start your free trial. A card is required, but you won't be charged until ${trialEndLabel} — cancel anytime before then. Payment is handled by Stripe; we never see or store your card details.`}
+              </p>
+            </div>
+            <IntervalToggle value={billingInterval} onChange={setBillingInterval} />
           </div>
           <div className="px-6 py-5">
             {checkoutError && (
@@ -374,10 +415,7 @@ export default function BillingPage() {
                       <h3 className="font-semibold text-neutral-dark">{p.name}</h3>
                       {isCurrent && <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-medium text-teal">Your plan</span>}
                     </div>
-                    <p className="mb-4">
-                      <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_monthly_pence)}</span>
-                      <span className="text-sm text-neutral-mid"> / month</span>
-                    </p>
+                    <PlanPrice p={p} interval={billingInterval} />
                     <ul className="mb-5 space-y-1.5">
                       {feats.map((f, i) => (
                         <li key={i} className="flex items-center gap-2 text-sm text-neutral-dark">

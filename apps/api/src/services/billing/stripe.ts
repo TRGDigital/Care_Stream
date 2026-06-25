@@ -59,10 +59,18 @@ function mapStatus(s: Stripe.Subscription.Status): string {
 }
 
 // ─── Plan → Stripe price (lazy create) ────────────────────────────────────────
-// Returns the recurring monthly price id for a plan, creating the Stripe Product
-// + Price on first use and persisting the id. Avoids any manual dashboard setup.
-async function ensurePlanPrice(plan: any): Promise<string> {
-  if (plan.stripe_price_id_monthly) return plan.stripe_price_id_monthly
+// Returns the recurring price id for a plan + interval ('month'|'year'), creating
+// the Stripe Product + Price on first use and persisting the id. Avoids any manual
+// dashboard setup. Annual price ids are normally pre-set on the plan in the DB.
+export type BillingInterval = 'month' | 'year'
+
+async function ensurePlanPrice(plan: any, interval: BillingInterval = 'month'): Promise<string> {
+  const existing = interval === 'year' ? plan.stripe_price_id_annual : plan.stripe_price_id_monthly
+  if (existing) return existing
+
+  const amount = interval === 'year' ? plan.price_annual_pence : plan.price_monthly_pence
+  if (!amount) throw new Error(`No ${interval === 'year' ? 'annual' : 'monthly'} price configured for the ${plan.name} plan.`)
+
   const stripe = getStripe()
   const opts = managedPaymentsRequestOptions()
   const product = await stripe.products.create({
@@ -73,24 +81,27 @@ async function ensurePlanPrice(plan: any): Promise<string> {
   const price = await stripe.prices.create({
     product:    product.id,
     currency:   'gbp',
-    unit_amount: plan.price_monthly_pence,
-    recurring:  { interval: 'month' },
+    unit_amount: amount,
+    recurring:  { interval },
     metadata:   { plan_id: plan.id },
   }, opts)
-  await (prisma as any).plan.update({ where: { id: plan.id }, data: { stripe_price_id_monthly: price.id } })
+  await (prisma as any).plan.update({
+    where: { id: plan.id },
+    data:  interval === 'year' ? { stripe_price_id_annual: price.id } : { stripe_price_id_monthly: price.id },
+  })
   return price.id
 }
 
 // ─── Checkout ─────────────────────────────────────────────────────────────────
 // Creates a hosted Checkout Session for a tenant to subscribe to a plan.
-export async function createCheckoutSession(tenantId: string, planId: string): Promise<string> {
+export async function createCheckoutSession(tenantId: string, planId: string, interval: BillingInterval = 'month'): Promise<string> {
   const stripe = getStripe()
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true } })
   if (!tenant) throw new Error('Tenant not found')
   const plan = await (prisma as any).plan.findUnique({ where: { id: planId } })
   if (!plan || !plan.is_active) throw new Error('Plan not available')
 
-  const priceId = await ensurePlanPrice(plan)
+  const priceId = await ensurePlanPrice(plan, interval)
   const admin = await (prisma as any).user.findFirst({
     where:   { tenant_id: tenantId, role: 'admin', is_active: true },
     orderBy: { created_at: 'asc' }, select: { email: true },

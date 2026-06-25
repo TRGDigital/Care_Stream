@@ -30,9 +30,10 @@ billingRouter.get('/plans', async (_req: Request, res: Response) => {
 billingRouter.post('/checkout', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const planId   = (req.body?.plan_id as string | undefined)?.trim()
+  const interval = req.body?.interval === 'year' ? 'year' : 'month'
   if (!planId) { err(res, 'VALIDATION_ERROR', 'plan_id is required.', 400); return }
   try {
-    const url = await createCheckoutSession(tenantId, planId)
+    const url = await createCheckoutSession(tenantId, planId, interval)
     ok(res, { url })
   } catch (e: any) {
     err(res, 'CHECKOUT_FAILED', e.message ?? 'Could not start checkout.', 500)

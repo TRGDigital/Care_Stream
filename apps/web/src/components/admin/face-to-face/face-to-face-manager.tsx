@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
-  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail,
+  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle,
 } from 'lucide-react'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -30,12 +30,20 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [loading,  setLoading]  = useState(true)
   const [editing,  setEditing]  = useState<{ mode: 'new'; date?: string } | { mode: 'edit'; session: Session } | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
+  // Past/today sessions with staff still not marked attended or absent.
+  const [unmarked, setUnmarked] = useState<any[]>([])
+  const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
 
+  async function loadUnmarked() {
+    if (!api) return
+    try { const d = await api.faceToFace.unmarked(); setUnmarked(d.sessions) } catch { /* ignore */ }
+  }
   async function loadSessions() {
     if (!api) return
     // Fetch a wide window so backfill (last year) and next-year planning are covered.
     const from = `${year - 1}-01-01`, to = `${year + 1}-12-31`
     try { const d = await api.faceToFace.sessions(from, to); setSessions(d.sessions) } catch { /* ignore */ }
+    loadUnmarked()
   }
   useEffect(() => {
     if (!api) return
@@ -44,8 +52,23 @@ export function FaceToFaceManager({ token }: { token?: string }) {
       api.faceToFace.sessions(`${year - 1}-01-01`, `${year + 1}-12-31`).then(d => setSessions(d.sessions)).catch(() => {}),
       api.faceToFace.modules().then(d => setModules(d.modules)).catch(() => {}),
       api.users.list().then((d: any) => setStaff((d.users ?? d ?? []).filter((u: any) => u.is_active !== false))).catch(() => {}),
+      api.faceToFace.unmarked().then(d => setUnmarked(d.sessions)).catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [api, year]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Quick-mark one person straight from the "still to record" list.
+  async function quickMark(sessionId: string, userId: string, status: 'attended' | 'absent') {
+    if (!api) return
+    setMarkBusy(`${sessionId}:${userId}`)
+    try {
+      await api.faceToFace.markAttendance(sessionId, [{ user_id: userId, status }])
+      // Drop the person locally; drop the session row once it's fully marked.
+      setUnmarked(prev => prev
+        .map(s => s.id === sessionId ? { ...s, people: s.people.filter((p: any) => p.user_id !== userId) } : s)
+        .filter(s => s.people.length > 0))
+      loadSessions()
+    } catch { /* ignore */ } finally { setMarkBusy(null) }
+  }
 
   // Sessions bucketed by day for the calendar.
   const byDay = useMemo(() => {
@@ -131,6 +154,45 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         </div>
       </div>
       {loading && <p className="mt-3 text-center text-sm text-neutral-mid">Loading…</p>}
+
+      {/* Attendance still to record — past/today sessions with unmarked staff */}
+      {unmarked.length > 0 && (() => {
+        const pending = unmarked.reduce((n: number, s: any) => n + s.people.length, 0)
+        return (
+          <div className="mt-8">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <AlertTriangle size={16} className="text-amber-500" />
+              <h3 className="text-sm font-bold text-neutral-dark">Attendance still to record</h3>
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{pending} {pending === 1 ? 'person' : 'people'}</span>
+            </div>
+            <p className="mb-3 text-xs text-neutral-mid">These sessions have already taken place but some staff aren&apos;t marked attended or missed yet. Mark them here so nobody is left off the record.</p>
+            <div className="space-y-3">
+              {unmarked.map((s: any) => (
+                <div key={s.id} className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <button onClick={() => setViewingId(s.id)} className="text-left text-sm font-semibold text-neutral-dark hover:text-teal">{s.title}</button>
+                    <span className="text-xs text-neutral-mid">{prettyDate(s.session_date)} · {s.people.length} to mark</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {s.people.map((p: any) => (
+                      <div key={p.user_id} className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-white px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-neutral-dark">{p.name}</p>
+                          {p.job_role && <p className="text-xs text-neutral-mid">{p.job_role}</p>}
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <button onClick={() => quickMark(s.id, p.user_id, 'attended')} disabled={markBusy === `${s.id}:${p.user_id}`} className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-green-600 hover:border-green-300 disabled:opacity-50"><CheckCircle2 size={13} /> Attended</button>
+                          <button onClick={() => quickMark(s.id, p.user_id, 'absent')} disabled={markBusy === `${s.id}:${p.user_id}`} className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-red-500 hover:border-red-300 disabled:opacity-50"><XCircle size={13} /> Missed</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {editing && api && (
         <SessionModal

@@ -605,6 +605,7 @@ export function createApiClient(token: string) {
         apiFetch<{ assigned: number; newly_enrolled: number }>(`/face-to-face/sessions/${id}/assign-module`, token, { method: 'POST', body: JSON.stringify({ user_ids }) }),
       remind: (id: string, user_ids?: string[]) =>
         apiFetch<{ sent: number; reminder_sent_at: string }>(`/face-to-face/sessions/${id}/remind`, token, { method: 'POST', body: JSON.stringify(user_ids ? { user_ids } : {}) }),
+      unmarked: () => apiFetch<{ sessions: Array<{ id: string; title: string; session_date: string; people: Array<{ user_id: string; name: string; job_role: string | null }> }> }>('/face-to-face/unmarked', token),
       analytics: () => apiFetch<{
         summary: { sessions: number; allocations: number; attended: number; missed: number; modules_assigned: number; assigned_incomplete: number }
         by_staff: Array<{ user_id: string; name: string; job_role: string | null; allocated: number; attended: number; missed: number; assigned: number; assigned_incomplete: number; missed_sessions: Array<{ session_id: string; title: string; date: string; module_assigned: boolean; completion: string | null }> }>

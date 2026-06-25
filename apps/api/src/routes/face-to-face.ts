@@ -333,6 +333,33 @@ faceToFaceRouter.post('/sessions/:id/remind', requireAdmin, async (req: Request,
   } catch (e: any) { err(res, 'REMIND_FAILED', e.message, 500) }
 })
 
+// ─── GET /face-to-face/unmarked ───────────────────────────────────────────────
+// Sessions that have already happened (today or earlier) with staff still not
+// marked attended or absent — a backfill safety net so admins don't miss anyone.
+faceToFaceRouter.get('/unmarked', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const end = new Date(); end.setUTCHours(23, 59, 59, 999)
+    const sessions = await (prisma as any).faceToFaceSession.findMany({
+      where:  { tenant_id: tenantId, session_date: { lte: end }, attendance: { some: { status: 'allocated' } } },
+      select: { id: true, title: true, session_date: true, attendance: { where: { status: 'allocated' }, select: { user_id: true } } },
+      orderBy: { session_date: 'desc' },
+    })
+    const userIds = [...new Set((sessions as any[]).flatMap((s: any) => s.attendance.map((a: any) => a.user_id)))]
+    const users = userIds.length
+      ? await (prisma as any).user.findMany({ where: { id: { in: userIds }, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } })
+      : []
+    const uMap = new Map((users as any[]).map(u => [u.id, u]))
+    const out = (sessions as any[]).map((s: any) => ({
+      id: s.id, title: s.title, session_date: s.session_date,
+      people: s.attendance
+        .map((a: any) => ({ user_id: a.user_id, name: uMap.get(a.user_id)?.name ?? 'Unknown', job_role: uMap.get(a.user_id)?.job_role ?? null }))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    }))
+    ok(res, { sessions: out })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
 // ─── GET /face-to-face/analytics ──────────────────────────────────────────────
 // Per-staff view for the Staff analytics tab: who missed sessions, who was sent the
 // digital module as a result, and whether they've completed it.

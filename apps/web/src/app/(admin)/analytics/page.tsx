@@ -1376,7 +1376,7 @@ export default function AnalyticsPage() {
             </div>
           ))}
           <p className="mb-6 rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-3 text-xs text-neutral-mid">
-            This shows whether training and audited practice move together over time. It&apos;s a correlation, useful evidence of a continuous-improvement loop for CQC, not proof that the training alone caused the change.
+            It needs several monthly audit runs to show a meaningful trend. One run is just a point. The view shows whether training and audited practice move together over time, useful evidence of a continuous-improvement loop for CQC, but it&apos;s a correlation, not proof that the training alone caused the change.
           </p>
         </>
       ))}

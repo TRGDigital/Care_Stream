@@ -51,9 +51,9 @@ billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) =>
   }
   const t = await (prisma as any).tenant.findUnique({
     where: { id: tenantId },
-    select: { subscription_status: true, stripe_subscription_id: true },
+    select: { subscription_status: true, stripe_subscription_id: true, tier: true },
   })
-  const needsBilling = t ? (t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
+  const needsBilling = t ? (t.tier !== 'training_only' && t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
   ok(res, { needs_billing: needsBilling, subscription_status: t?.subscription_status ?? null })
 })
 

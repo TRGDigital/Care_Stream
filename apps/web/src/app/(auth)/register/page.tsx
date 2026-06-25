@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,10 +20,18 @@ export default function RegisterPage() {
   const [form, setForm]     = useState<Record<FormKey, string>>({
     org_name: '', name: '', email: '', password: '',
   })
-  const [error,   setError]   = useState('')
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [error,        setError]        = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [success,      setSuccess]      = useState(false)
+  // Training-only signup (à la carte training modules, no subscription) when the
+  // page is reached as /register?tier=training_only. Read client-side to avoid an
+  // SSR/hydration mismatch.
+  const [trainingOnly, setTrainingOnly] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tier') === 'training_only') setTrainingOnly(true)
+  }, [])
 
   function update(key: FormKey) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -38,7 +46,7 @@ export default function RegisterPage() {
     const res  = await fetch(`${API_URL}/auth/register`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(form),
+      body:    JSON.stringify(trainingOnly ? { ...form, tier: 'training_only' } : form),
     })
     const body = await res.json()
 
@@ -54,8 +62,17 @@ export default function RegisterPage() {
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Start your 14-day free trial</h1>
-      <p className="mb-7 text-sm text-neutral-mid">Card required to start — no charge until day 14, cancel anytime. Up and running in minutes.</p>
+      {trainingOnly ? (
+        <>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Start with training modules</h1>
+          <p className="mb-7 text-sm text-neutral-mid">No subscription. Create your account, then buy the training modules you need at £25.99 per staff member, per module.</p>
+        </>
+      ) : (
+        <>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Start your 14-day free trial</h1>
+          <p className="mb-7 text-sm text-neutral-mid">Card required to start — no charge until day 14, cancel anytime. Up and running in minutes.</p>
+        </>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         {FIELDS.map(({ key, label, type, placeholder }) => (
           <div key={key}>

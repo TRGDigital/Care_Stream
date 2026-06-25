@@ -270,7 +270,7 @@ export default function DashboardPage() {
         <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />
       )}
 
-      {session?.accessToken && <PlanCard token={session.accessToken} />}
+      {session?.accessToken && (session.user as any)?.tier !== 'training_only' && <PlanCard token={session.accessToken} />}
 
       <SidebarGuide />
 

@@ -57,6 +57,9 @@ const RegisterSchema = z.object({
   email:     z.string().email(),
   password:  z.string().min(8),
   plan_id:   z.string().uuid().optional(),
+  // 'training_only' = self-serve gateway tier (buy training modules à la carte,
+  // no subscription). Anything else is the full CareStream platform.
+  tier:      z.enum(['full', 'training_only']).optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -67,6 +70,8 @@ authRouter.post('/register', async (req: Request, res: Response) => {
   }
 
   const { org_name, name, email, password, plan_id } = parsed.data
+  // Training-only accounts have no subscription plan — they buy modules à la carte.
+  const tier = parsed.data.tier === 'training_only' ? 'training_only' : 'full'
 
   // Check email not already in use
   const existing = await (prisma as any).user.findUnique({ where: { email } })
@@ -91,7 +96,8 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         slug,
         email_domain: slug,
         subscription_status: 'trialling',
-        plan_id: plan_id ?? null,
+        plan_id: tier === 'training_only' ? null : (plan_id ?? null),
+        tier,
         branding_signoff: 'The CareStream Team',
       },
     })
@@ -255,9 +261,13 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   const accessToken  = generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: user.role })
   const refreshToken = await issueRefreshToken(user.id)
 
+  // Training-only tenants never go through the card-up-front subscription gate.
+  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
+
   ok(res, {
     access_token:  accessToken,
     refresh_token: refreshToken,
+    needs_billing: needsBilling,
     tier:          user.tenant?.tier ?? 'full',
     user: {
       id:        user.id,
@@ -286,7 +296,7 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
   // Hard gate for the card-up-front trial: a tenant that hasn't started a Stripe
   // subscription yet (and isn't already active) must add a card before using the app.
-  const needsBilling = user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
+  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
   // "Staff + Audits": this member can conduct audits in the hub.
   const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
   ok(res, {
@@ -542,7 +552,8 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   })
 
   // Re-evaluate the billing gate on every refresh so it clears once a card is added.
-  const needsBilling = user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
+  // Training-only tenants are exempt — they never subscribe.
+  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
   const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
 
   ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling, audit_access: auditAccess, tier: user.tenant?.tier ?? 'full' })

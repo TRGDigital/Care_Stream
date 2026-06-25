@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
-import { Check, Minus, ChevronDown } from 'lucide-react'
+import { Check, Minus, ChevronDown, GraduationCap } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
@@ -224,6 +224,29 @@ export default function PricingPage() {
                 </div>
               )
             ))}
+          </div>
+
+          {/* Just need training? — à la carte modules, no subscription */}
+          <div className="mt-8 rounded-2xl border border-teal/20 bg-white p-8 shadow-card sm:flex sm:items-center sm:justify-between sm:gap-8">
+            <div className="mb-6 sm:mb-0">
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-pill bg-teal-light px-3 py-1 text-xs font-bold text-teal">
+                <GraduationCap size={14} /> Training only
+              </div>
+              <h3 className="mb-1.5 text-xl font-extrabold text-neutral-dark">Just need training? Buy modules individually.</h3>
+              <p className="max-w-lg text-sm leading-relaxed text-neutral-mid">
+                No subscription required. Pay per module, per staff member. Each module includes the interactive lesson,
+                the assessment, and a certificate on completion. Annual modules renew yearly. Upgrade to a full plan any time.
+              </p>
+            </div>
+            <div className="shrink-0 text-center">
+              <p className="mb-3">
+                <span className="text-3xl font-extrabold text-neutral-dark">£25.99</span>
+                <span className="block text-xs text-neutral-mid">per staff member, per module</span>
+              </p>
+              <Link href="/register?tier=training_only" className="inline-block rounded-btn bg-teal px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-dark">
+                Start with training modules
+              </Link>
+            </div>
           </div>
         </div>
       </section>

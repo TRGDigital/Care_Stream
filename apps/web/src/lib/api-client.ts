@@ -675,6 +675,14 @@ export function createApiClient(token: string) {
         trend: Array<{ week_start: string; active: number; pct: number; channels: { chat: number; whatsapp: number; email: number; voice: number } }>
         channels: { chat: number; whatsapp: number; email: number; voice: number; total: number; hub_pct: number | null }
       }>('/analytics/engagement', token),
+      effectiveness: () => apiFetch<{
+        headline: { gaps_put_right: number; open_gaps: number; resolution_rate: number | null; engaged_pct: number | null; resolved_30d: number }
+        loop: { learn: number; retry: number; resolved_7d: number; resolved_30d: number; trend: Array<{ week_start: string; resolved: number }> }
+        mastery: { assigned: number; completed: number; completion_pct: number | null; avg_assessment_score: number | null; answers: number }
+        reaction: { responses: number; avg_confidence_pct: number | null; avg_usefulness_pct: number | null }
+        cqc: { evaluated: number; retried: number; avg_first_score: number | null; avg_latest_score: number | null; avg_improvement: number | null }
+        language: { second_lang_users: number; with: { staff: number; completion_pct: number | null; avg_score: number | null }; without: { staff: number; completion_pct: number | null; avg_score: number | null } }
+      }>('/analytics/effectiveness', token),
       languageSwitches: () => apiFetch<{
         summary: { total_switches: number; staff_count: number; set_count: number; days: number }
         by_area: Array<{ area: string; label: string; count: number }>

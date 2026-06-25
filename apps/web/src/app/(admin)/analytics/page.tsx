@@ -223,7 +223,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced'
+type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview',   label: 'Overview' },
@@ -233,7 +233,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'training',   label: 'Training' },
   { id: 'compliance', label: 'Audits' },
   { id: 'cqc',        label: 'CQC Staff Prep' },
-  { id: 'advanced',   label: 'Advanced' },
+  { id: 'effectiveness', label: 'Effectiveness of Training' },
 ]
 
 export default function AnalyticsPage() {
@@ -252,6 +252,7 @@ export default function AnalyticsPage() {
   const [annual,       setAnnual]   = useState<any>(null)
   const [langSwitch,   setLangSwitch] = useState<any>(null)
   const [f2f,          setF2f]      = useState<any>(null)
+  const [effectiveness, setEffectiveness] = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -262,7 +263,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -284,10 +285,11 @@ export default function AnalyticsPage() {
       api.analytics.engagement().catch(() => null),
       api.analytics.languageSwitches().catch(() => null),
       api.faceToFace.analytics().catch(() => null),
+      api.analytics.effectiveness().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -1253,6 +1255,89 @@ export default function AnalyticsPage() {
       </>)}
 
       {/* ── Advanced section ─────────────────────────────────────────────────── */}
+      {tab === 'effectiveness' && (!effectiveness ? (
+        <EmptyTab>Effectiveness data appears here once staff have completed training and worked through follow-ups.</EmptyTab>
+      ) : (() => {
+        const e = effectiveness
+        const maxTrend = Math.max(1, ...e.loop.trend.map((w: any) => w.resolved))
+        return (
+          <>
+            <SectionDivider
+              title="Effectiveness of Training"
+              subtitle="Evidence that training and follow-up are improving knowledge across your team — learner reaction, learning, and behaviour change — from your CareStream data."
+            />
+
+            {/* Headline proof points */}
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <StatCard label="Questions put right" value={e.headline.gaps_put_right} info="Times a staff member got a question wrong, then worked through follow-up and answered correctly. The core proof that training closes gaps." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+              <StatCard label="Gaps resolved" value={e.headline.resolution_rate ?? 0} suffix="%" info="Of all knowledge gaps surfaced (wrong answers), the share since put right. The remainder are still open." Icon={TrendingUp} iconBg="bg-teal-light" iconColor="text-teal" />
+              <StatCard label="Engaged with learning" value={e.headline.engaged_pct ?? 0} suffix="%" info="Of gaps closed, the share where staff worked through the policy-grounded micro-lesson ('Learn & retry') rather than just re-answering." Icon={Brain} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
+              <StatCard label="Put right (30 days)" value={e.headline.resolved_30d} info="Knowledge gaps closed in the last 30 days — recent momentum." Icon={Activity} iconBg="bg-amber-50" iconColor="text-amber-500" />
+            </div>
+
+            {/* The learning loop */}
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Card title="How gaps get closed" info="When staff close a gap they either work through the micro-lesson first ('Learn & retry') or simply re-answer ('Just retry'). More 'Learn & retry' means deeper engagement.">
+                <HBar label="Learn & retry" count={e.loop.learn} total={Math.max(1, e.loop.learn + e.loop.retry)} color="bg-teal" />
+                <HBar label="Just retry" count={e.loop.retry} total={Math.max(1, e.loop.learn + e.loop.retry)} color="bg-neutral-mid" />
+                <p className="mt-2 text-xs text-neutral-mid">{e.headline.open_gaps} gap{e.headline.open_gaps === 1 ? '' : 's'} still open across the team.</p>
+              </Card>
+              <Card title="Gaps closed over time" info="Knowledge gaps put right each week over the last 8 weeks — your learning loop in action.">
+                <div className="flex h-32 items-end gap-1.5">
+                  {e.loop.trend.map((w: any, i: number) => (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <div className="w-full rounded-t bg-teal" style={{ height: `${(w.resolved / maxTrend) * 100}%`, minHeight: w.resolved > 0 ? 4 : 0 }} title={`${w.resolved} closed`} />
+                      <span className="text-[9px] text-neutral-mid">{new Date(w.week_start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Mastery + reaction */}
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <StatCard label="Assessment accuracy" value={e.mastery.avg_assessment_score ?? 0} suffix="%" info="Across every training question answered, the share answered correctly — the team's current knowledge level." Icon={GraduationCap} iconBg="bg-teal-light" iconColor="text-teal" />
+              <StatCard label="Training completed" value={e.mastery.completion_pct ?? 0} suffix="%" info="Share of assigned training modules completed." Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" />
+              <StatCard label="Confidence to apply" value={e.reaction.avg_confidence_pct ?? '—'} suffix={e.reaction.avg_confidence_pct != null ? '%' : ''} info={`How confident staff feel applying what they learned, self-rated after annual modules. Based on ${e.reaction.responses} response${e.reaction.responses === 1 ? '' : 's'}.`} Icon={Brain} iconBg="bg-indigo-50" iconColor="text-indigo-500" />
+              <StatCard label="Rated useful" value={e.reaction.avg_usefulness_pct ?? '—'} suffix={e.reaction.avg_usefulness_pct != null ? '%' : ''} info="How useful and relevant staff rated the training to their role." Icon={CheckCircle2} iconBg="bg-amber-50" iconColor="text-amber-500" />
+            </div>
+
+            {/* CQC prep close-the-loop */}
+            {e.cqc.retried > 0 && (
+              <div className="mb-6">
+                <Card title="CQC prep: improvement after review" info="When a staff member scores low on a CQC prep question they can review the model answer and try again. Average score before and after — direct evidence of learning.">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-orange-500">{e.cqc.avg_first_score ?? '—'}</p><p className="text-xs text-neutral-mid">First attempt</p></div>
+                    <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-green-600">{e.cqc.avg_latest_score ?? '—'}</p><p className="text-xs text-neutral-mid">After review</p></div>
+                    <div className="rounded-xl border border-gray-100 bg-teal-light/30 p-3"><p className="text-2xl font-bold text-teal">{e.cqc.avg_improvement != null ? `+${e.cqc.avg_improvement}` : '—'}</p><p className="text-xs text-neutral-mid">Improvement</p></div>
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-mid">Across {e.cqc.retried} retried answer{e.cqc.retried === 1 ? '' : 's'}.</p>
+                </Card>
+              </div>
+            )}
+
+            {/* Language inclusion parity */}
+            {e.language.second_lang_users > 0 && (
+              <div className="mb-6">
+                <Card title="Language is not a barrier to competency" info="Staff who use second-language support to understand a set, compared with the rest of the team. Equivalent results show language support keeps everyone safely competent — an inclusion point for CQC.">
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b border-gray-100 text-left"><th className="pb-2 text-xs font-medium text-neutral-mid">Group</th><th className="pb-2 text-right text-xs font-medium text-neutral-mid">Staff</th><th className="pb-2 text-right text-xs font-medium text-neutral-mid">Completion</th><th className="pb-2 text-right text-xs font-medium text-neutral-mid">Assessment accuracy</th></tr></thead>
+                    <tbody>
+                      <tr className="border-b border-gray-50"><td className="py-2 font-medium text-neutral-dark">Use second-language support</td><td className="py-2 text-right text-neutral-mid">{e.language.with.staff}</td><td className="py-2 text-right text-neutral-dark">{e.language.with.completion_pct ?? '—'}%</td><td className="py-2 text-right text-neutral-dark">{e.language.with.avg_score ?? '—'}%</td></tr>
+                      <tr><td className="py-2 font-medium text-neutral-dark">Rest of the team</td><td className="py-2 text-right text-neutral-mid">{e.language.without.staff}</td><td className="py-2 text-right text-neutral-dark">{e.language.without.completion_pct ?? '—'}%</td><td className="py-2 text-right text-neutral-dark">{e.language.without.avg_score ?? '—'}%</td></tr>
+                    </tbody>
+                  </table>
+                </Card>
+              </div>
+            )}
+
+            <p className="mb-6 rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-3 text-xs text-neutral-mid">
+              These measures show training is improving knowledge (reaction, learning and behaviour). Linking training to care outcomes such as antipsychotic use, falls or incident rates is a later phase that needs those outcomes to be recorded in CareStream.
+            </p>
+          </>
+        )
+      })())}
+
       {tab === 'advanced' && (!advanced ? (
         <div className="rounded-card border-2 border-dashed border-gray-200 p-8 text-center">
           <TrendingUp size={32} className="mx-auto mb-3 text-neutral-mid" />

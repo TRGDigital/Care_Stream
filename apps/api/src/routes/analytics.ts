@@ -1467,6 +1467,84 @@ analyticsRouter.get('/follow-up', requireAdmin, async (_req: Request, res: Respo
   }
 })
 
+// ─── GET /analytics/effectiveness ─────────────────────────────────────────────
+// Phase-1 "Effectiveness of Training": evidence that training + follow-up are
+// improving knowledge, from data CareStream already holds. Maps to Kirkpatrick
+// levels 1–3 (reaction, learning, behaviour). Level 4 (care outcomes) is a later
+// phase that needs outcome data to be captured.
+analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const DAY = 86_400_000, WEEK = 7 * DAY
+  try {
+    const now = Date.now()
+    const since7 = new Date(now - 7 * DAY), since30 = new Date(now - 30 * DAY)
+    const [kg, attempts, enrollments, cqc, langEvents] = await Promise.all([
+      getKnowledgeGapData(tenantId),
+      (prisma as any).remediationAttempt.findMany({ where: { tenant_id: tenantId }, select: { user_id: true, method: true, created_at: true } }),
+      (prisma as any).trainingEnrollment.findMany({
+        where:  { tenant_id: tenantId },
+        select: { user_id: true, status: true, eval_confidence: true, eval_usefulness: true, eval_at: true, answers: { select: { is_correct: true } } },
+      }),
+      (prisma as any).cqcStaffDelivery.findMany({ where: { tenant_id: tenantId, status: 'evaluated' }, select: { score: true, first_score: true, attempts: true } }),
+      (prisma as any).languageSwitchEvent.findMany({ where: { tenant_id: tenantId }, select: { user_id: true } }),
+    ])
+
+    // ── Learning loop: gaps put right via follow-up (uncapped) ──
+    const att = attempts as any[]
+    const learn = att.filter(a => a.method !== 'retry').length
+    const retry = att.filter(a => a.method === 'retry').length
+    const putRight = att.length
+    const openGaps = kg.summary.open_gaps
+    const resolved7  = att.filter(a => new Date(a.created_at) >= since7).length
+    const resolved30 = att.filter(a => new Date(a.created_at) >= since30).length
+    const trend = Array.from({ length: 8 }, (_, i) => {
+      const end = now - i * WEEK, start = end - WEEK
+      return { week_start: new Date(start).toISOString(), resolved: att.filter(a => { const t = new Date(a.created_at).getTime(); return t >= start && t < end }).length }
+    }).reverse()
+
+    // ── Mastery: completion + assessment accuracy ──
+    const enr = enrollments as any[]
+    const assigned = enr.length
+    const completed = enr.filter(e => e.status === 'complete').length
+    let totalAns = 0, correctAns = 0
+    for (const e of enr) for (const a of (e.answers ?? [])) { totalAns++; if (a.is_correct) correctAns++ }
+
+    // ── Reaction: post-completion annual evaluations (1–5 → %) ──
+    const evald = enr.filter(e => e.eval_at && (e.eval_confidence != null || e.eval_usefulness != null))
+    const avgPct5 = (vals: number[]) => vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length / 5) * 100) : null
+
+    // ── CQC prep: improvement after reviewing the model answer and retrying ──
+    const cqcEvald = cqc as any[]
+    const retried = cqcEvald.filter(d => (d.attempts ?? 1) > 1 && d.first_score != null)
+    const avg = (vals: number[]) => vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null
+
+    // ── Language inclusion parity: does 2nd-language support keep competency on par? ──
+    const langUsers = new Set((langEvents as any[]).map(l => l.user_id))
+    const groupStats = (members: any[]) => {
+      const total = members.length
+      const comp = members.filter(e => e.status === 'complete').length
+      let t = 0, c = 0
+      for (const e of members) for (const a of (e.answers ?? [])) { t++; if (a.is_correct) c++ }
+      return { staff: new Set(members.map(e => e.user_id)).size, completion_pct: total ? Math.round((comp / total) * 100) : null, avg_score: t ? Math.round((c / t) * 100) : null }
+    }
+
+    ok(res, {
+      headline: {
+        gaps_put_right:  putRight,
+        open_gaps:       openGaps,
+        resolution_rate: (putRight + openGaps) > 0 ? Math.round((putRight / (putRight + openGaps)) * 100) : null,
+        engaged_pct:     (learn + retry) > 0 ? Math.round((learn / (learn + retry)) * 100) : null,
+        resolved_30d:    resolved30,
+      },
+      loop:    { learn, retry, resolved_7d: resolved7, resolved_30d: resolved30, trend },
+      mastery: { assigned, completed, completion_pct: assigned ? Math.round((completed / assigned) * 100) : null, avg_assessment_score: totalAns ? Math.round((correctAns / totalAns) * 100) : null, answers: totalAns },
+      reaction:{ responses: evald.length, avg_confidence_pct: avgPct5(evald.map(e => e.eval_confidence).filter((v: any) => v != null)), avg_usefulness_pct: avgPct5(evald.map(e => e.eval_usefulness).filter((v: any) => v != null)) },
+      cqc:     { evaluated: cqcEvald.length, retried: retried.length, avg_first_score: avg(retried.map(d => d.first_score)), avg_latest_score: avg(retried.map(d => d.score)), avg_improvement: retried.length ? Math.round(retried.reduce((s, d) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / retried.length) : null },
+      language:{ second_lang_users: langUsers.size, with: groupStats(enr.filter(e => langUsers.has(e.user_id))), without: groupStats(enr.filter(e => !langUsers.has(e.user_id))) },
+    })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
 // ─── GET /analytics/knowledge-gaps ────────────────────────────────────────────
 // Unified, team-wide view of knowledge gaps: open gaps (training + induction
 // combined), the most-missed questions, the weakest topics, and how staff are

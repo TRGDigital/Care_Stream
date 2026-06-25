@@ -462,7 +462,38 @@ const WHERE: Record<string, string> = {
   'You have the full platform. Let us make you a power user.': 'In the console sidebar, open your Dashboard for the overview. Your account manager’s contact is in your welcome email.',
 }
 
-const withWhere = (e: OnboardingEmail): OnboardingEmail => ({ ...e, where: e.where ?? WHERE[e.subject] })
+// Real platform screenshots (captured from a populated Enterprise account),
+// keyed by subject. Several emails reuse the same screen.
+const IMG = (f: string) => `/email-previews/${f}.png`
+const IMAGES: Record<string, string> = {
+  'Welcome to CareStream. Let us get your first answer today.': IMG('chat'),
+  'Upload your policies once, answer questions forever': IMG('policies'),
+  'Why CareStream’s answers are ones you can trust': IMG('knowledge'),
+  'Bring your team into CareStream': IMG('staff'),
+  'Three ways your staff can ask, no app required': IMG('settings'),
+  'Put CareStream in your team’s pocket': IMG('chat'),
+  'Every answer, in the language your carer thinks in': IMG('staff'),
+  'Annual training that staff actually remember': IMG('training'),
+  'Your statutory training, ready to go': IMG('training'),
+  'Turn wrong answers into a stronger team': IMG('dashboard'),
+  'Give every new starter a flawless first week': IMG('onboarding'),
+  'Ask your last CQC report anything': IMG('cqc'),
+  'See how your whole service is really using CareStream': IMG('analytics'),
+  'Inspection evidence, generated in one click': IMG('analytics-cqc-report'),
+  'Find the gaps before an inspector does': IMG('gaps'),
+  'Bring your in-person training into one clear view': IMG('training-f2f'),
+  'Audits shaped around your home, not a template': IMG('audits'),
+  'Proof that your training is actually working': IMG('analytics-effectiveness'),
+  'Close the loop: from training to real-world practice': IMG('analytics-impact'),
+  'You are up and running. Here is what is next.': IMG('billing'),
+  'You have the full platform. Let us make you a power user.': IMG('dashboard'),
+}
+
+const withWhere = (e: OnboardingEmail): OnboardingEmail => ({
+  ...e,
+  where:    e.where ?? WHERE[e.subject],
+  imageSrc: e.imageSrc ?? IMAGES[e.subject],
+})
 
 // ── Compose sequences ──────────────────────────────────────────────────────────
 function build(plan: PlanKey): OnboardingEmail[] {

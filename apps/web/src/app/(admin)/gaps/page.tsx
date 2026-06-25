@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
+import { usePlanFeatures } from '@/lib/use-plan-features'
+import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
@@ -37,6 +39,7 @@ function HelpAccordion({ title, children }: { title: string; children: React.Rea
 
 export default function GapsPage() {
   const { data: session } = useSession()
+  const { features } = usePlanFeatures()
   const userId = session?.user?.email ?? 'guest'
   const [data,    setData]    = useState<GapsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -71,6 +74,18 @@ export default function GapsPage() {
     } finally {
       setAnalysing(false)
     }
+  }
+
+  // Policy gap detection is a Professional+ feature — show an upgrade prompt
+  // instead of a raw "not included" error for Starter tenants.
+  if (features && !features.has_gap_detection) {
+    return (
+      <UpgradePanel
+        title="Policy gap analysis"
+        description="See which CQC regulations your policies cover, where the gaps are, and the unmatched questions your staff are asking. Available on the Professional and Enterprise plans."
+        tier="Professional"
+      />
+    )
   }
 
   if (loading) {

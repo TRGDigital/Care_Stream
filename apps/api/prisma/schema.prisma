@@ -199,6 +199,7 @@ model Tenant {
   stripe_customer_id  String?            @unique
   stripe_subscription_id String?                              // active Stripe subscription (set via checkout/webhook)
   subscription_status String             @default("trialling") // active|trialling|past_due|cancelled
+  closure_requested_at DateTime?                               // set when an admin requests account closure (logins deactivated, queued for erasure)
   trial_ends_at       DateTime?                                // when the Stripe trial ends (card-up-front trial)
   plan_id             String?
   tier                String             @default("full")                   // "full" = full CareStream | "training_only" = standard-training-only gateway tier

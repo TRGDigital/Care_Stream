@@ -6,6 +6,8 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { usePlanFeatures } from '@/lib/use-plan-features'
+import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { Printer, FileDown, ClipboardCheck } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -87,6 +89,7 @@ function fmt(date: string | null): string {
 
 export default function CQCReportPage() {
   const { data: session } = useSession()
+  const { features } = usePlanFeatures()
 
   // Default date range: rolling 12 months
   const todayStr       = new Date().toISOString().slice(0, 10)
@@ -133,6 +136,17 @@ export default function CQCReportPage() {
     } finally {
       setPdfLoading(false)
     }
+  }
+
+  // CQC Readiness Report is a Professional+ feature.
+  if (features && !features.has_cqc_report) {
+    return (
+      <UpgradePanel
+        title="CQC Inspection Evidence Report"
+        description="Generate a structured, inspection-ready evidence report from your staff's AI interactions and training activity. Available on the Professional and Enterprise plans."
+        tier="Professional"
+      />
+    )
   }
 
   return (

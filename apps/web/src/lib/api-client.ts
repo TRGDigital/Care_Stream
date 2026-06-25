@@ -265,6 +265,8 @@ export function createApiClient(token: string) {
         apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id }) }),
       sync: () =>
         apiFetch<{ needs_billing: boolean; subscription_status: string | null }>('/billing/sync', token, { method: 'POST' }),
+      closeAccount: () =>
+        apiFetch<{ closed: boolean; deactivated_users: number }>('/billing/close-account', token, { method: 'POST' }),
     },
 
     settings: {

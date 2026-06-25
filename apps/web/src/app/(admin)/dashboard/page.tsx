@@ -150,8 +150,8 @@ function SidebarGuide() {
       content: (
         <>
           <p><strong className="text-neutral-dark">Onboarding</strong> — build structured induction flows for new starters. Assign policies to read and questions to answer; the system tracks completion and reminds staff of outstanding steps. Ideal for evidencing induction for CQC purposes.</p>
-          <p><strong className="text-neutral-dark">Billing</strong> — manage your subscription plan, view your current usage against plan limits, and update payment details. You can see how many queries and staff users you have used out of your plan allowance.</p>
-          <p><strong className="text-neutral-dark">Settings</strong> — configure your organisation name, inbound email domain, staff job role list, branding sign-off, and notification preferences. Changes here affect how staff interact with the AI across all channels.</p>
+          <p><strong className="text-neutral-dark">Billing</strong> — manage your subscription plan, view your current usage against plan limits, and update payment details. You can see how many queries and staff users you have used out of your plan allowance, and <strong className="text-neutral-dark">upgrade your plan</strong> to unlock more features and a bigger monthly training allocation.</p>
+          <p><strong className="text-neutral-dark">Settings</strong> — configure your organisation name, inbound email domain, staff job role list, branding sign-off, and notification preferences. Changes here affect how staff interact with the AI across all channels. The <strong className="text-neutral-dark">Danger zone</strong> at the bottom lets an admin delete the account (cancels billing, signs everyone out, and queues your data for erasure, recoverable by support for 30 days).</p>
         </>
       ),
     },

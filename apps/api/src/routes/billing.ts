@@ -67,6 +67,35 @@ billingRouter.post('/cancel', requireAdmin, async (req: Request, res: Response) 
   }
 })
 
+// ─── POST /billing/close-account — request account closure ────────────────────
+// Cancels the Stripe subscription, deactivates ALL logins immediately, and flags
+// the tenant for permanent erasure (closure_requested_at). Recoverable by the
+// CareStream team for a short window before data is erased.
+billingRouter.post('/close-account', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    // Best-effort Stripe cancel — don't block closure if Stripe is unreachable.
+    await cancelTenantSubscription(tenantId).catch((e) => console.error('[billing] close-account stripe cancel:', e?.message))
+
+    await (prisma as any).tenant.update({
+      where: { id: tenantId },
+      data:  { subscription_status: 'cancelled', closure_requested_at: new Date() },
+    })
+    // Deactivate every login on the account so no one can sign in.
+    const { count } = await (prisma as any).user.updateMany({
+      where: { tenant_id: tenantId, is_active: true },
+      data:  { is_active: false },
+    })
+
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, account_number: true } })
+    console.warn(`[billing] ACCOUNT CLOSURE requested for ${t?.account_number ?? tenantId} (${t?.name ?? ''}) — ${count} logins deactivated, queued for erasure.`)
+
+    ok(res, { closed: true, deactivated_users: count })
+  } catch (e: any) {
+    err(res, 'CLOSE_FAILED', e.message ?? 'Could not close the account.', 500)
+  }
+})
+
 // ─── GET /billing/summary ─────────────────────────────────────────────────────
 // Returns current plan + subscription info.
 // DB fields are available now; Stripe fields (next_billing_date, etc.) are

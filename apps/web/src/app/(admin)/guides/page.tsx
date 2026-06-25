@@ -1219,6 +1219,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               ['Notifications',           'Configure which events trigger email notifications to managers.'],
               ['Data retention',          'Set how long query history and session data is kept.'],
               ['Branding',                'Add your care setting name and logo to the Chat Hub and email replies.'],
+              ['Danger zone',             'Delete account: closes the account, signs everyone out, and queues your data for permanent erasure. See "Plans, billing & closing your account" below.'],
             ].map(([setting, desc]) => (
               <div key={setting} className="grid grid-cols-[11rem_1fr] gap-3 px-4 py-3">
                 <span className="font-medium text-neutral-dark">{setting}</span>
@@ -1228,6 +1229,59 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
         </SectionBlock>
         <Tip>Settings changes take effect immediately and there is no separate publish or save step for most settings.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'billing-account',
+    icon:    ShieldAlert,
+    title:   'Plans, billing & closing your account',
+    summary: 'Upgrade your plan, manage billing, and how to delete your account',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="Your plan & upgrading">
+          <p className="text-sm text-neutral-mid">
+            Your current plan, monthly price, and annual training allocation are shown on the <strong>Dashboard</strong> and
+            on the <strong>Billing</strong> page. Each plan includes a monthly pool of annual training allocations
+            (Starter 10, Professional 30, Enterprise unlimited) — one allocation is one annual training module assigned to
+            one staff member.
+          </p>
+          <div className="space-y-3">
+            <Step n={1}>Go to <strong>Billing</strong> in the sidebar (or click <strong>Upgrade plan</strong> on the Dashboard).</Step>
+            <Step n={2}>Under <strong>Upgrade your plan</strong>, the higher tiers available to you are listed with their features and price.</Step>
+            <Step n={3}>Click <strong>Upgrade to …</strong> to go to secure Stripe checkout. Upgrades take effect immediately and unlock the new features straight away.</Step>
+          </div>
+          <Tip>Locked features (for example Face-to-face training, Build your own audit, or the Effectiveness and Training Impact reports) show an <strong>Upgrade</strong> prompt that takes you to Billing. Your existing data is always kept exactly as it is when you change plan.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Managing payment & invoices">
+          <p className="text-sm text-neutral-mid">
+            Use <strong>Manage billing</strong> on the Billing page to open the secure Stripe portal, where you can update
+            your card, change payment details, and download invoices. Your invoice history is also listed on the Billing
+            page. CareStream never sees or stores your card details.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Deleting your account">
+          <p className="text-sm text-neutral-mid">
+            If you need to close your account, you can do it yourself from <strong>Settings → Danger zone → Delete account</strong>.
+            This is a serious, account-wide action, so it asks you to confirm by typing <strong>DELETE</strong>.
+          </p>
+          <p className="text-sm font-medium text-neutral-dark">When you delete your account, we immediately:</p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-mid">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /> Cancel your subscription so you are not billed again.</li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /> Sign out and deactivate <strong>every</strong> login on the account, so no one (admins or staff) can sign in.</li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /> Queue all of your data (policies, staff, training, audits) for permanent erasure.</li>
+          </ul>
+          <Tip>
+            Changed your mind? Our team can restore a closed account for <strong>30 days</strong>. After that, the data is
+            permanently erased and cannot be recovered. To restore, contact support before the 30 days are up.
+          </Tip>
+          <p className="text-sm text-neutral-mid">
+            Only an <strong>admin</strong> can delete the account. If you only want to stop being billed but keep your data,
+            use <strong>Manage billing</strong> to cancel your subscription instead of deleting the account.
+          </p>
+        </SectionBlock>
       </div>
     ),
   },

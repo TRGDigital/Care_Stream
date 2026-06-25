@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
-  Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
+  AlertTriangle, Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
   Mail, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
 
@@ -71,6 +71,84 @@ function SettingSection({
           {children}
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Danger zone (account closure) ───────────────────────────────────────────
+
+function DangerZone({ token }: { token: string }) {
+  const [open,    setOpen]    = useState(false)
+  const [confirm, setConfirm] = useState('')
+  const [closing, setClosing] = useState(false)
+  const [error,   setError]   = useState('')
+
+  async function closeAccount() {
+    setError(''); setClosing(true)
+    try {
+      await createApiClient(token).billing.closeAccount()
+      // All logins are now deactivated — sign this admin out and send to login.
+      await signOut({ callbackUrl: '/login' })
+    } catch (e: any) {
+      setError(e.message ?? 'Could not close the account.'); setClosing(false)
+    }
+  }
+
+  return (
+    <div className="rounded-card overflow-hidden border border-red-200 bg-white shadow-card">
+      <div className="flex items-center gap-3 border-b border-red-100 bg-red-50/50 px-6 py-4">
+        <AlertTriangle size={16} className="shrink-0 text-red-600" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-red-700">Danger zone</p>
+          <p className="mt-0.5 text-xs text-neutral-mid">Close this account and remove access for everyone.</p>
+        </div>
+      </div>
+      <div className="px-6 py-5">
+        <p className="mb-1 text-sm font-medium text-neutral-dark">Delete account</p>
+        <p className="mb-4 max-w-xl text-xs leading-relaxed text-neutral-mid">
+          Deleting your account cancels your subscription, immediately signs out and deactivates every login on the
+          account, and queues all of your data for permanent erasure. Our team can restore it for 30 days if this was a
+          mistake; after that it is gone for good.
+        </p>
+        {!open ? (
+          <button
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+          >
+            <Trash2 size={15} /> Delete account
+          </button>
+        ) : (
+          <div className="rounded-lg border border-red-200 bg-red-50/40 p-4">
+            <p className="mb-3 text-sm text-neutral-dark">
+              Type <span className="font-mono font-bold">DELETE</span> to confirm. Everyone will be signed out immediately.
+            </p>
+            <input
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              placeholder="DELETE"
+              className="mb-3 w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+            />
+            {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={closeAccount}
+                disabled={confirm !== 'DELETE' || closing}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {closing ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                {closing ? 'Closing account…' : 'Permanently delete account'}
+              </button>
+              <button
+                onClick={() => { setOpen(false); setConfirm(''); setError('') }}
+                disabled={closing}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1029,6 +1107,8 @@ export default function SettingsPage() {
             </div>
           </div>
         </SettingSection>
+
+        {session?.accessToken && <DangerZone token={session.accessToken} />}
 
       </div>
     </div>

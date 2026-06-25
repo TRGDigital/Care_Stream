@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle, Check, Loader2 } from 'lucide-react'
+import { ExternalLink, FileText, Download, CheckCircle2, Clock, AlertCircle, XCircle, Check, Loader2, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,6 +38,23 @@ function StatusBadge({ status }: { status: string }) {
       {icon}{label}
     </span>
   )
+}
+
+// Headline features for a plan card / chooser tile.
+function planFeats(p: any): string[] {
+  return [
+    `${p.monthly_annual_license_limit ?? 'Unlimited'} annual training allocations / month`,
+    `${p.monthly_query_limit?.toLocaleString() ?? 'Unlimited'} queries / month`,
+    `${p.max_staff_users ?? 'Unlimited'} staff`,
+    `${p.max_policies ?? 'Unlimited'} policies`,
+    ...(p.has_gap_detection      ? ['Policy gap analysis'] : []),
+    ...(p.has_cqc_report         ? ['CQC Readiness Report'] : []),
+    ...(p.has_advanced_analytics ? ['Advanced analytics'] : []),
+    ...(p.has_face_to_face       ? ['Face-to-face training & matrix'] : []),
+    ...(p.has_custom_audits      ? ['Build your own audits'] : []),
+    ...(p.has_effectiveness      ? ['Effectiveness of training'] : []),
+    ...(p.has_training_impact    ? ['Audits linked to training + Training Impact'] : []),
+  ]
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -272,6 +289,64 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* ── Upgrade your plan (active subscribers — show higher tiers) ───────── */}
+      {!loading && summary && summary.subscription_status === 'active' && (() => {
+        const currentPrice = summary.price_monthly_pence ?? 0
+        const upgrades = plans.filter((p: any) => (p.price_monthly_pence ?? 0) > currentPrice)
+        if (upgrades.length === 0) {
+          return (
+            <div className="mb-6 rounded-card border border-teal/20 bg-teal-light/20 px-6 py-4 text-sm text-neutral-dark">
+              <span className="font-semibold">You&rsquo;re on our top plan.</span> Every feature is included.
+            </div>
+          )
+        }
+        return (
+          <div className="mb-6 rounded-card bg-white shadow-card">
+            <div className="border-b border-gray-100 px-6 py-4">
+              <h2 className="text-sm font-semibold text-neutral-dark">Upgrade your plan</h2>
+              <p className="mt-0.5 text-xs text-neutral-mid">Unlock more features and a bigger monthly allocation. Upgrades take effect immediately; your data is kept exactly as it is.</p>
+            </div>
+            <div className="px-6 py-5">
+              {checkoutError && (
+                <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{checkoutError}</p>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {upgrades.map((p: any) => (
+                  <div key={p.id} className="rounded-lg border border-gray-200 p-5">
+                    <div className="mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-neutral-dark">{p.name}</h3>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Upgrade</span>
+                    </div>
+                    <p className="mb-4">
+                      <span className="text-2xl font-bold text-neutral-dark">{pence(p.price_monthly_pence)}</span>
+                      <span className="text-sm text-neutral-mid"> / month</span>
+                      {p.price_annual_pence && (
+                        <span className="ml-2 text-xs text-neutral-mid">or {pence(p.price_annual_pence)} / year</span>
+                      )}
+                    </p>
+                    <ul className="mb-5 space-y-1.5">
+                      {planFeats(p).map((f, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-neutral-dark">
+                          <Check size={14} className="shrink-0 text-teal" />{f}
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      onClick={() => subscribe(p.id)}
+                      disabled={!!checkoutPlan}
+                      className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
+                    >
+                      {checkoutPlan === p.id ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                      {checkoutPlan === p.id ? 'Redirecting to Stripe…' : `Upgrade to ${p.name}`}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Plan chooser (shown until a subscription is active) ──────────────── */}
       {!loading && summary && summary.subscription_status !== 'active' && plans.length > 0 && (
         <div className="mb-6 rounded-card bg-white shadow-card">
@@ -292,14 +367,7 @@ export default function BillingPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {plans.map((p: any) => {
                 const isCurrent = summary.plan_name === p.name
-                const feats: string[] = [
-                  `${p.monthly_query_limit?.toLocaleString() ?? 'Unlimited'} queries / month`,
-                  `${p.max_staff_users ?? 'Unlimited'} staff`,
-                  `${p.max_policies ?? 'Unlimited'} policies`,
-                  ...(p.has_cqc_report ? ['CQC reports'] : []),
-                  ...(p.has_gap_detection ? ['Gap analysis'] : []),
-                  ...(p.has_advanced_analytics ? ['Advanced analytics'] : []),
-                ]
+                const feats: string[] = planFeats(p)
                 return (
                   <div key={p.id} className={clsx('rounded-lg border p-5', isCurrent ? 'border-teal ring-1 ring-teal/30' : 'border-gray-200')}>
                     <div className="mb-1 flex items-center justify-between">

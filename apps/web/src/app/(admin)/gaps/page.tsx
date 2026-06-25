@@ -39,7 +39,8 @@ function HelpAccordion({ title, children }: { title: string; children: React.Rea
 
 export default function GapsPage() {
   const { data: session } = useSession()
-  const { features } = usePlanFeatures()
+  const { features, loading: planLoading } = usePlanFeatures()
+  const locked = !!features && !features.has_gap_detection
   const userId = session?.user?.email ?? 'guest'
   const [data,    setData]    = useState<GapsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,7 +62,14 @@ export default function GapsPage() {
       .finally(() => setLoading(false))
   }, [session?.accessToken, userId])
 
-  useEffect(() => { load() }, [load])
+  // Only call the (plan-gated) gaps API once we know the plan includes gap
+  // detection — otherwise a locked tenant briefly sees the API's raw
+  // "not included" error before the upgrade panel renders.
+  useEffect(() => {
+    if (planLoading) return          // plan unknown yet — wait
+    if (locked) { setLoading(false); return }
+    load()
+  }, [planLoading, locked, load])
 
   async function runAnalysis() {
     if (!session?.accessToken) return
@@ -76,9 +84,10 @@ export default function GapsPage() {
     }
   }
 
-  // Policy gap detection is a Professional+ feature — show an upgrade prompt
-  // instead of a raw "not included" error for Starter tenants.
-  if (features && !features.has_gap_detection) {
+  // Policy gap detection is a Professional+ feature. While the plan is still
+  // loading, show a skeleton (never the raw API error); once known, show the
+  // upgrade prompt for locked tenants.
+  if (locked) {
     return (
       <UpgradePanel
         title="Policy gap analysis"
@@ -88,7 +97,7 @@ export default function GapsPage() {
     )
   }
 
-  if (loading) {
+  if (planLoading || loading) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-64 animate-pulse rounded bg-gray-100" />

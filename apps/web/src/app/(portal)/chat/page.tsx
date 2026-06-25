@@ -13,6 +13,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { F2FAdminView } from '@/components/hub/f2f-admin-view'
+import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { ProgressView } from '@/components/hub/progress-view'
 import Link from 'next/link'
@@ -333,6 +334,9 @@ function ChatPageInner() {
 
   const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
+  const { features: planFeatures }                     = usePlanFeatures()
+  // F2F is a Professional/Enterprise feature — hide the hub admin tab otherwise.
+  const canF2F                                         = isAdmin && (planFeatures == null || planFeatures.has_face_to_face)
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
@@ -782,7 +786,7 @@ function ChatPageInner() {
               {navCounts.audits > 0 && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
             </button>
           )}
-          {isAdmin && (
+          {canF2F && (
             <button
               onClick={() => setView('f2f')}
               className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'f2f' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -956,7 +960,7 @@ function ChatPageInner() {
         )}
 
         {/* F2F Training (admin-only) */}
-        {view === 'f2f' && isAdmin && session?.accessToken && (
+        {view === 'f2f' && canF2F && session?.accessToken && (
           <F2FAdminView token={session.accessToken} />
         )}
 

@@ -9,6 +9,8 @@ import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, C
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
+import { usePlanFeatures } from '@/lib/use-plan-features'
+import { LockChip } from '@/components/admin/upgrade-gate'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -58,6 +60,9 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AuditsPage() {
   const { data: session }           = useSession()
+  const { features }                = usePlanFeatures()
+  const canCustomAudits = features == null || features.has_custom_audits
+  const canLinkTraining = features == null || features.has_training_impact
   const userId = session?.user?.email ?? 'guest'
   const router                      = useRouter()
   const [templates, setTemplates]   = useState<any[]>([])
@@ -149,10 +154,16 @@ export default function AuditsPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowBuilder(true)}
-            className="flex items-center gap-2 rounded-btn border border-teal/40 bg-white px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/40"
+            onClick={() => canCustomAudits ? setShowBuilder(true) : router.push('/billing')}
+            className={clsx(
+              'flex items-center gap-2 rounded-btn border px-4 py-2 text-sm font-medium',
+              canCustomAudits
+                ? 'border-teal/40 bg-white text-teal hover:bg-teal-light/40'
+                : 'border-amber-200 bg-amber-50/60 text-amber-700 hover:bg-amber-50',
+            )}
+            title={canCustomAudits ? undefined : 'Building your own audits is an Enterprise feature'}
           >
-            <Wrench size={15} /> Build your own audit
+            <Wrench size={15} /> Build your own audit{!canCustomAudits && <LockChip tier="Enterprise" />}
           </button>
           <button
             onClick={() => setShowNew(v => !v)}
@@ -186,8 +197,8 @@ export default function AuditsPage() {
                   <p className="text-xs text-neutral-mid capitalize">{t.frequency}{typeof t._count?.sections === 'number' ? ` · ${t._count.sections} section${t._count.sections === 1 ? '' : 's'}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setLinking(t)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                    <GraduationCap size={13} /> Linked training{Array.isArray(t.module_ids) && t.module_ids.length ? ` (${t.module_ids.length})` : ''}
+                  <button onClick={() => canLinkTraining ? setLinking(t) : router.push('/billing')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal" title={canLinkTraining ? undefined : 'Linking audits to training is an Enterprise feature'}>
+                    <GraduationCap size={13} /> Linked training{Array.isArray(t.module_ids) && t.module_ids.length ? ` (${t.module_ids.length})` : ''}{!canLinkTraining && <LockChip tier="Enterprise" />}
                   </button>
                   <button onClick={() => removeTemplate(t.id, t.name)} disabled={deleting === t.id} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-red-200 hover:text-red-500 disabled:opacity-50">
                     <Trash2 size={13} /> {deleting === t.id ? 'Deleting…' : 'Delete'}

@@ -115,6 +115,7 @@ export default function ClientsPage() {
                   <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3">Plan</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Annual licences (this month)</th>
                   <th className="px-4 py-3 text-right">Queries (this month)</th>
                   <th className="px-4 py-3 text-right">Staff</th>
                   <th className="px-4 py-3 text-right">Policies</th>
@@ -158,6 +159,17 @@ export default function ClientsPage() {
                       <td className="px-4 py-3 text-neutral-mid">{t.tier === 'training_only' ? 'Training module' : (t.plan?.name ?? '—')}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={t.subscription_status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {t.tier === 'training_only' ? (
+                          <p className="text-right text-xs text-neutral-mid/60">—</p>
+                        ) : (
+                          <UsageBar
+                            used={t.stats.annualLicensesUsed}
+                            limit={t.stats.annualLicenseLimit ?? null}
+                            label="allocations"
+                          />
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <UsageBar

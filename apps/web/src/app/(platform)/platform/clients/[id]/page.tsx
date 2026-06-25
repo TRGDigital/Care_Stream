@@ -718,6 +718,12 @@ export default function ClientDetailPage() {
                 <p className="mb-4 text-xs text-neutral-mid">Usage against plan limits. Query count resets on the 1st of each month.</p>
                 <div className="divide-y divide-gray-100">
                   <UsageMeter
+                    label="Annual training allocations this month"
+                    used={detail.annual_license?.used ?? 0}
+                    limit={detail.annual_license?.limit ?? null}
+                    note="One per annual module assigned to one staff member. Pool resets on the 1st."
+                  />
+                  <UsageMeter
                     label="Queries this month"
                     used={detail.queriesThisMonth}
                     limit={(detail.tenant.plan as PlanLimits).monthly_query_limit}
@@ -750,7 +756,11 @@ export default function ClientDetailPage() {
                   <p className="mb-2 text-xs font-medium text-neutral-mid">Feature gates</p>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { label: 'Gap detection', active: (detail.tenant.plan as PlanLimits).has_gap_detection },
+                      { label: 'Gap detection',        active: (detail.tenant.plan as PlanLimits).has_gap_detection },
+                      { label: 'Face-to-face training', active: !!(detail.tenant.plan as PlanLimits).has_face_to_face },
+                      { label: 'Build your own audit',  active: !!(detail.tenant.plan as PlanLimits).has_custom_audits },
+                      { label: 'Effectiveness',         active: !!(detail.tenant.plan as PlanLimits).has_effectiveness },
+                      { label: 'Training Impact',       active: !!(detail.tenant.plan as PlanLimits).has_training_impact },
                     ].map(({ label, active }) => (
                       <span
                         key={label}

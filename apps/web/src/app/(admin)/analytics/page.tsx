@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
+import { usePlanFeatures } from '@/lib/use-plan-features'
+import { UpgradePanel, LockChip } from '@/components/admin/upgrade-gate'
 import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb, Globe } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
@@ -225,7 +227,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness' | 'impact'
 
-const TABS: { id: TabId; label: string }[] = [
+const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_training_impact' }[] = [
   { id: 'overview',   label: 'Overview' },
   { id: 'engagement', label: 'Engagement' },
   { id: 'staff',      label: 'Staff' },
@@ -233,12 +235,13 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'training',   label: 'Training' },
   { id: 'compliance', label: 'Audits' },
   { id: 'cqc',        label: 'CQC Staff Prep' },
-  { id: 'effectiveness', label: 'Effectiveness of Training' },
-  { id: 'impact',        label: 'Training Impact' },
+  { id: 'effectiveness', label: 'Effectiveness of Training', premium: 'has_effectiveness' },
+  { id: 'impact',        label: 'Training Impact',           premium: 'has_training_impact' },
 ]
 
 export default function AnalyticsPage() {
   const { data: session }           = useSession()
+  const { features } = usePlanFeatures()
   const userId = session?.user?.email ?? 'guest'
   const [engagementData, setEngagement] = useState<any>(null)
   const [data,         setData]     = useState<any>(null)
@@ -330,15 +333,18 @@ export default function AnalyticsPage() {
       <div className="sticky -top-6 z-30 -mx-6 -mt-6 mb-6 bg-neutral-light px-6 pt-6 shadow-sm">
         <h1 className="mb-3 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
         <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-gray-200">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${tab === t.id ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}
-            >
-              {t.label}
-            </button>
-          ))}
+          {TABS.map(t => {
+            const locked = !!t.premium && features != null && !features[t.premium]
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${tab === t.id ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}
+              >
+                {t.label}{locked && <LockChip tier="Enterprise" />}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -1258,7 +1264,13 @@ export default function AnalyticsPage() {
       </>)}
 
       {/* ── Advanced section ─────────────────────────────────────────────────── */}
-      {tab === 'effectiveness' && (!effectiveness ? (
+      {tab === 'effectiveness' && (features && !features.has_effectiveness ? (
+        <UpgradePanel
+          title="Effectiveness of Training"
+          description="See evidence that your training and follow-ups are improving knowledge across the team, mapped to recognised learning levels. Available on the Enterprise plan."
+          tier="Enterprise"
+        />
+      ) : !effectiveness ? (
         <EmptyTab>Effectiveness data appears here once staff have completed training and worked through follow-ups.</EmptyTab>
       ) : (() => {
         const e = effectiveness
@@ -1341,7 +1353,13 @@ export default function AnalyticsPage() {
         )
       })())}
 
-      {tab === 'impact' && (!impact || impact.audits.length === 0 ? (
+      {tab === 'impact' && (features && !features.has_training_impact ? (
+        <UpgradePanel
+          title="Training Impact"
+          description="Link audits to training modules and see whether the training is moving the needle on audited practice over time. The closed loop from training to real-world compliance. Available on the Enterprise plan."
+          tier="Enterprise"
+        />
+      ) : !impact || impact.audits.length === 0 ? (
         <EmptyTab>Link an audit to a training module to see whether the training improves audited practice. On <strong>Monthly Audits</strong>, open one of your own audits and use <strong>Linked training</strong> (or tick modules when building a new audit).</EmptyTab>
       ) : (
         <>

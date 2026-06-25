@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
+import { PlanCard } from '@/components/admin/plan-card'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -268,6 +269,8 @@ export default function DashboardPage() {
       {session?.accessToken && (session.user as any)?.tenantId && (
         <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />
       )}
+
+      {session?.accessToken && <PlanCard token={session.accessToken} />}
 
       <SidebarGuide />
 

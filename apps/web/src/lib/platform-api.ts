@@ -117,12 +117,19 @@ export interface LeadsData {
 
 export interface PlanLimits {
   name:                         string
+  price_monthly_pence?:         number | null
+  price_annual_pence?:          number | null
   monthly_query_limit:          number
+  monthly_annual_license_limit?: number | null
   max_policies:                 number | null
   max_staff_users:              number | null
   max_handbooks:                number | null
   max_manual_knowledge_entries: number | null
   has_gap_detection:            boolean
+  has_face_to_face?:            boolean
+  has_custom_audits?:           boolean
+  has_effectiveness?:           boolean
+  has_training_impact?:         boolean
 }
 
 export interface TenantSummary {
@@ -143,6 +150,8 @@ export interface TenantSummary {
     queryCount:           number
     activeUserCount:      number
     queriesThisMonth:     number
+    annualLicensesUsed?:  number
+    annualLicenseLimit?:  number | null
   }
 }
 
@@ -196,6 +205,11 @@ export interface TenantDetail {
   userCount:            number
   queriesThisMonth:     number
   handbookCount:        number
+  annual_license?: {
+    used:      number
+    limit:     number | null
+    remaining: number | null
+  }
   storage?: {
     bucket:          string | null
     region:          string

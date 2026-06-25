@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
+import { usePlanFeatures } from '@/lib/use-plan-features'
+import { UpgradePanel, LockChip } from '@/components/admin/upgrade-gate'
 import {
   emptyQuestion, isComplete, McqQuestionEditor,
   DAY_NAMES, type Module, type Staff, type Enrollment, type Question,
@@ -1194,6 +1196,8 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
 
 export default function TrainingPage() {
   const { data: session } = useSession()
+  const { features } = usePlanFeatures()
+  const f2fLocked = features != null && !features.has_face_to_face
   const trainingOnly = session?.user?.tier === 'training_only'
   const userId = session?.user?.email ?? 'guest'
   const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face'>('compliance')
@@ -1341,7 +1345,7 @@ export default function TrainingPage() {
                   : (isFtf ? 'text-teal hover:text-teal/80' : 'text-neutral-mid hover:text-neutral-dark')
               }`}
             >
-              {t.label}
+              {t.label}{isFtf && f2fLocked && <LockChip tier="Professional" />}
             </button>
           )
         })}
@@ -1354,7 +1358,15 @@ export default function TrainingPage() {
       {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
       {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
-      {tab === 'face_to_face' && <FaceToFaceManager token={session?.accessToken} />}
+      {tab === 'face_to_face' && (f2fLocked ? (
+        <UpgradePanel
+          title="Face-to-face Training"
+          description="Record in-person training sessions, mark attendance, and see a combined training matrix across digital and face-to-face learning. Available on the Professional and Enterprise plans."
+          tier="Professional"
+        />
+      ) : (
+        <FaceToFaceManager token={session?.accessToken} />
+      ))}
 
       {tab === 'compliance' && <>
 

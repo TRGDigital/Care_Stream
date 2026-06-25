@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { Check, Minus, ChevronDown } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
@@ -12,60 +13,133 @@ export const metadata = {
   },
 }
 
-const STARTER_FEATURES: Array<[string, string | boolean]> = [
-  ['Policies stored',                    'Up to 25'          ],
-  ['Staff handbooks',                    '1'                 ],
-  ['Staff users',                        'Up to 10'          ],
-  ['Query limit',                        '500/month'         ],
-  ['Languages supported',                '50+'               ],
-  ['Web chat interface',                 true                ],
-  ['Email interface',                    true                ],
-  ['Voice input',                        true                ],
-  ['External regulatory knowledge base', true                ],
-  ['Document versioning',                true                ],
-  ['Home knowledge base (auto)',         true                ],
-  ['Home knowledge base (manual)',       'Up to 50 entries'  ],
-  ['Basic analytics',                    true                ],
-  ['Advanced analytics',                 false               ],
-  ['CQC Readiness Report',               false               ],
-  ['Policy gap detection',               false               ],
-  ['Support',                            'Email support'     ],
-  ['Free trial',                         '14 days'           ],
+// ─── Plan cards ───────────────────────────────────────────────────────────────
+
+const PLANS = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '£49',
+    annual: '£490/year, save £98',
+    highlight: false,
+    badge: null as string | null,
+    features: [
+      '10 annual training allocations per month',
+      'Up to 25 policies, 1 handbook, 10 staff users',
+      '500 queries per month',
+      'Chat, email and voice access',
+      'Basic analytics and regulatory knowledge base',
+    ],
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    price: '£129',
+    annual: '£1,290/year, save £258',
+    highlight: true,
+    badge: 'Most popular',
+    features: [
+      '30 annual training allocations per month',
+      'Unlimited policies, handbooks and staff users',
+      '5,000 queries per month',
+      'Advanced analytics + CQC Readiness Report',
+      'Policy gap detection',
+      'Face-to-face training and matrix',
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: '£211.99',
+    annual: '£2,100/year, save £443.88',
+    highlight: false,
+    badge: 'Everything included',
+    features: [
+      'Unlimited annual training allocations',
+      'Everything in Professional, plus:',
+      'Build your own audits',
+      'Effectiveness of training analytics',
+      'Audits linked to training + Training Impact',
+      'Priority support and a dedicated manager',
+    ],
+  },
 ]
 
-const PRO_FEATURES: Array<[string, string | boolean]> = [
-  ['Policies stored',                    'Unlimited'                 ],
-  ['Staff handbooks',                    'Unlimited'                 ],
-  ['Staff users',                        'Unlimited'                 ],
-  ['Query limit',                        '5,000/month'               ],
-  ['Languages supported',                '50+'                       ],
-  ['Web chat interface',                 true                        ],
-  ['Email interface',                    true                        ],
-  ['Voice input',                        true                        ],
-  ['External regulatory knowledge base', true                        ],
-  ['Document versioning',                true                        ],
-  ['Home knowledge base (auto)',         true                        ],
-  ['Home knowledge base (manual)',       'Unlimited'                 ],
-  ['Basic analytics',                    true                        ],
-  ['Advanced analytics',                 true                        ],
-  ['CQC Readiness Report',               true                        ],
-  ['Policy gap detection',               true                        ],
-  ['Support',                            'Priority email and phone'  ],
-  ['Free trial',                         '14 days'                   ],
+// ─── Comparison matrix ────────────────────────────────────────────────────────
+// Each row holds the value for [Starter, Professional, Enterprise].
+
+type Cell = string | boolean
+type Row = { label: string; values: [Cell, Cell, Cell] }
+type Group = { section: string; rows: Row[] }
+
+const MATRIX: Group[] = [
+  {
+    section: 'Core',
+    rows: [
+      { label: 'Annual training allocations', values: ['10 / month', '30 / month', 'Unlimited'] },
+      { label: 'Policies stored',             values: ['Up to 25', 'Unlimited', 'Unlimited'] },
+      { label: 'Staff handbooks',             values: ['1', 'Unlimited', 'Unlimited'] },
+      { label: 'Staff users',                 values: ['Up to 10', 'Unlimited', 'Unlimited'] },
+      { label: 'Query limit',                 values: ['500 / month', '5,000 / month', 'Unlimited'] },
+      { label: 'Languages supported',         values: ['50+', '50+', '50+'] },
+    ],
+  },
+  {
+    section: 'Access and knowledge',
+    rows: [
+      { label: 'Web chat interface',                 values: [true, true, true] },
+      { label: 'Email interface',                    values: [true, true, true] },
+      { label: 'Voice input',                        values: [true, true, true] },
+      { label: 'External regulatory knowledge base', values: [true, true, true] },
+      { label: 'Document versioning',                values: [true, true, true] },
+      { label: 'Home knowledge base (auto)',         values: [true, true, true] },
+      { label: 'Home knowledge base (manual)',       values: ['Up to 50 entries', 'Unlimited', 'Unlimited'] },
+    ],
+  },
+  {
+    section: 'Analytics and compliance',
+    rows: [
+      { label: 'Basic analytics',      values: [true, true, true] },
+      { label: 'Advanced analytics',   values: [false, true, true] },
+      { label: 'CQC Readiness Report', values: [false, true, true] },
+      { label: 'Policy gap detection', values: [false, true, true] },
+    ],
+  },
+  {
+    section: 'Training and audit intelligence',
+    rows: [
+      { label: 'Face-to-face training and matrix', values: [false, true, true] },
+      { label: 'Build your own audits',            values: [false, false, true] },
+      { label: 'Effectiveness of training',        values: [false, false, true] },
+      { label: 'Audits linked to training',        values: [false, false, true] },
+      { label: 'Training Impact',                  values: [false, false, true] },
+    ],
+  },
+  {
+    section: 'Support',
+    rows: [
+      { label: 'Support',    values: ['Email support', 'Priority email and phone', 'Priority + dedicated manager'] },
+      { label: 'Free trial', values: ['14 days', '14 days', '14 days'] },
+    ],
+  },
 ]
 
 const FAQS = [
+  {
+    q: 'What is an annual training allocation?',
+    a: 'Each plan includes a monthly pool of annual-training-module allocations. One allocation is one annual training module assigned to one staff member. For example, on Starter you can assign 10 modules to one person, or one module to 10 people, or any mix up to 10 each month. The pool resets on the 1st. Professional includes 30 per month and Enterprise is unlimited.',
+  },
   {
     q: 'What counts as a query?',
     a: 'Any message sent to CareStreamAI counts as one query, regardless of channel. This includes web chat messages, emails, and voice questions. Follow-up messages in the same session or thread each count as one query.',
   },
   {
-    q: 'What happens if I reach my query limit?',
-    a: 'You will receive a dashboard alert at 80% and 95% of your monthly usage. If you reach the limit, queries are queued until the next billing period begins, or you can upgrade instantly from the dashboard.',
+    q: 'What happens if I reach a monthly limit?',
+    a: 'You will receive a dashboard alert as you approach your monthly query or allocation limit. If you reach it, you can upgrade instantly from the dashboard, or wait until the pool resets at the start of the next billing period.',
   },
   {
     q: 'Can I upgrade or downgrade at any time?',
-    a: 'Yes. Upgrades take effect immediately. Downgrades take effect at the start of your next billing period.',
+    a: 'Yes. Upgrades take effect immediately and unlock features instantly. Downgrades take effect at the start of your next billing period, and your existing data is always kept exactly as it is.',
   },
   {
     q: 'Is there a contract?',
@@ -73,11 +147,7 @@ const FAQS = [
   },
   {
     q: 'Do you offer discounts for group operators?',
-    a: 'Yes. Contact us for group pricing if you are managing multiple homes. We offer volume discounts from three homes or more.',
-  },
-  {
-    q: 'Is the free trial the full product?',
-    a: 'Yes. The 14-day trial gives you full access to the Professional plan, all features, no restrictions. You add a card to start the trial, but you are not charged until day 14 — cancel anytime before then.',
+    a: 'Yes. Enterprise is built for multi-site providers and we offer volume pricing from three homes or more. Contact us for group pricing.',
   },
   {
     q: 'Is my data kept separate from other organisations?',
@@ -85,10 +155,10 @@ const FAQS = [
   },
 ]
 
-function FeatureValue({ val }: { val: string | boolean }) {
-  if (val === true)  return <Check size={15} className="mx-auto text-teal" />
-  if (val === false) return <Minus size={15} className="mx-auto text-gray-300" />
-  return <span className="text-sm font-medium text-neutral-dark">{val}</span>
+function FeatureValue({ val, light = false }: { val: Cell; light?: boolean }) {
+  if (val === true)  return <Check size={15} className={`mx-auto ${light ? 'text-white/70' : 'text-teal'}`} />
+  if (val === false) return <Minus size={15} className={`mx-auto ${light ? 'text-white/30' : 'text-gray-300'}`} />
+  return <span className={`text-sm font-medium ${light ? 'text-white' : 'text-neutral-dark'}`}>{val}</span>
 }
 
 export default function PricingPage() {
@@ -97,68 +167,108 @@ export default function PricingPage() {
       <PageHero
         label="Pricing"
         title="Simple pricing. No surprises."
-        subtitle="Both plans include a 14-day free trial. No charge until day 14 — cancel anytime."
+        subtitle="Every plan includes a 14-day free trial. No charge until day 14 — cancel anytime."
         centered
       />
 
       {/* Plan cards */}
       <section className="bg-neutral-light py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="grid gap-6 md:grid-cols-2">
-
-            {/* Starter */}
-            <div className="card-lift rounded-2xl border border-gray-200 bg-white p-8 shadow-card">
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-mid">Starter</p>
-              <p className="mb-1 text-4xl font-extrabold text-neutral-dark">
-                £49<span className="text-base font-normal text-neutral-mid">/month</span>
-              </p>
-              <p className="mb-7 text-sm text-neutral-mid">£490/year, save £98</p>
-              <Link href="/register" className="mb-8 block rounded-btn border-2 border-teal px-6 py-3 text-center text-sm font-bold text-teal transition-colors hover:bg-teal-light">
-                Start Free Trial
-              </Link>
-              <ul className="space-y-3 border-t border-gray-100 pt-6">
-                {STARTER_FEATURES.map(([label, val]) => (
-                  <li key={label} className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-neutral-mid">{label}</span>
-                    <span className="text-right"><FeatureValue val={val} /></span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Professional */}
-            <div className="card-lift relative rounded-2xl bg-teal-gradient p-8 shadow-teal-glow">
-              <span className="absolute right-6 top-6 rounded-pill bg-amber-brand px-3 py-1 text-xs font-bold text-white">
-                Most popular
-              </span>
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/60">Professional</p>
-              <p className="mb-1 text-4xl font-extrabold text-white">
-                £129<span className="text-base font-normal text-white/60">/month</span>
-              </p>
-              <p className="mb-7 text-sm text-white/60">£1,290/year, save £258</p>
-              <Link href="/register" className="btn-amber mb-8 block rounded-btn px-6 py-3 text-center text-sm">
-                Start Free Trial
-              </Link>
-              <ul className="space-y-3 border-t border-white/15 pt-6">
-                {PRO_FEATURES.map(([label, val]) => (
-                  <li key={label} className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-white/70">{label}</span>
-                    <span className="text-right">
-                      {val === true  ? <Check size={15} className="mx-auto text-white/70" /> :
-                       val === false ? <Minus size={15} className="mx-auto text-white/30" /> :
-                       <span className="text-sm font-medium text-white">{val}</span>}
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="grid gap-6 md:grid-cols-3">
+            {PLANS.map(plan => (
+              plan.highlight ? (
+                <div key={plan.id} className="card-lift relative rounded-2xl bg-teal-gradient p-8 shadow-teal-glow">
+                  {plan.badge && (
+                    <span className="absolute right-6 top-6 rounded-pill bg-amber-brand px-3 py-1 text-xs font-bold text-white">
+                      {plan.badge}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  )}
+                  <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/60">{plan.name}</p>
+                  <p className="mb-1 text-4xl font-extrabold text-white">
+                    {plan.price}<span className="text-base font-normal text-white/60">/month</span>
+                  </p>
+                  <p className="mb-7 text-sm text-white/60">{plan.annual}</p>
+                  <Link href="/register" className="btn-amber mb-8 block rounded-btn px-6 py-3 text-center text-sm">
+                    Start Free Trial
+                  </Link>
+                  <ul className="space-y-3 border-t border-white/15 pt-6">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-white/80">
+                        <Check size={15} className="mt-0.5 shrink-0 text-white/70" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div key={plan.id} className="card-lift rounded-2xl border border-gray-200 bg-white p-8 shadow-card">
+                  {plan.badge && (
+                    <span className="mb-3 inline-block rounded-pill bg-teal-light px-3 py-1 text-xs font-bold text-teal">
+                      {plan.badge}
+                    </span>
+                  )}
+                  <p className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-mid">{plan.name}</p>
+                  <p className="mb-1 text-4xl font-extrabold text-neutral-dark">
+                    {plan.price}<span className="text-base font-normal text-neutral-mid">/month</span>
+                  </p>
+                  <p className="mb-7 text-sm text-neutral-mid">{plan.annual}</p>
+                  <Link href="/register" className="mb-8 block rounded-btn border-2 border-teal px-6 py-3 text-center text-sm font-bold text-teal transition-colors hover:bg-teal-light">
+                    Start Free Trial
+                  </Link>
+                  <ul className="space-y-3 border-t border-gray-100 pt-6">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-neutral-mid">
+                        <Check size={15} className="mt-0.5 shrink-0 text-teal" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* Full comparison matrix */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <SectionLabel>Compare plans</SectionLabel>
+          <h2 className="mb-10 text-3xl font-extrabold text-neutral-dark">Every feature, side by side</h2>
+          <div className="overflow-x-auto rounded-2xl border border-gray-200">
+            <table className="w-full min-w-[680px] text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 bg-neutral-light">
+                  <th className="px-5 py-4 text-left text-sm font-bold text-neutral-dark">Feature</th>
+                  <th className="px-5 py-4 text-center text-sm font-bold text-neutral-dark">Starter</th>
+                  <th className="px-5 py-4 text-center text-sm font-bold text-teal">Professional</th>
+                  <th className="px-5 py-4 text-center text-sm font-bold text-neutral-dark">Enterprise</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MATRIX.map(group => (
+                  <Fragment key={group.section}>
+                    <tr className="bg-neutral-light/50">
+                      <td colSpan={4} className="px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
+                        {group.section}
+                      </td>
+                    </tr>
+                    {group.rows.map(row => (
+                      <tr key={row.label} className="border-b border-gray-100 last:border-0">
+                        <td className="px-5 py-3 text-neutral-mid">{row.label}</td>
+                        <td className="px-5 py-3 text-center"><FeatureValue val={row.values[0]} /></td>
+                        <td className="bg-teal-light/20 px-5 py-3 text-center"><FeatureValue val={row.values[1]} /></td>
+                        <td className="px-5 py-3 text-center"><FeatureValue val={row.values[2]} /></td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
       {/* Guarantee strip */}
-      <section className="bg-white py-14">
+      <section className="bg-neutral-light py-14">
         <div className="mx-auto max-w-content px-6">
           <div className="flex flex-wrap items-center justify-center gap-10 text-sm text-neutral-mid">
             {[
@@ -178,7 +288,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-neutral-light py-24">
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-2xl px-6">
           <SectionLabel>Pricing FAQs</SectionLabel>
           <h2 className="mb-12 text-3xl font-extrabold text-neutral-dark">Common questions about pricing</h2>

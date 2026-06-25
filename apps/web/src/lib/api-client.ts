@@ -16,6 +16,29 @@ export interface StaffContact {
   inbound_email:   string | null
 }
 
+// Monthly annual-training-module allocation usage (the per-plan licence pool).
+export interface LicenseUsage {
+  used:      number
+  limit:     number | null   // null = unlimited (Enterprise)
+  remaining: number | null
+  resets_at: string
+}
+
+// Plan feature flags + licence usage, used to grey out / unlock features.
+export interface PlanFeatures {
+  plan_name:              string | null
+  price_monthly_pence:    number | null
+  price_annual_pence:     number | null
+  has_advanced_analytics: boolean
+  has_cqc_report:         boolean
+  has_gap_detection:      boolean
+  has_face_to_face:       boolean
+  has_custom_audits:      boolean
+  has_effectiveness:      boolean
+  has_training_impact:    boolean
+  annual_license:         LicenseUsage
+}
+
 export interface Citation {
   policy_id:         string
   policy_name:       string
@@ -212,6 +235,7 @@ export function createApiClient(token: string) {
         plan_name:            string | null
         subscription_status:  string
         price_monthly_pence:  number | null
+        price_annual_pence:   number | null
         monthly_query_limit:  number | null
         has_stripe:           boolean
         next_billing_date:    string | null
@@ -219,6 +243,7 @@ export function createApiClient(token: string) {
         current_period_end:   string | null
         billing_interval:     string | null
         cancel_at_period_end?: boolean
+        features:             PlanFeatures
       }>('/billing/summary', token),
       invoices: () => apiFetch<{ invoices: Array<{
         id:           string
@@ -230,10 +255,11 @@ export function createApiClient(token: string) {
         hosted_url:   string | null
       }> }>('/billing/invoices', token),
       plans: () => apiFetch<{ plans: Array<{
-        id: string; name: string; price_monthly_pence: number; monthly_query_limit: number
+        id: string; name: string; price_monthly_pence: number; price_annual_pence: number | null; monthly_query_limit: number
         max_policies: number | null; max_staff_users: number | null; max_handbooks: number | null
-        max_manual_knowledge_entries: number | null; monthly_ai_credit_limit: number | null
+        max_manual_knowledge_entries: number | null; monthly_ai_credit_limit: number | null; monthly_annual_license_limit: number | null
         has_advanced_analytics: boolean; has_cqc_report: boolean; has_gap_detection: boolean
+        has_face_to_face: boolean; has_custom_audits: boolean; has_effectiveness: boolean; has_training_impact: boolean
       }> }>('/billing/plans', token),
       checkout: (plan_id: string) =>
         apiFetch<{ url: string }>('/billing/checkout', token, { method: 'POST', body: JSON.stringify({ plan_id }) }),

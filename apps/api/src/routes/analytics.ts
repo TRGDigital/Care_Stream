@@ -1551,6 +1551,66 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 
+// ─── GET /analytics/training-impact ───────────────────────────────────────────
+// For audits linked to training modules: a monthly timeline of audit compliance %
+// alongside cumulative training completion %, so admins can see whether the
+// training is correlated with a real improvement in audited practice. Correlation,
+// not causation — framed as a trend + before/after on the client.
+analyticsRouter.get('/training-impact', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const templates = await (prisma as any).auditTemplate.findMany({
+      where:  { tenant_id: tenantId, is_active: true, module_ids: { isEmpty: false } },
+      select: { id: true, name: true, module_ids: true },
+    })
+    if (!(templates as any[]).length) { ok(res, { audits: [] }); return }
+
+    const allModuleIds = [...new Set((templates as any[]).flatMap((t: any) => t.module_ids))]
+    const [runs, modules, enrollments] = await Promise.all([
+      (prisma as any).auditRun.findMany({
+        where:  { tenant_id: tenantId, template_id: { in: (templates as any[]).map((t: any) => t.id) }, status: 'completed' },
+        select: { template_id: true, audit_month: true, answers: { select: { answer_yn: true, answer_na: true } } },
+        orderBy: { audit_month: 'asc' },
+      }),
+      (prisma as any).trainingModule.findMany({ where: { id: { in: allModuleIds } }, select: { id: true, name: true } }),
+      (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, module_id: { in: allModuleIds } }, select: { module_id: true, created_at: true, completed_at: true } }),
+    ])
+    const moduleName = new Map((modules as any[]).map((m: any) => [m.id, m.name]))
+    const monthEnd = (d: any) => { const x = new Date(d); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 0, 23, 59, 59)) }
+    const runScore = (r: any) => {
+      const ans = r.answers ?? []
+      const yes = ans.filter((a: any) => a.answer_yn === true && !a.answer_na).length
+      const no  = ans.filter((a: any) => a.answer_yn === false && !a.answer_na).length
+      return (yes + no) > 0 ? Math.round((yes / (yes + no)) * 100) : null
+    }
+
+    const audits = (templates as any[]).map((t: any) => {
+      const tRuns = (runs as any[]).filter(r => r.template_id === t.id)
+      const enr   = (enrollments as any[]).filter(e => t.module_ids.includes(e.module_id))
+      const timeline = tRuns.map(r => {
+        const end = monthEnd(r.audit_month)
+        const assigned  = enr.filter(e => new Date(e.created_at) <= end).length
+        const completed = enr.filter(e => e.completed_at && new Date(e.completed_at) <= end).length
+        return { month: r.audit_month, audit_score: runScore(r), completion_pct: assigned > 0 ? Math.round((completed / assigned) * 100) : null }
+      })
+      const scores = timeline.map(x => x.audit_score).filter((x): x is number => x != null)
+      const first = scores.length ? scores[0] : null
+      const latest = scores.length ? scores[scores.length - 1] : null
+      const currentCompleted = enr.filter(e => e.completed_at).length
+      return {
+        template_id: t.id, name: t.name,
+        modules: t.module_ids.map((id: string) => ({ id, name: moduleName.get(id) ?? 'Module' })),
+        runs: tRuns.length,
+        timeline,
+        first_score: first, latest_score: latest,
+        score_change: (first != null && latest != null) ? latest - first : null,
+        current_completion_pct: enr.length ? Math.round((currentCompleted / enr.length) * 100) : null,
+      }
+    })
+    ok(res, { audits })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
 // ─── GET /analytics/knowledge-gaps ────────────────────────────────────────────
 // Unified, team-wide view of knowledge gaps: open gaps (training + induction
 // combined), the most-missed questions, the weakest topics, and how staff are

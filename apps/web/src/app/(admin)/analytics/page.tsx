@@ -223,7 +223,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness'
+type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness' | 'impact'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview',   label: 'Overview' },
@@ -234,6 +234,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'compliance', label: 'Audits' },
   { id: 'cqc',        label: 'CQC Staff Prep' },
   { id: 'effectiveness', label: 'Effectiveness of Training' },
+  { id: 'impact',        label: 'Training Impact' },
 ]
 
 export default function AnalyticsPage() {
@@ -253,6 +254,7 @@ export default function AnalyticsPage() {
   const [langSwitch,   setLangSwitch] = useState<any>(null)
   const [f2f,          setF2f]      = useState<any>(null)
   const [effectiveness, setEffectiveness] = useState<any>(null)
+  const [impact,       setImpact]   = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -263,7 +265,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -286,10 +288,11 @@ export default function AnalyticsPage() {
       api.analytics.languageSwitches().catch(() => null),
       api.faceToFace.analytics().catch(() => null),
       api.analytics.effectiveness().catch(() => null),
+      api.analytics.trainingImpact().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -1337,6 +1340,46 @@ export default function AnalyticsPage() {
           </>
         )
       })())}
+
+      {tab === 'impact' && (!impact || impact.audits.length === 0 ? (
+        <EmptyTab>Link an audit to a training module to see whether the training improves audited practice. On <strong>Monthly Audits</strong>, open one of your own audits and use <strong>Linked training</strong> (or tick modules when building a new audit).</EmptyTab>
+      ) : (
+        <>
+          <SectionDivider
+            title="Training Impact"
+            subtitle="For audits you've linked to training, how the audit's compliance score moves alongside training completion over time. A correlation and trend, not proof of cause."
+          />
+          {impact.audits.map((a: any) => (
+            <div key={a.template_id} className="mb-6">
+              <Card title={a.name} info="Each month: the audit's compliance score (share of 'yes' answers) and the cumulative completion of the linked training. If they rise together, that's evidence the training is landing in practice.">
+                <p className="mb-3 text-xs text-neutral-mid">Linked training: <strong>{a.modules.map((m: any) => m.name).join(', ')}</strong></p>
+                <div className="mb-4 grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-neutral-dark">{a.first_score ?? '—'}{a.first_score != null ? '%' : ''}</p><p className="text-xs text-neutral-mid">First audit</p></div>
+                  <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-teal">{a.latest_score ?? '—'}{a.latest_score != null ? '%' : ''}</p><p className="text-xs text-neutral-mid">Latest audit</p></div>
+                  <div className={`rounded-xl border p-3 ${a.score_change != null && a.score_change >= 0 ? 'border-green-100 bg-green-50/40' : 'border-gray-100'}`}><p className={`text-2xl font-bold ${a.score_change != null ? (a.score_change >= 0 ? 'text-green-600' : 'text-orange-600') : 'text-gray-300'}`}>{a.score_change != null ? `${a.score_change >= 0 ? '+' : ''}${a.score_change}` : '—'}</p><p className="text-xs text-neutral-mid">Change</p></div>
+                </div>
+                {a.timeline.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {a.timeline.map((pt: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 text-xs">
+                        <span className="w-14 shrink-0 text-neutral-mid">{new Date(pt.month).toLocaleDateString('en-GB', { month: 'short', year: '2-digit', timeZone: 'UTC' })}</span>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2"><span className="w-16 text-neutral-mid">Audit</span><div className="h-2 flex-1 rounded-full bg-gray-100"><div className="h-2 rounded-full bg-teal" style={{ width: `${pt.audit_score ?? 0}%` }} /></div><span className="w-9 text-right text-neutral-dark">{pt.audit_score != null ? `${pt.audit_score}%` : '—'}</span></div>
+                          <div className="flex items-center gap-2"><span className="w-16 text-neutral-mid">Trained</span><div className="h-2 flex-1 rounded-full bg-gray-100"><div className="h-2 rounded-full bg-indigo-400" style={{ width: `${pt.completion_pct ?? 0}%` }} /></div><span className="w-9 text-right text-neutral-dark">{pt.completion_pct != null ? `${pt.completion_pct}%` : '—'}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-sm text-neutral-mid">No completed audit runs yet. Complete a monthly audit to start building the trend.</p>}
+                <p className="mt-3 text-xs text-neutral-mid">{a.current_completion_pct ?? 0}% of allocated staff have completed the linked training, across {a.runs} completed audit{a.runs === 1 ? '' : 's'}.</p>
+              </Card>
+            </div>
+          ))}
+          <p className="mb-6 rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-3 text-xs text-neutral-mid">
+            This shows whether training and audited practice move together over time. It&apos;s a correlation, useful evidence of a continuous-improvement loop for CQC, not proof that the training alone caused the change.
+          </p>
+        </>
+      ))}
 
       {tab === 'advanced' && (!advanced ? (
         <div className="rounded-card border-2 border-dashed border-gray-200 p-8 text-center">

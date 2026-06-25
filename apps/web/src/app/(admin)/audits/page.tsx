@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2 } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
+import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -65,6 +66,7 @@ export default function AuditsPage() {
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
+  const [linking, setLinking] = useState<any>(null)
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
   const [selTemplate, setSelTemplate] = useState('')
@@ -167,6 +169,10 @@ export default function AuditsPage() {
         <AuditBuilder token={session.accessToken} onClose={() => setShowBuilder(false)} onCreated={reloadTemplates} />
       )}
 
+      {linking && session?.accessToken && (
+        <LinkTrainingModal token={session.accessToken} template={linking} onClose={() => setLinking(null)} onSaved={reloadTemplates} />
+      )}
+
       {/* ── Your custom audits ─────────────────────────────────────────────────── */}
       {customTemplates.length > 0 && (
         <div className="mb-6 rounded-card bg-white p-5 shadow-card">
@@ -179,9 +185,14 @@ export default function AuditsPage() {
                   <p className="text-sm font-medium text-neutral-dark">{t.name}</p>
                   <p className="text-xs text-neutral-mid capitalize">{t.frequency}{typeof t._count?.sections === 'number' ? ` · ${t._count.sections} section${t._count.sections === 1 ? '' : 's'}` : ''}</p>
                 </div>
-                <button onClick={() => removeTemplate(t.id, t.name)} disabled={deleting === t.id} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-red-200 hover:text-red-500 disabled:opacity-50">
-                  <Trash2 size={13} /> {deleting === t.id ? 'Deleting…' : 'Delete'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setLinking(t)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                    <GraduationCap size={13} /> Linked training{Array.isArray(t.module_ids) && t.module_ids.length ? ` (${t.module_ids.length})` : ''}
+                  </button>
+                  <button onClick={() => removeTemplate(t.id, t.name)} disabled={deleting === t.id} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-red-200 hover:text-red-500 disabled:opacity-50">
+                    <Trash2 size={13} /> {deleting === t.id ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

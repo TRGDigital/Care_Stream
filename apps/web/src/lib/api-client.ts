@@ -521,6 +521,7 @@ export function createApiClient(token: string) {
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[] }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),
+      updateTemplateModules: (id: string, module_ids: string[]) => apiFetch<{ updated: boolean }>(`/audits/templates/${id}`, token, { method: 'PATCH', body: JSON.stringify({ module_ids }) }),
       deleteTemplate: (id: string) => apiFetch<{ deleted: boolean }>(`/audits/templates/${id}`, token, { method: 'DELETE' }),
       addRoom: (room: string) => apiFetch<{ rooms: string[] }>('/audits/rooms', token, { method: 'POST', body: JSON.stringify({ room }) }),
       runs: (params?: { status?: string; template_id?: string }) => {
@@ -685,6 +686,14 @@ export function createApiClient(token: string) {
         cqc: { evaluated: number; retried: number; avg_first_score: number | null; avg_latest_score: number | null; avg_improvement: number | null }
         language: { second_lang_users: number; with: { staff: number; completion_pct: number | null; avg_score: number | null }; without: { staff: number; completion_pct: number | null; avg_score: number | null } }
       }>('/analytics/effectiveness', token),
+      trainingImpact: () => apiFetch<{
+        audits: Array<{
+          template_id: string; name: string; runs: number
+          modules: Array<{ id: string; name: string }>
+          timeline: Array<{ month: string; audit_score: number | null; completion_pct: number | null }>
+          first_score: number | null; latest_score: number | null; score_change: number | null; current_completion_pct: number | null
+        }>
+      }>('/analytics/training-impact', token),
       languageSwitches: () => apiFetch<{
         summary: { total_switches: number; staff_count: number; set_count: number; days: number }
         by_area: Array<{ area: string; label: string; count: number }>

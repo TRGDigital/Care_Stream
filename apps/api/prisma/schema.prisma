@@ -1199,6 +1199,7 @@ model AuditTemplate {
   is_active   Boolean        @default(true)
   is_seed     Boolean        @default(false)
   frequency   String         @default("monthly")  // daily | weekly | monthly | quarterly | periodic
+  module_ids  String[]       @default([])         // training modules this audit measures the impact of
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   tenant      Tenant?        @relation(fields: [tenant_id], references: [id])

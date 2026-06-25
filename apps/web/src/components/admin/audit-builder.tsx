@@ -5,7 +5,7 @@
 // Saved as a tenant-owned AuditTemplate, which then appears in the staff "Access
 // level" allocation list and in the allocated staff member's hub.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { Plus, Trash2, Loader2, X } from 'lucide-react'
 
@@ -24,8 +24,14 @@ export function AuditBuilder({ token, onClose, onCreated }: { token: string; onC
   const [frequency, setFrequency] = useState('periodic')
   const [description, setDesc]    = useState('')
   const [questions, setQuestions] = useState<Q[]>([{ text: '', type: 'yes_no_na' }])
+  const [modules, setModules]     = useState<Array<{ id: string; name: string }>>([])
+  const [moduleIds, setModuleIds] = useState<string[]>([])
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
+
+  useEffect(() => {
+    createApiClient(token).faceToFace.modules().then(d => setModules(d.modules)).catch(() => {})
+  }, [token])
 
   function setQ(i: number, patch: Partial<Q>) {
     setQuestions(qs => qs.map((q, j) => (j === i ? { ...q, ...patch } : q)))
@@ -44,6 +50,7 @@ export function AuditBuilder({ token, onClose, onCreated }: { token: string; onC
         name: name.trim(),
         description: description.trim() || undefined,
         frequency,
+        module_ids: moduleIds,
         questions: cleaned.map(q => ({ text: q.text.trim(), type: q.type })),
       })
       onCreated()
@@ -81,6 +88,23 @@ export function AuditBuilder({ token, onClose, onCreated }: { token: string; onC
         <div className="mt-3">
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Description (optional)</label>
           <input value={description} onChange={e => setDesc(e.target.value)} placeholder="What this audit covers" className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+        </div>
+
+        <div className="mt-3">
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Linked training (optional)</label>
+          <p className="mb-2 text-xs text-neutral-mid">Pick the training module(s) this audit measures. CareStream then tracks whether completing that training improves this audit&apos;s scores over time (Analytics → Training Impact).</p>
+          {modules.length === 0 ? (
+            <p className="text-xs text-neutral-mid">No training modules available to link yet.</p>
+          ) : (
+            <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-gray-100 p-2">
+              {modules.map(m => (
+                <label key={m.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
+                  <input type="checkbox" checked={moduleIds.includes(m.id)} onChange={() => setModuleIds(ids => ids.includes(m.id) ? ids.filter(x => x !== m.id) : [...ids, m.id])} className="accent-teal" />
+                  <span className="text-neutral-dark">{m.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-5">

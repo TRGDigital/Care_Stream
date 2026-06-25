@@ -927,12 +927,14 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
     .filter(s => s.questions.length)
   if (!sections.length) return err(res, 'MISSING_QUESTIONS', 'Add at least one question', 400)
 
+  const moduleIds = Array.isArray(req.body.module_ids) ? [...new Set(req.body.module_ids.map(String))].slice(0, 20) : []
   const template = await (prisma as any).auditTemplate.create({
     data: {
       tenant_id:   tenantId,
       name:        name.trim(),
       description: description?.trim() ?? null,
       frequency:   ['daily', 'weekly', 'monthly', 'quarterly', 'periodic'].includes(frequency) ? frequency : 'periodic',
+      module_ids:  moduleIds,
       sections: {
         create: sections.map((s, si) => ({
           title:         s.title,
@@ -944,6 +946,18 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
     include: { sections: { include: { questions: true } } },
   })
   ok(res, { template }, 201)
+})
+
+// ─── PATCH /audits/templates/:id — link/unlink the training modules this audit measures ─
+auditsRouter.patch('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const id = String(req.params.id)
+  const existing = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: tenantId }, select: { id: true } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Audit not found, or it is a shared template that can\'t be edited here.', 404); return }
+  const data: any = {}
+  if (Array.isArray(req.body.module_ids)) data.module_ids = [...new Set(req.body.module_ids.map(String))].slice(0, 20)
+  if (Object.keys(data).length) await (prisma as any).auditTemplate.update({ where: { id }, data })
+  ok(res, { updated: true })
 })
 
 // ─── DELETE /audits/templates/:id — deactivate a tenant's own custom audit ────

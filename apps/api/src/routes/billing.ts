@@ -5,6 +5,7 @@ import { prisma } from '../db/client'
 import { createPortalSession, handleWebhook, createCheckoutSession, getSubscriptionInfo, listInvoices, reconcileTenantBilling, cancelTenantSubscription } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
+import { getPlanFeatures } from '../lib/plan-limits'
 
 export const billingRouter = Router()
 
@@ -14,10 +15,11 @@ billingRouter.get('/plans', async (_req: Request, res: Response) => {
     where:   { is_active: true, is_public: true }, // internal plans (e.g. £1 Sandbox) are hidden
     orderBy: { price_monthly_pence: 'asc' },
     select: {
-      id: true, name: true, price_monthly_pence: true, monthly_query_limit: true,
+      id: true, name: true, price_monthly_pence: true, price_annual_pence: true, monthly_query_limit: true,
       max_policies: true, max_staff_users: true, max_handbooks: true,
-      max_manual_knowledge_entries: true, monthly_ai_credit_limit: true,
+      max_manual_knowledge_entries: true, monthly_ai_credit_limit: true, monthly_annual_license_limit: true,
       has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
+      has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
     },
   })
   ok(res, { plans })
@@ -83,6 +85,7 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
         select: {
           name:               true,
           price_monthly_pence: true,
+          price_annual_pence:  true,
           monthly_query_limit: true,
         },
       },
@@ -96,11 +99,15 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
 
   // Live subscription fields from Stripe (null if not subscribed / Stripe down).
   const sub = await getSubscriptionInfo(tenant).catch(() => null)
+  // Plan feature flags + the monthly annual-allocation usage (for gating + the
+  // dashboard licence meter).
+  const features = await getPlanFeatures(tenantId)
 
   ok(res, {
     plan_name:           tenant.plan?.name ?? null,
     subscription_status: tenant.subscription_status as string,
     price_monthly_pence: tenant.plan?.price_monthly_pence ?? null,
+    price_annual_pence:  tenant.plan?.price_annual_pence ?? null,
     monthly_query_limit: tenant.plan?.monthly_query_limit ?? null,
     has_stripe:          !!tenant.stripe_customer_id,
     next_billing_date:    sub?.next_billing_date    ?? null,
@@ -108,6 +115,7 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
     current_period_end:   sub?.current_period_end   ?? null,
     billing_interval:     sub?.billing_interval     ?? null,
     cancel_at_period_end: sub?.cancel_at_period_end ?? false,
+    features,
   })
 })
 

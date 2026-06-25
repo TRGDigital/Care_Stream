@@ -28,6 +28,11 @@ interface PlanData {
   has_advanced_analytics:      boolean
   has_cqc_report:              boolean
   has_gap_detection:           boolean
+  has_face_to_face:            boolean
+  has_custom_audits:           boolean
+  has_effectiveness:           boolean
+  has_training_impact:         boolean
+  monthly_annual_license_limit: number | null
 }
 
 async function loadTenantPlan(tenantId: string): Promise<{
@@ -48,6 +53,11 @@ async function loadTenantPlan(tenantId: string): Promise<{
           has_advanced_analytics:      true,
           has_cqc_report:              true,
           has_gap_detection:           true,
+          has_face_to_face:            true,
+          has_custom_audits:           true,
+          has_effectiveness:           true,
+          has_training_impact:         true,
+          monthly_annual_license_limit: true,
         },
       },
     },
@@ -243,10 +253,26 @@ export async function checkManualKnowledgeLimit(tenantId: string): Promise<void>
   }
 }
 
+// Boolean plan features that can be gated.
+export type PlanFeature =
+  | 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics'
+  | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact'
+
+// Which plan unlocks each feature — used for the upgrade message.
+const FEATURE_TIER: Record<PlanFeature, string> = {
+  has_gap_detection:      'Professional',
+  has_cqc_report:         'Professional',
+  has_advanced_analytics: 'Professional',
+  has_face_to_face:       'Professional',
+  has_custom_audits:      'Enterprise',
+  has_effectiveness:      'Enterprise',
+  has_training_impact:    'Enterprise',
+}
+
 // Check whether the tenant's plan includes a boolean feature.
 export async function checkFeature(
   tenantId: string,
-  feature: 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics',
+  feature: PlanFeature,
 ): Promise<void> {
   const { plan, subscription_status } = await loadTenantPlan(tenantId)
   assertNotCancelled(subscription_status)
@@ -254,7 +280,82 @@ export async function checkFeature(
   if (!plan?.[feature]) {
     throw new PlanLimitError(
       'FEATURE_NOT_AVAILABLE',
-      'This feature is not included in your current plan. Upgrade to Professional to access it.',
+      `This feature is not included in your current plan. Upgrade to ${FEATURE_TIER[feature]} to access it.`,
+    )
+  }
+}
+
+// ─── Plan feature summary (for the dashboard / hub gating) ────────────────────
+
+export interface PlanFeatures {
+  plan_name:               string | null
+  price_monthly_pence:     number | null
+  price_annual_pence:      number | null
+  has_advanced_analytics:  boolean
+  has_cqc_report:          boolean
+  has_gap_detection:       boolean
+  has_face_to_face:        boolean
+  has_custom_audits:       boolean
+  has_effectiveness:       boolean
+  has_training_impact:     boolean
+  annual_license:          Usage  // monthly annual-module allocation quota
+}
+
+// Everything the front-end needs to grey out / unlock features and show usage.
+export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
+  const tenant = await (prisma as any).tenant.findUnique({
+    where:  { id: tenantId },
+    select: {
+      plan: {
+        select: {
+          name: true, price_monthly_pence: true, price_annual_pence: true,
+          has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
+          has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
+        },
+      },
+    },
+  })
+  const p = tenant?.plan ?? null
+  return {
+    plan_name:              p?.name ?? null,
+    price_monthly_pence:    p?.price_monthly_pence ?? null,
+    price_annual_pence:     p?.price_annual_pence ?? null,
+    has_advanced_analytics: !!p?.has_advanced_analytics,
+    has_cqc_report:         !!p?.has_cqc_report,
+    has_gap_detection:      !!p?.has_gap_detection,
+    has_face_to_face:       !!p?.has_face_to_face,
+    has_custom_audits:      !!p?.has_custom_audits,
+    has_effectiveness:      !!p?.has_effectiveness,
+    has_training_impact:    !!p?.has_training_impact,
+    annual_license:         await getAnnualLicenseUsage(tenantId),
+  }
+}
+
+// ─── Annual-training-module allocations (monthly quota) ───────────────────────
+// One allocation = one annual (ai_generated) module assigned to one staff member.
+// The quota is a monthly pool: Starter 10, Professional 30, Enterprise unlimited.
+
+export async function getAnnualLicenseUsage(tenantId: string): Promise<Usage> {
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { monthly_annual_license_limit: true } } } })
+  const limit = (tenant?.plan?.monthly_annual_license_limit ?? null) as number | null
+  const { start, next } = monthWindow()
+  const used = await (prisma as any).trainingEnrollment.count({
+    where: { tenant_id: tenantId, created_at: { gte: start }, module: { source: 'ai_generated' } },
+  })
+  return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
+}
+
+// Throw if assigning `additional` annual allocations would exceed the monthly quota.
+export async function checkAnnualLicenseLimit(tenantId: string, additional: number): Promise<void> {
+  const { subscription_status } = await loadTenantPlan(tenantId)
+  assertNotCancelled(subscription_status)
+  const { used, limit } = await getAnnualLicenseUsage(tenantId)
+  if (limit !== null && used + additional > limit) {
+    const remaining = Math.max(0, limit - used)
+    throw new PlanLimitError(
+      'ANNUAL_LICENSE_LIMIT_REACHED',
+      `Your plan includes ${limit} annual training allocations per month and you have ${remaining} left. ` +
+      `This assignment needs ${additional}. The pool resets at the start of next month, or you can upgrade your plan.`,
     )
   }
 }

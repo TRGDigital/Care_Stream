@@ -14,8 +14,16 @@ import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { notifyStaffAllocation, getUsers } from '../lib/notify'
 import { sendFaceToFaceReminderEmail } from '../services/email/outbound'
+import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 
 export const faceToFaceRouter = Router()
+
+// Face-to-face training (and the combined matrix) is a Professional/Enterprise
+// feature. Gate the entire router so Starter tenants cannot reach any endpoint.
+faceToFaceRouter.use(async (req: Request, res: Response, next) => {
+  try { await checkFeature((req as any).user.tenant_id, 'has_face_to_face'); next() }
+  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } next(e) }
+})
 
 const tid = (req: Request) => (req as any).user.tenant_id
 const uid = (req: Request) => (req as any).user.sub

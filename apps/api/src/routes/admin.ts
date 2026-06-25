@@ -359,12 +359,19 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
       plan: {
         select: {
           name:                         true,
+          price_monthly_pence:          true,
+          price_annual_pence:           true,
           monthly_query_limit:          true,
+          monthly_annual_license_limit: true,
           max_policies:                 true,
           max_staff_users:              true,
           max_handbooks:                true,
           max_manual_knowledge_entries: true,
           has_gap_detection:            true,
+          has_face_to_face:             true,
+          has_custom_audits:            true,
+          has_effectiveness:            true,
+          has_training_impact:          true,
         },
       },
     },
@@ -376,7 +383,7 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   // Aggregate stats for ALL tenants in a few grouped queries instead of 8 counts
   // per tenant (was 8×N round-trips → 7 total).
   const [
-    policyGroups, knowledgeAll, knowledgeManual, queryAll, queryMonth, activeUsers, subTenants,
+    policyGroups, knowledgeAll, knowledgeManual, queryAll, queryMonth, activeUsers, subTenants, annualMonth,
   ] = await Promise.all([
     (prisma as any).policy.groupBy({ by: ['tenant_id', 'document_category'], where: { status: 'active' }, _count: { _all: true } }),
     (prisma as any).knowledgeEntry.groupBy({ by: ['tenant_id'], _count: { _all: true } }),
@@ -385,6 +392,8 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
     (prisma as any).queryRecord.groupBy({ by: ['tenant_id'], where: { created_at: { gte: thisMonthStart } }, _count: { _all: true } }),
     (prisma as any).user.groupBy({ by: ['tenant_id'], where: { is_active: true }, _count: { _all: true } }),
     (prisma as any).tenant.groupBy({ by: ['parent_tenant_id'], where: { parent_tenant_id: { not: null } }, _count: { _all: true } }),
+    // Annual-training-module allocations used this month (the monthly licence pool).
+    (prisma as any).trainingEnrollment.groupBy({ by: ['tenant_id'], where: { created_at: { gte: thisMonthStart }, module: { source: 'ai_generated' } }, _count: { _all: true } }),
   ])
 
   const policyByTenant = new Map<string, { internal: number; handbook: number }>()
@@ -401,9 +410,12 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const queryMonthMap = toMap(queryMonth as any[])
   const usersMap      = toMap(activeUsers as any[])
   const subTenantMap  = toMap(subTenants as any[], 'parent_tenant_id')
+  const annualMap     = toMap(annualMonth as any[])
 
   const withStats = tenants.map((t: any) => {
     const p = policyByTenant.get(t.id) ?? { internal: 0, handbook: 0 }
+    const annualUsed  = annualMap.get(t.id) ?? 0
+    const annualLimit = (t.plan?.monthly_annual_license_limit ?? null) as number | null
     return {
       ...t,
       stats: {
@@ -414,6 +426,8 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
         queryCount:           queryMap.get(t.id)         ?? 0,
         activeUserCount:      usersMap.get(t.id)         ?? 0,
         queriesThisMonth:     queryMonthMap.get(t.id)    ?? 0,
+        annualLicensesUsed:   annualUsed,
+        annualLicenseLimit:   annualLimit,
       },
       sub_tenant_count: subTenantMap.get(t.id) ?? 0,
     }
@@ -438,7 +452,7 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   const now            = new Date()
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const [policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount] = await Promise.all([
+  const [policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, annualLicensesUsed] = await Promise.all([
     (prisma as any).policy.findMany({
       where:   { tenant_id: req.params.id },
       orderBy: { created_at: 'desc' },
@@ -461,7 +475,16 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     (prisma as any).user.count({ where: { tenant_id: req.params.id, is_active: true } }),
     (prisma as any).queryRecord.count({ where: { tenant_id: req.params.id, created_at: { gte: thisMonthStart } } }),
     (prisma as any).policy.count({ where: { tenant_id: req.params.id, status: 'active', document_category: 'staff_handbook' } }),
+    (prisma as any).trainingEnrollment.count({ where: { tenant_id: req.params.id, created_at: { gte: thisMonthStart }, module: { source: 'ai_generated' } } }),
   ])
+
+  // Monthly annual-training-module allocation pool (the per-plan licence quota).
+  const annualLimit = (tenant.plan?.monthly_annual_license_limit ?? null) as number | null
+  const annual_license = {
+    used:      annualLicensesUsed,
+    limit:     annualLimit,
+    remaining: annualLimit === null ? null : Math.max(0, annualLimit - annualLicensesUsed),
+  }
 
   // S3 location for this tenant's documents — lets the platform team match a
   // client to its bucket prefix (and vice versa) when investigating issues.
@@ -506,7 +529,7 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     training_licences = [...byModule.values()]
   }
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences })
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license })
 })
 
 // ─── GET /admin/tenants/:id/invoices ─────────────────────────────────────────

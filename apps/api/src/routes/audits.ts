@@ -3,7 +3,7 @@ import { prisma } from '../db/client'
 import { requireAdmin, requireAuditAccess, auditTemplateAllowed } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { callClaude } from '../services/ai/claude'
-import { trackAiAction } from '../lib/plan-limits'
+import { trackAiAction, checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
@@ -905,6 +905,9 @@ auditsRouter.post('/rooms', requireAdmin, async (req: Request, res: Response) =>
 
 auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
+  // Building your own audit is an Enterprise feature.
+  try { await checkFeature(tenantId, 'has_custom_audits') }
+  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
   const { name, description, frequency } = req.body
   if (!name?.trim()) return err(res, 'MISSING_NAME', 'Audit name is required', 400)
 
@@ -951,6 +954,9 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
 // ─── PATCH /audits/templates/:id — link/unlink the training modules this audit measures ─
 auditsRouter.patch('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
+  // Linking audits to training (Training Impact) is an Enterprise feature.
+  try { await checkFeature(tenantId, 'has_training_impact') }
+  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
   const id = String(req.params.id)
   const existing = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: tenantId }, select: { id: true } })
   if (!existing) { err(res, 'NOT_FOUND', 'Audit not found, or it is a shared template that can\'t be edited here.', 404); return }

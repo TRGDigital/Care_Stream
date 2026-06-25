@@ -18,7 +18,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
-import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, PlanLimitError } from '../lib/plan-limits'
+import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, checkAnnualLicenseLimit, PlanLimitError } from '../lib/plan-limits'
 
 export const trainingRouter = Router()
 
@@ -441,6 +441,14 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
         })
       }
     }
+    // Enforce the monthly annual-training-module allocation quota. Each new
+    // (staff × annual module) pairing consumes one allocation from the pool.
+    const annualSet = new Set((modules as any[]).filter(m => m.source === 'ai_generated').map(m => m.id))
+    const newAnnualAllocations = toCreate.filter(t => annualSet.has(t.module_id)).length
+    if (newAnnualAllocations > 0) {
+      try { await checkAnnualLicenseLimit(tenantId, newAnnualAllocations) }
+      catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+    }
     if (toCreate.length > 0) {
       await (prisma as any).trainingEnrollment.createMany({ data: toCreate, skipDuplicates: true })
     }
@@ -465,7 +473,6 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
 
       // Email each staff member a link to the hub for what was newly assigned —
       // split into My Training vs Annual Training so the link points to the right view.
-      const annualSet = new Set((modules as any[]).filter(m => m.source === 'ai_generated').map(m => m.id))
       const newManualUsers = [...new Set(toCreate.filter(t => !annualSet.has(t.module_id)).map(t => t.user_id))]
       const newAnnualUsers = [...new Set(toCreate.filter(t =>  annualSet.has(t.module_id)).map(t => t.user_id))]
       notifyStaffAllocation(tenantId, newManualUsers, 'training').catch(e => console.error('[training/enroll] staff email error:', e))

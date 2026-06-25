@@ -1476,6 +1476,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
   const tenantId = getTenantId()
   const DAY = 86_400_000, WEEK = 7 * DAY
   try {
+    await checkFeature(tenantId, 'has_effectiveness')
     const now = Date.now()
     const since7 = new Date(now - 7 * DAY), since30 = new Date(now - 30 * DAY)
     const [kg, attempts, enrollments, cqc, langEvents, ratings] = await Promise.all([
@@ -1548,7 +1549,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
       cqc:     { evaluated: cqcEvald.length, retried: retried.length, avg_first_score: avg(retried.map(d => d.first_score)), avg_latest_score: avg(retried.map(d => d.score)), avg_improvement: retried.length ? Math.round(retried.reduce((s, d) => s + ((d.score ?? 0) - (d.first_score ?? 0)), 0) / retried.length) : null },
       language:{ second_lang_users: langUsers.size, with: groupStats(enr.filter(e => langUsers.has(e.user_id))), without: groupStats(enr.filter(e => !langUsers.has(e.user_id))) },
     })
-  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+  } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } err(res, 'FETCH_FAILED', e.message, 500) }
 })
 
 // ─── GET /analytics/training-impact ───────────────────────────────────────────
@@ -1559,6 +1560,7 @@ analyticsRouter.get('/effectiveness', requireAdmin, async (_req: Request, res: R
 analyticsRouter.get('/training-impact', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
+    await checkFeature(tenantId, 'has_training_impact')
     const templates = await (prisma as any).auditTemplate.findMany({
       where:  { tenant_id: tenantId, is_active: true, module_ids: { isEmpty: false } },
       select: { id: true, name: true, module_ids: true },
@@ -1608,7 +1610,7 @@ analyticsRouter.get('/training-impact', requireAdmin, async (_req: Request, res:
       }
     })
     ok(res, { audits })
-  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+  } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } err(res, 'FETCH_FAILED', e.message, 500) }
 })
 
 // ─── GET /analytics/knowledge-gaps ────────────────────────────────────────────

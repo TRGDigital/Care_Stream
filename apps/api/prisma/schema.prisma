@@ -146,8 +146,15 @@ model Plan {
   has_advanced_analytics       Boolean  @default(false)
   has_cqc_report               Boolean  @default(false)
   has_gap_detection            Boolean  @default(false)
+  // Premium feature gating (Pro/Enterprise). See pricing tiers.
+  has_face_to_face             Boolean  @default(false)  // face-to-face training + the combined training matrix
+  has_custom_audits            Boolean  @default(false)  // build-your-own audits
+  has_effectiveness            Boolean  @default(false)  // Effectiveness of Training analytics
+  has_training_impact          Boolean  @default(false)  // audits linked to training + Training Impact analytics
   monthly_ai_credit_limit      Int?     // AI generation credits/month (training, CQC, onboarding…); null = unlimited
+  monthly_annual_license_limit Int?     // annual-training-module allocations per month (1 = one module to one staff member); null = unlimited
   price_monthly_pence          Int                       // stored in pence (UK)
+  price_annual_pence           Int?     // annual price in pence, where billed annually
   is_active                    Boolean  @default(true)
   is_public                    Boolean  @default(true)    // false = internal-only (hidden from the /billing chooser)
   tenants                      Tenant[]

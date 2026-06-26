@@ -464,7 +464,9 @@ const WHERE: Record<string, string> = {
 
 // Real platform screenshots (captured from a populated Enterprise account),
 // keyed by subject. Several emails reuse the same screen.
-const IMG = (f: string) => `/email-previews/${f}.png`
+// ?v bumps whenever a screenshot is replaced at the same filename, so browsers
+// refetch instead of showing a stale cached copy.
+const IMG = (f: string) => `/email-previews/${f}.png?v=3`
 const IMAGES: Record<string, string> = {
   'Welcome to CareStream. Let us get your first answer today.': IMG('chat'),
   'Upload your policies once, answer questions forever': IMG('policies'),

@@ -1401,3 +1401,61 @@ model RalfyIndexSubmission {
   @@index([url])
   @@map("ralfyindex_submissions")
 }
+
+// ─── Onboarding email drip ────────────────────────────────────────────────────
+model OnboardingEmail {
+  id         String   @id @default(uuid())
+  plan       String
+  day_index  Int
+  subject    String
+  preheader  String
+  from_email String?
+  body       Json
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  sends      OnboardingSend[]
+  @@unique([plan, day_index])
+  @@map("onboarding_emails")
+}
+
+model OnboardingEnrolment {
+  id         String   @id @default(uuid())
+  tenant_id  String   @unique
+  plan       String
+  start_date DateTime @db.Date
+  status     String   @default("active")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  sends      OnboardingSend[]
+  @@map("onboarding_enrolments")
+}
+
+model OnboardingSend {
+  id                String   @id @default(uuid())
+  tenant_id         String
+  enrolment_id      String?
+  email_id          String?
+  plan              String
+  day_index         Int
+  recipient_email   String
+  recipient_user_id String?
+  subject           String
+  scheduled_for     DateTime
+  sent_at           DateTime?
+  status            String   @default("scheduled")
+  sg_message_id     String?
+  delivered_at      DateTime?
+  first_opened_at   DateTime?
+  open_count        Int      @default(0)
+  first_clicked_at  DateTime?
+  click_count       Int      @default(0)
+  bounced_at        DateTime?
+  error             String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  email             OnboardingEmail?     @relation(fields: [email_id], references: [id])
+  enrolment         OnboardingEnrolment? @relation(fields: [enrolment_id], references: [id])
+  @@unique([tenant_id, email_id, recipient_email])
+  @@map("onboarding_sends")
+}

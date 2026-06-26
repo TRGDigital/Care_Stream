@@ -2482,3 +2482,69 @@ function buildPostData(body: any) {
     ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
   }
 }
+
+// ─── Onboarding email drip (platform Email Marketing) ─────────────────────────
+
+function aggregateSends(sends: any[]) {
+  const sent      = sends.filter(s => s.sent_at).length
+  const delivered = sends.filter(s => s.delivered_at).length
+  const opened    = sends.filter(s => s.first_opened_at).length
+  const clicked   = sends.filter(s => s.first_clicked_at).length
+  const bounced   = sends.filter(s => s.status === 'bounced').length
+  const pct = (n: number, d: number) => d > 0 ? Math.round((n / d) * 100) : null
+  return {
+    sent, delivered, opened, clicked, bounced,
+    delivered_pct: pct(delivered, sent),
+    open_pct:      pct(opened, delivered || sent),
+    click_pct:     pct(clicked, delivered || sent),
+    first_sent_at: sends.reduce<string | null>((min, s) => s.sent_at && (!min || s.sent_at < min) ? s.sent_at : min, null),
+  }
+}
+
+// GET /admin/onboarding/emails?plan=enterprise — sequence + aggregate stats per email.
+adminRouter.get('/onboarding/emails', async (req: Request, res: Response) => {
+  const plan = String(req.query.plan ?? 'enterprise')
+  const [emails, sends] = await Promise.all([
+    (prisma as any).onboardingEmail.findMany({ where: { plan }, orderBy: { day_index: 'asc' } }),
+    (prisma as any).onboardingSend.findMany({ where: { plan }, select: { email_id: true, sent_at: true, delivered_at: true, first_opened_at: true, first_clicked_at: true, status: true } }),
+  ])
+  const byEmail = new Map<string, any[]>()
+  for (const s of sends as any[]) { const a = byEmail.get(s.email_id) ?? []; a.push(s); byEmail.set(s.email_id, a) }
+  const out = (emails as any[]).map(e => ({
+    id: e.id, plan: e.plan, day_index: e.day_index, subject: e.subject, preheader: e.preheader,
+    from_email: e.from_email, badge: (e.body as any)?.badge ?? null, headline: (e.body as any)?.headline ?? null,
+    image: (e.body as any)?.imageSrc ?? null,
+    stats: aggregateSends(byEmail.get(e.id) ?? []),
+  }))
+  ok(res, { plan, emails: out })
+})
+
+// PATCH /admin/onboarding/emails/:id — edit subject / preview text.
+adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) => {
+  const data: any = {}
+  if (typeof req.body?.subject === 'string')   data.subject = req.body.subject.trim()
+  if (typeof req.body?.preheader === 'string') data.preheader = req.body.preheader.trim()
+  if (typeof req.body?.from_email === 'string') data.from_email = req.body.from_email.trim() || null
+  if (!Object.keys(data).length) { err(res, 'NO_FIELDS', 'Nothing to update.', 400); return }
+  const updated = await (prisma as any).onboardingEmail.update({ where: { id: req.params.id }, data })
+  ok(res, { id: updated.id })
+})
+
+// GET /admin/tenants/:id/onboarding — this client's drip + every send to it.
+adminRouter.get('/tenants/:id/onboarding', async (req: Request, res: Response) => {
+  const tenantId = req.params.id
+  const [enrolment, sends] = await Promise.all([
+    (prisma as any).onboardingEnrolment.findUnique({ where: { tenant_id: tenantId } }),
+    (prisma as any).onboardingSend.findMany({ where: { tenant_id: tenantId }, orderBy: [{ day_index: 'asc' }, { recipient_email: 'asc' }] }),
+  ])
+  ok(res, {
+    enrolment: enrolment ? { plan: enrolment.plan, start_date: enrolment.start_date, status: enrolment.status } : null,
+    sends: (sends as any[]).map(s => ({
+      day_index: s.day_index, subject: s.subject, recipient_email: s.recipient_email,
+      status: s.status, sent_at: s.sent_at, delivered_at: s.delivered_at,
+      first_opened_at: s.first_opened_at, open_count: s.open_count,
+      first_clicked_at: s.first_clicked_at, click_count: s.click_count,
+    })),
+    summary: aggregateSends(sends as any[]),
+  })
+})

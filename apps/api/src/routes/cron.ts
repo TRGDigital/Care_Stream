@@ -7,6 +7,8 @@ import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
+import { dispatchDue } from '../services/onboarding/dispatch'
+import { seedOnboardingEmails } from '../services/onboarding/seed'
 
 export const cronRouter = Router()
 
@@ -38,6 +40,22 @@ cronRouter.get('/audit-reminders', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/audit-reminders] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Runs at 09:00 and 10:00 UTC (covers 10am UK in both BST and GMT); dispatchDue
+// only sends when it's actually 10am UK. Each working day it sends the due
+// onboarding email to every active admin of every enrolled tenant. `?force=1`
+// (cron-authed) bypasses the 10am gate for testing.
+cronRouter.get('/onboarding-emails', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    await seedOnboardingEmails().catch(() => {})   // self-heal: ensure templates exist
+    const result = await dispatchDue({ force: req.query.force === '1' })
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/onboarding-emails] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

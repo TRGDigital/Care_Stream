@@ -29,6 +29,7 @@ import { publicTrainingReviewRouter } from './routes/training-review-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
+import { onboardingPublicRouter } from './routes/onboarding-public'
 import { lpPublicRouter } from './routes/lp-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
@@ -105,6 +106,49 @@ app.use('/whatsapp', whatsappRouter)
 // One-click feedback links from email/WhatsApp — no auth required, HMAC-verified.
 // Must be mounted BEFORE requireAuth.
 app.use('/feedback', feedbackRouter)
+
+// Onboarding email drip: unsubscribe + SendGrid event webhook, no auth. BEFORE requireAuth.
+app.use('/onboarding', onboardingPublicRouter)
+
+// TEMP: seed/preview/test-send onboarding emails before go-live. Remove after.
+// Guarded by a secret key; the send action can ONLY go to a fixed allowlist (no
+// open relay). preview/seed are read-only.
+const ONB_TEST_KEY = 'onb-9f3a2c7b1e54-preview'
+const ONB_TEST_ALLOW = new Set(['len@crosswayscarehome.co.uk', 'hello@carestreamai.com'])
+app.get('/public/_onboarding-test', async (req, res) => {
+  if (String(req.query.key ?? '') !== ONB_TEST_KEY) { res.status(404).end(); return }
+  try {
+    const { prisma } = await import('./db/client')
+    const { seedOnboardingEmails } = await import('./services/onboarding/seed')
+    const { renderOnboardingEmailHtml } = await import('./services/onboarding/render')
+    const seeded = await seedOnboardingEmails()
+    const action = String(req.query.action ?? 'seed')
+    const plan   = String(req.query.plan ?? 'enterprise')
+    const day    = Number(req.query.day ?? 1)
+    const tmpl   = await (prisma as any).onboardingEmail.findUnique({ where: { plan_day_index: { plan, day_index: day } } })
+
+    if (action === 'preview') {
+      if (!tmpl) { res.status(404).send('no template'); return }
+      res.set('content-type', 'text/html').send(renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl: '#' }))
+      return
+    }
+    if (action === 'send') {
+      const to = String(req.query.to ?? '').toLowerCase()
+      if (!ONB_TEST_ALLOW.has(to)) { res.status(403).json({ error: 'recipient not allowed' }); return }
+      if (!tmpl) { res.status(404).json({ error: 'no template' }); return }
+      const sg = (await import('@sendgrid/mail')).default
+      if (!process.env.SENDGRID_API_KEY) { res.status(500).json({ error: 'no SENDGRID_API_KEY' }); return }
+      sg.setApiKey(process.env.SENDGRID_API_KEY)
+      const html = renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl: '#' })
+      await sg.send({ to, from: { email: 'hello@carestreamai.com', name: 'CareStream' }, replyTo: 'hello@carestreamai.com', subject: `[TEST] ${tmpl.subject}`, html } as any)
+      res.json({ sent: to, plan, day, subject: tmpl.subject })
+      return
+    }
+    res.json({ seeded, sampleSubject: tmpl?.subject ?? null })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
 
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)

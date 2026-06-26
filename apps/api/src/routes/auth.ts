@@ -147,6 +147,21 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     console.error('[register] new-account notification failed:', e)
   }
 
+  // Onboarding drip: enrol the new tenant and send the welcome email immediately.
+  // Skipped for training-only accounts (they buy modules à la carte, no plan drip).
+  if (tier !== 'training_only') {
+    try {
+      const { enrolTenant, sendDayOneNow, ukNow } = await import('../services/onboarding/dispatch')
+      const planName = plan_id
+        ? (await (prisma as any).plan.findUnique({ where: { id: plan_id }, select: { name: true } }))?.name ?? null
+        : null
+      await enrolTenant(tenant.id, planName, ukNow().dateStr)
+      await sendDayOneNow(tenant.id, email, user.id)
+    } catch (e) {
+      console.error('[register] onboarding enrol failed:', e)
+    }
+  }
+
   ok(res, { email_verification_required: true, email }, 201)
 })
 

@@ -50,6 +50,15 @@ billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) =>
   } catch (e: any) {
     console.error('[billing] sync error:', e?.message)
   }
+  // Refresh the onboarding drip's plan so the later, plan-specific emails match
+  // the plan the tenant actually chose.
+  try {
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { name: true } } } })
+    if (t?.plan?.name) {
+      const { enrolTenant, ukNow } = await import('../services/onboarding/dispatch')
+      await enrolTenant(tenantId, t.plan.name, ukNow().dateStr)
+    }
+  } catch (e: any) { console.error('[billing] onboarding plan refresh error:', e?.message) }
   const t = await (prisma as any).tenant.findUnique({
     where: { id: tenantId },
     select: { subscription_status: true, stripe_subscription_id: true, tier: true },

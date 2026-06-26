@@ -788,13 +788,22 @@ adminRouter.post('/tenants/:id/open-account', async (req: Request, res: Response
     ? { id: targetUser, tenant_id: tenantId, is_active: true }
     : { tenant_id: tenantId, role: 'admin', is_active: true }
 
-  const user = await (prisma as any).user.findFirst({
+  let user = await (prisma as any).user.findFirst({
     where,
     select:  { id: true, name: true, email: true, tenant_id: true },
     orderBy: { created_at: 'asc' },   // the first/owner admin
   })
+  // Fallback for admin-less tenants (e.g. the CPD Assessor account, whose only user
+  // is a reviewer): open as any active user.
+  if (!user && !targetUser) {
+    user = await (prisma as any).user.findFirst({
+      where:   { tenant_id: tenantId, is_active: true },
+      select:  { id: true, name: true, email: true, tenant_id: true },
+      orderBy: { created_at: 'asc' },
+    })
+  }
   if (!user || user.tenant_id !== tenantId) {
-    err(res, 'NOT_FOUND', 'No active admin found for this client.', 404); return
+    err(res, 'NOT_FOUND', 'No active user found for this client.', 404); return
   }
 
   // Short-lived (5 min) one-time link — it's used immediately when the tab opens.

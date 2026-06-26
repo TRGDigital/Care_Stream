@@ -4,6 +4,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { sendFeatureRequestNotification } from '../services/email/outbound'
 
 export const featureRequestsRouter = Router()
 
@@ -27,5 +28,13 @@ featureRequestsRouter.post('/', async (req: Request, res: Response) => {
       title: title.slice(0, 200), details: details.slice(0, 5000),
     },
   })
+
+  // Notify the platform owner (fire-and-forget).
+  sendFeatureRequestNotification({
+    tenantName: tenant?.name ?? 'Unknown client',
+    submitterName: user?.name ?? null, submitterEmail: user?.email ?? null,
+    title: title.slice(0, 200), details: details.slice(0, 5000),
+  }).catch(e => console.error('[feature-requests] notify failed:', e?.message ?? e))
+
   ok(res, { id: created.id }, 201)
 })

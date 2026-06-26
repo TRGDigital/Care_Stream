@@ -191,6 +191,37 @@ export async function sendNewTenantNotification(opts: {
   await sgMail.send({ to, from, subject: `New CareStream account: ${opts.orgName} (${opts.accountNumber})`, html })
 }
 
+// ─── Feature-request notification to the platform owner ─────────────────────────
+// Sent whenever a client submits a feature request from Help & Guides.
+export async function sendFeatureRequestNotification(opts: {
+  tenantName: string; submitterName?: string | null; submitterEmail?: string | null; title: string; details: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping feature-request notification'); return }
+
+  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:13px;font-weight:600">${esc(v)}</td></tr>`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">💡 New feature request</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A client has submitted a feature request from Help &amp; Guides.</p>
+    <table style="border-collapse:collapse;margin:0 0 16px">
+      ${row('Client', opts.tenantName)}
+      ${row('From', opts.submitterName ?? '—')}
+      ${row('Email', opts.submitterEmail ?? '—')}
+      ${row('Title', opts.title)}
+    </table>
+    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">Details</p>
+    <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;background:#f9fafb;border:1px solid #eef0f2;border-radius:8px;padding:12px 14px;margin:0 0 18px">${esc(opts.details)}</div>
+    <p style="color:#9ca3af;font-size:12px;margin:0">Open the platform console → Feature Requests to triage it.</p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to, from, subject: `Feature request from ${opts.tenantName}: ${opts.title}`, html })
+}
+
 // ─── Passwordless sign-in link (magic link) ───────────────────────────────────
 
 export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; link: string; expiresMins: number }): Promise<void> {

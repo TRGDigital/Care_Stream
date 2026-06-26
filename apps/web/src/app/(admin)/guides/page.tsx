@@ -1,12 +1,71 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { createApiClient } from '@/lib/api-client'
 import {
   ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2,
 } from 'lucide-react'
+
+function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
+  const [title, setTitle]         = useState('')
+  const [details, setDetails]     = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone]           = useState(false)
+  const [error, setError]         = useState('')
+  if (!open) return null
+
+  function close() { setTitle(''); setDetails(''); setDone(false); setError(''); onClose() }
+  async function submit() {
+    if (!token || !title.trim() || !details.trim()) return
+    setSubmitting(true); setError('')
+    try { await createApiClient(token).featureRequests.create(title.trim(), details.trim()); setDone(true) }
+    catch (e: any) { setError(e?.message ?? 'Could not submit. Please try again.') }
+    finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={close}>
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
+          <Lightbulb size={18} className="text-teal" />
+          <h2 className="flex-1 text-base font-bold text-neutral-dark">Request a new feature</h2>
+          <button onClick={close} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+        {done ? (
+          <div className="px-6 py-8 text-center">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-green-100"><CheckCircle size={22} className="text-green-600" /></div>
+            <p className="mb-1 font-semibold text-neutral-dark">Thank you</p>
+            <p className="mb-5 text-sm text-neutral-mid">Your idea has been sent to the CareStream team. We read every request.</p>
+            <button onClick={close} className="rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Done</button>
+          </div>
+        ) : (
+          <div className="px-6 py-5">
+            <p className="mb-4 text-sm text-neutral-mid">Got an idea for something you would like CareStream to do? Tell us about it and our team will review it.</p>
+            <label className="mb-3 block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-mid">Title</span>
+              <input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} placeholder="A short summary of your idea" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20" />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-mid">Details</span>
+              <textarea value={details} onChange={e => setDetails(e.target.value)} rows={5} maxLength={5000} placeholder="What would you like it to do, and what problem would it solve for you?" className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20" />
+            </label>
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={close} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light">Cancel</button>
+              <button onClick={submit} disabled={submitting || !title.trim() || !details.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+                {submitting ? <Loader2 size={15} className="animate-spin" /> : <Lightbulb size={15} />} Submit request
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1322,7 +1381,9 @@ function GuideAccordion({ section, isOpen, onToggle }: { section: GuideSection; 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HelpPage() {
+  const { data: session } = useSession()
   const [query, setQuery] = useState('')
+  const [showRequest, setShowRequest] = useState(false)
   // Single-open accordion: only one section expanded at a time.
   const [openId, setOpenId] = useState<string | null>(GUIDE_SECTIONS.find(s => s.defaultOpen)?.id ?? null)
   const q = query.trim().toLowerCase()
@@ -1332,11 +1393,17 @@ export default function HelpPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-dark">Help &amp; Guides</h1>
-        <p className="mt-1 text-sm text-neutral-mid">
-          Step-by-step guides for every part of CareStream. Search or click a section to expand it.
-        </p>
+      <FeatureRequestModal open={showRequest} onClose={() => setShowRequest(false)} token={session?.accessToken} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-dark">Help &amp; Guides</h1>
+          <p className="mt-1 text-sm text-neutral-mid">
+            Step-by-step guides for every part of CareStream. Search or click a section to expand it.
+          </p>
+        </div>
+        <button onClick={() => setShowRequest(true)} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-dark">
+          <Lightbulb size={16} /> Request New Feature
+        </button>
       </div>
 
       {/* Search */}

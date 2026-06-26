@@ -546,6 +546,11 @@ export function createApiClient(token: string) {
         apiFetch<{ delivery: any; score: number; feedback: string; model_answer: string | null }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text }) }),
     },
 
+    featureRequests: {
+      create: (title: string, details: string) =>
+        apiFetch<{ id: string }>('/feature-requests', token, { method: 'POST', body: JSON.stringify({ title, details }) }),
+    },
+
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[] }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),

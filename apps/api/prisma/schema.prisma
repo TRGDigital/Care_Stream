@@ -1459,3 +1459,20 @@ model OnboardingSend {
   @@unique([tenant_id, email_id, recipient_email])
   @@map("onboarding_sends")
 }
+
+// ─── Feature requests (tenants → platform) ────────────────────────────────────
+model FeatureRequest {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  user_id         String?
+  tenant_name     String?
+  submitter_name  String?
+  submitter_email String?
+  title           String
+  details         String
+  status          String   @default("new")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  @@index([status, created_at])
+  @@map("feature_requests")
+}

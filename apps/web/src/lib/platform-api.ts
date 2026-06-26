@@ -452,6 +452,15 @@ export function createPlatformClient(token: string) {
     stats: () =>
       adminFetch<PlatformStats>('/stats', token),
 
+    featureRequests: {
+      list: () => adminFetch<{
+        requests: Array<{ id: string; tenant_id: string; tenant_name: string | null; submitter_name: string | null; submitter_email: string | null; title: string; details: string; status: string; created_at: string }>
+        counts: Record<string, number>; total: number
+      }>('/feature-requests', token),
+      updateStatus: (id: string, status: string) =>
+        adminFetch<{ updated: boolean }>(`/feature-requests/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    },
+
     onboarding: {
       emails: (plan: string) => adminFetch<{ plan: string; emails: Array<{
         id: string; plan: string; day_index: number; subject: string; preheader: string

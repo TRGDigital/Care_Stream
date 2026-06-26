@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb,
 } from 'lucide-react'
 
 const NAV = [
@@ -25,6 +25,7 @@ const NAV = [
   { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },
   { href: '/platform/blog',            label: 'Blog',             Icon: Newspaper       },
   { href: '/platform/email-marketing', label: 'Email Marketing',  Icon: Mail            },
+  { href: '/platform/feature-requests', label: 'Feature Requests', Icon: Lightbulb      },
 ]
 
 export function PlatformShell({ children }: { children: React.ReactNode }) {

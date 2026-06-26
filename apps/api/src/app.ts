@@ -23,6 +23,7 @@ import { trainingRouter } from './routes/training'
 import { faceToFaceRouter } from './routes/face-to-face'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
+import { featureRequestsRouter } from './routes/feature-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
@@ -158,6 +159,7 @@ app.use('/training', trainingRouter)
 app.use('/face-to-face', faceToFaceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
+app.use('/feature-requests', featureRequestsRouter)
 app.use('/agent-actions', agentActionsRouter)
 
 seedTrainingModulesIfEmpty()

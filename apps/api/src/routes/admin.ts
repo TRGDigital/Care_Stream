@@ -2572,3 +2572,21 @@ adminRouter.get('/tenants/:id/onboarding', async (req: Request, res: Response) =
     summary: aggregateSends(sends as any[]),
   })
 })
+
+// ─── Feature requests (read inbox for the platform team) ──────────────────────
+
+// GET /admin/feature-requests — every tenant-submitted request, newest first.
+adminRouter.get('/feature-requests', async (_req: Request, res: Response) => {
+  const requests = await (prisma as any).featureRequest.findMany({ orderBy: { created_at: 'desc' } })
+  const counts: Record<string, number> = {}
+  for (const r of requests as any[]) counts[r.status] = (counts[r.status] ?? 0) + 1
+  ok(res, { requests, counts, total: (requests as any[]).length })
+})
+
+// PATCH /admin/feature-requests/:id — update the triage status.
+adminRouter.patch('/feature-requests/:id', async (req: Request, res: Response) => {
+  const status = String(req.body?.status ?? '')
+  if (!['new', 'reviewing', 'planned', 'done', 'declined'].includes(status)) { err(res, 'INVALID', 'Invalid status.', 400); return }
+  await (prisma as any).featureRequest.update({ where: { id: req.params.id }, data: { status } })
+  ok(res, { updated: true })
+})

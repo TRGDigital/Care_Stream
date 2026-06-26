@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
-  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle,
+  CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle, FileText, Download, Loader2,
 } from 'lucide-react'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -33,6 +34,14 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   // Past/today sessions with staff still not marked attended or absent.
   const [unmarked, setUnmarked] = useState<any[]>([])
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
+  const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
+  const [payrollOpen, setPayrollOpen] = useState(false)
+
+  // Adhoc + annual training for the visible month (powers the calendar overlay).
+  useEffect(() => {
+    if (!api) return
+    api.faceToFace.trainingMonth(`${year}-${pad(month + 1)}`).then(d => setTraining({ adhoc: d.adhoc, annual: d.annual })).catch(() => setTraining(null))
+  }, [api, year, month])
 
   async function loadUnmarked() {
     if (!api) return
@@ -77,6 +86,20 @@ export function FaceToFaceManager({ token }: { token?: string }) {
     return m
   }, [sessions])
 
+  // Adhoc/annual training bucketed by day: allocated (+N) and completed (✓N) counts.
+  const byDayTraining = useMemo(() => {
+    const m = new Map<string, { adhocAlloc: number; adhocComp: number; annualAlloc: number; annualComp: number }>()
+    const get = (k: string) => { let v = m.get(k); if (!v) { v = { adhocAlloc: 0, adhocComp: 0, annualAlloc: 0, annualComp: 0 }; m.set(k, v) } return v }
+    const add = (rows: any[], type: 'adhoc' | 'annual') => {
+      for (const r of rows ?? []) {
+        if (r.allocated_at) get(keyOf(r.allocated_at))[`${type}Alloc` as const]++
+        if (r.completed_at) get(keyOf(r.completed_at))[`${type}Comp` as const]++
+      }
+    }
+    if (training) { add(training.adhoc, 'adhoc'); add(training.annual, 'annual') }
+    return m
+  }, [training])
+
   // October planning nudge: from October, prompt to start next year if it's empty.
   const nextYear = today.getFullYear() + 1
   const nextYearCount = sessions.filter(s => new Date(s.session_date).getUTCFullYear() === nextYear).length
@@ -104,7 +127,10 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         <div>
           <p className="text-sm text-neutral-mid">Log the in-person sessions you run, mark who attended, and send the digital module to anyone who missed.</p>
         </div>
-        <button onClick={() => setEditing({ mode: 'new' })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={16} /> New session</button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setPayrollOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40"><FileText size={16} /> Payroll report</button>
+          <button onClick={() => setEditing({ mode: 'new' })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={16} /> New session</button>
+        </div>
       </div>
 
       {showPlanNudge && (
@@ -146,12 +172,29 @@ export function FaceToFaceManager({ token }: { token?: string }) {
                         <span className="ml-1 font-normal text-teal/70">{s.attended}/{s.allocated}</span>
                       </button>
                     ))}
+                    {(() => {
+                      const t = byDayTraining.get(c.key); if (!t) return null
+                      const chip = (cls: string, txt: string) => <span className={`block truncate rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{txt}</span>
+                      return <>
+                        {t.adhocAlloc > 0  && chip('bg-orange-100 text-orange-700', `Adhoc +${t.adhocAlloc}`)}
+                        {t.adhocComp > 0   && chip('bg-orange-50 text-orange-600 ring-1 ring-orange-200', `Adhoc ✓${t.adhocComp}`)}
+                        {t.annualAlloc > 0 && chip('bg-indigo-100 text-indigo-700', `Annual +${t.annualAlloc}`)}
+                        {t.annualComp > 0  && chip('bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200', `Annual ✓${t.annualComp}`)}
+                      </>
+                    })()}
                   </div>
                 </>
               )}
             </div>
           ))}
         </div>
+      </div>
+      {/* Legend */}
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-teal/30" /> Face-to-face</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-orange-200" /> Adhoc training</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-indigo-200" /> Annual training</span>
+        <span className="text-neutral-mid/80">+N allocated · ✓N completed</span>
       </div>
       {loading && <p className="mt-3 text-center text-sm text-neutral-mid">Loading…</p>}
 
@@ -194,6 +237,10 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         )
       })()}
 
+      {payrollOpen && api && (
+        <PayrollModal api={api} year={year} month={month} onClose={() => setPayrollOpen(false)} />
+      )}
+
       {editing && api && (
         <SessionModal
           api={api} modules={modules} staff={staff}
@@ -229,6 +276,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [trainerName,  setTrainerName]  = useState(initial?.delivered_by_name ?? '')
   const [notes,    setNotes]    = useState(initial?.notes ?? '')
   const [attendees, setAttendees] = useState<Set<string>>(new Set())
+  const [onShift, setOnShift] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingAttendees, setLoadingAttendees] = useState(!!initial)
@@ -236,7 +284,11 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   // For an existing session, load its current attendee set.
   useEffect(() => {
     if (!initial) return
-    api.faceToFace.session(initial.id).then(d => setAttendees(new Set((d.session.attendance ?? []).map((a: any) => a.user_id)))).catch(() => {}).finally(() => setLoadingAttendees(false))
+    api.faceToFace.session(initial.id).then(d => {
+      const att = d.session.attendance ?? []
+      setAttendees(new Set(att.map((a: any) => a.user_id)))
+      setOnShift(new Set(att.filter((a: any) => a.on_shift).map((a: any) => a.user_id)))
+    }).catch(() => {}).finally(() => setLoadingAttendees(false))
   }, [initial, api])
 
   const moduleName = modules.find(m => m.id === moduleId)?.name
@@ -254,6 +306,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       delivered_by_name:    trainerMode === 'external' ? (trainerName.trim() || undefined) : null,
       notes: notes.trim() || undefined,
       attendee_ids: [...attendees],
+      on_shift_ids: [...onShift],
     }
     try {
       if (initial) {
@@ -309,15 +362,24 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
           </span>
         </label>
         <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter staff…" className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
-        <div className="mb-4 max-h-48 space-y-1 overflow-y-auto rounded-lg border border-gray-100 p-2">
+        <div className="mb-2 max-h-48 space-y-1 overflow-y-auto rounded-lg border border-gray-100 p-2">
           {loadingAttendees ? <p className="p-2 text-xs text-neutral-mid">Loading…</p> : shownStaff.map(s => (
-            <label key={s.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
-              <input type="checkbox" checked={attendees.has(s.id)} onChange={() => setAttendees(prev => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n })} className="accent-teal" />
-              <span className="text-neutral-dark">{s.name}</span>
-              {s.job_role && <span className="text-xs text-neutral-mid">{s.job_role}</span>}
-            </label>
+            <div key={s.id} className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
+              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+                <input type="checkbox" checked={attendees.has(s.id)} onChange={() => setAttendees(prev => { const n = new Set(prev); if (n.has(s.id)) { n.delete(s.id); setOnShift(o => { const oo = new Set(o); oo.delete(s.id); return oo }) } else n.add(s.id); return n })} className="accent-teal" />
+                <span className="truncate text-neutral-dark">{s.name}</span>
+                {s.job_role && <span className="shrink-0 text-xs text-neutral-mid">{s.job_role}</span>}
+              </label>
+              {attendees.has(s.id) && (
+                <label className="flex shrink-0 cursor-pointer items-center gap-1 text-xs font-medium text-neutral-mid" title="Tick if this person was on shift during the session">
+                  <input type="checkbox" checked={onShift.has(s.id)} onChange={() => setOnShift(prev => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n })} className="accent-teal" />
+                  On shift
+                </label>
+              )}
+            </div>
           ))}
         </div>
+        <p className="mb-4 text-xs text-neutral-mid">Tick <strong className="text-neutral-dark">On shift</strong> for anyone working during the session. On the payroll report, staff who attended <strong className="text-neutral-dark">off shift</strong> are flagged as payable; on-shift attendance is not.</p>
 
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
 
@@ -469,6 +531,139 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
           <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-600"><Trash2 size={14} /> Delete</button>
           <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Payroll / training report (PDF: download or email) ───────────────────────
+function PayrollModal({ api, year, month, onClose }: {
+  api: ReturnType<typeof createApiClient>; year: number; month: number; onClose: () => void
+}) {
+  const { data: session } = useSession()
+  const orgName = (session?.user as any)?.tenantName ?? 'Your service'
+  const [y, setY] = useState(year)
+  const [m, setM] = useState(month)   // 0-based
+  const [data, setData] = useState<{ f2f: any[]; adhoc: any[]; annual: any[] } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy]   = useState<'pdf' | 'email' | null>(null)
+  const [email, setEmail] = useState('')
+  const [msg, setMsg]     = useState('')
+  const reportRef = useRef<HTMLDivElement>(null)
+
+  const monthStr   = `${y}-${pad(m + 1)}`
+  const monthLabel = `${MONTHS[m]} ${y}`
+  const generated  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  useEffect(() => {
+    setLoading(true)
+    api.faceToFace.trainingMonth(monthStr).then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
+  }, [monthStr]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pay = (status: string, on_shift: boolean) => status === 'attended' ? (on_shift ? 'No' : 'Yes') : status === 'absent' ? 'No' : '—'
+  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, on_shift: a.on_shift })))
+    .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
+
+  async function makePdf() {
+    const html2pdf = (await import('html2pdf.js')).default
+    return html2pdf().set({
+      margin: [10, 10, 12, 10],
+      filename: `training-report-${monthLabel.replace(/\s+/g, '-')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] },
+    } as any).from(reportRef.current!)
+  }
+  async function download() { if (!reportRef.current) return; setBusy('pdf'); setMsg(''); try { await (await makePdf()).save() } finally { setBusy(null) } }
+  async function sendEmail() {
+    if (!reportRef.current || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setMsg('Enter a valid email address.'); return }
+    setBusy('email'); setMsg('')
+    try { const uri = await (await makePdf()).outputPdf('datauristring'); await api.faceToFace.payrollEmail(email.trim(), monthLabel, uri); setMsg(`Sent to ${email.trim()}`) }
+    catch (e: any) { setMsg(e?.message ?? 'Could not send the report.') } finally { setBusy(null) }
+  }
+
+  const th: CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.03em' }
+  const td: CSSProperties = { padding: '6px 8px', borderBottom: '1px solid #f0f0f0', fontSize: 12, color: '#1f2937' }
+  const sectionTitle: CSSProperties = { fontSize: 15, fontWeight: 800, color: '#111827', margin: '18px 0 6px', borderLeft: '4px solid #9B52B5', paddingLeft: 8 }
+  const dateStr = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) : 'Outstanding'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-neutral-dark"><FileText size={18} className="text-teal" /> Training report</h2>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        <p className="mb-3 text-sm text-neutral-mid">A monthly summary of face-to-face, adhoc and annual training allocated and completed, with the pay indicator for face-to-face attendance. Useful for payroll.</p>
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Month</label>
+        <input type="month" value={monthStr} onChange={e => { const mm = /^(\d{4})-(\d{2})$/.exec(e.target.value); if (mm) { setY(+mm[1]); setM(+mm[2] - 1) } }} className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+
+        {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
+          <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-teal">{f2fRows.length}</p>Face-to-face</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
+          </div>
+        )}
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Email the PDF to</label>
+        <div className="mb-1 flex gap-2">
+          <input type="email" value={email} onChange={e => { setEmail(e.target.value); setMsg('') }} placeholder="payroll@example.com" className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          <button onClick={sendEmail} disabled={!!busy || loading} className="inline-flex items-center gap-1.5 rounded-lg border border-teal px-3 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40 disabled:opacity-50">{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} Send</button>
+        </div>
+        {msg && <p className={`mb-2 text-xs font-medium ${msg.startsWith('Sent') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Close</button>
+          <button onClick={download} disabled={!!busy || loading} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF</button>
+        </div>
+      </div>
+
+      {/* Off-screen printable report */}
+      <div style={{ position: 'fixed', left: -99999, top: 0, width: 760 }}>
+        <div ref={reportRef} style={{ width: 760, padding: 24, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2937', background: '#fff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #9B52B5', paddingBottom: 12, marginBottom: 8 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-color.png" alt="CareStream" style={{ height: 44 }} crossOrigin="anonymous" />
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#6b7280' }}>Generated: {generated}</div>
+          </div>
+          <h1 style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px', color: '#111827' }}>Training Report</h1>
+          <p style={{ margin: '0 0 4px', fontSize: 13, color: '#374151' }}><strong>{orgName}</strong> · {monthLabel}</p>
+          <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>Face-to-face Pay column: a staff member who attended <strong>off shift</strong> is payable; on-shift attendance is not.</p>
+
+          <h2 style={sectionTitle}>Face-to-face training</h2>
+          {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th></tr></thead>
+              <tbody>{f2fRows.map((r: any, i: number) => (
+                <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.date)}</td><td style={{ ...td, textTransform: 'capitalize' }}>{r.status}</td><td style={td}>{r.on_shift ? 'Yes' : 'No'}</td><td style={{ ...td, fontWeight: 700, color: pay(r.status, r.on_shift) === 'Yes' ? '#b45309' : '#374151' }}>{pay(r.status, r.on_shift)}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
+
+          <h2 style={sectionTitle}>Adhoc training</h2>
+          {(data?.adhoc.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>
+              <tbody>{(data?.adhoc ?? []).map((r: any, i: number) => (
+                <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.allocated_at)}</td><td style={td}>{dateStr(r.completed_at)}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
+
+          <h2 style={sectionTitle}>Annual training</h2>
+          {(data?.annual.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>
+              <tbody>{(data?.annual ?? []).map((r: any, i: number) => (
+                <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.allocated_at)}</td><td style={td}>{dateStr(r.completed_at)}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

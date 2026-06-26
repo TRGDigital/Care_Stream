@@ -855,6 +855,7 @@ model FaceToFaceAttendance {
   session_id         String
   user_id            String
   status             String   @default("allocated")    // allocated | attended | absent
+  on_shift           Boolean  @default(false)           // was the staff member on shift during the session (payroll)
   module_assigned_at DateTime?                          // set when the digital module was sent to them off the back of this session
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt

@@ -122,6 +122,7 @@ faceToFaceRouter.get('/sessions/:id', requireAdmin, async (req: Request, res: Re
       name: uMap.get(a.user_id)?.name ?? 'Unknown',
       job_role: uMap.get(a.user_id)?.job_role ?? null,
       status: a.status,
+      on_shift: a.on_shift,
       module_assigned_at: a.module_assigned_at,
     })).sort((a: any, b: any) => a.name.localeCompare(b.name))
 
@@ -161,6 +162,8 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
     const validAttendees = attendeeIds.length
       ? (await (prisma as any).user.findMany({ where: { id: { in: attendeeIds }, tenant_id: tenantId }, select: { id: true } })).map((u: any) => u.id)
       : []
+    // Per-attendee "on shift" flag for payroll (default off shift = unticked).
+    const onShiftSet = new Set<string>(Array.isArray(b.on_shift_ids) ? b.on_shift_ids.map(String) : [])
 
     const session = await (prisma as any).faceToFaceSession.create({
       data: {
@@ -172,7 +175,7 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
         delivered_by_name: typeof b.delivered_by_name === 'string' && b.delivered_by_name.trim() ? b.delivered_by_name.trim().slice(0, 160) : null,
         notes: typeof b.notes === 'string' && b.notes.trim() ? b.notes.trim().slice(0, 2000) : null,
         created_by: uid(req),
-        attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id })) } : undefined,
+        attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, on_shift: onShiftSet.has(id) })) } : undefined,
       },
     })
     ok(res, { session: { id: session.id } })
@@ -211,6 +214,15 @@ faceToFaceRouter.patch('/sessions/:id', requireAdmin, async (req: Request, res: 
       const toRemove = [...have].filter(id => !want.has(id))
       if (toAdd.length) await (prisma as any).faceToFaceAttendance.createMany({ data: toAdd.map(id => ({ tenant_id: tenantId, session_id: existing.id, user_id: id })), skipDuplicates: true })
       if (toRemove.length) await (prisma as any).faceToFaceAttendance.deleteMany({ where: { session_id: existing.id, user_id: { in: toRemove } } })
+    }
+
+    // Update the per-attendee on-shift flags when provided.
+    if (Array.isArray(b.on_shift_ids)) {
+      const onShift = new Set((b.on_shift_ids as any[]).map(String))
+      const rows = await (prisma as any).faceToFaceAttendance.findMany({ where: { session_id: existing.id }, select: { id: true, user_id: true } })
+      for (const r of rows as any[]) {
+        await (prisma as any).faceToFaceAttendance.update({ where: { id: r.id }, data: { on_shift: onShift.has(r.user_id) } })
+      }
     }
     ok(res, { updated: true })
   } catch (e: any) { err(res, 'UPDATE_FAILED', e.message, 500) }
@@ -436,4 +448,62 @@ faceToFaceRouter.get('/analytics', requireAdmin, async (req: Request, res: Respo
       by_staff,
     })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+// ─── GET /face-to-face/training-month?month=YYYY-MM ───────────────────────────
+// Unified month view: F2F sessions (with per-attendee on_shift) + adhoc + annual
+// training allocated and/or completed in the month. Powers the calendar overlay
+// and the payroll PDF.
+faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const mm = /^(\d{4})-(\d{2})$/.exec(String(req.query.month ?? ''))
+  const now = new Date()
+  const y  = mm ? +mm[1] : now.getUTCFullYear()
+  const mo = mm ? +mm[2] - 1 : now.getUTCMonth()
+  const start = new Date(Date.UTC(y, mo, 1))
+  const end   = new Date(Date.UTC(y, mo + 1, 1))
+  try {
+    const [sessions, enrollments] = await Promise.all([
+      (prisma as any).faceToFaceSession.findMany({ where: { tenant_id: tenantId, session_date: { gte: start, lt: end } }, include: { attendance: true }, orderBy: { session_date: 'asc' } }),
+      (prisma as any).trainingEnrollment.findMany({
+        where: { tenant_id: tenantId, OR: [{ created_at: { gte: start, lt: end } }, { completed_at: { gte: start, lt: end } }] },
+        include: { module: { select: { name: true, source: true } } },
+      }),
+    ])
+    const userIds = new Set<string>()
+    for (const s of sessions as any[]) for (const a of (s.attendance ?? [])) userIds.add(a.user_id)
+    for (const e of enrollments as any[]) userIds.add(e.user_id)
+    const users = userIds.size ? await (prisma as any).user.findMany({ where: { id: { in: [...userIds] }, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } }) : []
+    const uMap = new Map((users as any[]).map(u => [u.id, u]))
+    const nm = (id: string) => uMap.get(id)?.name ?? 'Unknown'
+
+    const f2f = (sessions as any[]).map(s => ({
+      session_id: s.id, date: s.session_date, title: s.title,
+      attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, on_shift: a.on_shift })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    }))
+    const adhoc: any[] = [], annual: any[] = []
+    for (const e of enrollments as any[]) {
+      const row = { user_id: e.user_id, name: nm(e.user_id), title: e.module?.name ?? 'Training', allocated_at: e.created_at, completed_at: e.completed_at, status: e.status }
+      if (e.module?.source === 'ai_generated') annual.push(row); else adhoc.push(row)
+    }
+    const sortRows = (a: any, b: any) => a.name.localeCompare(b.name) || a.title.localeCompare(b.title)
+    ok(res, { month: `${y}-${String(mo + 1).padStart(2, '0')}`, f2f, adhoc: adhoc.sort(sortRows), annual: annual.sort(sortRows) })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+// ─── POST /face-to-face/payroll/email ─────────────────────────────────────────
+// body: { to, month_label, pdf_base64 } — emails the generated PDF as an attachment.
+faceToFaceRouter.post('/payroll/email', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const to        = String(req.body?.to ?? '').trim().toLowerCase()
+  const monthLabel = String(req.body?.month_label ?? '').trim().slice(0, 40) || 'the selected month'
+  const pdfBase64 = String(req.body?.pdf_base64 ?? '')
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { err(res, 'INVALID', 'A valid email address is required.', 400); return }
+  if (!pdfBase64 || pdfBase64.length < 100) { err(res, 'INVALID', 'No PDF to send.', 400); return }
+  try {
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+    const { sendF2FPayrollEmail } = await import('../services/email/outbound')
+    await sendF2FPayrollEmail({ to, orgName: tenant?.name ?? 'Your service', monthLabel, pdfBase64: pdfBase64.replace(/^data:application\/pdf;base64,/, '') })
+    ok(res, { sent: to })
+  } catch (e: any) { err(res, 'SEND_FAILED', e?.message ?? 'Could not send the report.', 500) }
 })

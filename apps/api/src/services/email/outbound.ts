@@ -222,6 +222,24 @@ export async function sendFeatureRequestNotification(opts: {
   await sgMail.send({ to, from, subject: `Feature request from ${opts.tenantName}: ${opts.title}`, html })
 }
 
+// ─── Face-to-face / training payroll report (PDF attachment) ──────────────────
+export async function sendF2FPayrollEmail(opts: { to: string; orgName: string; monthLabel: string; pdfBase64: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping payroll report email'); return }
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 12px">Hi,</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">Attached is the training report for <strong>${opts.orgName}</strong> covering <strong>${opts.monthLabel}</strong>. It lists face-to-face, adhoc and annual training allocated and completed in the period, with the on-shift / pay indicator for face-to-face sessions.</p>
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({
+    to: opts.to, from,
+    subject: `Training report for ${opts.orgName}, ${opts.monthLabel}`,
+    html,
+    attachments: [{ content: opts.pdfBase64, filename: `training-report-${opts.monthLabel.replace(/\s+/g, '-')}.pdf`, type: 'application/pdf', disposition: 'attachment' }],
+  })
+}
+
 // ─── Passwordless sign-in link (magic link) ───────────────────────────────────
 
 export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; link: string; expiresMins: number }): Promise<void> {

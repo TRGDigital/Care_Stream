@@ -670,29 +670,35 @@ function PayrollModal({ api, year, month, onClose }: {
   const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, on_shift: a.on_shift })))
     .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
 
-  async function makePdf() {
-    const html2pdf = (await import('html2pdf.js')).default
-    return html2pdf().set({
-      margin: [10, 10, 12, 10],
-      filename: `training-report-${monthLabel.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] },
-    } as any).from(reportRef.current!)
-  }
+  // NB: the html2pdf worker is a thenable. Never await it before calling
+  // .save()/.outputPdf() or the chain resolves and the worker methods vanish
+  // ("Cannot read properties of undefined (reading 'save')"). Chain in one go.
+  const pdfOpts = () => ({
+    margin: [10, 10, 12, 10],
+    filename: `training-report-${monthLabel.replace(/\s+/g, '-')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] },
+  })
   async function download() {
     if (!reportRef.current) return
     setBusy('pdf'); setMsg('')
-    try { await (await makePdf()).save() }
-    catch (e: any) { setMsg(e?.message ?? 'Could not generate the PDF.') }
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      await html2pdf().set(pdfOpts() as any).from(reportRef.current).save()
+    } catch (e: any) { setMsg(e?.message ?? 'Could not generate the PDF.') }
     finally { setBusy(null) }
   }
   async function sendEmail() {
     if (!reportRef.current || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setMsg('Enter a valid email address.'); return }
     setBusy('email'); setMsg('')
-    try { const uri = await (await makePdf()).outputPdf('datauristring'); await api.faceToFace.payrollEmail(email.trim(), monthLabel, uri); setMsg(`Sent to ${email.trim()}`) }
-    catch (e: any) { setMsg(e?.message ?? 'Could not send the report.') } finally { setBusy(null) }
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      const uri = await html2pdf().set(pdfOpts() as any).from(reportRef.current).outputPdf('datauristring')
+      await api.faceToFace.payrollEmail(email.trim(), monthLabel, uri)
+      setMsg(`Sent to ${email.trim()}`)
+    } catch (e: any) { setMsg(e?.message ?? 'Could not send the report.') } finally { setBusy(null) }
   }
 
   const th: CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.03em' }

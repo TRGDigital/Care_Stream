@@ -758,6 +758,53 @@ model MarketingLead {
   @@map("marketing_leads")
 }
 
+// ─── Provider leads (outbound prospecting) ────────────────────────────────────
+// UK CQC-regulated providers snapshotted from CareAssura, scored + segmented for
+// CareStream outbound sales (the "Prospects" tab). Platform-level (no tenant_id).
+// The CQC snapshot is refreshed every sync; nurture state below is preserved.
+
+model ProviderLead {
+  id                    String    @id @default(uuid())
+  source_id             String    @unique               // CareAssura care_homes.id
+  slug                  String?
+  name                  String
+  setting               String?                          // Residential | Nursing | Home care
+  town                  String?
+  county                String?
+  region                String?
+  postcode              String?
+  phone                 String?
+  email                 String?
+  website               String?
+  cqc_rating            String?
+  cqc_safe_rating       String?
+  cqc_effective_rating  String?
+  cqc_caring_rating     String?
+  cqc_responsive_rating String?
+  cqc_well_led_rating   String?
+  cqc_inspection_date   DateTime? @db.Date
+  cqc_report_url        String?
+  segment               String    @default("unrated")    // rescue | protect | maintain | defend | unrated
+  score                 Int       @default(0)
+  lead_angle_key        String?
+  lead_angle_label      String?
+  failing_domains       String[]  @default([])
+  why_now               String?
+  status                String    @default("new")        // new | queued | contacted | engaged | qualified | won | lost | suppressed
+  owner                 String?
+  notes                 String?
+  last_contacted_at     DateTime?
+  next_action_at        DateTime?
+  synced_at             DateTime  @default(now())
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([segment, score])
+  @@index([status])
+  @@index([region])
+  @@map("provider_leads")
+}
+
 // ─── Agent events ─────────────────────────────────────────────────────────────
 // Tracks how AI agents interact with CareStream via WebMCP — one row per tool
 // invocation. Platform-level, surfaced in the platform console (AI Agents tab).

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantSummary, type PlanLimits } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { AlertTriangle, Building2, Loader2, ExternalLink, GraduationCap } from 'lucide-react'
+import { AlertTriangle, Building2, Loader2, ExternalLink, GraduationCap, Award } from 'lucide-react'
 import Link from 'next/link'
 
 // ─── Usage bar ────────────────────────────────────────────────────────────────
@@ -128,13 +128,15 @@ export default function ClientsPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(t => {
                   const risk = atRisk(t.stats, t.plan)
+                  const isCpd = (t.name ?? '').toLowerCase().includes('cpd assessor')
                   return (
-                    <tr key={t.id} className={`hover:bg-neutral-light/50 ${risk ? 'bg-amber-50/30' : ''}`}>
+                    <tr key={t.id} className={`hover:bg-neutral-light/50 ${isCpd ? 'bg-purple-50/60' : risk ? 'bg-amber-50/30' : ''}`}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link href={`/platform/clients/${t.id}`} className="font-medium text-teal hover:underline">
+                          <Link href={`/platform/clients/${t.id}`} className={`font-medium hover:underline ${isCpd ? 'text-purple-700' : 'text-teal'}`}>
                             {t.name}
                           </Link>
+                          {isCpd && <span className="flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700"><Award size={10} /> CPD Reviewer</span>}
                           {risk && <AlertTriangle size={12} className="shrink-0 text-amber-500" />}
                         </div>
                         <div className="flex items-center gap-2">
@@ -209,7 +211,7 @@ export default function ClientsPage() {
                       <td className="px-4 py-3 text-neutral-mid text-xs">
                         {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
-                      <td className={`sticky right-0 px-4 py-3 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)] ${risk ? 'bg-amber-50' : 'bg-white'}`}>
+                      <td className={`sticky right-0 px-4 py-3 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)] ${isCpd ? 'bg-purple-50' : risk ? 'bg-amber-50' : 'bg-white'}`}>
                         <OpenAccountButton token={token!} tenantId={t.id} name={t.name} />
                       </td>
                     </tr>

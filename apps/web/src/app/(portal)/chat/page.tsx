@@ -339,7 +339,11 @@ function ChatPageInner() {
   const canF2F                                         = isAdmin && (planFeatures == null || planFeatures.has_face_to_face)
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
+  // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
+  const isReviewer                                     = (session?.user as any)?.isReviewer === true
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
+  // Reviewers land straight on Annual Training (the rest of the hub is hidden).
+  useEffect(() => { if (isReviewer) setView(v => (v === 'chat' ? 'annual' : v)) }, [isReviewer])
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
   const [messages, setMessages]                        = useState<ChatMessage[]>([])
@@ -726,7 +730,8 @@ function ChatPageInner() {
         <button onClick={() => setNavOpen(false)} aria-label="Close menu" className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light md:hidden">
           <X size={18} />
         </button>
-        {/* New chat — pinned, always visible */}
+        {/* New chat — pinned (hidden for CPD reviewers) */}
+        {!isReviewer && (
         <div className="flex-shrink-0 border-b border-gray-100 p-3">
           <button
             onClick={() => { setView('chat'); startNewChat(); setNavOpen(false) }}
@@ -736,7 +741,9 @@ function ChatPageInner() {
             New chat
           </button>
         </div>
+        )}
         <div className="p-3 space-y-0.5">
+          {!isReviewer && (
           <button
             onClick={() => setView('chat')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -744,6 +751,8 @@ function ChatPageInner() {
             <MessageSquare size={15} />
             Chat
           </button>
+          )}
+          {!isReviewer && (
           <button
             onClick={() => setView('induction')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'induction' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -752,6 +761,8 @@ function ChatPageInner() {
             My Induction
             {navCounts.induction > 0 && <NavBadge count={navCounts.induction} className="bg-indigo-500" />}
           </button>
+          )}
+          {!isReviewer && (
           <button
             onClick={() => setView('training')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'training' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -760,6 +771,7 @@ function ChatPageInner() {
             My Training
             {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
+          )}
           <button
             onClick={() => setView('annual')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'annual' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -795,6 +807,7 @@ function ChatPageInner() {
               F2F Training
             </button>
           )}
+          {!isReviewer && (
           <button
             onClick={() => setView('cqc')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'cqc' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -803,6 +816,8 @@ function ChatPageInner() {
             CQC Prep
             {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </button>
+          )}
+          {!isReviewer && (
           <button
             onClick={() => setView('progress')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'progress' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -810,10 +825,11 @@ function ChatPageInner() {
             <TrendingUp size={15} />
             My Progress
           </button>
+          )}
         </div>
 
-        {/* Saved policies */}
-        {savedPolicies.length > 0 && (
+        {/* Saved policies (hidden for reviewers) */}
+        {!isReviewer && savedPolicies.length > 0 && (
           <div className="border-t border-gray-100 px-3 py-3">
             <p className="mb-1.5 flex items-center gap-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
               <Bookmark size={11} /> Saved policies
@@ -935,7 +951,7 @@ function ChatPageInner() {
 
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
-          <AnnualTrainingView token={session.accessToken} userId={userId} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
+          <AnnualTrainingView token={session.accessToken} userId={userId} secondLang={secondLang} reviewer={isReviewer} onTalkToPolicy={talkToPolicy} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
         )}

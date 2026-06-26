@@ -26,18 +26,59 @@ const STATE_META: Record<string, { label: string; cls: string }> = {
 
 function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 
-export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy, secondLang = null }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null }) {
+export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy, secondLang = null, reviewer = false }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null; reviewer?: boolean }) {
   // If the admin enabled per-set language switching, secondLang is the name of their
   // second language; modules then offer a "Read in <language>" switch (card + inside).
   const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string }>({ mode: 'list' })
   if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} initialLang={view.lang ?? '1'} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
-  return <AnnualList token={token} userId={userId} secondLang={secondLang} onOpen={(id, name, lang) => setView({ mode: 'take', id, name, lang })} onCert={(id) => setView({ mode: 'cert', id })} />
+  return <AnnualList token={token} userId={userId} secondLang={secondLang} reviewer={reviewer} onOpen={(id, name, lang) => setView({ mode: 'take', id, name, lang })} onCert={(id) => setView({ mode: 'cert', id })} />
+}
+
+// CPD assessor notes + status panel shown under each module in reviewer mode.
+function ReviewerNotes({ token, moduleId, initial }: { token: string; moduleId: string; initial?: { notes: string; status: string } }) {
+  const [notes, setNotes]   = useState(initial?.notes ?? '')
+  const [status, setStatus] = useState(initial?.status ?? 'not_reviewed')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved]   = useState(false)
+  async function save(nextStatus?: string) {
+    setSaving(true); setSaved(false)
+    try { await createApiClient(token).me.saveModuleReview(moduleId, { notes, status: nextStatus ?? status }); setSaved(true); setTimeout(() => setSaved(false), 1500) }
+    finally { setSaving(false) }
+  }
+  const STATUS_LABEL: Record<string, string> = { not_reviewed: 'Not reviewed', reviewed: 'Reviewed', needs_discussion: 'Needs discussion' }
+  return (
+    <div className="border-t border-gray-100 bg-neutral-light/40 p-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-teal">Assessor review</span>
+        <select
+          value={status}
+          onChange={e => { setStatus(e.target.value); save(e.target.value) }}
+          className="rounded-lg border border-gray-300 px-2 py-1 text-xs font-semibold text-neutral-dark focus:border-teal focus:outline-none"
+        >
+          {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      </div>
+      <textarea
+        value={notes}
+        onChange={e => setNotes(e.target.value)}
+        rows={3}
+        placeholder="Notes and feedback on this module…"
+        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+      />
+      <div className="mt-2 flex items-center gap-2">
+        <button onClick={() => save()} disabled={saving} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+          {saving ? 'Saving…' : 'Save notes'}
+        </button>
+        {saved && <span className="text-xs font-medium text-green-600">Saved</span>}
+      </div>
+    </div>
+  )
 }
 
 // ─── List ─────────────────────────────────────────────────────────────────────
 
-function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { token: string; userId: string; onOpen: (id: string, name: string, lang?: '2') => void; onCert: (id: string) => void; secondLang?: { name: string } | null }) {
+function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer = false }: { token: string; userId: string; onOpen: (id: string, name: string, lang?: '2') => void; onCert: (id: string) => void; secondLang?: { name: string } | null; reviewer?: boolean }) {
   const api = createApiClient(token)
   const ck = hubKey('annual', userId)
   const cached = persistentCache.get<any[]>(ck)
@@ -47,6 +88,7 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
   // Per-card: which modules the staff member has flipped to their second language
   // (session-only — resets on revisit). Opening the module uses the chosen language.
   const [cardLang, setCardLang] = useState<Record<string, '2'>>({})
+  const [reviews, setReviews] = useState<Record<string, { notes: string; status: string }>>({})
 
   useEffect(() => {
     api.me.annualTraining.list()
@@ -54,6 +96,15 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!reviewer) return
+    api.me.moduleReviews().then(d => {
+      const m: Record<string, { notes: string; status: string }> = {}
+      d.reviews.forEach(r => { m[r.module_id] = { notes: r.notes ?? '', status: r.status } })
+      setReviews(m)
+    }).catch(() => {})
+  }, [reviewer]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <div className="flex-1 space-y-3 overflow-y-auto p-6">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />)}</div>
 
@@ -114,18 +165,20 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
             </button>
           )}
           {isDone && <button onClick={() => onCert(it.enrollment_id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
-          {(!isDone || it.state === 'overdue' || it.state === 'due_soon') && (
+          {(reviewer || !isDone || it.state === 'overdue' || it.state === 'due_soon') && (
             <button onClick={() => onOpen(it.enrollment_id, it.name, cardLang[it.enrollment_id])} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
-              {it.state === 'in_progress' ? 'Continue' : isDone ? 'Renew' : 'Start'}
+              {reviewer ? 'Open module' : it.state === 'in_progress' ? 'Continue' : isDone ? 'Renew' : 'Start'}
             </button>
           )}
         </div>
       </div>
-      {isDone && !it.rated && (
-        <div className="border-t border-gray-100 p-4">
-          <TrainingRatingCard token={token} area="annual" refId={it.enrollment_id} />
-        </div>
-      )}
+      {reviewer
+        ? <ReviewerNotes key={reviews[it.module_id] ? 'loaded' : 'empty'} token={token} moduleId={it.module_id} initial={reviews[it.module_id]} />
+        : (isDone && !it.rated && (
+            <div className="border-t border-gray-100 p-4">
+              <TrainingRatingCard token={token} area="annual" refId={it.enrollment_id} />
+            </div>
+          ))}
       </div>
     )
   }
@@ -133,8 +186,10 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null }: { toke
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> Annual Training</h2>
-        <p className="mb-5 text-sm text-neutral-mid">Training tailored to your home&apos;s policies. Read the lesson, pass the assessment, get your certificate.</p>
+        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> {reviewer ? 'Annual Training — CPD Review' : 'Annual Training'}</h2>
+        <p className="mb-5 text-sm text-neutral-mid">{reviewer
+          ? 'Open each module to go through it as a learner (lesson, scenarios, assessment and live follow-ups), then add your notes and status below it.'
+          : 'Training tailored to your home’s policies. Read the lesson, pass the assessment, get your certificate.'}</p>
         {todo.length > 0 && <div className="mb-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">To complete</p><div className="space-y-2">{todo.map(Card)}</div></div>}
         {renew.length > 0 && <div className="mb-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600">Due for renewal</p><div className="space-y-2">{renew.map(Card)}</div></div>}
         {done.length > 0 && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Completed</p><div className="space-y-2">{done.map(Card)}</div></div>}

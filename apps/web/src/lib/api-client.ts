@@ -585,6 +585,9 @@ export function createApiClient(token: string) {
     },
 
     me: {
+      moduleReviews: () => apiFetch<{ reviews: Array<{ module_id: string; notes: string | null; status: string }> }>('/me/module-reviews', token),
+      saveModuleReview: (module_id: string, data: { notes?: string; status?: string }) =>
+        apiFetch<{ saved: boolean }>('/me/module-reviews', token, { method: 'POST', body: JSON.stringify({ module_id, ...data }) }),
       progress: () => apiFetch<any>('/me/progress', token),
       profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean }>('/me/profile', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number }>('/me/counts', token),

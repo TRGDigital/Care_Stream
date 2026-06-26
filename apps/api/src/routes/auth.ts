@@ -284,6 +284,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     refresh_token: refreshToken,
     needs_billing: needsBilling,
     tier:          user.tenant?.tier ?? 'full',
+    is_reviewer:   !!(user as any).is_reviewer,
     user: {
       id:        user.id,
       name:      user.name,
@@ -319,6 +320,7 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
     refresh_token: await issueRefreshToken(user.id),
     needs_billing: needsBilling,
     audit_access:  auditAccess,
+    is_reviewer:   !!(user as any).is_reviewer,
     tier:          user.tenant?.tier ?? 'full',
     user:   { id: user.id, name: user.name, email: user.email, role: user.role, tenant_id: user.tenant_id },
     tenant: { id: user.tenant.id, name: user.tenant.name, slug: user.tenant.slug, subscription_status: user.tenant.subscription_status },
@@ -550,7 +552,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.findUnique({
     where: { id: rotated.userId },
     select: {
-      id: true, tenant_id: true, role: true, locked_until: true, audit_template_ids: true,
+      id: true, tenant_id: true, role: true, locked_until: true, audit_template_ids: true, is_reviewer: true,
       tenant: { select: { subscription_status: true, stripe_subscription_id: true, tier: true } },
     },
   })
@@ -571,7 +573,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
   const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
 
-  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling, audit_access: auditAccess, tier: user.tenant?.tier ?? 'full' })
+  ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling, audit_access: auditAccess, is_reviewer: !!(user as any).is_reviewer, tier: user.tenant?.tier ?? 'full' })
 })
 
 // ─── POST /auth/switch-site ───────────────────────────────────────────────────

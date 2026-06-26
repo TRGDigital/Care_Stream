@@ -452,6 +452,11 @@ export function createPlatformClient(token: string) {
     stats: () =>
       adminFetch<PlatformStats>('/stats', token),
 
+    cpdReviews: () => adminFetch<{
+      modules: Array<{ id: string; name: string; group_key: string | null; duration_minutes: number | null; pass_mark: number | null; status: string; notes: string | null; reviewer_name: string | null; updated_at: string | null }>
+      counts: Record<string, number>; total: number
+    }>('/cpd-reviews', token),
+
     featureRequests: {
       list: () => adminFetch<{
         requests: Array<{ id: string; tenant_id: string; tenant_name: string | null; submitter_name: string | null; submitter_email: string | null; title: string; details: string; status: string; created_at: string }>

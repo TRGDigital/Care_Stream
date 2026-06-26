@@ -256,6 +256,7 @@ model User {
   specialisms            String[]       @default([])         // specialist roles (e.g. Infection Control, Night Staff)
   audit_template_ids     String[]       @default([])         // "Staff + Audits": audit templates this staff member can conduct in the hub
   phone_number           String?                            // E.164 format (+447...) — enables WhatsApp access
+  is_reviewer            Boolean        @default(false)     // CPD assessor: locked-down hub showing only annual training + follow-ups
   is_active              Boolean        @default(true)      // false = deactivated (access revoked)
   email_verified                Boolean   @default(false)
   verification_token             String?
@@ -1475,4 +1476,19 @@ model FeatureRequest {
   updated_at      DateTime @updatedAt
   @@index([status, created_at])
   @@map("feature_requests")
+}
+
+// ─── CPD module reviews (assessor notes per annual module) ────────────────────
+model ModuleReview {
+  id               String   @id @default(uuid())
+  module_id        String
+  reviewer_user_id String
+  reviewer_name    String?
+  notes            String?
+  status           String   @default("not_reviewed")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  @@unique([module_id, reviewer_user_id])
+  @@index([module_id])
+  @@map("module_reviews")
 }

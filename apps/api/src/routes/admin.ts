@@ -2590,3 +2590,29 @@ adminRouter.patch('/feature-requests/:id', async (req: Request, res: Response) =
   await (prisma as any).featureRequest.update({ where: { id: req.params.id }, data: { status } })
   ok(res, { updated: true })
 })
+
+// ─── CPD review (assessor notes across the standard annual library) ───────────
+
+// GET /admin/cpd-reviews — every standard annual module with the assessor's note/status.
+adminRouter.get('/cpd-reviews', async (_req: Request, res: Response) => {
+  const [modules, reviews] = await Promise.all([
+    (prisma as any).trainingModule.findMany({
+      where:  { tenant_id: null, source: 'ai_generated', approved: true, is_active: true },
+      select: { id: true, name: true, group_key: true, duration_minutes: true, pass_mark: true },
+      orderBy: { name: 'asc' },
+    }),
+    (prisma as any).moduleReview.findMany(),
+  ])
+  const byModule = new Map((reviews as any[]).map(r => [r.module_id, r]))
+  const counts: Record<string, number> = { not_reviewed: 0, reviewed: 0, needs_discussion: 0 }
+  const out = (modules as any[]).map(m => {
+    const r = byModule.get(m.id)
+    const status = r?.status ?? 'not_reviewed'
+    counts[status] = (counts[status] ?? 0) + 1
+    return {
+      id: m.id, name: m.name, group_key: m.group_key, duration_minutes: m.duration_minutes, pass_mark: m.pass_mark,
+      status, notes: r?.notes ?? null, reviewer_name: r?.reviewer_name ?? null, updated_at: r?.updated_at ?? null,
+    }
+  })
+  ok(res, { modules: out, counts, total: out.length })
+})

@@ -594,6 +594,31 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
   })
 })
 
+// ─── CPD assessor: per-module review notes ────────────────────────────────────
+
+// GET /me/module-reviews — this reviewer's saved notes + status, keyed by module.
+meRouter.get('/module-reviews', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub
+  const rows = await (prisma as any).moduleReview.findMany({ where: { reviewer_user_id: userId } })
+  ok(res, { reviews: (rows as any[]).map(r => ({ module_id: r.module_id, notes: r.notes, status: r.status, updated_at: r.updated_at })) })
+})
+
+// POST /me/module-reviews — upsert notes/status for one module.
+meRouter.post('/module-reviews', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const moduleId = String(req.body?.module_id ?? '').trim()
+  if (!moduleId) { err(res, 'INVALID', 'module_id is required.', 400); return }
+  const notes  = req.body?.notes != null ? String(req.body.notes).slice(0, 8000) : undefined
+  const status = ['not_reviewed', 'reviewed', 'needs_discussion'].includes(req.body?.status) ? req.body.status : undefined
+  const user   = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
+  await (prisma as any).moduleReview.upsert({
+    where:  { module_id_reviewer_user_id: { module_id: moduleId, reviewer_user_id: userId } },
+    update: { ...(notes !== undefined ? { notes } : {}), ...(status ? { status } : {}), reviewer_name: user?.name ?? null },
+    create: { module_id: moduleId, reviewer_user_id: userId, reviewer_name: user?.name ?? null, notes: notes ?? null, status: status ?? 'not_reviewed' },
+  })
+  ok(res, { saved: true })
+})
+
 // ─── GET /me/policy/:policyId ─────────────────────────────────────────────────
 // Full policy text for a staff member to read, translated into their first
 // language when their comms toggle is on. Translations are cached per policy+lang.

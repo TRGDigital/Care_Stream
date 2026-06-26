@@ -947,7 +947,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'face-to-face',
     icon:    CalendarDays,
     title:   'Face-to-face training',
-    summary: 'Log your in-person group sessions, mark attendance, and send the digital module to anyone who missed',
+    summary: 'Log your in-person group sessions, mark attendance, flag who is owed pay, and produce a monthly payroll report',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it's for">
@@ -968,18 +968,42 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Open a session from the calendar and mark each person <strong>attended</strong>, <strong>missed</strong>, or leave them <strong>unmarked</strong>. Use <strong>All attended</strong> / <strong>All missed</strong> to set everyone at once, then adjust. This is your evidence of who was at each formal session.
           </p>
         </SectionBlock>
+        <SectionBlock title="Who gets paid: the &ldquo;Owed pay&rdquo; tick">
+          <p className="text-sm text-neutral-mid">
+            Some staff attend training <strong>on shift</strong> (they&apos;re already being paid for that time) and some attend <strong>off shift</strong> on their own time (so they&apos;re owed the hours). The <strong>Owed pay</strong> tick is how you tell payroll who falls into the second group.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Tick Owed pay</strong> next to anyone who attended <strong>off shift</strong>. They become payable and are owed <strong>hours equal to the session length</strong> (so a 2 hour session = 2 hours owed).</li>
+            <li><strong>Leave it unticked</strong> for anyone who was on shift. By default nobody is ticked, so you only tick the exceptions.</li>
+            <li>The tick is all you need, you do <strong>not</strong> have to mark attendance first for it to count. The only thing that cancels pay is marking someone <strong>missed</strong> (absent), since they didn&apos;t attend.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            <strong>Example:</strong> a 2 hour Moving &amp; Handling session with five staff. Three were on shift (leave unticked), two came in off shift (tick <strong>Owed pay</strong>). The report shows those two as payable, 2 hours each, and a total of 4 hours owed.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            You can set this when you create the session or change it later: open the session, click <strong>Edit session</strong>, and adjust the ticks.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Reading the calendar">
           <p className="text-sm text-neutral-mid">
             The calendar is colour-coded so you can see all training at a glance: <strong className="text-teal">teal</strong> for face-to-face sessions, <strong className="text-orange-600">orange</strong> for adhoc training and <strong className="text-indigo-600">indigo</strong> for annual training, with <strong>+N allocated</strong> and <strong>✓N completed</strong> counts. <strong>Click any day</strong> to open it and see the full detail: the face-to-face sessions that day (click through to mark attendance), plus the adhoc and annual training allocated or completed, by staff member.
           </p>
         </SectionBlock>
-        <SectionBlock title="Payroll report (PDF)">
-          <p className="text-sm text-neutral-mid">
-            Click <strong>Payroll report</strong> at the top of the Face-to-face tab to produce a <strong>monthly PDF</strong> for payroll. Pick the <strong>month</strong>, then either <strong>Download PDF</strong> or enter an email address and <strong>Send</strong> it as an attachment. The report carries the CareStream logo and the date it was generated.
+        <SectionBlock title="Producing the monthly payroll report (PDF)">
+          <div className="space-y-3">
+            <Step n={1}>Click <strong>Payroll report</strong> at the top of the Face-to-face tab.</Step>
+            <Step n={2}>Pick the <strong>month</strong> you&apos;re running payroll for. The summary shows how many face-to-face attendances are payable and the total hours owed.</Step>
+            <Step n={3}>Click <strong>Download PDF</strong> to save it, or type an email address and click <strong>Send</strong> to email it as an attachment (for example to your payroll provider).</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            The PDF carries the <strong>CareStream logo</strong> and the <strong>date it was generated</strong>, and separates training into three sections:
           </p>
-          <p className="mt-2 text-sm text-neutral-mid">
-            It separates <strong>Face-to-face</strong>, <strong>adhoc</strong> and <strong>annual</strong> training. The face-to-face section is outlined in blue and shows, per staff member, the session length and a <strong>Pay?</strong> column: anyone you ticked as <strong>Owed pay</strong> (attended off shift) is highlighted as payable and owed <strong>hours equal to the session length</strong>, with a monthly total. Staff who were on shift are not payable for the training. Adhoc and annual sections list what was allocated and completed in the month.
-          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Face-to-face</strong> (outlined in blue): one row per staff member per session, with the session length, attendance, a <strong>Pay?</strong> column and <strong>Hours owed</strong>. Payable rows (Owed pay ticked) are highlighted, and the section ends with a <strong>total hours owed</strong> for the month.</li>
+            <li><strong>Adhoc training</strong>: digital adhoc modules allocated and completed in the month.</li>
+            <li><strong>Annual training</strong>: annual modules allocated and completed in the month.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">Only face-to-face training carries a pay figure, adhoc and annual are for the training record, not payroll.</p>
         </SectionBlock>
         <SectionBlock title="Reminding allocated staff by email">
           <p className="text-sm text-neutral-mid">

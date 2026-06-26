@@ -677,7 +677,10 @@ function PayrollModal({ api, year, month, onClose }: {
     margin: [10, 10, 12, 10],
     filename: `training-report-${monthLabel.replace(/\s+/g, '-')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
+    // Pin the capture to the element's true width. Without width/windowWidth,
+    // the off-screen (left:-99999) element is sized against the viewport and
+    // the right edge gets clipped (cut date, incomplete border).
+    html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760, scrollX: 0, scrollY: 0 },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'] },
   })
@@ -740,8 +743,9 @@ function PayrollModal({ api, year, month, onClose }: {
         </div>
       </div>
 
-      {/* Off-screen printable report */}
-      <div style={{ position: 'fixed', left: -99999, top: 0, width: 760 }}>
+      {/* Printable report — kept at on-screen coords (0,0) so html2canvas
+          captures it cleanly, but clipped to 0x0 so it's not visible. */}
+      <div style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', zIndex: -1 }}>
         <div ref={reportRef} style={{ width: 760, padding: 24, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2937', background: '#fff' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #9B52B5', paddingBottom: 12, marginBottom: 8 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}

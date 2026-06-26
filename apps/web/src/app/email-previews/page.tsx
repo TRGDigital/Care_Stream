@@ -2,14 +2,25 @@
 
 // Internal preview gallery for the plan-specific onboarding email drip.
 // Not linked anywhere; reviewed on a Vercel preview URL. Copy lives in emails-data.ts.
-// Supports client-side reordering (persisted per browser) so the order can be
-// arranged and exported, plus a screenshot slot with "where to click" guidance.
+//
+// Ordering is GLOBAL by subject: the core onboarding emails are shared across all
+// three plans, so arranging them on any plan reorders them everywhere they appear.
+// Plan-specific emails (premium features, finales) just sit at their global rank.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SEQUENCES, PLAN_ORDER, type PlanKey, type OnboardingEmail } from './emails-data'
 
-const identity = (n: number) => Array.from({ length: n }, (_, i) => i)
-const isPerm = (a: number[], n: number) => a.length === n && [...a].sort((x, y) => x - y).every((v, i) => v === i)
+// Canonical union of every email subject, in a sensible default order (Enterprise is
+// the superset; Starter's finale is the only extra, appended at the end).
+const ALL_SUBJECTS: string[] = (() => {
+  const seen = new Set<string>(); const out: string[] = []
+  for (const p of ['enterprise', 'starter', 'professional'] as PlanKey[]) {
+    for (const e of SEQUENCES[p].emails) if (!seen.has(e.subject)) { seen.add(e.subject); out.push(e.subject) }
+  }
+  return out
+})()
+
+const sameSet = (a: string[]) => a.length === ALL_SUBJECTS.length && ALL_SUBJECTS.every(s => a.includes(s))
 
 function EmailFrame({
   email, index, canUp, canDown, onUp, onDown,
@@ -31,15 +42,12 @@ function EmailFrame({
 
       {/* The email itself */}
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-        {/* Preheader (the inbox preview line) */}
         <div className="bg-neutral-50 px-6 py-2 text-[11px] italic text-neutral-400">{email.preheader}</div>
 
-        {/* Brand bar */}
         <div className="bg-[#9B52B5] px-6 py-4">
           <span className="text-lg font-extrabold tracking-tight text-white">CareStream<span className="text-white/70">AI</span></span>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-7 sm:px-8">
           <h1 className="mb-4 text-[22px] font-extrabold leading-snug text-neutral-900">{email.headline}</h1>
 
@@ -88,26 +96,22 @@ function EmailFrame({
             ))}
           </div>
 
-          {/* Tip */}
           {email.tip && (
             <div className="mb-6 rounded-lg border border-teal/30 bg-teal-light px-4 py-3 text-[14px] leading-relaxed text-teal-dark">
               <span className="font-bold">Tip:</span> {email.tip}
             </div>
           )}
 
-          {/* CTA */}
           <a href="#" onClick={e => e.preventDefault()} className="inline-block rounded-lg bg-[#9B52B5] px-6 py-3 text-sm font-bold text-white no-underline">
             {email.ctaLabel}
           </a>
 
-          {/* Sign-off */}
           <p className="mt-7 text-[15px] leading-relaxed text-neutral-700">
             Here whenever you need us,<br />
             <span className="font-semibold text-neutral-900">The CareStream Team</span>
           </p>
         </div>
 
-        {/* Footer */}
         <div className="border-t border-neutral-100 bg-neutral-50 px-6 py-5 text-[11px] leading-relaxed text-neutral-400">
           <p className="mb-1">CareStreamAI, compliance and training for care providers.</p>
           <p>You are receiving this because you started a CareStream account. <span className="underline">Unsubscribe</span> from onboarding tips at any time.</p>
@@ -119,58 +123,51 @@ function EmailFrame({
 
 export default function EmailPreviewsPage() {
   const [plan, setPlan]   = useState<PlanKey>('starter')
-  const [orders, setOrders] = useState<Record<PlanKey, number[]>>({
-    starter:      identity(SEQUENCES.starter.emails.length),
-    professional: identity(SEQUENCES.professional.emails.length),
-    enterprise:   identity(SEQUENCES.enterprise.emails.length),
-  })
+  const [globalOrder, setGlobalOrder] = useState<string[]>(ALL_SUBJECTS)
   const [copied, setCopied] = useState(false)
 
-  // Hydrate any saved orders from this browser after mount (avoids SSR mismatch).
+  // Hydrate the saved global order from this browser after mount (avoids SSR mismatch).
   useEffect(() => {
-    setOrders(prev => {
-      const next = { ...prev }
-      for (const p of PLAN_ORDER) {
-        try {
-          const raw = localStorage.getItem(`cs-email-order-${p}`)
-          if (!raw) continue
-          const parsed = JSON.parse(raw)
-          if (Array.isArray(parsed) && isPerm(parsed, SEQUENCES[p].emails.length)) next[p] = parsed
-        } catch { /* ignore */ }
-      }
-      return next
-    })
+    try {
+      const raw = localStorage.getItem('cs-email-global-order')
+      if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && sameSet(parsed)) setGlobalOrder(parsed) }
+    } catch { /* ignore */ }
   }, [])
 
-  const seq   = SEQUENCES[plan]
-  const order = orders[plan]
+  const rank = useMemo(() => { const m = new Map<string, number>(); globalOrder.forEach((s, i) => m.set(s, i)); return m }, [globalOrder])
+  const seq  = SEQUENCES[plan]
+  const displayed = useMemo(
+    () => [...seq.emails].sort((a, b) => (rank.get(a.subject) ?? 0) - (rank.get(b.subject) ?? 0)),
+    [seq, rank],
+  )
 
-  function persist(p: PlanKey, next: number[]) {
-    setOrders(prev => ({ ...prev, [p]: next }))
-    try { localStorage.setItem(`cs-email-order-${p}`, JSON.stringify(next)) } catch { /* ignore */ }
+  function persistGlobal(next: string[]) {
+    setGlobalOrder(next)
+    try { localStorage.setItem('cs-email-global-order', JSON.stringify(next)) } catch { /* ignore */ }
     setCopied(false)
   }
 
+  // Move the email at display position `pos` before/after its visible neighbour, by
+  // re-placing its subject in the global order. Shared emails move on every plan.
   function move(pos: number, dir: -1 | 1) {
-    const target = pos + dir
-    if (target < 0 || target >= order.length) return
-    const next = [...order]
-    ;[next[pos], next[target]] = [next[target], next[pos]]
-    persist(plan, next)
+    const subs = displayed.map(e => e.subject)
+    const a = subs[pos], b = subs[pos + dir]
+    if (!a || !b) return
+    const next = globalOrder.filter(s => s !== a)
+    const bi = next.indexOf(b)
+    next.splice(dir === -1 ? bi : bi + 1, 0, a)
+    persistGlobal(next)
   }
 
-  function reset() {
-    persist(plan, identity(seq.emails.length))
-  }
+  function reset() { persistGlobal(ALL_SUBJECTS) }
 
   function copyOrder() {
-    const text = `${seq.label} email order (${seq.emails.length})\n` +
-      order.map((origIdx, i) => `${i + 1}. ${seq.emails[origIdx].subject}`).join('\n')
+    const text = `${seq.label} email order (${displayed.length})\n` +
+      displayed.map((e, i) => `${i + 1}. ${e.subject}`).join('\n')
     navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500) }).catch(() => {})
   }
 
-  const reordered = order !== undefined && !isPerm(order, seq.emails.length) ? identity(seq.emails.length) : order
-  const isChanged = reordered.some((v, i) => v !== i)
+  const isChanged = globalOrder.some((s, i) => s !== ALL_SUBJECTS[i])
 
   return (
     <div className="min-h-screen bg-neutral-100 pb-24">
@@ -180,7 +177,7 @@ export default function EmailPreviewsPage() {
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-teal">Internal preview, for review</p>
           <h1 className="text-2xl font-extrabold text-neutral-900">New-client onboarding emails</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            A plan-specific drip sent on working days after signup, one feature per email, benefit-led. Pick a plan to scroll its full sequence as the admin will see it. Use the ↑ ↓ buttons on any email to change the order, then Copy order to send me the final arrangement.
+            A plan-specific drip sent on working days after signup, one feature per email, benefit-led. Use the ↑ ↓ buttons to set the order. The core emails are shared across all three plans, so reordering them on one plan reorders them on every plan. Then Copy order to send me the final arrangement.
           </p>
         </div>
       </header>
@@ -222,18 +219,18 @@ export default function EmailPreviewsPage() {
             <button onClick={reset} disabled={!isChanged} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-40">
               Reset to default
             </button>
-            {isChanged && <span className="text-xs font-medium text-amber-600">Custom order (saved in this browser)</span>}
+            {isChanged && <span className="text-xs font-medium text-amber-600">Custom order (shared across plans, saved in this browser)</span>}
           </div>
         </div>
 
         <div className="space-y-10">
-          {reordered.map((origIdx, pos) => (
+          {displayed.map((email, pos) => (
             <EmailFrame
-              key={origIdx}
-              email={seq.emails[origIdx]}
+              key={email.subject}
+              email={email}
               index={pos}
               canUp={pos > 0}
-              canDown={pos < reordered.length - 1}
+              canDown={pos < displayed.length - 1}
               onUp={() => move(pos, -1)}
               onDown={() => move(pos, 1)}
             />

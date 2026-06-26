@@ -20,6 +20,7 @@ export interface DraftLead {
   failing_domains: string[]
   lead_angle_label: string | null
   cqc_report_url: string | null
+  contact_name?: string | null // named decision-maker, if enriched
 }
 
 export interface AiDraft {
@@ -43,6 +44,8 @@ export async function generateAiDraft(lead: DraftLead): Promise<AiDraft> {
   const location = [lead.town, lead.county].filter(Boolean).join(', ') || 'the UK'
   const failing = lead.failing_domains.length ? lead.failing_domains.join(', ') : 'none individually flagged'
 
+  const firstName = lead.contact_name ? lead.contact_name.trim().split(/\s+/)[0] : null
+
   const userMessage = [
     `Provider: ${lead.name}`,
     `Setting: ${lead.setting ?? 'care provider'}`,
@@ -51,6 +54,7 @@ export async function generateAiDraft(lead: DraftLead): Promise<AiDraft> {
     `CQC areas rated below Good: ${failing}`,
     `Lead segment: ${lead.segment} (rescue = Inadequate/Requires Improvement; protect = Good but an area slipping; maintain = solid Good; defend = Outstanding; unrated = not yet rated)`,
     `Most relevant CareStream capability to lead with: ${lead.lead_angle_label ?? 'compliance and evidence'}`,
+    firstName ? `Recipient first name (open with "Hi ${firstName},"): ${firstName}` : `Recipient name unknown (open with "Hello,")`,
   ].join('\n')
 
   const raw = await callClaude(SYSTEM, userMessage, { temperature: 0.4, maxTokens: 700 })

@@ -229,7 +229,7 @@ export async function sendF2FPayrollEmail(opts: { to: string; orgName: string; m
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 12px">Hi,</p>
-    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">Attached is the training report for <strong>${opts.orgName}</strong> covering <strong>${opts.monthLabel}</strong>. It lists face-to-face, adhoc and annual training allocated and completed in the period, with the on-shift / pay indicator for face-to-face sessions.</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">Attached is the training report for <strong>${opts.orgName}</strong> covering <strong>${opts.monthLabel}</strong>. It lists face-to-face, adhoc and annual training allocated and completed in the period, with the owed-pay hours indicator for face-to-face sessions.</p>
     ${emailFooter(opts.orgName)}
   `)
   await sgMail.send({

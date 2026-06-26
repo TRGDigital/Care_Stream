@@ -799,6 +799,12 @@ model ProviderLead {
   ai_draft_body         String?
   ai_draft_sources      String?                          // 'cqc-report' if the CQC page was used, else 'signals'
   ai_drafted_at         DateTime?
+  contact_name          String?                          // decision-maker (e.g. director / registered manager)
+  contact_role          String?
+  enriched_email        String?                          // best contact email scraped from the provider's website
+  enrichment_source     String?                          // website | companies-house | website+companies-house | none
+  company_number        String?
+  enriched_at           DateTime?
   synced_at             DateTime  @default(now())
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
@@ -887,7 +893,7 @@ model FaceToFaceSession {
   session_date         DateTime                         // the day the session runs (date semantics; backfill = past dates)
   delivered_by_user_id String?                          // internal trainer (a staff member)
   delivered_by_name    String?                          // external / free-text trainer name
-  duration_hours       Int      @default(1)             // session length in hours (1-5); drives off-shift pay hours on the payroll report
+  duration_hours       Int      @default(1)             // session length in hours (1-5); drives owed-pay hours on the payroll report
   notes                String?
   reminder_sent_at     DateTime?                        // last time the admin emailed allocated staff a reminder
   created_by           String?
@@ -907,7 +913,7 @@ model FaceToFaceAttendance {
   session_id         String
   user_id            String
   status             String   @default("allocated")    // allocated | attended | absent
-  on_shift           Boolean  @default(false)           // was the staff member on shift during the session (payroll)
+  owed_pay           Boolean  @default(false)           // payroll: ticked when they attended off shift and are owed the session hours (default false = on shift, not owed)
   module_assigned_at DateTime?                          // set when the digital module was sent to them off the back of this session
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt

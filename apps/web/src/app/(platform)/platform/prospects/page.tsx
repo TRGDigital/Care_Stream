@@ -11,7 +11,7 @@ import {
   type ProspectSegment,
 } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Target, Loader2, RefreshCw, X, Phone, Mail, Globe, FileText, Copy, Check, MapPin, Sparkles } from 'lucide-react'
+import { Target, Loader2, RefreshCw, X, Phone, Mail, Globe, FileText, Copy, Check, MapPin, Sparkles, UserSearch, Building2 } from 'lucide-react'
 
 const RATING_STYLE: Record<string, string> = {
   inadequate: 'bg-red-100 text-red-700',
@@ -281,6 +281,8 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
   const [aiDraft, setAiDraft] = useState<{ subject: string; body: string; sources: 'cqc-report' | 'signals' } | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiCopied, setAiCopied] = useState(false)
+  const [enriching, setEnriching] = useState(false)
+  const [enrichNote, setEnrichNote] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -309,6 +311,18 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
     if (!aiDraft) return
     await navigator.clipboard.writeText(`Subject: ${aiDraft.subject}\n\n${aiDraft.body}`)
     setAiCopied(true); setTimeout(() => setAiCopied(false), 1500)
+  }
+
+  async function enrich() {
+    setEnriching(true)
+    setEnrichNote(null)
+    try {
+      const { result, lead: updated } = await api.prospects.enrich(id)
+      setLead(updated)
+      if (result.source === 'none') setEnrichNote(result.notes ?? 'Nothing found.')
+    } finally {
+      setEnriching(false)
+    }
   }
 
   async function save() {
@@ -370,7 +384,32 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
               {lead.website && <a href={lead.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-teal hover:underline"><Globe size={14} />Website</a>}
               {lead.cqc_report_url && <a href={lead.cqc_report_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-teal hover:underline"><FileText size={14} />CQC report</a>}
             </div>
-            {!lead.email && <p className="text-xs text-neutral-mid">No decision-maker email on file — enrich before emailing.</p>}
+
+            {/* Decision-maker enrichment */}
+            <div className="rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-neutral-light px-4 py-2">
+                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid"><UserSearch size={13} /> Decision-maker</span>
+                <button onClick={enrich} disabled={enriching} className="flex items-center gap-1 text-xs font-medium text-teal hover:underline disabled:opacity-60">
+                  {enriching ? <><Loader2 size={13} className="animate-spin" /> Searching…</> : lead.enriched_at ? 'Re-enrich' : 'Enrich contact'}
+                </button>
+              </div>
+              <div className="space-y-1.5 p-4 text-sm">
+                {lead.contact_name && (
+                  <div className="text-neutral-dark"><span className="font-semibold">{lead.contact_name}</span>{lead.contact_role && <span className="text-neutral-mid"> · {lead.contact_role}</span>}</div>
+                )}
+                {lead.enriched_email && (
+                  <a href={`mailto:${lead.enriched_email}`} className="flex items-center gap-1.5 text-teal hover:underline"><Mail size={14} />{lead.enriched_email}</a>
+                )}
+                {lead.company_number && (
+                  <a href={`https://find-and-update.company-information.service.gov.uk/company/${lead.company_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-neutral-mid hover:underline"><Building2 size={13} />Companies House {lead.company_number}</a>
+                )}
+                {!lead.enriched_at && !enriching && <p className="text-neutral-mid">No contact found yet. Click “Enrich contact” to search the provider website and Companies House.</p>}
+                {lead.enriched_at && !lead.contact_name && !lead.enriched_email && <p className="text-neutral-mid">{enrichNote ?? 'No email or named director found.'}</p>}
+                {lead.enrichment_source && lead.enrichment_source !== 'none' && (
+                  <p className="text-[11px] text-neutral-mid">Source: {lead.enrichment_source.replace('+', ' + ')}</p>
+                )}
+              </div>
+            </div>
 
             {/* Draft message */}
             {draft && (

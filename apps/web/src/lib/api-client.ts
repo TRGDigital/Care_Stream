@@ -632,13 +632,13 @@ export function createApiClient(token: string) {
         return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
       },
       session: (id: string) => apiFetch<{ session: any }>(`/face-to-face/sessions/${id}`, token),
-      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; notes?: string; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
+      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; notes?: string; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
         apiFetch<{ session: { id: string } }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
-      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; notes?: string | null; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
+      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; notes?: string | null; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
         apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       trainingMonth: (month: string) => apiFetch<{
         month: string
-        f2f:    Array<{ session_id: string; date: string; title: string; attendees: Array<{ user_id: string; name: string; status: string; on_shift: boolean }> }>
+        f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean }> }>
         adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
         annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
       }>(`/face-to-face/training-month?month=${encodeURIComponent(month)}`, token),

@@ -129,7 +129,7 @@ faceToFaceRouter.get('/sessions/:id', requireAdmin, async (req: Request, res: Re
       name: uMap.get(a.user_id)?.name ?? 'Unknown',
       job_role: uMap.get(a.user_id)?.job_role ?? null,
       status: a.status,
-      on_shift: a.on_shift,
+      owed_pay: a.owed_pay,
       module_assigned_at: a.module_assigned_at,
     })).sort((a: any, b: any) => a.name.localeCompare(b.name))
 
@@ -169,8 +169,8 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
     const validAttendees = attendeeIds.length
       ? (await (prisma as any).user.findMany({ where: { id: { in: attendeeIds }, tenant_id: tenantId }, select: { id: true } })).map((u: any) => u.id)
       : []
-    // Per-attendee "on shift" flag for payroll (default off shift = unticked).
-    const onShiftSet = new Set<string>(Array.isArray(b.on_shift_ids) ? b.on_shift_ids.map(String) : [])
+    // Per-attendee "owed pay" flag for payroll (ticked = attended off shift, owed the hours; default unticked = on shift, not owed).
+    const owedPaySet = new Set<string>(Array.isArray(b.owed_pay_ids) ? b.owed_pay_ids.map(String) : [])
 
     const session = await (prisma as any).faceToFaceSession.create({
       data: {
@@ -183,7 +183,7 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
         duration_hours: clampDuration(b.duration_hours),
         notes: typeof b.notes === 'string' && b.notes.trim() ? b.notes.trim().slice(0, 2000) : null,
         created_by: uid(req),
-        attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, on_shift: onShiftSet.has(id) })) } : undefined,
+        attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, owed_pay: owedPaySet.has(id) })) } : undefined,
       },
     })
     ok(res, { session: { id: session.id } })
@@ -225,12 +225,12 @@ faceToFaceRouter.patch('/sessions/:id', requireAdmin, async (req: Request, res: 
       if (toRemove.length) await (prisma as any).faceToFaceAttendance.deleteMany({ where: { session_id: existing.id, user_id: { in: toRemove } } })
     }
 
-    // Update the per-attendee on-shift flags when provided.
-    if (Array.isArray(b.on_shift_ids)) {
-      const onShift = new Set((b.on_shift_ids as any[]).map(String))
+    // Update the per-attendee owed-pay flags when provided.
+    if (Array.isArray(b.owed_pay_ids)) {
+      const owedPay = new Set((b.owed_pay_ids as any[]).map(String))
       const rows = await (prisma as any).faceToFaceAttendance.findMany({ where: { session_id: existing.id }, select: { id: true, user_id: true } })
       for (const r of rows as any[]) {
-        await (prisma as any).faceToFaceAttendance.update({ where: { id: r.id }, data: { on_shift: onShift.has(r.user_id) } })
+        await (prisma as any).faceToFaceAttendance.update({ where: { id: r.id }, data: { owed_pay: owedPay.has(r.user_id) } })
       }
     }
     ok(res, { updated: true })
@@ -460,7 +460,7 @@ faceToFaceRouter.get('/analytics', requireAdmin, async (req: Request, res: Respo
 })
 
 // ─── GET /face-to-face/training-month?month=YYYY-MM ───────────────────────────
-// Unified month view: F2F sessions (with per-attendee on_shift) + adhoc + annual
+// Unified month view: F2F sessions (with per-attendee owed_pay) + adhoc + annual
 // training allocated and/or completed in the month. Powers the calendar overlay
 // and the payroll PDF.
 faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: Response) => {
@@ -488,7 +488,7 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
 
     const f2f = (sessions as any[]).map(s => ({
       session_id: s.id, date: s.session_date, title: s.title, duration_hours: s.duration_hours ?? 1,
-      attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, on_shift: a.on_shift })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
+      attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, owed_pay: a.owed_pay })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
     }))
     const adhoc: any[] = [], annual: any[] = []
     for (const e of enrollments as any[]) {

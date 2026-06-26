@@ -9,6 +9,7 @@ import { ok, err } from '../lib/response'
 import { draftMessage, SEGMENT_META } from '../services/prospects/scoring'
 import { syncProspects } from '../services/prospects/sync'
 import { generateAiDraft } from '../services/prospects/ai-draft'
+import { enrichLead } from '../services/prospects/enrich'
 
 export const prospectsRouter = Router()
 prospectsRouter.use(requirePlatformAdmin)
@@ -162,6 +163,7 @@ prospectsRouter.post('/:id/draft-ai', async (req: Request, res: Response) => {
       failing_domains: lead.failing_domains ?? [],
       lead_angle_label: lead.lead_angle_label,
       cqc_report_url: lead.cqc_report_url,
+      contact_name: lead.contact_name,
     })
     await (prisma as any).providerLead.update({
       where: { id: lead.id },
@@ -170,5 +172,30 @@ prospectsRouter.post('/:id/draft-ai', async (req: Request, res: Response) => {
     ok(res, draft)
   } catch (e) {
     err(res, 'DRAFT_FAILED', e instanceof Error ? e.message : String(e), 500)
+  }
+})
+
+// ─── POST /admin/prospects/:id/enrich ─────────────────────────────────────────
+// Find a decision-maker: scrape the provider website for a contact email, and
+// look up the active director via Companies House. Stores + returns the result.
+prospectsRouter.post('/:id/enrich', async (req: Request, res: Response) => {
+  const lead = await (prisma as any).providerLead.findUnique({ where: { id: String(req.params.id) } })
+  if (!lead) { err(res, 'NOT_FOUND', 'Lead not found', 404); return }
+  try {
+    const result = await enrichLead({ name: lead.name, website: lead.website })
+    const updated = await (prisma as any).providerLead.update({
+      where: { id: lead.id },
+      data: {
+        contact_name: result.contactName,
+        contact_role: result.contactRole,
+        enriched_email: result.email,
+        enrichment_source: result.source,
+        company_number: result.companyNumber,
+        enriched_at: new Date(),
+      },
+    })
+    ok(res, { result, lead: updated })
+  } catch (e) {
+    err(res, 'ENRICH_FAILED', e instanceof Error ? e.message : String(e), 500)
   }
 })

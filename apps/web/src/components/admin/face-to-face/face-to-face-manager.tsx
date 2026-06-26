@@ -382,7 +382,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [trainerName,  setTrainerName]  = useState(initial?.delivered_by_name ?? '')
   const [notes,    setNotes]    = useState(initial?.notes ?? '')
   const [attendees, setAttendees] = useState<Set<string>>(new Set())
-  const [onShift, setOnShift] = useState<Set<string>>(new Set())
+  const [owedPay, setOwedPay] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingAttendees, setLoadingAttendees] = useState(!!initial)
@@ -393,7 +393,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
     api.faceToFace.session(initial.id).then(d => {
       const att = d.session.attendance ?? []
       setAttendees(new Set(att.map((a: any) => a.user_id)))
-      setOnShift(new Set(att.filter((a: any) => a.on_shift).map((a: any) => a.user_id)))
+      setOwedPay(new Set(att.filter((a: any) => a.owed_pay).map((a: any) => a.user_id)))
     }).catch(() => {}).finally(() => setLoadingAttendees(false))
   }, [initial, api])
 
@@ -413,7 +413,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       duration_hours: duration,
       notes: notes.trim() || undefined,
       attendee_ids: [...attendees],
-      on_shift_ids: [...onShift],
+      owed_pay_ids: [...owedPay],
     }
     try {
       if (initial) {
@@ -484,20 +484,20 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
           {loadingAttendees ? <p className="p-2 text-xs text-neutral-mid">Loading…</p> : shownStaff.map(s => (
             <div key={s.id} className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-                <input type="checkbox" checked={attendees.has(s.id)} onChange={() => setAttendees(prev => { const n = new Set(prev); if (n.has(s.id)) { n.delete(s.id); setOnShift(o => { const oo = new Set(o); oo.delete(s.id); return oo }) } else n.add(s.id); return n })} className="accent-teal" />
+                <input type="checkbox" checked={attendees.has(s.id)} onChange={() => setAttendees(prev => { const n = new Set(prev); if (n.has(s.id)) { n.delete(s.id); setOwedPay(o => { const oo = new Set(o); oo.delete(s.id); return oo }) } else n.add(s.id); return n })} className="accent-teal" />
                 <span className="truncate text-neutral-dark">{s.name}</span>
                 {s.job_role && <span className="shrink-0 text-xs text-neutral-mid">{s.job_role}</span>}
               </label>
               {attendees.has(s.id) && (
-                <label className="flex shrink-0 cursor-pointer items-center gap-1 text-xs font-medium text-neutral-mid" title="Tick if this person was on shift during the session">
-                  <input type="checkbox" checked={onShift.has(s.id)} onChange={() => setOnShift(prev => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n })} className="accent-teal" />
-                  On shift
+                <label className={`flex shrink-0 cursor-pointer items-center gap-1 text-xs font-medium ${owedPay.has(s.id) ? 'text-amber-700' : 'text-neutral-mid'}`} title="Tick if this person attended off shift, so they are owed the session hours">
+                  <input type="checkbox" checked={owedPay.has(s.id)} onChange={() => setOwedPay(prev => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n })} className="accent-amber-600" />
+                  Owed pay
                 </label>
               )}
             </div>
           ))}
         </div>
-        <p className="mb-4 text-xs text-neutral-mid">Tick <strong className="text-neutral-dark">On shift</strong> for anyone working during the session. On the payroll report, staff who attended <strong className="text-neutral-dark">off shift</strong> are flagged as payable; on-shift attendance is not.</p>
+        <p className="mb-4 text-xs text-neutral-mid">Tick <strong className="text-amber-700">Owed pay</strong> for anyone who attended <strong className="text-neutral-dark">off shift</strong>, so they are owed the session hours on the payroll report. Leave it unticked for anyone who was on shift (already paid). By default nobody is marked as owed.</p>
 
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
 
@@ -679,11 +679,12 @@ function PayrollModal({ api, year, month, onClose }: {
     api.faceToFace.trainingMonth(monthStr).then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
   }, [monthStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pay = (status: string, on_shift: boolean) => status === 'attended' ? (on_shift ? 'No' : 'Yes') : status === 'absent' ? 'No' : '—'
-  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, on_shift: a.on_shift, hours: s.duration_hours ?? 1 })))
+  // Payable only when they attended AND were ticked as owed pay (off shift).
+  const pay = (status: string, owed_pay: boolean) => status === 'attended' ? (owed_pay ? 'Yes' : 'No') : status === 'absent' ? 'No' : '—'
+  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, owed_pay: a.owed_pay, hours: s.duration_hours ?? 1 })))
     .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
-  // Hours owed = the session length, but only for staff who attended off shift.
-  const hoursOwed = (r: any) => pay(r.status, r.on_shift) === 'Yes' ? r.hours : 0
+  // Hours owed = the session length, but only for payable rows.
+  const hoursOwed = (r: any) => pay(r.status, r.owed_pay) === 'Yes' ? r.hours : 0
   const totalHoursOwed = f2fRows.reduce((n: number, r: any) => n + hoursOwed(r), 0)
 
   // NB: the html2pdf worker is a thenable. Never await it before calling
@@ -740,7 +741,7 @@ function PayrollModal({ api, year, month, onClose }: {
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.on_shift) === 'Yes').length} payable · {totalHoursOwed}h</span>}</div>
+            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.owed_pay) === 'Yes').length} payable · {totalHoursOwed}h</span>}</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
           </div>
@@ -770,15 +771,15 @@ function PayrollModal({ api, year, month, onClose }: {
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px', color: '#111827' }}>Training Report</h1>
           <p style={{ margin: '0 0 4px', fontSize: 13, color: '#374151' }}><strong>{orgName}</strong> · {monthLabel}</p>
-          <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>Face-to-face Pay column: a staff member who attended <strong>off shift</strong> is payable; on-shift attendance is not.</p>
+          <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>Face-to-face Pay column: a staff member marked as <strong>owed pay</strong> (attended off shift) is payable for the session hours; on-shift attendance is not.</p>
 
           <div style={{ border: '2px solid #2563eb', borderRadius: 10, padding: '4px 12px 12px', background: '#eff6ff', marginTop: 14 }}>
             <h2 style={{ ...sectionTitle, borderLeftColor: '#2563eb', color: '#1e3a8a', marginTop: 12 }}>Face-to-face training</h2>
             {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Length</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th><th style={th}>Hours owed</th></tr></thead>
+                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Length</th><th style={th}>Attendance</th><th style={th}>Pay?</th><th style={th}>Hours owed</th></tr></thead>
                 <tbody>{f2fRows.map((r: any, i: number) => {
-                  const payable = pay(r.status, r.on_shift) === 'Yes'
+                  const payable = pay(r.status, r.owed_pay) === 'Yes'
                   const rowTd: CSSProperties = { ...td, ...(payable ? { background: '#fef3c7', borderBottom: '1px solid #fde68a' } : {}) }
                   return (
                     <tr key={i}>
@@ -787,17 +788,16 @@ function PayrollModal({ api, year, month, onClose }: {
                       <td style={rowTd}>{dateStr(r.date)}</td>
                       <td style={rowTd}>{r.hours}h</td>
                       <td style={{ ...rowTd, textTransform: 'capitalize' }}>{r.status}</td>
-                      <td style={rowTd}>{r.on_shift ? 'Yes' : 'No'}</td>
-                      <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#374151' }}>{pay(r.status, r.on_shift)}</td>
+                      <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#374151' }}>{pay(r.status, r.owed_pay)}</td>
                       <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#9ca3af' }}>{payable ? `${hoursOwed(r)}h` : '—'}</td>
                     </tr>
                   )
                 })}</tbody>
-                <tfoot><tr><td style={{ ...td, fontWeight: 700, borderTop: '2px solid #bfdbfe' }} colSpan={7}>Total hours owed (off-shift attendance)</td><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{totalHoursOwed}h</td></tr></tfoot>
+                <tfoot><tr><td style={{ ...td, fontWeight: 700, borderTop: '2px solid #bfdbfe' }} colSpan={6}>Total hours owed</td><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{totalHoursOwed}h</td></tr></tfoot>
               </table>
             )}
-            {f2fRows.some((r: any) => pay(r.status, r.on_shift) === 'Yes') && (
-              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member attended off shift and is owed the hours shown.</p>
+            {f2fRows.some((r: any) => pay(r.status, r.owed_pay) === 'Yes') && (
+              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member was marked as owed pay (attended off shift) and is owed the hours shown.</p>
             )}
           </div>
 

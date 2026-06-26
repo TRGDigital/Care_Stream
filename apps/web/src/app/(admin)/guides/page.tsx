@@ -960,7 +960,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>Go to <strong>Training</strong> and open the <strong>Face-to-face Training</strong> tab, then click <strong>New session</strong> (or click a day in the calendar to open that day and add a session for it).</Step>
             <Step n={2}>Choose the <strong>training topic</strong> from the dropdown (the same modules you can assign digitally). The title fills in from the module; you can edit it.</Step>
             <Step n={3}>Set the <strong>date</strong> and the <strong>session length</strong> (1 to 5 hours), and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer. The length sets how many hours off-shift attendees are owed on the payroll report.</Step>
-            <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend. For each person, tick <strong>On shift</strong> if they were working during the session; leave it unticked if they attended on their own time (this is what makes them payable on the report). Then <strong>Create session</strong>. Add notes if useful.</Step>
+            <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend. For anyone who attended <strong>off shift</strong>, also tick <strong>Owed pay</strong>, this marks them as payable and owes them the session hours on the report. Leave it unticked for anyone who was on shift (already paid); by default nobody is owed. Then <strong>Create session</strong>. Add notes if useful.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Marking attendance">
@@ -978,7 +978,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Click <strong>Payroll report</strong> at the top of the Face-to-face tab to produce a <strong>monthly PDF</strong> for payroll. Pick the <strong>month</strong>, then either <strong>Download PDF</strong> or enter an email address and <strong>Send</strong> it as an attachment. The report carries the CareStream logo and the date it was generated.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            It separates <strong>Face-to-face</strong>, <strong>adhoc</strong> and <strong>annual</strong> training. The face-to-face section is outlined in blue and shows, per staff member, the session length and a <strong>Pay?</strong> column: anyone who <strong>attended off shift</strong> is highlighted as payable and owed <strong>hours equal to the session length</strong>, with a monthly total. Staff who were <strong>on shift</strong> are not payable for the training. Adhoc and annual sections list what was allocated and completed in the month.
+            It separates <strong>Face-to-face</strong>, <strong>adhoc</strong> and <strong>annual</strong> training. The face-to-face section is outlined in blue and shows, per staff member, the session length and a <strong>Pay?</strong> column: anyone you ticked as <strong>Owed pay</strong> (attended off shift) is highlighted as payable and owed <strong>hours equal to the session length</strong>, with a monthly total. Staff who were on shift are not payable for the training. Adhoc and annual sections list what was allocated and completed in the month.
           </p>
         </SectionBlock>
         <SectionBlock title="Reminding allocated staff by email">

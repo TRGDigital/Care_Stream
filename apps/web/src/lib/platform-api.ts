@@ -482,6 +482,10 @@ export interface ProviderLead {
   notes: string | null
   last_contacted_at: string | null
   next_action_at: string | null
+  ai_draft_subject: string | null
+  ai_draft_body: string | null
+  ai_draft_sources: string | null
+  ai_drafted_at: string | null
   synced_at: string
 }
 
@@ -535,6 +539,8 @@ export function createPlatformClient(token: string) {
       get: (id: string) => adminFetch<{ lead: ProviderLead; draft: { subject: string; body: string } }>(`/prospects/${id}`, token),
       update: (id: string, data: { status?: string; owner?: string | null; notes?: string | null; next_action_at?: string | null }) =>
         adminFetch<{ lead: ProviderLead }>(`/prospects/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      draftAi: (id: string) =>
+        adminFetch<{ subject: string; body: string; sources: 'cqc-report' | 'signals' }>(`/prospects/${id}/draft-ai`, token, { method: 'POST' }),
       sync: () => adminFetch<ProspectSyncResult>('/prospects/sync', token, { method: 'POST' }),
     },
 

@@ -17,7 +17,7 @@ const prettyDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 type Staff = { id: string; name: string; job_role: string | null; is_active?: boolean }
 type Module = { id: string; name: string; category: string; ready?: boolean }
-type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
+type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
 
 export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
@@ -376,6 +376,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [moduleId, setModuleId] = useState(initial?.module_id ?? '')
   const [title,    setTitle]    = useState(initial?.title ?? '')
   const [date,     setDate]     = useState(initial ? keyOf(initial.session_date) : (presetDate ?? ymd(new Date())))
+  const [duration, setDuration] = useState<number>(initial?.duration_hours ?? 1)
   const [trainerMode, setTrainerMode] = useState<'staff' | 'external'>(initial?.delivered_by_user_id ? 'staff' : (initial?.delivered_by_name ? 'external' : 'staff'))
   const [trainerStaff, setTrainerStaff] = useState(initial?.delivered_by_user_id ?? '')
   const [trainerName,  setTrainerName]  = useState(initial?.delivered_by_name ?? '')
@@ -409,6 +410,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       session_date: date,
       delivered_by_user_id: trainerMode === 'staff' ? (trainerStaff || undefined) : null,
       delivered_by_name:    trainerMode === 'external' ? (trainerName.trim() || undefined) : null,
+      duration_hours: duration,
       notes: notes.trim() || undefined,
       attendee_ids: [...attendees],
       on_shift_ids: [...onShift],
@@ -444,8 +446,19 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Title {moduleName ? '(defaults to the module name)' : ''}</label>
         <input value={title} onChange={e => setTitle(e.target.value)} placeholder={moduleName ?? 'e.g. Moving & Handling refresher'} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Date</label>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+        <div className="mb-3 flex gap-3">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
+          <div className="w-36">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Length</label>
+            <select value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+              {[1, 2, 3, 4, 5].map(h => <option key={h} value={h}>{h} hour{h > 1 ? 's' : ''}</option>)}
+            </select>
+          </div>
+        </div>
+        <p className="-mt-1 mb-3 text-xs text-neutral-mid">The session length sets how many hours staff who attended <strong className="text-neutral-dark">off shift</strong> are owed on the payroll report.</p>
 
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Delivered by</label>
         <div className="mb-1 flex gap-2 text-xs">
@@ -562,7 +575,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         <div className="mb-1 flex items-start justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-neutral-dark">{data.title}</h2>
-            <p className="text-sm text-neutral-mid">{prettyDate(data.session_date)}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</p>
+            <p className="text-sm text-neutral-mid">{prettyDate(data.session_date)} · {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</p>
           </div>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
@@ -635,7 +648,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
 
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
           <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-600"><Trash2 size={14} /> Delete</button>
-          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
+          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
         </div>
       </div>
     </div>
@@ -667,8 +680,11 @@ function PayrollModal({ api, year, month, onClose }: {
   }, [monthStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const pay = (status: string, on_shift: boolean) => status === 'attended' ? (on_shift ? 'No' : 'Yes') : status === 'absent' ? 'No' : '—'
-  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, on_shift: a.on_shift })))
+  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, on_shift: a.on_shift, hours: s.duration_hours ?? 1 })))
     .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
+  // Hours owed = the session length, but only for staff who attended off shift.
+  const hoursOwed = (r: any) => pay(r.status, r.on_shift) === 'Yes' ? r.hours : 0
+  const totalHoursOwed = f2fRows.reduce((n: number, r: any) => n + hoursOwed(r), 0)
 
   // NB: the html2pdf worker is a thenable. Never await it before calling
   // .save()/.outputPdf() or the chain resolves and the worker methods vanish
@@ -724,7 +740,7 @@ function PayrollModal({ api, year, month, onClose }: {
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{(() => { const n = f2fRows.filter((r: any) => pay(r.status, r.on_shift) === 'Yes').length; return n > 0 ? <span className="mt-0.5 block font-semibold text-amber-700">{n} payable</span> : null })()}</div>
+            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.on_shift) === 'Yes').length} payable · {totalHoursOwed}h</span>}</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
           </div>
@@ -760,7 +776,7 @@ function PayrollModal({ api, year, month, onClose }: {
             <h2 style={{ ...sectionTitle, borderLeftColor: '#2563eb', color: '#1e3a8a', marginTop: 12 }}>Face-to-face training</h2>
             {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th></tr></thead>
+                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Length</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th><th style={th}>Hours owed</th></tr></thead>
                 <tbody>{f2fRows.map((r: any, i: number) => {
                   const payable = pay(r.status, r.on_shift) === 'Yes'
                   const rowTd: CSSProperties = { ...td, ...(payable ? { background: '#fef3c7', borderBottom: '1px solid #fde68a' } : {}) }
@@ -769,16 +785,19 @@ function PayrollModal({ api, year, month, onClose }: {
                       <td style={{ ...rowTd, fontWeight: payable ? 700 : 400 }}>{r.name}{payable ? ' 💷' : ''}</td>
                       <td style={rowTd}>{r.title}</td>
                       <td style={rowTd}>{dateStr(r.date)}</td>
+                      <td style={rowTd}>{r.hours}h</td>
                       <td style={{ ...rowTd, textTransform: 'capitalize' }}>{r.status}</td>
                       <td style={rowTd}>{r.on_shift ? 'Yes' : 'No'}</td>
                       <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#374151' }}>{pay(r.status, r.on_shift)}</td>
+                      <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#9ca3af' }}>{payable ? `${hoursOwed(r)}h` : '—'}</td>
                     </tr>
                   )
                 })}</tbody>
+                <tfoot><tr><td style={{ ...td, fontWeight: 700, borderTop: '2px solid #bfdbfe' }} colSpan={7}>Total hours owed (off-shift attendance)</td><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{totalHoursOwed}h</td></tr></tfoot>
               </table>
             )}
             {f2fRows.some((r: any) => pay(r.status, r.on_shift) === 'Yes') && (
-              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member attended off shift.</p>
+              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member attended off shift and is owed the hours shown.</p>
             )}
           </div>
 

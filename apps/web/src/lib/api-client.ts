@@ -629,12 +629,12 @@ export function createApiClient(token: string) {
         const qs = new URLSearchParams()
         if (from) qs.set('from', from)
         if (to)   qs.set('to', to)
-        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
+        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
       },
       session: (id: string) => apiFetch<{ session: any }>(`/face-to-face/sessions/${id}`, token),
-      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; notes?: string; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
+      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; notes?: string; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
         apiFetch<{ session: { id: string } }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
-      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; notes?: string | null; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
+      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; notes?: string | null; attendee_ids?: string[]; on_shift_ids?: string[] }) =>
         apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       trainingMonth: (month: string) => apiFetch<{
         month: string

@@ -8,6 +8,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { draftMessage, SEGMENT_META } from '../services/prospects/scoring'
 import { syncProspects } from '../services/prospects/sync'
+import { generateAiDraft } from '../services/prospects/ai-draft'
 
 export const prospectsRouter = Router()
 prospectsRouter.use(requirePlatformAdmin)
@@ -142,4 +143,32 @@ prospectsRouter.patch('/:id', async (req: Request, res: Response) => {
     .catch(() => null)
   if (!lead) { err(res, 'NOT_FOUND', 'Lead not found', 404); return }
   ok(res, { lead })
+})
+
+// ─── POST /admin/prospects/:id/draft-ai ───────────────────────────────────────
+// Generate (and store) an AI-sharpened outreach email — built from the CQC
+// signals, opportunistically using the provider's CQC report page.
+prospectsRouter.post('/:id/draft-ai', async (req: Request, res: Response) => {
+  const lead = await (prisma as any).providerLead.findUnique({ where: { id: String(req.params.id) } })
+  if (!lead) { err(res, 'NOT_FOUND', 'Lead not found', 404); return }
+  try {
+    const draft = await generateAiDraft({
+      name: lead.name,
+      setting: lead.setting,
+      town: lead.town,
+      county: lead.county,
+      segment: lead.segment,
+      cqc_rating: lead.cqc_rating,
+      failing_domains: lead.failing_domains ?? [],
+      lead_angle_label: lead.lead_angle_label,
+      cqc_report_url: lead.cqc_report_url,
+    })
+    await (prisma as any).providerLead.update({
+      where: { id: lead.id },
+      data: { ai_draft_subject: draft.subject, ai_draft_body: draft.body, ai_draft_sources: draft.sources, ai_drafted_at: new Date() },
+    })
+    ok(res, draft)
+  } catch (e) {
+    err(res, 'DRAFT_FAILED', e instanceof Error ? e.message : String(e), 500)
+  }
 })

@@ -65,6 +65,12 @@ faceToFaceRouter.get('/modules', requireAdmin, async (req: Request, res: Respons
 })
 
 // Shape one session row with attendance counts for the calendar.
+// Session length in whole hours, clamped to the 1-5 range the form offers.
+function clampDuration(v: any): number {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) ? Math.min(5, Math.max(1, n)) : 1
+}
+
 function summariseSession(s: any) {
   const att = s.attendance ?? []
   return {
@@ -74,6 +80,7 @@ function summariseSession(s: any) {
     session_date: s.session_date,
     delivered_by_user_id: s.delivered_by_user_id,
     delivered_by_name: s.delivered_by_name,
+    duration_hours: s.duration_hours ?? 1,
     notes: s.notes ?? null,
     reminder_sent_at: s.reminder_sent_at ?? null,
     allocated: att.length,
@@ -173,6 +180,7 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
         session_date: date,
         delivered_by_user_id: b.delivered_by_user_id ? String(b.delivered_by_user_id) : null,
         delivered_by_name: typeof b.delivered_by_name === 'string' && b.delivered_by_name.trim() ? b.delivered_by_name.trim().slice(0, 160) : null,
+        duration_hours: clampDuration(b.duration_hours),
         notes: typeof b.notes === 'string' && b.notes.trim() ? b.notes.trim().slice(0, 2000) : null,
         created_by: uid(req),
         attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, on_shift: onShiftSet.has(id) })) } : undefined,
@@ -195,6 +203,7 @@ faceToFaceRouter.patch('/sessions/:id', requireAdmin, async (req: Request, res: 
     if (b.notes !== undefined) data.notes = typeof b.notes === 'string' && b.notes.trim() ? b.notes.trim().slice(0, 2000) : null
     if (b.delivered_by_user_id !== undefined) data.delivered_by_user_id = b.delivered_by_user_id ? String(b.delivered_by_user_id) : null
     if (b.delivered_by_name !== undefined) data.delivered_by_name = typeof b.delivered_by_name === 'string' && b.delivered_by_name.trim() ? b.delivered_by_name.trim().slice(0, 160) : null
+    if (b.duration_hours !== undefined) data.duration_hours = clampDuration(b.duration_hours)
     if (b.module_id !== undefined) {
       if (b.module_id) {
         const m = await (prisma as any).trainingModule.findFirst({ where: { id: String(b.module_id), is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true } })
@@ -478,7 +487,7 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
     const nm = (id: string) => uMap.get(id)?.name ?? 'Unknown'
 
     const f2f = (sessions as any[]).map(s => ({
-      session_id: s.id, date: s.session_date, title: s.title,
+      session_id: s.id, date: s.session_date, title: s.title, duration_hours: s.duration_hours ?? 1,
       attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, on_shift: a.on_shift })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
     }))
     const adhoc: any[] = [], annual: any[] = []

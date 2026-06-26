@@ -45,6 +45,7 @@ const PLANS = [
       'Advanced analytics + CQC Readiness Report',
       'Policy gap detection',
       'Face-to-face training and matrix',
+      'Training payroll report',
     ],
   },
   {
@@ -109,6 +110,7 @@ const MATRIX: Group[] = [
     section: 'Training and audit intelligence',
     rows: [
       { label: 'Face-to-face training and matrix', values: [false, true, true] },
+      { label: 'Training payroll report',          values: [false, true, true] },
       { label: 'Build your own audits',            values: [false, false, true] },
       { label: 'Effectiveness of training',        values: [false, false, true] },
       { label: 'Audits linked to training',        values: [false, false, true] },

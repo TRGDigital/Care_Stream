@@ -9,6 +9,7 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
+import { syncProspects } from '../services/prospects/sync'
 
 export const cronRouter = Router()
 
@@ -69,6 +70,20 @@ cronRouter.get('/licence-renewals', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/licence-renewals] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Weekly (Mon 06:00 UTC): refresh the Prospects universe from CareAssura so
+// newly downgraded providers surface automatically. Idempotent; preserves
+// nurture state (status/owner/notes/contact dates).
+cronRouter.get('/prospects-sync', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await syncProspects()
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/prospects-sync] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

@@ -795,6 +795,10 @@ model ProviderLead {
   notes                 String?
   last_contacted_at     DateTime?
   next_action_at        DateTime?
+  ai_draft_subject      String?
+  ai_draft_body         String?
+  ai_draft_sources      String?                          // 'cqc-report' if the CQC page was used, else 'signals'
+  ai_drafted_at         DateTime?
   synced_at             DateTime  @default(now())
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
@@ -883,6 +887,7 @@ model FaceToFaceSession {
   session_date         DateTime                         // the day the session runs (date semantics; backfill = past dates)
   delivered_by_user_id String?                          // internal trainer (a staff member)
   delivered_by_name    String?                          // external / free-text trainer name
+  duration_hours       Int      @default(1)             // session length in hours (1-5); drives off-shift pay hours on the payroll report
   notes                String?
   reminder_sent_at     DateTime?                        // last time the admin emailed allocated staff a reminder
   created_by           String?

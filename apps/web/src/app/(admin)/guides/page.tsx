@@ -957,15 +957,28 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Logging a session">
           <div className="space-y-3">
-            <Step n={1}>Go to <strong>Training</strong> and open the <strong>Face-to-face Training</strong> tab, then click <strong>New session</strong> (or click a day in the calendar to pre-fill its date).</Step>
+            <Step n={1}>Go to <strong>Training</strong> and open the <strong>Face-to-face Training</strong> tab, then click <strong>New session</strong> (or click a day in the calendar to open that day and add a session for it).</Step>
             <Step n={2}>Choose the <strong>training topic</strong> from the dropdown (the same modules you can assign digitally). The title fills in from the module; you can edit it.</Step>
-            <Step n={3}>Set the <strong>date</strong>, and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer.</Step>
-            <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend, then <strong>Create session</strong>. Add notes if useful.</Step>
+            <Step n={3}>Set the <strong>date</strong> and the <strong>session length</strong> (1 to 5 hours), and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer. The length sets how many hours off-shift attendees are owed on the payroll report.</Step>
+            <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend. For each person, tick <strong>On shift</strong> if they were working during the session; leave it unticked if they attended on their own time (this is what makes them payable on the report). Then <strong>Create session</strong>. Add notes if useful.</Step>
           </div>
         </SectionBlock>
         <SectionBlock title="Marking attendance">
           <p className="text-sm text-neutral-mid">
             Open a session from the calendar and mark each person <strong>attended</strong>, <strong>missed</strong>, or leave them <strong>unmarked</strong>. Use <strong>All attended</strong> / <strong>All missed</strong> to set everyone at once, then adjust. This is your evidence of who was at each formal session.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Reading the calendar">
+          <p className="text-sm text-neutral-mid">
+            The calendar is colour-coded so you can see all training at a glance: <strong className="text-teal">teal</strong> for face-to-face sessions, <strong className="text-orange-600">orange</strong> for adhoc training and <strong className="text-indigo-600">indigo</strong> for annual training, with <strong>+N allocated</strong> and <strong>✓N completed</strong> counts. <strong>Click any day</strong> to open it and see the full detail: the face-to-face sessions that day (click through to mark attendance), plus the adhoc and annual training allocated or completed, by staff member.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Payroll report (PDF)">
+          <p className="text-sm text-neutral-mid">
+            Click <strong>Payroll report</strong> at the top of the Face-to-face tab to produce a <strong>monthly PDF</strong> for payroll. Pick the <strong>month</strong>, then either <strong>Download PDF</strong> or enter an email address and <strong>Send</strong> it as an attachment. The report carries the CareStream logo and the date it was generated.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            It separates <strong>Face-to-face</strong>, <strong>adhoc</strong> and <strong>annual</strong> training. The face-to-face section is outlined in blue and shows, per staff member, the session length and a <strong>Pay?</strong> column: anyone who <strong>attended off shift</strong> is highlighted as payable and owed <strong>hours equal to the session length</strong>, with a monthly total. Staff who were <strong>on shift</strong> are not payable for the training. Adhoc and annual sections list what was allocated and completed in the month.
           </p>
         </SectionBlock>
         <SectionBlock title="Reminding allocated staff by email">

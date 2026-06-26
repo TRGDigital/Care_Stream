@@ -11,7 +11,7 @@ import {
   type ProspectSegment,
 } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Target, Loader2, RefreshCw, X, Phone, Mail, Globe, FileText, Copy, Check, MapPin } from 'lucide-react'
+import { Target, Loader2, RefreshCw, X, Phone, Mail, Globe, FileText, Copy, Check, MapPin, Sparkles } from 'lucide-react'
 
 const RATING_STYLE: Record<string, string> = {
   inadequate: 'bg-red-100 text-red-700',
@@ -278,14 +278,38 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
   const [status, setStatus] = useState('')
   const [owner, setOwner] = useState('')
   const [notes, setNotes] = useState('')
+  const [aiDraft, setAiDraft] = useState<{ subject: string; body: string; sources: 'cqc-report' | 'signals' } | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiCopied, setAiCopied] = useState(false)
 
   useEffect(() => {
     setLoading(true)
     api.prospects.get(id).then(({ lead, draft }) => {
       setLead(lead); setDraft(draft)
       setStatus(lead.status); setOwner(lead.owner ?? ''); setNotes(lead.notes ?? '')
+      if (lead.ai_draft_body) {
+        setAiDraft({ subject: lead.ai_draft_subject ?? '', body: lead.ai_draft_body, sources: (lead.ai_draft_sources as 'cqc-report' | 'signals') ?? 'signals' })
+      } else {
+        setAiDraft(null)
+      }
     }).finally(() => setLoading(false))
   }, [api, id])
+
+  async function genAi() {
+    setAiLoading(true)
+    try {
+      const d = await api.prospects.draftAi(id)
+      setAiDraft(d)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  async function copyAi() {
+    if (!aiDraft) return
+    await navigator.clipboard.writeText(`Subject: ${aiDraft.subject}\n\n${aiDraft.body}`)
+    setAiCopied(true); setTimeout(() => setAiCopied(false), 1500)
+  }
 
   async function save() {
     setSaving(true)
@@ -363,6 +387,36 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
                 </div>
               </div>
             )}
+
+            {/* AI-sharpened draft */}
+            <div className="rounded-lg border border-teal/30">
+              <div className="flex items-center justify-between border-b border-teal/20 bg-teal-light px-4 py-2">
+                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal-dark">
+                  <Sparkles size={13} /> AI-sharpened draft
+                  {aiDraft && <span className="ml-1 rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-medium normal-case tracking-normal text-teal-dark">{aiDraft.sources === 'cqc-report' ? 'from CQC report' : 'from CQC signals'}</span>}
+                </span>
+                <div className="flex items-center gap-3">
+                  {aiDraft && (
+                    <button onClick={copyAi} className="flex items-center gap-1 text-xs text-teal-dark hover:underline">
+                      {aiCopied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
+                    </button>
+                  )}
+                  <button onClick={genAi} disabled={aiLoading} className="flex items-center gap-1 text-xs font-medium text-teal-dark hover:underline disabled:opacity-60">
+                    {aiLoading ? <><Loader2 size={13} className="animate-spin" /> Writing…</> : aiDraft ? 'Regenerate' : 'Generate'}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2 p-4">
+                {aiDraft ? (
+                  <>
+                    <div className="text-sm font-semibold text-neutral-dark">{aiDraft.subject}</div>
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-neutral-dark">{aiDraft.body}</pre>
+                  </>
+                ) : (
+                  <p className="text-sm text-neutral-mid">Generate a personalised email tailored to this provider, drawing on its CQC report where available.</p>
+                )}
+              </div>
+            </div>
 
             {/* Nurture controls */}
             <div className="space-y-3 rounded-lg border border-gray-200 p-4">

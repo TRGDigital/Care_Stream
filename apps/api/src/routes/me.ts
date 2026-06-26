@@ -394,13 +394,14 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
       where:   { tenant_id: tenantId, user_id: userId },
       include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true } } },
     }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_reviewer: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }).catch(() => null),
     (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId, user_id: userId, area: 'annual' }, select: { ref: true } }),
   ])
   const ratedAnnual = new Set((ratings as any[]).map(r => r.ref))
   let items = (enrollments as any[])
-    .filter(e => e.module?.source === 'ai_generated' && e.module?.approved)
+    // Reviewers (CPD assessors) also see modules pending approval — that's the point of the review.
+    .filter(e => e.module?.source === 'ai_generated' && (user?.is_reviewer || e.module?.approved))
     .map(e => ({
       enrollment_id: e.id, module_id: e.module.id, name: e.module.name,
       frequency: e.module.frequency, requires_practical: e.module.requires_practical,

@@ -2597,8 +2597,8 @@ adminRouter.patch('/feature-requests/:id', async (req: Request, res: Response) =
 adminRouter.get('/cpd-reviews', async (_req: Request, res: Response) => {
   const [modules, reviews] = await Promise.all([
     (prisma as any).trainingModule.findMany({
-      where:  { tenant_id: null, source: 'ai_generated', approved: true, is_active: true },
-      select: { id: true, name: true, group_key: true, duration_minutes: true, pass_mark: true },
+      where:  { tenant_id: null, source: 'ai_generated', is_active: true, is_annual: true },
+      select: { id: true, name: true, group_key: true, duration_minutes: true, pass_mark: true, approved: true },
       orderBy: { name: 'asc' },
     }),
     (prisma as any).moduleReview.findMany(),
@@ -2610,7 +2610,7 @@ adminRouter.get('/cpd-reviews', async (_req: Request, res: Response) => {
     const status = r?.status ?? 'not_reviewed'
     counts[status] = (counts[status] ?? 0) + 1
     return {
-      id: m.id, name: m.name, group_key: m.group_key, duration_minutes: m.duration_minutes, pass_mark: m.pass_mark,
+      id: m.id, name: m.name, group_key: m.group_key, duration_minutes: m.duration_minutes, pass_mark: m.pass_mark, approved: m.approved,
       status, notes: r?.notes ?? null, reviewer_name: r?.reviewer_name ?? null, updated_at: r?.updated_at ?? null,
     }
   })

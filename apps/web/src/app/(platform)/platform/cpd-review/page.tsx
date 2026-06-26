@@ -61,7 +61,9 @@ export default function CpdReviewPage() {
                 {modules.map(m => (
                   <tr key={m.id} className="align-top hover:bg-neutral-light/40">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-neutral-dark">{m.name}</p>
+                      <p className="flex items-center gap-2 font-medium text-neutral-dark">{m.name}
+                        {!m.approved && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">Pending approval</span>}
+                      </p>
                       {m.duration_minutes != null && <p className="text-xs text-neutral-mid">{m.duration_minutes} min · {m.duration_minutes ? Math.round((m.duration_minutes / 60) * 10) / 10 : 0} CPD hrs{m.pass_mark != null ? ` · pass ${m.pass_mark}%` : ''}</p>}
                     </td>
                     <td className="px-4 py-3"><span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[m.status] ?? STATUS_STYLE.not_reviewed}`}>{STATUS_LABEL[m.status] ?? m.status}</span></td>

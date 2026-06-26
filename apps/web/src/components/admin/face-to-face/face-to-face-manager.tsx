@@ -36,6 +36,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
   const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
+  const [dayDetail, setDayDetail] = useState<string | null>(null)   // open the per-day overlay
 
   // Adhoc + annual training for the visible month (powers the calendar overlay).
   useEffect(() => {
@@ -160,7 +161,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         <div className="grid grid-cols-7">
           {cells.map((c, i) => (
             <div key={i} className={`min-h-[92px] border-b border-r border-gray-100 p-1.5 ${i % 7 === 6 ? 'border-r-0' : ''} ${c ? 'cursor-pointer hover:bg-neutral-light/30' : 'bg-neutral-light/20'}`}
-                 onClick={c ? () => setEditing({ mode: 'new', date: c.key }) : undefined}>
+                 onClick={c ? () => setDayDetail(c.key) : undefined}>
               {c && (
                 <>
                   <div className={`mb-1 text-right text-xs ${c.key === todayKey ? 'font-bold text-teal' : 'text-neutral-mid'}`}>{c.day}</div>
@@ -241,6 +242,17 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         <PayrollModal api={api} year={year} month={month} onClose={() => setPayrollOpen(false)} />
       )}
 
+      {dayDetail && (
+        <DayDetail
+          dayKey={dayDetail}
+          sessions={byDay.get(dayDetail) ?? []}
+          training={training}
+          onClose={() => setDayDetail(null)}
+          onNew={() => { const k = dayDetail; setDayDetail(null); setEditing({ mode: 'new', date: k }) }}
+          onOpenSession={(id) => { setDayDetail(null); setViewingId(id) }}
+        />
+      )}
+
       {editing && api && (
         <SessionModal
           api={api} modules={modules} staff={staff}
@@ -259,6 +271,99 @@ export function FaceToFaceManager({ token }: { token?: string }) {
           onEdit={(s) => { setViewingId(null); setEditing({ mode: 'edit', session: s }) }}
         />
       )}
+    </div>
+  )
+}
+
+// ─── Day overlay: everything happening on one calendar day ────────────────────
+function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }: {
+  dayKey: string
+  sessions: Session[]
+  training: { adhoc: any[]; annual: any[] } | null
+  onClose: () => void
+  onNew: () => void
+  onOpenSession: (id: string) => void
+}) {
+  // Flatten adhoc/annual rows into per-day events (a row can be allocated and/or completed today).
+  const eventsFor = (rows: any[]) => (rows ?? []).flatMap((r: any) => {
+    const out: Array<{ name: string; title: string; kind: 'Allocated' | 'Completed' }> = []
+    if (r.allocated_at && keyOf(r.allocated_at) === dayKey) out.push({ name: r.name, title: r.title, kind: 'Allocated' })
+    if (r.completed_at && keyOf(r.completed_at) === dayKey) out.push({ name: r.name, title: r.title, kind: 'Completed' })
+    return out
+  }).sort((a, b) => a.name.localeCompare(b.name))
+
+  const adhoc = eventsFor(training?.adhoc ?? [])
+  const annual = eventsFor(training?.annual ?? [])
+  const nothing = sessions.length === 0 && adhoc.length === 0 && annual.length === 0
+
+  const KindTag = ({ kind }: { kind: 'Allocated' | 'Completed' }) =>
+    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${kind === 'Completed' ? 'bg-green-50 text-green-600 ring-1 ring-green-200' : 'bg-gray-100 text-neutral-mid'}`}>{kind}</span>
+
+  const EventList = ({ rows, color }: { rows: Array<{ name: string; title: string; kind: 'Allocated' | 'Completed' }>; color: string }) => (
+    <div className="space-y-1">
+      {rows.map((e, i) => (
+        <div key={i} className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-neutral-dark">{e.name}</p>
+            <p className={`truncate text-xs ${color}`}>{e.title}</p>
+          </div>
+          <KindTag kind={e.kind} />
+        </div>
+      ))}
+    </div>
+  )
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-4 flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-neutral-dark">{prettyDate(dayKey)}</h2>
+            <p className="text-sm text-neutral-mid">Training on this day</p>
+          </div>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        {nothing && <p className="rounded-lg bg-neutral-light/50 px-3 py-3 text-sm text-neutral-mid">Nothing scheduled or allocated on this day.</p>}
+
+        {/* Face-to-face sessions */}
+        {sessions.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-teal">Face-to-face sessions</p>
+            <div className="space-y-1">
+              {sessions.map(s => (
+                <button key={s.id} onClick={() => onOpenSession(s.id)} className="flex w-full items-center justify-between gap-2 rounded-lg border border-teal/30 bg-teal/5 px-3 py-2 text-left hover:bg-teal/10">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{s.title}</p>
+                    <p className="text-xs text-neutral-mid">{s.attended}/{s.allocated} attended{s.unmarked > 0 ? ` · ${s.unmarked} to mark` : ''}</p>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-teal" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Adhoc training */}
+        {adhoc.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-orange-600">Adhoc training</p>
+            <EventList rows={adhoc} color="text-orange-600" />
+          </div>
+        )}
+
+        {/* Annual training */}
+        {annual.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-600">Annual training</p>
+            <EventList rows={annual} color="text-indigo-600" />
+          </div>
+        )}
+
+        <div className="mt-5 flex justify-end border-t border-gray-100 pt-4">
+          <button onClick={onNew} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={14} /> New session this day</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -576,7 +681,13 @@ function PayrollModal({ api, year, month, onClose }: {
       pagebreak: { mode: ['css', 'legacy'] },
     } as any).from(reportRef.current!)
   }
-  async function download() { if (!reportRef.current) return; setBusy('pdf'); setMsg(''); try { await (await makePdf()).save() } finally { setBusy(null) } }
+  async function download() {
+    if (!reportRef.current) return
+    setBusy('pdf'); setMsg('')
+    try { await (await makePdf()).save() }
+    catch (e: any) { setMsg(e?.message ?? 'Could not generate the PDF.') }
+    finally { setBusy(null) }
+  }
   async function sendEmail() {
     if (!reportRef.current || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setMsg('Enter a valid email address.'); return }
     setBusy('email'); setMsg('')
@@ -628,7 +739,7 @@ function PayrollModal({ api, year, month, onClose }: {
         <div ref={reportRef} style={{ width: 760, padding: 24, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2937', background: '#fff' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #9B52B5', paddingBottom: 12, marginBottom: 8 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" style={{ height: 44 }} crossOrigin="anonymous" />
+            <img src="/logo-color.png" alt="CareStream" style={{ height: 44 }} />
             <div style={{ textAlign: 'right', fontSize: 11, color: '#6b7280' }}>Generated: {generated}</div>
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px', color: '#111827' }}>Training Report</h1>

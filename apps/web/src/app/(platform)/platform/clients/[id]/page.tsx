@@ -338,6 +338,61 @@ function StaffActionMenu({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// ─── Onboarding email activity for this client ────────────────────────────────
+function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId: string }) {
+  const [data, setData] = useState<Awaited<ReturnType<ReturnType<typeof createPlatformClient>['onboarding']['forTenant']>> | null>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    createPlatformClient(token).onboarding.forTenant(tenantId).then(setData).catch(() => {}).finally(() => setLoaded(true))
+  }, [token, tenantId])
+
+  if (!loaded) return null
+  if (!data?.enrolment && (!data?.sends || data.sends.length === 0)) return null
+
+  const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—'
+  const s = data.summary
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="mb-1 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-neutral-dark">Onboarding emails</h2>
+        {data.enrolment && (
+          <span className="rounded-full bg-teal-light px-2.5 py-0.5 text-xs font-medium text-teal capitalize">{data.enrolment.plan} · {data.enrolment.status}</span>
+        )}
+      </div>
+      <p className="mb-4 text-xs text-neutral-mid">
+        {data.enrolment ? `Drip started ${fmt(data.enrolment.start_date)}. ` : ''}
+        {s.sent} sent · {s.delivered} delivered{s.delivered_pct != null ? ` (${s.delivered_pct}%)` : ''} · {s.opened} opened{s.open_pct != null ? ` (${s.open_pct}%)` : ''} · {s.clicked} clicked{s.click_pct != null ? ` (${s.click_pct}%)` : ''}
+      </p>
+      {data.sends.length === 0 ? (
+        <p className="text-xs text-neutral-mid">No emails sent yet. The first goes out at 10am UK on the start date.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
+              <tr><th className="px-2 py-2">Day</th><th className="px-2 py-2">Email</th><th className="px-2 py-2">Recipient</th><th className="px-2 py-2">Sent</th><th className="px-2 py-2 text-center">Delivered</th><th className="px-2 py-2 text-center">Opened</th><th className="px-2 py-2 text-center">Clicked</th></tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.sends.map((x, i) => (
+                <tr key={i} className="hover:bg-neutral-light/40">
+                  <td className="px-2 py-2 text-neutral-mid">{x.day_index}</td>
+                  <td className="px-2 py-2 text-neutral-dark">{x.subject}</td>
+                  <td className="px-2 py-2 text-neutral-mid">{x.recipient_email}</td>
+                  <td className="px-2 py-2 text-neutral-mid">{fmt(x.sent_at)}</td>
+                  <td className="px-2 py-2 text-center">{x.delivered_at ? '✓' : (x.status === 'bounced' ? '✕' : '—')}</td>
+                  <td className="px-2 py-2 text-center">{x.first_opened_at ? `✓${x.open_count > 1 ? ` ×${x.open_count}` : ''}` : '—'}</td>
+                  <td className="px-2 py-2 text-center">{x.first_clicked_at ? `✓${x.click_count > 1 ? ` ×${x.click_count}` : ''}` : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ClientDetailPage() {
   const token   = usePlatformAuth()
   const { id }  = useParams<{ id: string }>()
@@ -779,6 +834,9 @@ export default function ClientDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Onboarding email activity */}
+            {token && <OnboardingEmailsSection token={token} tenantId={id} />}
 
             {/* Billing & revenue */}
             <div className="rounded-xl border border-gray-200 bg-white p-5">

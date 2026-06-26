@@ -452,6 +452,21 @@ export function createPlatformClient(token: string) {
     stats: () =>
       adminFetch<PlatformStats>('/stats', token),
 
+    onboarding: {
+      emails: (plan: string) => adminFetch<{ plan: string; emails: Array<{
+        id: string; plan: string; day_index: number; subject: string; preheader: string
+        from_email: string | null; badge: string | null; headline: string | null; image: string | null
+        stats: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; delivered_pct: number | null; open_pct: number | null; click_pct: number | null; first_sent_at: string | null }
+      }> }>(`/onboarding/emails?plan=${encodeURIComponent(plan)}`, token),
+      update: (id: string, data: { subject?: string; preheader?: string; from_email?: string }) =>
+        adminFetch<{ id: string }>(`/onboarding/emails/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      forTenant: (id: string) => adminFetch<{
+        enrolment: { plan: string; start_date: string; status: string } | null
+        sends: Array<{ day_index: number; subject: string; recipient_email: string; status: string; sent_at: string | null; delivered_at: string | null; first_opened_at: string | null; open_count: number; first_clicked_at: string | null; click_count: number }>
+        summary: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; delivered_pct: number | null; open_pct: number | null; click_pct: number | null }
+      }>(`/tenants/${id}/onboarding`, token),
+    },
+
     standardTraining: {
       catalogue: () => adminFetch<{
         groups: Record<string, string>

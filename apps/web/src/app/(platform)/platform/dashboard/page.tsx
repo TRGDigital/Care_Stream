@@ -1731,6 +1731,29 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Onboarding Email Drip */}
+      <RefSection icon={Mail} title="Onboarding Email Drip (Email Marketing)">
+        <p className="leading-relaxed text-neutral-mid">
+          Plan-specific welcome sequence sent to new clients, one email per working day, benefit-led, one feature each.
+          Managed under <strong>Platform &rarr; Email Marketing</strong> (edit subject line + preview text per email).
+          Per-client activity shows on each client&rsquo;s detail page. Built 2026-06-26.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Sequences"         value="Starter 12 emails · Professional 16 · Enterprise 20. Core emails 1–11 are shared; later emails are plan-specific premium features + a finale." />
+          <RefRow label="Cadence"           value="One email per working day (weekends skipped) at 10am UK. DST-aware (cron at 09:00 & 10:00 UTC; dispatch only sends when it is 10am Europe/London)." />
+          <RefRow label="On signup"         value="Day-1 welcome sent immediately on registration; then dripped by plan. Skipped for training-only tenants. Plan refreshed on billing /sync so days 12+ match the chosen plan." />
+          <RefRow label="Recipients"        value="Every ACTIVE admin user on the tenant." />
+          <RefRow label="From / reply-to"   value="hello@carestreamai.com (SendGrid). Open + click tracking enabled; events via the SendGrid Event Webhook." />
+          <RefRow label="DB tables"         value="onboarding_emails (templates, editable subject/preheader, body JSONB) · onboarding_enrolments (tenant, plan, start_date, status) · onboarding_sends (per recipient: sent/delivered/opened/clicked)." />
+          <RefRow label="Cron"              value="GET /cron/onboarding-emails (vercel.json, 0 9,10 * * *). Self-heals the template seed each run. ?force=1 bypasses the 10am gate (cron-authed)." />
+          <RefRow label="Code"              value="apps/api/src/services/onboarding/ (content, seed, render, dispatch) · routes/onboarding-public.ts (unsubscribe + /onboarding/events webhook) · admin.ts (/admin/onboarding/*)." />
+          <RefRow label="Images"            value="Screenshots at /email-previews/*.png (web public dir), referenced as absolute URLs in emails. NOTE: contain real Ferndale data — anonymise before wider rollout." />
+          <RefRow label="Webhook"           value="SendGrid Event Webhook → POST https://api.carestreamai.com/onboarding/events (acts only on events carrying our onboarding_send_id custom arg)." />
+          <RefRow label="Unsubscribe"       value="GET /onboarding/unsubscribe?e=<enrolment>&t=<hmac> cancels the tenant's drip." />
+          <RefRow label="First live test"   value="Mon 2026-06-29 10am UK — Enterprise sequence to all active admins of CS-1001, CS-1002, CS-1009 (live test accounts)." />
+        </div>
+      </RefSection>
+
       {/* Channel Routing & Intent Classification */}
       <RefSection icon={GitBranch} title="Channel Routing & Intent Classification">
         <p className="leading-relaxed text-neutral-mid">

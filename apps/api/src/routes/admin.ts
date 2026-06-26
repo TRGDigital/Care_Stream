@@ -2528,6 +2528,21 @@ adminRouter.get('/onboarding/emails/:id/preview', async (req: Request, res: Resp
   ok(res, { html, subject: e.subject })
 })
 
+// POST /admin/onboarding/emails/:id/test — send a one-off test to any address.
+adminRouter.post('/onboarding/emails/:id/test', async (req: Request, res: Response) => {
+  const to = String(req.body?.to ?? '').trim().toLowerCase()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { err(res, 'INVALID', 'A valid email address is required.', 400); return }
+  const e = await (prisma as any).onboardingEmail.findUnique({ where: { id: req.params.id } })
+  if (!e) { err(res, 'NOT_FOUND', 'Email not found', 404); return }
+  try {
+    const { sendTestEmail } = await import('../services/onboarding/dispatch')
+    await sendTestEmail(to, e)
+    ok(res, { sent: to })
+  } catch (e: any) {
+    err(res, 'SEND_FAILED', e?.message ?? 'Could not send the test.', 500)
+  }
+})
+
 // PATCH /admin/onboarding/emails/:id — edit subject / preview text.
 adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) => {
   const data: any = {}

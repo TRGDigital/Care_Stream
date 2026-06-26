@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Mail, Check, ChevronDown, Eye } from 'lucide-react'
+import { Loader2, Mail, Check, ChevronDown, Eye, Send } from 'lucide-react'
 
 async function viewEmail(token: string, id: string) {
   const w = window.open('', '_blank')
@@ -42,7 +42,18 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
   const [preheader, setPreheader] = useState(email.preheader)
   const [saving, setSaving]       = useState(false)
   const [saved, setSaved]         = useState(false)
+  const [testTo, setTestTo]       = useState('')
+  const [testing, setTesting]     = useState(false)
+  const [testMsg, setTestMsg]     = useState('')
   const dirty = subject !== email.subject || preheader !== email.preheader
+
+  async function sendTest() {
+    if (!testTo.trim()) return
+    setTesting(true); setTestMsg('')
+    try { await createPlatformClient(token).onboarding.test(email.id, testTo.trim()); setTestMsg(`Sent to ${testTo.trim()}`) }
+    catch (e: any) { setTestMsg(e?.message ?? 'Could not send') }
+    finally { setTesting(false) }
+  }
 
   async function save() {
     setSaving(true)
@@ -97,6 +108,23 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
         <Stat label="Delivered" value={s.delivered} pct={s.delivered_pct} />
         <Stat label="Opened"    value={s.opened}    pct={s.open_pct} />
         <Stat label="Clicked"   value={s.clicked}   pct={s.click_pct} />
+      </div>
+
+      {/* Send a test */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+        <span className="text-xs font-semibold text-neutral-mid">Send a test to:</span>
+        <input
+          type="email"
+          value={testTo}
+          onChange={e => { setTestTo(e.target.value); setTestMsg('') }}
+          onKeyDown={e => { if (e.key === 'Enter') sendTest() }}
+          placeholder="you@example.com"
+          className="min-w-[180px] flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+        />
+        <button onClick={sendTest} disabled={testing || !testTo.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+          {testing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Test now
+        </button>
+        {testMsg && <span className={`text-xs font-medium ${testMsg.startsWith('Sent') ? 'text-green-600' : 'text-red-600'}`}>{testMsg}</span>}
       </div>
 
       {dirty && (

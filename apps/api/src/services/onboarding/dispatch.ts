@@ -124,6 +124,14 @@ async function sendToRecipient(opts: {
   }
 }
 
+// Send a one-off test of a template to any address (platform-admin only). Not
+// logged to onboarding_sends and no tracking, so it never pollutes the stats.
+export async function sendTestEmail(to: string, tmpl: { subject: string; preheader: string; body: any }): Promise<void> {
+  if (!ensureSg()) throw new Error('SENDGRID_API_KEY is not set')
+  const html = renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl: '#' })
+  await sgMail.send({ to, from: { email: FROM, name: FROM_NAME }, replyTo: FROM, subject: `[TEST] ${tmpl.subject}`, html } as any)
+}
+
 // Enrol a tenant into the drip (one active enrolment per tenant).
 export async function enrolTenant(tenantId: string, planName: string | null, startStr: string): Promise<any> {
   const plan = planKeyOf(planName)

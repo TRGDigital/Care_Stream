@@ -75,8 +75,8 @@ export function renderOnboardingEmailHtml(
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6">
     <tr><td align="center" style="padding:24px 12px">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;font-family:Inter,Arial,Helvetica,sans-serif">
-        <tr><td style="background:#ffffff;padding:20px 28px;border-bottom:1px solid #f0f0f0">
-          <img src="${WEB_URL}/logo-color.png" alt="CareStream" height="38" style="height:38px;display:block;border:0">
+        <tr><td align="center" style="background:#ffffff;padding:28px 28px 24px;border-bottom:1px solid #f0f0f0;text-align:center">
+          <img src="${WEB_URL}/logo-color.png" alt="CareStream" height="64" style="height:64px;display:inline-block;border:0">
         </td></tr>
         <tr><td style="padding:28px 32px 8px">
           ${badge}

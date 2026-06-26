@@ -461,6 +461,7 @@ export function createPlatformClient(token: string) {
       update: (id: string, data: { subject?: string; preheader?: string; from_email?: string }) =>
         adminFetch<{ id: string }>(`/onboarding/emails/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       preview: (id: string) => adminFetch<{ html: string; subject: string }>(`/onboarding/emails/${id}/preview`, token),
+      test: (id: string, to: string) => adminFetch<{ sent: string }>(`/onboarding/emails/${id}/test`, token, { method: 'POST', body: JSON.stringify({ to }) }),
       forTenant: (id: string) => adminFetch<{
         enrolment: { plan: string; start_date: string; status: string } | null
         sends: Array<{ day_index: number; email_id: string | null; subject: string; recipient_email: string; status: string; sent_at: string | null; delivered_at: string | null; first_opened_at: string | null; open_count: number; first_clicked_at: string | null; click_count: number }>

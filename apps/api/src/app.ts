@@ -126,24 +126,31 @@ app.get('/public/_onboarding-test', async (req, res) => {
     const plan   = String(req.query.plan ?? 'enterprise')
     const day    = Number(req.query.day ?? 1)
 
-    // ── SendGrid Event Webhook management (read-only status, or enable) ──
-    if (action === 'webhook-status' || action === 'webhook-enable') {
+    // ── SendGrid Event Webhook management. The legacy single webhook belongs to
+    // another project sharing this account, so we ADD a second one (multi-webhook). ──
+    if (action === 'webhook-status' || action === 'webhook-list' || action === 'webhook-create') {
       const sgKey = process.env.SENDGRID_API_KEY
       if (!sgKey) { res.status(500).json({ error: 'no SENDGRID_API_KEY' }); return }
-      const SG = 'https://api.sendgrid.com/v3/user/webhooks/event/settings'
+      const H = { Authorization: `Bearer ${sgKey}`, 'Content-Type': 'application/json' }
+      const ourUrl = 'https://api.carestreamai.com/onboarding/events'
       if (action === 'webhook-status') {
-        const r = await fetch(SG, { headers: { Authorization: `Bearer ${sgKey}` } })
+        const r = await fetch('https://api.sendgrid.com/v3/user/webhooks/event/settings', { headers: H })
         res.status(200).json({ current: await r.json() }); return
       }
-      // enable: only proceed if no other URL is already configured (avoid clobbering).
-      const cur = await (await fetch(SG, { headers: { Authorization: `Bearer ${sgKey}` } })).json() as any
-      const ourUrl = 'https://api.carestreamai.com/onboarding/events'
-      if (cur?.url && cur.url !== ourUrl) { res.status(409).json({ error: 'an event webhook url is already set; not overwriting', current: cur }); return }
-      const r = await fetch(SG, {
-        method: 'PATCH', headers: { Authorization: `Bearer ${sgKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: true, url: ourUrl, delivered: true, open: true, click: true, bounce: true, dropped: true, processed: false, deferred: false, spam_report: false, unsubscribe: false, group_resubscribe: false, group_unsubscribe: false }),
+      if (action === 'webhook-list') {
+        const r = await fetch('https://api.sendgrid.com/v3/user/webhooks/event/settings/all', { headers: H })
+        res.status(r.status).json(await r.json()); return
+      }
+      // create: skip if one already points at our URL.
+      const allR = await fetch('https://api.sendgrid.com/v3/user/webhooks/event/settings/all', { headers: H })
+      const all = await allR.json() as any
+      const existing = (all?.webhooks ?? []).find((w: any) => w.url === ourUrl)
+      if (existing) { res.status(200).json({ already: true, webhook: existing }); return }
+      const r = await fetch('https://api.sendgrid.com/v3/user/webhooks/event/settings', {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ enabled: true, url: ourUrl, friendly_name: 'carestream-onboarding', delivered: true, open: true, click: true, bounce: true, dropped: true, processed: false, deferred: false, spam_report: false, unsubscribe: false, group_resubscribe: false, group_unsubscribe: false }),
       })
-      res.status(r.status).json({ enabled: r.ok, result: await r.json() }); return
+      res.status(r.status).json({ created: r.ok, result: await r.json() }); return
     }
 
     const tmpl   = await (prisma as any).onboardingEmail.findUnique({ where: { plan_day_index: { plan, day_index: day } } })

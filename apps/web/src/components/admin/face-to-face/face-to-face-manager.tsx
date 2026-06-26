@@ -679,8 +679,9 @@ function PayrollModal({ api, year, month, onClose }: {
     api.faceToFace.trainingMonth(monthStr).then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
   }, [monthStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Payable only when they attended AND were ticked as owed pay (off shift).
-  const pay = (status: string, owed_pay: boolean) => status === 'attended' ? (owed_pay ? 'Yes' : 'No') : status === 'absent' ? 'No' : '—'
+  // The "Owed pay" tick drives payment. We only withhold it if the person was
+  // explicitly marked absent (they didn't attend, so nothing is owed).
+  const pay = (status: string, owed_pay: boolean) => status === 'absent' ? 'No' : (owed_pay ? 'Yes' : 'No')
   const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, owed_pay: a.owed_pay, hours: s.duration_hours ?? 1 })))
     .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
   // Hours owed = the session length, but only for payable rows.

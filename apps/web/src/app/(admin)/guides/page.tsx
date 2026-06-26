@@ -678,11 +678,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="Two kinds of training module">
           <p className="text-sm text-neutral-mid">
-            A module can be a <strong>full scenario-based lesson</strong> (a short lesson that teaches each point through a real care-home scenario, then a quick check, followed by an assessment) or a simpler <strong>assessment-only question set</strong>. Both are built on the <strong>Training → Modules &amp; Questions</strong> tab and taken by staff in the hub, in their first language.
+            A module can be a <strong>full scenario-based lesson</strong> (a short lesson that teaches each point through a real care-home scenario, then a quick check, followed by an assessment) or a simpler <strong>assessment-only question set</strong>. Both are built on the <strong>Training → Adhoc Training Modules &amp; Questions</strong> tab and taken by staff in the hub, in their first language.
           </p>
         </SectionBlock>
-        <SectionBlock title="Building a module — Modules & Questions tab">
-          <p className="mb-2 text-sm text-neutral-mid">Open <strong>Training → Modules &amp; Questions</strong> and use the buttons on each module:</p>
+        <SectionBlock title="Building a module — Adhoc Training Modules & Questions tab">
+          <p className="mb-2 text-sm text-neutral-mid">Open <strong>Training → Adhoc Training Modules &amp; Questions</strong> and use the buttons on each module:</p>
           <ul className="space-y-1.5 text-sm text-neutral-mid">
             <li><strong className="text-neutral-dark">Generate lesson &amp; questions</strong> (recommended) — the AI writes a full scenario lesson <em>and</em> a fresh assessment, grounded in your own policies, and reuses the matching standard module&rsquo;s images. The questions then open in the editor so you can review and <strong>Save</strong>.</li>
             <li><strong className="text-neutral-dark">Questions only</strong> — generates just the assessment questions, with no lesson.</li>
@@ -919,7 +919,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             In the session, the <strong>Send the digital module</strong> panel lets you pick exactly who should complete the training digitally, click <strong>Select those who missed</strong> for the obvious case, or choose anyone. They get the module in their hub <strong>My Training</strong>, and the session shows a <strong>sent</strong> marker against them.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            A module can only be sent once it has been <strong>built</strong> (it has a lesson or questions). If it hasn&apos;t, you&apos;ll see a prompt to add a lesson or questions in <strong>Training → Modules &amp; Questions</strong> first, and unbuilt topics are marked <strong>&ldquo;not built yet&rdquo;</strong> in the session form.
+            A module can only be sent once it has been <strong>built</strong> (it has a lesson or questions). If it hasn&apos;t, you&apos;ll see a prompt to add a lesson or questions in <strong>Training → Adhoc Training Modules &amp; Questions</strong> first, and unbuilt topics are marked <strong>&ldquo;not built yet&rdquo;</strong> in the session form.
           </p>
         </SectionBlock>
         <SectionBlock title="Backfilling the last 12 months">

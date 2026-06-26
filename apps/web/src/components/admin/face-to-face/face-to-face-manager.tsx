@@ -440,7 +440,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         {!data.module_id ? (
           <p className="mt-5 rounded-lg bg-neutral-light/50 px-3 py-2 text-xs text-neutral-mid">No training module is linked to this session, so the digital module can&apos;t be sent. Add one via Edit.</p>
         ) : !moduleReady ? (
-          <p className="mt-5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">This session&apos;s training module hasn&apos;t been built yet, so it can&apos;t be sent. Add a lesson or questions in Training → Modules &amp; Questions first.</p>
+          <p className="mt-5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">This session&apos;s training module hasn&apos;t been built yet, so it can&apos;t be sent. Add a lesson or questions in Training → Adhoc Training Modules &amp; Questions first.</p>
         ) : (
           <div className="mt-5 rounded-xl border border-teal/30 bg-teal-light/10 p-4">
             <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-teal"><GraduationCap size={15} /> Send the digital module</p>

@@ -479,7 +479,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
 
   return (
     <div>
-      <HelpAccordion title="How Modules &amp; Questions work">
+      <HelpAccordion title="How Adhoc Training Modules &amp; Questions work">
         <p><strong className="text-neutral-dark">What this tab does</strong> — build each training module your staff complete in the hub. A module can be a full scenario-based lesson (a short lesson taught through real care-home scenarios, then an assessment) or just an assessment question set. Staff take it in their first language.</p>
         <p><strong className="text-neutral-dark">The best way to build a module</strong> — click <strong className="text-blue-700">Generate lesson &amp; questions</strong>. The AI writes a full lesson (each section teaches a point, then applies it through a real scenario and a quick check) plus a fresh assessment bank, grounded in your own policies, and reuses the matching standard module&apos;s images. Staff then play it step by step in <strong className="text-neutral-dark">My Training</strong>, exactly like Annual training. Click <strong className="text-neutral-dark">Preview</strong> to step through it yourself first.</p>
         <p><strong className="text-neutral-dark">Questions-only modules</strong> — if you just want an assessment with no lesson, use <strong className="text-purple-700">Questions only</strong> (or write your own question texts and use <strong className="text-purple-700">Generate answer options</strong> to fill in the A/B/C/D choices). These appear in My Training as a simple question list.</p>
@@ -573,11 +573,11 @@ function HistoryTab({ api, modules }: {
   return (
     <div>
       <HelpAccordion title="How Question History works">
-        <p><strong className="text-neutral-dark">What this tab does</strong> — every time you save questions on the Modules &amp; Questions tab, a full snapshot of that question set is stored here. This gives you a permanent, time-stamped audit trail of every version of every module's questions.</p>
+        <p><strong className="text-neutral-dark">What this tab does</strong> — every time you save questions on the Adhoc Training Modules &amp; Questions tab, a full snapshot of that question set is stored here. This gives you a permanent, time-stamped audit trail of every version of every module's questions.</p>
         <p><strong className="text-neutral-dark">Versions</strong> — each saved set is recorded as a new version (v1, v2, v3, and so on). The most recent version is shown first. Expanding a version reveals the complete question set as it was at that point in time, including the correct answers marked in teal.</p>
         <p><strong className="text-neutral-dark">Why this matters</strong> — if a CQC inspector asks which questions staff were tested on during a specific period, you can open this tab, filter to that date range, and show the exact questions used. It also means you can confidently update questions over time without losing the historical record.</p>
         <p><strong className="text-neutral-dark">Date filter</strong> — use the From and To date pickers to narrow the view to versions saved within a specific date range. Click <strong className="text-neutral-dark">Clear</strong> to reset the filter and see all versions again.</p>
-        <p><strong className="text-neutral-dark">Building the history</strong> — history only appears after questions have been saved at least once. A module with no saved versions will not appear here. Each save on the Modules &amp; Questions tab adds a new entry automatically.</p>
+        <p><strong className="text-neutral-dark">Building the history</strong> — history only appears after questions have been saved at least once. A module with no saved versions will not appear here. Each save on the Adhoc Training Modules &amp; Questions tab adds a new entry automatically.</p>
       </HelpAccordion>
 
       {/* Date filter bar */}
@@ -622,7 +622,7 @@ function HistoryTab({ api, modules }: {
           </p>
           <p className="mt-1 text-sm text-neutral-mid">
             {allVersions.length === 0
-              ? 'Save questions on the Modules & Questions tab to start building a version history.'
+              ? 'Save questions on the Adhoc Training Modules & Questions tab to start building a version history.'
               : 'Try adjusting or clearing the date filter.'}
           </p>
         </div>
@@ -1329,7 +1329,7 @@ export default function TrainingPage() {
       <div className="mb-6 flex gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1 w-fit">
         {([
           { key: 'compliance', label: 'Compliance' },
-          { key: 'modules',    label: 'Modules & Questions' },
+          { key: 'modules',    label: 'Adhoc Training Modules & Questions' },
           { key: 'history',    label: 'Question History' },
           { key: 'delivery',   label: 'Schedule Training Questions Delivery' },
           { key: 'face_to_face', label: 'Face-to-face Training' },

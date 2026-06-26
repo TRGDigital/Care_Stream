@@ -110,26 +110,6 @@ app.use('/feedback', feedbackRouter)
 // Onboarding email drip: unsubscribe + SendGrid event webhook, no auth. BEFORE requireAuth.
 app.use('/onboarding', onboardingPublicRouter)
 
-// TEMP: re-send a test of the onboarding email (new logo). Secret-key gated; can
-// ONLY send to a fixed allowlist (no open relay). Remove after the re-test.
-app.get('/public/_onboarding-retest', async (req, res) => {
-  if (String(req.query.key ?? '') !== 'onb-9f3a2c7b1e54-preview') { res.status(404).end(); return }
-  const to = String(req.query.to ?? '').toLowerCase()
-  if (!new Set(['len@crosswayscarehome.co.uk', 'hello@carestreamai.com']).has(to)) { res.status(403).json({ error: 'recipient not allowed' }); return }
-  try {
-    const { prisma } = await import('./db/client')
-    const { renderOnboardingEmailHtml } = await import('./services/onboarding/render')
-    const tmpl = await (prisma as any).onboardingEmail.findUnique({ where: { plan_day_index: { plan: 'enterprise', day_index: 1 } } })
-    if (!tmpl) { res.status(404).json({ error: 'no template' }); return }
-    const sg = (await import('@sendgrid/mail')).default
-    if (!process.env.SENDGRID_API_KEY) { res.status(500).json({ error: 'no SENDGRID_API_KEY' }); return }
-    sg.setApiKey(process.env.SENDGRID_API_KEY)
-    const html = renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl: '#' })
-    await sg.send({ to, from: { email: 'hello@carestreamai.com', name: 'CareStream' }, replyTo: 'hello@carestreamai.com', subject: `[TEST] ${tmpl.subject}`, html } as any)
-    res.json({ sent: to, subject: tmpl.subject })
-  } catch (e: any) { res.status(500).json({ error: e?.message ?? 'failed' }) }
-})
-
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)
 

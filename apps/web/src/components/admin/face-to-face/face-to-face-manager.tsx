@@ -721,7 +721,7 @@ function PayrollModal({ api, year, month, onClose }: {
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-teal">{f2fRows.length}</p>Face-to-face</div>
+            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{(() => { const n = f2fRows.filter((r: any) => pay(r.status, r.on_shift) === 'Yes').length; return n > 0 ? <span className="mt-0.5 block font-semibold text-amber-700">{n} payable</span> : null })()}</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
           </div>
@@ -752,15 +752,31 @@ function PayrollModal({ api, year, month, onClose }: {
           <p style={{ margin: '0 0 4px', fontSize: 13, color: '#374151' }}><strong>{orgName}</strong> · {monthLabel}</p>
           <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>Face-to-face Pay column: a staff member who attended <strong>off shift</strong> is payable; on-shift attendance is not.</p>
 
-          <h2 style={sectionTitle}>Face-to-face training</h2>
-          {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th></tr></thead>
-              <tbody>{f2fRows.map((r: any, i: number) => (
-                <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.date)}</td><td style={{ ...td, textTransform: 'capitalize' }}>{r.status}</td><td style={td}>{r.on_shift ? 'Yes' : 'No'}</td><td style={{ ...td, fontWeight: 700, color: pay(r.status, r.on_shift) === 'Yes' ? '#b45309' : '#374151' }}>{pay(r.status, r.on_shift)}</td></tr>
-              ))}</tbody>
-            </table>
-          )}
+          <div style={{ border: '2px solid #2563eb', borderRadius: 10, padding: '4px 12px 12px', background: '#eff6ff', marginTop: 14 }}>
+            <h2 style={{ ...sectionTitle, borderLeftColor: '#2563eb', color: '#1e3a8a', marginTop: 12 }}>Face-to-face training</h2>
+            {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Attendance</th><th style={th}>On shift</th><th style={th}>Pay?</th></tr></thead>
+                <tbody>{f2fRows.map((r: any, i: number) => {
+                  const payable = pay(r.status, r.on_shift) === 'Yes'
+                  const rowTd: CSSProperties = { ...td, ...(payable ? { background: '#fef3c7', borderBottom: '1px solid #fde68a' } : {}) }
+                  return (
+                    <tr key={i}>
+                      <td style={{ ...rowTd, fontWeight: payable ? 700 : 400 }}>{r.name}{payable ? ' 💷' : ''}</td>
+                      <td style={rowTd}>{r.title}</td>
+                      <td style={rowTd}>{dateStr(r.date)}</td>
+                      <td style={{ ...rowTd, textTransform: 'capitalize' }}>{r.status}</td>
+                      <td style={rowTd}>{r.on_shift ? 'Yes' : 'No'}</td>
+                      <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#374151' }}>{pay(r.status, r.on_shift)}</td>
+                    </tr>
+                  )
+                })}</tbody>
+              </table>
+            )}
+            {f2fRows.some((r: any) => pay(r.status, r.on_shift) === 'Yes') && (
+              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member attended off shift.</p>
+            )}
+          </div>
 
           <h2 style={sectionTitle}>Adhoc training</h2>
           {(data?.adhoc.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (

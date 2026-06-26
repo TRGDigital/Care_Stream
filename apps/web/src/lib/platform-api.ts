@@ -447,10 +447,96 @@ export async function uploadBlogImage(token: string, file: File): Promise<string
   return body.data.url as string
 }
 
+// ─── Prospects (outbound CQC-sourced lead universe) ──────────────────────────
+export type ProspectSegment = 'rescue' | 'protect' | 'maintain' | 'defend' | 'unrated'
+
+export interface ProviderLead {
+  id: string
+  source_id: string
+  slug: string | null
+  name: string
+  setting: string | null
+  town: string | null
+  county: string | null
+  region: string | null
+  postcode: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  cqc_rating: string | null
+  cqc_safe_rating: string | null
+  cqc_effective_rating: string | null
+  cqc_caring_rating: string | null
+  cqc_responsive_rating: string | null
+  cqc_well_led_rating: string | null
+  cqc_inspection_date: string | null
+  cqc_report_url: string | null
+  segment: ProspectSegment
+  score: number
+  lead_angle_key: string | null
+  lead_angle_label: string | null
+  failing_domains: string[]
+  why_now: string | null
+  status: string
+  owner: string | null
+  notes: string | null
+  last_contacted_at: string | null
+  next_action_at: string | null
+  synced_at: string
+}
+
+export interface ProspectsListData {
+  rows: ProviderLead[]
+  total: number
+  page: number
+  pageSize: number
+  segmentCounts: Record<string, number>
+}
+
+export interface ProspectFilters {
+  segment?: ProspectSegment
+  status?: string
+  setting?: string
+  region?: string
+  rating?: string
+  q?: string
+  sort?: 'score' | 'inspected' | 'name'
+  page?: number
+  pageSize?: number
+}
+
+export interface ProspectsMeta {
+  regions: string[]
+  settings: string[]
+  statuses: string[]
+  segments: Array<{ key: ProspectSegment; label: string; tagline: string }>
+}
+
+export interface ProspectSyncResult {
+  fetched: number
+  upserted: number
+  bySegment: Record<string, number>
+  durationMs: number
+}
+
 export function createPlatformClient(token: string) {
   return {
     stats: () =>
       adminFetch<PlatformStats>('/stats', token),
+
+    prospects: {
+      list: (f: ProspectFilters = {}) => {
+        const qs = new URLSearchParams()
+        Object.entries(f).forEach(([k, v]) => { if (v !== undefined && v !== '') qs.set(k, String(v)) })
+        const q = qs.toString()
+        return adminFetch<ProspectsListData>(`/prospects${q ? `?${q}` : ''}`, token)
+      },
+      filters: () => adminFetch<ProspectsMeta>('/prospects/filters', token),
+      get: (id: string) => adminFetch<{ lead: ProviderLead; draft: { subject: string; body: string } }>(`/prospects/${id}`, token),
+      update: (id: string, data: { status?: string; owner?: string | null; notes?: string | null; next_action_at?: string | null }) =>
+        adminFetch<{ lead: ProviderLead }>(`/prospects/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      sync: () => adminFetch<ProspectSyncResult>('/prospects/sync', token, { method: 'POST' }),
+    },
 
     cpdReviews: () => adminFetch<{
       modules: Array<{ id: string; name: string; group_key: string | null; duration_minutes: number | null; pass_mark: number | null; approved: boolean; status: string; notes: string | null; reviewer_name: string | null; updated_at: string | null }>

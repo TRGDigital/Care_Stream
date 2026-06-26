@@ -14,6 +14,7 @@ import { formatPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { TRAINING_TOPICS } from '../data/training-topics'
 import { SETTING_LABELS } from '../lib/care-setting'
+import { renderOnboardingEmailHtml } from '../services/onboarding/render'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
 import { embedTexts } from '../services/rag/embedder'
@@ -2519,6 +2520,14 @@ adminRouter.get('/onboarding/emails', async (req: Request, res: Response) => {
   ok(res, { plan, emails: out })
 })
 
+// GET /admin/onboarding/emails/:id/preview — rendered HTML of the email.
+adminRouter.get('/onboarding/emails/:id/preview', async (req: Request, res: Response) => {
+  const e = await (prisma as any).onboardingEmail.findUnique({ where: { id: req.params.id } })
+  if (!e) { err(res, 'NOT_FOUND', 'Email not found', 404); return }
+  const html = renderOnboardingEmailHtml({ subject: e.subject, preheader: e.preheader, body: e.body }, { unsubscribeUrl: '#' })
+  ok(res, { html, subject: e.subject })
+})
+
 // PATCH /admin/onboarding/emails/:id — edit subject / preview text.
 adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) => {
   const data: any = {}
@@ -2540,7 +2549,7 @@ adminRouter.get('/tenants/:id/onboarding', async (req: Request, res: Response) =
   ok(res, {
     enrolment: enrolment ? { plan: enrolment.plan, start_date: enrolment.start_date, status: enrolment.status } : null,
     sends: (sends as any[]).map(s => ({
-      day_index: s.day_index, subject: s.subject, recipient_email: s.recipient_email,
+      day_index: s.day_index, email_id: s.email_id, subject: s.subject, recipient_email: s.recipient_email,
       status: s.status, sent_at: s.sent_at, delivered_at: s.delivered_at,
       first_opened_at: s.first_opened_at, open_count: s.open_count,
       first_clicked_at: s.first_clicked_at, click_count: s.click_count,

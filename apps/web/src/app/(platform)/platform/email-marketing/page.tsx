@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Mail, Check } from 'lucide-react'
+import { Loader2, Mail, Check, ChevronDown, Eye } from 'lucide-react'
+
+async function viewEmail(token: string, id: string) {
+  const w = window.open('', '_blank')
+  try {
+    const { html } = await createPlatformClient(token).onboarding.preview(id)
+    if (w) { w.document.open(); w.document.write(html); w.document.close() }
+  } catch { w?.close() }
+}
 
 type EmailRow = Awaited<ReturnType<ReturnType<typeof createPlatformClient>['onboarding']['emails']>>['emails'][number]
 
@@ -29,6 +37,7 @@ function Stat({ label, value, pct }: { label: string; value: number; pct?: numbe
 }
 
 function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; onSaved: () => void }) {
+  const [open, setOpen]           = useState(false)
   const [subject, setSubject]     = useState(email.subject)
   const [preheader, setPreheader] = useState(email.preheader)
   const [saving, setSaving]       = useState(false)
@@ -43,9 +52,24 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
 
   const s = email.stats
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      {/* Accordion header */}
+      <div className="flex items-center gap-2 px-5 py-3">
+        <button onClick={() => setOpen(o => !o)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-bold text-teal">Day {email.day_index}</span>
+          {email.badge && <span className="hidden rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 sm:inline">{email.badge}</span>}
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-dark">{email.subject}</span>
+          <span className="hidden whitespace-nowrap text-xs text-neutral-mid md:inline">{s.sent} sent · {s.opened} opened</span>
+          <ChevronDown size={16} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        <button onClick={() => viewEmail(token, email.id)} title="View email" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/40 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">
+          <Eye size={13} /> View
+        </button>
+      </div>
+
+      {!open ? null : (
+      <div className="border-t border-gray-100 p-5">
       <div className="mb-3 flex items-center gap-2">
-        <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-bold text-teal">Day {email.day_index}</span>
         {email.badge && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{email.badge}</span>}
         <span className="ml-auto text-xs text-neutral-mid">Date sent: <span className="font-medium text-neutral-dark">{fmtDate(s.first_sent_at)}</span></span>
       </div>
@@ -84,6 +108,8 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
         </div>
       )}
       {saved && <p className="mt-2 text-xs font-medium text-green-600">Saved</p>}
+      </div>
+      )}
     </div>
   )
 }

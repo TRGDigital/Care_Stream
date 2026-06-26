@@ -338,6 +338,14 @@ function StaffActionMenu({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+async function viewOnboardingEmail(token: string, id: string) {
+  const w = window.open('', '_blank')
+  try {
+    const { html } = await createPlatformClient(token).onboarding.preview(id)
+    if (w) { w.document.open(); w.document.write(html); w.document.close() }
+  } catch { w?.close() }
+}
+
 // ─── Onboarding email activity for this client ────────────────────────────────
 function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId: string }) {
   const [data, setData] = useState<Awaited<ReturnType<ReturnType<typeof createPlatformClient>['onboarding']['forTenant']>> | null>(null)
@@ -371,7 +379,7 @@ function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId:
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
-              <tr><th className="px-2 py-2">Day</th><th className="px-2 py-2">Email</th><th className="px-2 py-2">Recipient</th><th className="px-2 py-2">Sent</th><th className="px-2 py-2 text-center">Delivered</th><th className="px-2 py-2 text-center">Opened</th><th className="px-2 py-2 text-center">Clicked</th></tr>
+              <tr><th className="px-2 py-2">Day</th><th className="px-2 py-2">Email</th><th className="px-2 py-2">Recipient</th><th className="px-2 py-2">Sent</th><th className="px-2 py-2 text-center">Delivered</th><th className="px-2 py-2 text-center">Opened</th><th className="px-2 py-2 text-center">Clicked</th><th className="px-2 py-2"></th></tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {data.sends.map((x, i) => (
@@ -383,6 +391,9 @@ function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId:
                   <td className="px-2 py-2 text-center">{x.delivered_at ? '✓' : (x.status === 'bounced' ? '✕' : '—')}</td>
                   <td className="px-2 py-2 text-center">{x.first_opened_at ? `✓${x.open_count > 1 ? ` ×${x.open_count}` : ''}` : '—'}</td>
                   <td className="px-2 py-2 text-center">{x.first_clicked_at ? `✓${x.click_count > 1 ? ` ×${x.click_count}` : ''}` : '—'}</td>
+                  <td className="px-2 py-2 text-right">
+                    {x.email_id && <button onClick={() => viewOnboardingEmail(token, x.email_id!)} className="text-xs font-semibold text-teal hover:underline">View</button>}
+                  </td>
                 </tr>
               ))}
             </tbody>

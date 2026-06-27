@@ -512,7 +512,7 @@ export function InviteModal({
                   />
                   <span className="text-xs text-neutral-mid">/hr</span>
                 </div>
-                <p className="mt-1 text-xs text-neutral-mid">Used to cost their owed training hours on the payroll report.</p>
+                <p className="mt-1 text-xs text-neutral-mid">Only used for face-to-face training attended off shift, to cost their owed hours on the payroll report.</p>
               </div>
               <div className="sm:col-span-2">
                 <AccessLevelField
@@ -752,7 +752,7 @@ export function EditModal({
               />
               <span className="text-xs text-neutral-mid">/hr</span>
             </div>
-            <p className="mt-1 text-xs text-neutral-mid">Used to cost owed training hours on the payroll report.</p>
+            <p className="mt-1 text-xs text-neutral-mid">Only used for face-to-face training attended off shift, to cost their owed hours on the payroll report.</p>
           </div>
 
           <div className="sm:col-span-2">

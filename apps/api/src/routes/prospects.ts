@@ -95,9 +95,9 @@ prospectsRouter.get('/filters', async (_req: Request, res: Response) => {
 // well under the function time limit; the UI loops it.
 const bulkBody = z
   .object({
-    limit: z.coerce.number().int().min(1).max(100).default(50),
+    limit: z.coerce.number().int().min(1).max(100).default(100),
     segment: z.enum(SEGMENTS).optional(),
-    concurrency: z.coerce.number().int().min(1).max(10).default(6),
+    concurrency: z.coerce.number().int().min(1).max(10).default(8),
   })
   .strict()
 
@@ -105,7 +105,8 @@ prospectsRouter.post('/enrich-bulk', async (req: Request, res: Response) => {
   const parsed = bulkBody.safeParse(req.body ?? {})
   if (!parsed.success) { err(res, 'BAD_REQUEST', parsed.error.message); return }
   try {
-    const result = await enrichBatch(parsed.data)
+    // Manual bulk action — allow the paid Hunter fallback on scrape misses.
+    const result = await enrichBatch({ ...parsed.data, useFinder: true })
     ok(res, result)
   } catch (e) {
     err(res, 'ENRICH_FAILED', e instanceof Error ? e.message : String(e), 500)
@@ -206,7 +207,7 @@ prospectsRouter.post('/:id/enrich', async (req: Request, res: Response) => {
   const lead = await (prisma as any).providerLead.findUnique({ where: { id: String(req.params.id) } })
   if (!lead) { err(res, 'NOT_FOUND', 'Lead not found', 404); return }
   try {
-    const result = await enrichLead({ name: lead.name, website: lead.website })
+    const result = await enrichLead({ name: lead.name, website: lead.website }, { useFinder: true })
     const updated = await (prisma as any).providerLead.update({
       where: { id: lead.id },
       data: {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import {
   createPlatformClient,
@@ -74,7 +74,6 @@ export default function ProspectsPage() {
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [enrichRun, setEnrichRun] = useState(false)
   const [enrichStat, setEnrichStat] = useState<{ done: number; emails: number; remaining: number } | null>(null)
-  const enrichStop = useRef(false)
 
   // Load filter vocab once.
   useEffect(() => {
@@ -115,20 +114,14 @@ export default function ProspectsPage() {
     }
   }
 
+  // One controlled batch of 100 (hottest-first, scoped to the current segment).
+  // Click again for the next 100. The cron handles the rest hands-off.
   async function runEnrich() {
     if (!api) return
-    enrichStop.current = false
     setEnrichRun(true)
-    let done = 0, emails = 0
     try {
-      while (!enrichStop.current) {
-        const r = await api.prospects.enrichBulk({ limit: 50, segment: filters.segment })
-        done += r.processed; emails += r.withEmail
-        setEnrichStat({ done, emails, remaining: r.remaining })
-        if (r.processed === 0 || r.remaining === 0) break
-      }
-    } catch (e) {
-      setEnrichStat((s) => s)
+      const r = await api.prospects.enrichBulk({ limit: 100, segment: filters.segment })
+      setEnrichStat({ done: r.processed, emails: r.withEmail, remaining: r.remaining })
     } finally {
       setEnrichRun(false)
       load()
@@ -161,19 +154,14 @@ export default function ProspectsPage() {
                 Enriched {enrichStat.done.toLocaleString()} · {enrichStat.emails.toLocaleString()} emails · {enrichStat.remaining.toLocaleString()} left
               </span>
             )}
-            {enrichRun ? (
-              <button onClick={() => { enrichStop.current = true }} className="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                <X size={15} /> Stop
-              </button>
-            ) : (
-              <button
-                onClick={runEnrich}
-                title={filters.segment ? `Enrich ${filters.segment} leads with a website` : 'Enrich all leads with a website (hottest first)'}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light"
-              >
-                <UserSearch size={15} /> Enrich websites{filters.segment ? ` · ${filters.segment}` : ''}
-              </button>
-            )}
+            <button
+              onClick={runEnrich}
+              disabled={enrichRun}
+              title={filters.segment ? `Enrich the next 100 ${filters.segment} leads with a website (hottest first)` : 'Enrich the next 100 leads with a website (hottest first)'}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-60"
+            >
+              {enrichRun ? <><Loader2 size={15} className="animate-spin" /> Enriching 100…</> : <><UserSearch size={15} /> Enrich 100{filters.segment ? ` · ${filters.segment}` : ''}</>}
+            </button>
             {syncMsg && <span className="text-xs text-neutral-mid">{syncMsg}</span>}
             <button
               onClick={runSync}

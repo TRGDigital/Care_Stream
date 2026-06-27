@@ -12,6 +12,7 @@ export interface BatchOpts {
   limit?: number
   segment?: string
   concurrency?: number
+  useFinder?: boolean // allow the paid Hunter fallback (manual bulk only, never the cron)
 }
 
 export interface BatchResult {
@@ -21,7 +22,7 @@ export interface BatchResult {
   remaining: number
 }
 
-export async function enrichBatch({ limit = 60, segment, concurrency = 6 }: BatchOpts): Promise<BatchResult> {
+export async function enrichBatch({ limit = 60, segment, concurrency = 6, useFinder = false }: BatchOpts): Promise<BatchResult> {
   const where: Record<string, unknown> = { website: { not: null }, enriched_at: null }
   if (segment) where.segment = segment
 
@@ -40,7 +41,7 @@ export async function enrichBatch({ limit = 60, segment, concurrency = 6 }: Batc
     while (idx < batch.length) {
       const lead = batch[idx++]
       try {
-        const r = await enrichLead({ name: lead.name, website: lead.website })
+        const r = await enrichLead({ name: lead.name, website: lead.website }, { useFinder })
         await (prisma as any).providerLead.update({
           where: { id: lead.id },
           data: {

@@ -947,7 +947,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'face-to-face',
     icon:    CalendarDays,
     title:   'Face-to-face training',
-    summary: 'Log your in-person group sessions, mark attendance, flag who is owed pay, and produce a monthly payroll report',
+    summary: 'Log in-person sessions, mark attendance and competency, track renewals in a compliance matrix, keep CQC evidence, and run a payroll report',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it's for">
@@ -959,7 +959,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Training</strong> and open the <strong>Face-to-face Training</strong> tab, then click <strong>New session</strong> (or click a day in the calendar to open that day and add a session for it).</Step>
             <Step n={2}>Choose the <strong>training topic</strong> from the dropdown (the same modules you can assign digitally). The title fills in from the module; you can edit it.</Step>
-            <Step n={3}>Set the <strong>date</strong> and the <strong>session length</strong> (1 to 5 hours), and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer. The length sets how many hours off-shift attendees are owed on the payroll report.</Step>
+            <Step n={3}>Set the <strong>date</strong> and the <strong>session length</strong> (1 to 5 hours), and record <strong>who delivered it</strong>, either a staff member or a free-typed name for an external trainer. The length sets how many hours off-shift attendees are owed on the payroll report. Optionally add a <strong>start/end time</strong>, <strong>location/room</strong> and <strong>capacity</strong>. To schedule a regular session, use <strong>Repeat</strong> to create a monthly series in one go (each copy carries the same details and allocated staff). Use <strong>Renews after</strong> if the training expires (e.g. 12 months) so the compliance matrix can track it.</Step>
             <Step n={4}>Tick the <strong>staff who were allocated</strong> to attend. For anyone who attended <strong>off shift</strong>, also tick <strong>Owed pay</strong>, this marks them as payable and owes them the session hours on the report. Leave it unticked for anyone who was on shift (already paid); by default nobody is owed. Then <strong>Create session</strong>. Add notes if useful.</Step>
           </div>
         </SectionBlock>
@@ -1004,6 +1004,30 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li><strong>Annual training</strong>: annual modules allocated and completed in the month.</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">Only face-to-face training carries a pay figure, adhoc and annual are for the training record, not payroll.</p>
+          <p className="mt-2 text-sm text-neutral-mid">If you set a <strong>training hourly rate</strong> on a staff member (edit their profile under Staff), the report also costs their owed hours into a <strong>&pound; total</strong>. Use <strong>CSV</strong> instead of the PDF to export the same data as a spreadsheet for your payroll system.</p>
+        </SectionBlock>
+        <SectionBlock title="The compliance matrix">
+          <p className="text-sm text-neutral-mid">
+            Switch the Face-to-face tab from <strong>Calendar</strong> to <strong>Matrix</strong> for an at-a-glance compliance grid: every staff member down the side, every training topic across the top. Each cell shows their latest <strong>attended</strong> session for that topic, colour-coded:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-green-700">In date</strong> — trained and still valid (or no expiry set).</li>
+            <li><strong className="text-amber-700">Due soon</strong> — valid but expires within 60 days.</li>
+            <li><strong className="text-red-600">Overdue</strong> — past its renewal date (set <em>Renews after</em> on the session to drive this).</li>
+            <li><strong className="text-red-600">Missing</strong> — the topic is mandatory for their role and they don&apos;t hold it.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Use <strong>Mandatory by role</strong> to choose which training each job role must hold. Anyone in that role without it is flagged <strong>missing</strong>, so you can see your gaps before an inspection. The chips at the top total your overdue, due-soon and missing counts.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Evidence for CQC (sign-in sheets, files, certificates)">
+          <p className="text-sm text-neutral-mid">Open a session and use the <strong>Evidence</strong> panel to build a defensible record:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Sign-in sheet</strong>: download a printable register (session details + a signature line per allocated staff member). Staff sign on the day, then you scan it.</li>
+            <li><strong>Upload file</strong>: attach the signed scan, photos, or the trainer&apos;s certificate (PDF or image, up to 15 MB). Files are stored privately and open with a click.</li>
+            <li><strong>Competency</strong>: for each attendee, record <em>competent</em> or <em>not yet competent</em> where the training was practically assessed.</li>
+            <li><strong>Certificate</strong>: generate a branded completion certificate for any attendee for their own record.</li>
+          </ul>
         </SectionBlock>
         <SectionBlock title="Reminding allocated staff by email">
           <p className="text-sm text-neutral-mid">

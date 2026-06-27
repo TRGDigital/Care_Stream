@@ -45,7 +45,9 @@ const PLANS = [
       'Advanced analytics + CQC Readiness Report',
       'Policy gap detection',
       'Face-to-face training and matrix',
-      'Training payroll report',
+      'Renewal tracking and mandatory-by-role gaps',
+      'CQC evidence pack (sign-in sheets, certificates)',
+      'Training payroll report (PDF, CSV and £ costing)',
     ],
   },
   {
@@ -110,7 +112,10 @@ const MATRIX: Group[] = [
     section: 'Training and audit intelligence',
     rows: [
       { label: 'Face-to-face training and matrix', values: [false, true, true] },
-      { label: 'Training payroll report',          values: [false, true, true] },
+      { label: 'Training compliance matrix (renewals + gaps)', values: [false, true, true] },
+      { label: 'Mandatory training by role',       values: [false, true, true] },
+      { label: 'CQC evidence pack (sign-in sheets, certificates, files)', values: [false, true, true] },
+      { label: 'Training payroll report (PDF + CSV, £ costing)', values: [false, true, true] },
       { label: 'Build your own audits',            values: [false, false, true] },
       { label: 'Effectiveness of training',        values: [false, false, true] },
       { label: 'Audits linked to training',        values: [false, false, true] },

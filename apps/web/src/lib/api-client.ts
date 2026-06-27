@@ -629,12 +629,12 @@ export function createApiClient(token: string) {
         const qs = new URLSearchParams()
         if (from) qs.set('from', from)
         if (to)   qs.set('to', to)
-        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
+        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; renews_after_months: number | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
       },
       session: (id: string) => apiFetch<{ session: any }>(`/face-to-face/sessions/${id}`, token),
-      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; repeat_monthly?: number; notes?: string; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
+      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; renews_after_months?: number | null; repeat_monthly?: number; notes?: string; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
         apiFetch<{ session: { id: string }; series_count?: number }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
-      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; notes?: string | null; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
+      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; renews_after_months?: number | null; notes?: string | null; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
         apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       trainingMonth: (month: string) => apiFetch<{
         month: string
@@ -644,6 +644,15 @@ export function createApiClient(token: string) {
       }>(`/face-to-face/training-month?month=${encodeURIComponent(month)}`, token),
       payrollEmail: (to: string, month_label: string, pdf_base64: string) =>
         apiFetch<{ sent: string }>('/face-to-face/payroll/email', token, { method: 'POST', body: JSON.stringify({ to, month_label, pdf_base64 }) }),
+      matrix: () => apiFetch<{
+        topics: Array<{ key: string; label: string; module_id: string | null }>
+        staff:  Array<{ user_id: string; name: string; job_role: string | null; cells: Array<{ topic_key: string; status: 'in_date' | 'due_soon' | 'overdue' | 'missing' | 'none'; last_date: string | null; valid_until: string | null }> }>
+        mandatory: Array<{ id: string; job_role: string; module_id: string; module_name: string }>
+        summary: { overdue: number; due_soon: number; missing: number }
+      }>('/face-to-face/matrix', token),
+      mandatory: () => apiFetch<{ items: Array<{ id: string; job_role: string; module_id: string; module_name: string }> }>('/face-to-face/mandatory', token),
+      setMandatory: (items: Array<{ job_role: string; module_id: string }>) =>
+        apiFetch<{ count: number }>('/face-to-face/mandatory', token, { method: 'PUT', body: JSON.stringify({ items }) }),
       deleteSession: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'DELETE' }),
       markAttendance: (id: string, marks: Array<{ user_id: string; status: 'allocated' | 'attended' | 'absent' }>) =>

@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api-client'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
   CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle, FileText, Download, Loader2,
+  CalendarDays, Grid3x3, Settings2,
 } from 'lucide-react'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -17,7 +18,7 @@ const prettyDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 type Staff = { id: string; name: string; job_role: string | null; is_active?: boolean }
 type Module = { id: string; name: string; category: string; ready?: boolean }
-type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
+type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; renews_after_months: number | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
 
 export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
@@ -37,6 +38,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
   const [dayDetail, setDayDetail] = useState<string | null>(null)   // open the per-day overlay
+  const [view, setView] = useState<'calendar' | 'matrix'>('calendar')   // calendar vs compliance matrix
 
   // Adhoc + annual training for the visible month (powers the calendar overlay).
   useEffect(() => {
@@ -125,14 +127,19 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-neutral-mid">Log the in-person sessions you run, mark who attended, and send the digital module to anyone who missed.</p>
+        <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-sm font-semibold">
+          <button onClick={() => setView('calendar')} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'calendar' ? 'bg-teal text-white' : 'text-neutral-mid hover:text-teal'}`}><CalendarDays size={15} /> Calendar</button>
+          <button onClick={() => setView('matrix')} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'matrix' ? 'bg-teal text-white' : 'text-neutral-mid hover:text-teal'}`}><Grid3x3 size={15} /> Matrix</button>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setPayrollOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40"><FileText size={16} /> Payroll report</button>
           <button onClick={() => setEditing({ mode: 'new' })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={16} /> New session</button>
         </div>
       </div>
+
+      {view === 'matrix' && api && <F2FMatrixView api={api} modules={modules} staff={staff} />}
+
+      {view === 'calendar' && (<>
 
       {showPlanNudge && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -237,6 +244,8 @@ export function FaceToFaceManager({ token }: { token?: string }) {
           </div>
         )
       })()}
+
+      </>)}
 
       {payrollOpen && api && (
         <PayrollModal api={api} year={year} month={month} onClose={() => setPayrollOpen(false)} />
@@ -385,6 +394,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [endTime,   setEndTime]   = useState(initial?.end_time ?? '')
   const [location,  setLocation]  = useState(initial?.location ?? '')
   const [capacity,  setCapacity]  = useState(initial?.capacity != null ? String(initial.capacity) : '')
+  const [renewMonths, setRenewMonths] = useState(initial?.renews_after_months != null ? String(initial.renews_after_months) : '')
   const [repeatMonths, setRepeatMonths] = useState(0)   // additional monthly copies (new sessions only)
   const [attendees, setAttendees] = useState<Set<string>>(new Set())
   const [owedPay, setOwedPay] = useState<Set<string>>(new Set())
@@ -420,6 +430,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       end_time: endTime || null,
       location: location.trim() || null,
       capacity: capacity.trim() ? Number(capacity) : null,
+      renews_after_months: renewMonths ? Number(renewMonths) : null,
       notes: notes.trim() || undefined,
       attendee_ids: [...attendees],
       owed_pay_ids: [...owedPay],
@@ -488,6 +499,16 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
             <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Training room 2" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
         </div>
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Renews after</label>
+        <select value={renewMonths} onChange={e => setRenewMonths(e.target.value)} className="mb-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+          <option value="">No expiry</option>
+          <option value="6">6 months</option>
+          <option value="12">12 months (annual)</option>
+          <option value="24">24 months</option>
+          <option value="36">36 months</option>
+        </select>
+        <p className="mb-3 text-xs text-neutral-mid">If the training expires, set how long it stays valid. The compliance matrix then flags people as due soon or overdue.</p>
         {!initial && (
           <div className="mb-3">
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Repeat</label>
@@ -687,7 +708,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
 
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
           <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-600"><Trash2 size={14} /> Delete</button>
-          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, start_time: data.start_time ?? null, end_time: data.end_time ?? null, location: data.location ?? null, capacity: data.capacity ?? null, series_id: data.series_id ?? null, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
+          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, start_time: data.start_time ?? null, end_time: data.end_time ?? null, location: data.location ?? null, capacity: data.capacity ?? null, series_id: data.series_id ?? null, renews_after_months: data.renews_after_months ?? null, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
         </div>
       </div>
     </div>
@@ -887,6 +908,187 @@ function PayrollModal({ api, year, month, onClose }: {
               ))}</tbody>
             </table>
           )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Compliance matrix: staff × training topic, RAG status ────────────────────
+type MatrixData = Awaited<ReturnType<ReturnType<typeof createApiClient>['faceToFace']['matrix']>>
+
+const STATUS_STYLE: Record<string, { cls: string; glyph: string; label: string }> = {
+  in_date:  { cls: 'bg-green-100 text-green-700',                     glyph: '✓', label: 'In date' },
+  due_soon: { cls: 'bg-amber-100 text-amber-700',                    glyph: '⏳', label: 'Due soon' },
+  overdue:  { cls: 'bg-red-100 text-red-700',                        glyph: '✕', label: 'Overdue' },
+  missing:  { cls: 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-300', glyph: '!', label: 'Missing (required)' },
+  none:     { cls: 'bg-neutral-light/60 text-neutral-mid/50',        glyph: '·', label: 'Not recorded' },
+}
+
+function F2FMatrixView({ api, modules, staff }: {
+  api: ReturnType<typeof createApiClient>; modules: Module[]; staff: Staff[]
+}) {
+  const [data, setData] = useState<MatrixData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [configOpen, setConfigOpen] = useState(false)
+
+  function load() { setLoading(true); api.faceToFace.matrix().then(setData).catch(() => setData(null)).finally(() => setLoading(false)) }
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Roles available to configure = those held by staff plus any already configured.
+  const roles = useMemo(() => {
+    const s = new Set<string>()
+    for (const u of staff) if (u.job_role) s.add(u.job_role)
+    for (const m of (data?.mandatory ?? [])) if (m.job_role) s.add(m.job_role)
+    return [...s].sort((a, b) => a.localeCompare(b))
+  }, [staff, data])
+
+  const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''
+  const cellTitle = (topic: string, c: any) => {
+    const s = STATUS_STYLE[c.status]?.label ?? c.status
+    if (c.status === 'in_date') return `${topic}: ${s}${c.valid_until ? ` (until ${fmt(c.valid_until)})` : ' (no expiry)'}${c.last_date ? ` · last ${fmt(c.last_date)}` : ''}`
+    if (c.status === 'due_soon' || c.status === 'overdue') return `${topic}: ${s}${c.valid_until ? ` ${fmt(c.valid_until)}` : ''}${c.last_date ? ` · last ${fmt(c.last_date)}` : ''}`
+    return `${topic}: ${s}`
+  }
+
+  if (loading) return <p className="py-8 text-center text-sm text-neutral-mid">Loading the matrix…</p>
+  if (!data) return <p className="py-8 text-center text-sm text-neutral-mid">Could not load the matrix.</p>
+
+  const { topics, staff: rows, summary } = data
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-red-100 px-2.5 py-1 font-semibold text-red-700">{summary.overdue} overdue</span>
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-700">{summary.due_soon} due soon</span>
+          <span className="rounded-full bg-red-50 px-2.5 py-1 font-semibold text-red-600 ring-1 ring-inset ring-red-200">{summary.missing} missing</span>
+        </div>
+        <button onClick={() => setConfigOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40"><Settings2 size={15} /> Mandatory by role</button>
+      </div>
+
+      <p className="mb-3 text-xs text-neutral-mid">Each cell shows the staff member&apos;s latest <strong>attended</strong> face-to-face training for that topic. Set a renewal period on a session to track expiry, and mark training mandatory by role to flag who&apos;s missing it.</p>
+
+      {topics.length === 0 ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-neutral-mid">No training topics yet. Run a session (and mark attendance), or set mandatory training by role, and it will appear here.</div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="sticky left-0 z-10 border-b border-gray-100 bg-neutral-light/60 px-3 py-2 text-left text-xs font-semibold text-neutral-mid">Staff</th>
+                {topics.map(t => (
+                  <th key={t.key} className="border-b border-l border-gray-100 bg-neutral-light/40 px-2 py-2 text-center align-bottom text-[11px] font-semibold text-neutral-dark" style={{ minWidth: 64, maxWidth: 96 }}>
+                    <span className="block leading-tight">{t.label}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(r => {
+                const cellByKey = new Map(r.cells.map(c => [c.topic_key, c]))
+                return (
+                  <tr key={r.user_id} className="hover:bg-neutral-light/20">
+                    <td className="sticky left-0 z-10 border-b border-gray-50 bg-white px-3 py-1.5">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{r.name}</p>
+                      {r.job_role && <p className="truncate text-[11px] text-neutral-mid">{r.job_role}</p>}
+                    </td>
+                    {topics.map(t => {
+                      const c: any = cellByKey.get(t.key) ?? { status: 'none' }
+                      const st = STATUS_STYLE[c.status] ?? STATUS_STYLE.none
+                      return (
+                        <td key={t.key} className="border-b border-l border-gray-50 px-1 py-1 text-center">
+                          <span title={cellTitle(t.label, c)} className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold ${st.cls}`}>{st.glyph}</span>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
+        {(['in_date', 'due_soon', 'overdue', 'missing', 'none'] as const).map(k => (
+          <span key={k} className="flex items-center gap-1.5"><span className={`inline-flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold ${STATUS_STYLE[k].cls}`}>{STATUS_STYLE[k].glyph}</span>{STATUS_STYLE[k].label}</span>
+        ))}
+      </div>
+
+      {configOpen && (
+        <MandatoryConfigModal api={api} roles={roles} modules={modules} initial={data.mandatory} onClose={() => setConfigOpen(false)} onSaved={() => { setConfigOpen(false); load() }} />
+      )}
+    </div>
+  )
+}
+
+// ─── Mandatory training by role ───────────────────────────────────────────────
+function MandatoryConfigModal({ api, roles, modules, initial, onClose, onSaved }: {
+  api: ReturnType<typeof createApiClient>; roles: string[]; modules: Module[]
+  initial: Array<{ job_role: string; module_id: string }>; onClose: () => void; onSaved: () => void
+}) {
+  // role -> set of required module ids
+  const [sel, setSel] = useState<Map<string, Set<string>>>(() => {
+    const m = new Map<string, Set<string>>()
+    for (const r of initial) { if (!m.has(r.job_role)) m.set(r.job_role, new Set()); m.get(r.job_role)!.add(r.module_id) }
+    return m
+  })
+  const [role, setRole] = useState(roles[0] ?? '')
+  const [saving, setSaving] = useState(false)
+  const [filter, setFilter] = useState('')
+
+  const current = sel.get(role) ?? new Set<string>()
+  const toggle = (moduleId: string) => setSel(prev => {
+    const next = new Map(prev)
+    const set = new Set(next.get(role) ?? [])
+    set.has(moduleId) ? set.delete(moduleId) : set.add(moduleId)
+    next.set(role, set)
+    return next
+  })
+  const shown = modules.filter(m => m.name.toLowerCase().includes(filter.toLowerCase()))
+
+  async function save() {
+    setSaving(true)
+    const items: Array<{ job_role: string; module_id: string }> = []
+    for (const [r, set] of sel) for (const id of set) items.push({ job_role: r, module_id: id })
+    try { await api.faceToFace.setMandatory(items); onSaved() } catch { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-neutral-dark">Mandatory training by role</h2>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+        <p className="mb-4 text-sm text-neutral-mid">Choose the face-to-face training each role must hold. Anyone in that role without it (in date) is flagged <strong className="text-red-600">missing</strong> on the matrix.</p>
+
+        {roles.length === 0 ? (
+          <p className="rounded-lg bg-neutral-light/50 px-3 py-3 text-sm text-neutral-mid">Add job roles to your staff first, then you can set their mandatory training here.</p>
+        ) : (
+          <>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Role</label>
+            <select value={role} onChange={e => setRole(e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+              {roles.map(r => <option key={r} value={r}>{r}{(sel.get(r)?.size ?? 0) > 0 ? ` (${sel.get(r)!.size})` : ''}</option>)}
+            </select>
+
+            <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter training…" className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
+            <div className="mb-4 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-gray-100 p-2">
+              {shown.length === 0 ? <p className="p-2 text-xs text-neutral-mid">No training modules found.</p> : shown.map(m => (
+                <label key={m.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
+                  <input type="checkbox" checked={current.has(m.id)} onChange={() => toggle(m.id)} className="accent-teal" />
+                  <span className="truncate text-neutral-dark">{m.name}</span>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Cancel</button>
+          <button onClick={save} disabled={saving || roles.length === 0} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? 'Saving…' : 'Save'}</button>
         </div>
       </div>
     </div>

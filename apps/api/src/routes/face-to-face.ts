@@ -86,6 +86,11 @@ function cleanCapacity(v: any): number | null {
 function cleanText(v: any, max: number): string | null {
   return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null
 }
+// Renewal period in months (1-60), or null for "no expiry".
+function cleanMonths(v: any): number | null {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) && n > 0 ? Math.min(60, n) : null
+}
 // Same calendar day-of-month, n months on (UTC). Clamps to month length (e.g. 31 Jan -> 28/29 Feb).
 function addMonthsUTC(d: Date, n: number): Date {
   const y = d.getUTCFullYear(), m = d.getUTCMonth(), day = d.getUTCDate()
@@ -109,6 +114,7 @@ function summariseSession(s: any) {
     location: s.location ?? null,
     capacity: s.capacity ?? null,
     series_id: s.series_id ?? null,
+    renews_after_months: s.renews_after_months ?? null,
     notes: s.notes ?? null,
     reminder_sent_at: s.reminder_sent_at ?? null,
     allocated: att.length,
@@ -217,6 +223,7 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
       location: cleanText(b.location, 160),
       capacity: cleanCapacity(b.capacity),
       series_id: seriesId,
+      renews_after_months: cleanMonths(b.renews_after_months),
       notes: cleanText(b.notes, 2000),
       created_by: uid(req),
     }
@@ -254,6 +261,7 @@ faceToFaceRouter.patch('/sessions/:id', requireAdmin, async (req: Request, res: 
     if (b.end_time !== undefined) data.end_time = cleanTime(b.end_time)
     if (b.location !== undefined) data.location = cleanText(b.location, 160)
     if (b.capacity !== undefined) data.capacity = cleanCapacity(b.capacity)
+    if (b.renews_after_months !== undefined) data.renews_after_months = cleanMonths(b.renews_after_months)
     if (b.module_id !== undefined) {
       if (b.module_id) {
         const m = await (prisma as any).trainingModule.findFirst({ where: { id: String(b.module_id), is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true } })
@@ -567,4 +575,122 @@ faceToFaceRouter.post('/payroll/email', requireAdmin, async (req: Request, res: 
     await sendF2FPayrollEmail({ to, orgName: tenant?.name ?? 'Your service', monthLabel, pdfBase64: pdfBase64.replace(/^data:application\/pdf;base64,/, '') })
     ok(res, { sent: to })
   } catch (e: any) { err(res, 'SEND_FAILED', e?.message ?? 'Could not send the report.', 500) }
+})
+
+// ─── GET /face-to-face/matrix ─────────────────────────────────────────────────
+// Compliance grid: each active staff member x each training topic, with a RAG
+// status from their latest ATTENDED session and that topic's renewal period.
+//   in_date  — attended and still valid (or no expiry set)
+//   due_soon — valid but expires within 60 days
+//   overdue  — past its renewal date
+//   missing  — never attended a topic that's MANDATORY for their role
+//   none     — never attended, not mandatory for their role
+faceToFaceRouter.get('/matrix', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const [sessions, staff, mandatory] = await Promise.all([
+      (prisma as any).faceToFaceSession.findMany({
+        where: { tenant_id: tenantId },
+        select: { module_id: true, title: true, session_date: true, renews_after_months: true,
+                  attendance: { where: { status: 'attended' }, select: { user_id: true } } },
+      }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true, is_reviewer: false }, select: { id: true, name: true, job_role: true } }),
+      (prisma as any).faceToFaceMandatory.findMany({ where: { tenant_id: tenantId } }),
+    ])
+
+    const topicKey = (module_id: string | null, title: string) => module_id ?? `t:${(title || '').trim().toLowerCase()}`
+    const topicMeta = new Map<string, { label: string; module_id: string | null; latest: number }>()
+    // best.get(userId).get(topicKey) = { date, renews }
+    const best = new Map<string, Map<string, { date: Date; renews: number | null }>>()
+
+    for (const s of sessions as any[]) {
+      const key = topicKey(s.module_id, s.title)
+      const ts = new Date(s.session_date).getTime()
+      const meta = topicMeta.get(key)
+      if (!meta || ts > meta.latest) topicMeta.set(key, { label: s.title || 'Training', module_id: s.module_id ?? null, latest: ts })
+      for (const a of (s.attendance ?? [])) {
+        let m = best.get(a.user_id); if (!m) { m = new Map(); best.set(a.user_id, m) }
+        const cur = m.get(key)
+        if (!cur || ts > cur.date.getTime()) m.set(key, { date: new Date(s.session_date), renews: s.renews_after_months ?? null })
+      }
+    }
+
+    // Mandatory modules become topics too (so a never-run requirement still shows a column).
+    const mandatoryByRole = new Map<string, Set<string>>()
+    for (const m of mandatory as any[]) {
+      if (!topicMeta.has(m.module_id)) topicMeta.set(m.module_id, { label: m.module_name, module_id: m.module_id, latest: 0 })
+      let set = mandatoryByRole.get(m.job_role); if (!set) { set = new Set(); mandatoryByRole.set(m.job_role, set) }
+      set.add(m.module_id)
+    }
+
+    const topics = [...topicMeta.entries()].map(([key, v]) => ({ key, label: v.label, module_id: v.module_id }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+
+    const now = Date.now()
+    const SOON_MS = 60 * 24 * 3600 * 1000
+    const cellFor = (userId: string, t: { key: string; module_id: string | null }, jobRole: string | null) => {
+      const rec = best.get(userId)?.get(t.key)
+      if (rec) {
+        if (rec.renews == null) return { topic_key: t.key, status: 'in_date', last_date: rec.date, valid_until: null }
+        const validUntil = addMonthsUTC(rec.date, rec.renews)
+        const vt = validUntil.getTime()
+        const status = vt < now ? 'overdue' : (vt - now <= SOON_MS ? 'due_soon' : 'in_date')
+        return { topic_key: t.key, status, last_date: rec.date, valid_until: validUntil }
+      }
+      const required = !!(t.module_id && mandatoryByRole.get(jobRole || '')?.has(t.module_id))
+      return { topic_key: t.key, status: required ? 'missing' : 'none', last_date: null, valid_until: null }
+    }
+
+    const rows = (staff as any[])
+      .map(u => ({ user_id: u.id, name: u.name, job_role: u.job_role ?? null, cells: topics.map(t => cellFor(u.id, t, u.job_role)) }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+
+    let overdue = 0, due_soon = 0, missing = 0
+    for (const r of rows) for (const c of r.cells) { if (c.status === 'overdue') overdue++; else if (c.status === 'due_soon') due_soon++; else if (c.status === 'missing') missing++ }
+
+    ok(res, {
+      topics, staff: rows,
+      mandatory: (mandatory as any[]).map(m => ({ id: m.id, job_role: m.job_role, module_id: m.module_id, module_name: m.module_name })),
+      summary: { overdue, due_soon, missing },
+    })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not build the matrix.', 500) }
+})
+
+// ─── GET/PUT /face-to-face/mandatory ──────────────────────────────────────────
+// Mandatory-training-by-role config. PUT replaces the whole set.
+faceToFaceRouter.get('/mandatory', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const items = await (prisma as any).faceToFaceMandatory.findMany({ where: { tenant_id: tenantId }, orderBy: [{ job_role: 'asc' }, { module_name: 'asc' }] })
+    ok(res, { items: (items as any[]).map(m => ({ id: m.id, job_role: m.job_role, module_id: m.module_id, module_name: m.module_name })) })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message, 500) }
+})
+
+faceToFaceRouter.put('/mandatory', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const raw = Array.isArray(req.body?.items) ? req.body.items : []
+  try {
+    // Validate the referenced modules and snapshot their names. Dedupe by role+module.
+    const moduleIds = [...new Set(raw.map((r: any) => String(r.module_id)).filter(Boolean))]
+    const modules = moduleIds.length
+      ? await (prisma as any).trainingModule.findMany({ where: { id: { in: moduleIds }, OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true } })
+      : []
+    const nameById = new Map((modules as any[]).map(m => [m.id, m.name]))
+    const seen = new Set<string>()
+    const rows: any[] = []
+    for (const r of raw) {
+      const job_role = String(r.job_role ?? '').trim().slice(0, 100)
+      const module_id = String(r.module_id ?? '')
+      if (!job_role || !nameById.has(module_id)) continue
+      const k = `${job_role}::${module_id}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      rows.push({ tenant_id: tenantId, job_role, module_id, module_name: nameById.get(module_id) })
+    }
+    await (prisma as any).$transaction([
+      (prisma as any).faceToFaceMandatory.deleteMany({ where: { tenant_id: tenantId } }),
+      ...(rows.length ? [(prisma as any).faceToFaceMandatory.createMany({ data: rows })] : []),
+    ])
+    ok(res, { count: rows.length })
+  } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not save.', 500) }
 })

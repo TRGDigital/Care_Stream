@@ -833,18 +833,20 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
           <p style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
         </div>
 
-        <div ref={certRef} style={{ width: 1040, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
-          <div style={{ boxSizing: 'border-box', border: '10px solid #0d9488', padding: '72px 64px', textAlign: 'center' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" style={{ height: 48, marginBottom: 18 }} />
-            <div style={{ fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: '#0d9488', fontWeight: 700 }}>Certificate of Training</div>
-            <div style={{ margin: '22px 0 8px', fontSize: 15, color: '#6b7280' }}>This certifies that</div>
-            <div style={{ fontSize: 44, fontWeight: 700, color: '#111827', lineHeight: 1.2 }}>{certFor?.name ?? ''}</div>
-            <div style={{ margin: '18px 0 6px', fontSize: 16, color: '#374151' }}>has attended the face-to-face training</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: '#0d9488', lineHeight: 1.3 }}>{data.title}</div>
-            <div style={{ marginTop: 16, fontSize: 15, color: '#374151' }}>{prettyDate(data.session_date)} &middot; {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</div>
-            {certFor?.competency === 'competent' && <div style={{ marginTop: 14, fontSize: 15, fontWeight: 700, color: '#0d9488' }}>Assessed as competent</div>}
-            <div style={{ marginTop: 40, fontSize: 13, color: '#9ca3af' }}>{orgName}</div>
+        <div ref={certRef} style={{ width: 1040, height: 735, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
+          <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', border: '12px solid #0d9488', display: 'table' }}>
+            <div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', padding: '0 72px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-color.png" alt="CareStream" style={{ height: 54, marginBottom: 22 }} />
+              <div style={{ fontSize: 18, letterSpacing: 4, textTransform: 'uppercase', color: '#0d9488', fontWeight: 700 }}>Certificate of Training</div>
+              <div style={{ margin: '26px 0 10px', fontSize: 16, color: '#6b7280' }}>This certifies that</div>
+              <div style={{ fontSize: 50, fontWeight: 700, color: '#111827', lineHeight: 1.2 }}>{certFor?.name ?? ''}</div>
+              <div style={{ margin: '22px 0 8px', fontSize: 17, color: '#374151' }}>has attended the face-to-face training</div>
+              <div style={{ fontSize: 30, fontWeight: 700, color: '#0d9488', lineHeight: 1.3 }}>{data.title}</div>
+              <div style={{ marginTop: 20, fontSize: 16, color: '#374151' }}>{prettyDate(data.session_date)} &middot; {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</div>
+              {certFor?.competency === 'competent' && <div style={{ marginTop: 16, fontSize: 16, fontWeight: 700, color: '#0d9488' }}>Assessed as competent</div>}
+              <div style={{ marginTop: 48, fontSize: 14, color: '#9ca3af' }}>{orgName}</div>
+            </div>
           </div>
         </div>
       </div>

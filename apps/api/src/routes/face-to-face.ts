@@ -16,6 +16,8 @@ import { requireAdmin } from '../middleware/auth'
 import { notifyStaffAllocation, getUsers } from '../lib/notify'
 import { sendFaceToFaceReminderEmail } from '../services/email/outbound'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
+import { evidenceUploadMiddleware } from '../middleware/upload'
+import { uploadEvidenceFile, downloadFile, deleteFile } from '../services/storage/s3'
 
 export const faceToFaceRouter = Router()
 
@@ -147,7 +149,7 @@ faceToFaceRouter.get('/sessions/:id', requireAdmin, async (req: Request, res: Re
   try {
     const s = await (prisma as any).faceToFaceSession.findFirst({
       where: { id: String(req.params.id), tenant_id: tenantId },
-      include: { attendance: true },
+      include: { attendance: true, evidence: true },
     })
     if (!s) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
 
@@ -164,14 +166,19 @@ faceToFaceRouter.get('/sessions/:id', requireAdmin, async (req: Request, res: Re
       job_role: uMap.get(a.user_id)?.job_role ?? null,
       status: a.status,
       owed_pay: a.owed_pay,
+      competency: a.competency ?? 'not_assessed',
       module_assigned_at: a.module_assigned_at,
     })).sort((a: any, b: any) => a.name.localeCompare(b.name))
+
+    const evidence = (s.evidence ?? []).map((e: any) => ({ id: e.id, file_name: e.file_name, file_type: e.file_type, size_bytes: e.size_bytes, created_at: e.created_at }))
+      .sort((a: any, b: any) => String(b.created_at).localeCompare(String(a.created_at)))
 
     ok(res, {
       session: {
         ...summariseSession(s),
         delivered_by_name_resolved: s.delivered_by_user_id ? (uMap.get(s.delivered_by_user_id)?.name ?? null) : s.delivered_by_name,
         attendance,
+        evidence,
       },
     })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
@@ -307,7 +314,9 @@ faceToFaceRouter.delete('/sessions/:id', requireAdmin, async (req: Request, res:
 })
 
 // ─── POST /face-to-face/sessions/:id/attendance ───────────────────────────────
-// body: { marks: [{ user_id, status }] }  — status in allocated|attended|absent
+// body: { marks: [{ user_id, status?, competency? }] } — status in allocated|attended|absent;
+// competency in not_assessed|competent|not_yet_competent. Either field may be set per mark.
+const COMPETENCIES = ['not_assessed', 'competent', 'not_yet_competent']
 faceToFaceRouter.post('/sessions/:id/attendance', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = tid(req)
   const marks = Array.isArray(req.body?.marks) ? req.body.marks : []
@@ -316,11 +325,14 @@ faceToFaceRouter.post('/sessions/:id/attendance', requireAdmin, async (req: Requ
     if (!session) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
 
     for (const m of marks) {
-      const status = STATUSES.includes(m?.status) ? m.status : null
-      if (!status || !m?.user_id) continue
+      if (!m?.user_id) continue
+      const data: any = {}
+      if (STATUSES.includes(m?.status)) data.status = m.status
+      if (COMPETENCIES.includes(m?.competency)) data.competency = m.competency
+      if (Object.keys(data).length === 0) continue
       await (prisma as any).faceToFaceAttendance.updateMany({
         where: { session_id: session.id, user_id: String(m.user_id) },
-        data:  { status },
+        data,
       })
     }
     ok(res, { updated: true })
@@ -693,4 +705,53 @@ faceToFaceRouter.put('/mandatory', requireAdmin, async (req: Request, res: Respo
     ])
     ok(res, { count: rows.length })
   } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not save.', 500) }
+})
+
+// ─── Session evidence files (CQC: signed sheets, photos, trainer certs) ───────
+const EVIDENCE_EXT: Record<string, string> = {
+  'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png',
+  'image/webp': 'webp', 'image/gif': 'gif', 'image/heic': 'heic',
+}
+
+// POST /face-to-face/sessions/:id/evidence  (multipart: field "file")
+faceToFaceRouter.post('/sessions/:id/evidence', requireAdmin, evidenceUploadMiddleware, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) { err(res, 'NO_FILE', 'No file was uploaded.', 400); return }
+  try {
+    const session = await (prisma as any).faceToFaceSession.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } })
+    if (!session) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
+    const ext = EVIDENCE_EXT[file.mimetype] ?? (file.originalname.split('.').pop()?.toLowerCase() || 'bin')
+    const key = `${randomUUID()}.${ext}`
+    const s3Key = await uploadEvidenceFile({ tenantId, sessionId: session.id, key, buffer: file.buffer, mimeType: file.mimetype })
+    const ev = await (prisma as any).faceToFaceEvidence.create({
+      data: { tenant_id: tenantId, session_id: session.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: file.mimetype, size_bytes: file.size ?? 0, uploaded_by: uid(req) },
+    })
+    ok(res, { evidence: { id: ev.id, file_name: ev.file_name, file_type: ev.file_type, size_bytes: ev.size_bytes, created_at: ev.created_at } })
+  } catch (e: any) { err(res, 'UPLOAD_FAILED', e?.message ?? 'Could not upload the file.', 500) }
+})
+
+// GET /face-to-face/evidence/:id  — authenticated stream of the file
+faceToFaceRouter.get('/evidence/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const ev = await (prisma as any).faceToFaceEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+    if (!ev) { err(res, 'NOT_FOUND', 'File not found.', 404); return }
+    const buf = await downloadFile(ev.s3_key)
+    res.setHeader('Content-Type', ev.file_type || 'application/octet-stream')
+    res.setHeader('Content-Disposition', `inline; filename="${ev.file_name.replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
+    res.send(buf)
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not fetch the file.', 500) }
+})
+
+// DELETE /face-to-face/evidence/:id
+faceToFaceRouter.delete('/evidence/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const ev = await (prisma as any).faceToFaceEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+    if (!ev) { err(res, 'NOT_FOUND', 'File not found.', 404); return }
+    await deleteFile(ev.s3_key)
+    await (prisma as any).faceToFaceEvidence.delete({ where: { id: ev.id } })
+    ok(res, { deleted: true })
+  } catch (e: any) { err(res, 'DELETE_FAILED', e?.message ?? 'Could not delete the file.', 500) }
 })

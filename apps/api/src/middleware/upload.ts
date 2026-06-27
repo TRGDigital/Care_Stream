@@ -60,6 +60,30 @@ const imageMulter = multer({
   },
 })
 
+// ─── Evidence upload (face-to-face training evidence: scans, photos, certs) ───
+const ALLOWED_EVIDENCE_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic'])
+const MAX_EVIDENCE_SIZE     = 15 * 1024 * 1024  // 15 MB
+
+const evidenceMulter = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_EVIDENCE_SIZE },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_EVIDENCE_EXT.has('.' + (file.originalname.split('.').pop()?.toLowerCase() ?? ''))) {
+      cb(new Error('INVALID_EVIDENCE_TYPE')); return
+    }
+    cb(null, true)
+  },
+})
+
+export function evidenceUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
+  evidenceMulter.single('file')(req, res, (multerErr) => {
+    if (!multerErr) { if (req.file) req.file.originalname = fixUtf8Filename(req.file.originalname); next(); return }
+    if (multerErr.message === 'INVALID_EVIDENCE_TYPE') { err(res, 'INVALID_EVIDENCE_TYPE', 'Only PDF or image files (JPG, PNG, WebP, GIF, HEIC) are accepted.'); return }
+    if (multerErr.code === 'LIMIT_FILE_SIZE') { err(res, 'FILE_TOO_LARGE', 'File must be under 15 MB.', 413); return }
+    err(res, 'UPLOAD_ERROR', 'File upload failed. Please try again.', 500)
+  })
+}
+
 export function imageUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
   imageMulter.single('image')(req, res, (multerErr) => {
     if (!multerErr) { next(); return }

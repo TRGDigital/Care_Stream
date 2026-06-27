@@ -119,6 +119,25 @@ export async function uploadPolicyFile(params: {
   return key
 }
 
+// Face-to-face training evidence (attendance-sheet scans, photos, trainer certs).
+// Private — served back only via the authenticated download endpoint.
+export async function uploadEvidenceFile(params: {
+  tenantId: string; sessionId: string; key: string; buffer: Buffer; mimeType: string
+}): Promise<string> {
+  const s3Key = `tenants/${params.tenantId}/face_to_face/${params.sessionId}/${params.key}`
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: params.mimeType,
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId, session_id: params.sessionId },
+  }))
+  return s3Key
+}
+
+export async function deleteFile(s3Key: string): Promise<void> {
+  if (USE_LOCAL) { try { fs.rmSync(localPath(s3Key), { force: true }) } catch { /* ignore */ } return }
+  try { await getS3().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: s3Key })) } catch { /* ignore */ }
+}
+
 // Store extracted plain text alongside the original — used by the query pipeline
 // for full-policy returns (§4.3) and by GET /policies/:id
 export async function uploadExtractedText(

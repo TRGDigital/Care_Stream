@@ -6,7 +6,7 @@ import { createApiClient } from '@/lib/api-client'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
   CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle, FileText, Download, Loader2,
-  CalendarDays, Grid3x3, Settings2,
+  CalendarDays, Grid3x3, Settings2, Upload, Award, Paperclip, ClipboardList, FileDown,
 } from 'lucide-react'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -580,12 +580,21 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
   api: ReturnType<typeof createApiClient>; staff: Staff[]; modules: Module[]; sessionId: string
   onClose: () => void; onChanged: () => void; onEdit: (s: Session) => void
 }) {
+  const { data: session } = useSession()
+  const orgName = (session?.user as any)?.tenantName ?? 'Your service'
   const [data, setData] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [assignMsg, setAssignMsg] = useState('')
   const [reminding, setReminding] = useState(false)
   const [remindMsg, setRemindMsg] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [evidenceMsg, setEvidenceMsg] = useState('')
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null)   // 'signin' | `cert:<userId>`
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const signInRef = useRef<HTMLDivElement>(null)
+  const certRef = useRef<HTMLDivElement>(null)
+  const [certFor, setCertFor] = useState<any>(null)   // attendee being certificated
 
   function load() { api.faceToFace.session(sessionId).then(d => setData(d.session)).catch(() => {}) }
   useEffect(() => { load() }, [sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -601,6 +610,43 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     setData((d: any) => ({ ...d, attendance: d.attendance.map((a: any) => a.user_id === userId ? { ...a, status } : a) }))
     await api.faceToFace.markAttendance(sessionId, [{ user_id: userId, status }]).catch(() => {})
     onChanged()
+  }
+  async function setCompetency(userId: string, competency: 'not_assessed' | 'competent' | 'not_yet_competent') {
+    setData((d: any) => ({ ...d, attendance: d.attendance.map((a: any) => a.user_id === userId ? { ...a, competency } : a) }))
+    await api.faceToFace.markAttendance(sessionId, [{ user_id: userId, competency }]).catch(() => {})
+  }
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    setUploading(true); setEvidenceMsg('')
+    try { await api.faceToFace.uploadEvidence(sessionId, file); load() }
+    catch (err: any) { setEvidenceMsg(err?.message ?? 'Upload failed.') }
+    finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
+  }
+  async function openEvidence(ev: any) {
+    try { const blob = await api.faceToFace.downloadEvidence(ev.id); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000) }
+    catch { setEvidenceMsg('Could not open the file.') }
+  }
+  async function deleteEvidence(ev: any) {
+    if (!confirm(`Delete "${ev.file_name}"?`)) return
+    await api.faceToFace.deleteEvidence(ev.id).catch(() => {}); load()
+  }
+  async function makeSignInSheet() {
+    if (!signInRef.current) return
+    setPdfBusy('signin'); setEvidenceMsg('')
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      await html2pdf().set({ margin: [10, 10, 12, 10], filename: `sign-in-${(data.title || 'session').replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } } as any).from(signInRef.current).save()
+    } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the sheet.') } finally { setPdfBusy(null) }
+  }
+  async function makeCertificate(a: any) {
+    setCertFor(a); setPdfBusy(`cert:${a.user_id}`); setEvidenceMsg('')
+    // Wait a tick for the hidden cert node to render with this attendee's details.
+    await new Promise(r => setTimeout(r, 50))
+    try {
+      if (!certRef.current) throw new Error('Certificate not ready.')
+      const html2pdf = (await import('html2pdf.js')).default
+      await html2pdf().set({ margin: 0, filename: `certificate-${a.name.replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } } as any).from(certRef.current).save()
+    } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the certificate.') } finally { setPdfBusy(null) }
   }
   async function bulk(status: 'attended' | 'absent') {
     const marks = (data?.attendance ?? []).map((a: any) => ({ user_id: a.user_id, status }))
@@ -650,15 +696,31 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         </div>
         <div className="space-y-1.5">
           {att.map((a: any) => (
-            <div key={a.user_id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-2">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-neutral-dark">{a.name}</p>
-                <p className="text-xs text-neutral-mid">{a.job_role || 'Staff'}{a.module_assigned_at ? ' · module sent' : ''}</p>
+            <div key={a.user_id} className="rounded-lg border border-gray-100 px-3 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-dark">{a.name}</p>
+                  <p className="text-xs text-neutral-mid">{a.job_role || 'Staff'}{a.module_assigned_at ? ' · module sent' : ''}</p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <button onClick={() => mark(a.user_id, 'attended')} title="Attended" className={`rounded-md border p-1.5 ${a.status === 'attended' ? 'border-green-400 bg-green-50 text-green-600' : 'border-gray-200 text-neutral-mid hover:border-green-300'}`}><CheckCircle2 size={14} /></button>
+                  <button onClick={() => mark(a.user_id, 'absent')} title="Missed" className={`rounded-md border p-1.5 ${a.status === 'absent' ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-200 text-neutral-mid hover:border-red-300'}`}><XCircle size={14} /></button>
+                  <button onClick={() => mark(a.user_id, 'allocated')} title="Not marked" className={`rounded-md border p-1.5 ${a.status === 'allocated' ? 'border-gray-300 bg-gray-50 text-neutral-dark' : 'border-gray-200 text-neutral-mid hover:border-gray-300'}`}><Circle size={14} /></button>
+                </div>
               </div>
-              <div className="flex shrink-0 gap-1">
-                <button onClick={() => mark(a.user_id, 'attended')} title="Attended" className={`rounded-md border p-1.5 ${a.status === 'attended' ? 'border-green-400 bg-green-50 text-green-600' : 'border-gray-200 text-neutral-mid hover:border-green-300'}`}><CheckCircle2 size={14} /></button>
-                <button onClick={() => mark(a.user_id, 'absent')} title="Missed" className={`rounded-md border p-1.5 ${a.status === 'absent' ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-200 text-neutral-mid hover:border-red-300'}`}><XCircle size={14} /></button>
-                <button onClick={() => mark(a.user_id, 'allocated')} title="Not marked" className={`rounded-md border p-1.5 ${a.status === 'allocated' ? 'border-gray-300 bg-gray-50 text-neutral-dark' : 'border-gray-200 text-neutral-mid hover:border-gray-300'}`}><Circle size={14} /></button>
+              {/* Competency outcome + certificate (CQC evidence) */}
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-neutral-mid">Competency</span>
+                  <select value={a.competency ?? 'not_assessed'} onChange={e => setCompetency(a.user_id, e.target.value as any)} className="rounded-md border border-gray-200 px-1.5 py-0.5 text-[11px] focus:border-teal focus:outline-none">
+                    <option value="not_assessed">Not assessed</option>
+                    <option value="competent">Competent</option>
+                    <option value="not_yet_competent">Not yet competent</option>
+                  </select>
+                </div>
+                <button onClick={() => makeCertificate(a)} disabled={pdfBusy === `cert:${a.user_id}`} title="Generate a completion certificate" className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                  {pdfBusy === `cert:${a.user_id}` ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />} Certificate
+                </button>
               </div>
             </div>
           ))}
@@ -675,6 +737,34 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
             {remindMsg && <span className="text-xs text-teal">{remindMsg}</span>}
           </div>
         )}
+
+        {/* CQC evidence: sign-in sheet, file uploads */}
+        <div className="mt-5 rounded-xl border border-gray-200 p-4">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ClipboardList size={15} className="text-teal" /> Evidence</p>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <button onClick={makeSignInSheet} disabled={pdfBusy === 'signin'} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 disabled:opacity-50">{pdfBusy === 'signin' ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} Sign-in sheet</button>
+            <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 disabled:opacity-50">{uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Upload file</button>
+            <input ref={fileInputRef} type="file" accept=".pdf,image/*" onChange={onPickFile} className="hidden" />
+          </div>
+          <p className="mb-2 text-xs text-neutral-mid">Print a sign-in sheet for staff to sign, then upload the scan. You can also attach photos or the trainer&apos;s certificate (PDF or image, up to 15 MB).</p>
+          {(data.evidence ?? []).length > 0 && (
+            <div className="space-y-1">
+              {data.evidence.map((ev: any) => (
+                <div key={ev.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-1.5">
+                  <button onClick={() => openEvidence(ev)} className="flex min-w-0 items-center gap-1.5 text-left text-sm text-neutral-dark hover:text-teal">
+                    <Paperclip size={13} className="shrink-0 text-neutral-mid" /><span className="truncate">{ev.file_name}</span>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-[11px] text-neutral-mid">{(ev.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+                    <button onClick={() => openEvidence(ev)} title="Open" className="text-neutral-mid hover:text-teal"><Download size={13} /></button>
+                    <button onClick={() => deleteEvidence(ev)} title="Delete" className="text-neutral-mid hover:text-red-500"><Trash2 size={13} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {evidenceMsg && <p className="mt-2 text-xs font-medium text-red-600">{evidenceMsg}</p>}
+        </div>
 
         {/* Send the digital module */}
         {!data.module_id ? (
@@ -709,6 +799,53 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
           <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-600"><Trash2 size={14} /> Delete</button>
           <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, start_time: data.start_time ?? null, end_time: data.end_time ?? null, location: data.location ?? null, capacity: data.capacity ?? null, series_id: data.series_id ?? null, renews_after_months: data.renews_after_months ?? null, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
+        </div>
+      </div>
+
+      {/* Hidden printables (sign-in sheet + certificate), captured by html2pdf */}
+      <div style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', zIndex: -1 }} onClick={e => e.stopPropagation()}>
+        <div ref={signInRef} style={{ width: 760, padding: 24, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2937', background: '#fff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0d9488', paddingBottom: 10, marginBottom: 10 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-color.png" alt="CareStream" style={{ height: 40 }} />
+            <div style={{ textAlign: 'right', fontSize: 12, color: '#374151' }}><strong>{orgName}</strong></div>
+          </div>
+          <h1 style={{ fontSize: 19, fontWeight: 800, margin: '2px 0 8px' }}>Training sign-in sheet</h1>
+          <table style={{ width: '100%', fontSize: 12, marginBottom: 12 }}><tbody>
+            <tr><td style={{ padding: '2px 0', color: '#6b7280', width: 110 }}>Training</td><td style={{ fontWeight: 700 }}>{data.title}</td></tr>
+            <tr><td style={{ padding: '2px 0', color: '#6b7280' }}>Date</td><td>{prettyDate(data.session_date)}{data.start_time ? ` · ${data.start_time}${data.end_time ? `–${data.end_time}` : ''}` : ''}</td></tr>
+            <tr><td style={{ padding: '2px 0', color: '#6b7280' }}>Location</td><td>{data.location || '—'}</td></tr>
+            <tr><td style={{ padding: '2px 0', color: '#6b7280' }}>Delivered by</td><td>{data.delivered_by_name_resolved || '—'}</td></tr>
+          </tbody></table>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead><tr>
+              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', width: 28 }}>#</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb' }}>Name</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb' }}>Job role</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', width: 220 }}>Signature</th>
+            </tr></thead>
+            <tbody>{att.map((a: any, i: number) => (
+              <tr key={a.user_id}><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{i + 1}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{a.name}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{a.job_role || ''}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }} /></tr>
+            ))}
+            {att.length === 0 && <tr><td colSpan={4} style={{ padding: '10px 8px', color: '#6b7280' }}>No staff allocated.</td></tr>}
+            </tbody>
+          </table>
+          <p style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
+        </div>
+
+        <div ref={certRef} style={{ width: 1040, height: 720, padding: 0, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', border: '10px solid #0d9488', padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-color.png" alt="CareStream" style={{ height: 48, marginBottom: 14 }} />
+            <div style={{ fontSize: 15, letterSpacing: 3, textTransform: 'uppercase', color: '#0d9488', fontWeight: 700 }}>Certificate of Training</div>
+            <div style={{ margin: '14px 0 6px', fontSize: 14, color: '#6b7280' }}>This certifies that</div>
+            <div style={{ fontSize: 40, fontWeight: 700, color: '#111827' }}>{certFor?.name ?? ''}</div>
+            <div style={{ margin: '14px 0 4px', fontSize: 15, color: '#374151' }}>has attended the face-to-face training</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#0d9488' }}>{data.title}</div>
+            <div style={{ marginTop: 12, fontSize: 14, color: '#374151' }}>{prettyDate(data.session_date)} · {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</div>
+            {certFor?.competency === 'competent' && <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: '#0d9488' }}>Assessed as competent</div>}
+            <div style={{ marginTop: 26, fontSize: 12, color: '#9ca3af' }}>{orgName}</div>
+          </div>
         </div>
       </div>
     </div>

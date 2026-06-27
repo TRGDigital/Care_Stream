@@ -655,8 +655,19 @@ export function createApiClient(token: string) {
         apiFetch<{ count: number }>('/face-to-face/mandatory', token, { method: 'PUT', body: JSON.stringify({ items }) }),
       deleteSession: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'DELETE' }),
-      markAttendance: (id: string, marks: Array<{ user_id: string; status: 'allocated' | 'attended' | 'absent' }>) =>
+      markAttendance: (id: string, marks: Array<{ user_id: string; status?: 'allocated' | 'attended' | 'absent'; competency?: 'not_assessed' | 'competent' | 'not_yet_competent' }>) =>
         apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}/attendance`, token, { method: 'POST', body: JSON.stringify({ marks }) }),
+      uploadEvidence: (id: string, file: File) => {
+        const fd = new FormData(); fd.append('file', file)
+        return apiFetch<{ evidence: { id: string; file_name: string; file_type: string; size_bytes: number; created_at: string } }>(`/face-to-face/sessions/${id}/evidence`, token, { method: 'POST', body: fd })
+      },
+      downloadEvidence: async (evidenceId: string): Promise<Blob> => {
+        const r = await fetch(`${API_URL}/face-to-face/evidence/${evidenceId}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok) throw new Error('Could not fetch the file.')
+        return r.blob()
+      },
+      deleteEvidence: (evidenceId: string) =>
+        apiFetch<{ deleted: boolean }>(`/face-to-face/evidence/${evidenceId}`, token, { method: 'DELETE' }),
       assignModule: (id: string, user_ids: string[]) =>
         apiFetch<{ assigned: number; newly_enrolled: number }>(`/face-to-face/sessions/${id}/assign-module`, token, { method: 'POST', body: JSON.stringify({ user_ids }) }),
       remind: (id: string, user_ids?: string[]) =>

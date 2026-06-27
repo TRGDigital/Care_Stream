@@ -907,6 +907,7 @@ model FaceToFaceSession {
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
   attendance           FaceToFaceAttendance[]
+  evidence             FaceToFaceEvidence[]
 
   @@index([tenant_id, session_date])
   @@map("face_to_face_sessions")
@@ -921,6 +922,7 @@ model FaceToFaceAttendance {
   user_id            String
   status             String   @default("allocated")    // allocated | attended | absent
   owed_pay           Boolean  @default(false)           // payroll: ticked when they attended off shift and are owed the session hours (default false = on shift, not owed)
+  competency         String   @default("not_assessed")  // not_assessed | competent | not_yet_competent (CQC evidence of practical sign-off)
   module_assigned_at DateTime?                          // set when the digital module was sent to them off the back of this session
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
@@ -929,6 +931,26 @@ model FaceToFaceAttendance {
   @@unique([session_id, user_id])
   @@index([tenant_id, user_id])
   @@map("face_to_face_attendance")
+}
+
+// A file attached to a face-to-face session as CQC evidence (signed attendance sheet
+// scan, photos, trainer's certificate). Stored privately in S3; served via the
+// authenticated download endpoint only.
+model FaceToFaceEvidence {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  session_id  String
+  s3_key      String
+  file_name   String
+  file_type   String                                       // MIME type
+  size_bytes  Int      @default(0)
+  uploaded_by String?
+  created_at  DateTime @default(now())
+  session     FaceToFaceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([session_id])
+  @@map("face_to_face_evidence")
 }
 
 // Mandatory face-to-face training requirement: a job role must hold a given training

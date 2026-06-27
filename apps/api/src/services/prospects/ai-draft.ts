@@ -8,7 +8,20 @@
 // Citing the actual report narrative (the genuinely useful enrichment) needs the
 // deeper assessment-report/PDF + a freshness reconciliation; tracked as follow-up.
 import { callClaude } from '../ai/claude'
+import { prisma } from '../../db/client'
 import { ratingLabel, type Segment } from './scoring'
+
+// Editable prompt slot — overridable via the platform "AI Prompts" tab.
+export const PROSPECT_EMAIL_PROMPT_USAGE = 'prospect_email_draft'
+
+async function getPrompt(usage: string, defaultPrompt: string): Promise<string> {
+  try {
+    const row = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
+    return row?.content?.trim() || defaultPrompt
+  } catch {
+    return defaultPrompt
+  }
+}
 
 export interface DraftLead {
   name: string
@@ -29,7 +42,7 @@ export interface AiDraft {
   sources: 'cqc-report' | 'signals'
 }
 
-const SYSTEM = `You are an SDR for CareStream, an AI compliance assistant for UK care providers (CQC-regulated). CareStream gives providers: a live, always-current policy library (incl. safeguarding and medicines); evidenced staff training and competency records; continuous audits and a CQC-ready evidence base; and an AI assistant any staff member can ask a question of in their own language. Pricing is £49 to £129 per location per month.
+export const DEFAULT_PROSPECT_EMAIL_PROMPT = `You are an SDR for CareStream, an AI compliance assistant for UK care providers (CQC-regulated). CareStream gives providers: a live, always-current policy library (incl. safeguarding and medicines); evidenced staff training and competency records; continuous audits and a CQC-ready evidence base; and an AI assistant any staff member can ask a question of in their own language. Pricing is £49 to £129 per location per month.
 
 Write a concise, warm, professional cold outreach email to a care provider. Rules:
 - 110 to 160 words. Plain text. No markdown, no bullet points.
@@ -57,7 +70,8 @@ export async function generateAiDraft(lead: DraftLead): Promise<AiDraft> {
     firstName ? `Recipient first name (open with "Hi ${firstName},"): ${firstName}` : `Recipient name unknown (open with "Hello,")`,
   ].join('\n')
 
-  const raw = await callClaude(SYSTEM, userMessage, { temperature: 0.4, maxTokens: 700 })
+  const system = await getPrompt(PROSPECT_EMAIL_PROMPT_USAGE, DEFAULT_PROSPECT_EMAIL_PROMPT)
+  const raw = await callClaude(system, userMessage, { temperature: 0.4, maxTokens: 700 })
 
   let subject = ''
   let body = ''

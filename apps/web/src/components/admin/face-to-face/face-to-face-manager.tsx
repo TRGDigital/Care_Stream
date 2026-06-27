@@ -645,7 +645,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     try {
       if (!certRef.current) throw new Error('Certificate not ready.')
       const html2pdf = (await import('html2pdf.js')).default
-      await html2pdf().set({ margin: 0, filename: `certificate-${a.name.replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } } as any).from(certRef.current).save()
+      await html2pdf().set({ margin: 0, filename: `certificate-${a.name.replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 1040, windowWidth: 1040 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } } as any).from(certRef.current).save()
     } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the certificate.') } finally { setPdfBusy(null) }
   }
   async function bulk(status: 'attended' | 'absent') {
@@ -833,18 +833,18 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
           <p style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
         </div>
 
-        <div ref={certRef} style={{ width: 1040, height: 720, padding: 0, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
-          <div style={{ height: '100%', boxSizing: 'border-box', border: '10px solid #0d9488', padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div ref={certRef} style={{ width: 1040, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
+          <div style={{ boxSizing: 'border-box', border: '10px solid #0d9488', padding: '72px 64px', textAlign: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" style={{ height: 48, marginBottom: 14 }} />
-            <div style={{ fontSize: 15, letterSpacing: 3, textTransform: 'uppercase', color: '#0d9488', fontWeight: 700 }}>Certificate of Training</div>
-            <div style={{ margin: '14px 0 6px', fontSize: 14, color: '#6b7280' }}>This certifies that</div>
-            <div style={{ fontSize: 40, fontWeight: 700, color: '#111827' }}>{certFor?.name ?? ''}</div>
-            <div style={{ margin: '14px 0 4px', fontSize: 15, color: '#374151' }}>has attended the face-to-face training</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#0d9488' }}>{data.title}</div>
-            <div style={{ marginTop: 12, fontSize: 14, color: '#374151' }}>{prettyDate(data.session_date)} · {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</div>
-            {certFor?.competency === 'competent' && <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: '#0d9488' }}>Assessed as competent</div>}
-            <div style={{ marginTop: 26, fontSize: 12, color: '#9ca3af' }}>{orgName}</div>
+            <img src="/logo-color.png" alt="CareStream" style={{ height: 48, marginBottom: 18 }} />
+            <div style={{ fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: '#0d9488', fontWeight: 700 }}>Certificate of Training</div>
+            <div style={{ margin: '22px 0 8px', fontSize: 15, color: '#6b7280' }}>This certifies that</div>
+            <div style={{ fontSize: 44, fontWeight: 700, color: '#111827', lineHeight: 1.2 }}>{certFor?.name ?? ''}</div>
+            <div style={{ margin: '18px 0 6px', fontSize: 16, color: '#374151' }}>has attended the face-to-face training</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#0d9488', lineHeight: 1.3 }}>{data.title}</div>
+            <div style={{ marginTop: 16, fontSize: 15, color: '#374151' }}>{prettyDate(data.session_date)} &middot; {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</div>
+            {certFor?.competency === 'competent' && <div style={{ marginTop: 14, fontSize: 15, fontWeight: 700, color: '#0d9488' }}>Assessed as competent</div>}
+            <div style={{ marginTop: 40, fontSize: 13, color: '#9ca3af' }}>{orgName}</div>
           </div>
         </div>
       </div>
@@ -858,8 +858,10 @@ function PayrollModal({ api, year, month, onClose }: {
 }) {
   const { data: session } = useSession()
   const orgName = (session?.user as any)?.tenantName ?? 'Your service'
+  const [period, setPeriod] = useState<'monthly' | 'weekly'>('monthly')
   const [y, setY] = useState(year)
   const [m, setM] = useState(month)   // 0-based
+  const [weekAnchor, setWeekAnchor] = useState<string>(() => ymd(new Date()))   // any day in the target week
   const [data, setData] = useState<{ f2f: any[]; adhoc: any[]; annual: any[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy]   = useState<'pdf' | 'email' | null>(null)
@@ -868,13 +870,18 @@ function PayrollModal({ api, year, month, onClose }: {
   const reportRef = useRef<HTMLDivElement>(null)
 
   const monthStr   = `${y}-${pad(m + 1)}`
-  const monthLabel = `${MONTHS[m]} ${y}`
+  // Monday → Sunday week containing the anchor day.
+  const weekMon = (() => { const [Y, M, D] = weekAnchor.split('-').map(Number); const d = new Date(Date.UTC(Y, M - 1, D)); const dow = (d.getUTCDay() + 6) % 7; return new Date(Date.UTC(Y, M - 1, D - dow)) })()
+  const weekSun = new Date(Date.UTC(weekMon.getUTCFullYear(), weekMon.getUTCMonth(), weekMon.getUTCDate() + 6))
+  const fromStr = ymd(weekMon), toStr = ymd(weekSun)
+  const periodLabel = period === 'weekly' ? `Week of ${prettyDate(fromStr)} to ${prettyDate(toStr)}` : `${MONTHS[m]} ${y}`
   const generated  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   useEffect(() => {
     setLoading(true)
-    api.faceToFace.trainingMonth(monthStr).then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
-  }, [monthStr]) // eslint-disable-line react-hooks/exhaustive-deps
+    const req = period === 'weekly' ? api.faceToFace.trainingRange(fromStr, toStr) : api.faceToFace.trainingMonth(monthStr)
+    req.then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
+  }, [period, monthStr, fromStr, toStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // The "Owed pay" tick drives payment. We only withhold it if the person was
   // explicitly marked absent (they didn't attend, so nothing is owed).
@@ -895,7 +902,7 @@ function PayrollModal({ api, year, month, onClose }: {
   // ("Cannot read properties of undefined (reading 'save')"). Chain in one go.
   const pdfOpts = () => ({
     margin: [10, 10, 12, 10],
-    filename: `training-report-${monthLabel.replace(/\s+/g, '-')}.pdf`,
+    filename: `training-report-${periodLabel.replace(/\s+/g, '-')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     // Pin the capture to the element's true width. Without width/windowWidth,
     // the off-screen (left:-99999) element is sized against the viewport and
@@ -919,7 +926,7 @@ function PayrollModal({ api, year, month, onClose }: {
     try {
       const html2pdf = (await import('html2pdf.js')).default
       const uri = await html2pdf().set(pdfOpts() as any).from(reportRef.current).outputPdf('datauristring')
-      await api.faceToFace.payrollEmail(email.trim(), monthLabel, uri)
+      await api.faceToFace.payrollEmail(email.trim(), periodLabel, uri)
       setMsg(`Sent to ${email.trim()}`)
     } catch (e: any) { setMsg(e?.message ?? 'Could not send the report.') } finally { setBusy(null) }
   }
@@ -939,7 +946,7 @@ function PayrollModal({ api, year, month, onClose }: {
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `training-report-${monthLabel.replace(/\s+/g, '-')}.csv`
+    a.href = url; a.download = `training-report-${periodLabel.replace(/\s+/g, '-')}.csv`
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
   }
 
@@ -956,10 +963,25 @@ function PayrollModal({ api, year, month, onClose }: {
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
 
-        <p className="mb-3 text-sm text-neutral-mid">A monthly summary of face-to-face, adhoc and annual training allocated and completed, with the pay indicator for face-to-face attendance. Useful for payroll.</p>
+        <p className="mb-3 text-sm text-neutral-mid">A summary of face-to-face, adhoc and annual training allocated and completed, with the pay indicator for face-to-face attendance. Useful for payroll.</p>
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Month</label>
-        <input type="month" value={monthStr} onChange={e => { const mm = /^(\d{4})-(\d{2})$/.exec(e.target.value); if (mm) { setY(+mm[1]); setM(+mm[2] - 1) } }} className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+        <div className="mb-3 inline-flex rounded-lg border border-gray-200 p-0.5 text-sm font-semibold">
+          <button onClick={() => setPeriod('monthly')} className={`rounded-md px-3 py-1.5 ${period === 'monthly' ? 'bg-teal text-white' : 'text-neutral-mid hover:text-teal'}`}>Monthly</button>
+          <button onClick={() => setPeriod('weekly')} className={`rounded-md px-3 py-1.5 ${period === 'weekly' ? 'bg-teal text-white' : 'text-neutral-mid hover:text-teal'}`}>Weekly</button>
+        </div>
+
+        {period === 'monthly' ? (
+          <>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Month</label>
+            <input type="month" value={monthStr} onChange={e => { const mm = /^(\d{4})-(\d{2})$/.exec(e.target.value); if (mm) { setY(+mm[1]); setM(+mm[2] - 1) } }} className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          </>
+        ) : (
+          <>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Week (pick any day in it)</label>
+            <input type="date" value={weekAnchor} onChange={e => e.target.value && setWeekAnchor(e.target.value)} className="mb-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            <p className="mb-4 text-xs text-neutral-mid">Covers <strong className="text-neutral-dark">{prettyDate(fromStr)}</strong> to <strong className="text-neutral-dark">{prettyDate(toStr)}</strong> (Monday to Sunday).</p>
+          </>
+        )}
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
@@ -993,7 +1015,7 @@ function PayrollModal({ api, year, month, onClose }: {
             <div style={{ textAlign: 'right', fontSize: 11, color: '#6b7280' }}>Generated: {generated}</div>
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px', color: '#111827' }}>Training Report</h1>
-          <p style={{ margin: '0 0 4px', fontSize: 13, color: '#374151' }}><strong>{orgName}</strong> · {monthLabel}</p>
+          <p style={{ margin: '0 0 4px', fontSize: 13, color: '#374151' }}><strong>{orgName}</strong> · {periodLabel}</p>
           <p style={{ margin: '0 0 8px', fontSize: 11, color: '#9ca3af' }}>Face-to-face Pay column: a staff member marked as <strong>owed pay</strong> (attended off shift) is payable for the session hours; on-shift attendance is not.</p>
 
           <div style={{ border: '2px solid #2563eb', borderRadius: 10, padding: '4px 12px 12px', background: '#eff6ff', marginTop: 14 }}>

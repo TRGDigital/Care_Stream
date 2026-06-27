@@ -535,12 +535,24 @@ faceToFaceRouter.get('/analytics', requireAdmin, async (req: Request, res: Respo
 // and the payroll PDF.
 faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = tid(req)
+  // Explicit date range (YYYY-MM-DD..YYYY-MM-DD, inclusive) takes precedence; this
+  // powers the weekly payroll option. Otherwise fall back to a whole month.
+  const fromM = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(req.query.from ?? ''))
+  const toM   = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(req.query.to ?? ''))
   const mm = /^(\d{4})-(\d{2})$/.exec(String(req.query.month ?? ''))
   const now = new Date()
   const y  = mm ? +mm[1] : now.getUTCFullYear()
   const mo = mm ? +mm[2] - 1 : now.getUTCMonth()
-  const start = new Date(Date.UTC(y, mo, 1))
-  const end   = new Date(Date.UTC(y, mo + 1, 1))
+  let start: Date, end: Date, periodLabel: string
+  if (fromM && toM) {
+    start = new Date(Date.UTC(+fromM[1], +fromM[2] - 1, +fromM[3]))
+    end   = new Date(Date.UTC(+toM[1], +toM[2] - 1, +toM[3] + 1))   // inclusive of the 'to' day
+    periodLabel = `${req.query.from}..${req.query.to}`
+  } else {
+    start = new Date(Date.UTC(y, mo, 1))
+    end   = new Date(Date.UTC(y, mo + 1, 1))
+    periodLabel = `${y}-${String(mo + 1).padStart(2, '0')}`
+  }
   try {
     const [sessions, enrollments] = await Promise.all([
       (prisma as any).faceToFaceSession.findMany({ where: { tenant_id: tenantId, session_date: { gte: start, lt: end } }, include: { attendance: true }, orderBy: { session_date: 'asc' } }),
@@ -568,7 +580,7 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
       if (e.module?.source === 'ai_generated') annual.push(row); else adhoc.push(row)
     }
     const sortRows = (a: any, b: any) => a.name.localeCompare(b.name) || a.title.localeCompare(b.title)
-    ok(res, { month: `${y}-${String(mo + 1).padStart(2, '0')}`, f2f, adhoc: adhoc.sort(sortRows), annual: annual.sort(sortRows) })
+    ok(res, { month: `${y}-${String(mo + 1).padStart(2, '0')}`, period: periodLabel, f2f, adhoc: adhoc.sort(sortRows), annual: annual.sort(sortRows) })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 

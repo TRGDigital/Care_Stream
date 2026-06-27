@@ -642,6 +642,13 @@ export function createApiClient(token: string) {
         adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
         annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
       }>(`/face-to-face/training-month?month=${encodeURIComponent(month)}`, token),
+      // Same shape as trainingMonth, but over an explicit inclusive date range (weekly payroll).
+      trainingRange: (from: string, to: string) => apiFetch<{
+        month: string; period: string
+        f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean; hourly_rate: number | null }> }>
+        adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+      }>(`/face-to-face/training-month?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, token),
       payrollEmail: (to: string, month_label: string, pdf_base64: string) =>
         apiFetch<{ sent: string }>('/face-to-face/payroll/email', token, { method: 'POST', body: JSON.stringify({ to, month_label, pdf_base64 }) }),
       matrix: () => apiFetch<{

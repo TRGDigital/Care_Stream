@@ -25,6 +25,7 @@ const listQuery = z.object({
   region: z.string().min(1).optional(),
   rating: z.string().min(1).optional(),
   q: z.string().min(1).optional(),
+  enriched: z.enum(['email', 'enriched', 'none']).optional(), // email = has contact email; enriched = processed; none = not yet
   sort: z.enum(['score', 'inspected', 'name']).default('score'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
@@ -39,6 +40,9 @@ function buildWhere(f: ListFilters, includeSegment: boolean): Record<string, unk
   if (f.region) where.region = f.region
   if (f.rating) where.cqc_rating = f.rating
   if (f.q) where.name = { contains: f.q, mode: 'insensitive' }
+  if (f.enriched === 'email') where.enriched_email = { not: null }
+  else if (f.enriched === 'enriched') where.enriched_at = { not: null }
+  else if (f.enriched === 'none') where.enriched_at = null
   return where
 }
 

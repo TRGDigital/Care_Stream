@@ -224,13 +224,20 @@ export default function ProspectsPage() {
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
 
+          <select value={filters.enriched ?? ''} onChange={(e) => patch({ enriched: (e.target.value || undefined) as ProspectFilters['enriched'] })} className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
+            <option value="">All contacts</option>
+            <option value="email">Has email ✓</option>
+            <option value="enriched">Enriched</option>
+            <option value="none">Not enriched</option>
+          </select>
+
           <select value={filters.sort ?? 'score'} onChange={(e) => patch({ sort: e.target.value as ProspectFilters['sort'] })} className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
             <option value="score">Sort: Score</option>
             <option value="inspected">Sort: Recently inspected</option>
             <option value="name">Sort: Name</option>
           </select>
 
-          {(filters.setting || filters.region || filters.status || filters.q) && (
+          {(filters.setting || filters.region || filters.status || filters.q || filters.enriched) && (
             <button onClick={() => { setSearch(''); setFilters((f) => ({ sort: f.sort, segment: f.segment, page: 1, pageSize: f.pageSize })) }} className="text-sm text-teal hover:underline">Clear</button>
           )}
         </div>
@@ -261,10 +268,15 @@ export default function ProspectsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {data.rows.map((l) => (
-                    <tr key={l.id} onClick={() => setSelectedId(l.id)} className="cursor-pointer hover:bg-neutral-light/50">
-                      <td className="px-4 py-3">
+                    <tr key={l.id} onClick={() => setSelectedId(l.id)} className={`cursor-pointer hover:bg-neutral-light/50 ${l.enriched_email ? 'bg-green-50/70' : ''}`}>
+                      <td className={`px-4 py-3 ${l.enriched_email ? 'border-l-2 border-green-500' : 'border-l-2 border-transparent'}`}>
                         <div className="font-medium text-neutral-dark">{l.name}</div>
                         <div className="text-xs text-neutral-mid">{[l.town, l.county].filter(Boolean).join(', ') || '—'}</div>
+                        {l.enriched_email && (
+                          <div className="mt-0.5 flex items-center gap-1 text-xs font-medium text-green-700">
+                            <Mail size={11} />{l.enriched_email}{l.contact_name ? ` · ${l.contact_name}` : ''}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-neutral-mid">{l.setting ?? '—'}</td>
                       <td className="px-4 py-3">{ratingBadge(l.cqc_rating)}</td>

@@ -510,6 +510,7 @@ export interface ProspectFilters {
   region?: string
   rating?: string
   q?: string
+  enriched?: 'email' | 'enriched' | 'none'
   sort?: 'score' | 'inspected' | 'name'
   page?: number
   pageSize?: number

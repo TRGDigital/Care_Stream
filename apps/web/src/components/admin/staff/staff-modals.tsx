@@ -18,6 +18,17 @@ import {
   langNameOf,
 } from './staff-shared'
 
+// ─── Money helpers (training hourly rate is stored in GBP pence) ───────────────
+function poundsToPence(v: string): number | null {
+  const s = (v ?? '').trim()
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null
+}
+function penceToPounds(p: number | null | undefined): string {
+  return typeof p === 'number' ? (p / 100).toFixed(2) : ''
+}
+
 // ─── Training assign step ─────────────────────────────────────────────────────
 
 const PAGE_SIZE = 4
@@ -370,7 +381,7 @@ export function InviteModal({
   const [step,      setStep]      = useState<ModalStep>('form')
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
-  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', first_language: 'eng', second_language: '', staff_type: 'existing' })
+  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', training_hourly_rate: '', first_language: 'eng', second_language: '', staff_type: 'existing' })
   const [auditIds,  setAuditIds]  = useState<string[]>([])
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
@@ -399,6 +410,7 @@ export function InviteModal({
       specialisms:     hasSpecialism ? specialisms : [],
       audit_template_ids: form.role === 'admin' ? [] : auditIds,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
+      training_hourly_rate: poundsToPence(form.training_hourly_rate),
       first_language:  form.first_language,
       second_language: form.second_language || undefined,
       comms_always_first_language: commsFirstLang,
@@ -487,6 +499,20 @@ export function InviteModal({
                   <option value="day">Day shift</option>
                   <option value="night">Night shift</option>
                 </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Training hourly rate <span className="font-normal text-neutral-mid">(optional)</span></label>
+                <div className="flex items-center rounded-md border border-gray-300 px-3 focus-within:border-teal focus-within:ring-2 focus-within:ring-teal/20">
+                  <span className="text-sm text-neutral-mid">£</span>
+                  <input
+                    type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00"
+                    value={form.training_hourly_rate}
+                    onChange={update('training_hourly_rate')}
+                    className="w-full bg-transparent px-2 py-2 text-sm outline-none"
+                  />
+                  <span className="text-xs text-neutral-mid">/hr</span>
+                </div>
+                <p className="mt-1 text-xs text-neutral-mid">Used to cost their owed training hours on the payroll report.</p>
               </div>
               <div className="sm:col-span-2">
                 <AccessLevelField
@@ -631,6 +657,7 @@ export function EditModal({
     job_role:        user.job_role        ?? '',
     role:            user.role            ?? 'staff',
     shift_type:      user.shift_type      ?? 'any',
+    training_hourly_rate: penceToPounds((user as any).training_hourly_rate),
     first_language:  user.first_language  ?? 'eng',
     second_language: user.second_language ?? '',
   })
@@ -659,6 +686,7 @@ export function EditModal({
       role:            form.role,
       audit_template_ids: form.role === 'admin' ? [] : auditIds,
       shift_type:      form.shift_type as 'any' | 'day' | 'night',
+      training_hourly_rate: poundsToPence(form.training_hourly_rate),
       first_language:  form.first_language,
       second_language: form.second_language || null,
       comms_always_first_language: commsFirstLang,
@@ -710,6 +738,21 @@ export function EditModal({
               <option value="day">Day shift</option>
               <option value="night">Night shift</option>
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Training hourly rate <span className="font-normal text-neutral-mid">(optional)</span></label>
+            <div className="flex items-center rounded-md border border-gray-300 px-3 focus-within:border-teal focus-within:ring-2 focus-within:ring-teal/20">
+              <span className="text-sm text-neutral-mid">£</span>
+              <input
+                type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00"
+                value={form.training_hourly_rate}
+                onChange={update('training_hourly_rate')}
+                className="w-full bg-transparent px-2 py-2 text-sm outline-none"
+              />
+              <span className="text-xs text-neutral-mid">/hr</span>
+            </div>
+            <p className="mt-1 text-xs text-neutral-mid">Used to cost owed training hours on the payroll report.</p>
           </div>
 
           <div className="sm:col-span-2">
@@ -935,6 +978,7 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
             <div className="grid grid-cols-2 gap-4 rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
               <Field label="Position">{user.job_role || <span className="italic text-neutral-mid/60">Not set</span>}</Field>
               <Field label="Shift">{user.shift_type === 'day' ? 'Day shift' : user.shift_type === 'night' ? 'Night shift' : 'Flexible'}</Field>
+              <Field label="Training rate">{typeof (user as any).training_hourly_rate === 'number' ? `£${((user as any).training_hourly_rate / 100).toFixed(2)}/hr` : <span className="italic text-neutral-mid/60">Not set</span>}</Field>
               <Field label="Email questions">
                 <span className="inline-flex items-center gap-1.5"><Mail size={12} className="text-neutral-mid" />Enabled</span>
               </Field>

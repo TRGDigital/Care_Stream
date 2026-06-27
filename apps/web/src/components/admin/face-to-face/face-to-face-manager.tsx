@@ -17,7 +17,7 @@ const prettyDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 type Staff = { id: string; name: string; job_role: string | null; is_active?: boolean }
 type Module = { id: string; name: string; category: string; ready?: boolean }
-type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
+type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
 
 export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
@@ -381,6 +381,11 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [trainerStaff, setTrainerStaff] = useState(initial?.delivered_by_user_id ?? '')
   const [trainerName,  setTrainerName]  = useState(initial?.delivered_by_name ?? '')
   const [notes,    setNotes]    = useState(initial?.notes ?? '')
+  const [startTime, setStartTime] = useState(initial?.start_time ?? '')
+  const [endTime,   setEndTime]   = useState(initial?.end_time ?? '')
+  const [location,  setLocation]  = useState(initial?.location ?? '')
+  const [capacity,  setCapacity]  = useState(initial?.capacity != null ? String(initial.capacity) : '')
+  const [repeatMonths, setRepeatMonths] = useState(0)   // additional monthly copies (new sessions only)
   const [attendees, setAttendees] = useState<Set<string>>(new Set())
   const [owedPay, setOwedPay] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('')
@@ -411,6 +416,10 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       delivered_by_user_id: trainerMode === 'staff' ? (trainerStaff || undefined) : null,
       delivered_by_name:    trainerMode === 'external' ? (trainerName.trim() || undefined) : null,
       duration_hours: duration,
+      start_time: startTime || null,
+      end_time: endTime || null,
+      location: location.trim() || null,
+      capacity: capacity.trim() ? Number(capacity) : null,
       notes: notes.trim() || undefined,
       attendee_ids: [...attendees],
       owed_pay_ids: [...owedPay],
@@ -419,7 +428,7 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
       if (initial) {
         await api.faceToFace.updateSession(initial.id, payload)
       } else {
-        const r = await api.faceToFace.createSession(payload)
+        const r = await api.faceToFace.createSession({ ...payload, repeat_monthly: repeatMonths || undefined })
         if (sendReminder && r?.session?.id) await api.faceToFace.remind(r.session.id).catch(() => {})
       }
       onSaved()
@@ -459,6 +468,36 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
           </div>
         </div>
         <p className="-mt-1 mb-3 text-xs text-neutral-mid">The session length sets how many hours staff who attended <strong className="text-neutral-dark">off shift</strong> are owed on the payroll report.</p>
+
+        {/* Optional logistics: time, location, capacity */}
+        <div className="mb-3 flex flex-wrap gap-3">
+          <div className="w-28">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Start time</label>
+            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
+          <div className="w-28">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">End time</label>
+            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
+          <div className="w-24">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Capacity</label>
+            <input type="number" min="1" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="—" className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
+          <div className="min-w-[8rem] flex-1">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Location / room</label>
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Training room 2" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
+        </div>
+        {!initial && (
+          <div className="mb-3">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Repeat</label>
+            <select value={repeatMonths} onChange={e => setRepeatMonths(Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+              <option value={0}>Just this date</option>
+              {[1, 2, 3, 5, 11].map(n => <option key={n} value={n}>Monthly for {n + 1} months</option>)}
+            </select>
+            {repeatMonths > 0 && <p className="mt-1 text-xs text-neutral-mid">Creates {repeatMonths + 1} sessions, one a month from this date, each with the same details and allocated staff.</p>}
+          </div>
+        )}
 
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Delivered by</label>
         <div className="mb-1 flex gap-2 text-xs">
@@ -575,7 +614,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         <div className="mb-1 flex items-start justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-neutral-dark">{data.title}</h2>
-            <p className="text-sm text-neutral-mid">{prettyDate(data.session_date)} · {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</p>
+            <p className="text-sm text-neutral-mid">{prettyDate(data.session_date)}{data.start_time ? ` · ${data.start_time}${data.end_time ? `–${data.end_time}` : ''}` : ''} · {data.duration_hours ?? 1} hour{(data.duration_hours ?? 1) > 1 ? 's' : ''}{data.location ? ` · ${data.location}` : ''}{data.delivered_by_name_resolved ? ` · delivered by ${data.delivered_by_name_resolved}` : ''}</p>
           </div>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
@@ -648,7 +687,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
 
         <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
           <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-600"><Trash2 size={14} /> Delete</button>
-          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
+          <button onClick={() => onEdit({ id: data.id, module_id: data.module_id, title: data.title, session_date: data.session_date, delivered_by_user_id: data.delivered_by_user_id, delivered_by_name: data.delivered_by_name, duration_hours: data.duration_hours ?? 1, start_time: data.start_time ?? null, end_time: data.end_time ?? null, location: data.location ?? null, capacity: data.capacity ?? null, series_id: data.series_id ?? null, notes: data.notes, allocated: att.length, attended: 0, absent: 0, unmarked: 0 })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40"><Users size={14} /> Edit session</button>
         </div>
       </div>
     </div>
@@ -682,11 +721,16 @@ function PayrollModal({ api, year, month, onClose }: {
   // The "Owed pay" tick drives payment. We only withhold it if the person was
   // explicitly marked absent (they didn't attend, so nothing is owed).
   const pay = (status: string, owed_pay: boolean) => status === 'absent' ? 'No' : (owed_pay ? 'Yes' : 'No')
-  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, owed_pay: a.owed_pay, hours: s.duration_hours ?? 1 })))
+  const f2fRows = (data?.f2f ?? []).flatMap((s: any) => (s.attendees ?? []).map((a: any) => ({ name: a.name, title: s.title, date: s.date, status: a.status, owed_pay: a.owed_pay, hours: s.duration_hours ?? 1, rate: a.hourly_rate as number | null })))
     .sort((a: any, b: any) => a.name.localeCompare(b.name) || a.date.localeCompare(b.date))
   // Hours owed = the session length, but only for payable rows.
   const hoursOwed = (r: any) => pay(r.status, r.owed_pay) === 'Yes' ? r.hours : 0
   const totalHoursOwed = f2fRows.reduce((n: number, r: any) => n + hoursOwed(r), 0)
+  // Cost in pence = hours owed x the staff member's hourly rate (when set).
+  const costPence = (r: any) => { const h = hoursOwed(r); return h > 0 && typeof r.rate === 'number' ? h * r.rate : 0 }
+  const totalCostPence = f2fRows.reduce((n: number, r: any) => n + costPence(r), 0)
+  const anyRates = f2fRows.some((r: any) => typeof r.rate === 'number')   // only show £ columns if at least one rate is set
+  const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
 
   // NB: the html2pdf worker is a thenable. Never await it before calling
   // .save()/.outputPdf() or the chain resolves and the worker methods vanish
@@ -721,6 +765,25 @@ function PayrollModal({ api, year, month, onClose }: {
       setMsg(`Sent to ${email.trim()}`)
     } catch (e: any) { setMsg(e?.message ?? 'Could not send the report.') } finally { setBusy(null) }
   }
+  // Spreadsheet export of the same data (one row per record, with a Section column).
+  function downloadCsv() {
+    const d = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''
+    const esc = (v: any) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
+    const header = ['Section', 'Staff', 'Training', 'Date', 'Length (h)', 'Attendance', 'Allocated', 'Completed', 'Pay?', 'Hours owed', 'Hourly rate', 'Cost']
+    const rows: any[][] = []
+    for (const r of f2fRows) {
+      const payable = pay(r.status, r.owed_pay) === 'Yes'
+      rows.push(['Face-to-face', r.name, r.title, d(r.date), r.hours, r.status, '', '', pay(r.status, r.owed_pay), payable ? hoursOwed(r) : '', typeof r.rate === 'number' ? (r.rate / 100).toFixed(2) : '', payable && costPence(r) ? (costPence(r) / 100).toFixed(2) : ''])
+    }
+    for (const r of (data?.adhoc ?? [])) rows.push(['Adhoc', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    for (const r of (data?.annual ?? [])) rows.push(['Annual', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    const csv = [header, ...rows].map(row => row.map(esc).join(',')).join('\r\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `training-report-${monthLabel.replace(/\s+/g, '-')}.csv`
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+  }
 
   const th: CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.03em' }
   const td: CSSProperties = { padding: '6px 8px', borderBottom: '1px solid #f0f0f0', fontSize: 12, color: '#1f2937' }
@@ -742,7 +805,7 @@ function PayrollModal({ api, year, month, onClose }: {
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.owed_pay) === 'Yes').length} payable · {totalHoursOwed}h</span>}</div>
+            <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.owed_pay) === 'Yes').length} payable · {totalHoursOwed}h{anyRates && totalCostPence > 0 ? ` · ${gbp(totalCostPence)}` : ''}</span>}</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
           </div>
@@ -755,8 +818,9 @@ function PayrollModal({ api, year, month, onClose }: {
         </div>
         {msg && <p className={`mb-2 text-xs font-medium ${msg.startsWith('Sent') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Close</button>
+          <button onClick={downloadCsv} disabled={loading} className="inline-flex items-center gap-1.5 rounded-lg border border-teal px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40 disabled:opacity-50"><Download size={14} /> CSV</button>
           <button onClick={download} disabled={!!busy || loading} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF</button>
         </div>
       </div>
@@ -778,7 +842,7 @@ function PayrollModal({ api, year, month, onClose }: {
             <h2 style={{ ...sectionTitle, borderLeftColor: '#2563eb', color: '#1e3a8a', marginTop: 12 }}>Face-to-face training</h2>
             {f2fRows.length === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Length</th><th style={th}>Attendance</th><th style={th}>Pay?</th><th style={th}>Hours owed</th></tr></thead>
+                <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Date</th><th style={th}>Length</th><th style={th}>Attendance</th><th style={th}>Pay?</th><th style={th}>Hours owed</th>{anyRates && <><th style={th}>Rate</th><th style={th}>Cost</th></>}</tr></thead>
                 <tbody>{f2fRows.map((r: any, i: number) => {
                   const payable = pay(r.status, r.owed_pay) === 'Yes'
                   const rowTd: CSSProperties = { ...td, ...(payable ? { background: '#fef3c7', borderBottom: '1px solid #fde68a' } : {}) }
@@ -791,14 +855,16 @@ function PayrollModal({ api, year, month, onClose }: {
                       <td style={{ ...rowTd, textTransform: 'capitalize' }}>{r.status}</td>
                       <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#374151' }}>{pay(r.status, r.owed_pay)}</td>
                       <td style={{ ...rowTd, fontWeight: 700, color: payable ? '#b45309' : '#9ca3af' }}>{payable ? `${hoursOwed(r)}h` : '—'}</td>
+                      {anyRates && <td style={rowTd}>{typeof r.rate === 'number' ? gbp(r.rate) : '—'}</td>}
+                      {anyRates && <td style={{ ...rowTd, fontWeight: 700, color: payable && costPence(r) ? '#b45309' : '#9ca3af' }}>{payable && costPence(r) ? gbp(costPence(r)) : '—'}</td>}
                     </tr>
                   )
                 })}</tbody>
-                <tfoot><tr><td style={{ ...td, fontWeight: 700, borderTop: '2px solid #bfdbfe' }} colSpan={6}>Total hours owed</td><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{totalHoursOwed}h</td></tr></tfoot>
+                <tfoot><tr><td style={{ ...td, fontWeight: 700, borderTop: '2px solid #bfdbfe' }} colSpan={6}>Total hours owed</td><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{totalHoursOwed}h</td>{anyRates && <><td style={{ ...td, borderTop: '2px solid #bfdbfe' }} /><td style={{ ...td, fontWeight: 800, color: '#b45309', borderTop: '2px solid #bfdbfe' }}>{gbp(totalCostPence)}</td></>}</tr></tfoot>
               </table>
             )}
             {f2fRows.some((r: any) => pay(r.status, r.owed_pay) === 'Yes') && (
-              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member was marked as owed pay (attended off shift) and is owed the hours shown.</p>
+              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#b45309', fontWeight: 600 }}>Highlighted rows are payable: the staff member was marked as owed pay (attended off shift) and is owed the hours shown{anyRates ? ', costed at their training hourly rate where set' : ''}.</p>
             )}
           </div>
 

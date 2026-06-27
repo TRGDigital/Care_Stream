@@ -203,12 +203,12 @@ export function createApiClient(token: string) {
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
       markPractical: (id: string, enrollmentId: string, data: { signed: boolean; note?: string }) =>
         apiFetch<{ practical: { practical_signed: boolean; practical_signed_by: string | null; practical_signed_at: string | null; practical_note: string | null } }>(`/users/${id}/annual-training/${enrollmentId}/practical`, token, { method: 'POST', body: JSON.stringify(data) }),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean }) =>
+      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean }) =>
+      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),
@@ -629,16 +629,16 @@ export function createApiClient(token: string) {
         const qs = new URLSearchParams()
         if (from) qs.set('from', from)
         if (to)   qs.set('to', to)
-        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
+        return apiFetch<{ sessions: Array<{ id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }> }>(`/face-to-face/sessions${qs.toString() ? '?' + qs : ''}`, token)
       },
       session: (id: string) => apiFetch<{ session: any }>(`/face-to-face/sessions/${id}`, token),
-      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; notes?: string; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
-        apiFetch<{ session: { id: string } }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
-      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; notes?: string | null; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
+      createSession: (data: { module_id?: string; title?: string; session_date: string; delivered_by_user_id?: string; delivered_by_name?: string; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; repeat_monthly?: number; notes?: string; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
+        apiFetch<{ session: { id: string }; series_count?: number }>('/face-to-face/sessions', token, { method: 'POST', body: JSON.stringify(data) }),
+      updateSession: (id: string, data: { module_id?: string | null; title?: string; session_date?: string; delivered_by_user_id?: string | null; delivered_by_name?: string | null; duration_hours?: number; start_time?: string | null; end_time?: string | null; location?: string | null; capacity?: number | null; notes?: string | null; attendee_ids?: string[]; owed_pay_ids?: string[] }) =>
         apiFetch<{ updated: boolean }>(`/face-to-face/sessions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       trainingMonth: (month: string) => apiFetch<{
         month: string
-        f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean }> }>
+        f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean; hourly_rate: number | null }> }>
         adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
         annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
       }>(`/face-to-face/training-month?month=${encodeURIComponent(month)}`, token),

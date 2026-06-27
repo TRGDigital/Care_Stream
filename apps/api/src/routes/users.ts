@@ -43,7 +43,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     where:   { tenant_id: tenantId },
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
+      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
     orderBy: { created_at: 'asc' },
@@ -63,7 +63,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     where:  { id },
     select: {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
+      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
     },
   })
@@ -218,6 +218,7 @@ const InviteSchema = z.object({
   specialisms:     z.array(z.string().max(100)).optional(),   // specialist roles
   phone_number:    z.string().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must be in E.164 format, e.g. +447911123456').optional(),
   shift_type:      z.enum(['any', 'day', 'night']).default('any'),
+  training_hourly_rate: z.number().int().min(0).max(100000).nullable().optional(),  // GBP pence
   first_language:  z.string().length(3).default('eng'),
   second_language: z.string().length(3).optional(),
   comms_always_first_language: z.boolean().optional(),
@@ -244,7 +245,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, specialisms, phone_number, shift_type, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter } = parsed.data
+  const { name, email, role, job_role, specialisms, phone_number, shift_type, training_hourly_rate, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter } = parsed.data
   const tenantId = req.user!.tenant_id
   const auditTemplateIds = await resolveAuditTemplateIds(tenantId, role, parsed.data.audit_template_ids)
 
@@ -289,6 +290,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       audit_template_ids: auditTemplateIds,
       phone_number:    phone_number ?? null,
       shift_type:      shift_type ?? 'any',
+      training_hourly_rate: training_hourly_rate ?? null,
       first_language:  first_language ?? 'eng',
       second_language: second_language ?? null,
       comms_always_first_language: comms_always_first_language ?? true,
@@ -300,7 +302,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       // staff receive no verification email). Without this, invited staff cannot log in.
       email_verified:  true,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -381,6 +383,7 @@ const UpdateSchema = z.object({
   role:            z.enum(['admin', 'staff']).optional(),
   phone_number:    z.string().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must be in E.164 format, e.g. +447911123456').nullable().optional(),
   shift_type:      z.enum(['any', 'day', 'night']).optional(),
+  training_hourly_rate: z.number().int().min(0).max(100000).nullable().optional(),  // GBP pence
   first_language:  z.string().length(3).optional(),
   second_language: z.string().length(3).nullable().optional(),
   comms_always_first_language: z.boolean().optional(),
@@ -445,6 +448,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.role            !== undefined) updateData.role            = parsed.data.role
   if (parsed.data.phone_number    !== undefined) updateData.phone_number    = parsed.data.phone_number
   if (parsed.data.shift_type      !== undefined) updateData.shift_type      = parsed.data.shift_type
+  if (parsed.data.training_hourly_rate !== undefined) updateData.training_hourly_rate = parsed.data.training_hourly_rate
   if (parsed.data.first_language  !== undefined) updateData.first_language  = parsed.data.first_language
   if (parsed.data.second_language !== undefined) updateData.second_language = parsed.data.second_language
   if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
@@ -462,7 +466,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

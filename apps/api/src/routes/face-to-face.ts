@@ -9,6 +9,7 @@
 // training matrix. Supports backfilling past sessions and planning future ones.
 
 import { Router, Request, Response } from 'express'
+import { randomUUID } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
@@ -71,6 +72,28 @@ function clampDuration(v: any): number {
   return Number.isFinite(n) ? Math.min(5, Math.max(1, n)) : 1
 }
 
+// "HH:MM" 24h time, or null.
+function cleanTime(v: any): string | null {
+  if (typeof v !== 'string') return null
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(v.trim())
+  return m ? `${m[1].padStart(2, '0')}:${m[2]}` : null
+}
+// Positive capacity int (cap 999), or null.
+function cleanCapacity(v: any): number | null {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) && n > 0 ? Math.min(999, n) : null
+}
+function cleanText(v: any, max: number): string | null {
+  return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null
+}
+// Same calendar day-of-month, n months on (UTC). Clamps to month length (e.g. 31 Jan -> 28/29 Feb).
+function addMonthsUTC(d: Date, n: number): Date {
+  const y = d.getUTCFullYear(), m = d.getUTCMonth(), day = d.getUTCDate()
+  const target = new Date(Date.UTC(y, m + n, 1))
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), Math.min(day, lastDay)))
+}
+
 function summariseSession(s: any) {
   const att = s.attendance ?? []
   return {
@@ -81,6 +104,11 @@ function summariseSession(s: any) {
     delivered_by_user_id: s.delivered_by_user_id,
     delivered_by_name: s.delivered_by_name,
     duration_hours: s.duration_hours ?? 1,
+    start_time: s.start_time ?? null,
+    end_time: s.end_time ?? null,
+    location: s.location ?? null,
+    capacity: s.capacity ?? null,
+    series_id: s.series_id ?? null,
     notes: s.notes ?? null,
     reminder_sent_at: s.reminder_sent_at ?? null,
     allocated: att.length,
@@ -172,21 +200,39 @@ faceToFaceRouter.post('/sessions', requireAdmin, async (req: Request, res: Respo
     // Per-attendee "owed pay" flag for payroll (ticked = attended off shift, owed the hours; default unticked = on shift, not owed).
     const owedPaySet = new Set<string>(Array.isArray(b.owed_pay_ids) ? b.owed_pay_ids.map(String) : [])
 
-    const session = await (prisma as any).faceToFaceSession.create({
-      data: {
-        tenant_id: tenantId,
-        module_id: moduleId,
-        title: title.slice(0, 200),
-        session_date: date,
-        delivered_by_user_id: b.delivered_by_user_id ? String(b.delivered_by_user_id) : null,
-        delivered_by_name: typeof b.delivered_by_name === 'string' && b.delivered_by_name.trim() ? b.delivered_by_name.trim().slice(0, 160) : null,
-        duration_hours: clampDuration(b.duration_hours),
-        notes: typeof b.notes === 'string' && b.notes.trim() ? b.notes.trim().slice(0, 2000) : null,
-        created_by: uid(req),
-        attendance: validAttendees.length ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, owed_pay: owedPaySet.has(id) })) } : undefined,
-      },
+    // Optional recurring series: create the first session plus this many further
+    // monthly copies (same details + attendees), grouped by a shared series_id.
+    const repeatMonths = Math.min(11, Math.max(0, Math.round(Number(b.repeat_monthly)) || 0))
+    const seriesId = repeatMonths > 0 ? randomUUID() : null
+
+    const baseData = {
+      tenant_id: tenantId,
+      module_id: moduleId,
+      title: title.slice(0, 200),
+      delivered_by_user_id: b.delivered_by_user_id ? String(b.delivered_by_user_id) : null,
+      delivered_by_name: cleanText(b.delivered_by_name, 160),
+      duration_hours: clampDuration(b.duration_hours),
+      start_time: cleanTime(b.start_time),
+      end_time: cleanTime(b.end_time),
+      location: cleanText(b.location, 160),
+      capacity: cleanCapacity(b.capacity),
+      series_id: seriesId,
+      notes: cleanText(b.notes, 2000),
+      created_by: uid(req),
+    }
+    const mkAttendance = () => (validAttendees.length
+      ? { create: validAttendees.map((id: string) => ({ tenant_id: tenantId, user_id: id, owed_pay: owedPaySet.has(id) })) }
+      : undefined)
+
+    const first = await (prisma as any).faceToFaceSession.create({
+      data: { ...baseData, session_date: date, attendance: mkAttendance() },
     })
-    ok(res, { session: { id: session.id } })
+    for (let i = 1; i <= repeatMonths; i++) {
+      await (prisma as any).faceToFaceSession.create({
+        data: { ...baseData, session_date: addMonthsUTC(date, i), attendance: mkAttendance() },
+      })
+    }
+    ok(res, { session: { id: first.id }, series_count: repeatMonths + 1 })
   } catch (e: any) { err(res, 'CREATE_FAILED', e.message, 500) }
 })
 
@@ -204,6 +250,10 @@ faceToFaceRouter.patch('/sessions/:id', requireAdmin, async (req: Request, res: 
     if (b.delivered_by_user_id !== undefined) data.delivered_by_user_id = b.delivered_by_user_id ? String(b.delivered_by_user_id) : null
     if (b.delivered_by_name !== undefined) data.delivered_by_name = typeof b.delivered_by_name === 'string' && b.delivered_by_name.trim() ? b.delivered_by_name.trim().slice(0, 160) : null
     if (b.duration_hours !== undefined) data.duration_hours = clampDuration(b.duration_hours)
+    if (b.start_time !== undefined) data.start_time = cleanTime(b.start_time)
+    if (b.end_time !== undefined) data.end_time = cleanTime(b.end_time)
+    if (b.location !== undefined) data.location = cleanText(b.location, 160)
+    if (b.capacity !== undefined) data.capacity = cleanCapacity(b.capacity)
     if (b.module_id !== undefined) {
       if (b.module_id) {
         const m = await (prisma as any).trainingModule.findFirst({ where: { id: String(b.module_id), is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true } })
@@ -482,13 +532,15 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
     const userIds = new Set<string>()
     for (const s of sessions as any[]) for (const a of (s.attendance ?? [])) userIds.add(a.user_id)
     for (const e of enrollments as any[]) userIds.add(e.user_id)
-    const users = userIds.size ? await (prisma as any).user.findMany({ where: { id: { in: [...userIds] }, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } }) : []
+    const users = userIds.size ? await (prisma as any).user.findMany({ where: { id: { in: [...userIds] }, tenant_id: tenantId }, select: { id: true, name: true, job_role: true, training_hourly_rate: true } }) : []
     const uMap = new Map((users as any[]).map(u => [u.id, u]))
     const nm = (id: string) => uMap.get(id)?.name ?? 'Unknown'
+    const rate = (id: string) => uMap.get(id)?.training_hourly_rate ?? null   // GBP pence or null
 
     const f2f = (sessions as any[]).map(s => ({
       session_id: s.id, date: s.session_date, title: s.title, duration_hours: s.duration_hours ?? 1,
-      attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, owed_pay: a.owed_pay })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
+      start_time: s.start_time ?? null, end_time: s.end_time ?? null, location: s.location ?? null,
+      attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, owed_pay: a.owed_pay, hourly_rate: rate(a.user_id) })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
     }))
     const adhoc: any[] = [], annual: any[] = []
     for (const e of enrollments as any[]) {

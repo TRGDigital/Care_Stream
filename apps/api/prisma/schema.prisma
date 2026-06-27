@@ -269,6 +269,7 @@ model User {
   last_login_at          DateTime?                          // updated on every successful login
   last_followup_email_at DateTime?                          // debounce for the "you have follow-up" email
   shift_type             String         @default("any")     // 'any' | 'day' | 'night'
+  training_hourly_rate   Int?                               // optional GBP pence (e.g. 2000 = £20.00/hr) — used to cost owed-pay training hours on the payroll report
   first_language         String         @default("eng")     // ISO 639-3 — primary language for outbound comms
   second_language        String?                            // optional secondary language
   comms_always_first_language Boolean   @default(true)      // true → translate outbound comms into first_language; false → English
@@ -894,6 +895,11 @@ model FaceToFaceSession {
   delivered_by_user_id String?                          // internal trainer (a staff member)
   delivered_by_name    String?                          // external / free-text trainer name
   duration_hours       Int      @default(1)             // session length in hours (1-5); drives owed-pay hours on the payroll report
+  start_time           String?                          // optional start time "HH:MM" (24h) for the schedule
+  end_time             String?                          // optional end time "HH:MM" (24h)
+  location             String?                          // optional room / venue
+  capacity             Int?                             // optional max attendees
+  series_id            String?                          // groups a recurring series created together
   notes                String?
   reminder_sent_at     DateTime?                        // last time the admin emailed allocated staff a reminder
   created_by           String?

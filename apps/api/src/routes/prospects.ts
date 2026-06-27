@@ -10,6 +10,7 @@ import { draftMessage, SEGMENT_META } from '../services/prospects/scoring'
 import { syncProspects } from '../services/prospects/sync'
 import { generateAiDraft } from '../services/prospects/ai-draft'
 import { enrichLead } from '../services/prospects/enrich'
+import { enrichBatch } from '../services/prospects/enrich-batch'
 
 export const prospectsRouter = Router()
 prospectsRouter.use(requirePlatformAdmin)
@@ -86,6 +87,29 @@ prospectsRouter.get('/filters', async (_req: Request, res: Response) => {
     statuses: STATUSES,
     segments: SEGMENTS.map((s) => ({ key: s, ...SEGMENT_META[s] })),
   })
+})
+
+// ─── POST /admin/prospects/enrich-bulk ────────────────────────────────────────
+// Enrich the next batch of website-having, not-yet-enriched leads (hottest
+// first). Call repeatedly until `remaining` hits 0. Bounded per call so it stays
+// well under the function time limit; the UI loops it.
+const bulkBody = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    segment: z.enum(SEGMENTS).optional(),
+    concurrency: z.coerce.number().int().min(1).max(10).default(6),
+  })
+  .strict()
+
+prospectsRouter.post('/enrich-bulk', async (req: Request, res: Response) => {
+  const parsed = bulkBody.safeParse(req.body ?? {})
+  if (!parsed.success) { err(res, 'BAD_REQUEST', parsed.error.message); return }
+  try {
+    const result = await enrichBatch(parsed.data)
+    ok(res, result)
+  } catch (e) {
+    err(res, 'ENRICH_FAILED', e instanceof Error ? e.message : String(e), 500)
+  }
 })
 
 // ─── POST /admin/prospects/sync ───────────────────────────────────────────────

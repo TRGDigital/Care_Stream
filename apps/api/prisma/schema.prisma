@@ -900,6 +900,7 @@ model FaceToFaceSession {
   location             String?                          // optional room / venue
   capacity             Int?                             // optional max attendees
   series_id            String?                          // groups a recurring series created together
+  renews_after_months  Int?                             // optional: training valid for N months from attendance (powers the compliance matrix); null = no expiry
   notes                String?
   reminder_sent_at     DateTime?                        // last time the admin emailed allocated staff a reminder
   created_by           String?
@@ -928,6 +929,21 @@ model FaceToFaceAttendance {
   @@unique([session_id, user_id])
   @@index([tenant_id, user_id])
   @@map("face_to_face_attendance")
+}
+
+// Mandatory face-to-face training requirement: a job role must hold a given training
+// module. Powers gap detection in the compliance matrix (who in this role is missing it).
+model FaceToFaceMandatory {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  job_role    String                                       // free-text role label (matches users.job_role)
+  module_id   String                                       // the required training module/topic
+  module_name String                                       // snapshot for display
+  created_at  DateTime @default(now())
+
+  @@unique([tenant_id, job_role, module_id])
+  @@index([tenant_id])
+  @@map("face_to_face_mandatory")
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────────

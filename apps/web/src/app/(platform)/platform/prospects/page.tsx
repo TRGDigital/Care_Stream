@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import {
   createPlatformClient,
@@ -72,6 +72,9 @@ export default function ProspectsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
+  const [enrichRun, setEnrichRun] = useState(false)
+  const [enrichStat, setEnrichStat] = useState<{ done: number; emails: number; remaining: number } | null>(null)
+  const enrichStop = useRef(false)
 
   // Load filter vocab once.
   useEffect(() => {
@@ -112,6 +115,26 @@ export default function ProspectsPage() {
     }
   }
 
+  async function runEnrich() {
+    if (!api) return
+    enrichStop.current = false
+    setEnrichRun(true)
+    let done = 0, emails = 0
+    try {
+      while (!enrichStop.current) {
+        const r = await api.prospects.enrichBulk({ limit: 50, segment: filters.segment })
+        done += r.processed; emails += r.withEmail
+        setEnrichStat({ done, emails, remaining: r.remaining })
+        if (r.processed === 0 || r.remaining === 0) break
+      }
+    } catch (e) {
+      setEnrichStat((s) => s)
+    } finally {
+      setEnrichRun(false)
+      load()
+    }
+  }
+
   if (!token) return null
 
   const segTabs: Array<{ key?: ProspectSegment; label: string; tagline?: string }> = [
@@ -133,6 +156,24 @@ export default function ProspectsPage() {
             <p className="mt-1 text-sm text-neutral-mid">UK CQC-regulated providers, scored and segmented from live inspection data.</p>
           </div>
           <div className="flex items-center gap-3">
+            {enrichStat && (
+              <span className="text-xs text-neutral-mid">
+                Enriched {enrichStat.done.toLocaleString()} · {enrichStat.emails.toLocaleString()} emails · {enrichStat.remaining.toLocaleString()} left
+              </span>
+            )}
+            {enrichRun ? (
+              <button onClick={() => { enrichStop.current = true }} className="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                <X size={15} /> Stop
+              </button>
+            ) : (
+              <button
+                onClick={runEnrich}
+                title={filters.segment ? `Enrich ${filters.segment} leads with a website` : 'Enrich all leads with a website (hottest first)'}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light"
+              >
+                <UserSearch size={15} /> Enrich websites{filters.segment ? ` · ${filters.segment}` : ''}
+              </button>
+            )}
             {syncMsg && <span className="text-xs text-neutral-mid">{syncMsg}</span>}
             <button
               onClick={runSync}

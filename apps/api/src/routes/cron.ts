@@ -10,6 +10,7 @@ import { sendLicenceRenewalReminders } from '../services/training/licence-renewa
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { syncProspects } from '../services/prospects/sync'
+import { enrichBatch } from '../services/prospects/enrich-batch'
 
 export const cronRouter = Router()
 
@@ -84,6 +85,19 @@ cronRouter.get('/prospects-sync', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/prospects-sync] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Every 10 min: enrich the next batch of website-having prospects (hottest
+// first), burning down the backlog hands-off. No-op once all are enriched.
+cronRouter.get('/prospects-enrich', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await enrichBatch({ limit: 80, concurrency: 8 })
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/prospects-enrich] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

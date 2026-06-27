@@ -549,6 +549,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ subject: string; body: string; sources: 'cqc-report' | 'signals' }>(`/prospects/${id}/draft-ai`, token, { method: 'POST' }),
       enrich: (id: string) =>
         adminFetch<{ result: { contactName: string | null; contactRole: string | null; email: string | null; companyNumber: string | null; source: string; notes: string | null }; lead: ProviderLead }>(`/prospects/${id}/enrich`, token, { method: 'POST' }),
+      enrichBulk: (body: { limit?: number; segment?: ProspectSegment } = {}) =>
+        adminFetch<{ processed: number; withEmail: number; withContact: number; remaining: number }>(`/prospects/enrich-bulk`, token, { method: 'POST', body: JSON.stringify(body) }),
       sync: () => adminFetch<ProspectSyncResult>('/prospects/sync', token, { method: 'POST' }),
     },
 

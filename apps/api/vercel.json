@@ -16,6 +16,7 @@
     { "path": "/cron/audit-reminders", "schedule": "0 8 * * *" },
     { "path": "/cron/licence-renewals", "schedule": "0 9 * * *" },
     { "path": "/cron/onboarding-emails", "schedule": "0 9,10 * * *" },
-    { "path": "/cron/prospects-sync", "schedule": "0 6 * * 1" }
+    { "path": "/cron/prospects-sync", "schedule": "0 6 * * 1" },
+    { "path": "/cron/prospects-enrich", "schedule": "*/10 * * * *" }
   ]
 }

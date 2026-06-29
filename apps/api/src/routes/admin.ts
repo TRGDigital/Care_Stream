@@ -2555,6 +2555,34 @@ adminRouter.post('/onboarding/emails/:id/test', async (req: Request, res: Respon
   }
 })
 
+// GET /admin/onboarding/enrolments — active drip enrolments (for the manual runner).
+adminRouter.get('/onboarding/enrolments', async (_req: Request, res: Response) => {
+  try {
+    const enrolments = await (prisma as any).onboardingEnrolment.findMany({ where: { status: 'active' }, orderBy: { created_at: 'desc' } })
+    const ids = enrolments.map((e: any) => e.tenant_id)
+    const tenants = ids.length ? await (prisma as any).tenant.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, account_number: true } }) : []
+    const tMap = new Map((tenants as any[]).map(t => [t.id, t]))
+    ok(res, { enrolments: enrolments.map((e: any) => ({
+      tenant_id: e.tenant_id,
+      tenant_name: tMap.get(e.tenant_id)?.name ?? null,
+      account_number: tMap.get(e.tenant_id)?.account_number ?? null,
+      plan: e.plan, start_date: e.start_date, status: e.status,
+    })) })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not load enrolments.', 500) }
+})
+
+// POST /admin/onboarding/dispatch-now — manually run today's due dispatch (force,
+// bypasses the 10am-UK gate). Optional { tenant_id } scopes it to one client so a
+// test only emails that tenant's admins. A safety net while crons are unavailable.
+adminRouter.post('/onboarding/dispatch-now', async (req: Request, res: Response) => {
+  const tenantId = req.body?.tenant_id ? String(req.body.tenant_id) : undefined
+  try {
+    const { dispatchDue } = await import('../services/onboarding/dispatch')
+    const result = await dispatchDue({ force: true, tenantId })
+    ok(res, result)
+  } catch (e: any) { err(res, 'DISPATCH_FAILED', e?.message ?? 'Could not run the dispatch.', 500) }
+})
+
 // PATCH /admin/onboarding/emails/:id — edit subject / preview text.
 adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) => {
   const data: any = {}

@@ -587,6 +587,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ id: string }>(`/onboarding/emails/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       preview: (id: string) => adminFetch<{ html: string; subject: string }>(`/onboarding/emails/${id}/preview`, token),
       test: (id: string, to: string) => adminFetch<{ sent: string }>(`/onboarding/emails/${id}/test`, token, { method: 'POST', body: JSON.stringify({ to }) }),
+      enrolments: () => adminFetch<{ enrolments: Array<{ tenant_id: string; tenant_name: string | null; account_number: string | null; plan: string; start_date: string; status: string }> }>(`/onboarding/enrolments`, token),
+      dispatchNow: (tenant_id?: string) => adminFetch<{ dateStr: string; enrolments: number; sent: number; skipped: number; failed: number; completed: number; skipped_reason?: string; reason?: string; due?: Array<{ tenant_id: string; plan: string; day: number; recipients: number }> }>(`/onboarding/dispatch-now`, token, { method: 'POST', body: JSON.stringify(tenant_id ? { tenant_id } : {}) }),
       forTenant: (id: string) => adminFetch<{
         enrolment: { plan: string; start_date: string; status: string } | null
         sends: Array<{ day_index: number; email_id: string | null; subject: string; recipient_email: string; status: string; sent_at: string | null; delivered_at: string | null; first_opened_at: string | null; open_count: number; first_clicked_at: string | null; click_count: number }>

@@ -155,12 +155,15 @@ export async function sendDayOneNow(tenantId: string, recipientEmail: string, re
   await sendToRecipient({ tenantId, enrolment, tmpl, recipientEmail, recipientUserId, scheduledFor: new Date() }).catch(() => {})
 }
 
-// The daily cron entry point. force=true bypasses the 10am-UK gate (for testing).
-export async function dispatchDue(opts: { force?: boolean } = {}): Promise<any> {
+// The daily cron entry point. force=true bypasses the 10am-UK gate (for testing);
+// tenantId scopes the run to a single tenant (used by the manual "Run drip now").
+export async function dispatchDue(opts: { force?: boolean; tenantId?: string } = {}): Promise<any> {
   const { dateStr, hour } = ukNow()
   if (!opts.force && hour !== 10) return { skipped: true, reason: `not 10am UK (currently ${hour}:00)`, dateStr }
 
-  const enrolments = await (prisma as any).onboardingEnrolment.findMany({ where: { status: 'active' } })
+  const enrolments = await (prisma as any).onboardingEnrolment.findMany({
+    where: { status: 'active', ...(opts.tenantId ? { tenant_id: opts.tenantId } : {}) },
+  })
   const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, due: [] as any[] }
 
   for (const enr of enrolments) {

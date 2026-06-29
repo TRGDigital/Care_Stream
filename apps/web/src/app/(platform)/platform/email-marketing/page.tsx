@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Mail, Check, ChevronDown, Eye, Send } from 'lucide-react'
+import { Loader2, Mail, Check, ChevronDown, Eye, Send, Play, AlertTriangle } from 'lucide-react'
 
 async function viewEmail(token: string, id: string) {
   const w = window.open('', '_blank')
@@ -142,6 +142,50 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
   )
 }
 
+// Manual runner: sends today's DUE onboarding email on demand (bypasses the 10am
+// gate). Scope to one tenant to test safely, or run for all enrolled tenants.
+function RunDripNow({ token }: { token: string }) {
+  const [enrolments, setEnrolments] = useState<Array<{ tenant_id: string; tenant_name: string | null; account_number: string | null; plan: string; start_date: string }>>([])
+  const [scope, setScope] = useState('')   // '' = all enrolled tenants
+  const [running, setRunning] = useState(false)
+  const [result, setResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    createPlatformClient(token).onboarding.enrolments().then(d => setEnrolments(d.enrolments)).catch(() => {})
+  }, [token])
+
+  async function run() {
+    setRunning(true); setResult(null)
+    try {
+      const r = await createPlatformClient(token).onboarding.dispatchNow(scope || undefined)
+      if (r.reason) setResult(`Nothing due: ${r.reason}`)
+      else {
+        const due = (r.due ?? []).map(d => `${d.recipients} recipient(s) on day ${d.day}`).join('; ')
+        setResult(`Done — ${r.sent} sent, ${r.skipped} already-sent, ${r.failed} failed${due ? ` · ${due}` : ''}.`)
+      }
+    } catch (e: any) { setResult(`Failed: ${e?.message ?? 'error'}`) }
+    finally { setRunning(false) }
+  }
+
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-800"><Play size={15} /> Run drip now</p>
+      <p className="mt-1 text-xs text-amber-700">Sends today&apos;s due email immediately (skips the 10am wait). Use this to test, or as a manual fallback if the scheduled send hasn&apos;t run.</p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <select value={scope} onChange={e => setScope(e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+          <option value="">All enrolled tenants ({enrolments.length})</option>
+          {enrolments.map(e => <option key={e.tenant_id} value={e.tenant_id}>{e.account_number ? `${e.account_number} · ` : ''}{e.tenant_name ?? e.tenant_id} ({e.plan})</option>)}
+        </select>
+        <button onClick={run} disabled={running} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
+          {running ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Run now
+        </button>
+      </div>
+      {result && <p className="mt-2 text-xs font-medium text-neutral-dark">{result}</p>}
+      <p className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-700"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> Each send is one-per-recipient: re-running won&apos;t resend an email a client has already received that day.</p>
+    </div>
+  )
+}
+
 export default function EmailMarketingPage() {
   const token = usePlatformAuth()
   const [plan, setPlan]       = useState('enterprise')
@@ -166,6 +210,8 @@ export default function EmailMarketingPage() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-neutral-dark"><Mail size={22} className="text-teal" /> Email Marketing</h1>
           <p className="mt-1 text-sm text-neutral-mid">New-client onboarding drip. One email per working day from signup, sent 10am UK to every active admin. Edit the subject line and preview text inline; changes apply to future sends.</p>
         </div>
+
+        <RunDripNow token={token} />
 
         <div className="flex gap-2">
           {PLANS.map(p => (

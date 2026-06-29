@@ -358,6 +358,11 @@ export function createApiClient(token: string) {
         apiFetch<{ enrolled: number }>(`/onboarding/flows/${flowId}/enroll`, token, { method: 'POST', body: JSON.stringify(data) }),
       flowProgress: (flowId: string) =>
         apiFetch<{ flow: any; enrollments: any[] }>(`/onboarding/flows/${flowId}/progress`, token),
+      matrix: () =>
+        apiFetch<{
+          flows: Array<{ id: string; name: string; flow_kind: string }>
+          staff: Array<{ user_id: string; name: string; job_role: string | null; cells: Record<string, { status: 'complete' | 'in_progress' | 'not_started' | 'overdue'; steps_done: number; steps_total: number }> }>
+        }>('/onboarding/matrix', token),
       myEnrollments: (lang?: '2') =>
         apiFetch<{ enrollments: any[] }>(`/onboarding/my${lang ? `?lang=${lang}` : ''}`, token),
       completeStep: (enrollmentId: string, stepId: string, data?: { answer_text?: string }) =>

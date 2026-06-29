@@ -70,6 +70,122 @@ function StatusCell({ enrollment }: { enrollment: Enrollment | undefined }) {
   return <span title="Not started" className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={12} /></span>
 }
 
+// Shared compact matrix shell (sticky staff column, horizontal scroll, legend).
+function MatrixShell({ icon, title, count, legend, head, children }: {
+  icon: React.ReactNode; title: string; count?: string; legend: React.ReactNode
+  head: React.ReactNode; children: React.ReactNode
+}) {
+  return (
+    <div className="mt-6">
+      <div className="mb-2 flex items-center gap-2">
+        {icon}
+        <h2 className="text-sm font-semibold text-neutral-dark">{title}</h2>
+        {count && <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">{count}</span>}
+      </div>
+      <div className="overflow-x-auto rounded-card border border-gray-100 bg-white shadow-card">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-gray-100">
+            <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left text-xs font-medium text-neutral-mid min-w-[180px]">Staff member</th>
+            {head}
+          </tr></thead>
+          <tbody>{children}</tbody>
+        </table>
+        <div className="flex flex-wrap items-center gap-4 border-t border-gray-100 px-5 py-3 text-xs text-neutral-mid">{legend}</div>
+      </div>
+    </div>
+  )
+}
+
+// RAG glyph badge (face-to-face matrix).
+const F2F_STYLE: Record<string, { cls: string; glyph: string; label: string }> = {
+  in_date:  { cls: 'bg-green-100 text-green-700',                          glyph: '✓', label: 'In date' },
+  due_soon: { cls: 'bg-amber-100 text-amber-700',                         glyph: '⏳', label: 'Due soon' },
+  overdue:  { cls: 'bg-red-100 text-red-700',                             glyph: '✕', label: 'Overdue' },
+  missing:  { cls: 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-300', glyph: '!', label: 'Missing (required)' },
+  none:     { cls: 'bg-neutral-light/60 text-neutral-mid/50',             glyph: '·', label: 'Not recorded' },
+}
+
+function F2FComplianceMatrix({ token, enabled }: { token: string; enabled: boolean }) {
+  const [data, setData] = useState<any>(null)
+  useEffect(() => {
+    if (!token || !enabled) return
+    createApiClient(token).faceToFace.matrix().then(setData).catch(() => setData(null))
+  }, [token, enabled])
+  if (!enabled || !data || data.topics.length === 0 || data.staff.length === 0) return null
+  return (
+    <MatrixShell
+      icon={<Users size={16} className="text-teal" />}
+      title="Face-to-face training"
+      count={`${data.staff.length} staff · ${data.topics.length} topic${data.topics.length === 1 ? '' : 's'}`}
+      head={data.topics.map((t: any) => (
+        <th key={t.key} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[80px] max-w-[110px]"><span className="block leading-tight">{t.label.length > 16 ? t.label.slice(0, 14) + '…' : t.label}</span></th>
+      ))}
+      legend={<>
+        {(['in_date', 'due_soon', 'overdue', 'missing', 'none'] as const).map(k => (
+          <span key={k} className="flex items-center gap-1.5"><span className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${F2F_STYLE[k].cls}`}>{F2F_STYLE[k].glyph}</span>{F2F_STYLE[k].label}</span>
+        ))}
+        <span className="ml-auto">Renewals &amp; mandatory-by-role are managed in the Face-to-face tab</span>
+      </>}
+    >
+      {data.staff.map((s: any) => {
+        const cellByKey = new Map(s.cells.map((c: any) => [c.topic_key, c]))
+        return (
+          <tr key={s.user_id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
+            <td className="sticky left-0 z-10 bg-white px-5 py-3"><p className="font-medium text-neutral-dark">{s.name}</p><p className="text-xs text-neutral-mid">{s.job_role ?? 'Staff'}</p></td>
+            {data.topics.map((t: any) => {
+              const c: any = cellByKey.get(t.key) ?? { status: 'none' }
+              const st = F2F_STYLE[c.status] ?? F2F_STYLE.none
+              return <td key={t.key} className="px-3 py-3 text-center"><span title={`${t.label} — ${st.label}`} className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold ${st.cls}`}>{st.glyph}</span></td>
+            })}
+          </tr>
+        )
+      })}
+    </MatrixShell>
+  )
+}
+
+function OnboardingStatusCell({ cell }: { cell: any }) {
+  if (!cell) return <span className="text-gray-300 text-sm">—</span>
+  const t = `${cell.steps_done}/${cell.steps_total} steps`
+  if (cell.status === 'complete')    return <span title={`Complete · ${t}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={14} /></span>
+  if (cell.status === 'overdue')     return <span title={`Overdue · ${t}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-500"><AlertCircle size={14} /></span>
+  if (cell.status === 'in_progress') return <span title={`In progress · ${t}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-teal bg-teal/10 text-teal"><Clock size={12} /></span>
+  return <span title={`Not started · ${t}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={12} /></span>
+}
+
+function OnboardingComplianceMatrix({ token }: { token: string }) {
+  const [data, setData] = useState<any>(null)
+  useEffect(() => {
+    if (!token) return
+    createApiClient(token).onboarding.matrix().then(setData).catch(() => setData(null))
+  }, [token])
+  if (!data || data.flows.length === 0 || data.staff.length === 0) return null
+  return (
+    <MatrixShell
+      icon={<ShieldCheck size={16} className="text-teal" />}
+      title="Staff onboarding"
+      count={`${data.staff.length} staff · ${data.flows.length} flow${data.flows.length === 1 ? '' : 's'}`}
+      head={data.flows.map((f: any) => (
+        <th key={f.id} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[130px]"><span className="block leading-tight">{f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name}</span></th>
+      ))}
+      legend={<>
+        <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={11} /></span> Complete</span>
+        <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-500"><AlertCircle size={11} /></span> Overdue</span>
+        <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-teal bg-teal/10 text-teal"><Clock size={10} /></span> In progress</span>
+        <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={10} /></span> Not started</span>
+        <span className="flex items-center gap-1.5"><span className="text-gray-300 font-bold">—</span> Not enrolled</span>
+      </>}
+    >
+      {data.staff.map((s: any) => (
+        <tr key={s.user_id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
+          <td className="sticky left-0 z-10 bg-white px-5 py-3"><p className="font-medium text-neutral-dark">{s.name}</p><p className="text-xs text-neutral-mid">{s.job_role ?? 'Staff'}</p></td>
+          {data.flows.map((f: any) => <td key={f.id} className="px-3 py-3 text-center"><OnboardingStatusCell cell={s.cells[f.id]} /></td>)}
+        </tr>
+      ))}
+    </MatrixShell>
+  )
+}
+
 
 // ─── Modules tab ──────────────────────────────────────────────────────────────
 
@@ -1395,7 +1511,11 @@ export default function TrainingPage() {
         ))}
       </div>
 
-      {/* Compliance grid */}
+      {/* Compliance grid — adhoc / statutory / specialist */}
+      <div className="mb-2 flex items-center gap-2">
+        <ShieldCheck size={16} className="text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Adhoc, statutory &amp; specialist training</h2>
+      </div>
       {gridModules.length === 0 ? (
         <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
           <ShieldCheck size={32} className="mx-auto mb-3 text-gray-300" />
@@ -1531,6 +1651,12 @@ export default function TrainingPage() {
           </div>
         </div>
       )}
+
+      {/* Face-to-face training matrix (only for plans with the feature) */}
+      <F2FComplianceMatrix token={session?.accessToken ?? ''} enabled={!f2fLocked} />
+
+      {/* Staff onboarding matrix */}
+      <OnboardingComplianceMatrix token={session?.accessToken ?? ''} />
 
       </> }
 

@@ -240,6 +240,43 @@ onboardingRouter.get('/flows/:id/progress', requireAdmin, async (req, res) => {
   }
 })
 
+// GET /onboarding/matrix — staff × onboarding-flow completion grid (compliance view).
+onboardingRouter.get('/matrix', requireAdmin, async (_req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const flows = await prisma.onboardingFlow.findMany({
+      where:   { tenant_id: tenantId },
+      include: {
+        steps:       { select: { id: true } },
+        enrollments: { include: { user: { select: { id: true, name: true, job_role: true } }, progress: { select: { completed_at: true } } } },
+      },
+      orderBy: { name: 'asc' },
+    }) as any[]
+
+    const flowList = flows.map(f => ({ id: f.id, name: f.name, flow_kind: f.flow_kind }))
+    const now = Date.now()
+    const staffMap = new Map<string, any>()
+    for (const f of flows) {
+      const total = (f.steps ?? []).length
+      for (const e of f.enrollments ?? []) {
+        const u = e.user; if (!u) continue
+        if (!staffMap.has(u.id)) staffMap.set(u.id, { user_id: u.id, name: u.name, job_role: u.job_role ?? null, cells: {} as Record<string, any> })
+        const done = (e.progress ?? []).filter((p: any) => p.completed_at).length
+        let status: string
+        if (e.completed_at || (total > 0 && done >= total)) status = 'complete'
+        else if (e.due_date && new Date(e.due_date).getTime() < now) status = 'overdue'
+        else if (done > 0) status = 'in_progress'
+        else status = 'not_started'
+        staffMap.get(u.id).cells[f.id] = { status, steps_done: done, steps_total: total }
+      }
+    }
+    const staff = [...staffMap.values()].sort((a, b) => a.name.localeCompare(b.name))
+    res.json({ success: true, data: { flows: flowList, staff } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})
+
 // ─── Staff: My Induction ──────────────────────────────────────────────────────
 
 // GET /onboarding/my

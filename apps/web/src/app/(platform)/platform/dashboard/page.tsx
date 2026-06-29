@@ -2008,10 +2008,25 @@ function SystemReference() {
             <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/policies/</span><span className="text-neutral-dark">{'{policy_id}'}/{'{filename}'}</span> <span className="text-neutral-mid ml-2">— live document</span></div>
             <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/extracted/</span><span className="text-neutral-dark">{'{policy_id}'}.txt</span> <span className="text-neutral-mid ml-2">— plain-text cache post-ingestion</span></div>
             <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/versions/</span><span className="text-neutral-dark">{'{policy_id}'}/v{'{n}'}/{'{file}'}</span> <span className="text-neutral-mid ml-2">— superseded versions archived</span></div>
+            <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/face_to_face/</span><span className="text-neutral-dark">{'{session_id}'}/{'{uuid}'}.{'{ext}'}</span> <span className="text-neutral-mid ml-2">— F2F evidence (private)</span></div>
+            <div><span className="text-teal font-semibold">tenants/</span><span className="text-neutral-dark">{'{tenant_id}'}</span><span className="text-teal font-semibold">/f2f_certificates/</span><span className="text-neutral-dark">{'{cert_id}'}.pdf</span> <span className="text-neutral-mid ml-2">— stored completion certificates (private)</span></div>
           </div>
+        </div>
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-1.5">Malware screening on user uploads</p>
+          <p className="text-xs leading-relaxed text-neutral-dark">
+            Face-to-face training <strong>evidence uploads</strong> (admin-supplied scans, photos, trainer certs) pass a layered check before they are ever stored:
+          </p>
+          <ol className="mt-1.5 ml-4 list-decimal space-y-1 text-xs text-neutral-mid">
+            <li><strong>Magic-byte content validation</strong> — the real file bytes must be a genuine PDF/JPEG/PNG/GIF/WebP/HEIC; the browser-claimed type and extension are ignored. Blocks disguised payloads (HTML/SVG/script renamed .png).</li>
+            <li><strong>Malware scan</strong> — Cloudmersive Virus Scan API (<code className="font-mono">apps/api/src/services/security/malware-scan.ts</code>), gated by <code className="font-mono">CLOUDMERSIVE_API_KEY</code>. Infected → rejected. Scanner configured but erroring → <strong>fail closed</strong> (not stored). No key set → scan skipped, content validation still applies. Stored result in <code className="font-mono">face_to_face_evidence.scan_status</code>.</li>
+            <li><strong>Locked-down serving</strong> — known-safe Content-Type only, <code className="font-mono">X-Content-Type-Options: nosniff</code>, sandboxed CSP, <code className="font-mono">no-store</code>; non-previewable types forced to attachment. Max 15 MB, 40 files/session.</li>
+          </ol>
+          <p className="mt-1.5 text-xs text-neutral-mid">Stored completion certificates are system-generated PDFs (not user uploads), so they bypass the scanner but use the same private, locked-down serving.</p>
         </div>
         <div className="mt-3 space-y-1">
           <RefRow label="Retention"            value="Files are never deleted — old versions archived under /versions/ (§10.5)" />
+          <RefRow label="Malware scanner"      value="Cloudmersive Virus Scan API — set CLOUDMERSIVE_API_KEY in Vercel env to activate (fail-closed when configured)" />
           <RefRow label="Upload flow"          value="POST /policies/upload → multer buffer → S3 PutObject → Prisma creates policy record → ingestDocument() runs inline on Vercel (no Redis)" />
           <RefRow label="Ingestion flow"       value="S3 GetObject → PDF/DOCX text extraction → chunk (800 tokens, 100 overlap) → OpenAI embed → Pinecone upsert → policy.status = active" />
           <RefRow label="Text extraction"      value="pdf-parse for PDF files, mammoth for DOCX" />

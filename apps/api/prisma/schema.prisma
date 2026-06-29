@@ -806,6 +806,11 @@ model ProviderLead {
   enrichment_source     String?                          // website | companies-house | website+companies-house | none
   company_number        String?
   enriched_at           DateTime?
+  email_status          String    @default("none")        // none | drafted | sent | replied | booked | unsubscribed
+  gmail_draft_id        String?
+  drafted_at            DateTime?
+  draft_subject         String?
+  draft_body            String?
   synced_at             DateTime  @default(now())
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt

@@ -11,6 +11,7 @@ import { syncProspects } from '../services/prospects/sync'
 import { generateAiDraft } from '../services/prospects/ai-draft'
 import { enrichLead } from '../services/prospects/enrich'
 import { enrichBatch } from '../services/prospects/enrich-batch'
+import { draftEmails } from '../services/prospects/draft-emails'
 
 export const prospectsRouter = Router()
 prospectsRouter.use(requirePlatformAdmin)
@@ -114,6 +115,27 @@ prospectsRouter.post('/enrich-bulk', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e) {
     err(res, 'ENRICH_FAILED', e instanceof Error ? e.message : String(e), 500)
+  }
+})
+
+// ─── POST /admin/prospects/draft-emails ───────────────────────────────────────
+// Create Gmail drafts (in len@'s mailbox) for the next N hottest leads that have
+// an email and aren't drafted yet. Human reviews + sends in Gmail.
+const draftBody = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(50).default(10),
+    segment: z.enum(SEGMENTS).optional(),
+  })
+  .strict()
+
+prospectsRouter.post('/draft-emails', async (req: Request, res: Response) => {
+  const parsed = draftBody.safeParse(req.body ?? {})
+  if (!parsed.success) { err(res, 'BAD_REQUEST', parsed.error.message); return }
+  try {
+    const result = await draftEmails(parsed.data)
+    ok(res, result)
+  } catch (e) {
+    err(res, 'DRAFT_EMAILS_FAILED', e instanceof Error ? e.message : String(e), 500)
   }
 })
 

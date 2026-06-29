@@ -1026,7 +1026,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li><strong>Sign-in sheet</strong>: download a printable register (session details + a signature line per allocated staff member). Staff sign on the day, then you scan it.</li>
             <li><strong>Upload file</strong>: attach the signed scan, photos, or the trainer&apos;s certificate (PDF or image, up to 15 MB). Files are stored privately and open with a click.</li>
             <li><strong>Competency</strong>: for each attendee, record <em>competent</em> or <em>not yet competent</em> where the training was practically assessed.</li>
-            <li><strong>Certificate</strong>: generate a branded completion certificate for any attendee for their own record.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">Uploaded files are kept safe automatically: every file is checked to confirm it is a genuine PDF or image and scanned for malware before it is stored. Anything that fails is rejected and never saved, and a small <strong>scanned</strong> tag shows on files that passed.</p>
+        </SectionBlock>
+        <SectionBlock title="Completion certificates (issued and tracked)">
+          <p className="text-sm text-neutral-mid">
+            In a session, each attendee has a <strong>Certificate</strong> button. It produces a branded, full-page completion certificate named after the course and date.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Attended only</strong>: the button activates once you mark the person <strong>attended</strong> (the green tick). You can&apos;t issue a certificate to someone who missed or isn&apos;t marked yet.</li>
+            <li><strong>Saved automatically</strong>: issuing a certificate downloads it <em>and</em> stores it against that staff member. A tick on the button shows one has been issued; re-issuing replaces it.</li>
+            <li><strong>On the staff record</strong>: every certificate appears in a <strong>Training certificates</strong> section on the individual&apos;s staff page (Staff → open a person), where you can re-open any of them.</li>
+            <li><strong>In analytics</strong>: <strong>Analytics → Staff</strong> shows a <strong>Completion certificates</strong> list across all staff, plus a per-person count, so you have one place to see and open everything issued.</li>
           </ul>
         </SectionBlock>
         <SectionBlock title="Reminding allocated staff by email">

@@ -492,6 +492,11 @@ export interface ProviderLead {
   enrichment_source: string | null
   company_number: string | null
   enriched_at: string | null
+  email_status: string
+  gmail_draft_id: string | null
+  drafted_at: string | null
+  draft_subject: string | null
+  draft_body: string | null
   synced_at: string
 }
 
@@ -553,6 +558,8 @@ export function createPlatformClient(token: string) {
       enrichBulk: (body: { limit?: number; segment?: ProspectSegment } = {}) =>
         adminFetch<{ processed: number; withEmail: number; withContact: number; remaining: number }>(`/prospects/enrich-bulk`, token, { method: 'POST', body: JSON.stringify(body) }),
       sync: () => adminFetch<ProspectSyncResult>('/prospects/sync', token, { method: 'POST' }),
+      draftEmails: (body: { limit?: number; segment?: ProspectSegment } = {}) =>
+        adminFetch<{ created: number; errors: number; remaining: number }>(`/prospects/draft-emails`, token, { method: 'POST', body: JSON.stringify(body) }),
     },
 
     cpdReviews: () => adminFetch<{

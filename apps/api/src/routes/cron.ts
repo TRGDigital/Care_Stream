@@ -11,6 +11,7 @@ import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { syncProspects } from '../services/prospects/sync'
 import { enrichBatch } from '../services/prospects/enrich-batch'
+import { draftEmails } from '../services/prospects/draft-emails'
 
 export const cronRouter = Router()
 
@@ -98,6 +99,19 @@ cronRouter.get('/prospects-enrich', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/prospects-enrich] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Weekday mornings (08:00 UTC): create up to 10 Gmail drafts for the hottest
+// emailable, not-yet-drafted leads. Len reviews + sends in Gmail.
+cronRouter.get('/prospects-draft', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await draftEmails({ limit: 10 })
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/prospects-draft] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

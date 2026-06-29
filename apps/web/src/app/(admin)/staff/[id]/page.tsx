@@ -171,6 +171,10 @@ export default function StaffRecordPage() {
     try { await createApiClient(token).users.markPractical(id, enrollmentId, { signed, note: practicalNote }); setPracticalModal(null); load() }
     catch { setNote('Could not save practical sign-off.') } finally { setBusy(null) }
   }
+  async function openCertificate(certId: string) {
+    try { const blob = await createApiClient(token).faceToFace.downloadCertificate(certId); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000) }
+    catch { setNote('Could not open the certificate.') }
+  }
   function printCert() { document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 600) }
   // Use the browser's native print-to-PDF for full-fidelity rendering (rings,
   // pills and fonts render exactly as on screen). Print CSS (globals.css) shows
@@ -532,6 +536,27 @@ export default function StaffRecordPage() {
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${s.status === 'attended' ? 'bg-green-50 text-green-600' : s.status === 'absent' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-neutral-mid'}`}>
                     {s.status === 'attended' ? 'Attended' : s.status === 'absent' ? 'Missed' : 'Allocated'}
                   </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Face-to-face completion certificates */}
+        {rec.certificates && rec.certificates.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Award size={15} className="text-teal" /> Training certificates <InfoTip text="Completion certificates issued to this staff member for face-to-face sessions they attended. Click one to open or download the PDF." /></p>
+              <p className="text-xs text-neutral-mid">{rec.certificates.count} issued</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {rec.certificates.items.map((c: any) => (
+                <div key={c.id} className="flex items-center justify-between gap-2 px-5 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-neutral-dark">{c.title}</p>
+                    <p className="text-xs text-neutral-mid">{fmtDate(c.session_date)} · issued {fmtDate(c.issued_at)}{c.competency === 'competent' ? ' · competent' : ''}</p>
+                  </div>
+                  <button onClick={() => openCertificate(c.id)} className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal no-print"><Download size={13} /> Open</button>
                 </div>
               ))}
             </div>

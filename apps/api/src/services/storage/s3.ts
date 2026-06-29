@@ -133,6 +133,19 @@ export async function uploadEvidenceFile(params: {
   return s3Key
 }
 
+// Stored face-to-face completion certificate (system-generated PDF). Private.
+export async function uploadCertificateFile(params: {
+  tenantId: string; certificateId: string; buffer: Buffer
+}): Promise<string> {
+  const s3Key = `tenants/${params.tenantId}/f2f_certificates/${params.certificateId}.pdf`
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: 'application/pdf',
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId, certificate_id: params.certificateId },
+  }))
+  return s3Key
+}
+
 export async function deleteFile(s3Key: string): Promise<void> {
   if (USE_LOCAL) { try { fs.rmSync(localPath(s3Key), { force: true }) } catch { /* ignore */ } return }
   try { await getS3().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: s3Key })) } catch { /* ignore */ }

@@ -675,14 +675,27 @@ export function createApiClient(token: string) {
       },
       deleteEvidence: (evidenceId: string) =>
         apiFetch<{ deleted: boolean }>(`/face-to-face/evidence/${evidenceId}`, token, { method: 'DELETE' }),
+      // Stored completion certificates (issued only for attended staff).
+      issueCertificate: (sessionId: string, user_id: string, pdf_base64: string) =>
+        apiFetch<{ certificate: { id: string; user_id: string; title: string } }>(`/face-to-face/sessions/${sessionId}/certificate`, token, { method: 'POST', body: JSON.stringify({ user_id, pdf_base64 }) }),
+      certificates: (user_id?: string) =>
+        apiFetch<{ certificates: Array<{ id: string; user_id: string; user_name: string; title: string; session_date: string; competency: string; file_name: string; created_at: string }> }>(`/face-to-face/certificates${user_id ? `?user_id=${encodeURIComponent(user_id)}` : ''}`, token),
+      downloadCertificate: async (certificateId: string): Promise<Blob> => {
+        const r = await fetch(`${API_URL}/face-to-face/certificate/${certificateId}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok) throw new Error('Could not fetch the certificate.')
+        return r.blob()
+      },
+      deleteCertificate: (certificateId: string) =>
+        apiFetch<{ deleted: boolean }>(`/face-to-face/certificate/${certificateId}`, token, { method: 'DELETE' }),
       assignModule: (id: string, user_ids: string[]) =>
         apiFetch<{ assigned: number; newly_enrolled: number }>(`/face-to-face/sessions/${id}/assign-module`, token, { method: 'POST', body: JSON.stringify({ user_ids }) }),
       remind: (id: string, user_ids?: string[]) =>
         apiFetch<{ sent: number; reminder_sent_at: string }>(`/face-to-face/sessions/${id}/remind`, token, { method: 'POST', body: JSON.stringify(user_ids ? { user_ids } : {}) }),
       unmarked: () => apiFetch<{ sessions: Array<{ id: string; title: string; session_date: string; people: Array<{ user_id: string; name: string; job_role: string | null }> }> }>('/face-to-face/unmarked', token),
       analytics: () => apiFetch<{
-        summary: { sessions: number; allocations: number; attended: number; missed: number; modules_assigned: number; assigned_incomplete: number }
-        by_staff: Array<{ user_id: string; name: string; job_role: string | null; allocated: number; attended: number; missed: number; assigned: number; assigned_incomplete: number; missed_sessions: Array<{ session_id: string; title: string; date: string; module_assigned: boolean; completion: string | null }> }>
+        summary: { sessions: number; allocations: number; attended: number; missed: number; modules_assigned: number; assigned_incomplete: number; certificates: number }
+        by_staff: Array<{ user_id: string; name: string; job_role: string | null; allocated: number; attended: number; missed: number; assigned: number; assigned_incomplete: number; certificates: number; missed_sessions: Array<{ session_id: string; title: string; date: string; module_assigned: boolean; completion: string | null }> }>
+        certificates: Array<{ id: string; user_id: string; user_name: string; title: string; session_date: string; competency: string; created_at: string }>
       }>('/face-to-face/analytics', token),
     },
 

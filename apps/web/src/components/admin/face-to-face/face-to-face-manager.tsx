@@ -639,6 +639,8 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the sheet.') } finally { setPdfBusy(null) }
   }
   async function makeCertificate(a: any) {
+    // Only attended staff can be certificated (server enforces this too).
+    if (a.status !== 'attended') { setEvidenceMsg('Mark the staff member as attended before issuing a certificate.'); return }
     setCertFor(a); setPdfBusy(`cert:${a.user_id}`); setEvidenceMsg('')
     // Wait a tick for the hidden cert node to render with this attendee's details.
     await new Promise(r => setTimeout(r, 50))
@@ -648,7 +650,12 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
       const slug = (s: string) => s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
       const filename = `${slug(data.title || 'training')}-${slug(prettyDate(data.session_date))}.pdf`
       const html2pdf = (await import('html2pdf.js')).default
-      await html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 1040, windowWidth: 1040 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' } } as any).from(certRef.current).save()
+      const worker = html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 1040, windowWidth: 1040 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' } } as any).from(certRef.current)
+      // Store the certificate against the staff member (analytics + their record), then download it.
+      const uri = await worker.outputPdf('datauristring')
+      await api.faceToFace.issueCertificate(sessionId, a.user_id, uri).catch(() => { throw new Error('Generated, but could not save it to the record.') })
+      await worker.save()
+      load()   // refresh so the row shows it's been issued
     } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the certificate.') } finally { setPdfBusy(null) }
   }
   async function bulk(status: 'attended' | 'absent') {
@@ -721,8 +728,8 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
                     <option value="not_yet_competent">Not yet competent</option>
                   </select>
                 </div>
-                <button onClick={() => makeCertificate(a)} disabled={pdfBusy === `cert:${a.user_id}`} title="Generate a completion certificate" className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
-                  {pdfBusy === `cert:${a.user_id}` ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />} Certificate
+                <button onClick={() => makeCertificate(a)} disabled={pdfBusy === `cert:${a.user_id}` || a.status !== 'attended'} title={a.status !== 'attended' ? 'Mark as attended first' : (a.certificate_id ? 'Re-issue and download the certificate' : 'Issue a completion certificate')} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:cursor-not-allowed disabled:opacity-40">
+                  {pdfBusy === `cert:${a.user_id}` ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} className={a.certificate_id ? 'text-teal' : ''} />} {a.certificate_id ? 'Certificate ✓' : 'Certificate'}
                 </button>
               </div>
             </div>
@@ -758,6 +765,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
                     <Paperclip size={13} className="shrink-0 text-neutral-mid" /><span className="truncate">{ev.file_name}</span>
                   </button>
                   <div className="flex shrink-0 items-center gap-2">
+                    {ev.scan_status === 'clean' && <span title="Passed the malware scan" className="rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-600">scanned</span>}
                     <span className="text-[11px] text-neutral-mid">{(ev.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
                     <button onClick={() => openEvidence(ev)} title="Open" className="text-neutral-mid hover:text-teal"><Download size={13} /></button>
                     <button onClick={() => deleteEvidence(ev)} title="Delete" className="text-neutral-mid hover:text-red-500"><Trash2 size={13} /></button>

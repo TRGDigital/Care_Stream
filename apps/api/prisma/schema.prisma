@@ -942,8 +942,9 @@ model FaceToFaceEvidence {
   session_id  String
   s3_key      String
   file_name   String
-  file_type   String                                       // MIME type
+  file_type   String                                       // MIME type (sniffed canonical type, not browser-supplied)
   size_bytes  Int      @default(0)
+  scan_status String   @default("skipped")                  // malware scan: clean | skipped (no scanner) — infected files are rejected, never stored
   uploaded_by String?
   created_at  DateTime @default(now())
   session     FaceToFaceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
@@ -951,6 +952,30 @@ model FaceToFaceEvidence {
   @@index([tenant_id])
   @@index([session_id])
   @@map("face_to_face_evidence")
+}
+
+// A generated, stored completion certificate for one staff member for one
+// face-to-face session. Only created once they're marked ATTENDED. The PDF is
+// generated in the browser and stored privately in S3; served via the
+// authenticated download endpoint. Snapshots survive later edits/deletes.
+model FaceToFaceCertificate {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  session_id    String?                                      // null if the source session is later deleted (snapshot kept)
+  user_id       String
+  user_name     String                                       // snapshot
+  title         String                                       // training topic snapshot
+  session_date  DateTime                                     // snapshot
+  competency    String   @default("not_assessed")            // snapshot at issue time
+  s3_key        String
+  file_name     String
+  issued_by     String?
+  created_at    DateTime @default(now())
+
+  @@index([tenant_id])
+  @@index([tenant_id, user_id])
+  @@index([session_id])
+  @@map("face_to_face_certificates")
 }
 
 // Mandatory face-to-face training requirement: a job role must hold a given training

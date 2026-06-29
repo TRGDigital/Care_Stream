@@ -17,7 +17,8 @@ import { notifyStaffAllocation, getUsers } from '../lib/notify'
 import { sendFaceToFaceReminderEmail } from '../services/email/outbound'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { evidenceUploadMiddleware } from '../middleware/upload'
-import { uploadEvidenceFile, downloadFile, deleteFile } from '../services/storage/s3'
+import { uploadEvidenceFile, uploadCertificateFile, downloadFile, deleteFile } from '../services/storage/s3'
+import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 
 export const faceToFaceRouter = Router()
 
@@ -170,14 +171,19 @@ faceToFaceRouter.get('/sessions/:id', requireAdmin, async (req: Request, res: Re
       module_assigned_at: a.module_assigned_at,
     })).sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-    const evidence = (s.evidence ?? []).map((e: any) => ({ id: e.id, file_name: e.file_name, file_type: e.file_type, size_bytes: e.size_bytes, created_at: e.created_at }))
+    const evidence = (s.evidence ?? []).map((e: any) => ({ id: e.id, file_name: e.file_name, file_type: e.file_type, size_bytes: e.size_bytes, scan_status: e.scan_status ?? 'skipped', created_at: e.created_at }))
       .sort((a: any, b: any) => String(b.created_at).localeCompare(String(a.created_at)))
+
+    // Certificates already issued for this session (so the UI can mark who has one).
+    const certs = await (prisma as any).faceToFaceCertificate.findMany({ where: { tenant_id: tenantId, session_id: s.id }, select: { id: true, user_id: true, created_at: true } })
+    const certByUser: Record<string, { id: string; created_at: Date }> = {}
+    for (const c of certs as any[]) certByUser[c.user_id] = { id: c.id, created_at: c.created_at }
 
     ok(res, {
       session: {
         ...summariseSession(s),
         delivered_by_name_resolved: s.delivered_by_user_id ? (uMap.get(s.delivered_by_user_id)?.name ?? null) : s.delivered_by_name,
-        attendance,
+        attendance: attendance.map((a: any) => ({ ...a, certificate_id: certByUser[a.user_id]?.id ?? null })),
         evidence,
       },
     })
@@ -518,13 +524,28 @@ faceToFaceRouter.get('/analytics', requireAdmin, async (req: Request, res: Respo
       }
     }
 
+    // Stored completion certificates: per-staff counts + the recent list.
+    const certRows = await (prisma as any).faceToFaceCertificate.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' } })
+    const certCountByUser = new Map<string, number>()
+    for (const c of certRows as any[]) {
+      certCountByUser.set(c.user_id, (certCountByUser.get(c.user_id) ?? 0) + 1)
+      if (!byStaff.has(c.user_id)) {
+        const u = uMap.get(c.user_id)
+        byStaff.set(c.user_id, { user_id: c.user_id, name: u?.name ?? c.user_name, job_role: u?.job_role ?? null, allocated: 0, attended: 0, missed: 0, assigned: 0, assigned_incomplete: 0, missed_sessions: [] })
+      }
+    }
+    for (const st of byStaff.values()) st.certificates = certCountByUser.get(st.user_id) ?? 0
+
     const by_staff = [...byStaff.values()]
-      .filter(s => s.missed > 0 || s.assigned > 0)
-      .sort((a, b) => (b.missed - a.missed) || (b.assigned_incomplete - a.assigned_incomplete))
+      .filter(s => s.missed > 0 || s.assigned > 0 || s.certificates > 0)
+      .sort((a, b) => (b.missed - a.missed) || (b.assigned_incomplete - a.assigned_incomplete) || (b.certificates - a.certificates))
+
+    const certificates = (certRows as any[]).map(c => ({ id: c.id, user_id: c.user_id, user_name: c.user_name, title: c.title, session_date: c.session_date, competency: c.competency, created_at: c.created_at }))
 
     ok(res, {
-      summary: { sessions: (sessions as any[]).length, allocations: totalAlloc, attended: totalAttended, missed: totalMissed, modules_assigned: assignedCount, assigned_incomplete: assignedIncomplete },
+      summary: { sessions: (sessions as any[]).length, allocations: totalAlloc, attended: totalAttended, missed: totalMissed, modules_assigned: assignedCount, assigned_incomplete: assignedIncomplete, certificates: certRows.length },
       by_staff,
+      certificates,
     })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
@@ -760,12 +781,18 @@ faceToFaceRouter.post('/sessions/:id/evidence', requireAdmin, evidenceUploadMidd
     const count = await (prisma as any).faceToFaceEvidence.count({ where: { session_id: session.id } })
     if (count >= MAX_EVIDENCE_PER_SESSION) { err(res, 'TOO_MANY', `A session can hold up to ${MAX_EVIDENCE_PER_SESSION} evidence files. Delete some first.`, 400); return }
 
+    // Malware scan (Cloudmersive when configured). Infected -> reject; if the scanner
+    // is configured but errors -> fail closed (don't store an unscanned file).
+    const scan = await scanBuffer(file.buffer, file.originalname)
+    if (scan.status === 'infected') { err(res, 'MALWARE_DETECTED', 'That file was flagged by the malware scanner and was not uploaded.', 400); return }
+    if (scan.status === 'error' && scannerConfigured()) { err(res, 'SCAN_FAILED', 'The file could not be virus-scanned just now, so it was not uploaded. Please try again.', 503); return }
+
     const key = `${randomUUID()}.${detected.ext}`
     const s3Key = await uploadEvidenceFile({ tenantId, sessionId: session.id, key, buffer: file.buffer, mimeType: detected.mime })
     const ev = await (prisma as any).faceToFaceEvidence.create({
-      data: { tenant_id: tenantId, session_id: session.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: detected.mime, size_bytes: file.size ?? 0, uploaded_by: uid(req) },
+      data: { tenant_id: tenantId, session_id: session.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: detected.mime, size_bytes: file.size ?? 0, scan_status: scan.status === 'clean' ? 'clean' : 'skipped', uploaded_by: uid(req) },
     })
-    ok(res, { evidence: { id: ev.id, file_name: ev.file_name, file_type: ev.file_type, size_bytes: ev.size_bytes, created_at: ev.created_at } })
+    ok(res, { evidence: { id: ev.id, file_name: ev.file_name, file_type: ev.file_type, size_bytes: ev.size_bytes, scan_status: ev.scan_status, created_at: ev.created_at } })
   } catch (e: any) { err(res, 'UPLOAD_FAILED', e?.message ?? 'Could not upload the file.', 500) }
 })
 
@@ -802,4 +829,85 @@ faceToFaceRouter.delete('/evidence/:id', requireAdmin, async (req: Request, res:
     await (prisma as any).faceToFaceEvidence.delete({ where: { id: ev.id } })
     ok(res, { deleted: true })
   } catch (e: any) { err(res, 'DELETE_FAILED', e?.message ?? 'Could not delete the file.', 500) }
+})
+
+// ─── Stored completion certificates ───────────────────────────────────────────
+// POST /face-to-face/sessions/:id/certificate  body: { user_id, pdf_base64 }
+// Issues (stores) a certificate for one attendee. The PDF is generated in the
+// browser; we only store it once the person is marked ATTENDED (server-enforced).
+faceToFaceRouter.post('/sessions/:id/certificate', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const userId = String(req.body?.user_id ?? '')
+  const pdfBase64 = String(req.body?.pdf_base64 ?? '').replace(/^data:application\/pdf;base64,/, '')
+  if (!userId) { err(res, 'VALIDATION_ERROR', 'A staff member is required.', 400); return }
+  if (!pdfBase64 || pdfBase64.length < 100) { err(res, 'INVALID', 'No certificate to store.', 400); return }
+  try {
+    const session = await (prisma as any).faceToFaceSession.findFirst({
+      where: { id: String(req.params.id), tenant_id: tenantId },
+      include: { attendance: { where: { user_id: userId } } },
+    })
+    if (!session) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
+    const att = (session.attendance ?? [])[0]
+    if (!att) { err(res, 'NOT_ALLOCATED', 'That staff member was not allocated to this session.', 400); return }
+    if (att.status !== 'attended') { err(res, 'NOT_ATTENDED', 'A certificate can only be issued once the staff member is marked as attended.', 400); return }
+
+    const user = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { name: true } })
+    const buffer = Buffer.from(pdfBase64, 'base64')
+
+    // One certificate per person per session: replace any existing one.
+    const existing = await (prisma as any).faceToFaceCertificate.findFirst({ where: { tenant_id: tenantId, session_id: session.id, user_id: userId } })
+    const id = existing?.id ?? randomUUID()
+    const s3Key = await uploadCertificateFile({ tenantId, certificateId: id, buffer })
+    const fileName = `${(session.title || 'training').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)}-certificate.pdf`
+    const dataFields = {
+      tenant_id: tenantId, session_id: session.id, user_id: userId,
+      user_name: user?.name ?? 'Staff member', title: session.title, session_date: session.session_date,
+      competency: att.competency ?? 'not_assessed', s3_key: s3Key, file_name: fileName, issued_by: uid(req),
+    }
+    if (existing) await (prisma as any).faceToFaceCertificate.update({ where: { id }, data: dataFields })
+    else await (prisma as any).faceToFaceCertificate.create({ data: { id, ...dataFields } })
+
+    ok(res, { certificate: { id, user_id: userId, title: session.title } })
+  } catch (e: any) { err(res, 'ISSUE_FAILED', e?.message ?? 'Could not store the certificate.', 500) }
+})
+
+// GET /face-to-face/certificates?user_id=&limit=  — list stored certificates
+faceToFaceRouter.get('/certificates', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  const userId = req.query.user_id ? String(req.query.user_id) : null
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 200))
+  try {
+    const where: any = { tenant_id: tenantId }
+    if (userId) where.user_id = userId
+    const rows = await (prisma as any).faceToFaceCertificate.findMany({ where, orderBy: { created_at: 'desc' }, take: limit })
+    ok(res, { certificates: (rows as any[]).map(c => ({ id: c.id, user_id: c.user_id, user_name: c.user_name, title: c.title, session_date: c.session_date, competency: c.competency, file_name: c.file_name, created_at: c.created_at })) })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not load certificates.', 500) }
+})
+
+// GET /face-to-face/certificate/:id  — authenticated PDF stream
+faceToFaceRouter.get('/certificate/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const c = await (prisma as any).faceToFaceCertificate.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+    if (!c) { err(res, 'NOT_FOUND', 'Certificate not found.', 404); return }
+    const buf = await downloadFile(c.s3_key)
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; object-src 'self'")
+    res.setHeader('Cache-Control', 'private, no-store')
+    res.setHeader('Content-Disposition', `inline; filename="${c.file_name.replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
+    res.send(buf)
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not fetch the certificate.', 500) }
+})
+
+// DELETE /face-to-face/certificate/:id
+faceToFaceRouter.delete('/certificate/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const c = await (prisma as any).faceToFaceCertificate.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+    if (!c) { err(res, 'NOT_FOUND', 'Certificate not found.', 404); return }
+    await deleteFile(c.s3_key)
+    await (prisma as any).faceToFaceCertificate.delete({ where: { id: c.id } })
+    ok(res, { deleted: true })
+  } catch (e: any) { err(res, 'DELETE_FAILED', e?.message ?? 'Could not delete the certificate.', 500) }
 })

@@ -381,6 +381,17 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     },
   }
 
+  // ── Stored face-to-face completion certificates for this person ──
+  const certRows = await (prisma as any).faceToFaceCertificate.findMany({
+    where:  { tenant_id: tenantId, user_id: userId },
+    select: { id: true, title: true, session_date: true, competency: true, file_name: true, created_at: true },
+    orderBy: { created_at: 'desc' },
+  }).catch(() => [] as any[])
+  const certificates = {
+    items: (certRows as any[]).map(c => ({ id: c.id, title: c.title, session_date: c.session_date, competency: c.competency, file_name: c.file_name, issued_at: c.created_at })),
+    count: (certRows as any[]).length,
+  }
+
   return {
     user: {
       id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role,
@@ -393,6 +404,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     annual_training: { items: annualTraining, summary: annualSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
     face_to_face: faceToFace,
+    certificates,
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,
     cqc_prep: cqcPrep,

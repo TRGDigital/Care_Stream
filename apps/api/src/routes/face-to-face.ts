@@ -94,6 +94,16 @@ function cleanMonths(v: any): number | null {
   const n = Math.round(Number(v))
   return Number.isFinite(n) && n > 0 ? Math.min(60, n) : null
 }
+// Extract the raw base64 from a data URI. jsPDF emits prefixes like
+// "data:application/pdf;filename=generated.pdf;base64,..." (note the extra
+// ;filename= segment), so we take everything after the LAST "base64," rather
+// than matching a fixed prefix — otherwise the prefix is decoded as bytes and
+// the file is corrupt ("Failed to load PDF document").
+function dataUriToBase64(s: string): string {
+  const i = s.lastIndexOf('base64,')
+  return i >= 0 ? s.slice(i + 'base64,'.length) : s
+}
+
 // Same calendar day-of-month, n months on (UTC). Clamps to month length (e.g. 31 Jan -> 28/29 Feb).
 function addMonthsUTC(d: Date, n: number): Date {
   const y = d.getUTCFullYear(), m = d.getUTCMonth(), day = d.getUTCDate()
@@ -617,7 +627,7 @@ faceToFaceRouter.post('/payroll/email', requireAdmin, async (req: Request, res: 
   try {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     const { sendF2FPayrollEmail } = await import('../services/email/outbound')
-    await sendF2FPayrollEmail({ to, orgName: tenant?.name ?? 'Your service', monthLabel, pdfBase64: pdfBase64.replace(/^data:application\/pdf;base64,/, '') })
+    await sendF2FPayrollEmail({ to, orgName: tenant?.name ?? 'Your service', monthLabel, pdfBase64: dataUriToBase64(pdfBase64) })
     ok(res, { sent: to })
   } catch (e: any) { err(res, 'SEND_FAILED', e?.message ?? 'Could not send the report.', 500) }
 })
@@ -838,7 +848,7 @@ faceToFaceRouter.delete('/evidence/:id', requireAdmin, async (req: Request, res:
 faceToFaceRouter.post('/sessions/:id/certificate', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = tid(req)
   const userId = String(req.body?.user_id ?? '')
-  const pdfBase64 = String(req.body?.pdf_base64 ?? '').replace(/^data:application\/pdf;base64,/, '')
+  const pdfBase64 = dataUriToBase64(String(req.body?.pdf_base64 ?? ''))
   if (!userId) { err(res, 'VALIDATION_ERROR', 'A staff member is required.', 400); return }
   if (!pdfBase64 || pdfBase64.length < 100) { err(res, 'INVALID', 'No certificate to store.', 400); return }
   try {

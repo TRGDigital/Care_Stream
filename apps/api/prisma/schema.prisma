@@ -802,8 +802,9 @@ model ProviderLead {
   ai_drafted_at         DateTime?
   contact_name          String?                          // decision-maker (e.g. director / registered manager)
   contact_role          String?
-  enriched_email        String?                          // best contact email scraped from the provider's website
-  enrichment_source     String?                          // website | companies-house | website+companies-house | none
+  enriched_email        String?                          // primary contact email (named contact preferred)
+  alt_email             String?                          // secondary email (e.g. generic info@) when a named one is also found
+  enrichment_source     String?                          // website | hunter | companies-house | combinations | none
   company_number        String?
   enriched_at           DateTime?
   email_status          String    @default("none")        // none | drafted | sent | replied | booked | unsubscribed

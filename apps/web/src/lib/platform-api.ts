@@ -489,6 +489,7 @@ export interface ProviderLead {
   contact_name: string | null
   contact_role: string | null
   enriched_email: string | null
+  alt_email: string | null
   enrichment_source: string | null
   company_number: string | null
   enriched_at: string | null

@@ -48,6 +48,7 @@ export async function enrichBatch({ limit = 60, segment, concurrency = 6, useFin
             contact_name: r.contactName,
             contact_role: r.contactRole,
             enriched_email: r.email,
+            alt_email: r.altEmail,
             enrichment_source: r.source,
             company_number: r.companyNumber,
             enriched_at: new Date(),

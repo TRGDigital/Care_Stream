@@ -21,7 +21,8 @@ export interface EnrichOpts {
 export interface EnrichResult {
   contactName: string | null
   contactRole: string | null
-  email: string | null
+  email: string | null // primary (named contact preferred)
+  altEmail: string | null // secondary (e.g. generic info@) when both are found
   companyNumber: string | null
   source: string // '+'-joined contributing sources: website | hunter | companies-house | none
   notes: string | null
@@ -218,32 +219,57 @@ async function fromCompaniesHouse(name: string): Promise<{ companyNumber: string
   return { companyNumber, contactName, contactRole }
 }
 
+// Local-parts that signal a generic shared mailbox rather than a named person.
+const GENERIC_LOCALS = ['info', 'enquiries', 'enquiry', 'admin', 'hello', 'contact', 'office', 'reception', 'home', 'care', 'mail', 'team', 'sales', 'support', 'hi', 'accounts', 'recruitment', 'careers', 'general']
+function isGenericEmail(email: string | null): boolean {
+  if (!email) return false
+  const local = (email.toLowerCase().split('@')[0] ?? '')
+  return GENERIC_LOCALS.some((g) => local === g || local.startsWith(g))
+}
+
+interface Candidate { email: string; named: boolean; src: string; name: string | null; role: string | null }
+
 export async function enrichLead(input: EnrichInput, opts: EnrichOpts = {}): Promise<EnrichResult> {
   const [web, ch] = await Promise.all([fromWebsite(input.website), fromCompaniesHouse(input.name)])
 
+  // The scrape's email is almost always a generic shared mailbox (info@…). To
+  // ALWAYS prefer a named contact, consult Hunter unless the scrape already
+  // surfaced a personal (named) email.
+  const scrapeHasPersonalEmail = !!web.email && !isGenericEmail(web.email)
+  const hunter = opts.useFinder && !scrapeHasPersonalEmail ? await fromHunter(input.website, input.name) : null
+
+  // Gather candidate emails (named = a personal mailbox), de-duplicated.
+  const cands: Candidate[] = []
+  if (hunter?.email) cands.push({ email: hunter.email, named: !!hunter.name, src: 'hunter', name: hunter.name, role: hunter.role })
+  if (web.email) cands.push({ email: web.email, named: !isGenericEmail(web.email), src: 'website', name: null, role: null })
+  const seen = new Set<string>()
+  const uniq = cands.filter((c) => { const k = c.email.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true })
+
+  // Primary = a named contact if we have one, else the first; secondary = the other (e.g. info@).
+  const primary = uniq.find((c) => c.named) ?? uniq[0] ?? null
+  const alt = uniq.find((c) => c !== primary) ?? null
+
   const sources: string[] = []
-  let email = web.email
-  let finderName: string | null = null
-  let finderRole: string | null = null
-  if (web.email || web.contactName) sources.push('website')
-
-  // Paid fallback only when the free scrape found no email.
-  if (!email && opts.useFinder) {
-    const h = await fromHunter(input.website, input.name)
-    if (h?.email) {
-      email = h.email
-      finderName = h.name
-      finderRole = h.role
-      sources.push('hunter')
-    }
+  let contactName: string | null = null
+  let contactRole: string | null = null
+  if (primary) {
+    sources.push(primary.src)
+    if (primary.named && primary.name) { contactName = primary.name; contactRole = primary.role }
   }
-  if (ch?.contactName) sources.push('companies-house')
+  if (alt) sources.push(alt.src)
 
-  // Prefer a Companies House director, then a website-found manager, then Hunter's named hit.
-  const contactName = ch?.contactName ?? web.contactName ?? finderName
-  const contactRole = ch?.contactName ? ch.contactRole : web.contactName ? web.contactRole : finderRole
+  // Fall back to a website manager name, then a Companies House director.
+  if (!contactName && web.contactName) {
+    contactName = web.contactName
+    contactRole = web.contactRole
+    if (!sources.includes('website')) sources.push('website')
+  }
+  if (ch?.contactName) {
+    if (!contactName) { contactName = ch.contactName; contactRole = ch.contactRole }
+    sources.push('companies-house')
+  }
 
-  const source = sources.join('+') || 'none'
+  const source = [...new Set(sources)].join('+') || 'none'
   const notes =
     source === 'none'
       ? input.website
@@ -251,5 +277,13 @@ export async function enrichLead(input: EnrichInput, opts: EnrichOpts = {}): Pro
         : 'No website on file and no Companies House match.'
       : null
 
-  return { contactName: contactName ?? null, contactRole: contactRole ?? null, email, companyNumber: ch?.companyNumber ?? null, source, notes }
+  return {
+    contactName,
+    contactRole,
+    email: primary?.email ?? null,
+    altEmail: alt?.email ?? null,
+    companyNumber: ch?.companyNumber ?? null,
+    source,
+    notes,
+  }
 }

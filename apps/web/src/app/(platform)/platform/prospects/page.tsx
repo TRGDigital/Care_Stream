@@ -470,7 +470,10 @@ function LeadDrawer({ id, onClose, onSaved, apiToken }: { id: string; onClose: (
                   <div className="text-neutral-dark"><span className="font-semibold">{lead.contact_name}</span>{lead.contact_role && <span className="text-neutral-mid"> · {lead.contact_role}</span>}</div>
                 )}
                 {lead.enriched_email && (
-                  <a href={`mailto:${lead.enriched_email}`} className="flex items-center gap-1.5 text-teal hover:underline"><Mail size={14} />{lead.enriched_email}</a>
+                  <a href={`mailto:${lead.enriched_email}`} className="flex items-center gap-1.5 text-teal hover:underline"><Mail size={14} />{lead.enriched_email}{lead.contact_name ? ` · ${lead.contact_name}` : ''}</a>
+                )}
+                {lead.alt_email && (
+                  <a href={`mailto:${lead.alt_email}`} className="flex items-center gap-1.5 text-xs text-neutral-mid hover:underline"><Mail size={12} />{lead.alt_email} <span className="text-neutral-mid">(alt)</span></a>
                 )}
                 {lead.company_number && (
                   <a href={`https://find-and-update.company-information.service.gov.uk/company/${lead.company_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-neutral-mid hover:underline"><Building2 size={13} />Companies House {lead.company_number}</a>

@@ -240,6 +240,7 @@ prospectsRouter.post('/:id/enrich', async (req: Request, res: Response) => {
         contact_name: result.contactName,
         contact_role: result.contactRole,
         enriched_email: result.email,
+        alt_email: result.altEmail,
         enrichment_source: result.source,
         company_number: result.companyNumber,
         enriched_at: new Date(),

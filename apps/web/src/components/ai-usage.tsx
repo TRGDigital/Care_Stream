@@ -4,7 +4,9 @@
 // (everyday Q&A) — kept separate. Used on the dashboard and each AI feature page.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Sparkles, MessageSquare } from 'lucide-react'
 
 type Meter = { used: number; limit: number | null; remaining: number | null; resets_at: string }
@@ -12,9 +14,14 @@ type Usage = { credits: Meter; queries: Meter }
 
 function resetLabel(iso: string) { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
 
+// Stale-while-revalidate: paint the last snapshot instantly, refresh in the background.
 export function useAiUsage(token: string) {
-  const [usage, setUsage] = useState<Usage | null>(null)
-  useEffect(() => { createApiClient(token).training.aiUsage().then(setUsage).catch(() => {}) }, [token])
+  const { data: session } = useSession()
+  const cacheKey = `ai-usage-${session?.user?.email ?? 'guest'}`
+  const [usage, setUsage] = useState<Usage | null>(() => persistentCache.get<Usage>(cacheKey) ?? null)
+  useEffect(() => {
+    createApiClient(token).training.aiUsage().then(u => { setUsage(u); persistentCache.set(cacheKey, u) }).catch(() => {})
+  }, [token, cacheKey])
   return usage
 }
 

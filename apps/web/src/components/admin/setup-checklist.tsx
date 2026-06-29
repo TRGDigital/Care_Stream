@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { CheckCircle2, Circle, X, FileText, Users, GraduationCap, MessageSquare, ArrowRight } from 'lucide-react'
 
 type Status = { policies: boolean; staff: boolean; training: boolean; query: boolean; allocated: boolean }
@@ -15,7 +16,8 @@ type Step = { done: boolean; Icon: typeof FileText; title: string; desc: string;
 
 export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: string; tenantId: string; tier?: string }) {
   const trainingOnly = tier === 'training_only'
-  const [status, setStatus]       = useState<Status | null>(null)
+  const statusKey = `admin-setup-${tenantId}`
+  const [status, setStatus]       = useState<Status | null>(() => persistentCache.get<Status>(statusKey) ?? null)
   const [dismissed, setDismissed] = useState(true) // hidden until we've checked localStorage
 
   const key = `cs-setup-dismissed-${tenantId}`
@@ -26,12 +28,13 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
 
   useEffect(() => {
     const api = createApiClient(token)
+    const save = (s: Status) => { setStatus(s); persistentCache.set(statusKey, s) }
     // Training-only clients have a different starting setup: add staff, then allocate the
     // licences they bought. No policies / hub / full-training assignment applies to them.
     if (trainingOnly) {
       Promise.allSettled([api.users.list(), api.training.licences()]).then(([u, l]) => {
         const lic = l.status === 'fulfilled' ? ((l.value as any)?.licences ?? []) : []
-        setStatus({
+        save({
           policies: false, training: false, query: false,
           staff:     u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
           allocated: Array.isArray(lic) && lic.some((x: any) => x?.user_id),
@@ -45,7 +48,7 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
       api.query.list({ limit: '1' }),
       api.training.compliance(),
     ]).then(([p, u, q, t]) => {
-      setStatus({
+      save({
         policies: p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
         staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
         query:    q.status === 'fulfilled' && Number((q.value as any)?.total ?? 0) > 0,
@@ -53,7 +56,7 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
         allocated: false,
       })
     }).catch(() => {})
-  }, [token, trainingOnly])
+  }, [token, trainingOnly, statusKey])
 
   if (!status || dismissed) return null
 

@@ -7,22 +7,27 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Sparkles, BadgeCheck } from 'lucide-react'
 
 const gbp = (pence: number) => `£${(pence / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
+type PlanSummary = Awaited<ReturnType<ReturnType<typeof createApiClient>['billing']['summary']>>
+
 export function PlanCard({ token }: { token: string }) {
-  const [data, setData] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['billing']['summary']>> | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: session } = useSession()
+  const cacheKey = `admin-plancard-${session?.user?.email ?? 'guest'}`
+  const [data, setData] = useState<PlanSummary | null>(() => persistentCache.get<PlanSummary>(cacheKey) ?? null)
+  const [loading, setLoading] = useState(!persistentCache.get<PlanSummary>(cacheKey))
 
   useEffect(() => {
     let active = true
     createApiClient(token).billing.summary()
-      .then(s => { if (active) setData(s) })
+      .then(s => { if (active) { setData(s); persistentCache.set(cacheKey, s) } })
       .catch(() => {})
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [token])
+  }, [token, cacheKey])
 
   if (loading) {
     return <div className="mb-6 h-24 animate-pulse rounded-card border border-gray-100 bg-gray-50" />

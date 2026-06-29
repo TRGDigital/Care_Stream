@@ -10,7 +10,7 @@ import {
 
 const NAV = [
   { href: '/platform/dashboard',       label: 'Dashboard',        Icon: LayoutDashboard },
-  { href: '/platform/prospects',       label: 'Prospects',        Icon: Target, newTab: true },
+  { href: '/platform/prospects',       label: 'Prospects',        Icon: Target          },
   { href: '/platform/clients',         label: 'Clients',          Icon: Building2       },
   { href: '/platform/usage',           label: 'Usage',            Icon: BarChart2       },
   { href: '/platform/analytics',       label: 'AI Analytics',     Icon: LineChart       },
@@ -51,14 +51,12 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Platform navigation">
-          {NAV.map(({ href, label, Icon, newTab }) => {
-            const active = !newTab && (pathname === href || pathname.startsWith(href + '/'))
+          {NAV.map(({ href, label, Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link
                 key={href}
                 href={href}
-                target={newTab ? '_blank' : undefined}
-                rel={newTab ? 'noopener noreferrer' : undefined}
                 className={clsx(
                   'mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   active
@@ -69,7 +67,6 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
               >
                 <Icon size={15} />
                 {label}
-                {newTab && <span className="ml-auto text-[10px] text-neutral-mid">↗</span>}
               </Link>
             )
           })}

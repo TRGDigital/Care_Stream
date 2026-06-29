@@ -105,12 +105,12 @@ const F2F_STYLE: Record<string, { cls: string; glyph: string; label: string }> =
   none:     { cls: 'bg-neutral-light/60 text-neutral-mid/50',             glyph: '·', label: 'Not recorded' },
 }
 
-function F2FComplianceMatrix({ token, enabled }: { token: string; enabled: boolean }) {
-  const [data, setData] = useState<any>(null)
+function F2FComplianceMatrix({ token, enabled, userId }: { token: string; enabled: boolean; userId: string }) {
+  const [data, setData] = useState<any>(() => persistentCache.get<any>(`admin-f2f-matrix-${userId}`) ?? null)
   useEffect(() => {
     if (!token || !enabled) return
-    createApiClient(token).faceToFace.matrix().then(setData).catch(() => setData(null))
-  }, [token, enabled])
+    createApiClient(token).faceToFace.matrix().then(d => { setData(d); persistentCache.set(`admin-f2f-matrix-${userId}`, d) }).catch(() => {})
+  }, [token, enabled, userId])
   if (!enabled || !data || data.topics.length === 0 || data.staff.length === 0) return null
   return (
     <MatrixShell
@@ -153,12 +153,12 @@ function OnboardingStatusCell({ cell }: { cell: any }) {
   return <span title={`Not started · ${t}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={12} /></span>
 }
 
-function OnboardingComplianceMatrix({ token }: { token: string }) {
-  const [data, setData] = useState<any>(null)
+function OnboardingComplianceMatrix({ token, userId }: { token: string; userId: string }) {
+  const [data, setData] = useState<any>(() => persistentCache.get<any>(`admin-onboarding-matrix-${userId}`) ?? null)
   useEffect(() => {
     if (!token) return
-    createApiClient(token).onboarding.matrix().then(setData).catch(() => setData(null))
-  }, [token])
+    createApiClient(token).onboarding.matrix().then(d => { setData(d); persistentCache.set(`admin-onboarding-matrix-${userId}`, d) }).catch(() => {})
+  }, [token, userId])
   if (!data || data.flows.length === 0 || data.staff.length === 0) return null
   return (
     <MatrixShell
@@ -1653,10 +1653,10 @@ export default function TrainingPage() {
       )}
 
       {/* Face-to-face training matrix (only for plans with the feature) */}
-      <F2FComplianceMatrix token={session?.accessToken ?? ''} enabled={!f2fLocked} />
+      <F2FComplianceMatrix token={session?.accessToken ?? ''} enabled={!f2fLocked} userId={userId} />
 
       {/* Staff onboarding matrix */}
-      <OnboardingComplianceMatrix token={session?.accessToken ?? ''} />
+      <OnboardingComplianceMatrix token={session?.accessToken ?? ''} userId={userId} />
 
       </> }
 

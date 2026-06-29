@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import {
   ChevronLeft, ChevronRight, Plus, Users, X, Trash2,
   CheckCircle2, XCircle, Circle, GraduationCap, Send, Info, Mail, AlertTriangle, FileText, Download, Loader2,
@@ -22,18 +23,21 @@ type Session = { id: string; module_id: string | null; title: string; session_da
 
 export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
+  const { data: authSession } = useSession()
+  const cacheKey = `admin-f2f-tab-${(authSession?.user as any)?.email ?? 'guest'}`
+  const cached = useMemo(() => persistentCache.get<{ sessions: Session[]; modules: Module[]; staff: Staff[]; unmarked: any[] }>(cacheKey), [cacheKey])
 
   const today = new Date()
   const [year, setYear]   = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())  // 0-based
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [modules,  setModules]  = useState<Module[]>([])
-  const [staff,    setStaff]    = useState<Staff[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const [sessions, setSessions] = useState<Session[]>(cached?.sessions ?? [])
+  const [modules,  setModules]  = useState<Module[]>(cached?.modules ?? [])
+  const [staff,    setStaff]    = useState<Staff[]>(cached?.staff ?? [])
+  const [loading,  setLoading]  = useState(!cached)
   const [editing,  setEditing]  = useState<{ mode: 'new'; date?: string } | { mode: 'edit'; session: Session } | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
   // Past/today sessions with staff still not marked attended or absent.
-  const [unmarked, setUnmarked] = useState<any[]>([])
+  const [unmarked, setUnmarked] = useState<any[]>(cached?.unmarked ?? [])
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
   const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
@@ -41,10 +45,14 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [view, setView] = useState<'calendar' | 'matrix'>('calendar')   // calendar vs compliance matrix
 
   // Adhoc + annual training for the visible month (powers the calendar overlay).
+  // Paint from cache instantly, then revalidate.
   useEffect(() => {
     if (!api) return
-    api.faceToFace.trainingMonth(`${year}-${pad(month + 1)}`).then(d => setTraining({ adhoc: d.adhoc, annual: d.annual })).catch(() => setTraining(null))
-  }, [api, year, month])
+    const tmKey = `${cacheKey}-tm-${year}-${pad(month + 1)}`
+    const c = persistentCache.get<{ adhoc: any[]; annual: any[] }>(tmKey)
+    if (c) setTraining(c)
+    api.faceToFace.trainingMonth(`${year}-${pad(month + 1)}`).then(d => { const v = { adhoc: d.adhoc, annual: d.annual }; setTraining(v); persistentCache.set(tmKey, v) }).catch(() => {})
+  }, [api, year, month, cacheKey])
 
   async function loadUnmarked() {
     if (!api) return
@@ -59,13 +67,14 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   }
   useEffect(() => {
     if (!api) return
-    setLoading(true)
+    if (!cached) setLoading(true)   // only show the spinner when there's nothing cached to paint
+    let s: Session[] = [], mo: Module[] = [], st: Staff[] = [], un: any[] = []
     Promise.all([
-      api.faceToFace.sessions(`${year - 1}-01-01`, `${year + 1}-12-31`).then(d => setSessions(d.sessions)).catch(() => {}),
-      api.faceToFace.modules().then(d => setModules(d.modules)).catch(() => {}),
-      api.users.list().then((d: any) => setStaff((d.users ?? d ?? []).filter((u: any) => u.is_active !== false))).catch(() => {}),
-      api.faceToFace.unmarked().then(d => setUnmarked(d.sessions)).catch(() => {}),
-    ]).finally(() => setLoading(false))
+      api.faceToFace.sessions(`${year - 1}-01-01`, `${year + 1}-12-31`).then(d => { s = d.sessions; setSessions(d.sessions) }).catch(() => {}),
+      api.faceToFace.modules().then(d => { mo = d.modules; setModules(d.modules) }).catch(() => {}),
+      api.users.list().then((d: any) => { st = (d.users ?? d ?? []).filter((u: any) => u.is_active !== false); setStaff(st) }).catch(() => {}),
+      api.faceToFace.unmarked().then(d => { un = d.sessions; setUnmarked(d.sessions) }).catch(() => {}),
+    ]).finally(() => { setLoading(false); persistentCache.set(cacheKey, { sessions: s, modules: mo, staff: st, unmarked: un }) })
   }, [api, year]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Quick-mark one person straight from the "still to record" list.
@@ -137,7 +146,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         </div>
       </div>
 
-      {view === 'matrix' && api && <F2FMatrixView api={api} modules={modules} staff={staff} />}
+      {view === 'matrix' && api && <F2FMatrixView api={api} modules={modules} staff={staff} cacheKey={cacheKey} />}
 
       {view === 'calendar' && (<>
 
@@ -1104,14 +1113,15 @@ const STATUS_STYLE: Record<string, { cls: string; glyph: string; label: string }
   none:     { cls: 'bg-neutral-light/60 text-neutral-mid/50',        glyph: '·', label: 'Not recorded' },
 }
 
-function F2FMatrixView({ api, modules, staff }: {
-  api: ReturnType<typeof createApiClient>; modules: Module[]; staff: Staff[]
+function F2FMatrixView({ api, modules, staff, cacheKey }: {
+  api: ReturnType<typeof createApiClient>; modules: Module[]; staff: Staff[]; cacheKey: string
 }) {
-  const [data, setData] = useState<MatrixData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const mKey = `${cacheKey}-matrix`
+  const [data, setData] = useState<MatrixData | null>(() => persistentCache.get<MatrixData>(mKey) ?? null)
+  const [loading, setLoading] = useState(!persistentCache.get<MatrixData>(mKey))
   const [configOpen, setConfigOpen] = useState(false)
 
-  function load() { setLoading(true); api.faceToFace.matrix().then(setData).catch(() => setData(null)).finally(() => setLoading(false)) }
+  function load() { api.faceToFace.matrix().then(d => { setData(d); persistentCache.set(mKey, d) }).catch(() => {}).finally(() => setLoading(false)) }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Roles available to configure = those held by staff plus any already configured.

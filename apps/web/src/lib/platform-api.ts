@@ -33,15 +33,15 @@ const TOKEN_KEY = 'platform_admin_token'
 
 export function getPlatformToken(): string | null {
   if (typeof window === 'undefined') return null
-  return sessionStorage.getItem(TOKEN_KEY)
+  return localStorage.getItem(TOKEN_KEY)
 }
 
 export function setPlatformToken(token: string): void {
-  sessionStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem(TOKEN_KEY, token)
 }
 
 export function clearPlatformToken(): void {
-  sessionStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(TOKEN_KEY)
 }
 
 async function adminFetch<T>(

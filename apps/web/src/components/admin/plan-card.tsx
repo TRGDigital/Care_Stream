@@ -36,6 +36,9 @@ export function PlanCard({ token }: { token: string }) {
 
   const plan = data.plan_name ?? 'No plan'
   const isEnterprise = plan.toLowerCase() === 'enterprise'
+  // Enterprise is the top tier with unlimited allocations and nothing to upgrade,
+  // so we don't show the plan/manage banner at all for them.
+  if (isEnterprise) return null
   const lic = data.features?.annual_license
   const used = lic?.used ?? 0
   const limit = lic?.limit ?? null            // null = unlimited

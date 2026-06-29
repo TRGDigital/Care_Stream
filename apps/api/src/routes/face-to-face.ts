@@ -720,9 +720,27 @@ faceToFaceRouter.put('/mandatory', requireAdmin, async (req: Request, res: Respo
 })
 
 // ─── Session evidence files (CQC: signed sheets, photos, trainer certs) ───────
-const EVIDENCE_EXT: Record<string, string> = {
-  'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png',
-  'image/webp': 'webp', 'image/gif': 'gif', 'image/heic': 'heic',
+// Hard cap on files per session (abuse / storage-bomb guard).
+const MAX_EVIDENCE_PER_SESSION = 40
+
+// Content sniffing: validate the ACTUAL bytes, never trust the browser-reported
+// MIME or the filename extension. We only ever accept PDF + raster images, and we
+// store/serve the canonical type we detected here. This blocks disguised payloads
+// (e.g. an HTML/SVG/script file renamed .png) that could otherwise become stored
+// XSS when served back from the API origin.
+function detectEvidenceType(buf: Buffer): { mime: string; ext: string } | null {
+  const b = buf
+  const ascii = (i: number, s: string) => s.split('').every((c, k) => b[i + k] === c.charCodeAt(0))
+  if (b.length >= 5 && ascii(0, '%PDF-')) return { mime: 'application/pdf', ext: 'pdf' }
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { mime: 'image/jpeg', ext: 'jpg' }
+  if (b.length >= 8 && b[0] === 0x89 && ascii(1, 'PNG') && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return { mime: 'image/png', ext: 'png' }
+  if (b.length >= 6 && (ascii(0, 'GIF87a') || ascii(0, 'GIF89a'))) return { mime: 'image/gif', ext: 'gif' }
+  if (b.length >= 12 && ascii(0, 'RIFF') && ascii(8, 'WEBP')) return { mime: 'image/webp', ext: 'webp' }
+  if (b.length >= 12 && ascii(4, 'ftyp')) {
+    const brand = b.toString('ascii', 8, 12)
+    if (['heic', 'heix', 'heif', 'hevc', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'].includes(brand)) return { mime: 'image/heic', ext: 'heic' }
+  }
+  return null
 }
 
 // POST /face-to-face/sessions/:id/evidence  (multipart: field "file")
@@ -733,25 +751,43 @@ faceToFaceRouter.post('/sessions/:id/evidence', requireAdmin, evidenceUploadMidd
   try {
     const session = await (prisma as any).faceToFaceSession.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } })
     if (!session) { err(res, 'NOT_FOUND', 'Session not found.', 404); return }
-    const ext = EVIDENCE_EXT[file.mimetype] ?? (file.originalname.split('.').pop()?.toLowerCase() || 'bin')
-    const key = `${randomUUID()}.${ext}`
-    const s3Key = await uploadEvidenceFile({ tenantId, sessionId: session.id, key, buffer: file.buffer, mimeType: file.mimetype })
+
+    // Validate the real file content. Reject anything that isn't a genuine PDF/image,
+    // regardless of the extension or claimed MIME the browser sent.
+    const detected = detectEvidenceType(file.buffer)
+    if (!detected) { err(res, 'INVALID_FILE', 'That file is not a valid PDF or image, so it was not uploaded.', 400); return }
+
+    const count = await (prisma as any).faceToFaceEvidence.count({ where: { session_id: session.id } })
+    if (count >= MAX_EVIDENCE_PER_SESSION) { err(res, 'TOO_MANY', `A session can hold up to ${MAX_EVIDENCE_PER_SESSION} evidence files. Delete some first.`, 400); return }
+
+    const key = `${randomUUID()}.${detected.ext}`
+    const s3Key = await uploadEvidenceFile({ tenantId, sessionId: session.id, key, buffer: file.buffer, mimeType: detected.mime })
     const ev = await (prisma as any).faceToFaceEvidence.create({
-      data: { tenant_id: tenantId, session_id: session.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: file.mimetype, size_bytes: file.size ?? 0, uploaded_by: uid(req) },
+      data: { tenant_id: tenantId, session_id: session.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: detected.mime, size_bytes: file.size ?? 0, uploaded_by: uid(req) },
     })
     ok(res, { evidence: { id: ev.id, file_name: ev.file_name, file_type: ev.file_type, size_bytes: ev.size_bytes, created_at: ev.created_at } })
   } catch (e: any) { err(res, 'UPLOAD_FAILED', e?.message ?? 'Could not upload the file.', 500) }
 })
 
 // GET /face-to-face/evidence/:id  — authenticated stream of the file
+const SAFE_EVIDENCE_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'])
 faceToFaceRouter.get('/evidence/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = tid(req)
   try {
     const ev = await (prisma as any).faceToFaceEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
     if (!ev) { err(res, 'NOT_FOUND', 'File not found.', 404); return }
     const buf = await downloadFile(ev.s3_key)
-    res.setHeader('Content-Type', ev.file_type || 'application/octet-stream')
-    res.setHeader('Content-Disposition', `inline; filename="${ev.file_name.replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
+    // Only ever advertise a known-safe content type; never echo a stored value that
+    // might have been set before validation existed. Lock the browser down so even a
+    // hypothetical bad byte stream cannot execute: no sniffing, sandboxed, no scripts.
+    const type = SAFE_EVIDENCE_TYPES.has(ev.file_type) ? ev.file_type : 'application/octet-stream'
+    res.setHeader('Content-Type', type)
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; img-src 'self' data:; object-src 'self'")
+    res.setHeader('Cache-Control', 'private, no-store')
+    // Images/PDF can preview inline; anything else is forced to download.
+    const disposition = type === 'application/octet-stream' ? 'attachment' : 'inline'
+    res.setHeader('Content-Disposition', `${disposition}; filename="${ev.file_name.replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
     res.send(buf)
   } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not fetch the file.', 500) }
 })

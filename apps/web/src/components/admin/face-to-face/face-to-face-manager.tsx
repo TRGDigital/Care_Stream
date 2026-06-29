@@ -644,8 +644,11 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     await new Promise(r => setTimeout(r, 50))
     try {
       if (!certRef.current) throw new Error('Certificate not ready.')
+      // Filename = course + date (e.g. "Moving-and-Handling-26-Jun-2026.pdf").
+      const slug = (s: string) => s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
+      const filename = `${slug(data.title || 'training')}-${slug(prettyDate(data.session_date))}.pdf`
       const html2pdf = (await import('html2pdf.js')).default
-      await html2pdf().set({ margin: 0, filename: `certificate-${a.name.replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 1040, windowWidth: 1040 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } } as any).from(certRef.current).save()
+      await html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 1040, windowWidth: 1040 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' } } as any).from(certRef.current).save()
     } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the certificate.') } finally { setPdfBusy(null) }
   }
   async function bulk(status: 'attended' | 'absent') {
@@ -833,7 +836,7 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
           <p style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
         </div>
 
-        <div ref={certRef} style={{ width: 1040, height: 735, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
+        <div ref={certRef} style={{ width: 1040, height: 725, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>
           <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', border: '12px solid #0d9488', display: 'table' }}>
             <div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', padding: '0 72px' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

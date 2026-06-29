@@ -316,7 +316,15 @@ export default function AnalyticsPage() {
 
   async function openCertificate(certId: string) {
     if (!session?.accessToken) return
-    try { const blob = await createApiClient(session.accessToken).faceToFace.downloadCertificate(certId); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000) } catch { /* ignore */ }
+    // Open the tab synchronously (popup-blocker safe), then load the fetched PDF; fall back to download.
+    const win = window.open('', '_blank')
+    try {
+      const blob = await createApiClient(session.accessToken).faceToFace.downloadCertificate(certId)
+      const url = URL.createObjectURL(blob)
+      if (win) { win.location.href = url }
+      else { const a = document.createElement('a'); a.href = url; a.download = 'certificate.pdf'; document.body.appendChild(a); a.click(); a.remove() }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch { if (win) win.close() }
   }
 
   if (loading) return <p className="text-sm text-neutral-mid">Loading analytics…</p>

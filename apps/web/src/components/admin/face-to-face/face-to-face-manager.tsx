@@ -623,8 +623,15 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
   async function openEvidence(ev: any) {
-    try { const blob = await api.faceToFace.downloadEvidence(ev.id); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000) }
-    catch { setEvidenceMsg('Could not open the file.') }
+    // Open the tab synchronously (popup-blocker safe), then load the fetched file; fall back to download.
+    const win = window.open('', '_blank')
+    try {
+      const blob = await api.faceToFace.downloadEvidence(ev.id)
+      const url = URL.createObjectURL(blob)
+      if (win) { win.location.href = url }
+      else { const a = document.createElement('a'); a.href = url; a.download = ev.file_name || 'evidence'; document.body.appendChild(a); a.click(); a.remove() }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch { if (win) win.close(); setEvidenceMsg('Could not open the file.') }
   }
   async function deleteEvidence(ev: any) {
     if (!confirm(`Delete "${ev.file_name}"?`)) return

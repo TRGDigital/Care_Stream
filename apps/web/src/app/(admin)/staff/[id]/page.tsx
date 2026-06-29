@@ -172,8 +172,16 @@ export default function StaffRecordPage() {
     catch { setNote('Could not save practical sign-off.') } finally { setBusy(null) }
   }
   async function openCertificate(certId: string) {
-    try { const blob = await createApiClient(token).faceToFace.downloadCertificate(certId); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000) }
-    catch { setNote('Could not open the certificate.') }
+    // Open the tab synchronously (so the popup blocker allows it), then point it at
+    // the fetched PDF. Falls back to a direct download if the tab was blocked.
+    const win = window.open('', '_blank')
+    try {
+      const blob = await createApiClient(token).faceToFace.downloadCertificate(certId)
+      const url = URL.createObjectURL(blob)
+      if (win) { win.location.href = url }
+      else { const a = document.createElement('a'); a.href = url; a.download = 'certificate.pdf'; document.body.appendChild(a); a.click(); a.remove() }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch { if (win) win.close(); setNote('Could not open the certificate.') }
   }
   function printCert() { document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 600) }
   // Use the browser's native print-to-PDF for full-fidelity rendering (rings,

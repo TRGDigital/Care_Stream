@@ -74,6 +74,8 @@ export default function ProspectsPage() {
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [enrichRun, setEnrichRun] = useState(false)
   const [enrichStat, setEnrichStat] = useState<{ done: number; emails: number; remaining: number } | null>(null)
+  const [draftRun, setDraftRun] = useState(false)
+  const [draftMsg, setDraftMsg] = useState<string | null>(null)
 
   // Load filter vocab once.
   useEffect(() => {
@@ -128,6 +130,21 @@ export default function ProspectsPage() {
     }
   }
 
+  async function runDraftEmails() {
+    if (!api) return
+    setDraftRun(true)
+    setDraftMsg(null)
+    try {
+      const r = await api.prospects.draftEmails({ limit: 10, segment: filters.segment })
+      setDraftMsg(`Created ${r.created} draft${r.created === 1 ? '' : 's'} in Gmail${r.errors ? ` (${r.errors} failed)` : ''} · ${r.remaining} emailable left`)
+      load()
+    } catch (e) {
+      setDraftMsg(`Draft failed: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setDraftRun(false)
+    }
+  }
+
   if (!token) return null
 
   const segTabs: Array<{ key?: ProspectSegment; label: string; tagline?: string }> = [
@@ -161,6 +178,15 @@ export default function ProspectsPage() {
               className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-60"
             >
               {enrichRun ? <><Loader2 size={15} className="animate-spin" /> Enriching 100…</> : <><UserSearch size={15} /> Enrich 100{filters.segment ? ` · ${filters.segment}` : ''}</>}
+            </button>
+            {draftMsg && <span className="text-xs text-neutral-mid">{draftMsg}</span>}
+            <button
+              onClick={runDraftEmails}
+              disabled={draftRun}
+              title="Create up to 10 Gmail drafts for the hottest emailable leads — review & send in your Gmail"
+              className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light px-3 py-2 text-sm font-medium text-teal-dark hover:bg-teal-light/70 disabled:opacity-60"
+            >
+              {draftRun ? <><Loader2 size={15} className="animate-spin" /> Drafting…</> : <><Mail size={15} /> Create drafts</>}
             </button>
             {syncMsg && <span className="text-xs text-neutral-mid">{syncMsg}</span>}
             <button
@@ -275,6 +301,11 @@ export default function ProspectsPage() {
                         {l.enriched_email && (
                           <div className="mt-0.5 flex items-center gap-1 text-xs font-medium text-green-700">
                             <Mail size={11} />{l.enriched_email}{l.contact_name ? ` · ${l.contact_name}` : ''}
+                          </div>
+                        )}
+                        {l.drafted_at && (
+                          <div className="mt-0.5 inline-flex items-center gap-1 rounded bg-teal-light px-1.5 py-0.5 text-[10px] font-medium text-teal-dark">
+                            <Mail size={10} /> Drafted in Gmail
                           </div>
                         )}
                       </td>

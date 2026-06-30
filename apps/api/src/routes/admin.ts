@@ -36,7 +36,6 @@ import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
-import { DEFAULT_PROSPECT_EMAIL_PROMPT } from '../services/prospects/ai-draft'
 
 export const adminRouter = Router()
 
@@ -1899,7 +1898,6 @@ const USAGE_LABELS: Record<string, string> = {
   training_module_generation:     'Annual Training — Module Generation',
   training_image_generation:       'Annual Training — Cover Image',
   regulation_coverage:             'Policy Gaps — Regulation Coverage',
-  prospect_email_draft:            'Prospects — Outreach Email Draft',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -1927,7 +1925,6 @@ async function ensurePromptsSeeded() {
     training_module_generation: DEFAULT_TRAINING_MODULE_PROMPT,
     training_image_generation:  DEFAULT_TRAINING_IMAGE_PROMPT,
     regulation_coverage:        DEFAULT_REGULATION_COVERAGE_PROMPT,
-    prospect_email_draft:       DEFAULT_PROSPECT_EMAIL_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

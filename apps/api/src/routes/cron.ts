@@ -9,9 +9,6 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
-import { syncProspects } from '../services/prospects/sync'
-import { enrichBatch } from '../services/prospects/enrich-batch'
-import { draftEmails } from '../services/prospects/draft-emails'
 
 export const cronRouter = Router()
 
@@ -76,42 +73,3 @@ cronRouter.get('/licence-renewals', async (req: Request, res: Response) => {
   }
 })
 
-// Weekly (Mon 06:00 UTC): refresh the Prospects universe from CareAssura so
-// newly downgraded providers surface automatically. Idempotent; preserves
-// nurture state (status/owner/notes/contact dates).
-cronRouter.get('/prospects-sync', async (req: Request, res: Response) => {
-  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
-  try {
-    const result = await syncProspects()
-    ok(res, result)
-  } catch (e: any) {
-    console.error('[cron/prospects-sync] failed:', e?.message ?? e)
-    err(res, 'JOB_FAILED', e.message, 500)
-  }
-})
-
-// Every 10 min: enrich the next batch of website-having prospects (hottest
-// first), burning down the backlog hands-off. No-op once all are enriched.
-cronRouter.get('/prospects-enrich', async (req: Request, res: Response) => {
-  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
-  try {
-    const result = await enrichBatch({ limit: 80, concurrency: 8 })
-    ok(res, result)
-  } catch (e: any) {
-    console.error('[cron/prospects-enrich] failed:', e?.message ?? e)
-    err(res, 'JOB_FAILED', e.message, 500)
-  }
-})
-
-// Weekday mornings (08:00 UTC): create up to 10 Gmail drafts for the hottest
-// emailable, not-yet-drafted leads. Len reviews + sends in Gmail.
-cronRouter.get('/prospects-draft', async (req: Request, res: Response) => {
-  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
-  try {
-    const result = await draftEmails({ limit: 10 })
-    ok(res, result)
-  } catch (e: any) {
-    console.error('[cron/prospects-draft] failed:', e?.message ?? e)
-    err(res, 'JOB_FAILED', e.message, 500)
-  }
-})

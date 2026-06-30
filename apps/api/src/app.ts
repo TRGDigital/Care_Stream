@@ -13,7 +13,6 @@ import { billingRouter, stripeWebhookHandler } from './routes/billing'
 import { regulationsRouter } from './routes/regulations'
 import { analyticsRouter } from './routes/analytics'
 import { adminRouter } from './routes/admin'
-import { prospectsRouter } from './routes/prospects'
 import { onboardingTemplatesRouter } from './routes/onboarding-templates'
 import { policySeedsRouter } from './routes/policy-seeds'
 import { settingsRouter } from './routes/settings'
@@ -93,7 +92,6 @@ app.use('/auth', authRouter)
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
-app.use('/admin/prospects', prospectsRouter)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled

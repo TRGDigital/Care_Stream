@@ -474,6 +474,8 @@ export function createPlatformClient(token: string) {
       }> }>(`/onboarding/emails?plan=${encodeURIComponent(plan)}`, token),
       update: (id: string, data: { subject?: string; preheader?: string; from_email?: string }) =>
         adminFetch<{ id: string }>(`/onboarding/emails/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      reorder: (plan: string, ids: string[]) =>
+        adminFetch<{ reordered: number }>(`/onboarding/emails/reorder`, token, { method: 'POST', body: JSON.stringify({ plan, ids }) }),
       preview: (id: string) => adminFetch<{ html: string; subject: string }>(`/onboarding/emails/${id}/preview`, token),
       test: (id: string, to: string) => adminFetch<{ sent: string }>(`/onboarding/emails/${id}/test`, token, { method: 'POST', body: JSON.stringify({ to }) }),
       enrolments: () => adminFetch<{ enrolments: Array<{ tenant_id: string; tenant_name: string | null; account_number: string | null; plan: string; start_date: string; status: string }> }>(`/onboarding/enrolments`, token),

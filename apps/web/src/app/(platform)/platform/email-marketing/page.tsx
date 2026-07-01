@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Mail, Check, ChevronDown, Eye, Send, Play, AlertTriangle } from 'lucide-react'
+import { Loader2, Mail, Check, ChevronDown, ChevronUp, Eye, Send, Play, AlertTriangle } from 'lucide-react'
 
 async function viewEmail(token: string, id: string) {
   const w = window.open('', '_blank')
@@ -36,7 +36,7 @@ function Stat({ label, value, pct }: { label: string; value: number; pct?: numbe
   )
 }
 
-function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; onSaved: () => void }) {
+function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown }: { token: string; email: EmailRow; onSaved: () => void; onMoveUp: () => void; onMoveDown: () => void; canUp: boolean; canDown: boolean }) {
   const [open, setOpen]           = useState(false)
   const [subject, setSubject]     = useState(email.subject)
   const [preheader, setPreheader] = useState(email.preheader)
@@ -73,6 +73,10 @@ function EmailCard({ token, email, onSaved }: { token: string; email: EmailRow; 
           <span className="hidden whitespace-nowrap text-xs text-neutral-mid md:inline">{s.sent} sent · {s.opened} opened</span>
           <ChevronDown size={16} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
+        <div className="flex shrink-0 flex-col">
+          <button onClick={onMoveUp} disabled={!canUp} title="Move earlier" className="text-neutral-mid hover:text-teal disabled:opacity-25"><ChevronUp size={15} /></button>
+          <button onClick={onMoveDown} disabled={!canDown} title="Move later" className="text-neutral-mid hover:text-teal disabled:opacity-25"><ChevronDown size={15} /></button>
+        </div>
         <button onClick={() => viewEmail(token, email.id)} title="View email" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/40 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">
           <Eye size={13} /> View
         </button>
@@ -201,6 +205,17 @@ export default function EmailMarketingPage() {
   }
   useEffect(load, [token, plan])
 
+  async function move(index: number, dir: -1 | 1) {
+    if (!token) return
+    const j = index + dir
+    if (j < 0 || j >= emails.length) return
+    const next = [...emails]
+    ;[next[index], next[j]] = [next[j], next[index]]
+    setEmails(next.map((e, i) => ({ ...e, day_index: i + 1 })))
+    try { await createPlatformClient(token).onboarding.reorder(plan, next.map(e => e.id)) }
+    catch { load() }
+  }
+
   if (!token) return null
 
   return (
@@ -208,7 +223,7 @@ export default function EmailMarketingPage() {
       <div className="space-y-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-neutral-dark"><Mail size={22} className="text-teal" /> Email Marketing</h1>
-          <p className="mt-1 text-sm text-neutral-mid">New-client onboarding drip. One email per working day from signup, sent 10am UK to every active admin. Edit the subject line and preview text inline; changes apply to future sends.</p>
+          <p className="mt-1 text-sm text-neutral-mid">New-client onboarding drip. One email per working day from signup, sent 10am UK to every active admin. Edit the subject line and preview text inline, and use the arrows to reorder the sequence. Changes apply to future sends.</p>
         </div>
 
         <RunDripNow token={token} />
@@ -225,7 +240,7 @@ export default function EmailMarketingPage() {
           <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin text-neutral-mid" /></div>
         ) : (
           <div className="space-y-4">
-            {emails.map(e => <EmailCard key={e.id} token={token} email={e} onSaved={load} />)}
+            {emails.map((e, i) => <EmailCard key={e.id} token={token} email={e} onSaved={load} onMoveUp={() => move(i, -1)} onMoveDown={() => move(i, 1)} canUp={i > 0} canDown={i < emails.length - 1} />)}
           </div>
         )}
       </div>

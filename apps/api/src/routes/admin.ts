@@ -2591,6 +2591,28 @@ adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) 
   ok(res, { id: updated.id })
 })
 
+// POST /admin/onboarding/emails/reorder — set the send order for a plan.
+// Body: { plan, ids: [emailId,...] } in the desired order; day_index is
+// reassigned 1..N. Two-phase (negative temp values) to avoid the
+// (plan, day_index) unique conflict mid-update.
+adminRouter.post('/onboarding/emails/reorder', async (req: Request, res: Response) => {
+  const plan = String(req.body?.plan ?? '')
+  const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids.map(String) : []
+  if (!plan || ids.length === 0) { err(res, 'BAD_REQUEST', 'plan and ids are required.', 400); return }
+
+  const existing = await (prisma as any).onboardingEmail.findMany({ where: { plan }, select: { id: true } })
+  const existingIds = new Set(existing.map((e: any) => e.id))
+  if (ids.length !== existing.length || !ids.every((id) => existingIds.has(id))) {
+    err(res, 'BAD_REQUEST', 'ids must be exactly the emails in this plan.', 400); return
+  }
+
+  await (prisma as any).$transaction([
+    ...ids.map((id, i) => (prisma as any).onboardingEmail.update({ where: { id }, data: { day_index: -(i + 1) } })),
+    ...ids.map((id, i) => (prisma as any).onboardingEmail.update({ where: { id }, data: { day_index: i + 1 } })),
+  ])
+  ok(res, { reordered: ids.length })
+})
+
 // GET /admin/tenants/:id/onboarding — this client's drip + every send to it.
 adminRouter.get('/tenants/:id/onboarding', async (req: Request, res: Response) => {
   const tenantId = req.params.id

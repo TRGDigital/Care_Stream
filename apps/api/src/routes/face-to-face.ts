@@ -134,6 +134,7 @@ function summariseSession(s: any) {
     attended: att.filter((a: any) => a.status === 'attended').length,
     absent:   att.filter((a: any) => a.status === 'absent').length,
     unmarked: att.filter((a: any) => a.status === 'allocated').length,
+    evidence_count: (s.evidence ?? []).length,
   }
 }
 
@@ -148,7 +149,7 @@ faceToFaceRouter.get('/sessions', requireAdmin, async (req: Request, res: Respon
 
     const sessions = await (prisma as any).faceToFaceSession.findMany({
       where, orderBy: { session_date: 'asc' },
-      include: { attendance: { select: { status: true } } },
+      include: { attendance: { select: { status: true } }, evidence: { select: { id: true } } },
     })
     ok(res, { sessions: (sessions as any[]).map(summariseSession) })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }

@@ -19,7 +19,7 @@ const prettyDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 type Staff = { id: string; name: string; job_role: string | null; is_active?: boolean }
 type Module = { id: string; name: string; category: string; ready?: boolean }
-type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; renews_after_months: number | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number }
+type Session = { id: string; module_id: string | null; title: string; session_date: string; delivered_by_user_id: string | null; delivered_by_name: string | null; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; capacity: number | null; series_id: string | null; renews_after_months: number | null; notes: string | null; allocated: number; attended: number; absent: number; unmarked: number; evidence_count?: number }
 
 export function FaceToFaceManager({ token }: { token?: string }) {
   const api = useMemo(() => (token ? createApiClient(token) : null), [token])
@@ -184,9 +184,12 @@ export function FaceToFaceManager({ token }: { token?: string }) {
                   <div className="space-y-1">
                     {(byDay.get(c.key) ?? []).map(s => (
                       <button key={s.id} onClick={(e) => { e.stopPropagation(); setViewingId(s.id) }}
-                              className="block w-full truncate rounded-md bg-teal/10 px-1.5 py-1 text-left text-[11px] font-medium text-teal hover:bg-teal/20">
-                        {s.title}
-                        <span className="ml-1 font-normal text-teal/70">{s.attended}/{s.allocated}</span>
+                              className="flex w-full items-center gap-1 truncate rounded-md bg-teal/10 px-1.5 py-1 text-left text-[11px] font-medium text-teal hover:bg-teal/20">
+                        <span className="truncate">{s.title}</span>
+                        <span className="ml-auto flex shrink-0 items-center gap-1 font-normal text-teal/70">
+                          {(s.evidence_count ?? 0) > 0 && <span className="flex items-center gap-0.5" title={`${s.evidence_count} evidence file${s.evidence_count === 1 ? '' : 's'}`}><Paperclip size={9} />{s.evidence_count}</span>}
+                          {s.attended}/{s.allocated}
+                        </span>
                       </button>
                     ))}
                     {(() => {
@@ -353,7 +356,10 @@ function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }
                 <button key={s.id} onClick={() => onOpenSession(s.id)} className="flex w-full items-center justify-between gap-2 rounded-lg border border-teal/30 bg-teal/5 px-3 py-2 text-left hover:bg-teal/10">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-neutral-dark">{s.title}</p>
-                    <p className="text-xs text-neutral-mid">{s.attended}/{s.allocated} attended{s.unmarked > 0 ? ` · ${s.unmarked} to mark` : ''}</p>
+                    <p className="flex items-center gap-1 text-xs text-neutral-mid">
+                      {s.attended}/{s.allocated} attended{s.unmarked > 0 ? ` · ${s.unmarked} to mark` : ''}
+                      {(s.evidence_count ?? 0) > 0 && <span className="inline-flex items-center gap-0.5 text-teal"><Paperclip size={11} />{s.evidence_count}</span>}
+                    </p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-teal" />
                 </button>
@@ -765,17 +771,25 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
         )}
 
         {/* CQC evidence: sign-in sheet, file uploads */}
+        {(() => {
+          const evidence = data.evidence ?? []
+          return (
         <div className="mt-5 rounded-xl border border-gray-200 p-4">
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ClipboardList size={15} className="text-teal" /> Evidence</p>
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
+            <ClipboardList size={15} className="text-teal" /> Evidence
+            <span className="rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-semibold text-neutral-mid">{evidence.length}</span>
+          </p>
           <div className="mb-3 flex flex-wrap gap-2">
             <button onClick={makeSignInSheet} disabled={pdfBusy === 'signin'} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 disabled:opacity-50">{pdfBusy === 'signin' ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} Sign-in sheet</button>
             <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 disabled:opacity-50">{uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Upload file</button>
             <input ref={fileInputRef} type="file" accept=".pdf,image/*" onChange={onPickFile} className="hidden" />
           </div>
           <p className="mb-2 text-xs text-neutral-mid">Print a sign-in sheet for staff to sign, then upload the scan. You can also attach photos or the trainer&apos;s certificate (PDF or image, up to 15 MB).</p>
-          {(data.evidence ?? []).length > 0 && (
+          {/* Uploaded files, always shown so it's clear where evidence lives, with an empty state when none. */}
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Uploaded files</p>
+          {evidence.length > 0 ? (
             <div className="space-y-1">
-              {data.evidence.map((ev: any) => (
+              {evidence.map((ev: any) => (
                 <div key={ev.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-1.5">
                   <button onClick={() => openEvidence(ev)} className="flex min-w-0 items-center gap-1.5 text-left text-sm text-neutral-dark hover:text-teal">
                     <Paperclip size={13} className="shrink-0 text-neutral-mid" /><span className="truncate">{ev.file_name}</span>
@@ -789,9 +803,16 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-200 bg-neutral-light/30 px-3 py-3 text-xs text-neutral-mid">
+              <Paperclip size={14} className="shrink-0 text-neutral-mid" />
+              No evidence uploaded yet. Sign-in sheets, photos or the trainer&apos;s certificate you upload will be listed here against this session.
+            </div>
           )}
           {evidenceMsg && <p className="mt-2 text-xs font-medium text-red-600">{evidenceMsg}</p>}
         </div>
+          )
+        })()}
 
         {/* Send the digital module */}
         {!data.module_id ? (

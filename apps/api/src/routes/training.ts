@@ -1215,21 +1215,29 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
       err(res, 'GENERATION_FAILED', 'No lesson content was generated — please try again.', 502); return
     }
 
-    // Reuse images from the matching library module (same subject) instead of
-    // regenerating: cover always; section images by position where they line up.
+    // Reuse images from matching library modules instead of regenerating.
     const sections = draft.learning_content.sections as any[]
     let illustration_key: string | null = module.illustration_key
-    // Source pool = any module (tenant or library) that already carries images.
+    // Source pool = any module (tenant or library) that already carries a cover.
     const candidates = await imagedSourceModules(tenantId)
-    // If this module already has a cover (pre-loaded), anchor section images to the
-    // SAME source it came from — deterministic, no re-guessing. Otherwise match by name.
-    let match = module.illustration_key ? (candidates.find((c: any) => c.illustration_key === module.illustration_key) ?? null) : null
-    if (!match) match = pickImageSource(module.name, module.topic_id, candidates)
-    if (match) {
-      if (!illustration_key && match.illustration_key) illustration_key = match.illustration_key
-      const stdSecs = Array.isArray(match.learning_content?.sections) ? match.learning_content.sections : []
+    const hasSecImgs = (c: any) => Array.isArray(c?.learning_content?.sections) && c.learning_content.sections.some((s: any) => s?.image_key)
+
+    // Cover: keep the module's existing cover, else borrow from the best name match.
+    let coverMatch = module.illustration_key ? (candidates.find((c: any) => c.illustration_key === module.illustration_key) ?? null) : null
+    if (!coverMatch) coverMatch = pickImageSource(module.name, module.topic_id, candidates)
+    if (!illustration_key && coverMatch?.illustration_key) illustration_key = coverMatch.illustration_key
+
+    // Section images: borrow from the best source that ACTUALLY carries section
+    // images (i.e. the corresponding annual module), not just any cover. This was the
+    // gap — anchoring to a cover-only source left the lesson with only a hero image.
+    const withSecImgs = (candidates as any[]).filter(hasSecImgs)
+    const secMatch = pickImageSource(module.name, module.topic_id, withSecImgs) ?? (hasSecImgs(coverMatch) ? coverMatch : null)
+    if (secMatch) {
+      const stdSecs = secMatch.learning_content.sections as any[]
+      // Copy the section illustrations across by position, as far as they line up.
       sections.forEach((sec: any, i: number) => { if (!sec.image_key && stdSecs[i]?.image_key) sec.image_key = stdSecs[i].image_key })
     }
+    const match = coverMatch || secMatch
 
     const updated = await (prisma as any).trainingModule.update({
       where: { id: module.id },

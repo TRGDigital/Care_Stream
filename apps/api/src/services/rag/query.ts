@@ -39,7 +39,8 @@ const TOP_K_CHAPTERS       = 3    // chapter-index matches for two-stage retriev
 const TOP_K_KNOWLEDGE      = 3    // knowledge base entries retrieved
 const MIN_SIMILARITY       = 0.5  // below this score → no_match
 const CHAPTER_STAGE1_MIN   = 0.75 // below this → skip chapter filtering, flat search
-const KNOWLEDGE_MIN_SCORE  = 0.75 // knowledge entries below this are excluded
+const KNOWLEDGE_MIN_SCORE  = 0.75 // platform/policy knowledge entries below this are excluded
+const MANUAL_MIN_SCORE     = 0.55 // the home's own manual entries use a more lenient floor so home-specific facts surface (text-embedding-3-small tops out ~0.65 even on near-perfect matches)
 
 // System prompt used when staff chat about training topics
 const TRAINING_SYSTEM_PROMPT = `You are a training support assistant for a UK care home. You help staff understand their mandatory and specialist training topics so they are well-prepared and knowledgeable in their work.
@@ -153,6 +154,39 @@ function buildManualSources(rows: Array<{ source_type?: string | null; question?
     if (!name || seen.has(name)) continue
     seen.add(name)
     out.push({ name })
+  }
+  return out
+}
+
+// Select which knowledge entries to actually use from raw vector matches: enforce
+// the approval gate (Postgres), then apply a per-source score floor — the home's
+// own 'manual' entries use the more lenient MANUAL_MIN_SCORE so home-specific facts
+// surface, while platform/policy entries keep the stricter KNOWLEDGE_MIN_SCORE.
+// kbResults must be score-descending (Pinecone returns them sorted).
+async function selectUsedKnowledge(
+  kbResults: Array<{ score: number; metadata: any }>,
+  tenantId:  string,
+): Promise<KnowledgeEntry[]> {
+  const entryIds = kbResults.map(r => r.metadata?.entry_id).filter(Boolean)
+  if (entryIds.length === 0) return []
+  const approvedRows = await (prisma as any).knowledgeEntry.findMany({
+    where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
+    select: { id: true, source_type: true, source_name: true },
+  })
+  const approvedMap = new Map(approvedRows.map((r: any) => [r.id as string, r]))
+  const out: KnowledgeEntry[] = []
+  for (const r of kbResults) {
+    const row: any = approvedMap.get(r.metadata?.entry_id)
+    if (!row) continue
+    const floor = row.source_type === 'manual' ? MANUAL_MIN_SCORE : KNOWLEDGE_MIN_SCORE
+    if (r.score < floor) continue
+    out.push({
+      question:    r.metadata.question,
+      answer:      r.metadata.answer,
+      source_name: row.source_name ?? r.metadata.source_name,
+      source_type: row.source_type,
+    })
+    if (out.length >= TOP_K_KNOWLEDGE) break
   }
   return out
 }
@@ -332,6 +366,7 @@ interface KnowledgeEntry {
   question:    string
   answer:      string
   source_name: string
+  source_type?: string   // 'manual' (home-specific) | 'platform' | 'policy'
 }
 
 // Returns the verbosity instruction for a given channel + tenant preference.
@@ -370,6 +405,19 @@ function buildContextBlock(
     parts.push(`[RESPONSE STYLE]\n${VERBOSITY_INSTRUCTIONS[verbosity]}`)
   }
 
+  // The home's own manually-added knowledge is authoritative for how THIS home
+  // operates, and unique to them (e.g. where they store COSHH substances). Lead with
+  // it, above the policy content, and tell the model to state it plainly.
+  const homeKnowledge = knowledge.filter(k => k.source_type === 'manual')
+  const otherKnowledge = knowledge.filter(k => k.source_type !== 'manual')
+
+  if (homeKnowledge.length > 0) {
+    parts.push('[HOME-SPECIFIC KNOWLEDGE — the care home\'s own confirmed facts, added by their management. These are authoritative for how THIS home operates and override generic guidance. When they answer the question, LEAD with them and state them plainly, then add any relevant policy detail.]')
+    for (const k of homeKnowledge) {
+      parts.push(`Q: ${k.question}\nA: ${k.answer}`)
+    }
+  }
+
   if (chunks.length > 0) {
     parts.push('[RETRIEVED POLICY CONTENT]')
     for (const chunk of chunks) {
@@ -382,9 +430,9 @@ function buildContextBlock(
     }
   }
 
-  if (knowledge.length > 0) {
+  if (otherKnowledge.length > 0) {
     parts.push('[KNOWLEDGE BASE]')
-    for (const k of knowledge) {
+    for (const k of otherKnowledge) {
       parts.push(`Q: ${k.question}\nA: ${k.answer}\nSource: ${k.source_name}`)
     }
   }
@@ -605,26 +653,23 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
       }
     }
 
-    // Also include approved tenant knowledge entries (vector search)
+    // Also include approved tenant knowledge entries (vector search), home-specific first.
     try {
       const kbResults = await queryKnowledgeVectors(tenantId, queryEmbeddingForKB, TOP_K_KNOWLEDGE * 2)
-      const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
-      if (candidates.length > 0) {
-        const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
-        const approvedRows = await (prisma as any).knowledgeEntry.findMany({
-          where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
-          select: { id: true },
-        })
-        const approvedSet = new Set(approvedRows.map((r: any) => r.id as string))
-        const knowledgeEntries = candidates
-          .filter(r => approvedSet.has(r.metadata.entry_id))
-          .slice(0, TOP_K_KNOWLEDGE)
-        if (knowledgeEntries.length > 0) {
-          parts.push(
-            "[YOUR ORGANISATION'S KNOWLEDGE]\n" +
-            knowledgeEntries.map(r => `Q: ${r.metadata.question}\nA: ${r.metadata.answer}`).join('\n\n'),
-          )
-        }
+      const knowledgeEntries = await selectUsedKnowledge(kbResults, tenantId)
+      const homeKb  = knowledgeEntries.filter(k => k.source_type === 'manual')
+      const otherKb = knowledgeEntries.filter(k => k.source_type !== 'manual')
+      if (homeKb.length > 0) {
+        parts.push(
+          "[HOME-SPECIFIC KNOWLEDGE — the care home's own confirmed facts, authoritative for how THIS home operates. Lead with these.]\n" +
+          homeKb.map(k => `Q: ${k.question}\nA: ${k.answer}`).join('\n\n'),
+        )
+      }
+      if (otherKb.length > 0) {
+        parts.push(
+          "[YOUR ORGANISATION'S KNOWLEDGE]\n" +
+          otherKb.map(k => `Q: ${k.question}\nA: ${k.answer}`).join('\n\n'),
+        )
       }
     } catch {
       // Non-fatal — knowledge namespace may not exist yet
@@ -716,19 +761,9 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
     let manualSources: ManualSource[] = []
     try {
       const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE * 2)
-      const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
-      if (candidates.length > 0) {
-        const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
-        const approvedRows = await (prisma as any).knowledgeEntry.findMany({
-          where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
-          select: { id: true, source_type: true, source_name: true },
-        })
-        const approvedMap = new Map(approvedRows.map((r: any) => [r.id as string, r]))
-        const used = candidates.filter(r => approvedMap.has(r.metadata.entry_id)).slice(0, TOP_K_KNOWLEDGE)
-        knowledgeEntries = used.map(r => ({ question: r.metadata.question, answer: r.metadata.answer, source_name: r.metadata.source_name }))
-        seedSources = buildSeedSources(used.map(r => approvedMap.get(r.metadata.entry_id)).filter(Boolean) as any[])
-        manualSources = buildManualSources(used.map(r => ({ source_type: (approvedMap.get(r.metadata.entry_id) as any)?.source_type, question: r.metadata.question })))
-      }
+      knowledgeEntries = await selectUsedKnowledge(kbResults, tenantId)
+      seedSources   = buildSeedSources(knowledgeEntries as any[])
+      manualSources = buildManualSources(knowledgeEntries as any[])
     } catch { /* non-fatal */ }
 
     // Build regulation context for any explicitly cited regulations
@@ -791,12 +826,16 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
       }
     }
 
-    // Knowledge base entries
-    if (knowledgeEntries.length > 0) {
+    // Knowledge base entries — lead with the home's own manual facts (authoritative).
+    const homeKb  = knowledgeEntries.filter(k => k.source_type === 'manual')
+    const otherKb = knowledgeEntries.filter(k => k.source_type !== 'manual')
+    if (homeKb.length > 0) {
+      parts.push('[HOME-SPECIFIC KNOWLEDGE — the care home\'s own confirmed facts, authoritative for how THIS home operates. Lead with these and state them plainly.]')
+      for (const k of homeKb) parts.push(`Q: ${k.question}\nA: ${k.answer}`)
+    }
+    if (otherKb.length > 0) {
       parts.push('[KNOWLEDGE BASE]')
-      for (const k of knowledgeEntries) {
-        parts.push(`Q: ${k.question}\nA: ${k.answer}`)
-      }
+      for (const k of otherKb) parts.push(`Q: ${k.question}\nA: ${k.answer}`)
     }
 
     // Regulatory context
@@ -1013,10 +1052,16 @@ At the end of your response, append this comment (do not display it to the user)
       }
     }
 
-    // Approved Knowledge Base entries
-    if ((bcEntries as any[]).length > 0) {
+    // Approved Knowledge Base entries — lead with the home's own manual facts.
+    const bcHome  = (bcEntries as any[]).filter(e => e.source_type === 'manual')
+    const bcOther = (bcEntries as any[]).filter(e => e.source_type !== 'manual')
+    if (bcHome.length > 0) {
+      parts.push('[HOME-SPECIFIC KNOWLEDGE — the care home\'s own confirmed facts, authoritative for how THIS home operates. Lead with these and state them plainly.]')
+      for (const entry of bcHome) parts.push(`Q: ${entry.question}\nA: ${entry.answer}`)
+    }
+    if (bcOther.length > 0) {
       parts.push('[BUSINESS CONTINUITY KNOWLEDGE BASE]')
-      for (const entry of bcEntries as any[]) {
+      for (const entry of bcOther) {
         parts.push(`Q: ${entry.question}\nA: ${entry.answer}${entry.source_name && entry.source_name !== 'Manual entry' ? `\nSource: ${entry.source_name}` : ''}`)
       }
     }
@@ -1150,28 +1195,11 @@ At the end of your response, append this comment (do not display it to the user)
   let manualSources: ManualSource[] = []
   try {
     const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE * 2)
-    const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
-
-    if (candidates.length > 0) {
-      // Cross-reference with Postgres to enforce approval gate
-      const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
-      const approvedRows = await (prisma as any).knowledgeEntry.findMany({
-        where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
-        select: { id: true, source_type: true, source_name: true },
-      })
-      const approvedMap = new Map(approvedRows.map((r: any) => [r.id as string, r]))
-
-      const used = candidates.filter(r => approvedMap.has(r.metadata.entry_id)).slice(0, TOP_K_KNOWLEDGE)
-      knowledgeEntries = used.map(r => ({
-        question:    r.metadata.question,
-        answer:      r.metadata.answer,
-        source_name: r.metadata.source_name,
-      }))
-      // Surface CareStream (platform) guidance used, as labelled sources.
-      seedSources = buildSeedSources(used.map(r => approvedMap.get(r.metadata.entry_id)).filter(Boolean) as any[])
-      // Surface the home's own manually-added knowledge used, as labelled sources.
-      manualSources = buildManualSources(used.map(r => ({ source_type: (approvedMap.get(r.metadata.entry_id) as any)?.source_type, question: r.metadata.question })))
-    }
+    // Approval-gated + per-source score floor (home 'manual' entries surface more readily).
+    knowledgeEntries = await selectUsedKnowledge(kbResults, tenantId)
+    // Surface CareStream (platform) guidance and the home's own manual knowledge as labelled sources.
+    seedSources   = buildSeedSources(knowledgeEntries as any[])
+    manualSources = buildManualSources(knowledgeEntries as any[])
   } catch (e) {
     // Non-fatal — knowledge namespace may not exist yet for this tenant
     console.warn(`[query] Knowledge retrieval failed (non-fatal): ${String(e)}`)

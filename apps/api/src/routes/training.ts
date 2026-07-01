@@ -333,42 +333,43 @@ function normName(s: string): string {
   return (s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
-// Backfill: make every published standard (annual) training module's NAME available
-// in the tenant's Adhoc list as an empty, generatable module — so tenants can build
-// their own adhoc version the same way as any other adhoc module (per-row "Generate
-// lesson & questions"). Deduped against the tenant's existing adhoc modules by
-// normalised name (and topic). Idempotent; also picks up newly-published standards.
+// Backfill: make every annual training TOPIC (the same list the Annual page shows,
+// scoped to the tenant's care setting) available in the tenant's Adhoc list as an
+// empty, generatable module — so tenants can build their own adhoc version the same
+// way as any other adhoc module (per-row "Generate lesson & questions"). Deduped
+// against the tenant's existing adhoc modules by normalised name (and topic).
+// Idempotent; also picks up newly-added topics.
 async function ensureAnnualTopicsAsAdhoc(tenantId: string): Promise<void> {
   const tenant  = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
   const setting = facilityTypeToSetting(tenant?.facility_type)
   const settingOr = [{ care_setting: null }, { care_setting: setting }]
-  const [existing, standard] = await Promise.all([
+  const [existing, topics] = await Promise.all([
     (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: { not: 'ai_generated' } }, select: { name: true, topic_id: true } }),
-    (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: { name: true, description: true, topic_id: true, category: true, image_key: true, group_key: true, requires_practical: true } }),
+    (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, select: { id: true, title: true, group_key: true, image_key: true, requires_practical: true } }),
   ])
   const haveNames  = new Set((existing as any[]).map(m => normName(m.name)))
   const haveTopics = new Set((existing as any[]).map(m => m.topic_id).filter(Boolean))
   const seen = new Set<string>()
   const rows: any[] = []
-  for (const s of (standard as any[])) {
-    const key = normName(s.name)
+  for (const t of (topics as any[])) {
+    const key = normName(t.title)
     if (!key || seen.has(key) || haveNames.has(key)) continue
-    if (s.topic_id && haveTopics.has(s.topic_id)) continue
+    if (t.id && haveTopics.has(t.id)) continue
     seen.add(key)
     rows.push({
       tenant_id:          tenantId,
-      slug:               `annual-${kebab(s.name)}`.slice(0, 200),
-      name:               s.name,
-      description:        (s.description || s.name).slice(0, 500),
-      category:           s.category === 'specialist' ? 'specialist' : 'statutory',
+      slug:               `annual-${kebab(t.title)}`.slice(0, 200),
+      name:               t.title,
+      description:        String(t.title).slice(0, 500),
+      category:           t.group_key === 'role_specific' ? 'specialist' : 'statutory',
       questions:          [],
       is_annual:          false,
       frequency:          'adhoc',
       renewal_months:     null,
-      requires_practical: !!s.requires_practical,
-      image_key:          s.image_key ?? s.group_key ?? null,
-      group_key:          s.group_key ?? null,
-      topic_id:           s.topic_id ?? null,
+      requires_practical: !!t.requires_practical,
+      image_key:          t.image_key ?? t.group_key ?? null,
+      group_key:          t.group_key ?? null,
+      topic_id:           t.id ?? null,
       source:             'manual',
     })
   }

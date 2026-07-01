@@ -19,7 +19,7 @@ const TIP = {
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
   annual:     "AI-generated annual training built from your policies. 'Score' is the assessment result; 'Renews' is when it's next due. For topics that also need a practical/observed assessment, use 'Record practical' to log that it's been done (with your name + date). View or print each certificate as evidence.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
-  reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end; 'Skimmed' = marked read without scrolling far. Multiple opens of the same policy are combined.",
+  reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end AND spent a realistic amount of time reading (at least a minute); 'Skimmed' = reached the end but too quickly to have genuinely read it, or marked read without scrolling far. Multiple opens of the same policy are combined.",
   cqc:        "This person's CQC inspector-prep practice: each question assigned, their AI score out of 100, and — where they reviewed the model answer and tried again — how much they improved. Useful evidence of inspection readiness.",
   questions:  "Every induction question this person has answered, with their answer and whether it was correct. Incorrect answers highlight where they may need support. Multiple-choice questions are graded automatically; written answers are checked by AI.",
   followup:   "Questions this person has currently answered incorrectly across training and induction — the knowledge to reinforce. Re-send their outstanding questions, reset a module below so they can retake it, or assign targeted training. 'Mark as reviewed' records that you've actioned it (supervision evidence) and clears it until a new wrong answer appears.",
@@ -650,8 +650,16 @@ export default function StaffRecordPage() {
               </tr></thead>
               <tbody>
                 {rec.reading.items.map((p: any) => {
-                  const how = p.best_scroll_pct >= 90 ? { label: 'Thorough', cls: 'bg-green-50 text-green-700' }
-                    : p.marked_read && p.best_scroll_pct < 70 ? { label: 'Skimmed', cls: 'bg-amber-50 text-amber-700' }
+                  // Prefer the label computed server-side; fall back for any cached data.
+                  // "Thorough" needs a deep scroll AND a plausible amount of time (a
+                  // policy can't be thoroughly read in a few seconds).
+                  const kind = p.how ?? (
+                    (p.best_scroll_pct >= 90 && (p.total_seconds ?? 0) >= 60) ? 'thorough'
+                    : (p.marked_read || p.reached_end || p.best_scroll_pct >= 90) ? 'skimmed'
+                    : 'partial'
+                  )
+                  const how = kind === 'thorough' ? { label: 'Thorough', cls: 'bg-green-50 text-green-700' }
+                    : kind === 'skimmed' ? { label: 'Skimmed', cls: 'bg-amber-50 text-amber-700' }
                     : { label: 'Partial', cls: 'bg-gray-100 text-gray-500' }
                   return (
                     <tr key={p.policy_id} className="border-b border-gray-50 last:border-0">

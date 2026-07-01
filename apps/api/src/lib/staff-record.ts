@@ -20,6 +20,19 @@ function policyTitleFromFilename(filename: string): string {
   return (filename || 'Policy').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim()
 }
 
+// A read only counts as "thorough" if the reader scrolled (almost) to the end AND
+// spent a plausible amount of time — you cannot thoroughly read a care policy in a
+// few seconds, so scrolling fast to the bottom is a skim, not a thorough read.
+export const READING_THOROUGH_MIN_SECONDS = 60
+export function readingHow(i: { best_scroll_pct?: number; total_seconds?: number; marked_read?: boolean; reached_end?: boolean }): 'thorough' | 'skimmed' | 'partial' {
+  const deepScroll = (i.best_scroll_pct ?? 0) >= 90
+  const enoughTime = (i.total_seconds ?? 0) >= READING_THOROUGH_MIN_SECONDS
+  if (deepScroll && enoughTime) return 'thorough'
+  // Reached/marked the end (or scrolled right through) but too quickly to have read it.
+  if (i.marked_read || i.reached_end || deepScroll) return 'skimmed'
+  return 'partial'
+}
+
 export async function buildStaffRecord(tenantId: string, userId: string, opts: StaffRecordOptions = {}) {
   const now  = new Date()
   const soon = new Date(now.getTime() + 30 * DAY)
@@ -296,7 +309,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       if (!g.last_read_at) g.last_read_at = s.created_at   // sessions are newest-first
       byPolicy.set(s.policy_id, g)
     }
-    const items = [...byPolicy.values()].filter(i => titleById.has(i.policy_id))
+    const items = [...byPolicy.values()].filter(i => titleById.has(i.policy_id)).map(i => ({ ...i, how: readingHow(i) }))
     const scrolls = items.map(i => i.best_scroll_pct)
     reading = {
       items,
@@ -304,8 +317,8 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
         policies_read:  items.length,
         avg_scroll_pct: scrolls.length ? Math.round(scrolls.reduce((a, b) => a + b, 0) / scrolls.length) : null,
         total_seconds:  items.reduce((a, i) => a + i.total_seconds, 0),
-        thorough:       items.filter(i => i.best_scroll_pct >= 90).length,
-        skimmed:        items.filter(i => i.marked_read && i.best_scroll_pct < 70).length,
+        thorough:       items.filter(i => i.how === 'thorough').length,
+        skimmed:        items.filter(i => i.how === 'skimmed').length,
       },
     }
   }

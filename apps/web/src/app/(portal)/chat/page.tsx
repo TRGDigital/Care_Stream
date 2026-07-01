@@ -1571,15 +1571,15 @@ function MessageBubble({
                     <span className="ml-auto shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">CareStream Seeded</span>
                   </div>
                 ))}
-                {/* CareStream internal guidance — reference material, no document to open */}
+                {/* CareStream pre-loaded guidance — platform-curated reference, no document to open */}
                 {msg.seedSources?.map((s, i) => (
                   <div
                     key={`seed-${i}`}
-                    className="flex items-center gap-2 rounded-md border border-gray-200 bg-neutral-light/60 px-3 py-1.5 text-xs text-neutral-mid"
+                    className="flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs text-purple-800"
                   >
-                    <Sparkles size={11} className="shrink-0 text-neutral-mid" />
+                    <Sparkles size={11} className="shrink-0 text-purple-500" />
                     <span className="min-w-0 truncate">{s.name}</span>
-                    <span className="ml-auto shrink-0 rounded-full bg-gray-200/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-mid">CareStream guidance</span>
+                    <span className="ml-auto shrink-0 rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">CareStream guidance</span>
                   </div>
                 ))}
               </div>

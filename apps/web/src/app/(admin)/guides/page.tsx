@@ -863,21 +863,41 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What the knowledge base is for">
           <p className="text-sm text-neutral-mid">
-            The knowledge base lets you add short, structured facts about your care setting that CareStream always has access to. These are things that would not normally appear in a policy document, such as your setting's specialism, key contacts, or specific procedures unique to your service.
+            The knowledge base lets you add short, structured facts about your care setting that CareStream always has access to. These are the things unique to <em>your</em> home that would not appear in a standard policy document, and they are exactly what makes chat answers specific to you.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            For example, you might have <strong>two COSHH storage cupboards</strong>: one under the stairs for substances in use, and one in the laundry room for unused stock. No policy would spell that out, but it is exactly what a staff member needs to know. Add it here and CareStream will use it when someone asks where COSHH substances are kept. The same applies to your registration number, registered manager, bed capacity, specialism, or emergency escalation contacts.
           </p>
         </SectionBlock>
-        <SectionBlock title="Adding entries">
-          <div className="space-y-3">
-            <Step n={1}>Go to <strong>Knowledge Base</strong> in the sidebar.</Step>
-            <Step n={2}>Click <strong>Add entry</strong> and fill in the question and answer.</Step>
-            <Step n={3}>Select the <strong>Category</strong> that best describes the entry (see below).</Step>
-            <Step n={4}>Optionally add a source name (e.g. the plan or policy the entry comes from).</Step>
-            <Step n={5}>Save the entry, it is saved as <em>pending</em>. Approve it from the list before it is used in responses.</Step>
+        <SectionBlock title="Where your knowledge comes from">
+          <p className="text-sm text-neutral-mid">The Knowledge Base page groups entries into three types:</p>
+          <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Manual entries', 'Facts you type in yourself, the home and care-setting nuances unique to your service (like the COSHH cupboards above). Shown first on the page because this is where your own knowledge lives.'],
+              ['From uploaded policies', 'Question-and-answer pairs CareStream generates automatically from the policy documents you upload. Use "Regenerate all" to (re)build them.'],
+              ['CareStream standard entries', 'A pre-loaded library of UK care regulatory knowledge (CQC Key Questions, health & safety, infection control, medication and more), provided as a starting point. You can edit these to make them specific to your home. They do not count against your document limit.'],
+            ].map(([type, desc]) => (
+              <div key={type} className="grid grid-cols-[11rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{type}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
           </div>
+        </SectionBlock>
+        <SectionBlock title="Approval, nothing goes live until you approve it">
+          <p className="text-sm text-neutral-mid">
+            Every entry, whichever of the three types it is, is <strong>pending approval</strong> until you approve it, and <strong>only approved entries are ever used</strong> to answer staff or shown as a source in chat. This applies equally to your manual entries, the policy-generated ones, <em>and</em> the pre-loaded CareStream entries: pre-loaded entries are guides for what you could add, and you are meant to review, edit and approve them so they fit your home before staff ever see them.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Go to <strong>Knowledge Base</strong> in the sidebar.</Step>
+            <Step n={2}>For a manual fact, click <strong>Add entry</strong>, fill in the question and answer, and choose a <strong>Category</strong> (see below). For a pre-loaded or policy-generated entry, open it and edit it so it matches your home.</Step>
+            <Step n={3}>Each entry shows a green <strong>Approved</strong> or amber <strong>Pending approval</strong> badge. Click <strong>Approve</strong> to make it live; you can <strong>Revoke</strong> at any time to take it back out of use.</Step>
+          </div>
+          <Tip>You will see a running count of approved vs pending entries at the top of the page. Staff only ever benefit from the approved ones.</Tip>
         </SectionBlock>
         <SectionBlock title="Knowledge categories">
           <div className="space-y-2 text-sm text-neutral-mid">
-            <p>The category you choose determines where the entry is used:</p>
+            <p>The category you choose for a manual entry determines where it is used:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><strong>General</strong>: available across all policy and handbook queries via the general knowledge base.</li>
               <li><strong>Business Continuity</strong>: appears exclusively in the Business Continuity chat channel. Staff can access it on the portal by selecting the Business Continuity card.</li>
@@ -885,9 +905,28 @@ const GUIDE_SECTIONS: GuideSection[] = [
             </ul>
           </div>
         </SectionBlock>
-        <SectionBlock title="Platform knowledge">
+        <SectionBlock title="How your knowledge shows in chat answers, the source colours">
           <p className="text-sm text-neutral-mid">
-            CareStream also comes pre-loaded with a library of regulatory knowledge covering CQC Key Questions, health and safety legislation, infection control guidance, medication regulations, and more. This is available to all care settings on the platform and does not count against your document limit.
+            When CareStream answers a staff question it lists what it drew from under <strong>&ldquo;sources referenced&rdquo;</strong> beneath the answer. Each kind of source has its own colour so staff (and inspectors) can see exactly where an answer came from:
+          </p>
+          <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['bg-teal', 'Company policy', 'One of your uploaded policy documents. Includes a "Read full policy" button to open the full text.'],
+              ['bg-yellow-400', 'Home knowledge', 'One of your approved manual knowledge base entries, the nuances unique to your home (e.g. the COSHH cupboards).'],
+              ['bg-purple-500', 'CareStream guidance', 'An approved pre-loaded CareStream regulatory entry that helped ground the answer.'],
+              ['bg-blue-500', 'CareStream Seeded', 'An external regulation the policy quotes (Care Act, COSHH, DoLS, and similar), labelled as CareStream seeded.'],
+            ].map(([dot, label, desc]) => (
+              <div key={label} className="grid grid-cols-[10rem_1fr] items-start gap-3 px-4 py-3">
+                <span className="flex items-center gap-2 font-medium text-neutral-dark">
+                  <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
+                  {label}
+                </span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Because of the approval gate above, a <strong>yellow &ldquo;Home knowledge&rdquo;</strong> or <strong>purple &ldquo;CareStream guidance&rdquo;</strong> source only ever appears once you have approved that entry.
           </p>
         </SectionBlock>
         <Tip>Use the knowledge base for things that change less often than policies, such as your registration number, registered manager, bed capacity, or emergency escalation contacts. Categorising entries correctly ensures staff can find them in the right chat channel.</Tip>

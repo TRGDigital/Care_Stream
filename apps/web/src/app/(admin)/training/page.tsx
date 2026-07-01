@@ -427,7 +427,14 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                       <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="h-10 w-16 shrink-0 rounded-md border border-gray-100 object-cover" />
                     )}
                     <div>
-                      <p className="text-sm font-medium text-neutral-dark">{m.name}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium text-neutral-dark">{m.name}</p>
+                        {moduleHasLesson(m) && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                            <CheckCircle2 size={10} /> Module Generated
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-neutral-mid">
                         {qs.length} question{qs.length !== 1 ? 's' : ''}
                         {version > 0 && <span className="ml-1.5 text-neutral-mid/60">v{version}</span>}

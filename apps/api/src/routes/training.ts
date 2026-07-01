@@ -14,7 +14,7 @@ import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
-import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
+import { generateAnnualModuleDraft, balanceAnswerPositions } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
@@ -1180,12 +1180,13 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
       return
     }
 
-    const questions = generated.map(q => ({
+    // Spread the correct answers across A/B/C/D (LLMs otherwise cluster them on A).
+    const questions = balanceAnswerPositions(generated.map(q => ({
       id:      randomUUID(),
       text:    q.text,
       options: q.options,
       correct: q.correct,
-    }))
+    })))
 
     await logAiCredit(tenantId, 'training_questions')
     ok(res, { questions })
@@ -1283,13 +1284,14 @@ trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: R
       return
     }
 
-    // Merge generated options back onto the original question IDs
-    const enriched = questions.map((q: any, i: number) => ({
+    // Merge generated options back onto the original question IDs, then spread the
+    // correct answers across A/B/C/D (LLMs otherwise cluster them on A).
+    const enriched = balanceAnswerPositions(questions.map((q: any, i: number) => ({
       id:      q.id ?? randomUUID(),
       text:    q.text,
       options: generated[i]?.options ?? ['', '', '', ''],
       correct: generated[i]?.correct ?? 0,
-    }))
+    })))
 
     ok(res, { questions: enriched })
   } catch (e: any) {

@@ -86,6 +86,35 @@ function normaliseMcq(raw: any, key: 'question' | 'text'): { options: string[]; 
   return { [key]: String(raw?.[key] ?? ''), options, correct }
 }
 
+// LLMs strongly favour placing the correct option first (A), so generated answers
+// cluster on one letter. Move the correct answer to a target position and shuffle the
+// distractors around it. Used with balanceAnswerPositions for an even spread.
+function moveCorrectTo<T extends { options: string[]; correct: number }>(it: T, target: number): T {
+  const opts = it.options
+  if (!Array.isArray(opts) || opts.length < 2) return it
+  if (typeof it.correct !== 'number' || it.correct < 0 || it.correct >= opts.length) return it
+  const tgt = Math.max(0, Math.min(target, opts.length - 1))
+  const correctVal = opts[it.correct]
+  const rest = opts.filter((_, i) => i !== it.correct)
+  for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]] }
+  const out: string[] = []
+  let r = 0
+  for (let pos = 0; pos < opts.length; pos++) out.push(pos === tgt ? correctVal : rest[r++])
+  // Mutate in place so the exact object type (and any extra fields) is preserved.
+  it.options = out
+  it.correct = tgt
+  return it
+}
+
+// Redistribute the correct answers across the four positions as evenly as possible,
+// in a shuffled order (so there's no learnable A-B-C-D pattern either), and shuffle
+// each question's distractors.
+export function balanceAnswerPositions<T extends { options: string[]; correct: number }>(items: T[]): T[] {
+  const targets = items.map((_, i) => i % 4)
+  for (let i = targets.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [targets[i], targets[j]] = [targets[j], targets[i]] }
+  return items.map((it, idx) => moveCorrectTo(it, targets[idx]))
+}
+
 function policyTitle(filename?: string | null): string {
   if (!filename) return 'Policy'
   return filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
@@ -239,6 +268,12 @@ export async function generateAnnualModuleDraft(
 
   const estMin = Math.round(Number(p?.estimated_minutes))
   const estimated_minutes = Number.isFinite(estMin) ? Math.max(10, Math.min(180, estMin)) : 30
+
+  // Break the LLM's "correct answer is always A" bias: spread the correct answer
+  // evenly across A/B/C/D for the assessment questions and the per-section checks.
+  // balanceAnswerPositions mutates each item's options/correct in place.
+  balanceAnswerPositions(questions)
+  balanceAnswerPositions(sections.map(s => s.check))
 
   return {
     title: String(p?.title ?? topic.title).slice(0, 160),

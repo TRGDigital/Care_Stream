@@ -1066,7 +1066,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li><strong>Upload file</strong>: attach the signed scan, photos, or the trainer&apos;s certificate (PDF or image, up to 15 MB). Files are stored privately and open with a click.</li>
             <li><strong>Competency</strong>: for each attendee, record <em>competent</em> or <em>not yet competent</em> where the training was practically assessed.</li>
           </ul>
+          <p className="mt-2 text-sm text-neutral-mid">The Evidence panel <strong>always shows an &ldquo;Uploaded files&rdquo; list</strong> with a count, so you can see exactly what is held against a session, and it tells you clearly when nothing has been uploaded yet. On the calendar, any session that has evidence shows a small <strong>paperclip</strong> with the file count, so you can spot at a glance which sessions have their paperwork.</p>
           <p className="mt-2 text-sm text-neutral-mid">Uploaded files are kept safe automatically: every file is checked to confirm it is a genuine PDF or image and scanned for malware before it is stored. Anything that fails is rejected and never saved, and a small <strong>scanned</strong> tag shows on files that passed.</p>
+        </SectionBlock>
+        <SectionBlock title="Evidence log (everything in one place)">
+          <p className="text-sm text-neutral-mid">
+            Click <strong>Evidence log</strong> at the top of the Face-to-face tab (next to <strong>Payroll report</strong>) to see <strong>every file uploaded across all sessions</strong> in one list, grouped by training session with its date and file count. Open any file with a click, or click a session to jump straight to it. It is the quickest way to answer an inspector who asks to see your face-to-face training records, without opening each session one by one.
+          </p>
         </SectionBlock>
         <SectionBlock title="Completion certificates (issued and tracked)">
           <p className="text-sm text-neutral-mid">

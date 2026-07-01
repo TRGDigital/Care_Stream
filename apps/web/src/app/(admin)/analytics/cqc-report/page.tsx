@@ -98,7 +98,6 @@ export default function CQCReportPage() {
   const [dateFrom,      setDateFrom]      = useState(twelveMonthAgo)
   const [dateTo,        setDateTo]        = useState(todayStr)
   const [loading,       setLoading]       = useState(false)
-  const [pdfLoading,    setPdfLoading]    = useState(false)
   const [error,         setError]         = useState('')
   const [report,        setReport]        = useState<any>(null)
 
@@ -118,24 +117,22 @@ export default function CQCReportPage() {
     }
   }
 
-  async function downloadPdf() {
-    const element = document.getElementById('cqc-print-area')
-    if (!element || !report) return
-    setPdfLoading(true)
-    try {
-      const html2pdf = (await import('html2pdf.js')).default
-      const filename = `CQC-Inspection-Evidence-${report.meta.org_name.replace(/\s+/g, '-')}-${report.meta.date_to.slice(0, 10)}.pdf`
-      await html2pdf().set({
-        margin:      [10, 10, 10, 10],
-        filename,
-        image:       { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:   { mode: ['css', 'legacy'] },
-      } as any).from(element).save()
-    } finally {
-      setPdfLoading(false)
+  // Native print-to-PDF (like the staff record). This handles the tenant logo,
+  // a tall multi-section report and all page styling reliably — html2canvas would
+  // taint on the cross-origin logo and blank out large reports.
+  function downloadPdf() {
+    if (!report) return
+    const org = (report.meta?.org_name ?? 'organisation').replace(/\s+/g, '-')
+    const prevTitle = document.title
+    document.title = `CQC-Inspection-Evidence-${org}-${String(report.meta?.date_to ?? '').slice(0, 10)}`
+    document.body.classList.add('printing-cqc')
+    const cleanup = () => {
+      document.body.classList.remove('printing-cqc')
+      document.title = prevTitle
+      window.removeEventListener('afterprint', cleanup)
     }
+    window.addEventListener('afterprint', cleanup)
+    window.print()
   }
 
   // CQC Readiness Report is a Professional+ feature.
@@ -160,11 +157,11 @@ export default function CQCReportPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={downloadPdf}
-                disabled={pdfLoading}
+                title="Opens your print dialog — choose “Save as PDF” as the destination"
                 className="flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
               >
                 <FileDown size={15} />
-                {pdfLoading ? 'Generating…' : 'Download PDF'}
+                Download PDF
               </button>
               <button
                 onClick={() => window.print()}

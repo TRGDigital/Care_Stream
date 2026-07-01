@@ -106,6 +106,21 @@ a, button { transition: all 0.18s ease; }
   .cqc-report-section { page-break-inside: avoid; break-inside: avoid; }
 }
 
+/* CQC evidence report → native print-to-PDF: print ONLY the report, full width,
+   with background colours preserved. Toggled by adding 'printing-cqc' to <body>
+   just before window.print(). */
+@media print {
+  body.printing-cqc, html:has(body.printing-cqc) { height: auto !important; overflow: visible !important; }
+  body.printing-cqc * { visibility: hidden !important; }
+  body.printing-cqc #cqc-print-area,
+  body.printing-cqc #cqc-print-area * { visibility: visible !important; }
+  body.printing-cqc #cqc-print-area {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  body.printing-cqc #cqc-print-area [class*="shadow"] { box-shadow: none !important; }
+}
+
 /* Keep cards whole when the staff record is printed / saved as PDF. */
 .pdf-card { page-break-inside: avoid; break-inside: avoid; }
 

@@ -201,6 +201,24 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [assignBusy, setAssignBusy] = useState<string | null>(null)  // module id during "assign all"
   const [assignMsg,  setAssignMsg]  = useState<Record<string, string>>({})
 
+  // Standard library → adhoc: the platform standard topics a tenant can spin up their
+  // own editable one-off (adhoc) version of, grounded in the standard content + their policies.
+  const [catalogue, setCatalogue] = useState<any[]>([])
+  const [genAdhoc,  setGenAdhoc]  = useState<string | null>(null)          // topic id in flight
+  const [adhocMsg,  setAdhocMsg]  = useState<Record<string, string>>({})
+  useEffect(() => { api.training.catalogue().then(d => setCatalogue(d.topics)).catch(() => {}) }, [api])
+  const standardTopics = catalogue.filter((t: any) => t.standard_module)
+  async function createAdhoc(topicId: string) {
+    setGenAdhoc(topicId); setAdhocMsg(p => ({ ...p, [topicId]: '' }))
+    try {
+      await api.training.generateAdhocModule(topicId)
+      const d = await api.training.catalogue(); setCatalogue(d.topics)
+      onAssigned()  // refresh the tenant modules list so the new module appears in the groups below
+    } catch (e: any) {
+      setAdhocMsg(p => ({ ...p, [topicId]: e?.message ?? 'Could not generate.' }))
+    } finally { setGenAdhoc(null) }
+  }
+
   // Staff currently assigned each module (for the "X assigned" count).
   const assignedByModule = (() => {
     const map: Record<string, Set<string>> = {}
@@ -614,6 +632,43 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
           </ul>
         </div>
       </HelpAccordion>
+
+      {standardTopics.length > 0 && (
+        <section className="mb-6 rounded-xl border border-blue-200 bg-blue-50/40 p-4">
+          <div className="mb-1 flex items-center gap-2">
+            <Sparkles size={16} className="text-blue-700" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Standard training library — create your own adhoc version</h2>
+          </div>
+          <p className="mb-3 text-xs text-neutral-mid">Spin up your own editable one-off (adhoc) module from any of our standard training topics. The AI grounds it in the standard content and <strong>your own policies</strong> (1 AI credit). It then appears in your modules below to edit, lock and assign.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {standardTopics.map((t: any) => {
+              const created = !!t.adhoc_module
+              const busy    = genAdhoc === t.id
+              const msg     = adhocMsg[t.id]
+              return (
+                <div key={t.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{t.title}</p>
+                    {created
+                      ? <p className="text-[11px] font-medium text-green-600">Adhoc module created — edit it below</p>
+                      : msg
+                        ? <p className="text-[11px] text-red-600">{msg}</p>
+                        : <p className="text-[11px] text-neutral-mid">Not created yet</p>}
+                  </div>
+                  <button
+                    onClick={() => createAdhoc(t.id)}
+                    disabled={busy}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:border-blue-400 hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {busy ? 'Generating…' : created ? 'Regenerate' : 'Create adhoc module'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {renderGroup('Statutory modules', 'text-teal', statutory)}
       {renderGroup('Specialist modules', 'text-indigo-500', specialist)}

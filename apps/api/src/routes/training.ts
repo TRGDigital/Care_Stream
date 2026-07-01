@@ -78,20 +78,24 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     const setting = facilityTypeToSetting(tenant?.facility_type)
     const settingOr = [{ care_setting: null }, { care_setting: setting }]
     const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true, created_at: true }
-    const [topics, modules, standard] = await Promise.all([
+    const [topics, modules, standard, adhoc] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
       // Platform standard library — published modules shared to all tenants, scoped to this tenant's setting (+ universal).
       (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: sel }),
+      // The tenant's own adhoc versions generated from standard topics (shown in the Adhoc tab).
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_adhoc' }, select: sel }),
     ])
     const slim = (m: any) => ({ ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
     const moduleByTopic = new Map<string, any>()
     for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, slim(m)) }
     const standardByTopic = new Map<string, any>()
     for (const m of (standard as any[])) { if (m.topic_id) standardByTopic.set(m.topic_id, slim(m)) }
+    const adhocByTopic = new Map<string, any>()
+    for (const m of (adhoc as any[])) { if (m.topic_id) adhocByTopic.set(m.topic_id, slim(m)) }
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
-      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null, adhoc_module: adhocByTopic.get(t.id) ?? null })),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -154,6 +158,58 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
     ok(res, { module })
   } catch (e: any) {
     console.error('[training/generate] failed:', e?.message ?? e)
+    err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
+// POST /training/catalogue/generate-adhoc — generate the tenant's OWN editable adhoc
+// (one-off) module from a standard topic, grounded in the standard content + their
+// policies. Same generation engine as the annual "Tailor to our policies" flow, but
+// persisted as an adhoc module (source 'ai_adhoc') so it lands in the Adhoc tab.
+trainingRouter.post('/catalogue/generate-adhoc', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const topicId  = String(req.body?.topic_id ?? '')
+  if (!topicId) { err(res, 'VALIDATION_ERROR', 'topic_id is required'); return }
+  try {
+    const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
+    if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
+
+    // Grounded AI generation consumes an AI credit (same as annual tailoring).
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
+    const draft = await generateAnnualModuleDraft(tenantId, { title: topic.title, aliases: topic.aliases, requires_practical: topic.requires_practical })
+    if (!draft.questions.length) { err(res, 'GENERATION_FAILED', 'No questions were generated — try again.', 502); return }
+
+    const category = topic.group_key === 'role_specific' ? 'specialist' : 'statutory'
+    const data = {
+      name: draft.title,
+      description: (draft.learning_content.summary || topic.title).slice(0, 500),
+      category,
+      questions: draft.questions,
+      is_annual: false,
+      source: 'ai_adhoc', approved: true, approved_at: new Date(), approved_by: 'AI (adhoc)',
+      learning_content: draft.learning_content,
+      requires_practical: !!topic.requires_practical,
+      frequency: 'adhoc',
+      renewal_months: null,
+      pass_mark: 80,
+      duration_minutes: draft.estimated_minutes,
+      image_key: topic.image_key ?? topic.group_key,
+      policy_refs: draft.policy_refs,
+      topic_id: topic.id,
+      group_key: topic.group_key,
+    }
+    const slug = `ai-adhoc-${kebab(topic.title)}`
+    const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: tenantId, topic_id: topic.id, source: 'ai_adhoc' } })
+    const module = existing
+      ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
+      : await (prisma as any).trainingModule.create({ data: { tenant_id: tenantId, slug, ...data } })
+
+    await logAiCredit(tenantId, 'training', topic.id)
+    ok(res, { module })
+  } catch (e: any) {
+    console.error('[training/generate-adhoc] failed:', e?.message ?? e)
     err(res, 'GENERATION_FAILED', e.message, 500)
   }
 })

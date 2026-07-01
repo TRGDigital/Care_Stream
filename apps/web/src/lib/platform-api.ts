@@ -785,6 +785,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}/ai-draft`, token, { method: 'POST', body: keep ? JSON.stringify({ keep }) : undefined }),
       seedRoles: (setting?: string) =>
         adminFetch<{ created: number }>(`/onboarding-templates/seed-roles${setting ? `?setting=${setting}` : ''}`, token, { method: 'POST' }),
+      clone: (id: string, setting: string) =>
+        adminFetch<{ skipped: boolean; flow: OnboardingTemplate }>(`/onboarding-templates/${id}/clone`, token, { method: 'POST', body: JSON.stringify({ setting }) }),
     },
 
     policySeeds: {

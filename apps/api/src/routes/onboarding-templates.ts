@@ -211,6 +211,67 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
   ok(res, { flow: updated })
 })
 
+// ─── POST /:id/clone  body { setting } ────────────────────────────────────────
+// Clone a template into another care setting, copying its read-policy steps verbatim
+// (they're setting-agnostic) and RE-WORDING its questions for the target setting via
+// AI. Created inactive for review. Idempotent (skips if the name already exists there).
+onboardingTemplatesRouter.post('/:id/clone', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  const setting = String(req.body?.setting ?? '')
+  if (!isCareSetting(setting)) return err(res, 'VALIDATION_ERROR', 'A valid care setting is required', 400)
+
+  const source = await (prisma as any).onboardingFlow.findFirst({ where: { id, tenant_id: null }, include: flowInclude })
+  if (!source) return err(res, 'NOT_FOUND', 'Source template not found', 404)
+  if (source.care_setting === setting) return err(res, 'SAME_SETTING', 'Source and target settings are the same', 400)
+
+  const dup = await (prisma as any).onboardingFlow.findFirst({ where: { tenant_id: null, care_setting: setting, name: source.name }, select: { id: true } })
+  if (dup) { ok(res, { skipped: true, flow: dup }); return }
+
+  const steps = (source.steps as any[])
+  const questionSteps = steps.filter(s => s.type === 'answer_question' && s.question)
+
+  // One AI call per flow: reword all its questions for the target setting.
+  const reworded = new Map<number, { question: string; options: string[]; correct_option: number }>()
+  if (questionSteps.length > 0) {
+    const label = settingLabelForPrompt(setting)
+    const system = `You adapt UK adult social care staff-induction multiple-choice questions from one care setting to another. Keep each question's learning point and the MEANING of the correct answer; only change the wording/scenario so it fits the target setting. Use UK English. Never add company or personal names. Return ONLY JSON.`
+    const list = questionSteps.map((s, i) => ({ i, question: s.question, options: s.options, correct_option: typeof s.correct_option === 'number' ? s.correct_option : 0 }))
+    const user = `Target care setting: ${label}. Rewrite each of these induction questions so they read correctly for staff working in a ${label} setting — adapt the scenario/context, keep exactly 4 options, keep the same correct_option index, and keep the same underlying topic. Input:\n${JSON.stringify(list)}\n\nOutput JSON only: {"questions":[{"i":<index>,"question":"...","options":["","","",""],"correct_option":<0-3>}]}`
+    try {
+      const parsed = extractJson(await callClaude(system, user, { maxTokens: 8000, temperature: 0.4 }))
+      for (const q of (Array.isArray(parsed?.questions) ? parsed.questions : [])) {
+        if (typeof q?.i === 'number' && typeof q.question === 'string' && Array.isArray(q.options) && q.options.length === 4) {
+          reworded.set(q.i, { question: String(q.question), options: q.options.map((o: any) => String(o)), correct_option: typeof q.correct_option === 'number' ? q.correct_option : 0 })
+        }
+      }
+    } catch { /* fall back to the original wording */ }
+  }
+
+  const newSteps = steps.map((s: any) => {
+    if (s.type === 'answer_question') {
+      const rw = reworded.get(questionSteps.indexOf(s))
+      return { order: s.order, title: (rw ? rw.question : s.title).slice(0, 200), type: 'answer_question', policy_section: s.policy_section ?? null, question: rw ? rw.question : s.question, options: rw ? rw.options : (s.options ?? []), correct_option: rw ? rw.correct_option : s.correct_option, locked: false }
+    }
+    return { order: s.order, title: s.title, type: 'read_policy', policy_section: s.policy_section ?? null, question: null, options: [], correct_option: null, locked: false }
+  })
+
+  const flow = await (prisma as any).onboardingFlow.create({
+    data: {
+      tenant_id:    null,
+      name:         source.name,
+      description:  source.description,
+      job_roles:    source.job_roles,
+      flow_kind:    source.flow_kind,
+      care_setting: setting,
+      difficulties: source.difficulties,
+      is_active:    false,
+      steps:        { create: newSteps },
+    },
+    include: flowInclude,
+  })
+  ok(res, { skipped: false, flow })
+})
+
 // ─── POST /seed-roles?setting= — create the canonical role/specialism templates ─
 // for a given care setting (empty shells). De-dupes within that setting, so each
 // setting can have its own Care Assistant etc.

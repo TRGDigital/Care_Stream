@@ -53,6 +53,7 @@ export default function OnboardingFlowsPage() {
   const [settingTab, setSettingTab] = useState('nursing-homes')
   const [showNew, setShowNew] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [cloning, setCloning] = useState<{ done: number; total: number } | null>(null)
 
   function load() {
     if (!token) return
@@ -77,6 +78,26 @@ export default function OnboardingFlowsPage() {
         : `All standard role templates already exist for ${settingLabel(settingTab)} — nothing new to add.`)
       load()
     } catch (e: any) { setError(e.message) } finally { setSeeding(false) }
+  }
+
+  // Copy every active Nursing Homes template into the current setting, rewording the
+  // questions for that setting (read steps are copied verbatim). Loops per flow so no
+  // single request is heavy; idempotent (skips flows that already exist there).
+  async function cloneFromNursing() {
+    if (!token || !settingTab || settingTab === 'nursing-homes') return
+    const sources = flows.filter(f => (f.care_setting ?? '') === 'nursing-homes' && f.is_active)
+    if (sources.length === 0) { setError('No active Nursing Homes templates to copy from yet.'); return }
+    setError(''); setNote(''); setCloning({ done: 0, total: sources.length })
+    const client = createPlatformClient(token)
+    let created = 0, skipped = 0
+    for (const src of sources) {
+      try { const r = await client.onboardingTemplates.clone(src.id, settingTab); r.skipped ? skipped++ : created++ }
+      catch { /* keep going */ }
+      setCloning(c => (c ? { ...c, done: c.done + 1 } : c))
+    }
+    setCloning(null)
+    setNote(`Copied ${created} flow${created === 1 ? '' : 's'} from Nursing Homes into ${settingLabel(settingTab)}${skipped ? `, ${skipped} already existed` : ''}. Questions were reworded for the setting. They're inactive — review and activate each when ready.`)
+    load()
   }
 
   async function createTemplate(data: { name: string; flow_kind: string; care_setting: string; job_roles: string[]; difficulties: string[] }) {
@@ -145,8 +166,16 @@ export default function OnboardingFlowsPage() {
               Shared induction templates. Draft each with AI, review the steps, then activate so tenants can adopt them.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <button onClick={seedRoles} disabled={seeding}
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {settingTab && settingTab !== 'nursing-homes' && (
+              <button onClick={cloneFromNursing} disabled={!!cloning || seeding}
+                className="flex items-center gap-2 rounded-md border border-teal/40 bg-teal-light/30 px-3 py-2 text-sm font-medium text-teal hover:bg-teal-light/60 disabled:opacity-50"
+                title="Copy every Nursing Homes flow into this setting, rewording the questions for it. Created inactive for you to review.">
+                {cloning ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />}
+                {cloning ? `Copying… ${cloning.done}/${cloning.total}` : `Copy from Nursing Homes`}
+              </button>
+            )}
+            <button onClick={seedRoles} disabled={seeding || !!cloning}
               className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
               {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create role templates{settingTab ? ` (${settingLabel(settingTab)})` : ''}
             </button>
@@ -175,9 +204,18 @@ export default function OnboardingFlowsPage() {
         ) : tabFlows.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
             <p className="text-sm text-neutral-mid">No {settingLabel(settingTab).toLowerCase()} templates yet.</p>
-            <button onClick={seedRoles} disabled={seeding} className="mt-3 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
-              Create the standard role templates for {settingLabel(settingTab)}
-            </button>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              {settingTab && settingTab !== 'nursing-homes' && (
+                <button onClick={cloneFromNursing} disabled={!!cloning || seeding}
+                  className="inline-flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                  {cloning ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />}
+                  {cloning ? `Copying… ${cloning.done}/${cloning.total}` : `Copy from Nursing Homes (reworded for ${settingLabel(settingTab)})`}
+                </button>
+              )}
+              <button onClick={seedRoles} disabled={seeding || !!cloning} className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
+                Create empty role templates instead
+              </button>
+            </div>
           </div>
         ) : (
           <>

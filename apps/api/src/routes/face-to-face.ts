@@ -807,6 +807,27 @@ faceToFaceRouter.post('/sessions/:id/evidence', requireAdmin, evidenceUploadMidd
   } catch (e: any) { err(res, 'UPLOAD_FAILED', e?.message ?? 'Could not upload the file.', 500) }
 })
 
+// GET /face-to-face/evidence  — all evidence files for the tenant, each with its
+// session, so the admin can see every upload grouped by training session in one place.
+faceToFaceRouter.get('/evidence', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = tid(req)
+  try {
+    const rows = await (prisma as any).faceToFaceEvidence.findMany({
+      where: { tenant_id: tenantId },
+      orderBy: { created_at: 'desc' },
+      include: { session: { select: { id: true, title: true, session_date: true } } },
+    })
+    const evidence = (rows as any[]).map((e: any) => ({
+      id: e.id, file_name: e.file_name, file_type: e.file_type, size_bytes: e.size_bytes,
+      scan_status: e.scan_status ?? 'skipped', created_at: e.created_at,
+      session_id: e.session?.id ?? e.session_id,
+      session_title: e.session?.title ?? 'Session',
+      session_date: e.session?.session_date ?? null,
+    }))
+    ok(res, { evidence })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not fetch evidence.', 500) }
+})
+
 // GET /face-to-face/evidence/:id  — authenticated stream of the file
 const SAFE_EVIDENCE_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'])
 faceToFaceRouter.get('/evidence/:id', requireAdmin, async (req: Request, res: Response) => {

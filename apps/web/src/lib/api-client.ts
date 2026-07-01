@@ -707,6 +707,9 @@ export function createApiClient(token: string) {
       },
       deleteEvidence: (evidenceId: string) =>
         apiFetch<{ deleted: boolean }>(`/face-to-face/evidence/${evidenceId}`, token, { method: 'DELETE' }),
+      // Every evidence file across all sessions, each tagged with its session.
+      listEvidence: () =>
+        apiFetch<{ evidence: Array<{ id: string; file_name: string; file_type: string; size_bytes: number; scan_status: string; created_at: string; session_id: string; session_title: string; session_date: string | null }> }>(`/face-to-face/evidence`, token),
       // Stored completion certificates (issued only for attended staff).
       issueCertificate: (sessionId: string, user_id: string, pdf_base64: string) =>
         apiFetch<{ certificate: { id: string; user_id: string; title: string } }>(`/face-to-face/sessions/${sessionId}/certificate`, token, { method: 'POST', body: JSON.stringify({ user_id, pdf_base64 }) }),

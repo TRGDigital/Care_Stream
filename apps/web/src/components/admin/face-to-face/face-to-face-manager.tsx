@@ -41,6 +41,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
   const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
+  const [evidenceLogOpen, setEvidenceLogOpen] = useState(false)
   const [dayDetail, setDayDetail] = useState<string | null>(null)   // open the per-day overlay
   const [view, setView] = useState<'calendar' | 'matrix'>('calendar')   // calendar vs compliance matrix
 
@@ -142,6 +143,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setPayrollOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40"><FileText size={16} /> Payroll report</button>
+          <button onClick={() => setEvidenceLogOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/40"><Paperclip size={16} /> Evidence log</button>
           <button onClick={() => setEditing({ mode: 'new' })} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Plus size={16} /> New session</button>
         </div>
       </div>
@@ -261,6 +263,10 @@ export function FaceToFaceManager({ token }: { token?: string }) {
 
       {payrollOpen && api && (
         <PayrollModal api={api} year={year} month={month} onClose={() => setPayrollOpen(false)} />
+      )}
+
+      {evidenceLogOpen && api && (
+        <EvidenceLogModal api={api} onClose={() => setEvidenceLogOpen(false)} onOpenSession={(id) => { setEvidenceLogOpen(false); setViewingId(id) }} />
       )}
 
       {dayDetail && (
@@ -897,6 +903,99 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Evidence log: every uploaded file, grouped by training session ───────────
+function EvidenceLogModal({ api, onClose, onOpenSession }: {
+  api: ReturnType<typeof createApiClient>; onClose: () => void; onOpenSession: (sessionId: string) => void
+}) {
+  const [rows, setRows] = useState<any[] | null>(null)
+  const [msg, setMsg]   = useState('')
+
+  useEffect(() => {
+    api.faceToFace.listEvidence().then(d => setRows(d.evidence)).catch(() => setRows([]))
+  }, [api])
+
+  async function openFile(ev: any) {
+    // Open the tab synchronously (popup-blocker safe), then swap in the fetched file.
+    const win = window.open('', '_blank')
+    try {
+      const blob = await api.faceToFace.downloadEvidence(ev.id)
+      const url = URL.createObjectURL(blob)
+      if (win) { win.location.href = url }
+      else { const a = document.createElement('a'); a.href = url; a.download = ev.file_name || 'evidence'; document.body.appendChild(a); a.click(); a.remove() }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch { if (win) win.close(); setMsg('Could not open the file.') }
+  }
+
+  // Group files by session, preserving the newest-first order the API returns.
+  const groups = useMemo(() => {
+    const m = new Map<string, { id: string; title: string; date: string | null; files: any[] }>()
+    for (const ev of rows ?? []) {
+      let g = m.get(ev.session_id)
+      if (!g) { g = { id: ev.session_id, title: ev.session_title, date: ev.session_date, files: [] }; m.set(ev.session_id, g) }
+      g.files.push(ev)
+    }
+    return [...m.values()]
+  }, [rows])
+
+  const totalFiles = rows?.length ?? 0
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-4 flex items-start justify-between gap-2">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-bold text-neutral-dark"><Paperclip size={18} className="text-teal" /> Evidence log</h2>
+            <p className="text-sm text-neutral-mid">Every file uploaded against a face-to-face session{rows ? `, ${totalFiles} file${totalFiles === 1 ? '' : 's'} across ${groups.length} session${groups.length === 1 ? '' : 's'}` : ''}.</p>
+          </div>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        {rows === null && <p className="py-8 text-center text-sm text-neutral-mid">Loading…</p>}
+
+        {rows !== null && groups.length === 0 && (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-neutral-light/30 px-4 py-10 text-center">
+            <Paperclip size={22} className="text-neutral-mid" />
+            <p className="text-sm font-medium text-neutral-dark">No evidence uploaded yet</p>
+            <p className="max-w-xs text-xs text-neutral-mid">Open any session and use <strong>Upload file</strong> in its Evidence box to attach signed sign-in sheets, photos or trainer certificates. They will all be listed here.</p>
+          </div>
+        )}
+
+        {rows !== null && groups.length > 0 && (
+          <div className="space-y-4">
+            {groups.map(g => (
+              <div key={g.id} className="rounded-xl border border-gray-200 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <button onClick={() => onOpenSession(g.id)} className="min-w-0 text-left">
+                    <p className="truncate text-sm font-semibold text-neutral-dark hover:text-teal">{g.title}</p>
+                    <p className="text-xs text-neutral-mid">{g.date ? prettyDate(g.date) : '—'} · {g.files.length} file{g.files.length === 1 ? '' : 's'}</p>
+                  </button>
+                  <button onClick={() => onOpenSession(g.id)} title="Open session" className="shrink-0 text-neutral-mid hover:text-teal"><ChevronRight size={16} /></button>
+                </div>
+                <div className="space-y-1">
+                  {g.files.map(ev => (
+                    <div key={ev.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-1.5">
+                      <button onClick={() => openFile(ev)} className="flex min-w-0 items-center gap-1.5 text-left text-sm text-neutral-dark hover:text-teal">
+                        <Paperclip size={13} className="shrink-0 text-neutral-mid" /><span className="truncate">{ev.file_name}</span>
+                      </button>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {ev.scan_status === 'clean' && <span title="Passed the malware scan" className="rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-600">scanned</span>}
+                        <span className="text-[11px] text-neutral-mid">{(ev.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+                        <button onClick={() => openFile(ev)} title="Open" className="text-neutral-mid hover:text-teal"><Download size={13} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {msg && <p className="mt-3 text-xs font-medium text-red-600">{msg}</p>}
       </div>
     </div>
   )

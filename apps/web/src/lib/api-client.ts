@@ -52,6 +52,13 @@ export interface SeedSource {
   name: string
 }
 
+// An external regulation/reference (from /platform/regulations) that the grounding
+// policies quote — surfaced as a labelled source linking to the official text.
+export interface ReferenceSource {
+  name: string
+  url?: string
+}
+
 export interface KnowledgeEntry {
   id:                 string
   tenant_id:          string
@@ -75,6 +82,7 @@ export interface QueryResponse {
   intentType:         string
   citations:          Citation[]
   seedSources?:       SeedSource[]
+  referenceSources?:  ReferenceSource[]
   noMatch:            boolean
   languageDetected:   string
   responseTimeMs:     number
@@ -135,7 +143,7 @@ export function createApiClient(token: string) {
       // arrives, then onDone with the final payload (citations, suggestions, etc.).
       stream: async (
         data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> },
-        handlers: { onParagraph: (html: string) => void; onDone: (d: { html: string; citations?: Citation[]; seedSources?: SeedSource[]; suggestedQuestions?: string[]; queryId?: string; languageDetected?: string; noMatch?: boolean }) => void; onError: (msg: string) => void },
+        handlers: { onParagraph: (html: string) => void; onDone: (d: { html: string; citations?: Citation[]; seedSources?: SeedSource[]; referenceSources?: ReferenceSource[]; suggestedQuestions?: string[]; queryId?: string; languageDetected?: string; noMatch?: boolean }) => void; onError: (msg: string) => void },
       ): Promise<void> => {
         const res = await fetch(`${API_URL}/query/stream`, {
           method: 'POST',

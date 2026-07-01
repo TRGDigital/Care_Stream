@@ -25,7 +25,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -37,7 +37,8 @@ interface ChatMessage {
   content:             string
   timestamp?:          string   // ISO — set on send for user, on response for assistant
   citations?:          Citation[]
-  seedSources?:        { name: string }[]   // CareStream platform guidance that grounded the answer
+  seedSources?:        { name: string }[]           // CareStream platform guidance that grounded the answer
+  referenceSources?:   { name: string; url?: string }[]  // external regulations the policies quote
   language?:           string
   loading?:            boolean
   suggestedQuestions?: string[]
@@ -720,6 +721,7 @@ function ChatPageInner() {
                 timestamp:          new Date().toISOString(),
                 citations:          d.citations?.length ? d.citations : undefined,
                 seedSources:        d.seedSources?.length ? d.seedSources : undefined,
+                referenceSources:   d.referenceSources?.length ? d.referenceSources : undefined,
                 language:           d.languageDetected && d.languageDetected !== 'eng' ? d.languageDetected : undefined,
                 loading:            false,
                 suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
@@ -1516,8 +1518,8 @@ function MessageBubble({
           </span>
         )}
 
-        {((msg.citations?.length ?? 0) + (msg.seedSources?.length ?? 0)) > 0 && !msg.loading && (() => {
-          const total = (msg.citations?.length ?? 0) + (msg.seedSources?.length ?? 0)
+        {((msg.citations?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)) > 0 && !msg.loading && (() => {
+          const total = (msg.citations?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)
           return (
           <div className="mt-2">
             <button
@@ -1543,6 +1545,21 @@ function MessageBubble({
                     >
                       <FileText size={11} /> Read full policy
                     </button>
+                  </div>
+                ))}
+                {/* External references — regulations the policies quote, linked to the official source */}
+                {msg.referenceSources?.map((r, i) => (
+                  <div
+                    key={`ref-${i}`}
+                    className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs text-blue-700"
+                  >
+                    <BookOpen size={11} className="shrink-0 text-blue-500" />
+                    <span className="min-w-0 truncate">{r.name}</span>
+                    {r.url
+                      ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-md border border-blue-300 bg-white px-2 py-1 font-medium text-blue-700 transition-colors hover:bg-blue-600 hover:text-white">
+                          <ExternalLink size={11} /> View source
+                        </a>
+                      : <span className="ml-auto shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">Reference</span>}
                   </div>
                 ))}
                 {/* CareStream internal guidance — reference material, no document to open */}

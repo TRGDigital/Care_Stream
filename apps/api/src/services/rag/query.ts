@@ -98,6 +98,28 @@ export interface SeedSource {
   name: string
 }
 
+// An external regulation/reference (from /platform/regulations) that the grounding
+// policies quote — surfaced as a labelled source with a link to the official text.
+export interface ReferenceSource {
+  name: string
+  url?: string
+}
+
+// Distinct external references from the regulations that grounded an answer,
+// deduped by name, each linking to its first official source URL.
+function buildReferenceSources(regs: Array<{ official_name?: string | null; source_urls?: string[] | null }>): ReferenceSource[] {
+  const seen = new Set<string>()
+  const out: ReferenceSource[] = []
+  for (const r of regs) {
+    const name = (r?.official_name ?? '').trim()
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    const url = Array.isArray(r.source_urls) ? r.source_urls.find(u => typeof u === 'string' && u.trim()) : undefined
+    out.push(url ? { name, url } : { name })
+  }
+  return out
+}
+
 // Distinct CareStream (platform) guidance labels from a set of retrieved,
 // approved knowledge entries — deduped by name, tenant entries excluded.
 function buildSeedSources(rows: Array<{ source_type?: string | null; source_name?: string | null }>): SeedSource[] {
@@ -118,6 +140,7 @@ export interface QueryOutput {
   intentType:         IntentType
   citations:          Citation[]
   seedSources?:       SeedSource[]
+  referenceSources?:  ReferenceSource[]
   noMatch:            boolean
   languageDetected:   string
   responseTimeMs:     number
@@ -813,6 +836,7 @@ At the end of your response, append this comment (do not display it):
       intentType:         'summary',
       citations,
       seedSources,
+      referenceSources:   buildReferenceSources(regulationContext),
       noMatch:            ranked.length === 0,
       languageDetected:   langDetection.code,
       responseTimeMs:     Date.now() - start,
@@ -1176,6 +1200,7 @@ At the end of your response, append this comment (do not display it to the user)
     intentType:         'summary',
     citations,
     seedSources,
+    referenceSources:   buildReferenceSources(regulationContext),
     noMatch,
     languageDetected:   langDetection.code,
     responseTimeMs:     Date.now() - start,

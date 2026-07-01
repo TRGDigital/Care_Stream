@@ -17,7 +17,7 @@ const QuerySchema = z.object({
   query_text:           z.string().min(1).max(2000),
   policy_id:            z.string().uuid().optional(),
   staff_name:           z.string().max(100).optional(),
-  document_category:    z.enum(['internal_policy', 'staff_handbook', 'training_module', 'cqc_report']).optional(),
+  document_category:    z.enum(['internal_policy', 'staff_handbook', 'training_module', 'cqc_report', 'audit_report', 'business_continuity']).optional(),
   chat_session_id:      z.string().uuid().optional(),
   language:             z.string().length(3).optional(),   // staff-chosen reply language (ISO 639-3 / private-use)
   conversation_history: z.array(z.object({

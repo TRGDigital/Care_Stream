@@ -596,6 +596,7 @@ export function createApiClient(token: string) {
       progress: () => apiFetch<any>('/me/progress', token),
       profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean }>('/me/profile', token),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number }>('/me/counts', token),
+      documentCategories: () => apiFetch<{ available: string[] }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),
       pushUnsubscribe: (endpoint: string) =>
@@ -615,7 +616,7 @@ export function createApiClient(token: string) {
         apiFetch<{ correct: boolean; resolved?: boolean; correct_option: number }>('/me/follow-up/lesson/answer', token, { method: 'POST', body: JSON.stringify(data) }),
       followUpResolved: (data: { source: string; ref: string; method: 'learn' | 'retry'; label?: string }) =>
         apiFetch<{ logged: boolean }>('/me/follow-up/resolved', token, { method: 'POST', body: JSON.stringify(data) }),
-      recordLanguageSwitch: (data: { area: 'training' | 'annual' | 'induction' | 'followup' | 'cqc'; set_ref?: string; set_name?: string }) =>
+      recordLanguageSwitch: (data: { area: 'training' | 'annual' | 'induction' | 'followup' | 'cqc' | 'chat'; set_ref?: string; set_name?: string }) =>
         apiFetch<{ logged: boolean }>('/me/language-switch', token, { method: 'POST', body: JSON.stringify(data) }),
       rateTraining: (data: { area: 'training' | 'annual' | 'followup' | 'cqc'; ref?: string; confidence?: number; usefulness?: number; comment?: string }) =>
         apiFetch<{ saved: boolean }>('/me/training-rating', token, { method: 'POST', body: JSON.stringify(data) }),

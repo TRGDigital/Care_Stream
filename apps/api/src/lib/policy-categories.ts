@@ -1,14 +1,15 @@
 // Document categories for the policy library.
 //
-// The three built-in categories are fixed: they drive behaviour elsewhere
+// The built-in categories are fixed: they drive behaviour elsewhere
 // (staff_handbook has its own plan limit, internal_policy carries a Section).
 // Tenants can add their own simple categories on top, stored on
 // tenant.policy_categories and surfaced in Settings + the upload dropdown.
 
 export const BUILTIN_CATEGORIES = [
-  { key: 'internal_policy', label: 'Internal policy' },
-  { key: 'staff_handbook',  label: 'Staff handbook' },
-  { key: 'cqc_report',      label: 'CQC Report' },
+  { key: 'internal_policy',     label: 'Internal policy' },
+  { key: 'staff_handbook',      label: 'Staff handbook' },
+  { key: 'cqc_report',          label: 'CQC Report' },
+  { key: 'business_continuity', label: 'Business continuity' },
 ] as const
 
 export const BUILTIN_CATEGORY_KEYS: string[] = BUILTIN_CATEGORIES.map(c => c.key)

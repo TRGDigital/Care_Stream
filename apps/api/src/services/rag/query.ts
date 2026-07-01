@@ -888,15 +888,25 @@ At the end of your response, append this comment (do not display it to the user)
   // stored in Postgres — no Pinecone search needed.
 
   if (selectedCategory === 'business_continuity') {
-    const bcEntries = await (prisma as any).knowledgeEntry.findMany({
-      where: {
-        tenant_id:          tenantId,
-        knowledge_category: 'business_continuity',
-        approved:           true,
-      },
-      select: { question: true, answer: true, source_name: true },
-      orderBy: { created_at: 'asc' },
-    })
+    // Business Continuity draws on two sources: documents uploaded on /policies
+    // under the Business Continuity category (semantic search over their chunks),
+    // plus approved KnowledgeEntry records tagged 'business_continuity'.
+    const queryEmbedding = await embedText(queryText)
+    const [bcChunks, bcEntries] = await Promise.all([
+      retrievePolicyChunks(tenantId, queryEmbedding, { document_category: 'business_continuity' }),
+      (prisma as any).knowledgeEntry.findMany({
+        where: {
+          tenant_id:          tenantId,
+          knowledge_category: 'business_continuity',
+          approved:           true,
+        },
+        select: { question: true, answer: true, source_name: true },
+        orderBy: { created_at: 'asc' },
+      }),
+    ])
+    const ranked          = [...bcChunks].sort((a, b) => b.score - a.score).slice(0, TOP_K_CHUNKS * 2)
+    const uniquePolicyIds = [...new Set(ranked.map(c => c.metadata.policy_id))]
+    const policyMeta      = await loadPolicyMeta(tenantId, uniquePolicyIds)
 
     const DEFAULT_BC_PROMPT = `You are a Business Continuity assistant for a UK adult social care provider. You help care home managers and staff understand and act on the organisation's business continuity plans, emergency procedures, and contingency arrangements.
 
@@ -906,7 +916,7 @@ Your role is to:
 3. Clarify escalation routes and responsible persons for each type of incident
 4. Remind staff of key priorities (resident safety, regulatory notification, communication)
 
-Draw on the provided [BUSINESS CONTINUITY KNOWLEDGE BASE] to give accurate, organisation-specific answers. If a scenario is not covered, advise on the general principles of maintaining safe care.
+Draw on the provided [BUSINESS CONTINUITY DOCUMENTS] and [BUSINESS CONTINUITY KNOWLEDGE BASE] to give accurate, organisation-specific answers. If a scenario is not covered, advise on the general principles of maintaining safe care.
 
 Format responses as clean, readable HTML using <p>, <ul>, <li>, <strong> tags. Keep answers clear and actionable.
 
@@ -917,13 +927,26 @@ At the end of your response, append this comment (do not display it to the user)
     if (queryText) parts.push(`[STAFF QUESTION]\n${queryText}`)
     if (staffName) parts.push(`[STAFF MEMBER NAME]\n${staffName}`)
 
+    // Uploaded Business Continuity documents (semantic matches)
+    if (ranked.length > 0) {
+      parts.push('[BUSINESS CONTINUITY DOCUMENTS]')
+      for (const chunk of ranked) {
+        const info  = policyMeta.get(chunk.metadata.policy_id)
+        const label = info ? `${info.name} (v${info.version})` : 'Business Continuity document'
+        parts.push(`--- ${label} ---\n${chunk.metadata.chunk_text}`)
+      }
+    }
+
+    // Approved Knowledge Base entries
     if ((bcEntries as any[]).length > 0) {
       parts.push('[BUSINESS CONTINUITY KNOWLEDGE BASE]')
       for (const entry of bcEntries as any[]) {
         parts.push(`Q: ${entry.question}\nA: ${entry.answer}${entry.source_name && entry.source_name !== 'Manual entry' ? `\nSource: ${entry.source_name}` : ''}`)
       }
-    } else {
-      parts.push('[NOTE]\nNo business continuity entries have been added yet. Please add entries via the Knowledge Base page, selecting the Business Continuity category.')
+    }
+
+    if (ranked.length === 0 && (bcEntries as any[]).length === 0) {
+      parts.push('[NOTE]\nNo business continuity content has been added yet. Upload a Business Continuity document on the Policies page, or add entries via the Knowledge Base page.')
     }
 
     const context = parts.join('\n\n')
@@ -937,13 +960,23 @@ At the end of your response, append this comment (do not display it to the user)
 
     const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
 
+    const citations: Citation[] = uniquePolicyIds
+      .map(id => {
+        const meta = policyMeta.get(id)
+        if (!meta) return null
+        return { policy_id: id, policy_name: meta.name, version: meta.version, document_category: meta.document_category }
+      })
+      .filter((c): c is Citation => c !== null)
+
+    const bcNoMatch = ranked.length === 0 && (bcEntries as any[]).length === 0
+
     const savedQueryId = await saveQueryRecord({
       tenantId, userId, channel, queryText,
       responseHtml:            cleanedHtml,
       intentType:              'summary',
       documentCategoryQueried: 'business_continuity',
-      policyIdsCited:          [],
-      noMatch:                 (bcEntries as any[]).length === 0,
+      policyIdsCited:          citations.map(c => c.policy_id),
+      noMatch:                 bcNoMatch,
       languageDetected:        langDetection.code,
       responseTimeMs:          Date.now() - start,
       chatSessionId,
@@ -952,8 +985,8 @@ At the end of your response, append this comment (do not display it to the user)
     return {
       responseHtml:       cleanedHtml,
       intentType:         'summary',
-      citations:          [],
-      noMatch:            (bcEntries as any[]).length === 0,
+      citations,
+      noMatch:            bcNoMatch,
       languageDetected:   langDetection.code,
       responseTimeMs:     Date.now() - start,
       suggestedQuestions: suggestions,

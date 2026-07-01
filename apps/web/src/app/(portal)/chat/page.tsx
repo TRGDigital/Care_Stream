@@ -359,8 +359,15 @@ function ChatPageInner() {
   const [firstLang,    setFirstLang]                    = useState<string>('eng') // the staff member's own language (from their profile)
   // If the admin enabled per-set language switching, the name of their second language
   // (else null) — passed to the hub views to offer a "Read in <language>" switch.
-  const [secondLang,   setSecondLang]                   = useState<{ name: string } | null>(null)
+  const [secondLang,   setSecondLang]                   = useState<{ name: string; code: string } | null>(null)
   const [localizedStarters, setLocalizedStarters]       = useState<Partial<Record<DocumentCategory, string[]>>>({})
+  // Which document categories the tenant actually has live documents in, so the
+  // "new chat" topic tiles can grey out ones with nothing uploaded. null = not yet loaded.
+  const [availableCats, setAvailableCats]               = useState<string[] | null>(null)
+  // Per-conversation second-language switch: while on, chat answers (and any policy
+  // the staff opens from a citation) come back in their 2nd language. Resets to their
+  // first language whenever they start a new chat/discussion.
+  const [chatSecond,   setChatSecond]                   = useState(false)
   const startersFetched = useRef<Set<string>>(new Set())
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
   // Voice: dictate in the chosen reply language, else the staff member's own language.
@@ -387,6 +394,9 @@ function ChatPageInner() {
   // Close the mobile sidebar drawer when the user navigates (picks a chat / view).
   useEffect(() => { setNavOpen(false) }, [sessionId, view])
 
+  // A new chat/discussion always starts in the staff member's first language.
+  useEffect(() => { setChatSecond(false) }, [sessionId])
+
   // Honour ?view=induction|training (e.g. links from My Progress)
   // Deep links + top-nav (e.g. /chat?view=cqc) open that section — reactive to the
   // query so it works even when already on /chat (query-only navigation).
@@ -405,6 +415,7 @@ function ChatPageInner() {
     try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
+    try { const dc = JSON.parse(localStorage.getItem(`cs_doccats_${userId}`) || 'null'); if (Array.isArray(dc)) setAvailableCats(dc) } catch { /* ignore */ }
   }, [userId])
 
   // Fetch the tenant's available languages (defaults + admin-added) for the
@@ -416,6 +427,15 @@ function ChatPageInner() {
       .catch(() => { /* picker falls back to Auto-detect only */ })
   }, [session?.accessToken])
 
+  // Which document categories actually have live documents — drives which "new chat"
+  // topic tiles are selectable vs greyed. Cached for instant paint, then revalidated.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.documentCategories()
+      .then(d => { const a = Array.isArray(d.available) ? d.available : []; setAvailableCats(a); try { localStorage.setItem(`cs_doccats_${userId}`, JSON.stringify(a)) } catch { /* ignore */ } })
+      .catch(() => {})
+  }, [session?.accessToken, userId])
+
   // Load the staff member's own language so voice dictates in it and the "Reply in"
   // picker defaults to it (parity with WhatsApp, where their language is applied
   // automatically) — unless they've already chosen a language on this device.
@@ -424,7 +444,7 @@ function ChatPageInner() {
     createApiClient(session.accessToken).me.profile()
       .then(p => {
         setFirstLang(p.first_language || 'eng')
-        if (p.allow_language_switching && p.second_language_name) setSecondLang({ name: p.second_language_name })
+        if (p.allow_language_switching && p.second_language_name && p.second_language) setSecondLang({ name: p.second_language_name, code: p.second_language })
         let stored: string | null = null
         try { stored = localStorage.getItem(`cs_reply_lang_${userId}`) } catch { /* ignore */ }
         if (!stored && p.comms_always_first_language && p.first_language && p.first_language !== 'eng') {
@@ -655,7 +675,8 @@ function ChatPageInner() {
           document_category:    category ?? undefined,
           policy_id:            pinnedPolicy?.id,
           chat_session_id:      sessionId,
-          language:             replyLang || undefined,
+          // Per-conversation 2nd-language toggle overrides the persistent "Reply in" picker.
+          language:             (chatSecond && secondLang?.code) ? secondLang.code : (replyLang || undefined),
           conversation_history: history.length > 0 ? history : undefined,
         },
         {
@@ -997,6 +1018,27 @@ function ChatPageInner() {
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                {secondLang && (
+                  <button
+                    onClick={() => {
+                      const turningOn = !chatSecond
+                      setChatSecond(turningOn)
+                      if (turningOn && session?.accessToken) {
+                        createApiClient(session.accessToken).me.recordLanguageSwitch({
+                          area: 'chat',
+                          set_ref: sessionId,
+                          set_name: pinnedPolicy ? pinnedPolicy.title : CATEGORY_LABELS[category].title,
+                        }).catch(() => {})
+                      }
+                    }}
+                    title={chatSecond
+                      ? `Answers are in ${secondLang.name} for this chat. Tap to switch back to your first language.`
+                      : `Read this chat in ${secondLang.name}. Starting a new chat returns to your first language.`}
+                    className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${chatSecond ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+                  >
+                    <Globe size={12} /> {chatSecond ? '1st language' : secondLang.name}
+                  </button>
+                )}
                 {returnTo && (
                   <button
                     onClick={() => { const r = returnTo; setReturnTo(null); setPinnedPolicy(null); setView(r) }}
@@ -1020,7 +1062,7 @@ function ChatPageInner() {
         {/* Chat messages + input — only shown in chat view */}
         {view === 'chat' && <div className="flex-1 overflow-y-auto px-4 py-6">
           {category === null ? (
-            <CategorySelect onSelect={setCategory} />
+            <CategorySelect onSelect={setCategory} available={availableCats} />
           ) : pinnedPolicy && isEmpty ? (
             <PolicyChatIntro title={pinnedPolicy.title} questions={policyQuestions} onSelect={sendMessage} />
           ) : isEmpty ? (
@@ -1148,7 +1190,7 @@ function ChatPageInner() {
 
       {/* Saved-policy reader (opened from the sidebar) */}
       {sidebarPolicy && session?.accessToken && (
-        <PolicyViewer token={session.accessToken} policyId={sidebarPolicy} onClose={() => setSidebarPolicy(null)} onTalk={talkToPolicy} />
+        <PolicyViewer token={session.accessToken} policyId={sidebarPolicy} onClose={() => setSidebarPolicy(null)} onTalk={talkToPolicy} lang={chatSecond ? '2' : undefined} />
       )}
     </div>
   )
@@ -1182,86 +1224,61 @@ function PolicyChatIntro({ title, questions, onSelect }: { title: string; questi
   )
 }
 
-function CategorySelect({ onSelect }: { onSelect: (c: DocumentCategory) => void }) {
+// The topics offered when starting a new chat. Each maps to a document_category;
+// a tile is greyed (visible but not selectable) when the tenant has no live
+// documents uploaded in that category.
+const CHAT_TOPICS: Array<{ key: DocumentCategory; Icon: typeof BookOpen; title: string; subtitle: string }> = [
+  { key: 'internal_policy',     Icon: BookOpen,    title: 'Policies & Procedures', subtitle: 'Care, clinical & operational policies' },
+  { key: 'staff_handbook',      Icon: Users,       title: 'Staff Handbook',        subtitle: 'HR, employment & staff guidance' },
+  { key: 'cqc_report',          Icon: ShieldCheck, title: 'CQC Compliance',        subtitle: 'Inspection readiness & regulatory compliance' },
+  { key: 'business_continuity', Icon: LifeBuoy,    title: 'Business Continuity',   subtitle: 'Emergency procedures & contingency plans' },
+]
+
+function CategorySelect({ onSelect, available }: { onSelect: (c: DocumentCategory) => void; available: string[] | null }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-12">
       <div className="text-center">
         <h2 className="text-2xl font-semibold text-neutral-dark">What would you like to ask about?</h2>
         <p className="mt-2 text-sm text-neutral-mid">Choose a knowledge area to get started</p>
       </div>
-      <div className="grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <button
-          onClick={() => onSelect('internal_policy')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <BookOpen className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">Policies &amp; Procedures</p>
-            <p className="mt-1 text-xs text-neutral-mid">Care, clinical &amp; operational policies</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('staff_handbook')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <Users className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">Staff Handbook</p>
-            <p className="mt-1 text-xs text-neutral-mid">HR, employment &amp; staff guidance</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('training_module')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <Brain className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">Training &amp; Learning</p>
-            <p className="mt-1 text-xs text-neutral-mid">Training modules &amp; care sector knowledge</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('cqc_report')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <ShieldCheck className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">CQC Compliance</p>
-            <p className="mt-1 text-xs text-neutral-mid">Inspection readiness &amp; regulatory compliance</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('audit_report')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <ClipboardCheck className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">Auditing</p>
-            <p className="mt-1 text-xs text-neutral-mid">Ask about audit findings &amp; AI recommendations</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('business_continuity')}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-            <LifeBuoy className="text-teal" size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-neutral-dark">Business Continuity</p>
-            <p className="mt-1 text-xs text-neutral-mid">Emergency procedures &amp; contingency plans</p>
-          </div>
-        </button>
+      <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
+        {CHAT_TOPICS.map(({ key, Icon, title, subtitle }) => {
+          // Until we know what's uploaded (available === null), keep tiles enabled.
+          const enabled = available === null || available.includes(key)
+          if (!enabled) {
+            return (
+              <div
+                key={key}
+                aria-disabled
+                title="No documents have been uploaded in this category yet"
+                className="flex cursor-not-allowed flex-col items-center gap-4 rounded-2xl border-2 border-gray-100 bg-gray-50 px-6 py-8 opacity-60"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                  <Icon className="text-gray-400" size={28} />
+                </div>
+                <div className="text-center">
+                  <p className="text-base font-semibold text-neutral-mid">{title}</p>
+                  <p className="mt-1 text-xs text-neutral-mid">No documents uploaded yet</p>
+                </div>
+              </div>
+            )
+          }
+          return (
+            <button
+              key={key}
+              onClick={() => onSelect(key)}
+              className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
+                <Icon className="text-teal" size={28} />
+              </div>
+              <div className="text-center">
+                <p className="text-base font-semibold text-neutral-dark">{title}</p>
+                <p className="mt-1 text-xs text-neutral-mid">{subtitle}</p>
+              </div>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

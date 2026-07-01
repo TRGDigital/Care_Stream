@@ -83,6 +83,29 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
   })
 })
 
+// ─── GET /me/document-categories ──────────────────────────────────────────────
+// Which document categories the tenant actually has live documents in, so the
+// hub's "new chat" screen can grey out topics with nothing uploaded yet.
+meRouter.get('/document-categories', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const rows = await (prisma as any).policy.groupBy({
+    by: ['document_category'],
+    where: { tenant_id: tenantId, status: { in: ['active', 'processing'] } },
+  }).catch(() => [] as Array<{ document_category: string }>)
+  const available = new Set<string>((rows ?? []).map((r: any) => r.document_category).filter(Boolean))
+
+  // Business Continuity chat also draws on the Knowledge Base, so approved BC
+  // entries make the topic usable even without an uploaded document.
+  if (!available.has('business_continuity')) {
+    const bc = await (prisma as any).knowledgeEntry.count({
+      where: { tenant_id: tenantId, knowledge_category: 'business_continuity', approved: true },
+    }).catch(() => 0)
+    if (bc > 0) available.add('business_continuity')
+  }
+
+  ok(res, { available: Array.from(available) })
+})
+
 // ─── Web-push subscription (PWA notifications) ────────────────────────────────
 meRouter.post('/push/subscribe', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
@@ -324,7 +347,7 @@ meRouter.post('/language-switch', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const b = req.body ?? {}
-  const AREAS = ['training', 'annual', 'induction', 'followup', 'cqc']
+  const AREAS = ['training', 'annual', 'induction', 'followup', 'cqc', 'chat']
   const area = String(b.area ?? '')
   if (!AREAS.includes(area)) { err(res, 'VALIDATION_ERROR', 'A valid area is required.'); return }
 

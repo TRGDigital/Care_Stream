@@ -100,9 +100,10 @@ export default function PoliciesPage() {
 
   // Built-in categories (fixed) + the tenant's custom ones, as { value, label }.
   const categoryOptions = [
-    { value: 'internal_policy', label: 'Internal policy' },
-    { value: 'staff_handbook',  label: 'Staff handbook' },
-    { value: 'cqc_report',      label: 'CQC Report' },
+    { value: 'internal_policy',     label: 'Internal policy' },
+    { value: 'staff_handbook',      label: 'Staff handbook' },
+    { value: 'cqc_report',          label: 'CQC Report' },
+    { value: 'business_continuity', label: 'Business continuity' },
     ...customCategories.map(c => ({ value: c, label: c })),
   ]
 

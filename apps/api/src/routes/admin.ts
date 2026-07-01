@@ -2514,13 +2514,17 @@ function aggregateSends(sends: any[]) {
 // GET /admin/onboarding/emails?plan=enterprise — sequence + aggregate stats per email.
 adminRouter.get('/onboarding/emails', async (req: Request, res: Response) => {
   const plan = String(req.query.plan ?? 'enterprise')
-  const [emails, sends] = await Promise.all([
+  const { ownerByKey } = await import('../services/onboarding/ordering')
+  const [emails, sends, owner] = await Promise.all([
     (prisma as any).onboardingEmail.findMany({ where: { plan }, orderBy: { day_index: 'asc' } }),
     (prisma as any).onboardingSend.findMany({ where: { plan }, select: { email_id: true, sent_at: true, delivered_at: true, first_opened_at: true, first_clicked_at: true, status: true } }),
+    ownerByKey(),
   ])
   const byEmail = new Map<string, any[]>()
   for (const s of sends as any[]) { const a = byEmail.get(s.email_id) ?? []; a.push(s); byEmail.set(s.email_id, a) }
-  const out = (emails as any[]).map(e => ({
+  // Show only the emails this plan introduces; shared ones are managed in the plan below.
+  const owned = (emails as any[]).filter(e => e.template_key && owner.get(e.template_key) === plan)
+  const out = owned.map(e => ({
     id: e.id, plan: e.plan, day_index: e.day_index, subject: e.subject, preheader: e.preheader,
     from_email: e.from_email, badge: (e.body as any)?.badge ?? null, headline: (e.body as any)?.headline ?? null,
     image: (e.body as any)?.imageSrc ?? null,
@@ -2580,37 +2584,39 @@ adminRouter.post('/onboarding/dispatch-now', async (req: Request, res: Response)
   } catch (e: any) { err(res, 'DISPATCH_FAILED', e?.message ?? 'Could not run the dispatch.', 500) }
 })
 
-// PATCH /admin/onboarding/emails/:id — edit subject / preview text.
+// PATCH /admin/onboarding/emails/:id — edit subject / preview text. Shared
+// emails are the same across plans, so the edit applies to every plan that has
+// this email (keyed by template_key).
 adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) => {
   const data: any = {}
   if (typeof req.body?.subject === 'string')   data.subject = req.body.subject.trim()
   if (typeof req.body?.preheader === 'string') data.preheader = req.body.preheader.trim()
   if (typeof req.body?.from_email === 'string') data.from_email = req.body.from_email.trim() || null
   if (!Object.keys(data).length) { err(res, 'NO_FIELDS', 'Nothing to update.', 400); return }
-  const updated = await (prisma as any).onboardingEmail.update({ where: { id: req.params.id }, data })
-  ok(res, { id: updated.id })
+  const email = await (prisma as any).onboardingEmail.findUnique({ where: { id: req.params.id }, select: { template_key: true } })
+  if (email?.template_key) {
+    await (prisma as any).onboardingEmail.updateMany({ where: { template_key: email.template_key }, data })
+  } else {
+    await (prisma as any).onboardingEmail.update({ where: { id: req.params.id }, data })
+  }
+  ok(res, { id: req.params.id })
 })
 
-// POST /admin/onboarding/emails/reorder — set the send order for a plan.
-// Body: { plan, ids: [emailId,...] } in the desired order; day_index is
-// reassigned 1..N. Two-phase (negative temp values) to avoid the
-// (plan, day_index) unique conflict mid-update.
+// POST /admin/onboarding/emails/reorder — set the order for a plan's OWN emails.
+// Body: { plan, ids: [emailId,...] } in the desired order. Reordering an owned
+// email flows up to every plan that also contains it (shared template_key +
+// sort_order); day_index is then recomputed for all plans.
 adminRouter.post('/onboarding/emails/reorder', async (req: Request, res: Response) => {
   const plan = String(req.body?.plan ?? '')
   const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids.map(String) : []
   if (!plan || ids.length === 0) { err(res, 'BAD_REQUEST', 'plan and ids are required.', 400); return }
-
-  const existing = await (prisma as any).onboardingEmail.findMany({ where: { plan }, select: { id: true } })
-  const existingIds = new Set(existing.map((e: any) => e.id))
-  if (ids.length !== existing.length || !ids.every((id) => existingIds.has(id))) {
-    err(res, 'BAD_REQUEST', 'ids must be exactly the emails in this plan.', 400); return
+  try {
+    const { reorderOwned } = await import('../services/onboarding/ordering')
+    await reorderOwned(plan as any, ids)
+    ok(res, { reordered: ids.length })
+  } catch (e: any) {
+    err(res, 'BAD_REQUEST', e?.message ?? 'Could not reorder.', 400)
   }
-
-  await (prisma as any).$transaction([
-    ...ids.map((id, i) => (prisma as any).onboardingEmail.update({ where: { id }, data: { day_index: -(i + 1) } })),
-    ...ids.map((id, i) => (prisma as any).onboardingEmail.update({ where: { id }, data: { day_index: i + 1 } })),
-  ])
-  ok(res, { reordered: ids.length })
 })
 
 // GET /admin/tenants/:id/onboarding — this client's drip + every send to it.

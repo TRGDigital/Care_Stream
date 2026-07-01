@@ -1539,17 +1539,19 @@ model RalfyIndexSubmission {
 
 // ─── Onboarding email drip ────────────────────────────────────────────────────
 model OnboardingEmail {
-  id         String   @id @default(uuid())
-  plan       String
-  day_index  Int
-  subject    String
-  preheader  String
-  from_email String?
-  body       Json
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  sends      OnboardingSend[]
+  id           String   @id @default(uuid())
+  plan         String
+  day_index    Int
+  template_key String?  // stable shared identity across plans
+  sort_order   Int?     // canonical order (drives day_index for every plan)
+  subject      String
+  preheader    String
+  from_email   String?
+  body         Json
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  sends        OnboardingSend[]
   @@unique([plan, day_index])
   @@map("onboarding_emails")
 }

@@ -210,9 +210,9 @@ export default function EmailMarketingPage() {
     if (j < 0 || j >= emails.length) return
     const next = [...emails]
     ;[next[index], next[j]] = [next[j], next[index]]
-    setEmails(next.map((e, i) => ({ ...e, day_index: i + 1 })))
+    setEmails(next) // optimistic swap; day numbers refresh after the reload
     try { await createPlatformClient(token).onboarding.reorder(plan, next.map(e => e.id)) }
-    catch { load() }
+    finally { load() }
   }
 
   if (!token) return null
@@ -222,7 +222,7 @@ export default function EmailMarketingPage() {
       <div className="space-y-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-neutral-dark"><Mail size={22} className="text-teal" /> Email Marketing</h1>
-          <p className="mt-1 text-sm text-neutral-mid">New-client onboarding drip. One email per working day from signup, sent 10am UK to every active admin. Edit the subject line and preview text inline, and use the arrows to reorder the sequence. Changes apply to future sends.</p>
+          <p className="mt-1 text-sm text-neutral-mid">New-client onboarding drip. One email per working day from signup, sent 10am UK to every active admin. Edit the subject and preview inline (shared emails update on every plan), and use the arrows to reorder. Plans are cumulative: each tab shows only the emails it <em>adds</em>, and reordering flows up to the higher plans. Changes apply to future sends.</p>
         </div>
 
         <RunDripNow token={token} />
@@ -234,6 +234,13 @@ export default function EmailMarketingPage() {
             </button>
           ))}
         </div>
+        <p className="-mt-2 text-xs text-neutral-mid">
+          {plan === 'starter'
+            ? 'The core sequence, shared by all plans (plus the Starter-only finale). Reordering here flows up to Professional and Enterprise.'
+            : plan === 'professional'
+              ? 'The emails Professional adds after the shared core. Reordering here also updates Enterprise.'
+              : 'The emails Enterprise adds after the Professional sequence.'}
+        </p>
 
         {loading ? (
           <div className="flex items-center justify-center py-16"><Loader2 size={28} className="animate-spin text-neutral-mid" /></div>

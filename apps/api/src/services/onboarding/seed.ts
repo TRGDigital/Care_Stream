@@ -4,6 +4,9 @@
 import { prisma } from '../../db/client'
 import { SEQUENCES, PLAN_ORDER } from './content'
 
+// Stable cross-plan identity: same subject -> same key (shared emails link up).
+const keyOf = (subject: string) => subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
 export async function seedOnboardingEmails(): Promise<{ inserted: number; total: number }> {
   let inserted = 0, total = 0
   for (const plan of PLAN_ORDER) {
@@ -17,6 +20,7 @@ export async function seedOnboardingEmails(): Promise<{ inserted: number; total:
       await (prisma as any).onboardingEmail.create({
         data: {
           plan, day_index, subject: e.subject, preheader: e.preheader, from_email: null,
+          template_key: keyOf(e.subject), sort_order: day_index * 100,
           body: {
             headline:  e.headline,
             intro:     e.intro,

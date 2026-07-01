@@ -131,15 +131,14 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
         {testMsg && <span className={`text-xs font-medium ${testMsg.startsWith('Sent') ? 'text-green-600' : 'text-red-600'}`}>{testMsg}</span>}
       </div>
 
-      {dirty && (
-        <div className="mt-3 flex items-center gap-2">
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
-            {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save changes
-          </button>
-          <button onClick={() => { setSubject(email.subject); setPreheader(email.preheader) }} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
-        </div>
-      )}
-      {saved && <p className="mt-2 text-xs font-medium text-green-600">Saved</p>}
+      <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-4">
+        <button onClick={save} disabled={saving || !dirty} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+          {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save subject &amp; preview
+        </button>
+        {dirty && <button onClick={() => { setSubject(email.subject); setPreheader(email.preheader) }} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>}
+        {saved && <span className="text-xs font-medium text-green-600">Saved ✓</span>}
+        {!dirty && !saved && <span className="text-xs text-neutral-mid">No unsaved changes</span>}
+      </div>
       </div>
       )}
     </div>

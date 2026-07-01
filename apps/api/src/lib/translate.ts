@@ -258,10 +258,9 @@ function langName_internal(code: string): string {
 // Translate already-formatted policy HTML into another language, chunk by chunk,
 // preserving all HTML tags. Used after the English formatting pass so the two
 // stages each stay within budget.
-export async function translateHtmlPreservingTags(html: string, langCode: string, langName?: string): Promise<string> {
-  if (!html || !langCode || langCode === 'eng') return html
-  const name = langName ?? langName_internal(langCode)
-
+// Core HTML translator: chunk by chunk, preserving every tag, into a named
+// language. Works for ANY target language (including English).
+async function translateHtmlChunks(html: string, name: string): Promise<string> {
   const parts = html.split(/(?<=<\/(?:p|li|h2|h3|h4|ul|ol|div)>)/i)
   const chunks: string[] = []
   let cur = ''
@@ -282,11 +281,25 @@ export async function translateHtmlPreservingTags(html: string, langCode: string
       recordUsage('claude-haiku-4-5-20251001', msg.usage)
       return ((msg.content[0] as any).text as string).replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim()
     } catch (e) {
-      console.error('[translate] html chunk failed, keeping English:', e)
+      console.error('[translate] html chunk failed, keeping original:', e)
       return chunk
     }
   })
   return out.join('')
+}
+
+// Translate already-English HTML into another language (no-op for English, where
+// the source is already English). Used after the English formatting pass.
+export async function translateHtmlPreservingTags(html: string, langCode: string, langName?: string): Promise<string> {
+  if (!html || !langCode || langCode === 'eng') return html
+  return translateHtmlChunks(html, langName ?? langName_internal(langCode))
+}
+
+// Translate HTML into ANY language, including English — used to flip an already
+// generated chat answer between a staff member's first and second language.
+export async function translateHtmlToLanguage(html: string, langName: string): Promise<string> {
+  if (!html || !langName) return html
+  return translateHtmlChunks(html, langName)
 }
 
 // Generate a few short, practical questions a care worker might ask about a

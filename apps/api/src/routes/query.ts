@@ -7,7 +7,7 @@ import { runQueryPipeline } from '../services/rag/query'
 import { ok, err } from '../lib/response'
 import { checkQueryLimit, PlanLimitError } from '../lib/plan-limits'
 import { languageNameForCode } from '../data/languages'
-import { translateTextsBatch } from '../lib/translate'
+import { translateTextsBatch, translateHtmlToLanguage, withTranslationBudget } from '../lib/translate'
 
 export const queryRouter = Router()
 
@@ -133,6 +133,36 @@ queryRouter.post('/suggested', async (req: Request, res: Response) => {
   } catch (e) {
     console.error('[query/suggested] translate failed:', e)
     ok(res, { questions }) // fall back to English rather than break the chat
+  }
+})
+
+// ─── POST /query/translate ────────────────────────────────────────────────────
+// Re-render an already-generated chat answer in another language. Used by the hub
+// language toggle to flip the visible conversation between the staff member's
+// first and second language, both directions (including back to English), without
+// re-asking the question.
+const TranslateSchema = z.object({
+  html:     z.string().min(1).max(60_000),
+  language: z.string().min(2).max(20),   // target language code (ISO 639-3 / private-use)
+})
+
+queryRouter.post('/translate', async (req: Request, res: Response) => {
+  const parsed = TranslateSchema.safeParse(req.body)
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', 'Invalid translate request'); return }
+  const { html, language } = parsed.data
+  const tenantId = getTenantId()
+
+  const tenantSettings = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId }, select: { custom_languages: true },
+  })
+  const name = languageNameForCode(language, tenantSettings?.custom_languages)
+
+  try {
+    const translated = await withTranslationBudget(translateHtmlToLanguage(html, name), 60_000, html)
+    ok(res, { html: translated })
+  } catch (e) {
+    console.error('[query/translate] failed:', e)
+    ok(res, { html }) // keep the original rather than break the chat
   }
 })
 

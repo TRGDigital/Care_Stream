@@ -41,6 +41,11 @@ interface ChatMessage {
   loading?:            boolean
   suggestedQuestions?: string[]
   queryId?:            string | null
+  // Language-switch support: the language this answer was generated in, plus a
+  // cache of translated versions keyed by language code, so the toggle can flip
+  // the displayed answer between the staff member's first and second language.
+  genLang?:            string
+  htmlByLang?:         Record<string, string>
 }
 
 interface StoredSession {
@@ -368,6 +373,7 @@ function ChatPageInner() {
   // the staff opens from a citation) come back in their 2nd language. Resets to their
   // first language whenever they start a new chat/discussion.
   const [chatSecond,   setChatSecond]                   = useState(false)
+  const [switchingLang, setSwitchingLang]               = useState(false)  // re-translating the visible answers
   const startersFetched = useRef<Set<string>>(new Set())
   const [langList,     setLangList]                     = useState<{ code: string; name: string }[]>([])
   // Voice: dictate in the chosen reply language, else the staff member's own language.
@@ -653,6 +659,11 @@ function ChatPageInner() {
     setSending(true)
     inputRef.current?.focus()
 
+    // The language this answer will be generated in, captured at send time so the
+    // toggle can later flip it back and forth.
+    const sentSecond = chatSecond
+    const sentLang   = (sentSecond && secondLang?.code) ? secondLang.code : (replyLang || undefined)
+
     try {
       const api = createApiClient(session.accessToken)
 
@@ -676,7 +687,7 @@ function ChatPageInner() {
           policy_id:            pinnedPolicy?.id,
           chat_session_id:      sessionId,
           // Per-conversation 2nd-language toggle overrides the persistent "Reply in" picker.
-          language:             (chatSecond && secondLang?.code) ? secondLang.code : (replyLang || undefined),
+          language:             sentLang,
           conversation_history: history.length > 0 ? history : undefined,
         },
         {
@@ -687,16 +698,21 @@ function ChatPageInner() {
             ))
           },
           onDone: (d) => {
+            const finalHtml = d.html || streamed
+            // The language the answer actually came back in (falls back to what we asked for).
+            const genLang = d.languageDetected || sentLang || firstLang || 'eng'
             setMessages(prev => prev.map(m =>
               m.id === placeholderId ? {
                 ...m,
-                content:            d.html || streamed,
+                content:            finalHtml,
                 timestamp:          new Date().toISOString(),
                 citations:          d.citations?.length ? d.citations : undefined,
                 language:           d.languageDetected && d.languageDetected !== 'eng' ? d.languageDetected : undefined,
                 loading:            false,
                 suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
                 queryId:            d.queryId ?? null,
+                genLang,
+                htmlByLang:         { [genLang]: finalHtml },
               } : m,
             ))
           },
@@ -723,6 +739,50 @@ function ChatPageInner() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     sendMessage(input)
+  }
+
+  // Flip the whole visible conversation between the staff member's first and second
+  // language. Answers are re-rendered in the chosen language (translated on demand
+  // and cached per message), and the choice sticks for the rest of this chat.
+  async function switchChatLang(turnOn: boolean) {
+    if (!secondLang) return
+    setChatSecond(turnOn)
+    const target = turnOn ? secondLang.code : (firstLang || 'eng')
+    if (!target) return
+
+    if (turnOn && session?.accessToken) {
+      createApiClient(session.accessToken).me.recordLanguageSwitch({
+        area: 'chat', set_ref: sessionId, set_name: pinnedPolicy ? pinnedPolicy.title : (category ? CATEGORY_LABELS[category].title : undefined),
+      }).catch(() => {})
+    }
+
+    // Instantly show any answers we've already got in the target language.
+    setMessages(prev => prev.map(m => {
+      if (m.role !== 'assistant' || !m.htmlByLang) return m
+      const cached = m.htmlByLang[target]
+      return cached ? { ...m, content: cached } : m
+    }))
+
+    // Translate the rest on demand (each from its originally-generated version).
+    const need = messages.filter(m => m.role === 'assistant' && m.genLang && m.htmlByLang && !m.htmlByLang[target] && m.genLang !== target)
+    if (!need.length || !session?.accessToken) return
+    const api = createApiClient(session.accessToken)
+    setSwitchingLang(true)
+    try {
+      await Promise.all(need.map(async (m) => {
+        const base = m.htmlByLang![m.genLang!] ?? m.content
+        try {
+          const { html } = await api.query.translate(base, target)
+          setMessages(prev => prev.map(x =>
+            x.id === m.id
+              ? { ...x, htmlByLang: { ...(x.htmlByLang ?? {}), [target]: html }, content: html }
+              : x,
+          ))
+        } catch { /* keep whatever is shown */ }
+      }))
+    } finally {
+      setSwitchingLang(false)
+    }
   }
 
   function toggleCitations(id: string) {
@@ -1020,23 +1080,14 @@ function ChatPageInner() {
               <div className="flex shrink-0 items-center gap-1">
                 {secondLang && (
                   <button
-                    onClick={() => {
-                      const turningOn = !chatSecond
-                      setChatSecond(turningOn)
-                      if (turningOn && session?.accessToken) {
-                        createApiClient(session.accessToken).me.recordLanguageSwitch({
-                          area: 'chat',
-                          set_ref: sessionId,
-                          set_name: pinnedPolicy ? pinnedPolicy.title : CATEGORY_LABELS[category].title,
-                        }).catch(() => {})
-                      }
-                    }}
+                    onClick={() => switchChatLang(!chatSecond)}
+                    disabled={switchingLang}
                     title={chatSecond
-                      ? `Answers are in ${secondLang.name} for this chat. Tap to switch back to your first language.`
-                      : `Read this chat in ${secondLang.name}. Starting a new chat returns to your first language.`}
-                    className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${chatSecond ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
+                      ? `This chat is in ${secondLang.name}. Tap to switch back to your first language.`
+                      : `Show this chat in ${secondLang.name}. Starting a new chat returns to your first language.`}
+                    className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors disabled:opacity-60 ${chatSecond ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
                   >
-                    <Globe size={12} /> {chatSecond ? '1st language' : secondLang.name}
+                    <Globe size={12} /> {switchingLang ? 'Translating…' : chatSecond ? '1st language' : secondLang.name}
                   </button>
                 )}
                 {returnTo && (

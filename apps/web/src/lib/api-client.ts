@@ -120,6 +120,10 @@ export function createApiClient(token: string) {
       // Translate the starter questions into the staff member's first language.
       suggested: (questions: string[]) =>
         apiFetch<{ questions: string[] }>('/query/suggested', token, { method: 'POST', body: JSON.stringify({ questions }) }),
+      // Re-render an already-generated answer in another language (for the chat
+      // language toggle) — works both directions, including back to English.
+      translate: (html: string, language: string) =>
+        apiFetch<{ html: string }>('/query/translate', token, { method: 'POST', body: JSON.stringify({ html, language }) }),
       // Stream the answer paragraph by paragraph (SSE). Calls onParagraph as each block
       // arrives, then onDone with the final payload (citations, suggestions, etc.).
       stream: async (

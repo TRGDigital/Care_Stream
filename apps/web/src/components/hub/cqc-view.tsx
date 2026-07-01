@@ -262,17 +262,53 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   const [expanded, setExpanded]     = useState<string | null>(null)        // question card open
   const [openDomains, setOpenDomains] = useState<Set<string>>(new Set())   // domain accordions open
   const [freshlyAnswered, setFreshlyAnswered] = useState<Set<string>>(new Set())  // answered this session → prompt a rating
-  // Session-only second-language switch for the whole CQC prep list (each card is a
-  // single question, so one toggle flips them all).
-  const [lang, setLang] = useState<'1' | '2'>('1')
+  // Per-question second-language aid: flip an individual question into the 2nd
+  // language to understand it; other questions stay in the first language.
+  const [second, setSecond] = useState<Record<string, Delivery> | null>(null)  // 2nd-language copies by id (lazy)
+  const [loadingSecond, setLoadingSecond] = useState(false)
+  const [langById, setLangById] = useState<Record<string, boolean>>({})
   const toggleDomain = (key: string) =>
     setOpenDomains(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+
+  function ensureSecond() {
+    if (second || loadingSecond || !secondLang) return
+    setLoadingSecond(true)
+    createApiClient(token).cqcQuestions.myDeliveries('2')
+      .then(res => { const m: Record<string, Delivery> = {}; for (const d of res.deliveries) m[d.id] = d; setSecond(m) })
+      .catch(() => {}).finally(() => setLoadingSecond(false))
+  }
+  function toggleQ(id: string) {
+    if (!langById[id]) { ensureSecond(); createApiClient(token).me.recordLanguageSwitch({ area: 'cqc' }).catch(() => {}) }
+    setLangById(m => ({ ...m, [id]: !m[id] }))
+  }
+  // Flip just the question text + model answer into the 2nd language; keep the
+  // learner's own answer, feedback, score and status from the live record.
+  function viewD(d: Delivery): Delivery {
+    const s = langById[d.id] ? second?.[d.id] : null
+    return s ? { ...d, rephrased_q: s.rephrased_q, question: { ...d.question, model_answer: s.question?.model_answer ?? d.question?.model_answer } } : d
+  }
+  // A compact per-question translate toggle, shown when a question is open.
+  function QLangToggle({ id }: { id: string }) {
+    if (!secondLang) return null
+    const on = !!langById[id]
+    return (
+      <button
+        type="button"
+        onClick={() => toggleQ(id)}
+        disabled={!on && loadingSecond && !second}
+        title={on ? 'Back to your first language' : `Show this question in ${secondLang.name}`}
+        className={`mb-3 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${on ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-700'}`}
+      >
+        <Globe className="w-3 h-3" /> {(!on && loadingSecond && !second) ? 'Loading…' : on ? '1st language' : `This question in ${secondLang.name}`}
+      </button>
+    )
+  }
 
   const load = useCallback(async () => {
     if (!token) return
     try {
       const api = createApiClient(token)
-      const res = await api.cqcQuestions.myDeliveries(lang === '2' ? '2' : undefined)
+      const res = await api.cqcQuestions.myDeliveries()
       setDeliveries(res.deliveries)
       const first = res.deliveries.find((d: Delivery) => d.status === 'pending')
       if (first) { setExpanded(first.id); setOpenDomains(new Set([`p:${first.question.domain}`])) }
@@ -281,7 +317,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
     } finally {
       setLoading(false)
     }
-  }, [token, lang])
+  }, [token])
 
   useEffect(() => { load() }, [load])
 
@@ -306,22 +342,11 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   return (
     <div className="flex-1 overflow-y-auto">
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Practise answering the kinds of questions a CQC inspector would ask you. Write your answers in your own words — there&apos;s no multiple choice.
-          </p>
-        </div>
-        {secondLang && (
-          <button
-            onClick={() => { setLoading(true); setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') createApiClient(token).me.recordLanguageSwitch({ area: 'cqc' }).catch(() => {}); return next }) }}
-            title={lang === '2' ? `Showing in ${secondLang.name}. Tap to read in your first language.` : `Read these questions in ${secondLang.name} instead of English`}
-            className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${lang === '2' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-teal-300 hover:text-teal-700'}`}
-          >
-            <Globe className="w-3 h-3" /> {lang === '2' ? '1st language' : secondLang.name}
-          </button>
-        )}
+      <div>
+        <h1 className="text-xl font-bold text-gray-900">CQC Inspector Prep</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Practise answering the kinds of questions a CQC inspector would ask you. Write your answers in your own words — there&apos;s no multiple choice.{secondLang ? ' Open a question and use the language button to read just that one in your second language.' : ''}
+        </p>
       </div>
 
       {(pending.length > 0 || evaluated.length > 0) && (
@@ -378,11 +403,12 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                         {items.map(d => (
                           <div key={d.id} className="border-b border-gray-50 last:border-0">
                             <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 py-3.5 text-left">
-                              <p className="flex-1 min-w-0 text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
+                              <p className="flex-1 min-w-0 text-sm font-medium text-gray-900 leading-snug">{viewD(d).rephrased_q}</p>
                               {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}
                             </button>
                             {expanded === d.id && (
                               <div className="pb-4">
+                                <QLangToggle id={d.id} />
                                 <AnswerForm delivery={d} token={token}
                                   onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); setExpanded(null); onChange?.() }} />
                               </div>
@@ -432,13 +458,14 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                                     {d.score}/100 — {scoreLabel(d.score)}
                                   </span>
                                 )}
-                                <p className="text-sm font-medium text-gray-900 leading-snug">{d.rephrased_q}</p>
+                                <p className="text-sm font-medium text-gray-900 leading-snug">{viewD(d).rephrased_q}</p>
                               </div>
                               {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}
                             </button>
                             {expanded === d.id && (
                               <div className="pb-4">
-                                <ResultCard delivery={d} token={token} showRating={freshlyAnswered.has(d.id)}
+                                <QLangToggle id={d.id} />
+                                <ResultCard delivery={viewD(d)} token={token} showRating={freshlyAnswered.has(d.id)}
                                   onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.() }} />
                               </div>
                             )}

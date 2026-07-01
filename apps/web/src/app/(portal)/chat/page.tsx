@@ -1858,7 +1858,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   const [openIds,    setOpenIds]     = useState<Set<string>>(new Set())
   // A statutory module that has a scenario lesson plays through the rich stepped
   // player (same as Annual training), via the annual TakeModule/CertView.
-  const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string } | null>(null)
+  const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string } | null>(null)
   // Per-set second-language switch (session-only). enrollmentId → '2' when flipped.
   const [langByEnr,  setLangByEnr]   = useState<Record<string, '2'>>({})
   // Lazily-fetched second-language copy of the enrollment list, keyed by enrollment id,
@@ -1943,7 +1943,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     })
   }
 
-  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} initialLang={taking.lang ?? '1'} switchArea="training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
+  if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} switchArea="training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
   if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} backLabel="My Training" onExit={() => { setTaking(null); load() }} />
 
   if (loading) {
@@ -2065,7 +2065,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                       </button>
                     )}
                     {isDone && <button onClick={() => setTaking({ mode: 'cert', id: enrollment.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
-                    <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name, lang: langByEnr[enrollment.id] })} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                    <button onClick={() => setTaking({ mode: 'take', id: enrollment.id, name: enrollment.module.name })} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
                       {isDone ? 'Review' : enrollment.status === 'in_progress' ? 'Continue' : 'Start'}
                     </button>
                   </div>

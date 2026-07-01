@@ -27,12 +27,13 @@ const STATE_META: Record<string, { label: string; cls: string }> = {
 function fmt(d?: string | null) { return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 
 export function AnnualTrainingView({ token, userId, onChange, onTalkToPolicy, secondLang = null, reviewer = false }: { token: string; userId: string; onChange?: () => void; onTalkToPolicy?: (policyId: string, title: string) => void; secondLang?: { name: string } | null; reviewer?: boolean }) {
-  // If the admin enabled per-set language switching, secondLang is the name of their
-  // second language; modules then offer a "Read in <language>" switch (card + inside).
-  const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string; lang?: '2' } | { mode: 'cert'; id: string }>({ mode: 'list' })
-  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} initialLang={view.lang ?? '1'} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
+  // If the admin enabled second-language switching, secondLang is the name of their
+  // second language; inside a module they can flip the CURRENT overview/section into
+  // it (a per-step aid), reverting to the first language on the next step.
+  const [view, setView] = useState<{ mode: 'list' } | { mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string }>({ mode: 'list' })
+  if (view.mode === 'take') return <TakeModule token={token} id={view.id} name={view.name} secondLang={secondLang} onTalkToPolicy={onTalkToPolicy} onExit={(toCert) => { onChange?.(); setView(toCert ? { mode: 'cert', id: view.id } : { mode: 'list' }) }} />
   if (view.mode === 'cert') return <CertView token={token} id={view.id} onExit={() => setView({ mode: 'list' })} />
-  return <AnnualList token={token} userId={userId} secondLang={secondLang} reviewer={reviewer} onOpen={(id, name, lang) => setView({ mode: 'take', id, name, lang })} onCert={(id) => setView({ mode: 'cert', id })} />
+  return <AnnualList token={token} userId={userId} secondLang={secondLang} reviewer={reviewer} onOpen={(id, name) => setView({ mode: 'take', id, name })} onCert={(id) => setView({ mode: 'cert', id })} />
 }
 
 // CPD assessor notes + status panel shown under each module in reviewer mode.
@@ -78,16 +79,13 @@ function ReviewerNotes({ token, moduleId, initial }: { token: string; moduleId: 
 
 // ─── List ─────────────────────────────────────────────────────────────────────
 
-function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer = false }: { token: string; userId: string; onOpen: (id: string, name: string, lang?: '2') => void; onCert: (id: string) => void; secondLang?: { name: string } | null; reviewer?: boolean }) {
+function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer = false }: { token: string; userId: string; onOpen: (id: string, name: string) => void; onCert: (id: string) => void; secondLang?: { name: string } | null; reviewer?: boolean }) {
   const api = createApiClient(token)
   const ck = hubKey('annual', userId)
   const cached = persistentCache.get<any[]>(ck)
   const [items, setItems] = useState<any[]>(cached ?? [])
   const [loading, setLoading] = useState(!cached)   // instant from cache, revalidate in background
   const [error, setError] = useState(false)
-  // Per-card: which modules the staff member has flipped to their second language
-  // (session-only — resets on revisit). Opening the module uses the chosen language.
-  const [cardLang, setCardLang] = useState<Record<string, '2'>>({})
   const [reviews, setReviews] = useState<Record<string, { notes: string; status: string }>>({})
 
   useEffect(() => {
@@ -150,23 +148,9 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {secondLang && (!isDone || it.state === 'overdue' || it.state === 'due_soon') && (
-            <button
-              onClick={() => setCardLang(prev => {
-                const next = { ...prev }
-                if (next[it.enrollment_id]) { delete next[it.enrollment_id] }
-                else { next[it.enrollment_id] = '2'; api.me.recordLanguageSwitch({ area: 'annual', set_ref: it.enrollment_id, set_name: it.name }).catch(() => {}) }
-                return next
-              })}
-              title={cardLang[it.enrollment_id] ? `This set will open in ${secondLang.name}. Tap to switch back to your first language.` : `Read this set in ${secondLang.name} instead of English`}
-              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${cardLang[it.enrollment_id] ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal'}`}
-            >
-              <Globe size={12} /> {cardLang[it.enrollment_id] ? '1st language' : secondLang.name}
-            </button>
-          )}
           {isDone && <button onClick={() => onCert(it.enrollment_id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Award size={12} /> Certificate</button>}
           {(reviewer || !isDone || it.state === 'overdue' || it.state === 'due_soon') && (
-            <button onClick={() => onOpen(it.enrollment_id, it.name, cardLang[it.enrollment_id])} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+            <button onClick={() => onOpen(it.enrollment_id, it.name)} className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
               {reviewer ? 'Open module' : it.state === 'in_progress' ? 'Continue' : isDone ? 'Renew' : 'Start'}
             </button>
           )}
@@ -215,10 +199,13 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, initialLang = '1', switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; initialLang?: '1' | '2'; switchArea?: 'annual' | 'training' }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; switchArea?: 'annual' | 'training' }) {
   const api = createApiClient(token)
-  const [data, setData] = useState<any>(null)
-  const [lang, setLang] = useState<'1' | '2'>(initialLang === '2' && secondLang ? '2' : '1')
+  const [data, setData] = useState<any>(null)            // first-language module (the default)
+  const [data2, setData2] = useState<any>(null)          // second-language version, fetched lazily + cached
+  const [loadingSecond, setLoadingSecond] = useState(false)
+  const [showSecond, setShowSecond] = useState(false)    // show the CURRENT learn step in the 2nd language
+  const [qLang, setQLang] = useState<Record<string, boolean>>({})  // per-question 2nd language in the assessment
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState<'learn' | 'assess'>('learn')
   const [policiesOpen, setPoliciesOpen] = useState(false)
@@ -260,13 +247,29 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   }
 
   useEffect(() => {
-    api.me.annualTraining.get(id, lang === '2' ? '2' : undefined).then(d => {
+    api.me.annualTraining.get(id).then(d => {
       setData(d)
       const s: Record<string, number> = {}
       for (const a of (d.answers ?? [])) { const idx = OPTION_LETTERS.indexOf(a.answer_text); if (idx >= 0) s[a.question_id] = idx }
       setSel(s)
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [id, lang]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch the second-language version once (on first use) and cache it, so flipping
+  // a step is instant. Records the switch for analytics the first time.
+  function ensureSecond() {
+    if (!secondLang) return
+    if (!data2 && !loadingSecond) {
+      setLoadingSecond(true)
+      api.me.annualTraining.get(id, '2').then(setData2).catch(() => {}).finally(() => setLoadingSecond(false))
+    }
+    createApiClient(token).me.recordLanguageSwitch({ area: switchArea, set_ref: id, set_name: name }).catch(() => {})
+  }
+
+  // The second-language aid is PER STEP: moving to another lesson step or into the
+  // assessment reverts to the first language, so staff learn in their first language
+  // by default and only dip into the second language on the step they're stuck on.
+  useEffect(() => { setShowSecond(false) }, [step, phase])
 
   async function pick(qid: string, oi: number) {
     setSel(prev => ({ ...prev, [qid]: oi }))
@@ -280,9 +283,14 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
 
   if (loading || !data) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-100" />)}</div>
 
-  const qs: any[] = data.questions ?? []
+  // Learn phase: the current step renders from the 2nd-language module when the
+  // per-step switch is on (and it's loaded); otherwise the first language.
+  const learnActive = (showSecond && data2) ? data2 : data
+  const qs: any[] = data.questions ?? []                 // assessment order + ids (stable across languages)
+  const q2ById: Record<string, any> = {}
+  for (const q of (data2?.questions ?? [])) q2ById[q.id] = q  // per-question 2nd-language lookup
   const answered = qs.filter(q => sel[q.id] != null).length
-  const sections: any[] = Array.isArray(data.learning?.sections) ? data.learning.sections : []
+  const sections: any[] = Array.isArray(learnActive.learning?.sections) ? learnActive.learning.sections : []
 
   // Result
   if (result) {
@@ -338,14 +346,15 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
       <div className="mx-auto max-w-2xl">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <button onClick={() => onExit(false)} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
-          {secondLang && (
+          {secondLang && phase === 'learn' && (
             <button
               type="button"
-              onClick={() => setLang(l => { const next = l === '2' ? '1' : '2'; if (next === '2') createApiClient(token).me.recordLanguageSwitch({ area: switchArea, set_ref: id, set_name: name }).catch(() => {}); return next })}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${lang === '2' ? 'border-teal bg-teal text-white' : 'border-teal/40 text-teal hover:bg-teal-light/40'}`}
-              title={lang === '2' ? 'Switch back to your first language' : `Show this module in ${secondLang.name}`}
+              onClick={() => { if (!showSecond) ensureSecond(); setShowSecond(s => !s) }}
+              disabled={!showSecond && loadingSecond}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-60 ${showSecond ? 'border-teal bg-teal text-white' : 'border-teal/40 text-teal hover:bg-teal-light/40'}`}
+              title={showSecond ? 'Back to your first language' : `Show just this step in ${secondLang.name} to help you understand it`}
             >
-              <Globe size={12} /> {lang === '2' ? '1st language' : `Read in ${secondLang.name}`}
+              <Globe size={12} /> {(!showSecond && loadingSecond) ? 'Loading…' : showSecond ? '1st language' : `This step in ${secondLang.name}`}
             </button>
           )}
         </div>
@@ -421,24 +430,24 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               {cur.type === 'overview' ? (
                 /* ── Overview ── */
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                  {data.illustration_url && <img src={apiAssetUrl(data.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
+                  {learnActive.illustration_url && <img src={apiAssetUrl(learnActive.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
                   <div className="p-5">
                     <div className="mb-1 flex items-center justify-between gap-2">
                       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learning — what to read first</p>
-                      {data.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {data.duration_minutes} min</span> : null}
+                      {learnActive.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {learnActive.duration_minutes} min</span> : null}
                     </div>
-                    {data.learning?.summary && <p className="text-sm text-neutral-dark">{data.learning.summary}</p>}
-                    {Array.isArray(data.learning?.outcomes) && data.learning.outcomes.length > 0 && (
+                    {learnActive.learning?.summary && <p className="text-sm text-neutral-dark">{learnActive.learning.summary}</p>}
+                    {Array.isArray(learnActive.learning?.outcomes) && learnActive.learning.outcomes.length > 0 && (
                       <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
                         <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
                         <ul className="space-y-1">
-                          {data.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
+                          {learnActive.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
                         </ul>
                       </div>
                     )}
-                    {sections.length === 0 && Array.isArray(data.learning?.key_points) && data.learning.key_points.length > 0 && (
+                    {sections.length === 0 && Array.isArray(learnActive.learning?.key_points) && learnActive.learning.key_points.length > 0 && (
                       <ul className="mt-3 space-y-1.5">
-                        {data.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
+                        {learnActive.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
                       </ul>
                     )}
                   </div>
@@ -517,19 +526,37 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               <button onClick={() => setPhase('learn')} className="hover:text-teal">← Back to the lesson</button>
             </div>
             <div className="space-y-3">
-              {qs.map((q, qi) => (
-                <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-4">
-                  <p className="mb-2 text-sm font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
-                  <div className="space-y-1.5">
-                    {q.options.map((opt: string, oi: number) => (
-                      <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${sel[q.id] === oi ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
-                        <input type="radio" name={`q-${q.id}`} checked={sel[q.id] === oi} onChange={() => pick(q.id, oi)} className="accent-teal" />
-                        {opt}
-                      </label>
-                    ))}
+              {qs.map((q, qi) => {
+                // Per-question 2nd-language aid: flip just this question, others stay
+                // in the first language. Options keep the same order across languages.
+                const qd = (qLang[q.id] && q2ById[q.id]) ? q2ById[q.id] : q
+                return (
+                  <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium text-neutral-dark">{qi + 1}. {qd.text}</p>
+                      {secondLang && (
+                        <button
+                          type="button"
+                          onClick={() => { if (!qLang[q.id]) ensureSecond(); setQLang(m => ({ ...m, [q.id]: !m[q.id] })) }}
+                          disabled={!qLang[q.id] && loadingSecond && !data2}
+                          title={qLang[q.id] ? 'Back to your first language' : `Show this question in ${secondLang.name}`}
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${qLang[q.id] ? 'border-teal bg-teal text-white' : 'border-teal/40 text-teal hover:bg-teal-light/40'}`}
+                        >
+                          <Globe size={11} /> {qLang[q.id] ? '1st language' : secondLang.name}
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      {qd.options.map((opt: string, oi: number) => (
+                        <label key={oi} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${sel[q.id] === oi ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
+                          <input type="radio" name={`q-${q.id}`} checked={sel[q.id] === oi} onChange={() => pick(q.id, oi)} className="accent-teal" />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
             <button onClick={submit} disabled={answered < qs.length || submitting} className="mt-4 w-full rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
               {submitting ? 'Marking…' : answered < qs.length ? `Answer all ${qs.length} to submit` : 'Submit assessment'}

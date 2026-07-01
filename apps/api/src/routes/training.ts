@@ -344,7 +344,7 @@ async function ensureAnnualTopicsAsAdhoc(tenantId: string): Promise<void> {
   const settingOr = [{ care_setting: null }, { care_setting: setting }]
   const [existing, standard] = await Promise.all([
     (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: { not: 'ai_generated' } }, select: { name: true, topic_id: true } }),
-    (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: { name: true, topic_id: true, category: true, image_key: true, group_key: true, requires_practical: true } }),
+    (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: { name: true, description: true, topic_id: true, category: true, image_key: true, group_key: true, requires_practical: true } }),
   ])
   const haveNames  = new Set((existing as any[]).map(m => normName(m.name)))
   const haveTopics = new Set((existing as any[]).map(m => m.topic_id).filter(Boolean))
@@ -359,6 +359,7 @@ async function ensureAnnualTopicsAsAdhoc(tenantId: string): Promise<void> {
       tenant_id:          tenantId,
       slug:               `annual-${kebab(s.name)}`.slice(0, 200),
       name:               s.name,
+      description:        (s.description || s.name).slice(0, 500),
       category:           s.category === 'specialist' ? 'specialist' : 'statutory',
       questions:          [],
       is_annual:          false,

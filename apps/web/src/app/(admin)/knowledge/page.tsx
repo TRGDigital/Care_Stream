@@ -221,14 +221,15 @@ export default function KnowledgePage() {
       ) : (
         <div className="space-y-10">
 
-          {/* Policy-generated entries — grouped by policy */}
-          {policyEntries.length > 0 && (
+          {/* Manual entries — grouped by knowledge_category. Kept first: this is
+              where tenants add home/care-setting nuances unique to their service. */}
+          {manualEntries.length > 0 && (
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-mid">
-                From uploaded policies ({policyEntries.length})
+                Manual entries ({manualEntries.length})
               </h2>
-              <PolicyAccordion
-                entries={policyEntries}
+              <ManualCategoryAccordion
+                entries={manualEntries}
                 editId={editId}
                 token={session?.accessToken ?? ''}
                 onEdit={setEditId}
@@ -243,14 +244,14 @@ export default function KnowledgePage() {
             </section>
           )}
 
-          {/* Manual entries — grouped by knowledge_category */}
-          {manualEntries.length > 0 && (
+          {/* Policy-generated entries — grouped by policy */}
+          {policyEntries.length > 0 && (
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-mid">
-                Manual entries ({manualEntries.length})
+                From uploaded policies ({policyEntries.length})
               </h2>
-              <ManualCategoryAccordion
-                entries={manualEntries}
+              <PolicyAccordion
+                entries={policyEntries}
                 editId={editId}
                 token={session?.accessToken ?? ''}
                 onEdit={setEditId}

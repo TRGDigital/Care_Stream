@@ -48,11 +48,9 @@ export async function seedTenantKnowledge(
         source_type: 'platform',
         source_id:   sourceId,
         source_name: seed.source_name,
-        // Platform seeds are CareStream-curated authoritative reference content,
-        // so they're approved on seed — they ground answers and appear as sources.
-        approved:    true,
-        approved_at: new Date(),
-        approved_by: 'CareStream',
+        // Seeded as pending approval (approved defaults to false) — a tenant admin
+        // must approve them, like manual entries, before they ground answers or
+        // appear as sources in chat.
       },
     })
 
@@ -110,9 +108,8 @@ export async function seedCustomSeedToAllTenants(
         source_type: 'platform',
         source_id:   sourceId,
         source_name: seed.source_name,
-        approved:    true,
-        approved_at: new Date(),
-        approved_by: 'CareStream',
+        // Pending approval (approved defaults to false) — tenant admin must
+        // approve before the seed is used in chat or referenced.
       },
     })
 

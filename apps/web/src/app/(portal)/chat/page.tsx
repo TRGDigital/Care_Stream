@@ -38,6 +38,7 @@ interface ChatMessage {
   timestamp?:          string   // ISO — set on send for user, on response for assistant
   citations?:          Citation[]
   seedSources?:        { name: string }[]           // CareStream platform guidance that grounded the answer
+  manualSources?:      { name: string }[]           // the home's own manually-added knowledge that grounded the answer
   referenceSources?:   { name: string; url?: string }[]  // external regulations the policies quote
   language?:           string
   loading?:            boolean
@@ -721,6 +722,7 @@ function ChatPageInner() {
                 timestamp:          new Date().toISOString(),
                 citations:          d.citations?.length ? d.citations : undefined,
                 seedSources:        d.seedSources?.length ? d.seedSources : undefined,
+                manualSources:      d.manualSources?.length ? d.manualSources : undefined,
                 referenceSources:   d.referenceSources?.length ? d.referenceSources : undefined,
                 language:           d.languageDetected && d.languageDetected !== 'eng' ? d.languageDetected : undefined,
                 loading:            false,
@@ -1518,8 +1520,8 @@ function MessageBubble({
           </span>
         )}
 
-        {((msg.citations?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)) > 0 && !msg.loading && (() => {
-          const total = (msg.citations?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)
+        {((msg.citations?.length ?? 0) + (msg.manualSources?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)) > 0 && !msg.loading && (() => {
+          const total = (msg.citations?.length ?? 0) + (msg.manualSources?.length ?? 0) + (msg.referenceSources?.length ?? 0) + (msg.seedSources?.length ?? 0)
           return (
           <div className="mt-2">
             <button
@@ -1545,6 +1547,17 @@ function MessageBubble({
                     >
                       <FileText size={11} /> Read full policy
                     </button>
+                  </div>
+                ))}
+                {/* Home knowledge — the tenant's own manually-added knowledge base entries */}
+                {msg.manualSources?.map((m, i) => (
+                  <div
+                    key={`manual-${i}`}
+                    className="flex items-center gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-3 py-1.5 text-xs text-yellow-800"
+                  >
+                    <BookOpen size={11} className="shrink-0 text-yellow-600" />
+                    <span className="min-w-0 truncate">{m.name}</span>
+                    <span className="ml-auto shrink-0 rounded-full bg-yellow-100 px-1.5 py-0.5 text-[10px] font-medium text-yellow-700">Home knowledge</span>
                   </div>
                 ))}
                 {/* External references — regulations the policies quote, labelled as CareStream seeded (no outbound link) */}

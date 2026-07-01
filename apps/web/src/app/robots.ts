@@ -9,7 +9,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/dashboard',
           '/policies',
-          '/staff',
+          // Trailing slash so these only block the authenticated app routes and
+          // NOT the public marketing pages that share the prefix
+          // (/staff-training/*, /cqc-compliance, /cqc-report-chat, /cqc-staff-questions).
+          '/staff/',
           '/analytics',
           '/settings',
           '/billing',
@@ -22,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
           '/audits',
           '/cqc-questions',
           '/chat',
-          '/cqc',
+          '/cqc/',
           '/api/',
           '/register',
           '/login',

@@ -37,6 +37,7 @@ interface ChatMessage {
   content:             string
   timestamp?:          string   // ISO — set on send for user, on response for assistant
   citations?:          Citation[]
+  seedSources?:        { name: string }[]   // CareStream platform guidance that grounded the answer
   language?:           string
   loading?:            boolean
   suggestedQuestions?: string[]
@@ -718,6 +719,7 @@ function ChatPageInner() {
                 content:            finalHtml,
                 timestamp:          new Date().toISOString(),
                 citations:          d.citations?.length ? d.citations : undefined,
+                seedSources:        d.seedSources?.length ? d.seedSources : undefined,
                 language:           d.languageDetected && d.languageDetected !== 'eng' ? d.languageDetected : undefined,
                 loading:            false,
                 suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
@@ -1148,6 +1150,7 @@ function ChatPageInner() {
                     sendMessage('Please send me the full policy')
                   }}
                   fullPolicyRequested={fullPolicyRequestedIds.has(msg.id)}
+                  onReadPolicy={(policyId) => setSidebarPolicy(policyId)}
                   langNames={langNameMap}
                   sessionRef={msg.id === firstUserMsgId ? sessionRef(sessionId) : undefined}
                   feedbackState={msg.queryId ? msgFeedback[msg.queryId] : undefined}
@@ -1385,6 +1388,7 @@ function MessageBubble({
   onSelectSuggestion,
   onRequestFullPolicy,
   fullPolicyRequested,
+  onReadPolicy,
   langNames,
   sessionRef: ref,
   feedbackState,
@@ -1398,6 +1402,7 @@ function MessageBubble({
   onSelectSuggestion:  (q: string) => void
   onRequestFullPolicy: () => void
   fullPolicyRequested: boolean
+  onReadPolicy:        (policyId: string) => void
   langNames:           Record<string, string>
   sessionRef?:         string
   feedbackState?:      'positive' | 'negative'
@@ -1511,7 +1516,9 @@ function MessageBubble({
           </span>
         )}
 
-        {msg.citations && msg.citations.length > 0 && !msg.loading && (
+        {((msg.citations?.length ?? 0) + (msg.seedSources?.length ?? 0)) > 0 && !msg.loading && (() => {
+          const total = (msg.citations?.length ?? 0) + (msg.seedSources?.length ?? 0)
+          return (
           <div className="mt-2">
             <button
               onClick={onToggleCitations}
@@ -1519,22 +1526,41 @@ function MessageBubble({
               aria-expanded={citationsExpanded}
             >
               {citationsExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              {msg.citations.length} source{msg.citations.length !== 1 ? 's' : ''} referenced
+              {total} source{total !== 1 ? 's' : ''} referenced
             </button>
             {citationsExpanded && (
               <div className="mt-1.5 space-y-1">
-                {msg.citations.map(c => (
+                {/* Company policies — the tenant's own documents, openable in full */}
+                {msg.citations?.map(c => (
                   <div
                     key={c.policy_id}
-                    className="rounded-md bg-teal-light px-3 py-1.5 text-xs text-teal"
+                    className="flex items-center justify-between gap-2 rounded-md bg-teal-light px-3 py-1.5 text-xs text-teal"
                   >
-                    {c.policy_name} — v{c.version}
+                    <span className="min-w-0 truncate">{c.policy_name} — v{c.version}</span>
+                    <button
+                      onClick={() => onReadPolicy(c.policy_id)}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-teal/30 bg-white px-2 py-1 font-medium text-teal transition-colors hover:bg-teal hover:text-white"
+                    >
+                      <FileText size={11} /> Read full policy
+                    </button>
+                  </div>
+                ))}
+                {/* CareStream internal guidance — reference material, no document to open */}
+                {msg.seedSources?.map((s, i) => (
+                  <div
+                    key={`seed-${i}`}
+                    className="flex items-center gap-2 rounded-md border border-gray-200 bg-neutral-light/60 px-3 py-1.5 text-xs text-neutral-mid"
+                  >
+                    <Sparkles size={11} className="shrink-0 text-neutral-mid" />
+                    <span className="min-w-0 truncate">{s.name}</span>
+                    <span className="ml-auto shrink-0 rounded-full bg-gray-200/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-mid">CareStream guidance</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        )}
+          )
+        })()}
 
         {msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && !msg.loading && (
           <div className="mt-3">

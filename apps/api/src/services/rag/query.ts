@@ -91,10 +91,33 @@ export interface Citation {
   document_category: DocumentCategory
 }
 
+// A CareStream-provided reference (platform Knowledge Base guidance) that helped
+// ground an answer. Not a tenant document, so it has no policy to open — it's
+// surfaced as a labelled source for transparency.
+export interface SeedSource {
+  name: string
+}
+
+// Distinct CareStream (platform) guidance labels from a set of retrieved,
+// approved knowledge entries — deduped by name, tenant entries excluded.
+function buildSeedSources(rows: Array<{ source_type?: string | null; source_name?: string | null }>): SeedSource[] {
+  const seen = new Set<string>()
+  const out: SeedSource[] = []
+  for (const r of rows) {
+    if (r?.source_type !== 'platform') continue
+    const name = (r.source_name ?? '').trim()
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    out.push({ name })
+  }
+  return out
+}
+
 export interface QueryOutput {
   responseHtml:       string
   intentType:         IntentType
   citations:          Citation[]
+  seedSources?:       SeedSource[]
   noMatch:            boolean
   languageDetected:   string
   responseTimeMs:     number
@@ -643,6 +666,7 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
 
     // Retrieve approved knowledge entries
     let knowledgeEntries: KnowledgeEntry[] = []
+    let seedSources: SeedSource[] = []
     try {
       const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE * 2)
       const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
@@ -650,13 +674,12 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
         const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
         const approvedRows = await (prisma as any).knowledgeEntry.findMany({
           where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
-          select: { id: true },
+          select: { id: true, source_type: true, source_name: true },
         })
-        const approvedSet = new Set(approvedRows.map((r: any) => r.id as string))
-        knowledgeEntries = candidates
-          .filter(r => approvedSet.has(r.metadata.entry_id))
-          .slice(0, TOP_K_KNOWLEDGE)
-          .map(r => ({ question: r.metadata.question, answer: r.metadata.answer, source_name: r.metadata.source_name }))
+        const approvedMap = new Map(approvedRows.map((r: any) => [r.id as string, r]))
+        const used = candidates.filter(r => approvedMap.has(r.metadata.entry_id)).slice(0, TOP_K_KNOWLEDGE)
+        knowledgeEntries = used.map(r => ({ question: r.metadata.question, answer: r.metadata.answer, source_name: r.metadata.source_name }))
+        seedSources = buildSeedSources(used.map(r => approvedMap.get(r.metadata.entry_id)).filter(Boolean) as any[])
       }
     } catch { /* non-fatal */ }
 
@@ -789,6 +812,7 @@ At the end of your response, append this comment (do not display it):
       responseHtml:       cleanedHtml,
       intentType:         'summary',
       citations,
+      seedSources,
       noMatch:            ranked.length === 0,
       languageDetected:   langDetection.code,
       responseTimeMs:     Date.now() - start,
@@ -900,13 +924,14 @@ At the end of your response, append this comment (do not display it to the user)
           knowledge_category: 'business_continuity',
           approved:           true,
         },
-        select: { question: true, answer: true, source_name: true },
+        select: { question: true, answer: true, source_name: true, source_type: true },
         orderBy: { created_at: 'asc' },
       }),
     ])
     const ranked          = [...bcChunks].sort((a, b) => b.score - a.score).slice(0, TOP_K_CHUNKS * 2)
     const uniquePolicyIds = [...new Set(ranked.map(c => c.metadata.policy_id))]
     const policyMeta      = await loadPolicyMeta(tenantId, uniquePolicyIds)
+    const seedSources     = buildSeedSources(bcEntries as any[])
 
     const DEFAULT_BC_PROMPT = `You are a Business Continuity assistant for a UK adult social care provider. You help care home managers and staff understand and act on the organisation's business continuity plans, emergency procedures, and contingency arrangements.
 
@@ -986,6 +1011,7 @@ At the end of your response, append this comment (do not display it to the user)
       responseHtml:       cleanedHtml,
       intentType:         'summary',
       citations,
+      seedSources,
       noMatch:            bcNoMatch,
       languageDetected:   langDetection.code,
       responseTimeMs:     Date.now() - start,
@@ -1068,6 +1094,7 @@ At the end of your response, append this comment (do not display it to the user)
 
   // 8b. Retrieve relevant knowledge base entries (approved only)
   let knowledgeEntries: KnowledgeEntry[] = []
+  let seedSources: SeedSource[] = []
   try {
     const kbResults = await queryKnowledgeVectors(tenantId, queryEmbedding, TOP_K_KNOWLEDGE * 2)
     const candidates = kbResults.filter(r => r.score >= KNOWLEDGE_MIN_SCORE)
@@ -1077,18 +1104,18 @@ At the end of your response, append this comment (do not display it to the user)
       const entryIds = candidates.map(r => r.metadata.entry_id).filter(Boolean)
       const approvedRows = await (prisma as any).knowledgeEntry.findMany({
         where:  { id: { in: entryIds }, tenant_id: tenantId, approved: true },
-        select: { id: true },
+        select: { id: true, source_type: true, source_name: true },
       })
-      const approvedSet = new Set(approvedRows.map((r: any) => r.id as string))
+      const approvedMap = new Map(approvedRows.map((r: any) => [r.id as string, r]))
 
-      knowledgeEntries = candidates
-        .filter(r => approvedSet.has(r.metadata.entry_id))
-        .slice(0, TOP_K_KNOWLEDGE)
-        .map(r => ({
-          question:    r.metadata.question,
-          answer:      r.metadata.answer,
-          source_name: r.metadata.source_name,
-        }))
+      const used = candidates.filter(r => approvedMap.has(r.metadata.entry_id)).slice(0, TOP_K_KNOWLEDGE)
+      knowledgeEntries = used.map(r => ({
+        question:    r.metadata.question,
+        answer:      r.metadata.answer,
+        source_name: r.metadata.source_name,
+      }))
+      // Surface CareStream (platform) guidance used, as labelled sources.
+      seedSources = buildSeedSources(used.map(r => approvedMap.get(r.metadata.entry_id)).filter(Boolean) as any[])
     }
   } catch (e) {
     // Non-fatal — knowledge namespace may not exist yet for this tenant
@@ -1148,6 +1175,7 @@ At the end of your response, append this comment (do not display it to the user)
     responseHtml:       cleanedHtml,
     intentType:         'summary',
     citations,
+    seedSources,
     noMatch,
     languageDetected:   langDetection.code,
     responseTimeMs:     Date.now() - start,

@@ -386,6 +386,12 @@ function ChatPageInner() {
   const [returnTo,      setReturnTo]                    = useState<'induction' | 'training' | 'followup' | 'annual' | 'audits' | null>(null)
   const [policyQuestions, setPolicyQuestions]           = useState<string[] | null>(null)
   const bottomRef          = useRef<HTMLDivElement>(null)
+  const chatScrollRef      = useRef<HTMLDivElement>(null)
+  // Whether the user is currently pinned to the bottom of the chat, tracked on
+  // scroll so it reflects their position *before* content changes (e.g. when the
+  // language toggle re-renders answers in place). Starts true (empty chat).
+  const atBottomRef        = useRef(true)
+  const prevMsgCountRef    = useRef(0)
   const inputRef           = useRef<HTMLInputElement>(null)
   const suppressAutoSaveRef = useRef(false)
 
@@ -400,8 +406,9 @@ function ChatPageInner() {
   // Close the mobile sidebar drawer when the user navigates (picks a chat / view).
   useEffect(() => { setNavOpen(false) }, [sessionId, view])
 
-  // A new chat/discussion always starts in the staff member's first language.
-  useEffect(() => { setChatSecond(false) }, [sessionId])
+  // A new chat/discussion always starts in the staff member's first language, and
+  // opens pinned to the latest message.
+  useEffect(() => { setChatSecond(false); atBottomRef.current = true; prevMsgCountRef.current = 0 }, [sessionId])
 
   // Honour ?view=induction|training (e.g. links from My Progress)
   // Deep links + top-nav (e.g. /chat?view=cqc) open that section — reactive to the
@@ -549,9 +556,13 @@ function ChatPageInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
-  // Scroll to bottom when messages change
+  // Auto-scroll to the newest content, but only when it's wanted: a brand-new
+  // message arrived, or the user was already at the bottom. If they've scrolled up
+  // (or flipped the language while reading the top), leave their position alone.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const grew = messages.length > prevMsgCountRef.current
+    prevMsgCountRef.current = messages.length
+    if (grew || atBottomRef.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   // ─── Session management ───────────────────────────────────────────────────────
@@ -1111,7 +1122,11 @@ function ChatPageInner() {
         )}
 
         {/* Chat messages + input — only shown in chat view */}
-        {view === 'chat' && <div className="flex-1 overflow-y-auto px-4 py-6">
+        {view === 'chat' && <div
+          ref={chatScrollRef}
+          onScroll={(e) => { const el = e.currentTarget; atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120 }}
+          className="flex-1 overflow-y-auto px-4 py-6"
+        >
           {category === null ? (
             <CategorySelect onSelect={setCategory} available={availableCats} />
           ) : pinnedPolicy && isEmpty ? (

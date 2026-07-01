@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, Loader2 } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import type { Flow } from '@/components/admin/onboarding/onboarding-shared'
 
 // Flow form & progress modals are lazy-loaded — only fetched when opened.
@@ -239,6 +239,7 @@ export default function OnboardingPage() {
   const [showForm, setShowForm] = useState(false)
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }>>([])
   const [genericPolicies, setGenericPolicies] = useState<Array<{ id: string; name: string; document_category: string; already_adopted: boolean }>>([])
+  const [hasPolicies, setHasPolicies] = useState(true)   // default true to avoid flashing the warning pre-load
   const [adoptingId, setAdoptingId] = useState<string | null>(null)
   const [adoptingPolicyId, setAdoptingPolicyId] = useState<string | null>(null)
   const [adoptNote, setAdoptNote] = useState('')
@@ -249,14 +250,16 @@ export default function OnboardingPage() {
   async function load() {
     if (!api) return
     try {
-      const [d, t, gp] = await Promise.all([
+      const [d, t, gp, pol] = await Promise.all([
         api.onboarding.listFlows(),
         api.onboarding.listTemplates().catch(() => ({ templates: [] })),
         api.onboarding.listGenericPolicies().catch(() => ({ policies: [] })),
+        api.policies.list({ limit: '1' }).catch(() => ({ policies: [] })),
       ])
       setFlows(d.flows)
       setTemplates(t.templates)
       setGenericPolicies(gp.policies)
+      setHasPolicies(((pol as any)?.policies ?? []).length > 0)
       persistentCache.set(`admin-onboarding-${userId}`, d.flows)
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
@@ -365,7 +368,14 @@ export default function OnboardingPage() {
 
       {/* Ready-made flows from CareStream */}
       {tab === 'ready' && (
-        templates.length === 0 && genericPolicies.length === 0 ? (
+        <div className="space-y-5">
+        {!hasPolicies && (
+          <div className="flex items-start gap-2 rounded-card border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
+            <span>You haven&rsquo;t uploaded any policies yet. The CareStream ready-made flows map their <strong>&lsquo;read policy&rsquo;</strong> steps to <strong>your own policies</strong>, so if you adopt one now its read steps will be empty and you won&rsquo;t be able to enrol staff until you <strong>upload your policies</strong> and map the steps. Upload your policies first for the smoothest setup.</span>
+          </div>
+        )}
+        {templates.length === 0 && genericPolicies.length === 0 ? (
           <div className="rounded-card border border-gray-100 bg-white px-5 py-10 text-center text-sm text-neutral-mid shadow-card">
             No ready-made flows are available right now.
           </div>
@@ -436,7 +446,8 @@ export default function OnboardingPage() {
           </div>
           )}
           </div>
-        )
+        )}
+        </div>
       )}
 
       {/* Active flows */}
@@ -453,6 +464,7 @@ export default function OnboardingPage() {
         {flows.map(flow => {
           const done  = flow.enrollments.filter(e => e.completed_at).length
           const total = flow.enrollments.length
+          const unmappedReads = flow.steps.filter((s: any) => s.type === 'read_policy' && !s.policy_id).length
           return (
             <div
               key={flow.id}
@@ -465,6 +477,11 @@ export default function OnboardingPage() {
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${flow.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {flow.is_active ? 'Active' : 'Paused'}
                     </span>
+                    {unmappedReads > 0 && (
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700" title="Some 'read policy' steps aren't linked to a policy. Map them (or upload the policy) before enrolling staff.">
+                        Not ready · {unmappedReads} step{unmappedReads !== 1 ? 's' : ''} need a policy
+                      </span>
+                    )}
                   </div>
                   {flow.description && <p className="mt-0.5 text-sm text-neutral-mid truncate">{flow.description}</p>}
                   <div className="mt-2 flex items-center gap-4 text-xs text-neutral-mid">

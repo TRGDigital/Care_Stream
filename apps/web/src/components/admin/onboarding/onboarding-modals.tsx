@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { Users, CheckCircle2, Clock, AlertCircle, X, GripVertical, Plus } from 'lucide-react'
+import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus } from 'lucide-react'
 import type { Step, Flow } from './onboarding-shared'
 
 // ─── Flow Form ────────────────────────────────────────────────────────────────
@@ -192,6 +192,11 @@ export function ProgressPanel({ api, flow, onClose }: {
   const [error,   setError]   = useState('')
   const [enrollModal, setEnrollModal] = useState(false)
 
+  // A flow can't be sent to staff while any 'read policy' step has no policy linked —
+  // they'd have nothing to read. Block enrolment until it's mapped/uploaded.
+  const unmappedReads = (flow.steps as any[]).filter((s: any) => s.type === 'read_policy' && !s.policy_id).length
+  const notReady = unmappedReads > 0
+
   useEffect(() => {
     api.onboarding.flowProgress(flow.id)
       .then(setData)
@@ -209,7 +214,9 @@ export function ProgressPanel({ api, flow, onClose }: {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setEnrollModal(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90"
+            disabled={notReady}
+            title={notReady ? `${unmappedReads} 'read policy' step${unmappedReads !== 1 ? 's' : ''} need a policy linked before you can enrol staff. Use Edit to map them, or upload the policy.` : undefined}
+            className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Users size={12} /> Enroll staff
           </button>
@@ -218,6 +225,12 @@ export function ProgressPanel({ api, flow, onClose }: {
       </div>
 
       <div className="px-6 py-4">
+        {notReady && (
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-500" />
+            <span>This flow isn&apos;t ready to send: <strong>{unmappedReads} &lsquo;read policy&rsquo; step{unmappedReads !== 1 ? 's' : ''}</strong> {unmappedReads !== 1 ? "aren't" : "isn't"} linked to one of your policies. Click <strong>Edit</strong> to map {unmappedReads !== 1 ? 'them' : 'it'} to a policy (or upload the policy first), then enrol staff.</span>
+          </div>
+        )}
         {loading && <div className="h-24 animate-pulse rounded bg-gray-50" />}
         {error   && <p className="text-sm text-red-600">{error}</p>}
         {data && data.enrollments.length === 0 && (

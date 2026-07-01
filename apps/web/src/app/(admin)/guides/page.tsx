@@ -467,7 +467,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={3}>tailors the questions to the wording of your policies.</Step>
           </div>
           <p className="mt-3 text-sm text-neutral-mid">
-            If a step can't be matched (because you haven't uploaded a policy for that area yet), the flow tells you so you can upload it and link the step. You can edit anything afterwards.
+            If a step can't be matched (because you haven't uploaded a policy for that area yet), the flow tells you so you can upload it and link the step. You can edit anything afterwards. A flow with any unmatched <em>read policy</em> step is marked <strong>&ldquo;Not ready&rdquo;</strong> and you <strong>can't enrol staff on it</strong> until those steps are linked to a policy, so nobody is ever sent an induction with nothing to read. If you haven't uploaded any policies yet, upload them first: the ready-made flows read <em>your</em> policies.
           </p>
         </SectionBlock>
         <SectionBlock title="Where the ready-made flows come from">

@@ -161,8 +161,15 @@ onboardingRouter.post('/flows/:id/enroll', requireAdmin, async (req, res) => {
   try {
     const tenantId = getTenantId()
     const id       = String(req.params.id)
-    const flow = await prisma.onboardingFlow.findFirst({ where: { id, tenant_id: tenantId } })
+    const flow = await (prisma as any).onboardingFlow.findFirst({ where: { id, tenant_id: tenantId }, include: { steps: true } })
     if (!flow) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Flow not found' } })
+
+    // A flow with 'read policy' steps that aren't mapped to a policy can't be sent to
+    // staff — they'd have nothing to read. Block enrolment until it's ready.
+    const unmapped = (flow.steps as any[]).filter(s => s.type === 'read_policy' && !s.policy_id).length
+    if (unmapped > 0) {
+      return res.status(400).json({ success: false, error: { code: 'FLOW_NOT_READY', message: `This flow isn't ready: ${unmapped} 'read policy' step${unmapped === 1 ? '' : 's'} ${unmapped === 1 ? "isn't" : "aren't"} linked to one of your policies. Open the flow and map ${unmapped === 1 ? 'it' : 'them'} to a policy first (or upload the policy), then enrol staff.` } })
+    }
 
     const created = await Promise.all(
       (user_ids as string[]).map(uid =>

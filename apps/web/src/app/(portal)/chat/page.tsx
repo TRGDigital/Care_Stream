@@ -25,7 +25,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -1547,7 +1547,7 @@ function MessageBubble({
                     </button>
                   </div>
                 ))}
-                {/* External references — regulations the policies quote, linked to the official source */}
+                {/* External references — regulations the policies quote, labelled as CareStream seeded (no outbound link) */}
                 {msg.referenceSources?.map((r, i) => (
                   <div
                     key={`ref-${i}`}
@@ -1555,11 +1555,7 @@ function MessageBubble({
                   >
                     <BookOpen size={11} className="shrink-0 text-blue-500" />
                     <span className="min-w-0 truncate">{r.name}</span>
-                    {r.url
-                      ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-md border border-blue-300 bg-white px-2 py-1 font-medium text-blue-700 transition-colors hover:bg-blue-600 hover:text-white">
-                          <ExternalLink size={11} /> View source
-                        </a>
-                      : <span className="ml-auto shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">Reference</span>}
+                    <span className="ml-auto shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">CareStream Seeded</span>
                   </div>
                 ))}
                 {/* CareStream internal guidance — reference material, no document to open */}

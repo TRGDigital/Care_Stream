@@ -15,12 +15,22 @@ const SECTIONS = [
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
+// Canonical care-setting values — must match apps/api/src/lib/care-setting.ts
+// (CARE_SETTINGS). Previously these used legacy values (nursing_home, care_home…)
+// that never matched the stored care_setting (nursing-homes…), so no flows showed.
 const SETTINGS: { value: string; label: string }[] = [
-  { value: '',             label: 'All settings' },
-  { value: 'nursing_home', label: 'Nursing home' },
-  { value: 'care_home',    label: 'Care home' },
-  { value: 'home_care',    label: 'Home care' },
-  { value: 'other',        label: 'Other' },
+  { value: '',                      label: 'All settings' },
+  { value: 'residential-care',      label: 'Residential Care' },
+  { value: 'nursing-homes',         label: 'Nursing Homes' },
+  { value: 'domiciliary-care',      label: 'Domiciliary Care' },
+  { value: 'live-in-care',          label: 'Live-in Care' },
+  { value: 'complex-care',          label: 'Complex Care' },
+  { value: 'shared-lives',          label: 'Shared Lives' },
+  { value: 'substance-misuse',      label: 'Substance Misuse & Rehab' },
+  { value: 'hospices',              label: 'Hospices' },
+  { value: 'independent-hospitals', label: 'Independent Hospitals' },
+  { value: 'gp-practices',          label: 'GP & Primary Care' },
+  { value: 'dental-practices',      label: 'Dental Practices' },
 ]
 const settingLabel = (v: string | null) => v ? (SETTINGS.find(s => s.value === v)?.label ?? v) : 'All settings'
 
@@ -39,7 +49,7 @@ export default function OnboardingFlowsPage() {
   const [busy,    setBusy]    = useState<string | null>(null)   // flowId currently mutating
   const [openId,  setOpenId]  = useState<string | null>(null)
   const [seeding, setSeeding] = useState(false)
-  const [settingTab, setSettingTab] = useState('nursing_home')
+  const [settingTab, setSettingTab] = useState('nursing-homes')
 
   function load() {
     if (!token) return

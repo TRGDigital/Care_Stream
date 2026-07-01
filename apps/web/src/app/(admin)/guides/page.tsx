@@ -475,6 +475,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
             The ready-made flows are built from a library of real care-sector policies that have been <strong>anonymised</strong>: every home name, address, person and contact detail removed, so they reflect genuine, well-written procedures without belonging to any one home. When you adopt a flow, CareStream uses this as the starting point but always matches and tailors it to <em>your</em> own policies, so what your staff read and answer is specific to your home.
           </p>
         </SectionBlock>
+        <SectionBlock title="Generic onboarding policies (turn any policy into a one-step flow)">
+          <p className="text-sm text-neutral-mid">
+            Sometimes you just want new staff to <strong>read and confirm a specific policy</strong> as part of induction, without building a whole flow. Any of your own policies can be turned into a one-step onboarding flow.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Flag the policy as a generic onboarding policy. When you <strong>upload</strong> a policy, set <strong>Generic Onboarding policy</strong> to <strong>Yes</strong>. For a policy already in your library, open the <strong>⋯ menu</strong> on the Policies page and choose <strong>Use as onboarding policy</strong> (a small amber <strong>Onboarding</strong> tag then shows on it). You can remove it the same way.</Step>
+            <Step n={2}>Go to <strong>Onboarding → Ready-made flows</strong>. Flagged policies appear in their own <strong>amber &ldquo;Generic onboarding policies&rdquo;</strong> section, separate from the CareStream role templates. Click <strong>Add as onboarding flow</strong> to create a one-step &ldquo;read &amp; confirm this policy&rdquo; flow.</Step>
+            <Step n={3}>It moves to <strong>Active flows</strong>, where you <strong>Enrol staff</strong> exactly like any other flow. Reading time and completion are tracked and count towards your CQC evidence.</Step>
+          </div>
+          <div className="mt-3"><Tip>These are ideal for one-off must-reads (a new fire procedure, an updated visiting policy) that every staff member should acknowledge, without the overhead of a full role induction.</Tip></div>
+        </SectionBlock>
         <SectionBlock title="Multiple-choice questions">
           <p className="text-sm text-neutral-mid">
             Questions can be <strong>multiple choice</strong>: staff pick an answer in the portal and it's marked instantly. A wrong answer asks them to review the policy and try again, so a completed flow is real evidence they understood it. You can also use free-text questions (CareStream assesses the answer) when you build your own steps.

@@ -16,14 +16,14 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://carestreamai.com'),
+  metadataBase: new URL('https://www.carestreamai.com'),
   title: {
     default:  'CareStreamAI — AI Policy Access for UK Care Homes',
     template: '%s | CareStreamAI',
   },
   description: 'Give every member of your care team instant access to your policies in any language, 24/7. AI-powered policy access via chat, email and voice — built for UK care providers.',
   keywords:    ['care home policies', 'CQC compliance', 'care AI', 'multilingual care', 'UK care training'],
-  authors:     [{ name: 'CareStreamAI', url: 'https://carestreamai.com' }],
+  authors:     [{ name: 'CareStreamAI', url: 'https://www.carestreamai.com' }],
   openGraph: {
     type:      'website',
     siteName:  'CareStreamAI',

@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: 'CQC Report Chat | CareStreamAI',
     description: 'Chat with your CQC inspection report, cross-referenced against your policies and the CQC framework.',
-    url: 'https://carestreamai.com/cqc-report-chat',
+    url: 'https://www.carestreamai.com/cqc-report-chat',
   },
 }
 

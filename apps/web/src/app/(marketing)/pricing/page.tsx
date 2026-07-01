@@ -9,7 +9,7 @@ export const metadata = {
   openGraph: {
     title: 'CareStreamAI Pricing',
     description: 'Simple, transparent pricing. 14-day free trial, no charge until day 14.',
-    url: 'https://carestreamai.com/pricing',
+    url: 'https://www.carestreamai.com/pricing',
   },
 }
 

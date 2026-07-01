@@ -1,7 +1,9 @@
 import { MetadataRoute } from 'next'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 
-const BASE = 'https://carestreamai.com'
+// Canonical host is www (the apex 308-redirects to it). The sitemap MUST use www
+// or Google reports every entry as "Page with redirect".
+const BASE = 'https://www.carestreamai.com'
 
 type Entry = { url: string; lastModified?: Date; changeFrequency?: MetadataRoute.Sitemap[number]['changeFrequency']; priority?: number }
 

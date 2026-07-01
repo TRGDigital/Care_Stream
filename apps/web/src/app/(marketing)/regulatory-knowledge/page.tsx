@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: 'Regulatory Knowledge | CareStreamAI',
     description: 'A built-in UK regulatory knowledge base: CQC, GDPR, RIDDOR, Care Act, Mental Capacity Act, and more.',
-    url: 'https://carestreamai.com/regulatory-knowledge',
+    url: 'https://www.carestreamai.com/regulatory-knowledge',
   },
 }
 

@@ -46,7 +46,7 @@ export const metadata = {
   openGraph: {
     title: 'Staff Training and Compliance | CareStreamAI',
     description: 'Training modules built from your own policies, delivered in the hub all year, with a full compliance dashboard.',
-    url: 'https://carestreamai.com/staff-training',
+    url: 'https://www.carestreamai.com/staff-training',
   },
 }
 

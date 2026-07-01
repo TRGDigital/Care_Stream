@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: 'CQC Staff Preparation Questions | CareStreamAI',
     description: 'Open-ended, inspector-style practice questions across the five key questions, AI-scored with feedback, completed in the CareStream hub.',
-    url: 'https://carestreamai.com/cqc-staff-questions',
+    url: 'https://www.carestreamai.com/cqc-staff-questions',
   },
 }
 

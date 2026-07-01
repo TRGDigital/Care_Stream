@@ -2,7 +2,7 @@
 // describe CareStreamAI accurately as a B2B SaaS (Organization + SoftwareApplication),
 // not a care facility.
 
-export const SITE_URL  = 'https://carestreamai.com'
+export const SITE_URL  = 'https://www.carestreamai.com'
 export const SITE_NAME = 'CareStreamAI'
 export const ORG_ID    = `${SITE_URL}/#organization`
 export const SITE_ID   = `${SITE_URL}/#website`

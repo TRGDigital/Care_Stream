@@ -32,6 +32,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://carestreamai.com/sitemap.xml',
+    sitemap: 'https://www.carestreamai.com/sitemap.xml',
   }
 }

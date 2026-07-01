@@ -434,13 +434,10 @@ export function createApiClient(token: string) {
       // ── Annual training (AI catalogue) ──
       catalogue: () => apiFetch<{
         groups: Record<string, string>
-        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null }; standard_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null }; adhoc_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
+        topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null }; standard_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
       }>('/training/catalogue', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
-      // Generate the tenant's own editable adhoc (one-off) module from a standard topic.
-      generateAdhocModule: (topicId: string) =>
-        apiFetch<{ module: any }>('/training/catalogue/generate-adhoc', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       aiUsage: () => apiFetch<{ credits: { used: number; limit: number | null; remaining: number | null; resets_at: string }; queries: { used: number; limit: number | null; remaining: number | null; resets_at: string } }>('/training/ai-usage', token),
       moduleFull: (id: string) => apiFetch<{ module: any }>(`/training/modules/${id}/full`, token),
       standardModuleFull: (id: string) => apiFetch<{ module: {

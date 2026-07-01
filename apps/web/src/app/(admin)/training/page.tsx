@@ -10,6 +10,7 @@ import { persistentCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
+  Search, X,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
@@ -200,24 +201,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [assignFor,  setAssignFor]  = useState<Module | null>(null)  // individual-assign modal
   const [assignBusy, setAssignBusy] = useState<string | null>(null)  // module id during "assign all"
   const [assignMsg,  setAssignMsg]  = useState<Record<string, string>>({})
-
-  // Standard library → adhoc: the platform standard topics a tenant can spin up their
-  // own editable one-off (adhoc) version of, grounded in the standard content + their policies.
-  const [catalogue, setCatalogue] = useState<any[]>([])
-  const [genAdhoc,  setGenAdhoc]  = useState<string | null>(null)          // topic id in flight
-  const [adhocMsg,  setAdhocMsg]  = useState<Record<string, string>>({})
-  useEffect(() => { api.training.catalogue().then(d => setCatalogue(d.topics)).catch(() => {}) }, [api])
-  const standardTopics = catalogue.filter((t: any) => t.standard_module)
-  async function createAdhoc(topicId: string) {
-    setGenAdhoc(topicId); setAdhocMsg(p => ({ ...p, [topicId]: '' }))
-    try {
-      await api.training.generateAdhocModule(topicId)
-      const d = await api.training.catalogue(); setCatalogue(d.topics)
-      onAssigned()  // refresh the tenant modules list so the new module appears in the groups below
-    } catch (e: any) {
-      setAdhocMsg(p => ({ ...p, [topicId]: e?.message ?? 'Could not generate.' }))
-    } finally { setGenAdhoc(null) }
-  }
+  const [search,     setSearch]     = useState('')   // filter the (now large) adhoc module list
 
   // Staff currently assigned each module (for the "X assigned" count).
   const assignedByModule = (() => {
@@ -405,8 +389,11 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
     }
   }
 
-  const statutory  = modules.filter(m => m.category === 'statutory')
-  const specialist = modules.filter(m => m.category === 'specialist')
+  const q = search.trim().toLowerCase()
+  const matchesSearch = (m: Module) => !q || m.name.toLowerCase().includes(q)
+  const statutory  = modules.filter(m => m.category === 'statutory' && matchesSearch(m))
+  const specialist = modules.filter(m => m.category === 'specialist' && matchesSearch(m))
+  const totalMatches = statutory.length + specialist.length
 
   function renderGroup(title: string, colour: string, list: Module[]) {
     return (
@@ -633,45 +620,33 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         </div>
       </HelpAccordion>
 
-      {standardTopics.length > 0 && (
-        <section className="mb-6 rounded-xl border border-blue-200 bg-blue-50/40 p-4">
-          <div className="mb-1 flex items-center gap-2">
-            <Sparkles size={16} className="text-blue-700" />
-            <h2 className="text-sm font-semibold text-neutral-dark">Standard training library — create your own adhoc version</h2>
-          </div>
-          <p className="mb-3 text-xs text-neutral-mid">Spin up your own editable one-off (adhoc) module from any of our standard training topics. The AI grounds it in the standard content and <strong>your own policies</strong> (1 AI credit). It then appears in your modules below to edit, lock and assign.</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {standardTopics.map((t: any) => {
-              const created = !!t.adhoc_module
-              const busy    = genAdhoc === t.id
-              const msg     = adhocMsg[t.id]
-              return (
-                <div key={t.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-neutral-dark">{t.title}</p>
-                    {created
-                      ? <p className="text-[11px] font-medium text-green-600">Adhoc module created — edit it below</p>
-                      : msg
-                        ? <p className="text-[11px] text-red-600">{msg}</p>
-                        : <p className="text-[11px] text-neutral-mid">Not created yet</p>}
-                  </div>
-                  <button
-                    onClick={() => createAdhoc(t.id)}
-                    disabled={busy}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:border-blue-400 hover:bg-blue-100 disabled:opacity-50"
-                  >
-                    {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                    {busy ? 'Generating…' : created ? 'Regenerate' : 'Create adhoc module'}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        </section>
+      {/* Search — the list now includes every standard/annual topic, so make it findable. */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search training modules…"
+            className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-8 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} title="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"><X size={14} /></button>
+          )}
+        </div>
+        {search && <span className="text-xs text-neutral-mid">{totalMatches} match{totalMatches === 1 ? '' : 'es'}</span>}
+      </div>
+
+      {search && totalMatches === 0 && (
+        <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+          <Search size={28} className="mx-auto mb-2 text-gray-300" />
+          <p className="font-medium text-neutral-dark">No modules match &ldquo;{search}&rdquo;</p>
+          <p className="mt-1 text-sm text-neutral-mid">Try a different search, or clear it to see all modules.</p>
+        </div>
       )}
 
-      {renderGroup('Statutory modules', 'text-teal', statutory)}
-      {renderGroup('Specialist modules', 'text-indigo-500', specialist)}
+      {statutory.length  > 0 && renderGroup('Statutory modules', 'text-teal', statutory)}
+      {specialist.length > 0 && renderGroup('Specialist modules', 'text-indigo-500', specialist)}
 
       {assignFor && (
         <PerModuleAssignModal

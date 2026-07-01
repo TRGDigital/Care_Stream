@@ -26,6 +26,7 @@ export function UploadModal({
   const [name,     setName]     = useState('')
   const [category, setCategory] = useState('internal_policy')
   const [section,  setSection]  = useState('')
+  const [genericOnboarding, setGenericOnboarding] = useState(false)
   const [file,     setFile]     = useState<File | null>(null)
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
@@ -42,6 +43,7 @@ export function UploadModal({
     form.append('name', name || file.name.replace(/\.[^.]+$/, ''))
     form.append('document_category', category)
     if (category === 'internal_policy' && section) form.append('section', section)
+    form.append('generic_onboarding', genericOnboarding ? 'true' : 'false')
 
     const api = createApiClient(token)
     const res = await api.policies.upload(form)
@@ -101,6 +103,26 @@ export function UploadModal({
               </select>
             </div>
           )}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Generic Onboarding policy</label>
+            <div className="flex gap-2">
+              {[['No', false], ['Yes', true]].map(([label, val]) => (
+                <button
+                  key={String(label)}
+                  type="button"
+                  onClick={() => setGenericOnboarding(val as boolean)}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                    genericOnboarding === val
+                      ? 'border-amber-400 bg-amber-50 text-amber-700'
+                      : 'border-gray-300 text-neutral-mid hover:border-amber-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-neutral-mid">Set to <strong>Yes</strong> to offer this policy on the Onboarding page as a one-step read-policy flow you can allocate to staff.</p>
+          </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">
               Document (PDF, DOCX, ODT, or TXT)

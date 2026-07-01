@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap } from 'lucide-react'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -131,6 +131,16 @@ export default function PoliciesPage() {
     const api = createApiClient(session.accessToken)
     try { await api.policies.retry(id) } catch (e: any) { alert(e?.message ?? 'Retry failed.') }
     load()
+  }
+
+  async function toggleGeneric(p: any) {
+    if (!session?.accessToken) return
+    const api = createApiClient(session.accessToken)
+    const next = !p.generic_onboarding
+    // Optimistic update, then persist.
+    setPolicies(prev => prev.map(x => x.id === p.id ? { ...x, generic_onboarding: next } : x))
+    try { await api.policies.update(p.id, { generic_onboarding: next }) }
+    catch (e: any) { alert(e?.message ?? 'Update failed.'); load() }
   }
 
   async function permanentDelete(id: string, name: string) {
@@ -283,6 +293,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
+            onToggleGeneric={toggleGeneric}
           />
           <PolicyGroup
             heading="Staff Handbooks"
@@ -292,6 +303,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
+            onToggleGeneric={toggleGeneric}
           />
           <PolicyGroup
             heading="CQC Reports"
@@ -301,6 +313,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
+            onToggleGeneric={toggleGeneric}
           />
           {/* Custom categories — shown only when they actually contain documents. */}
           {Array.from(new Set(visiblePolicies.map(p => p.document_category as string)))
@@ -316,6 +329,7 @@ export default function PoliciesPage() {
                 onRetry={p => retry(p.id)}
                 onArchive={p => archive(p.id, p.name)}
                 onDelete={p => permanentDelete(p.id, p.name)}
+            onToggleGeneric={toggleGeneric}
               />
             ))}
         </div>
@@ -335,6 +349,7 @@ function PolicyGroup({
   onRetry,
   onArchive,
   onDelete,
+  onToggleGeneric,
 }: {
   heading:      string
   policies:     any[]
@@ -344,6 +359,7 @@ function PolicyGroup({
   onRetry:      (p: any) => void
   onArchive:    (p: any) => void
   onDelete:     (p: any) => void
+  onToggleGeneric: (p: any) => void
 }) {
   return (
     <div className="rounded-card bg-white shadow-card">
@@ -379,7 +395,10 @@ function PolicyGroup({
             <tbody>
               {policies.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
-                  <td className="px-6 py-4 truncate font-medium text-neutral-dark">{p.name}</td>
+                  <td className="px-6 py-4 truncate font-medium text-neutral-dark">
+                    {p.name}
+                    {p.generic_onboarding && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[10px] font-semibold text-amber-700"><GraduationCap size={9} /> Onboarding</span>}
+                  </td>
                   {showSection && (
                     <td className="px-6 py-4">
                       {p.section
@@ -403,6 +422,7 @@ function PolicyGroup({
                       onRetry={() => onRetry(p)}
                       onArchive={() => onArchive(p)}
                       onDelete={() => onDelete(p)}
+                      onToggleGeneric={() => onToggleGeneric(p)}
                     />
                   </td>
                 </tr>
@@ -423,12 +443,14 @@ function PolicyActions({
   onRetry,
   onArchive,
   onDelete,
+  onToggleGeneric,
 }: {
   policy:       any
   onNewVersion: () => void
   onRetry:      () => void
   onArchive:    () => void
   onDelete:     () => void
+  onToggleGeneric: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [pos,  setPos]  = useState({ top: 0, right: 0 })
@@ -473,6 +495,14 @@ function PolicyActions({
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
               >
                 <RotateCcw size={13} /> Retry ingestion
+              </button>
+            )}
+            {policy.status === 'active' && policy.document_category !== 'cqc_report' && (
+              <button
+                onClick={() => { setOpen(false); onToggleGeneric() }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+              >
+                <GraduationCap size={13} /> {policy.generic_onboarding ? 'Remove from onboarding' : 'Use as onboarding policy'}
               </button>
             )}
             {policy.status !== 'archived' && (

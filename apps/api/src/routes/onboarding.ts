@@ -623,3 +623,68 @@ onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => 
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
   }
 })
+
+// GET /onboarding/generic-policies — policies flagged 'generic onboarding', offered
+// on the Onboarding page as allocatable one-step read-policy flows.
+onboardingRouter.get('/generic-policies', requireAdmin, async (_req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const [policies, mine] = await Promise.all([
+      (prisma as any).policy.findMany({
+        where:   { tenant_id: tenantId, status: 'active', generic_onboarding: true },
+        select:  { id: true, name: true, document_category: true },
+        orderBy: { name: 'asc' },
+      }),
+      (prisma as any).onboardingFlow.findMany({
+        where:  { tenant_id: tenantId, NOT: { source_policy_id: null } },
+        select: { source_policy_id: true },
+      }),
+    ])
+    const adopted = new Set((mine as any[]).map(f => f.source_policy_id))
+    const available = (policies as any[]).map(p => ({
+      id: p.id, name: p.name, document_category: p.document_category,
+      already_adopted: adopted.has(p.id),
+    }))
+    res.json({ success: true, data: { policies: available } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})
+
+// POST /onboarding/generic-policies/:policyId/adopt — create a one-step read-policy
+// onboarding flow from a generic onboarding policy, so it can be enrolled to staff
+// exactly like any other flow. Idempotent: returns the existing flow if already made.
+onboardingRouter.post('/generic-policies/:policyId/adopt', requireAdmin, async (req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const policyId = String(req.params.policyId)
+    const policy = await (prisma as any).policy.findFirst({
+      where:  { id: policyId, tenant_id: tenantId, status: 'active', generic_onboarding: true },
+      select: { id: true, name: true },
+    })
+    if (!policy) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Policy not found or not flagged for onboarding' } })
+
+    const existing = await (prisma as any).onboardingFlow.findFirst({
+      where:   { tenant_id: tenantId, source_policy_id: policyId },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    })
+    if (existing) return res.json({ success: true, data: { flow: existing, already: true } })
+
+    const flow = await (prisma as any).onboardingFlow.create({
+      data: {
+        tenant_id:        tenantId,
+        name:             policy.name,
+        description:      'Read and confirm this policy as part of onboarding.',
+        job_roles:        [],
+        flow_kind:        'primary',
+        source_policy_id: policyId,
+        is_active:        true,
+        steps: { create: [{ order: 0, title: `Read the ${policy.name} policy`, type: 'read_policy', policy_id: policyId }] },
+      },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    })
+    res.json({ success: true, data: { flow, already: false } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})

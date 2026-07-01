@@ -194,6 +194,8 @@ export function createApiClient(token: string) {
         }).then(r => r.json()),
       archive: (id: string) =>
         apiFetch<any>(`/policies/${id}`, token, { method: 'DELETE' }),
+      update: (id: string, data: { generic_onboarding?: boolean }) =>
+        apiFetch<{ policy: any }>(`/policies/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       version: (id: string, formData: FormData) =>
         fetch(`${API_URL}/policies/${id}/version`, {
           method:  'POST',
@@ -374,6 +376,11 @@ export function createApiClient(token: string) {
         apiFetch<{ templates: Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }> }>('/onboarding/templates', token),
       adoptTemplate: (id: string) =>
         apiFetch<{ flow: any; unmapped: number }>(`/onboarding/templates/${id}/adopt`, token, { method: 'POST' }),
+      // Generic onboarding policies → allocatable one-step read-policy flows.
+      listGenericPolicies: () =>
+        apiFetch<{ policies: Array<{ id: string; name: string; document_category: string; already_adopted: boolean }> }>('/onboarding/generic-policies', token),
+      adoptGenericPolicy: (policyId: string) =>
+        apiFetch<{ flow: any; already: boolean }>(`/onboarding/generic-policies/${policyId}/adopt`, token, { method: 'POST' }),
       createFlow: (data: { name: string; description?: string; job_roles?: string[]; steps?: Array<{ title: string; type: string; policy_id?: string; policy_section?: string | null; question?: string; options?: string[]; correct_option?: number | null }> }) =>
         apiFetch<{ flow: any }>('/onboarding/flows', token, { method: 'POST', body: JSON.stringify(data) }),
       updateFlow: (id: string, data: { name?: string; description?: string; job_roles?: string[]; is_active?: boolean; steps?: Array<{ title: string; type: string; policy_id?: string; policy_section?: string | null; question?: string; options?: string[]; correct_option?: number | null }> }) =>

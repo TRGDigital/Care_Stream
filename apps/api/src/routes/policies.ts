@@ -24,6 +24,7 @@ const UploadSchema = z.object({
   tags:                z.string().optional(),                           // JSON array string
   section:             z.string().max(100).optional(),                 // internal-policy section
   review_interval_days: z.coerce.number().int().min(1).optional(),
+  generic_onboarding:  z.string().optional(),                          // 'true' → allocatable as a one-step onboarding flow
 })
 
 // Resolve the tenant's custom categories and confirm the submitted category is
@@ -152,7 +153,8 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     return
   }
 
-  const { name, document_category, tags: rawTags, section, review_interval_days } = parsed.data
+  const { name, document_category, tags: rawTags, section, review_interval_days, generic_onboarding } = parsed.data
+  const isGenericOnboarding = generic_onboarding === 'true'
   const tenantId = req.user!.tenant_id
   const policyId = uuidv4()
 
@@ -201,6 +203,7 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
           status:              'processing',
           content_hash:        sha256(req.file!.buffer),
           section:             document_category === 'internal_policy' ? (section?.trim() || null) : null,
+          generic_onboarding:  isGenericOnboarding,
           tags:                parseTags(rawTags),
           uploaded_by:         req.user!.sub,
           review_interval_days: review_interval_days ?? null,
@@ -231,6 +234,21 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     err(res, 'UPLOAD_FAILED', 'Policy upload failed. Check server logs.', 500)
     return
   }
+})
+
+// ─── PATCH /policies/:id ──────────────────────────────────────────────────────
+// Update editable policy flags — currently the "generic onboarding policy" flag,
+// which controls whether this policy is offered on the Onboarding page as an
+// allocatable one-step read-policy flow.
+policiesRouter.patch('/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const existing = await (prisma as any).policy.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+  const data: Record<string, any> = {}
+  if (typeof req.body?.generic_onboarding === 'boolean') data.generic_onboarding = req.body.generic_onboarding
+  if (Object.keys(data).length === 0) { err(res, 'NO_CHANGES', 'Nothing to update', 400); return }
+  const policy = await (prisma as any).policy.update({ where: { id: existing.id }, data })
+  ok(res, { policy })
 })
 
 // ─── POST /policies/:id/version ───────────────────────────────────────────────

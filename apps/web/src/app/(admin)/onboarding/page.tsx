@@ -238,7 +238,9 @@ export default function OnboardingPage() {
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }>>([])
+  const [genericPolicies, setGenericPolicies] = useState<Array<{ id: string; name: string; document_category: string; already_adopted: boolean }>>([])
   const [adoptingId, setAdoptingId] = useState<string | null>(null)
+  const [adoptingPolicyId, setAdoptingPolicyId] = useState<string | null>(null)
   const [adoptNote, setAdoptNote] = useState('')
   const [tab, setTab] = useState<'active' | 'ready'>('active')
 
@@ -247,12 +249,14 @@ export default function OnboardingPage() {
   async function load() {
     if (!api) return
     try {
-      const [d, t] = await Promise.all([
+      const [d, t, gp] = await Promise.all([
         api.onboarding.listFlows(),
         api.onboarding.listTemplates().catch(() => ({ templates: [] })),
+        api.onboarding.listGenericPolicies().catch(() => ({ policies: [] })),
       ])
       setFlows(d.flows)
       setTemplates(t.templates)
+      setGenericPolicies(gp.policies)
       persistentCache.set(`admin-onboarding-${userId}`, d.flows)
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
@@ -273,6 +277,16 @@ export default function OnboardingPage() {
       )
       await load()
     } catch (e: any) { setError(e.message ?? 'Could not adopt template') } finally { setAdoptingId(null) }
+  }
+
+  async function adoptGenericPolicy(policyId: string) {
+    if (!api) return
+    setAdoptingPolicyId(policyId); setError(''); setAdoptNote('')
+    try {
+      const { flow } = await api.onboarding.adoptGenericPolicy(policyId)
+      setAdoptNote(`Added "${flow.name}" as a one-step onboarding flow. Open it in Active flows to enrol staff.`)
+      await load()
+    } catch (e: any) { setError(e.message ?? 'Could not add the policy') } finally { setAdoptingPolicyId(null) }
   }
 
   useEffect(() => {
@@ -337,7 +351,7 @@ export default function OnboardingPage() {
 
       {/* Tabs */}
       <div className="mb-5 flex gap-6 border-b border-gray-200">
-        {([['active', 'Active flows', flows.length], ['ready', 'Ready-made flows', templates.length]] as const).map(([key, label, count]) => (
+        {([['active', 'Active flows', flows.length], ['ready', 'Ready-made flows', templates.length + genericPolicies.length]] as const).map(([key, label, count]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -351,11 +365,13 @@ export default function OnboardingPage() {
 
       {/* Ready-made flows from CareStream */}
       {tab === 'ready' && (
-        templates.length === 0 ? (
+        templates.length === 0 && genericPolicies.length === 0 ? (
           <div className="rounded-card border border-gray-100 bg-white px-5 py-10 text-center text-sm text-neutral-mid shadow-card">
             No ready-made flows are available right now.
           </div>
         ) : (
+          <div className="space-y-5">
+          {templates.length > 0 && (
           <div className="rounded-card border border-gray-100 bg-white shadow-card">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-neutral-dark">Ready-made onboarding flows</h2>
@@ -384,6 +400,41 @@ export default function OnboardingPage() {
                 </div>
               ))}
             </div>
+          </div>
+          )}
+
+          {/* Generic onboarding policies — your own policies flagged for onboarding (amber, to set them apart). */}
+          {genericPolicies.length > 0 && (
+          <div className="rounded-card border border-amber-200 bg-white shadow-card">
+            <div className="border-b border-amber-100 bg-amber-50/50 px-5 py-4">
+              <h2 className="text-sm font-semibold text-neutral-dark">Generic onboarding policies</h2>
+              <p className="mt-0.5 text-xs text-neutral-mid">Your own policies flagged as <strong>Generic Onboarding</strong>. Add one as a simple <strong>read-and-confirm</strong> onboarding flow, then enrol staff from <strong>Active flows</strong>.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+              {genericPolicies.map(p => (
+                <div key={p.id} className="flex flex-col rounded-lg border border-amber-200 bg-amber-50/30 p-4">
+                  <div className="mb-1 flex items-center gap-2">
+                    <p className="font-semibold text-neutral-dark">{p.name}</p>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Policy</span>
+                  </div>
+                  <p className="mb-3 flex-1 text-xs text-neutral-mid">One step · read &amp; confirm this policy</p>
+                  {p.already_adopted ? (
+                    <span className="flex items-center justify-center gap-1.5 rounded-md bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700"><CheckCircle2 size={12} /> Added</span>
+                  ) : (
+                    <button
+                      onClick={() => adoptGenericPolicy(p.id)}
+                      disabled={adoptingPolicyId === p.id}
+                      className="flex items-center justify-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                    >
+                      {adoptingPolicyId === p.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                      {adoptingPolicyId === p.id ? 'Adding…' : 'Add as onboarding flow'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
           </div>
         )
       )}

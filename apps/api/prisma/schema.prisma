@@ -301,6 +301,7 @@ model Policy {
   status               String    @default("processing")   // active|processing|archived|superseded
   content_hash         String?                              // SHA-256 of file bytes — duplicate detection
   section              String?                              // internal-policy section/taxonomy (tenant-configurable)
+  generic_onboarding   Boolean   @default(false)             // flagged as a generic onboarding policy → allocatable as a one-step onboarding flow
   tags                 Json      @default("[]")
   uploaded_by          String
   pinecone_namespace   String?                             // active Pinecone namespace for this version
@@ -1011,6 +1012,7 @@ model OnboardingFlow {
   care_setting   String?                                   // nursing_home | care_home | … ; NULL = all settings
   difficulties   String[]             @default([])         // very_easy | easy | medium | hard — fed into AI question generation
   source_flow_id String?                                   // for a tenant copy: the platform template it was adopted from
+  source_policy_id String?                                 // for a one-step flow adopted from a 'generic onboarding' policy
   is_active      Boolean              @default(true)
   created_at     DateTime             @default(now())
   updated_at     DateTime             @updatedAt
@@ -1019,6 +1021,7 @@ model OnboardingFlow {
   enrollments    OnboardingEnrollment[]
 
   @@index([tenant_id, is_active])
+  @@index([source_policy_id])
   @@map("onboarding_flows")
 }
 

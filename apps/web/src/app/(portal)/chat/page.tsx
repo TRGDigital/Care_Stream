@@ -1596,7 +1596,7 @@ function MessageBubble({
                 )
               })}
 
-              {!fullPolicyRequested && (
+              {!fullPolicyRequested && (msg.citations?.length ?? 0) > 0 && (
                 <button
                   onClick={onRequestFullPolicy}
                   className="rounded-full border border-orange-400 px-3 py-1.5 text-left text-xs text-orange-600 transition-colors hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1"

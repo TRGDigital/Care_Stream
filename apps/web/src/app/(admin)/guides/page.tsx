@@ -456,6 +456,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             An onboarding flow is a guided induction for new staff, an ordered checklist of steps they work through when they join. Each step is either a <strong>policy to read</strong> (so they confirm they've seen a key document) or a <strong>question to answer</strong>. New starters complete their flow from the staff portal, and you can track who has finished.
           </p>
+          <p className="mt-2 text-sm text-neutral-mid">There are <strong>three ways</strong> to get a flow:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">CareStream ready-made role flows</strong> (teal) — full inductions for common roles, mapped to your own policies when you adopt them.</li>
+            <li><strong className="text-neutral-dark">Generic onboarding policies</strong> (amber) — one of your own policies flagged for onboarding, added as a one-step read-and-confirm flow.</li>
+            <li><strong className="text-neutral-dark">Build your own</strong> — a flow you create from scratch with read and question steps.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">The sections below cover each, and the &ldquo;Not ready&rdquo; state that stops you enrolling staff on a flow that still has an unlinked read step.</p>
         </SectionBlock>
         <SectionBlock title="Ready-made flows (the quickest way to start)">
           <p className="text-sm text-neutral-mid">

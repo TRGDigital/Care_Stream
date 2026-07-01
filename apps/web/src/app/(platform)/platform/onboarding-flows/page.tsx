@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type OnboardingTemplate, type OnboardingTemplateStep } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen } from 'lucide-react'
+import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen, X } from 'lucide-react'
 
 // Standard policy sections (mirrors api DEFAULT_POLICY_SECTIONS) for the step dropdowns.
 const SECTIONS = [
@@ -49,7 +49,10 @@ export default function OnboardingFlowsPage() {
   const [busy,    setBusy]    = useState<string | null>(null)   // flowId currently mutating
   const [openId,  setOpenId]  = useState<string | null>(null)
   const [seeding, setSeeding] = useState(false)
+  const [note,    setNote]    = useState('')
   const [settingTab, setSettingTab] = useState('nursing-homes')
+  const [showNew, setShowNew] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   function load() {
     if (!token) return
@@ -66,11 +69,29 @@ export default function OnboardingFlowsPage() {
 
   async function seedRoles() {
     if (!token) return
-    setSeeding(true); setError('')
+    setSeeding(true); setError(''); setNote('')
     try {
-      await createPlatformClient(token).onboardingTemplates.seedRoles(settingTab || undefined)
+      const { created } = await createPlatformClient(token).onboardingTemplates.seedRoles(settingTab || undefined)
+      setNote(created > 0
+        ? `Created ${created} standard role template${created === 1 ? '' : ''} for ${settingLabel(settingTab)}. Draft each with AI, review, then activate.`
+        : `All standard role templates already exist for ${settingLabel(settingTab)} — nothing new to add.`)
       load()
     } catch (e: any) { setError(e.message) } finally { setSeeding(false) }
+  }
+
+  async function createTemplate(data: { name: string; flow_kind: string; care_setting: string; job_roles: string[]; difficulties: string[] }) {
+    if (!token) return
+    setCreating(true); setError(''); setNote('')
+    try {
+      const { flow } = await createPlatformClient(token).onboardingTemplates.create({
+        name: data.name, flow_kind: data.flow_kind, care_setting: data.care_setting || null,
+        job_roles: data.job_roles, difficulties: data.difficulties,
+      })
+      setShowNew(false)
+      setSettingTab(data.care_setting || '')     // jump to the setting it was created under
+      setNote(`Created "${flow.name}". Draft its steps with AI, review, then activate so tenants can adopt it.`)
+      load()
+    } catch (e: any) { setError(e.message) } finally { setCreating(false) }
   }
 
   async function aiDraft(f: OnboardingTemplate, keep?: OnboardingTemplateStep[]) {
@@ -124,13 +145,20 @@ export default function OnboardingFlowsPage() {
               Shared induction templates. Draft each with AI, review the steps, then activate so tenants can adopt them.
             </p>
           </div>
-          <button onClick={seedRoles} disabled={seeding}
-            className="flex shrink-0 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
-            {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create role templates{settingTab ? ` (${settingLabel(settingTab)})` : ''}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button onClick={seedRoles} disabled={seeding}
+              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal disabled:opacity-50">
+              {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create role templates{settingTab ? ` (${settingLabel(settingTab)})` : ''}
+            </button>
+            <button onClick={() => setShowNew(true)}
+              className="flex items-center gap-2 rounded-md bg-teal px-3 py-2 text-sm font-medium text-white hover:bg-teal-dark">
+              <Plus size={14} /> New template
+            </button>
+          </div>
         </div>
 
         {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {note && <div className="rounded-md border border-teal/30 bg-teal-light/30 px-4 py-3 text-sm text-teal-dark">{note}</div>}
 
         {/* Care-setting tabs */}
         <div className="flex gap-1 border-b border-gray-200">
@@ -158,7 +186,81 @@ export default function OnboardingFlowsPage() {
           </>
         )}
       </div>
+
+      {showNew && (
+        <NewTemplateModal
+          defaultSetting={settingTab}
+          creating={creating}
+          onClose={() => setShowNew(false)}
+          onCreate={createTemplate}
+        />
+      )}
     </PlatformShell>
+  )
+}
+
+// ─── New template modal ───────────────────────────────────────────────────────
+function NewTemplateModal({ defaultSetting, creating, onClose, onCreate }: {
+  defaultSetting: string
+  creating: boolean
+  onClose: () => void
+  onCreate: (d: { name: string; flow_kind: string; care_setting: string; job_roles: string[]; difficulties: string[] }) => void
+}) {
+  const [name, setName]         = useState('')
+  const [kind, setKind]         = useState('primary')
+  const [setting, setSetting]   = useState(defaultSetting || '')
+  const [diffs, setDiffs]       = useState<string[]>([])
+
+  const toggleDiff = (v: string) => setDiffs(prev => prev.includes(v) ? prev.filter(d => d !== v) : [...prev, v])
+  const canSave = name.trim().length > 0
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-neutral-dark">New onboarding template</h2>
+          <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Template name (the role or specialism)</label>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Activities Coordinator" className={`${INPUT} mb-3`} />
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Type</label>
+        <div className="mb-3 flex gap-2">
+          {[['primary', 'Primary (job role)'], ['secondary', 'Secondary (specialism)']].map(([v, label]) => (
+            <button key={v} type="button" onClick={() => setKind(v)}
+              className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${kind === v ? 'border-teal bg-teal/10 text-teal' : 'border-gray-300 text-neutral-mid hover:border-teal/40'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Care setting</label>
+        <select value={setting} onChange={e => setSetting(e.target.value)} className={`${INPUT} mb-1`}>
+          {SETTINGS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+        <p className="mb-3 text-xs text-neutral-mid">Tenants of this setting (plus &ldquo;All settings&rdquo;) will see it once you activate it.</p>
+
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Question difficulty (optional)</label>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {DIFFICULTIES.map(d => (
+            <button key={d.value} type="button" onClick={() => toggleDiff(d.value)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${diffs.includes(d.value) ? 'border-teal bg-teal/10 text-teal' : 'border-gray-300 text-neutral-mid hover:border-teal/40'}`}>
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border border-gray-300 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light">Cancel</button>
+          <button onClick={() => onCreate({ name: name.trim(), flow_kind: kind, care_setting: setting, job_roles: name.trim() ? [name.trim()] : [], difficulties: diffs })}
+            disabled={!canSave || creating}
+            className="inline-flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+            {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create template
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

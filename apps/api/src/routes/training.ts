@@ -78,24 +78,50 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     const setting = facilityTypeToSetting(tenant?.facility_type)
     const settingOr = [{ care_setting: null }, { care_setting: setting }]
     const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true, created_at: true }
-    const [topics, modules, standard] = await Promise.all([
+    const [topics, modules, standard, hidden] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
       // Platform standard library — published modules shared to all tenants, scoped to this tenant's setting (+ universal).
       (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: sel }),
+      // This tenant's archived topics — hidden from their Annual list, restorable anytime.
+      (prisma as any).trainingTopicHidden.findMany({ where: { tenant_id: tenantId }, select: { topic_id: true } }),
     ])
     const slim = (m: any) => ({ ...m, illustration_url: illustrationUrl(m.illustration_key), question_count: Array.isArray(m.questions) ? m.questions.length : 0, questions: undefined })
     const moduleByTopic = new Map<string, any>()
     for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, slim(m)) }
     const standardByTopic = new Map<string, any>()
     for (const m of (standard as any[])) { if (m.topic_id) standardByTopic.set(m.topic_id, slim(m)) }
+    const hiddenIds = new Set((hidden as any[]).map(h => h.topic_id))
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
-      topics: (topics as any[]).map(t => ({ ...t, module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, archived: hiddenIds.has(t.id), module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null })),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }
+})
+
+// POST /training/catalogue/topics/:id/archive  body { archived: boolean }
+// Per-tenant: hide (archive) or restore an annual-training topic on this tenant's catalogue.
+trainingRouter.post('/catalogue/topics/:id/archive', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const topicId  = req.params.id
+  const archived = req.body?.archived !== false   // default true (archive)
+  try {
+    // Confirm the topic is one this tenant can actually see (their own or a universal/setting seed).
+    const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true } })
+    if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
+    if (archived) {
+      await (prisma as any).trainingTopicHidden.upsert({
+        where:  { tenant_id_topic_id: { tenant_id: tenantId, topic_id: topicId } },
+        create: { tenant_id: tenantId, topic_id: topicId },
+        update: {},
+      })
+    } else {
+      await (prisma as any).trainingTopicHidden.deleteMany({ where: { tenant_id: tenantId, topic_id: topicId } })
+    }
+    ok(res, { topic_id: topicId, archived })
+  } catch (e: any) { err(res, 'ARCHIVE_FAILED', e.message, 500) }
 })
 
 // GET /training/ai-usage — AI credits + queries used this month vs plan limits

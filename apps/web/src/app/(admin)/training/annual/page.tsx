@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users, Eye,
   Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
+  Archive, RotateCcw,
 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
@@ -27,6 +28,17 @@ export default function AnnualTrainingPage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [usage,   setUsage]   = useState<{ used: number; limit: number | null; remaining: number | null; resets_at: string } | null>(null)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
+  const [topicView,     setTopicView]     = useState<'live' | 'archived'>('live')
+  const [archivingTopic, setArchivingTopic] = useState<string | null>(null)
+
+  async function setTopicArchived(topicId: string, archived: boolean) {
+    if (!api) return
+    setArchivingTopic(topicId)
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, archived } : t))   // optimistic
+    try { await api.training.setTopicArchived(topicId, archived) }
+    catch { setTopics(prev => prev.map(t => t.id === topicId ? { ...t, archived: !archived } : t)) }
+    finally { setArchivingTopic(null) }
+  }
 
   function load() {
     if (!api) return
@@ -52,7 +64,10 @@ export default function AnnualTrainingPage() {
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
   if (view.mode === 'view'   && api) return <ViewStandardModule api={api} id={view.id} name={view.name} onBack={() => setView({ mode: 'list' })} />
 
-  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g) })).filter(g => g.items.length)
+  const liveCount     = topics.filter(t => !t.archived).length
+  const archivedCount = topics.filter(t =>  t.archived).length
+  const inView = (t: any) => topicView === 'archived' ? !!t.archived : !t.archived
+  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g && inView(t)) })).filter(g => g.items.length)
   const byGroupEmpty = byGroup.length === 0
 
   return (
@@ -95,6 +110,29 @@ export default function AnnualTrainingPage() {
         )}
       </div>
 
+      {/* Live / Archived — keep only the topics relevant to this service live, archive the rest. */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
+          {([['live', 'Live', liveCount], ['archived', 'Archived', archivedCount]] as const).map(([key, label, count]) => (
+            <button
+              key={key}
+              onClick={() => setTopicView(key)}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors ${
+                topicView === key ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid hover:text-neutral-dark'
+              }`}
+            >
+              {label}
+              <span className={`rounded-full px-1.5 text-xs ${topicView === key ? 'bg-teal/10 text-teal' : 'bg-gray-200 text-neutral-mid'}`}>{count}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-neutral-mid">
+          {topicView === 'live'
+            ? 'Archive topics your service doesn’t need to keep this list focused. Archived topics stay out of the way and can be restored anytime.'
+            : 'These topics are hidden from your Annual list. Restore any to move it back into Live.'}
+        </p>
+      </div>
+
       {error && (
         <div className="mb-4 rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p className="font-medium">Couldn&apos;t load the catalogue.</p>
@@ -103,7 +141,11 @@ export default function AnnualTrainingPage() {
         </div>
       )}
       {!loading && !error && byGroupEmpty && (
-        <div className="rounded-card border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-neutral-mid">No training topics found.</div>
+        <div className="rounded-card border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-neutral-mid">
+          {topicView === 'archived'
+            ? 'No archived topics. Archive a topic from the Live tab to hide it from this list without losing it.'
+            : archivedCount > 0 ? 'All topics are archived. Switch to Archived to restore any.' : 'No training topics found.'}
+        </div>
       )}
       {loading ? (
         <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-card bg-gray-100" />)}</div>
@@ -136,33 +178,53 @@ export default function AnnualTrainingPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {!m && (
+                        {topicView === 'archived' ? (
+                          <button
+                            onClick={() => setTopicArchived(t.id, false)}
+                            disabled={archivingTopic === t.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-50"
+                          >
+                            {archivingTopic === t.id ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />} Restore
+                          </button>
+                        ) : (
                           <>
-                            {t.standard_module && (
-                              <button onClick={() => setView({ mode: 'view', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
-                                <Eye size={12} /> View training
-                              </button>
+                            {!m && (
+                              <>
+                                {t.standard_module && (
+                                  <button onClick={() => setView({ mode: 'view', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                                    <Eye size={12} /> View training
+                                  </button>
+                                )}
+                                {t.standard_module && (
+                                  <button onClick={() => setView({ mode: 'assign', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                                    <Users size={12} /> Assign standard
+                                  </button>
+                                )}
+                                <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
+                                  {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
+                                </Button>
+                              </>
                             )}
-                            {t.standard_module && (
-                              <button onClick={() => setView({ mode: 'assign', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
-                                <Users size={12} /> Assign standard
-                              </button>
+                            {m && (
+                              <>
+                                <button onClick={() => setView({ mode: 'review', id: m.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                                  <Pencil size={12} /> {m.approved ? 'Edit' : 'Review'}
+                                </button>
+                                {m.approved && (
+                                  <button onClick={() => setView({ mode: 'assign', id: m.id, name: m.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                                    <Users size={12} /> Assign
+                                  </button>
+                                )}
+                              </>
                             )}
-                            <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
-                              {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
-                            </Button>
-                          </>
-                        )}
-                        {m && (
-                          <>
-                            <button onClick={() => setView({ mode: 'review', id: m.id })} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
-                              <Pencil size={12} /> {m.approved ? 'Edit' : 'Review'}
+                            <button
+                              onClick={() => setTopicArchived(t.id, true)}
+                              disabled={archivingTopic === t.id}
+                              title="Archive this topic (hide it from your Annual list; you can restore it later)"
+                              className="rounded-md p-1.5 text-neutral-mid transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
+                            >
+                              {archivingTopic === t.id ? <Loader2 size={14} className="animate-spin" /> : <Archive size={14} />}
                             </button>
-                            {m.approved && (
-                              <button onClick={() => setView({ mode: 'assign', id: m.id, name: m.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
-                                <Users size={12} /> Assign
-                              </button>
-                            )}
                           </>
                         )}
                       </div>

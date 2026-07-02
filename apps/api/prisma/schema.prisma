@@ -552,6 +552,19 @@ model TrainingTopic {
   @@map("training_topics")
 }
 
+// Per-tenant archived annual-training topics — hides a catalogue topic from THIS
+// tenant's Annual Training list without affecting the shared catalogue or others.
+model TrainingTopicHidden {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  topic_id   String
+  created_at DateTime @default(now())
+
+  @@unique([tenant_id, topic_id])
+  @@index([tenant_id])
+  @@map("training_topic_hidden")
+}
+
 model TrainingSeed {
   id                       String    @id @default(uuid())
   slug                     String    @unique               // e.g. 'safeguarding-adults'

@@ -468,13 +468,19 @@ export default function OnboardingPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {flows.map(flow => {
-          const done  = flow.enrollments.filter(e => e.completed_at).length
-          const total = flow.enrollments.length
-          const unmappedReads = flow.steps.filter((s: any) => s.type === 'read_policy' && !s.policy_id).length
+          const enrollments = flow.enrollments ?? []
+          const done  = enrollments.filter(e => e.completed_at).length
+          const total = enrollments.length
+          const unmappedReads = (flow.steps ?? []).filter((s: any) => s.type === 'read_policy' && !s.policy_id).length
+          // A flow built by the tenant (not adopted from a template or generic policy).
+          const isCustom = !flow.source_flow_id && !flow.source_policy_id
           return (
             <div
               key={flow.id}
-              className={`rounded-card border bg-white shadow-card transition-all ${selected?.id === flow.id ? 'border-teal ring-1 ring-teal' : 'border-gray-100'}`}
+              className={`rounded-card border bg-white shadow-card transition-all ${
+                selected?.id === flow.id ? 'border-teal ring-1 ring-teal'
+                : isCustom ? 'border-violet-300'
+                : 'border-gray-100'}`}
             >
               <div className="flex items-start justify-between px-5 py-4">
                 <div className="flex-1 min-w-0">
@@ -483,6 +489,9 @@ export default function OnboardingPage() {
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${flow.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {flow.is_active ? 'Active' : 'Paused'}
                     </span>
+                    {isCustom && (
+                      <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700" title="A flow you built yourself, rather than a CareStream ready-made or generic policy flow">Custom</span>
+                    )}
                     {unmappedReads > 0 && (
                       <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700" title="Some 'read policy' steps aren't linked to a policy. Map them (or upload the policy) before enrolling staff.">
                         Not ready · {unmappedReads} step{unmappedReads !== 1 ? 's' : ''} need a policy
@@ -543,11 +552,14 @@ export default function OnboardingPage() {
           initial={selected}
           onClose={() => setShowForm(false)}
           onSaved={(flow) => {
+            // The create/update response may omit enrollments/steps; default them
+            // so the flow card (which reads flow.enrollments/steps) never crashes.
+            const safe = { ...flow, enrollments: flow.enrollments ?? [], steps: flow.steps ?? [] }
             setFlows(prev => {
-              const idx = prev.findIndex(f => f.id === flow.id)
-              return idx >= 0 ? prev.map(f => f.id === flow.id ? flow : f) : [flow, ...prev]
+              const idx = prev.findIndex(f => f.id === safe.id)
+              return idx >= 0 ? prev.map(f => f.id === safe.id ? safe : f) : [safe, ...prev]
             })
-            setSelected(flow)
+            setSelected(safe)
             setShowForm(false)
           }}
         />

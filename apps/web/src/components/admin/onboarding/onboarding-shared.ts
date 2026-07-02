@@ -18,4 +18,8 @@ export type Flow = {
   is_active: boolean
   steps: Array<Step & { id: string; order: number }>
   enrollments: Array<{ id: string; completed_at: string | null }>
+  // Origin: adopted from a CareStream template, from a generic policy, or (both
+  // null) built by the tenant themselves.
+  source_flow_id?: string | null
+  source_policy_id?: string | null
 }

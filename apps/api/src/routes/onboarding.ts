@@ -142,7 +142,10 @@ onboardingRouter.post('/flows', requireAdmin, async (req, res) => {
           })),
         } : undefined,
       },
-      include: { steps: { orderBy: { order: 'asc' } } },
+      include: {
+        steps:       { orderBy: { order: 'asc' } },
+        enrollments: { select: { id: true, completed_at: true } },
+      },
     })
     res.json({ success: true, data: { flow } })
   } catch (e: any) {
@@ -180,16 +183,22 @@ onboardingRouter.patch('/flows/:id', requireAdmin, async (req, res) => {
         ...(steps !== undefined && {
           steps: {
             create: (steps as any[]).map((s, i) => ({
-              order:     i,
-              title:     s.title,
-              type:      s.type,
-              policy_id: s.policy_id ?? null,
-              question:  s.question  ?? null,
+              order:          i,
+              title:          s.title,
+              type:           s.type,
+              policy_id:      s.policy_id ?? null,
+              policy_section: s.policy_section ?? null,
+              question:       s.question  ?? null,
+              options:        Array.isArray(s.options) ? s.options.map((o: any) => String(o)) : [],
+              correct_option: typeof s.correct_option === 'number' ? s.correct_option : null,
             })),
           },
         }),
       },
-      include: { steps: { orderBy: { order: 'asc' } } },
+      include: {
+        steps:       { orderBy: { order: 'asc' } },
+        enrollments: { select: { id: true, completed_at: true } },
+      },
     })
     res.json({ success: true, data: { flow } })
   } catch (e: any) {

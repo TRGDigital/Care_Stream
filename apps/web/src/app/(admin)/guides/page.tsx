@@ -504,6 +504,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Add steps, a policy to read, or a question. When you add a <strong>read policy</strong> step, start typing the policy name and pick it from the list of your uploaded policies. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
             <Step n={3}>Make sure the flow is <strong>active</strong>: only active flows are assigned to new starters.</Step>
           </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            Flows you build yourself are marked <strong>Custom</strong> with a violet outline in <strong>Active flows</strong>, so you can tell them apart from CareStream ready-made flows and generic policy flows at a glance.
+          </p>
         </SectionBlock>
         <SectionBlock title="Generate questions from a policy with AI">
           <p className="text-sm text-neutral-mid">

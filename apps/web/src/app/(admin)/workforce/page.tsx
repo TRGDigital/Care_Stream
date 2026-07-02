@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
+import { SupervisionsView } from '@/components/admin/workforce/supervisions-view'
 import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail } from 'lucide-react'
 
 type Register = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['register']>>
@@ -59,6 +60,7 @@ export default function WorkforcePage() {
   const [data, setData] = useState<Register | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<StaffRow | null>(null)
+  const [tab, setTab] = useState<'credentials' | 'supervisions'>('credentials')
   const [alertState, setAlertState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [alertMsg, setAlertMsg] = useState('')
 
@@ -117,18 +119,33 @@ export default function WorkforcePage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-neutral-dark">Workforce compliance</h1>
-          <p className="mt-0.5 text-sm text-neutral-mid">Safe-recruitment credentials for every staff member. Click a row to record or update their credentials.</p>
+          <p className="mt-0.5 text-sm text-neutral-mid">Safe-recruitment credentials, supervisions and appraisals for every staff member.</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <button onClick={sendAlerts} disabled={alertState === 'sending'}
-            title="Email your admins a digest of credentials that are expired or expiring within 30 days"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
-            {alertState === 'sending' ? <><Loader2 size={13} className="animate-spin" /> Sending…</> : <><Mail size={13} /> Email expiry alerts</>}
-          </button>
-          {alertMsg && <p className={`max-w-[16rem] text-right text-xs ${alertState === 'error' ? 'text-red-600' : 'text-neutral-mid'}`}>{alertMsg}</p>}
-        </div>
+        {tab === 'credentials' && (
+          <div className="flex flex-col items-end gap-1">
+            <button onClick={sendAlerts} disabled={alertState === 'sending'}
+              title="Email your admins a digest of credentials that are expired or expiring within 30 days"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+              {alertState === 'sending' ? <><Loader2 size={13} className="animate-spin" /> Sending…</> : <><Mail size={13} /> Email expiry alerts</>}
+            </button>
+            {alertMsg && <p className={`max-w-[16rem] text-right text-xs ${alertState === 'error' ? 'text-red-600' : 'text-neutral-mid'}`}>{alertMsg}</p>}
+          </div>
+        )}
       </div>
 
+      {/* Tabs */}
+      <div className="flex w-fit gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1">
+        {([['credentials', 'Credentials'], ['supervisions', 'Supervisions & appraisals']] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${tab === key ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid hover:text-neutral-dark'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'supervisions' && session?.accessToken && <SupervisionsView token={session.accessToken} />}
+
+      {tab === 'credentials' && (<>
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <SummaryCard label="Valid"        value={s.valid}    cls="text-green-600" Icon={CheckCircle2} />
@@ -183,6 +200,7 @@ export default function WorkforcePage() {
           <span className="flex items-center gap-1.5"><span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-red-600">Expired / Missing</span> action needed</span>
         </div>
       </div>
+      </>)}
 
       {editing && session?.accessToken && (
         <EditStaffModal token={session.accessToken} staff={editing} onClose={() => setEditing(null)} onSaved={load} />

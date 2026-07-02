@@ -65,6 +65,7 @@ const PLANS = [
       'Audits linked to training + Training Impact',
       'Multi-site group console and benchmarking',
       'Workforce compliance register (DBS, right to work, registration, references)',
+      'Supervisions and appraisals tracking',
       'Priority support and a dedicated manager',
     ],
   },
@@ -129,6 +130,8 @@ const MATRIX: Group[] = [
     rows: [
       { label: 'Multi-site group console and benchmarking', values: [false, false, true] },
       { label: 'Workforce compliance register (DBS, right to work, registration, references)', values: [false, false, true] },
+      { label: 'Credential document uploads + expiry alerts', values: [false, false, true] },
+      { label: 'Supervisions and appraisals tracking', values: [false, false, true] },
     ],
   },
   {

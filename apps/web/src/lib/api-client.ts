@@ -51,6 +51,10 @@ export interface Credential {
   document:   { name: string; type: string; size: number; uploaded_at: string } | null
 }
 
+// Supervision / appraisal: the derived latest+next cell, and a full record.
+export interface SupCell { last_on: string | null; conducted_by: string | null; next_due: string | null; status: string }
+export interface SupRecord { id: string; type: string; held_on: string; conducted_by: string | null; next_due: string | null; notes: string | null }
+
 export interface Citation {
   policy_id:         string
   policy_name:       string
@@ -425,6 +429,18 @@ export function createApiClient(token: string) {
       },
       deleteDocument: (userId: string, type: string) =>
         apiFetch<{ deleted: boolean }>(`/workforce/staff/${userId}/credentials/${type}/document`, token, { method: 'DELETE' }),
+      supervisions: () =>
+        apiFetch<{
+          types: string[]; total_staff: number
+          summary: { supervisions_overdue: number; appraisals_overdue: number; no_supervision: number; no_appraisal: number }
+          staff: Array<{ id: string; name: string; job_role: string | null; supervision: SupCell; appraisal: SupCell }>
+        }>('/workforce/supervisions', token),
+      staffSupervisions: (userId: string) =>
+        apiFetch<{ user: { id: string; name: string; job_role: string | null }; records: SupRecord[] }>(`/workforce/staff/${userId}/supervisions`, token),
+      addSupervision: (userId: string, data: { type: string; held_on: string; conducted_by?: string; next_due?: string | null; notes?: string }) =>
+        apiFetch<{ record: SupRecord }>(`/workforce/staff/${userId}/supervisions`, token, { method: 'POST', body: JSON.stringify(data) }),
+      deleteSupervision: (id: string) =>
+        apiFetch<{ deleted: boolean }>(`/workforce/supervisions/${id}`, token, { method: 'DELETE' }),
     },
 
     onboarding: {

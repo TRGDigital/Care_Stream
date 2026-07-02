@@ -219,3 +219,78 @@ workforceRouter.delete('/staff/:userId/credentials/:type/document', async (req: 
   }
   ok(res, { deleted: true })
 })
+
+// ─── Supervisions & appraisals ─────────────────────────────────────────────────
+
+const SUPERVISION_TYPES = ['supervision', 'appraisal'] as const
+
+// Status of a supervision/appraisal from its next-due date.
+function superStatus(nextDue: Date | null, hasRecord: boolean): string {
+  if (!hasRecord) return 'none'
+  if (!nextDue) return 'ok'
+  const ms = new Date(nextDue).getTime() - Date.now()
+  if (ms < 0) return 'overdue'
+  return ms <= 30 * 86_400_000 ? 'due_soon' : 'ok'
+}
+
+// GET /workforce/supervisions — per staff, the latest + next-due supervision and appraisal.
+workforceRouter.get('/supervisions', async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const [users, records] = await Promise.all([
+    (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, job_role: true }, orderBy: { name: 'asc' } }),
+    (prisma as any).staffSupervision.findMany({ where: { tenant_id: tenantId }, orderBy: { held_on: 'desc' } }),
+  ])
+  const latest = new Map<string, any>()  // "user_id|type" → most recent record
+  for (const r of records) { const k = `${r.user_id}|${r.type}`; if (!latest.has(k)) latest.set(k, r) }
+
+  const summary = { supervisions_overdue: 0, appraisals_overdue: 0, no_supervision: 0, no_appraisal: 0 }
+  const staff = users.map((u: any) => {
+    const out: any = { id: u.id, name: u.name, job_role: u.job_role }
+    for (const type of SUPERVISION_TYPES) {
+      const r = latest.get(`${u.id}|${type}`) ?? null
+      const status = superStatus(r?.next_due ?? null, !!r)
+      out[type] = { last_on: r?.held_on ?? null, conducted_by: r?.conducted_by ?? null, next_due: r?.next_due ?? null, status }
+      if (status === 'overdue') { if (type === 'supervision') summary.supervisions_overdue++; else summary.appraisals_overdue++ }
+      if (status === 'none')    { if (type === 'supervision') summary.no_supervision++;    else summary.no_appraisal++ }
+    }
+    return out
+  })
+  ok(res, { types: SUPERVISION_TYPES, staff, summary, total_staff: users.length })
+})
+
+// GET /workforce/staff/:userId/supervisions — full history for one staff member.
+workforceRouter.get('/staff/:userId/supervisions', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  const user = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } })
+  if (!user) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const records = await (prisma as any).staffSupervision.findMany({ where: { tenant_id: tenantId, user_id: userId }, orderBy: { held_on: 'desc' } })
+  ok(res, { user, records })
+})
+
+// POST /workforce/staff/:userId/supervisions — log a supervision or appraisal.
+workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  const { type, held_on, conducted_by, next_due, notes } = req.body ?? {}
+  if (!SUPERVISION_TYPES.includes(type)) { err(res, 'VALIDATION_ERROR', 'Type must be supervision or appraisal.'); return }
+  if (!held_on) { err(res, 'VALIDATION_ERROR', 'A date is required.'); return }
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const record = await (prisma as any).staffSupervision.create({
+    data: {
+      id: randomUUID(), tenant_id: tenantId, user_id: userId, type,
+      held_on:      new Date(held_on),
+      conducted_by: conducted_by?.toString().trim() || null,
+      next_due:     next_due ? new Date(next_due) : null,
+      notes:        notes?.toString().trim() || null,
+    },
+  })
+  ok(res, { record })
+})
+
+// DELETE /workforce/supervisions/:id — remove a supervision/appraisal record.
+workforceRouter.delete('/supervisions/:id', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  await (prisma as any).staffSupervision.deleteMany({ where: { tenant_id: tenantId, id: String(req.params.id) } })
+  ok(res, { deleted: true })
+})

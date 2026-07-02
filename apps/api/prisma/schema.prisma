@@ -190,6 +190,26 @@ model StaffCredential {
   @@map("staff_credentials")
 }
 
+// Workforce compliance: supervision and appraisal records (Enterprise). One row
+// per session held; the register derives each staff member's last session and
+// next-due date per type. Plain columns (no relations) to stay self-contained.
+model StaffSupervision {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  user_id      String
+  type         String    // supervision | appraisal
+  held_on      DateTime
+  conducted_by String?
+  next_due     DateTime?
+  notes        String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@map("staff_supervisions")
+}
+
 // ─── Training licences (training-only gateway tier) ─────────────────────────────
 // One row = one staff seat × one standard module, bought one-off at £25.99. The
 // admin allocates a licence to a staff member (user_id) for a module (topic). A

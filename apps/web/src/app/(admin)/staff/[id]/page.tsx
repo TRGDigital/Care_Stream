@@ -163,9 +163,12 @@ export default function StaffRecordPage() {
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
   const [compliance, setCompliance] = useState<any>(null)
+  const [supervisions, setSupervisions] = useState<any>(null)
   useEffect(() => {
     if (!token || !hasWorkforce) return
-    createApiClient(token).workforce.staff(id).then(setCompliance).catch(() => {})
+    const api = createApiClient(token)
+    api.workforce.staff(id).then(setCompliance).catch(() => {})
+    api.workforce.staffSupervisions(id).then(setSupervisions).catch(() => {})
   }, [token, id, hasWorkforce])
   async function viewComplianceDoc(type: string) {
     try {
@@ -625,6 +628,35 @@ export default function StaffRecordPage() {
                       )}
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${st.cls}`}>{st.label}</span>
                     </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Supervisions & appraisals (Enterprise) */}
+        {hasWorkforce && supervisions && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Supervisions &amp; appraisals <InfoTip text="The latest supervision and appraisal recorded for this staff member, with the next due date. Manage these on the Workforce compliance page." /></p>
+              <a href="/workforce" className="text-xs font-medium text-teal hover:underline no-print">Manage</a>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {[
+                { key: 'supervision', label: 'Supervision', rec: (supervisions.records ?? []).find((r: any) => r.type === 'supervision') },
+                { key: 'appraisal',   label: 'Appraisal',   rec: (supervisions.records ?? []).find((r: any) => r.type === 'appraisal') },
+              ].map(({ key, label, rec }) => {
+                const overdue = rec?.next_due && new Date(rec.next_due) < new Date()
+                return (
+                  <div key={key} className="flex items-center justify-between gap-2 px-5 py-3.5">
+                    <div className="min-w-0">
+                      <p className="text-sm text-neutral-dark">{label}</p>
+                      <p className="text-xs text-neutral-mid">{rec ? `Last ${fmtDate(rec.held_on)}${rec.conducted_by ? ` by ${rec.conducted_by}` : ''}${rec.next_due ? ` · next due ${fmtDate(rec.next_due)}` : ''}` : 'None recorded'}</p>
+                    </div>
+                    {rec?.next_due && (
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${overdue ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>{overdue ? 'Overdue' : 'On track'}</span>
+                    )}
                   </div>
                 )
               })}

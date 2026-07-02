@@ -1455,7 +1455,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'workforce',
     icon:    BadgeCheck,
     title:   'Workforce compliance register (Enterprise)',
-    summary: 'DBS, right to work, registration and references, all in one place',
+    summary: 'DBS, right to work, registration, references, document uploads, expiry alerts, supervisions and appraisals',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it is">
@@ -1497,6 +1497,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             You can also send it on demand: on the <strong>Compliance</strong> page, click <strong>Email expiry alerts</strong> at the top right and your admins get the digest straight away.
           </p>
+        </SectionBlock>
+        <SectionBlock title="Supervisions and appraisals">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page tracks each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and the next due date, colour coded so overdue ones stand out.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Open the <strong>Compliance</strong> page and switch to the <strong>Supervisions &amp; appraisals</strong> tab.</Step>
+            <Step n={2}>Click a staff member to see their history and log a session: choose supervision or appraisal, the date it was held, who conducted it, the next due date, and any notes.</Step>
+            <Step n={3}>The register updates the last session and next-due status straight away. Each staff member&rsquo;s record page also shows their latest supervision and appraisal as CQC evidence.</Step>
+          </div>
         </SectionBlock>
         <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
       </div>

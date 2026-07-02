@@ -10,7 +10,7 @@ import { persistentCache } from '@/lib/page-cache'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
-  Search, X,
+  Search, X, Archive, RotateCcw,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
@@ -203,6 +203,31 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [assignMsg,  setAssignMsg]  = useState<Record<string, string>>({})
   const [search,     setSearch]     = useState('')   // filter the (now large) adhoc module list
 
+  // Live / archived modules. Archived ones are hidden from the compliance grid,
+  // assignment and delivery, but the tenant can restore them at any time.
+  const [view,      setView]      = useState<'live' | 'archived'>('live')
+  const [archived,  setArchived]  = useState<Module[]>([])
+  const [archiving, setArchiving] = useState<string | null>(null)
+  useEffect(() => { api.training.archivedModules().then(d => setArchived(d.modules as Module[])).catch(() => {}) }, [api])
+
+  async function archiveModule(m: Module) {
+    setArchiving(m.id)
+    try {
+      await api.training.setModuleArchived(m.id, true)
+      setArchived(prev => [...prev.filter(x => x.id !== m.id), m].sort((a, b) => a.name.localeCompare(b.name)))
+      if (open === m.id) setOpen(null)
+      onAssigned()   // refresh the live list (removes it)
+    } catch { /* ignore */ } finally { setArchiving(null) }
+  }
+  async function restoreModule(m: Module) {
+    setArchiving(m.id)
+    try {
+      await api.training.setModuleArchived(m.id, false)
+      setArchived(prev => prev.filter(x => x.id !== m.id))
+      onAssigned()   // refresh the live list (adds it back)
+    } catch { /* ignore */ } finally { setArchiving(null) }
+  }
+
   // Staff currently assigned each module (for the "X assigned" count).
   const assignedByModule = (() => {
     const map: Record<string, Set<string>> = {}
@@ -394,6 +419,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const statutory  = modules.filter(m => m.category === 'statutory' && matchesSearch(m))
   const specialist = modules.filter(m => m.category === 'specialist' && matchesSearch(m))
   const totalMatches = statutory.length + specialist.length
+  const archivedMatches = archived.filter(matchesSearch)
 
   function renderGroup(title: string, colour: string, list: Module[]) {
     return (
@@ -412,11 +438,11 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
 
             return (
               <div key={m.id}>
-                <button
-                  onClick={() => isOpen ? setOpen(null) : startEdit(m)}
-                  className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-neutral-light/40"
-                >
-                  <div className="flex items-center gap-3">
+                <div className="flex w-full items-center justify-between px-5 py-4 hover:bg-neutral-light/40">
+                  <button
+                    onClick={() => isOpen ? setOpen(null) : startEdit(m)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                       m.category === 'statutory' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'
                     }`}>
@@ -426,7 +452,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="h-10 w-16 shrink-0 rounded-md border border-gray-100 object-cover" />
                     )}
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium text-neutral-dark">{m.name}</p>
                         {moduleHasLesson(m) && (
@@ -442,13 +468,23 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                         {isDirty && !incomplete && <span className="ml-1.5">· unsaved changes</span>}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5 pl-2">
                     {isLocked && <span title="Questions locked"><Lock size={13} className="text-green-600" /></span>}
                     {(isDirty || incomplete) && <span className="h-2 w-2 rounded-full bg-amber-400" />}
-                    <ChevronDown size={15} className={`text-neutral-mid transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <button
+                      onClick={() => archiveModule(m)}
+                      disabled={archiving === m.id}
+                      title="Archive this module (hide it from the live list; you can restore it later)"
+                      className="rounded-md p-1.5 text-neutral-mid transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
+                    >
+                      {archiving === m.id ? <Loader2 size={14} className="animate-spin" /> : <Archive size={14} />}
+                    </button>
+                    <button onClick={() => isOpen ? setOpen(null) : startEdit(m)} className="rounded-md p-1 text-neutral-mid hover:text-neutral-dark" title={isOpen ? 'Collapse' : 'Expand'}>
+                      <ChevronDown size={15} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
                   </div>
-                </button>
+                </div>
 
                 {isOpen && (
                   <div className="border-t border-gray-100 px-5 pb-5 pt-4">
@@ -627,6 +663,29 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         </div>
       </HelpAccordion>
 
+      {/* Live / Archived — tenants keep only the modules relevant to them live, and archive the rest. */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
+          {([['live', 'Live', modules.length], ['archived', 'Archived', archived.length]] as const).map(([key, label, count]) => (
+            <button
+              key={key}
+              onClick={() => setView(key)}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors ${
+                view === key ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid hover:text-neutral-dark'
+              }`}
+            >
+              {label}
+              <span className={`rounded-full px-1.5 text-xs ${view === key ? 'bg-teal/10 text-teal' : 'bg-gray-200 text-neutral-mid'}`}>{count}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-neutral-mid">
+          {view === 'live'
+            ? 'Archive modules you don’t need to keep only the relevant ones live. Archived modules aren’t shown to staff and can be restored anytime.'
+            : 'These modules are hidden from staff. Restore any to move it back into the live list.'}
+        </p>
+      </div>
+
       {/* Search — the list now includes every standard/annual topic, so make it findable. */}
       <div className="mb-4 flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
@@ -641,19 +700,65 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
             <button onClick={() => setSearch('')} title="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"><X size={14} /></button>
           )}
         </div>
-        {search && <span className="text-xs text-neutral-mid">{totalMatches} match{totalMatches === 1 ? '' : 'es'}</span>}
+        {search && (
+          <span className="text-xs text-neutral-mid">
+            {(view === 'live' ? totalMatches : archivedMatches.length)} match{(view === 'live' ? totalMatches : archivedMatches.length) === 1 ? '' : 'es'}
+          </span>
+        )}
       </div>
 
-      {search && totalMatches === 0 && (
-        <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
-          <Search size={28} className="mx-auto mb-2 text-gray-300" />
-          <p className="font-medium text-neutral-dark">No modules match &ldquo;{search}&rdquo;</p>
-          <p className="mt-1 text-sm text-neutral-mid">Try a different search, or clear it to see all modules.</p>
-        </div>
-      )}
+      {view === 'live' && (<>
+        {search && totalMatches === 0 && (
+          <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+            <Search size={28} className="mx-auto mb-2 text-gray-300" />
+            <p className="font-medium text-neutral-dark">No modules match &ldquo;{search}&rdquo;</p>
+            <p className="mt-1 text-sm text-neutral-mid">Try a different search, or clear it to see all modules.</p>
+          </div>
+        )}
 
-      {statutory.length  > 0 && renderGroup('Statutory modules', 'text-teal', statutory)}
-      {specialist.length > 0 && renderGroup('Specialist modules', 'text-indigo-500', specialist)}
+        {statutory.length  > 0 && renderGroup('Statutory modules', 'text-teal', statutory)}
+        {specialist.length > 0 && renderGroup('Specialist modules', 'text-indigo-500', specialist)}
+      </>)}
+
+      {view === 'archived' && (
+        archivedMatches.length === 0 ? (
+          <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+            <Archive size={28} className="mx-auto mb-2 text-gray-300" />
+            <p className="font-medium text-neutral-dark">{search ? `No archived modules match “${search}”` : 'No archived modules'}</p>
+            <p className="mt-1 text-sm text-neutral-mid">{search ? 'Try a different search, or clear it.' : 'Archive a module from the Live tab to hide it from staff without deleting it.'}</p>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Archived modules</p>
+            <div className="divide-y divide-gray-100 rounded-card border border-gray-100 bg-white shadow-card">
+              {archivedMatches.map(m => (
+                <div key={m.id} className="flex items-center justify-between px-5 py-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      m.category === 'statutory' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'
+                    }`}>
+                      {m.category === 'statutory' ? 'S' : 'Sp'}
+                    </span>
+                    {m.illustration_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="h-10 w-16 shrink-0 rounded-md border border-gray-100 object-cover opacity-70" />
+                    )}
+                    <p className="truncate text-sm font-medium text-neutral-dark">{m.name}</p>
+                  </div>
+                  <button
+                    onClick={() => restoreModule(m)}
+                    disabled={archiving === m.id}
+                    className="ml-3 inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-sm font-medium text-teal transition-colors hover:bg-teal/10 disabled:opacity-50"
+                  >
+                    {archiving === m.id ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                    Restore
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      )}
 
       {assignFor && (
         <PerModuleAssignModal

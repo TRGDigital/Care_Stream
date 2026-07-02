@@ -408,6 +408,10 @@ export function createApiClient(token: string) {
     training: {
       modules: () =>
         apiFetch<{ modules: Array<{ id: string; slug: string; name: string; description: string; category: string; sort_order: number; illustration_url: string | null; questions: Array<{ id: string; text: string }> }> }>('/training/modules', token),
+      archivedModules: () =>
+        apiFetch<{ modules: any[] }>('/training/modules/archived', token),
+      setModuleArchived: (id: string, archived: boolean) =>
+        apiFetch<{ module: any }>(`/training/modules/${id}/archive`, token, { method: 'POST', body: JSON.stringify({ archived }) }),
 
       compliance: () =>
         apiFetch<{

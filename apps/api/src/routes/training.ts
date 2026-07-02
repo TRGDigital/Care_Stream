@@ -400,6 +400,33 @@ trainingRouter.get('/modules', async (req: Request, res: Response) => {
   }
 })
 
+// GET /training/modules/archived — this tenant's ARCHIVED adhoc modules (is_active=false).
+// Archived modules stay out of the compliance grid, assignment and delivery, but a
+// tenant can restore them to the live list at any time.
+trainingRouter.get('/modules/archived', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const modules = await (prisma as any).trainingModule.findMany({
+      where:   { tenant_id: tenantId, is_active: false, source: { not: 'ai_generated' } },
+      orderBy: { name: 'asc' },
+    })
+    ok(res, { modules: (modules as any[]).map(m => ({ ...m, illustration_url: illustrationUrl(m.illustration_key) })) })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// POST /training/modules/:id/archive  body { archived: boolean }
+// Archive (is_active=false) or restore (is_active=true) an adhoc module.
+trainingRouter.post('/modules/:id/archive', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const archived = req.body?.archived !== false   // default true (archive)
+  const module = await (prisma as any).trainingModule.findFirst({ where: { id: req.params.id, tenant_id: tenantId, source: { not: 'ai_generated' } }, select: { id: true } })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  const updated = await (prisma as any).trainingModule.update({ where: { id: module.id }, data: { is_active: !archived } })
+  ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) } })
+})
+
 // GET /training/compliance — full grid: all staff × enrolled modules
 trainingRouter.get('/compliance', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id

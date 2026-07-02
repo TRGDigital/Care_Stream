@@ -511,9 +511,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <div className="mt-2 space-y-3">
             <Step n={1}>Add a <strong>Read policy</strong> step and link it to a policy (start typing the policy name and choose it from the list).</Step>
-            <Step n={2}>Add an <strong>Answer question</strong> step. It shows a <strong>Generate from policy</strong> panel. Choose how many questions you want (1 to 5), and if your flow links more than one policy, pick which policy to use.</Step>
-            <Step n={3}>Click <strong>Generate with AI</strong>. CareStream reads the linked policy and writes multiple-choice questions from its wording, each with four options and the correct answer marked. The first fills the step you're on, and any extras are added as their own steps.</Step>
-            <Step n={4}>Review and edit before saving. The questions are a starting point, so adjust the wording, options or correct answer to suit your home.</Step>
+            <Step n={2}>At the bottom of the steps, use the <strong>Generate questions from policy</strong> panel. Choose how many questions you want (1 to 5), and if your flow links more than one policy, pick which policy to use.</Step>
+            <Step n={3}>Click <strong>Generate with AI</strong>. CareStream reads the linked policy and adds multiple-choice question steps, each with four options and the correct answer marked.</Step>
+            <Step n={4}>Review and edit before saving. To try a different set, use <strong>Re-generate with AI</strong>, which replaces all the question steps in one go.</Step>
           </div>
           <p className="mt-3 text-sm text-neutral-mid">
             A policy needs to have finished processing before you can generate from it. If it's still being read in, CareStream asks you to try again shortly.

@@ -124,46 +124,40 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
   const linkedPolicies = [...new Set(steps.filter(s => s.type === 'read_policy' && s.policy_id).map(s => s.policy_id as string))]
     .map(id => ({ id, name: policies.find(p => p.id === id)?.name ?? 'Linked policy' }))
 
-  const [genSel,  setGenSel]  = useState<Record<number, { policy?: string; count?: number }>>({})
-  const [genBusy, setGenBusy] = useState<number | null>(null)
+  const hasQuestions = steps.some(s => s.type === 'answer_question')
+
+  const [genPolicy, setGenPolicy] = useState('')
+  const [genCount,  setGenCount]  = useState(3)
+  const [genBusy,   setGenBusy]   = useState(false)
 
   function titleFromQuestion(q: string): string {
     const t = q.trim()
     return t.length > 70 ? t.slice(0, 67) + '…' : t
   }
 
-  async function generateForStep(i: number, policyId: string, count: number) {
-    if (!policyId || genBusy !== null) return
-    setGenBusy(i); setErr('')
+  // Generate knowledge-check questions from a linked policy. When replace is
+  // true (re-generate), all existing question steps are swapped for a fresh set
+  // in one go; otherwise the generated questions are appended after the steps.
+  async function generateQuestionsFromPolicy(policyId: string, count: number, replace: boolean) {
+    if (!policyId || genBusy) return
+    setGenBusy(true); setErr('')
     try {
       const { questions } = await api.onboarding.generateQuestions(policyId, count)
       if (!questions?.length) { setErr('No questions were generated. Please try again.'); return }
-      setSteps(prev => {
-        const next = [...prev]
-        const cur   = next[i]
-        const first = questions[0]
-        next[i] = {
-          ...cur,
-          type:           'answer_question',
-          title:          cur.title?.trim() ? cur.title : titleFromQuestion(first.question),
-          question:       first.question,
-          options:        first.options,
-          correct_option: first.correct_option,
-        }
-        const extra: Step[] = questions.slice(1).map(q => ({
-          title:          titleFromQuestion(q.question),
-          type:           'answer_question',
-          question:       q.question,
-          options:        q.options,
-          correct_option: q.correct_option,
-        }))
-        next.splice(i + 1, 0, ...extra)
-        return next
-      })
+      const generated: Step[] = questions.map(q => ({
+        title:          titleFromQuestion(q.question),
+        type:           'answer_question',
+        question:       q.question,
+        options:        q.options,
+        correct_option: q.correct_option,
+      }))
+      setSteps(prev => replace
+        ? [...prev.filter(s => s.type !== 'answer_question'), ...generated]
+        : [...prev, ...generated])
     } catch (e: any) {
       setErr(e?.message ?? 'Could not generate questions. Please try again.')
     } finally {
-      setGenBusy(null)
+      setGenBusy(false)
     }
   }
 
@@ -264,44 +258,6 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
                   )}
                   {step.type === 'answer_question' && (
                     <div className="space-y-2">
-                      {linkedPolicies.length > 0 ? (
-                        <div className="rounded-md border border-teal/30 bg-teal/5 p-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="flex items-center gap-1 text-[11px] font-semibold text-teal"><Sparkles size={12} /> Generate from policy</span>
-                            {linkedPolicies.length > 1 && (
-                              <select
-                                value={genSel[i]?.policy ?? linkedPolicies[0].id}
-                                onChange={e => setGenSel(prev => ({ ...prev, [i]: { ...prev[i], policy: e.target.value } }))}
-                                className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] focus:border-teal focus:outline-none">
-                                {linkedPolicies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                              </select>
-                            )}
-                            <select
-                              value={genSel[i]?.count ?? 3}
-                              onChange={e => setGenSel(prev => ({ ...prev, [i]: { ...prev[i], count: Number(e.target.value) } }))}
-                              className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] focus:border-teal focus:outline-none">
-                              {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} question{n > 1 ? 's' : ''}</option>)}
-                            </select>
-                            <button
-                              type="button"
-                              disabled={genBusy !== null}
-                              onClick={() => generateForStep(i, genSel[i]?.policy ?? linkedPolicies[0].id, genSel[i]?.count ?? 3)}
-                              className="inline-flex items-center gap-1 rounded bg-teal px-2.5 py-1 text-[11px] font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-                              {genBusy === i
-                                ? <><Loader2 size={12} className="animate-spin" /> Generating…</>
-                                : <><Sparkles size={12} /> Generate with AI</>}
-                            </button>
-                          </div>
-                          <p className="mt-1 text-[10px] text-neutral-mid">
-                            {linkedPolicies.length === 1 ? <>Based on &ldquo;{linkedPolicies[0].name}&rdquo;. </> : null}
-                            AI reads the policy and writes the question(s). Extra questions are added as their own steps.
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="rounded-md border border-dashed border-gray-300 bg-white px-2 py-1.5 text-[11px] text-neutral-mid">
-                          Tip: add a <strong>Read policy</strong> step and link a policy, then you can generate questions from it with AI.
-                        </p>
-                      )}
                       <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value })}
                         placeholder="The question staff must answer"
                         rows={2}
@@ -332,6 +288,43 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
                 <Plus size={12} /> Answer question
               </button>
             </div>
+
+            {/* AI question generation from a policy linked in a "read policy" step */}
+            {linkedPolicies.length > 0 ? (
+              <div className="mt-4 rounded-lg border border-teal/30 bg-teal/5 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-teal">
+                    <Sparkles size={13} /> {hasQuestions ? 'Re-generate questions from policy' : 'Generate questions from policy'}
+                  </span>
+                  {linkedPolicies.length > 1 && (
+                    <select value={genPolicy || linkedPolicies[0].id} onChange={e => setGenPolicy(e.target.value)}
+                      className="rounded border border-gray-200 bg-white px-2 py-1 text-xs focus:border-teal focus:outline-none">
+                      {linkedPolicies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  )}
+                  <select value={genCount} onChange={e => setGenCount(Number(e.target.value))}
+                    className="rounded border border-gray-200 bg-white px-2 py-1 text-xs focus:border-teal focus:outline-none">
+                    {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} question{n > 1 ? 's' : ''}</option>)}
+                  </select>
+                  <button type="button" disabled={genBusy}
+                    onClick={() => generateQuestionsFromPolicy(genPolicy || linkedPolicies[0].id, genCount, hasQuestions)}
+                    className="inline-flex items-center gap-1 rounded bg-teal px-3 py-1 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                    {genBusy
+                      ? <><Loader2 size={13} className="animate-spin" /> Generating…</>
+                      : <><Sparkles size={13} /> {hasQuestions ? 'Re-generate with AI' : 'Generate with AI'}</>}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11px] text-neutral-mid">
+                  {linkedPolicies.length === 1 ? <>Based on &ldquo;{linkedPolicies[0].name}&rdquo;. </> : null}
+                  AI reads the policy and writes the questions, each with four options and the correct answer marked.
+                  {hasQuestions ? ' Re-generating replaces all current question steps in one go.' : ' They are added as question steps you can then edit.'}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-xs text-neutral-mid">
+                Tip: add a <strong>Read policy</strong> step above and link a policy, then generate knowledge-check questions from it with AI.
+              </p>
+            )}
           </div>
         </div>
 

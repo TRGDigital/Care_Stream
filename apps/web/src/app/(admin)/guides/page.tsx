@@ -501,9 +501,24 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="Building your own flow">
           <div className="space-y-3">
             <Step n={1}>Click <strong>New flow</strong>, name it, and choose which <strong>job roles</strong> it applies to (leave blank for all staff).</Step>
-            <Step n={2}>Add steps, a policy to read, or a question. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
+            <Step n={2}>Add steps, a policy to read, or a question. When you add a <strong>read policy</strong> step, start typing the policy name and pick it from the list of your uploaded policies. For a question, fill all four options for an auto-marked multiple-choice question, or leave them blank for a free-text answer.</Step>
             <Step n={3}>Make sure the flow is <strong>active</strong>: only active flows are assigned to new starters.</Step>
           </div>
+        </SectionBlock>
+        <SectionBlock title="Generate questions from a policy with AI">
+          <p className="text-sm text-neutral-mid">
+            When you build your own flow, CareStream can write the knowledge check questions for you, based on your own policy. This saves drafting multiple-choice questions by hand and keeps them faithful to what your policy actually says.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Add a <strong>Read policy</strong> step and link it to a policy (start typing the policy name and choose it from the list).</Step>
+            <Step n={2}>Add an <strong>Answer question</strong> step. It shows a <strong>Generate from policy</strong> panel. Choose how many questions you want (1 to 5), and if your flow links more than one policy, pick which policy to use.</Step>
+            <Step n={3}>Click <strong>Generate with AI</strong>. CareStream reads the linked policy and writes multiple-choice questions from its wording, each with four options and the correct answer marked. The first fills the step you're on, and any extras are added as their own steps.</Step>
+            <Step n={4}>Review and edit before saving. The questions are a starting point, so adjust the wording, options or correct answer to suit your home.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            A policy needs to have finished processing before you can generate from it. If it's still being read in, CareStream asks you to try again shortly.
+          </p>
+          <div className="mt-3"><Tip>No policy linked yet? The panel reminds you to add a <strong>Read policy</strong> step and link a policy first, that policy is what the questions are drawn from.</Tip></div>
         </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">

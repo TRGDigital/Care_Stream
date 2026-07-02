@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2 } from 'lucide-react'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -469,56 +469,58 @@ function PolicyActions({
       <button
         ref={btnRef}
         onClick={handleOpen}
-        className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark shadow-sm hover:bg-gray-50"
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition-colors ${
+          open ? 'border-teal/40 bg-teal-light/40 text-teal' : 'border-gray-200 bg-white text-neutral-dark hover:border-teal/40 hover:bg-neutral-light'
+        }`}
       >
-        Actions <MoreHorizontal size={13} />
+        Actions <MoreHorizontal size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div
-            className="fixed z-20 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg"
+            className="dropdown-pop fixed z-20 w-60 origin-top-right overflow-hidden rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl ring-1 ring-black/5"
             style={{ top: pos.top, right: pos.right }}
           >
             {(policy.status === 'active' || policy.status === 'failed') && (
               <button
                 onClick={() => { setOpen(false); onNewVersion() }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+                className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
               >
-                <RefreshCw size={13} /> Upload new version
+                <RefreshCw size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" /> Upload new version
               </button>
             )}
             {policy.status === 'failed' && (
               <button
                 onClick={() => { setOpen(false); onRetry() }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+                className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
               >
-                <RotateCcw size={13} /> Retry ingestion
+                <RotateCcw size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" /> Retry ingestion
               </button>
             )}
             {policy.status === 'active' && policy.document_category !== 'cqc_report' && (
               <button
                 onClick={() => { setOpen(false); onToggleGeneric() }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+                className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-neutral-dark transition-colors hover:bg-amber-50"
               >
-                <GraduationCap size={13} /> {policy.generic_onboarding ? 'Remove from onboarding' : 'Use as onboarding policy'}
+                <GraduationCap size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-amber-600" /> {policy.generic_onboarding ? 'Remove from onboarding' : 'Use as onboarding policy'}
               </button>
             )}
             {policy.status !== 'archived' && (
               <button
                 onClick={() => { setOpen(false); onArchive() }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+                className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
               >
-                <Archive size={13} /> Archive
+                <Archive size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" /> Archive
               </button>
             )}
-            <div className="my-1 border-t border-gray-100" />
+            <div className="mx-2 my-1.5 border-t border-gray-100" />
             <button
               onClick={() => { setOpen(false); onDelete() }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-status-error hover:bg-red-50"
+              className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
             >
-              <X size={13} /> Delete permanently
+              <Trash2 size={15} className="shrink-0 text-red-400 transition-colors group-hover:text-red-600" /> Delete permanently
             </button>
           </div>
         </>

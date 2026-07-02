@@ -52,7 +52,7 @@ export interface Credential {
 }
 
 // Supervision / appraisal: the derived latest+next cell, and a full record.
-export interface SupCell { last_on: string | null; conducted_by: string | null; next_due: string | null; status: string }
+export interface SupCell { last_on: string | null; conducted_by: string | null; next_on: string | null; next_due: string | null; status: string }
 export interface SupRecord { id: string; type: string; held_on: string; conducted_by: string | null; next_due: string | null; notes: string | null }
 
 export interface Citation {
@@ -749,6 +749,7 @@ export function createApiClient(token: string) {
       savedPolicies: () => apiFetch<{ saved: Array<{ policy_id: string; title: string; saved_at: string }> }>('/me/saved-policies', token),
       savePolicy: (policyId: string) => apiFetch<{ saved: boolean }>('/me/saved-policies', token, { method: 'POST', body: JSON.stringify({ policy_id: policyId }) }),
       unsavePolicy: (policyId: string) => apiFetch<{ removed: boolean }>(`/me/saved-policies/${policyId}`, token, { method: 'DELETE' }),
+      supervisions: () => apiFetch<{ enabled: boolean; records: SupRecord[] }>('/me/supervisions', token),
     },
 
     faceToFace: {

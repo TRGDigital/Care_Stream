@@ -12,6 +12,7 @@ type Overview = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce
 type Row = Overview['staff'][number]
 
 const SUP_STATUS: Record<string, { cls: string; label: string }> = {
+  booked:   { cls: 'bg-blue-50 text-blue-700',   label: 'Booked' },
   ok:       { cls: 'bg-green-50 text-green-700', label: 'On track' },
   due_soon: { cls: 'bg-amber-50 text-amber-700', label: 'Due soon' },
   overdue:  { cls: 'bg-red-50 text-red-600',     label: 'Overdue' },
@@ -38,10 +39,12 @@ function SummaryCard({ label, value, cls, Icon }: { label: string; value: number
 
 function Cell({ cell }: { cell: Row['supervision'] }) {
   const st = SUP_STATUS[cell.status] ?? SUP_STATUS.none
+  const booked = cell.status === 'booked'
+  const dateStr = booked ? cell.next_on : cell.next_due
   return (
     <div className="text-center">
       <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>{st.label}</span>
-      {cell.next_due && <p className="mt-0.5 text-[10px] text-neutral-mid">due {fmtDate(cell.next_due)}</p>}
+      {dateStr && <p className="mt-0.5 text-[10px] text-neutral-mid">{booked ? 'on ' : 'due '}{fmtDate(dateStr)}</p>}
     </div>
   )
 }
@@ -185,9 +188,10 @@ function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Ro
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-neutral-mid">Date held</label>
+                <label className="mb-1 block text-xs font-medium text-neutral-mid">Date</label>
                 <input type="date" value={form.held_on} onChange={e => set({ held_on: e.target.value })} className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
               </div>
+              <p className="text-[11px] text-neutral-mid sm:col-span-2">Choose a future date to <strong>book</strong> an upcoming session (the staff member is emailed, and reminded the day before), or a past date to record one already held.</p>
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-mid">Conducted by</label>
                 <input value={form.conducted_by} onChange={e => set({ conducted_by: e.target.value })} placeholder="e.g. Jane Smith (Manager)" className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />

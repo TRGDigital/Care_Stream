@@ -18,6 +18,15 @@ import { evidenceUploadMiddleware } from '../middleware/upload'
 import { uploadCredentialFile, downloadFile, deleteFile } from '../services/storage/s3'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { detectEvidenceType, SAFE_EVIDENCE_TYPES } from '../lib/evidence-file'
+import { notifyUsers } from '../lib/notify'
+import { sendTrainingUpdateEmail } from '../services/email/outbound'
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+}
+function fmtLong(d: Date): string {
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+}
 
 export const workforceRouter = Router()
 
@@ -224,34 +233,50 @@ workforceRouter.delete('/staff/:userId/credentials/:type/document', async (req: 
 
 const SUPERVISION_TYPES = ['supervision', 'appraisal'] as const
 
-// Status of a supervision/appraisal from its next-due date.
-function superStatus(nextDue: Date | null, hasRecord: boolean): string {
-  if (!hasRecord) return 'none'
-  if (!nextDue) return 'ok'
-  const ms = new Date(nextDue).getTime() - Date.now()
-  if (ms < 0) return 'overdue'
-  return ms <= 30 * 86_400_000 ? 'due_soon' : 'ok'
+// Derive a staff member's supervision/appraisal cell from all their records for
+// one type: the most recent past session, the earliest upcoming (booked) one,
+// and a status. A future session is "booked"; otherwise the next-due date drives
+// overdue / due-soon / ok; no records at all is "none".
+function buildCell(records: any[]) {
+  const now = Date.now()
+  const sorted = records.slice().sort((a, b) => new Date(b.held_on).getTime() - new Date(a.held_on).getTime())  // desc
+  const past     = sorted.find(r => new Date(r.held_on).getTime() <= now) ?? null
+  const upcoming = sorted.filter(r => new Date(r.held_on).getTime() > now)
+  const next_on  = upcoming.length ? upcoming[upcoming.length - 1] : null   // earliest future
+  const next_due = past?.next_due ?? sorted[0]?.next_due ?? null
+
+  let status = 'none'
+  if (next_on)        status = 'booked'
+  else if (next_due)  { const ms = new Date(next_due).getTime() - now; status = ms < 0 ? 'overdue' : (ms <= 30 * 86_400_000 ? 'due_soon' : 'ok') }
+  else if (past)      status = 'ok'
+
+  return {
+    last_on:      past?.held_on ?? null,
+    conducted_by: past?.conducted_by ?? null,
+    next_on:      next_on?.held_on ?? null,
+    next_due,
+    status,
+  }
 }
 
-// GET /workforce/supervisions — per staff, the latest + next-due supervision and appraisal.
+// GET /workforce/supervisions — per staff, latest/next supervision and appraisal.
 workforceRouter.get('/supervisions', async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   const [users, records] = await Promise.all([
     (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, job_role: true }, orderBy: { name: 'asc' } }),
-    (prisma as any).staffSupervision.findMany({ where: { tenant_id: tenantId }, orderBy: { held_on: 'desc' } }),
+    (prisma as any).staffSupervision.findMany({ where: { tenant_id: tenantId } }),
   ])
-  const latest = new Map<string, any>()  // "user_id|type" → most recent record
-  for (const r of records) { const k = `${r.user_id}|${r.type}`; if (!latest.has(k)) latest.set(k, r) }
+  const byUserType = new Map<string, any[]>()
+  for (const r of records) { const k = `${r.user_id}|${r.type}`; (byUserType.get(k) ?? byUserType.set(k, []).get(k)!).push(r) }
 
   const summary = { supervisions_overdue: 0, appraisals_overdue: 0, no_supervision: 0, no_appraisal: 0 }
   const staff = users.map((u: any) => {
     const out: any = { id: u.id, name: u.name, job_role: u.job_role }
     for (const type of SUPERVISION_TYPES) {
-      const r = latest.get(`${u.id}|${type}`) ?? null
-      const status = superStatus(r?.next_due ?? null, !!r)
-      out[type] = { last_on: r?.held_on ?? null, conducted_by: r?.conducted_by ?? null, next_due: r?.next_due ?? null, status }
-      if (status === 'overdue') { if (type === 'supervision') summary.supervisions_overdue++; else summary.appraisals_overdue++ }
-      if (status === 'none')    { if (type === 'supervision') summary.no_supervision++;    else summary.no_appraisal++ }
+      const cell = buildCell(byUserType.get(`${u.id}|${type}`) ?? [])
+      out[type] = cell
+      if (cell.status === 'overdue') { if (type === 'supervision') summary.supervisions_overdue++; else summary.appraisals_overdue++ }
+      if (cell.status === 'none')    { if (type === 'supervision') summary.no_supervision++;    else summary.no_appraisal++ }
     }
     return out
   })
@@ -285,6 +310,22 @@ workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Re
       notes:        notes?.toString().trim() || null,
     },
   })
+
+  // Booking confirmation to the staff member for upcoming (today or future) sessions.
+  const held = new Date(held_on)
+  const startToday = new Date(); startToday.setHours(0, 0, 0, 0)
+  if (held.getTime() >= startToday.getTime()) {
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+    const label = type === 'appraisal' ? 'appraisal' : 'supervision'
+    const by = conducted_by?.toString().trim()
+    const bodyHtml =
+      `<p style="font-size:15px;margin:0 0 12px">Your ${label} has been booked for <strong>${fmtLong(held)}</strong>${by ? ` with ${escapeHtml(by)}` : ''}.</p>` +
+      `<p style="font-size:14px;color:#666;margin:0">You'll get a reminder the day before. You can see it any time in your CareStream hub under <strong>Supervisions</strong>.</p>`
+    notifyUsers(tenantId, 'supervision_updates', [userId], (email, name) =>
+      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml }),
+    ).catch(() => {})
+  }
+
   ok(res, { record })
 })
 

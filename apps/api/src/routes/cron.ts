@@ -10,6 +10,7 @@ import { sendLicenceRenewalReminders } from '../services/training/licence-renewa
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
+import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 
 export const cronRouter = Router()
 
@@ -42,6 +43,18 @@ cronRouter.get('/credential-expiry', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/credential-expiry] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Daily: remind staff (and admins) the day before a booked supervision/appraisal.
+cronRouter.get('/supervision-reminders', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await runSupervisionReminders()
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/supervision-reminders] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

@@ -1500,13 +1500,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Supervisions and appraisals">
           <p className="text-sm text-neutral-mid">
-            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page tracks each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and the next due date, colour coded so overdue ones stand out.
+            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page tracks each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and their next booked or due date, colour coded so overdue ones stand out.
           </p>
           <div className="mt-2 space-y-3">
             <Step n={1}>Open the <strong>Compliance</strong> page and switch to the <strong>Supervisions &amp; appraisals</strong> tab.</Step>
-            <Step n={2}>Click a staff member to see their history and log a session: choose supervision or appraisal, the date it was held, who conducted it, the next due date, and any notes.</Step>
-            <Step n={3}>The register updates the last session and next-due status straight away. Each staff member&rsquo;s record page also shows their latest supervision and appraisal as CQC evidence.</Step>
+            <Step n={2}>Click a staff member and use <strong>Log a session</strong>: choose supervision or appraisal, the date, who is conducting it, an optional next-due date, and notes.</Step>
+            <Step n={3}>Choose a <strong>future date to book</strong> an upcoming session, or a past date to record one already held. Booked sessions show as <strong>Booked</strong> on the register with their date.</Step>
           </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            When you book a future session, the staff member gets an <strong>email confirmation</strong>, and both the staff member and your admins get a <strong>reminder the day before</strong>. Staff can also see their booked and past sessions in their own hub under <strong>Supervisions</strong>. You can turn these emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>. Each staff member&rsquo;s record page shows their latest supervision and appraisal as CQC evidence.
+          </p>
         </SectionBlock>
         <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
       </div>

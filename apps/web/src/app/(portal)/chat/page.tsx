@@ -16,6 +16,7 @@ import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { ProgressView } from '@/components/hub/progress-view'
+import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
@@ -340,11 +341,13 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions'>('chat')
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const { features: planFeatures }                     = usePlanFeatures()
   // F2F is a Professional/Enterprise feature — hide the hub admin tab otherwise.
   const canF2F                                         = isAdmin && (planFeatures == null || planFeatures.has_face_to_face)
+  // Supervisions & appraisals is an Enterprise feature — staff see their own.
+  const canSupervisions                                = planFeatures?.has_workforce_compliance === true
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
@@ -905,6 +908,15 @@ function ChatPageInner() {
               F2F Training
             </button>
           )}
+          {canSupervisions && !isReviewer && (
+            <button
+              onClick={() => setView('supervisions')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'supervisions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <CalendarDays size={15} />
+              Supervisions
+            </button>
+          )}
           {!isReviewer && (
           <button
             onClick={() => setView('cqc')}
@@ -1071,6 +1083,11 @@ function ChatPageInner() {
         {/* My Progress view */}
         {view === 'progress' && session?.accessToken && (
           <ProgressView token={session.accessToken} />
+        )}
+
+        {/* Supervisions & appraisals (Enterprise) */}
+        {view === 'supervisions' && canSupervisions && session?.accessToken && (
+          <SupervisionsHubView token={session.accessToken} />
         )}
 
         {/* F2F Training (admin-only) */}

@@ -10,7 +10,7 @@ import { translateBundle, translateText, translateQuestionsBatch, translateTexts
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
-import { trackAiAction } from '../lib/plan-limits'
+import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
@@ -814,4 +814,21 @@ meRouter.get('/progress', async (req: Request, res: Response) => {
 
   const result = await withTranslationBudget(localise, 16_000, { ...record, ui: UI_STRINGS })
   ok(res, result)
+})
+
+// ─── GET /me/supervisions ─────────────────────────────────────────────────────
+// The signed-in staff member's own supervisions & appraisals (Enterprise). Used
+// by the hub "Supervisions" view. enabled=false when the plan doesn't include it.
+
+meRouter.get('/supervisions', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const features = await getPlanFeatures(tenantId).catch(() => null)
+  if (!features?.has_workforce_compliance) { ok(res, { enabled: false, records: [] }); return }
+  const records = await (prisma as any).staffSupervision.findMany({
+    where:   { tenant_id: tenantId, user_id: userId },
+    select:  { id: true, type: true, held_on: true, conducted_by: true, next_due: true, notes: true },
+    orderBy: { held_on: 'desc' },
+  })
+  ok(res, { enabled: true, records })
 })

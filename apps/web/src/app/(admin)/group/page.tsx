@@ -92,7 +92,7 @@ export default function GroupPage() {
         <p className="font-medium text-neutral-dark">This account has a single site</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-neutral-mid">
           The group overview benchmarks compliance across multiple homes. Add another site from
-          Settings, and it will appear here alongside this one.
+          Settings → Sites → Add a site, and it will appear here alongside this one.
         </p>
       </div>
     )

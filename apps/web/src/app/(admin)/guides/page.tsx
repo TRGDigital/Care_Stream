@@ -1444,7 +1444,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Adding a home">
           <p className="text-sm text-neutral-mid">
-            You can add another home to your group from <strong>Settings</strong> (Manage sites), or ask the CareStream team to set one up for you. New homes appear in the Group overview automatically.
+            To add another home yourself, go to <strong>Settings</strong>, open the <strong>Sites</strong> section, and click <strong>Add a site</strong>. You can also switch between your homes from there, or from the site switcher in the top bar. Or ask the CareStream team to set one up for you. New homes appear in the Group overview automatically.
           </p>
         </SectionBlock>
         <Tip>Each home keeps its own policies, staff and records. The Group overview never mixes them, it simply totals and compares them so you can manage the whole group from one place.</Tip>

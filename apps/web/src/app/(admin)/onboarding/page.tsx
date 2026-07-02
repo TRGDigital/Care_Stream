@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, ChevronRight, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, Loader2 } from 'lucide-react'
+import { BookOpen, ChevronDown, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import type { Flow } from '@/components/admin/onboarding/onboarding-shared'
 
 // Flow form & progress modals are lazy-loaded — only fetched when opened.
@@ -506,10 +506,10 @@ export default function OnboardingPage() {
                 <div className="ml-3 flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => { setSelected(flow); setShowForm(false) }}
-                    className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal"
-                    title="View progress"
+                    className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90"
+                    title="Allocate this flow to staff and view progress"
                   >
-                    <ChevronRight size={16} />
+                    <Users size={13} /> Allocate to Staff
                   </button>
                   <button
                     onClick={() => { setSelected(flow); setShowForm(true) }}

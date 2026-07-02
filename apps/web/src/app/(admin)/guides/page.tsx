@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -1411,6 +1411,43 @@ const GUIDE_SECTIONS: GuideSection[] = [
             All completed audits are stored in the Audit Repository at the bottom of the Monthly Audits page. Click any row to view the full report, review the AI recommendations, or print a PDF-ready version. In-progress audits appear separately at the top so you can return to them at any time.
           </p>
         </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'group',
+    icon:    Building2,
+    title:   'Managing multiple homes (Group)',
+    summary: 'Benchmark every home in your group and switch between them',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What the Group console is">
+          <p className="text-sm text-neutral-mid">
+            If your organisation runs more than one home, they can be linked together as a <strong>group</strong>. A <strong>Group</strong> item then appears at the top of the sidebar (you only see it when your account has more than one site). It gives regional and head-office managers a single place to see how every home is doing and to jump straight into any one of them.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="The group overview">
+          <p className="text-sm text-neutral-mid">Open <strong>Group</strong> to see:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">Summary cards</strong> across the whole group: number of homes, total staff, and group-wide Training, Onboarding, Audits and an Overall compliance score.</li>
+            <li><strong className="text-neutral-dark">A league table</strong> of your homes, ranked by overall compliance. Each home shows its staff count and its Training, Onboarding and Audit percentages, colour coded (green is strong, amber is worth watching, red needs action).</li>
+            <li><strong className="text-neutral-dark">An Attention count</strong> per home: overdue inductions plus expired training, so you can see at a glance where to focus.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">A home with no activity yet shows a dash rather than a percentage, until its staff start training, onboarding or audits.</p>
+        </SectionBlock>
+        <SectionBlock title="Opening a home">
+          <div className="space-y-3">
+            <Step n={1}>On the Group table, click <strong>Open</strong> next to any home.</Step>
+            <Step n={2}>CareStream switches you into that home. Everything (policies, staff, training, audits) is now that home&rsquo;s data, and the site name in the top bar updates.</Step>
+            <Step n={3}>Switch back the same way, from the Group page or the site switcher in the top bar. The home you are currently in is marked <strong>You are here</strong>.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Adding a home">
+          <p className="text-sm text-neutral-mid">
+            You can add another home to your group from <strong>Settings</strong> (Manage sites), or ask the CareStream team to set one up for you. New homes appear in the Group overview automatically.
+          </p>
+        </SectionBlock>
+        <Tip>Each home keeps its own policies, staff and records. The Group overview never mixes them, it simply totals and compares them so you can manage the whole group from one place.</Tip>
       </div>
     ),
   },

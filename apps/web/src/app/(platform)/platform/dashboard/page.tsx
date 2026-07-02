@@ -1731,6 +1731,29 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Multi-site Groups (Enterprise) */}
+      <RefSection icon={Building2} title="Multi-site Groups & Group Console (Enterprise)">
+        <p className="leading-relaxed text-neutral-mid">
+          A provider group is modelled with <strong>no separate Group table</strong>: sites are linked by
+          <code className="text-xs bg-gray-100 px-1 rounded">tenants.parent_tenant_id</code>. The group root is
+          <code className="text-xs bg-gray-100 px-1 rounded">parent_tenant_id ?? own id</code>; child sites point at the root.
+          Only 2 levels are allowed (root → site, no nesting). A group admin is a normal admin user on one tenant who
+          <strong> switches</strong> between sites; each switch mints a fresh JWT for the target tenant. Added 2026-07-02.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Grouping"          value="tenants.parent_tenant_id (self-relation TenantGroup). Root = null; sites = root id. Group root = parent_tenant_id ?? own id." />
+          <RefRow label="List sites"        value="GET /sites → all tenants where id = groupRoot OR parent_tenant_id = groupRoot (admin-only). Returns is_current / is_root." />
+          <RefRow label="Add a site"        value="POST /sites (self-service) or platform POST /admin/tenants/:id/sub-tenants. Always attaches to the group root; issues tokens so the admin can switch straight in." />
+          <RefRow label="Switch site"       value="POST /auth/switch-site — admin-only; validates target is in the SAME group (currentRoot === targetRoot) then issues a new JWT with the target tenant_id. Web: NextAuth credentials mode:'switch' + pageCache.clear()." />
+          <RefRow label="Group console UI"  value="apps/web/src/app/(admin)/group/page.tsx. Nav item 'Group' (Building2) injected into the Overview section by admin-shell.tsx ONLY when multiSite (sites.length > 1)." />
+          <RefRow label="Rollup endpoint"   value="GET /sites/overview (routes/sites.ts). Derives the group from the caller's tenant (never trusts client input), then aggregates per-site training/onboarding/audit compliance + a group summary." />
+          <RefRow label="Metrics"           value="Training % = complete/total (trainingEnrollment.status); Onboarding % = completed_at/total (+ overdue = due_date past & incomplete); Audits % = completed/total (auditRun.status). Overall = mean of the three that have data. Attention = overdue inductions + expired training." />
+          <RefRow label="Isolation"         value="Aggregates use where: { tenant_id: { in: siteIds } } with siteIds derived server-side from the caller's own group — cannot span another group. Standard getTenantId() tenant-scoping is bypassed intentionally for these group-wide queries." />
+          <RefRow label="api-client"        value="createApiClient(token).sites.overview() / .list() / .switch(id) — apps/web/src/lib/api-client.ts." />
+          <RefRow label="Not yet built"     value="Central policy push to all homes, group trends over time, per-metric drill-down, a dedicated group-admin role. parent_tenant_id + switch are the only primitives so far." />
+        </div>
+      </RefSection>
+
       {/* Onboarding Email Drip */}
       <RefSection icon={Mail} title="Onboarding Email Drip (Email Marketing)">
         <p className="leading-relaxed text-neutral-mid">

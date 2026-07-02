@@ -1490,6 +1490,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Once uploaded, a paperclip appears on that credential in the register, and you can <strong>View</strong> or <strong>Replace</strong> the document at any time. Each staff member&rsquo;s record page also has a <strong>Compliance credentials</strong> section showing their status and letting you open the uploaded documents, so everything is together as CQC evidence.
           </p>
         </SectionBlock>
+        <SectionBlock title="Expiry alerts">
+          <p className="text-sm text-neutral-mid">
+            CareStream can email your admins a digest of any credentials that have expired or expire within the next 30 days, so renewals never slip. This runs automatically each day. You can turn it on or off under <strong>Settings &rarr; Email communications &rarr; Compliance credential expiry</strong>.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            You can also send it on demand: on the <strong>Compliance</strong> page, click <strong>Email expiry alerts</strong> at the top right and your admins get the digest straight away.
+          </p>
+        </SectionBlock>
         <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
       </div>
     ),

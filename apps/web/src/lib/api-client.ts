@@ -318,6 +318,8 @@ export function createApiClient(token: string) {
         }),
       sendKnowledgeGapDigest: () =>
         apiFetch<{ digest_sent: boolean; refreshers: number }>('/settings/knowledge-gap-digest/send', token, { method: 'POST' }),
+      sendComplianceExpiryAlerts: () =>
+        apiFetch<{ sent: boolean; expiring: number; expired: number; recipients: number }>('/settings/compliance-expiry/send', token, { method: 'POST' }),
       uploadLogo: (file: File) => {
         const form = new FormData()
         form.append('logo', file)

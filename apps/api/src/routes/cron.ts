@@ -9,6 +9,7 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
+import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
 
 export const cronRouter = Router()
 
@@ -28,6 +29,19 @@ cronRouter.get('/knowledge-gaps', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/knowledge-gaps] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Daily: email Enterprise admins a digest of staff credentials (DBS, right to
+// work, registration) that have expired or expire within 30 days.
+cronRouter.get('/credential-expiry', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await runCredentialExpiryAllTenants()
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/credential-expiry] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

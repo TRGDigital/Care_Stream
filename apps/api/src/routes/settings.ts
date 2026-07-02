@@ -8,6 +8,7 @@ import { normaliseCategories } from '../lib/policy-categories'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
+import { runCredentialExpiryForTenant } from '../services/workforce/credentialExpiry'
 
 // Tenant settings: inbound email address, email allowlist, logo, email preferences.
 // Mounted at /settings in app.ts, behind requireAuth + tenantGuard.
@@ -30,6 +31,7 @@ const EMAIL_PREF_DEFAULTS: Record<string, boolean> = {
   audit_updates:           true,
   cqc_staff_prep:          true,
   onboarding_updates:      true,
+  compliance_expiry_alerts: true,
   monthly_invoice:         false,
   trg_product_updates:     false,
 }
@@ -307,6 +309,21 @@ settingsRouter.post('/knowledge-gap-digest/send', async (req: Request, res: Resp
   if (user.role !== 'admin') { return err(res, 'FORBIDDEN', 'Only admins can send the digest', 403) }
   try {
     const result = await runKnowledgeGapJobForTenant(user.tenant_id, { weekly: true })
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'SEND_FAILED', e.message, 500)
+  }
+})
+
+// ─── POST /settings/compliance-expiry/send ────────────────────────────────────
+// Admin "send now": email this tenant's admins a digest of staff credentials that
+// have expired or expire within 30 days (bypasses the email preference toggle).
+
+settingsRouter.post('/compliance-expiry/send', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') { return err(res, 'FORBIDDEN', 'Only admins can send the alerts', 403) }
+  try {
+    const result = await runCredentialExpiryForTenant(user.tenant_id, { force: true })
     ok(res, result)
   } catch (e: any) {
     err(res, 'SEND_FAILED', e.message, 500)

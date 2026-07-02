@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
-import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload } from 'lucide-react'
+import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail } from 'lucide-react'
 
 type Register = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['register']>>
 type StaffRow = Register['staff'][number]
@@ -59,6 +59,19 @@ export default function WorkforcePage() {
   const [data, setData] = useState<Register | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<StaffRow | null>(null)
+  const [alertState, setAlertState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [alertMsg, setAlertMsg] = useState('')
+
+  async function sendAlerts() {
+    if (!session?.accessToken || alertState === 'sending') return
+    setAlertState('sending'); setAlertMsg('')
+    try {
+      const r = await createApiClient(session.accessToken).settings.sendComplianceExpiryAlerts()
+      if (r.expired === 0 && r.expiring === 0) { setAlertState('sent'); setAlertMsg('Nothing expired or expiring in the next 30 days.') }
+      else if (r.sent && r.recipients > 0) { setAlertState('sent'); setAlertMsg(`Emailed ${r.recipients} admin${r.recipients === 1 ? '' : 's'}: ${r.expired} expired, ${r.expiring} expiring soon.`) }
+      else { setAlertState('sent'); setAlertMsg('No admin recipients to email.') }
+    } catch { setAlertState('error'); setAlertMsg('Could not send the alerts.') }
+  }
 
   async function load() {
     if (!session?.accessToken) return
@@ -101,9 +114,19 @@ export default function WorkforcePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-dark">Workforce compliance</h1>
-        <p className="mt-0.5 text-sm text-neutral-mid">Safe-recruitment credentials for every staff member. Click a row to record or update their credentials.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-dark">Workforce compliance</h1>
+          <p className="mt-0.5 text-sm text-neutral-mid">Safe-recruitment credentials for every staff member. Click a row to record or update their credentials.</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <button onClick={sendAlerts} disabled={alertState === 'sending'}
+            title="Email your admins a digest of credentials that are expired or expiring within 30 days"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+            {alertState === 'sending' ? <><Loader2 size={13} className="animate-spin" /> Sending…</> : <><Mail size={13} /> Email expiry alerts</>}
+          </button>
+          {alertMsg && <p className={`max-w-[16rem] text-right text-xs ${alertState === 'error' ? 'text-red-600' : 'text-neutral-mid'}`}>{alertMsg}</p>}
+        </div>
       </div>
 
       {/* Summary */}

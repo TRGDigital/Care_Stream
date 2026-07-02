@@ -2436,6 +2436,10 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
   const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
   const [savedSet,    setSavedSet]    = useState<Set<string>>(new Set())
+  // Each induction flow is a default-closed accordion, so the list reads like the
+  // training cards; click a flow to expand its steps.
+  const [openInd, setOpenInd] = useState<Set<string>>(new Set())
+  const toggleInd = (id: string) => setOpenInd(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   // Per-step second-language aid: flip an individual induction step into the 2nd
   // language to understand it; the rest of the induction stays in the first language.
   const [langByStep, setLangByStep] = useState<Record<string, boolean>>({})
@@ -2513,29 +2517,43 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
             const done  = e.steps.filter((s: any) => s.progress?.completed_at).length
             const total = e.steps.length
             const pct   = total > 0 ? Math.round((done / total) * 100) : 0
+            const isOpen = openInd.has(e.enrollment_id)
+            const thumb  = e.illustration_url ? (apiAssetUrl(e.illustration_url) ?? '') : ''
             return (
-              <div key={e.enrollment_id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="border-b border-gray-100 px-5 py-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-neutral-dark">{e.flow_name}</p>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {e.completed_at
-                        ? <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Complete</span>
-                        : <span className="text-xs text-neutral-mid">{done}/{total} steps</span>
-                      }
+              <div key={e.enrollment_id} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => toggleInd(e.enrollment_id)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-light/40"
+                >
+                  {thumb
+                    ? <img src={thumb} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                    : <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-light/70 to-teal/10"><ClipboardCheck size={20} className="text-teal" /></div>}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-semibold text-neutral-dark">{e.flow_name}</p>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {e.completed_at
+                          ? <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Complete</span>
+                          : <span className="text-xs text-neutral-mid">{done}/{total} steps</span>
+                        }
+                        {isOpen ? <ChevronUp size={16} className="text-neutral-mid" /> : <ChevronDown size={16} className="text-neutral-mid" />}
+                      </div>
                     </div>
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
+                      <div className="h-1.5 rounded-full bg-teal transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    {e.due_date && !e.completed_at && (
+                      <p className="mt-1.5 text-xs text-neutral-mid">
+                        Due: {new Date(e.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </p>
+                    )}
                   </div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
-                    <div className="h-1.5 rounded-full bg-teal transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                  {e.due_date && !e.completed_at && (
-                    <p className="mt-1.5 text-xs text-neutral-mid">
-                      Due: {new Date(e.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </p>
-                  )}
-                </div>
+                </button>
 
-                <div className="divide-y divide-gray-50 px-5">
+                {isOpen && (<>
+                <div className="divide-y divide-gray-50 border-t border-gray-100 px-5">
                   {e.steps.map((step: any, i: number) => {
                     const isCompleted = !!step.progress?.completed_at
                     const isLocked    = i > 0 && !e.steps[i - 1].progress?.completed_at
@@ -2659,13 +2677,14 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
                 </div>
 
                 {e.completed_at && (
-                  <div className="flex items-center gap-2 border-t border-green-50 bg-green-50/50 px-5 py-3 rounded-b-xl">
+                  <div className="flex items-center gap-2 border-t border-green-50 bg-green-50/50 px-5 py-3">
                     <CheckCircle2 size={15} className="text-green-500" />
                     <p className="text-sm font-medium text-green-700">
                       Induction complete — well done!
                     </p>
                   </div>
                 )}
+                </>)}
               </div>
             )
           })}

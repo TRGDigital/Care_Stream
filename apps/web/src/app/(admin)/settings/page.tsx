@@ -591,26 +591,19 @@ export default function SettingsPage() {
       )}
 
       {/* Search */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search settings — e.g. email, logo, sites, language, training…"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-9 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"
-              aria-label="Clear search"
-            >
-              <X size={15} />
-            </button>
-          )}
-        </div>
+      <div className="relative mb-4 max-w-xl">
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search settings…"
+          className="w-full rounded-card border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-sm shadow-card outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+        />
+        {search && (
+          <button onClick={() => setSearch('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark">
+            <X size={15} />
+          </button>
+        )}
       </div>
 
       <SettingsSearchCtx.Provider value={q}>

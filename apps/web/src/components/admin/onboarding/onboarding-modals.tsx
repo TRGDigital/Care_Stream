@@ -9,6 +9,68 @@ import { createApiClient } from '@/lib/api-client'
 import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus } from 'lucide-react'
 import type { Step, Flow } from './onboarding-shared'
 
+// ─── Policy typeahead (for "read policy" steps) ───────────────────────────────
+
+type PolicyLite = { id: string; name: string; document_category?: string; status?: string }
+
+// A searchable picker: the tenant types a policy name, sees their uploaded
+// policies filtered live, and selects one — which stores the policy's real id
+// in the step's policy_id while showing the readable name.
+function PolicyPicker({ policies, loading, value, onChange }: {
+  policies: PolicyLite[]
+  loading: boolean
+  value?: string
+  onChange: (id: string) => void
+}) {
+  const selected = policies.find(p => p.id === value)
+  const [query, setQuery] = useState(selected?.name ?? value ?? '')
+  const [open,  setOpen]  = useState(false)
+
+  const q = query.trim().toLowerCase()
+  const matches = (q
+    ? policies.filter(p => p.name?.toLowerCase().includes(q) || p.id?.toLowerCase().includes(q))
+    : policies
+  ).slice(0, 8)
+
+  return (
+    <div className="relative">
+      <input
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value.trim()) onChange('') }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={loading ? 'Loading your policies…' : 'Start typing a policy name to link it (optional)'}
+        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-neutral-mid focus:border-teal focus:outline-none" />
+      {open && !loading && matches.length > 0 && (
+        <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+          {matches.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { onChange(p.id); setQuery(p.name); setOpen(false) }}
+              className="flex w-full flex-col items-start px-3 py-1.5 text-left hover:bg-neutral-light"
+            >
+              <span className="text-xs font-medium text-neutral-dark">{p.name}</span>
+              {p.document_category && (
+                <span className="text-[10px] capitalize text-neutral-mid">{p.document_category.replace(/_/g, ' ')}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      {open && !loading && q && matches.length === 0 && (
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[11px] text-neutral-mid shadow-lg">
+          No matching policy. Upload it on the Policies page first.
+        </div>
+      )}
+      {selected
+        ? <p className="mt-1 text-[11px] text-teal">Linked to &ldquo;{selected.name}&rdquo;</p>
+        : <p className="mt-1 text-[11px] text-neutral-mid">Optional. Links this step to a specific uploaded policy.</p>}
+    </div>
+  )
+}
+
 // ─── Flow Form ────────────────────────────────────────────────────────────────
 
 export function FlowForm({ api, initial, onClose, onSaved }: {
@@ -26,6 +88,22 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
   )
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState('')
+
+  // The tenant's uploaded policies, for the "read policy" step typeahead.
+  const [policies,        setPolicies]        = useState<PolicyLite[]>([])
+  const [policiesLoading, setPoliciesLoading] = useState(true)
+  useEffect(() => {
+    let alive = true
+    api.policies.list({ limit: '2000' })
+      .then((d: any) => {
+        if (!alive) return
+        const list: PolicyLite[] = (d?.policies ?? []).filter((p: any) => !p.status || p.status === 'active')
+        setPolicies(list)
+      })
+      .catch(() => {})
+      .finally(() => { if (alive) setPoliciesLoading(false) })
+    return () => { alive = false }
+  }, [api])
 
   function addStep(type: 'read_policy' | 'answer_question') {
     setSteps(prev => [...prev, type === 'answer_question'
@@ -129,9 +207,12 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
                     placeholder="Step title (e.g. Read Medication Policy)"
                     className="mb-2 w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
                   {step.type === 'read_policy' && (
-                    <input value={step.policy_id ?? ''} onChange={e => updateStep(i, { policy_id: e.target.value })}
-                      placeholder="Policy ID (optional — links the step to a specific policy)"
-                      className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-neutral-mid focus:border-teal focus:outline-none" />
+                    <PolicyPicker
+                      policies={policies}
+                      loading={policiesLoading}
+                      value={step.policy_id}
+                      onChange={id => updateStep(i, { policy_id: id })}
+                    />
                   )}
                   {step.type === 'answer_question' && (
                     <div className="space-y-2">

@@ -7,7 +7,33 @@ import { notifyUsers, notifyFollowUp } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
+import { illustrationUrl } from '../services/training/moduleImage'
 import { DEFAULT_ONBOARDING_QUESTIONS_PROMPT } from './onboarding-templates'
+
+// Auto-match a flow to a training cover illustration by topic keywords, so the
+// staff hub can show a thumbnail that reads like the training cards. Generic
+// words (induction, policy, staff…) are ignored so only real topics match.
+const GENERIC_FLOW_WORDS = new Set([
+  'induction','inductions','policy','policies','procedure','procedures','training','module','modules',
+  'course','flow','flows','new','starter','starters','staff','care','home','homes','general','basic',
+  'intro','introduction','awareness','management','adult','adults','level','the','and','for','your','our',
+  'of','to','in','on','with','read','answer','question','questions',
+])
+function flowKeywords(text: string): Set<string> {
+  return new Set((text.toLowerCase().match(/[a-z]+/g) ?? []).filter(w => w.length >= 3 && !GENERIC_FLOW_WORDS.has(w)))
+}
+function pickIllustrationKey(flowText: string, candidates: Array<{ name: string; illustration_key: string | null }>): string | null {
+  const kw = flowKeywords(flowText)
+  if (kw.size === 0) return null
+  let best: { key: string; score: number } | null = null
+  for (const c of candidates) {
+    if (!c.illustration_key) continue
+    let score = 0
+    for (const w of flowKeywords(c.name)) if (kw.has(w)) score++
+    if (score > 0 && (!best || score > best.score)) best = { key: c.illustration_key, score }
+  }
+  return best?.key ?? null
+}
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { siteUrl } from '../lib/urls'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
@@ -362,7 +388,7 @@ onboardingRouter.get('/my', async (req, res) => {
     const tenantId = getTenantId()
     const userId   = req.user!.sub
 
-    const [enrollments, user, tenant] = await Promise.all([
+    const [enrollments, user, tenant, coverModules] = await Promise.all([
       prisma.onboardingEnrollment.findMany({
         where:   { user_id: userId, tenant_id: tenantId },
         include: {
@@ -373,6 +399,12 @@ onboardingRouter.get('/my', async (req, res) => {
       }),
       (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+      // Training modules with a cover illustration (this tenant's + shared platform
+      // ones) — candidates for auto-matching a thumbnail to each induction flow.
+      (prisma as any).trainingModule.findMany({
+        where:  { illustration_key: { not: null }, OR: [{ tenant_id: tenantId }, { tenant_id: null }] },
+        select: { name: true, illustration_key: true },
+      }).catch(() => [] as Array<{ name: string; illustration_key: string | null }>),
     ])
 
     // Deliver the induction in the staff member's first language when their
@@ -382,10 +414,15 @@ onboardingRouter.get('/my', async (req, res) => {
     const translate = langCode !== 'eng'
 
     // English baseline — always returned, even if translation fails.
-    const baseline = enrollments.map(e => ({
+    const baseline = enrollments.map(e => {
+      // Match a training cover image to the flow from its name, step titles and
+      // policy sections; the hub shows it as the flow thumbnail (or a fallback tile).
+      const flowText = [e.flow.name, ...e.flow.steps.map(s => `${s.title} ${(s as any).policy_section ?? ''}`)].join(' ')
+      return {
       enrollment_id: e.id,
       flow_id:       e.flow_id,
       flow_name:     e.flow.name,
+      illustration_url: illustrationUrl(pickIllustrationKey(flowText, coverModules)),
       enrolled_at:   e.enrolled_at,
       due_date:      e.due_date,
       completed_at:  e.completed_at,
@@ -399,7 +436,8 @@ onboardingRouter.get('/my', async (req, res) => {
         options:   s.options,                // shown to staff for MCQ — correct_option is NOT exposed
         progress:  e.progress.find(p => p.step_id === s.id) ?? null,
       })),
-    }))
+      }
+    })
     console.log(`[onboarding/my] user=${userId} lang=${langCode} translate=${translate} count=${baseline.length}`)
 
     let result = baseline

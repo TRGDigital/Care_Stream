@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
@@ -8,8 +8,12 @@ import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
-  Mail, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
+  Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
+
+// Active search query, shared with every SettingSection so non-matching
+// sections hide themselves (mirrors the Help & Guides search).
+const SettingsSearchCtx = createContext('')
 
 // ─── Email preference definitions ─────────────────────────────────────────────
 
@@ -48,9 +52,16 @@ function SettingSection({
   defaultOpen?: boolean
   children: React.ReactNode
 }) {
+  const query = useContext(SettingsSearchCtx)
   const [open, setOpen] = useState(defaultOpen)
+
+  // Hide sections that don't match the active search (title or description).
+  if (query && !`${title} ${description}`.toLowerCase().includes(query)) return null
+  // While searching, matching sections open so their content is visible.
+  const expanded = query ? true : open
+
   return (
-    <div className="rounded-card overflow-hidden bg-white shadow-card">
+    <div data-setting-section className="rounded-card overflow-hidden bg-white shadow-card">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -61,12 +72,12 @@ function SettingSection({
           <p className="text-sm font-semibold text-neutral-dark">{title}</p>
           <p className="text-xs text-neutral-mid mt-0.5">{description}</p>
         </div>
-        {open
+        {expanded
           ? <ChevronUp size={15} className="shrink-0 text-neutral-mid" />
           : <ChevronDown size={15} className="shrink-0 text-neutral-mid" />
         }
       </button>
-      {open && (
+      {expanded && (
         <div className="border-t border-gray-100 px-6 py-5">
           {children}
         </div>
@@ -178,6 +189,14 @@ export default function SettingsPage() {
   const [sites,          setSites]          = useState<any[]>([])
   const [showAddSite,    setShowAddSite]    = useState(false)
   const [newSiteName,    setNewSiteName]    = useState('')
+  const [search,         setSearch]         = useState('')
+  const q = search.trim().toLowerCase()
+  const sectionsRef = useRef<HTMLDivElement>(null)
+  const [hasResults, setHasResults] = useState(true)
+  useEffect(() => {
+    if (!q) { setHasResults(true); return }
+    setHasResults((sectionsRef.current?.querySelectorAll('[data-setting-section]').length ?? 0) > 0)
+  }, [q])
   const [addingSite,     setAddingSite]     = useState(false)
   const [siteError,      setSiteError]      = useState('')
   const [switchingTo,    setSwitchingTo]    = useState<string | null>(null)
@@ -571,7 +590,37 @@ export default function SettingsPage() {
         <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="space-y-3">
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search settings — e.g. email, logo, sites, language, training…"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-9 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-mid hover:text-neutral-dark"
+              aria-label="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <SettingsSearchCtx.Provider value={q}>
+      <div ref={sectionsRef} className="space-y-3">
+
+        {q && !hasResults && (
+          <div className="rounded-card border border-gray-200 bg-white px-5 py-8 text-center text-sm text-neutral-mid">
+            No settings match &ldquo;{search.trim()}&rdquo;.
+          </div>
+        )}
 
         {/* ── Dedicated email address ──────────────────────────────────────── */}
         <SettingSection icon={Mail} title="Dedicated email address" description="Your unique inbound email address for staff policy queries." defaultOpen>
@@ -1089,6 +1138,7 @@ export default function SettingsPage() {
         {session?.accessToken && <DangerZone token={session.accessToken} />}
 
       </div>
+      </SettingsSearchCtx.Provider>
     </div>
   )
 }

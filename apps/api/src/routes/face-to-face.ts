@@ -19,6 +19,7 @@ import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { evidenceUploadMiddleware } from '../middleware/upload'
 import { uploadEvidenceFile, uploadCertificateFile, downloadFile, deleteFile } from '../services/storage/s3'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
+import { detectEvidenceType, SAFE_EVIDENCE_TYPES } from '../lib/evidence-file'
 
 export const faceToFaceRouter = Router()
 
@@ -755,26 +756,6 @@ faceToFaceRouter.put('/mandatory', requireAdmin, async (req: Request, res: Respo
 // Hard cap on files per session (abuse / storage-bomb guard).
 const MAX_EVIDENCE_PER_SESSION = 40
 
-// Content sniffing: validate the ACTUAL bytes, never trust the browser-reported
-// MIME or the filename extension. We only ever accept PDF + raster images, and we
-// store/serve the canonical type we detected here. This blocks disguised payloads
-// (e.g. an HTML/SVG/script file renamed .png) that could otherwise become stored
-// XSS when served back from the API origin.
-function detectEvidenceType(buf: Buffer): { mime: string; ext: string } | null {
-  const b = buf
-  const ascii = (i: number, s: string) => s.split('').every((c, k) => b[i + k] === c.charCodeAt(0))
-  if (b.length >= 5 && ascii(0, '%PDF-')) return { mime: 'application/pdf', ext: 'pdf' }
-  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { mime: 'image/jpeg', ext: 'jpg' }
-  if (b.length >= 8 && b[0] === 0x89 && ascii(1, 'PNG') && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return { mime: 'image/png', ext: 'png' }
-  if (b.length >= 6 && (ascii(0, 'GIF87a') || ascii(0, 'GIF89a'))) return { mime: 'image/gif', ext: 'gif' }
-  if (b.length >= 12 && ascii(0, 'RIFF') && ascii(8, 'WEBP')) return { mime: 'image/webp', ext: 'webp' }
-  if (b.length >= 12 && ascii(4, 'ftyp')) {
-    const brand = b.toString('ascii', 8, 12)
-    if (['heic', 'heix', 'heif', 'hevc', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'].includes(brand)) return { mime: 'image/heic', ext: 'heic' }
-  }
-  return null
-}
-
 // POST /face-to-face/sessions/:id/evidence  (multipart: field "file")
 faceToFaceRouter.post('/sessions/:id/evidence', requireAdmin, evidenceUploadMiddleware, async (req: Request, res: Response) => {
   const tenantId = tid(req)
@@ -829,7 +810,6 @@ faceToFaceRouter.get('/evidence', requireAdmin, async (req: Request, res: Respon
 })
 
 // GET /face-to-face/evidence/:id  — authenticated stream of the file
-const SAFE_EVIDENCE_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'])
 faceToFaceRouter.get('/evidence/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = tid(req)
   try {

@@ -176,6 +176,12 @@ model StaffCredential {
   issued_at  DateTime?
   expires_at DateTime?
   notes      String?
+  // Uploaded evidence document (content-validated + malware-scanned, stored in S3)
+  evidence_key         String?
+  evidence_name        String?
+  evidence_type        String?
+  evidence_size        Int?
+  evidence_uploaded_at DateTime?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 

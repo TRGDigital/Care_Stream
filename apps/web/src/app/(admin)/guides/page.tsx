@@ -1482,6 +1482,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={3}>The register updates straight away, and the colour reflects the new expiry date. Use <strong>Clear</strong> to remove a credential if it was added by mistake.</Step>
           </div>
         </SectionBlock>
+        <SectionBlock title="Uploading the documents">
+          <p className="text-sm text-neutral-mid">
+            You can attach the actual document to each credential (the DBS certificate, visa, registration card or reference letter). Open a staff member&rsquo;s record from the register and use <strong>Upload</strong> next to a credential to add a PDF or image (up to 15 MB). Files are validated and virus-scanned before they are stored securely.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Once uploaded, a paperclip appears on that credential in the register, and you can <strong>View</strong> or <strong>Replace</strong> the document at any time. Each staff member&rsquo;s record page also has a <strong>Compliance credentials</strong> section showing their status and letting you open the uploaded documents, so everything is together as CQC evidence.
+          </p>
+        </SectionBlock>
         <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
       </div>
     ),

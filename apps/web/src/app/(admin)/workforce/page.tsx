@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
-import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users } from 'lucide-react'
+import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload } from 'lucide-react'
 
 type Register = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['register']>>
 type StaffRow = Register['staff'][number]
@@ -144,6 +144,7 @@ export default function WorkforcePage() {
                         <td key={t.key} className="px-3 py-3 text-center">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>
                           {t.hasExpiry && c?.expires_at && <p className="mt-0.5 text-[10px] text-neutral-mid">{fmtDate(c.expires_at)}</p>}
+                          {c?.document && <p className="mt-0.5 flex items-center justify-center gap-0.5 text-[10px] text-neutral-mid" title={c.document.name}><Paperclip size={9} /> document</p>}
                         </td>
                       )
                     })}
@@ -179,9 +180,39 @@ function EditStaffModal({ token, staff, onClose, onSaved }: { token: string; sta
     return init
   })
   const [busy, setBusy] = useState<string | null>(null)
+  const [docBusy, setDocBusy] = useState<string | null>(null)
+  const [docErr, setDocErr] = useState('')
+  const [docs, setDocs] = useState<Record<string, { name: string } | null>>(() => {
+    const init: any = {}
+    for (const t of TYPES) init[t.key] = staff.credentials[t.key]?.document ? { name: staff.credentials[t.key]!.document!.name } : null
+    return init
+  })
 
   function set(type: string, patch: Partial<{ reference: string; issued_at: string; expires_at: string; notes: string }>) {
     setForm(prev => ({ ...prev, [type]: { ...prev[type], ...patch } }))
+  }
+
+  async function uploadDoc(type: string, file: File) {
+    setDocBusy(type); setDocErr('')
+    try {
+      const r = await api.workforce.uploadDocument(staff.id, type, file)
+      setDocs(prev => ({ ...prev, [type]: r.credential.document ? { name: r.credential.document.name } : null }))
+      onSaved()
+    } catch (e: any) { setDocErr(e?.message ?? 'Could not upload the document.') }
+    finally { setDocBusy(null) }
+  }
+  async function removeDoc(type: string) {
+    setDocBusy(type); setDocErr('')
+    try { await api.workforce.deleteDocument(staff.id, type); setDocs(prev => ({ ...prev, [type]: null })); onSaved() }
+    finally { setDocBusy(null) }
+  }
+  async function viewDoc(type: string) {
+    try {
+      const blob = await api.workforce.downloadDocument(staff.id, type)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (e: any) { setDocErr(e?.message ?? 'Could not open the document.') }
   }
 
   async function save(type: string) {
@@ -211,6 +242,7 @@ function EditStaffModal({ token, staff, onClose, onSaved }: { token: string; sta
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
         <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-5">
+          {docErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{docErr}</p>}
           {TYPES.map(t => {
             const f = form[t.key]
             return (
@@ -245,6 +277,28 @@ function EditStaffModal({ token, staff, onClose, onSaved }: { token: string; sta
                       className="w-full rounded border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
                   </div>
                 </div>
+                {/* Document upload */}
+                <div className="mt-3 flex items-center justify-between gap-2 rounded-md border border-gray-100 bg-neutral-light/40 px-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2 text-xs text-neutral-mid">
+                    <Paperclip size={13} className="shrink-0" />
+                    {docs[t.key] ? <span className="truncate text-neutral-dark">{docs[t.key]!.name}</span> : <span>No document uploaded</span>}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {docs[t.key] && (
+                      <>
+                        <button onClick={() => viewDoc(t.key)} className="text-xs font-medium text-teal hover:underline">View</button>
+                        <button onClick={() => removeDoc(t.key)} disabled={docBusy === t.key} className="text-xs text-neutral-mid hover:text-red-500 disabled:opacity-50">Remove</button>
+                      </>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                      {docBusy === t.key ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                      {docs[t.key] ? 'Replace' : 'Upload'}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.heic" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadDoc(t.key, f); e.target.value = '' }} />
+                    </label>
+                  </div>
+                </div>
+
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <button onClick={() => clear(t.key)} disabled={busy === t.key} className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-mid hover:text-red-500 disabled:opacity-50">
                     <Trash2 size={12} /> Clear

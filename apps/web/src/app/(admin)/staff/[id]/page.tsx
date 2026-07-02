@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import {
-  ArrowLeft, Award, Bell, BookOpen, Brain, CalendarDays, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
-  Lightbulb, ListChecks, Loader2, MessageSquare, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
+  ArrowLeft, Award, BadgeCheck, Bell, BookOpen, Brain, CalendarDays, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
+  Lightbulb, ListChecks, Loader2, MessageSquare, Paperclip, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
 } from 'lucide-react'
 
 // Admin-facing explanations for each section of the record.
@@ -27,6 +28,16 @@ const TIP = {
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
+}
+
+// Compliance credential status → chip style (Enterprise workforce register).
+const COMP_STATUS: Record<string, { cls: string; label: string }> = {
+  valid:       { cls: 'bg-green-50 text-green-600', label: 'Valid' },
+  received:    { cls: 'bg-green-50 text-green-600', label: 'Received' },
+  expiring:    { cls: 'bg-amber-50 text-amber-700', label: 'Expiring' },
+  expired:     { cls: 'bg-red-50 text-red-600',     label: 'Expired' },
+  missing:     { cls: 'bg-red-50 text-red-600',     label: 'Missing' },
+  outstanding: { cls: 'bg-gray-100 text-neutral-mid', label: 'Outstanding' },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -147,6 +158,21 @@ export default function StaffRecordPage() {
     createApiClient(token).users.record(id).then(setRec).catch(() => {}).finally(() => setLoading(false))
   }, [token, id])
   useEffect(load, [load])
+
+  // Compliance credentials (Enterprise only) — shown as a read-only section.
+  const { features } = usePlanFeatures()
+  const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
+  const [compliance, setCompliance] = useState<any>(null)
+  useEffect(() => {
+    if (!token || !hasWorkforce) return
+    createApiClient(token).workforce.staff(id).then(setCompliance).catch(() => {})
+  }, [token, id, hasWorkforce])
+  async function viewComplianceDoc(type: string) {
+    try {
+      const blob = await createApiClient(token).workforce.downloadDocument(id, type)
+      const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch { /* ignore */ }
+  }
 
   async function sendReminder() {
     setBusy('remind'); setNote('')
@@ -567,6 +593,41 @@ export default function StaffRecordPage() {
                   <button onClick={() => openCertificate(c.id)} className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal no-print"><Download size={13} /> Open</button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Compliance credentials (Enterprise) */}
+        {hasWorkforce && compliance && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><BadgeCheck size={15} className="text-teal" /> Compliance credentials <InfoTip text="Safe-recruitment credentials for this staff member: DBS, right to work, professional registration and references, with any uploaded documents. Manage these on the Workforce compliance page." /></p>
+              <a href="/workforce" className="text-xs font-medium text-teal hover:underline no-print">Manage</a>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {[
+                { key: 'dbs',                        label: 'DBS check' },
+                { key: 'right_to_work',              label: 'Right to work' },
+                { key: 'professional_registration',  label: 'Professional registration' },
+                { key: 'reference',                  label: 'References' },
+              ].map(t => {
+                const c  = compliance.credentials?.[t.key]
+                const st = COMP_STATUS[c?.status ?? 'missing'] ?? COMP_STATUS.missing
+                return (
+                  <div key={t.key} className="flex items-center justify-between gap-2 px-5 py-3.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-neutral-dark">{t.label}</p>
+                      <p className="text-xs text-neutral-mid">{c?.expires_at ? `Expires ${fmtDate(c.expires_at)}` : (c?.reference || 'Not recorded')}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {c?.document && (
+                        <button onClick={() => viewComplianceDoc(t.key)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal no-print"><Paperclip size={12} /> Document</button>
+                      )}
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${st.cls}`}>{st.label}</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

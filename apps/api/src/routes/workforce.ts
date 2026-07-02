@@ -1,9 +1,11 @@
 // Workforce compliance register (Enterprise).
 //
 // A single place to record each staff member's "safe to work" credentials
-// (DBS, right to work, professional registration, references) with dates, and
-// see at a glance what is valid, expiring, expired or missing. Status is
-// computed from expires_at at read time (not stored). Reuses the staff list.
+// (DBS, right to work, professional registration, references) with dates and an
+// uploaded document, and see at a glance what is valid, expiring, expired or
+// missing. Status is computed from expires_at at read time (not stored).
+// Documents are content-validated + malware-scanned (reusing the evidence
+// pipeline) and stored in S3.
 
 import { Router, Request, Response } from 'express'
 import { randomUUID } from 'crypto'
@@ -12,6 +14,10 @@ import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { getTenantId } from '../db/tenant-context'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
+import { evidenceUploadMiddleware } from '../middleware/upload'
+import { uploadCredentialFile, downloadFile, deleteFile } from '../services/storage/s3'
+import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
+import { detectEvidenceType, SAFE_EVIDENCE_TYPES } from '../lib/evidence-file'
 
 export const workforceRouter = Router()
 
@@ -39,6 +45,28 @@ function statusFor(type: string, present: boolean, expiresAt: Date | null): stri
   return (ms - now) / 86_400_000 <= 30 ? 'expiring' : 'valid'
 }
 
+// Shape a stored credential row (or null) into the API response for one type.
+function shapeCredential(type: string, row: any) {
+  return {
+    present:    !!row,
+    reference:  row?.reference ?? null,
+    issued_at:  row?.issued_at ?? null,
+    expires_at: row?.expires_at ?? null,
+    notes:      row?.notes ?? null,
+    status:     statusFor(type, !!row, row?.expires_at ?? null),
+    document:   row?.evidence_key
+      ? { name: row.evidence_name, type: row.evidence_type, size: row.evidence_size, uploaded_at: row.evidence_uploaded_at }
+      : null,
+  }
+}
+
+async function findCredential(tenantId: string, userId: string, type: string) {
+  return (prisma as any).staffCredential.findFirst({ where: { tenant_id: tenantId, user_id: userId, type } })
+}
+async function requireStaff(tenantId: string, userId: string) {
+  return (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true } })
+}
+
 // GET /workforce/register — the staff × credentials grid + a group summary.
 workforceRouter.get('/register', async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
@@ -57,24 +85,17 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
     byUser.get(c.user_id)![c.type] = c
   }
 
-  const summary = { valid: 0, expiring: 0, expired: 0, missing: 0 }
+  const summary = { valid: 0, expiring: 0, expired: 0, missing: 0, documents: 0 }
   const staff = users.map((u: any) => {
     const credentials: Record<string, any> = {}
     for (const type of CREDENTIAL_TYPES) {
-      const row = byUser.get(u.id)?.[type] ?? null
-      const status = statusFor(type, !!row, row?.expires_at ?? null)
-      credentials[type] = {
-        present:    !!row,
-        reference:  row?.reference ?? null,
-        issued_at:  row?.issued_at ?? null,
-        expires_at: row?.expires_at ?? null,
-        notes:      row?.notes ?? null,
-        status,
-      }
-      if      (status === 'expired')                        summary.expired++
-      else if (status === 'expiring')                       summary.expiring++
-      else if (status === 'valid' || status === 'received') summary.valid++
-      else                                                  summary.missing++  // missing | outstanding
+      const shaped = shapeCredential(type, byUser.get(u.id)?.[type] ?? null)
+      credentials[type] = shaped
+      if      (shaped.status === 'expired')                               summary.expired++
+      else if (shaped.status === 'expiring')                              summary.expiring++
+      else if (shaped.status === 'valid' || shaped.status === 'received') summary.valid++
+      else                                                                summary.missing++  // missing | outstanding
+      if (shaped.document) summary.documents++
     }
     return { id: u.id, name: u.name, job_role: u.job_role, credentials }
   })
@@ -82,15 +103,26 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
   ok(res, { types: CREDENTIAL_TYPES, staff, summary, total_staff: users.length })
 })
 
-// PUT /workforce/staff/:userId/credentials/:type — record/update one credential.
+// GET /workforce/staff/:userId — one staff member's credentials (for the record page).
+workforceRouter.get('/staff/:userId', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  const user = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } })
+  if (!user) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const creds = await (prisma as any).staffCredential.findMany({ where: { tenant_id: tenantId, user_id: userId } })
+  const byType = new Map<string, any>(creds.map((c: any) => [c.type, c]))
+  const credentials: Record<string, any> = {}
+  for (const type of CREDENTIAL_TYPES) credentials[type] = shapeCredential(type, byType.get(type) ?? null)
+  ok(res, { user, types: CREDENTIAL_TYPES, credentials })
+})
+
+// PUT /workforce/staff/:userId/credentials/:type — record/update one credential's details.
 workforceRouter.put('/staff/:userId/credentials/:type', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const userId = String(req.params.userId)
   const type   = String(req.params.type)
   if (!CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
-
-  const user = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true } })
-  if (!user) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
 
   const { reference, issued_at, expires_at, notes } = req.body ?? {}
   const data = {
@@ -100,19 +132,90 @@ workforceRouter.put('/staff/:userId/credentials/:type', async (req: Request, res
     notes:      notes?.toString().trim() || null,
   }
 
-  const existing = await (prisma as any).staffCredential.findFirst({ where: { tenant_id: tenantId, user_id: userId, type } })
+  const existing = await findCredential(tenantId, userId, type)
   const cred = existing
     ? await (prisma as any).staffCredential.update({ where: { id: existing.id }, data })
     : await (prisma as any).staffCredential.create({ data: { id: randomUUID(), tenant_id: tenantId, user_id: userId, type, ...data } })
 
-  ok(res, { credential: { ...cred, status: statusFor(type, true, cred.expires_at) } })
+  ok(res, { credential: shapeCredential(type, cred) })
 })
 
-// DELETE /workforce/staff/:userId/credentials/:type — clear a credential.
+// DELETE /workforce/staff/:userId/credentials/:type — clear a credential (and its document).
 workforceRouter.delete('/staff/:userId/credentials/:type', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const userId = String(req.params.userId)
   const type   = String(req.params.type)
+  const existing = await findCredential(tenantId, userId, type)
+  if (existing?.evidence_key) await deleteFile(existing.evidence_key).catch(() => {})
   await (prisma as any).staffCredential.deleteMany({ where: { tenant_id: tenantId, user_id: userId, type } })
+  ok(res, { deleted: true })
+})
+
+// POST /workforce/staff/:userId/credentials/:type/document — upload the document (multipart: field "file").
+workforceRouter.post('/staff/:userId/credentials/:type/document', evidenceUploadMiddleware, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  const type   = String(req.params.type)
+  if (!CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) { err(res, 'NO_FILE', 'No file was uploaded.', 400); return }
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+
+  try {
+    // Validate the real bytes, then malware-scan (fail closed if the scanner is configured but errors).
+    const detected = detectEvidenceType(file.buffer)
+    if (!detected) { err(res, 'INVALID_FILE', 'That file is not a valid PDF or image, so it was not uploaded.', 400); return }
+    const scan = await scanBuffer(file.buffer, file.originalname)
+    if (scan.status === 'infected') { err(res, 'MALWARE_DETECTED', 'That file was flagged by the malware scanner and was not uploaded.', 400); return }
+    if (scan.status === 'error' && scannerConfigured()) { err(res, 'SCAN_FAILED', 'The file could not be virus-scanned just now, so it was not uploaded. Please try again.', 503); return }
+
+    const existing = await findCredential(tenantId, userId, type)
+    if (existing?.evidence_key) await deleteFile(existing.evidence_key).catch(() => {})   // replace the old document
+
+    const s3Key = await uploadCredentialFile({ tenantId, userId, key: `${type}-${randomUUID()}.${detected.ext}`, buffer: file.buffer, mimeType: detected.mime })
+    const doc = {
+      evidence_key:  s3Key,
+      evidence_name: file.originalname.slice(0, 200),
+      evidence_type: detected.mime,
+      evidence_size: file.size ?? 0,
+      evidence_uploaded_at: new Date(),
+    }
+    const cred = existing
+      ? await (prisma as any).staffCredential.update({ where: { id: existing.id }, data: doc })
+      : await (prisma as any).staffCredential.create({ data: { id: randomUUID(), tenant_id: tenantId, user_id: userId, type, ...doc } })
+    ok(res, { credential: shapeCredential(type, cred) })
+  } catch (e: any) { err(res, 'UPLOAD_FAILED', e?.message ?? 'Could not upload the file.', 500) }
+})
+
+// GET /workforce/staff/:userId/credentials/:type/document — view/download the document.
+workforceRouter.get('/staff/:userId/credentials/:type/document', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const cred = await findCredential(tenantId, String(req.params.userId), String(req.params.type))
+  if (!cred?.evidence_key) { err(res, 'NOT_FOUND', 'No document found.', 404); return }
+  try {
+    const buf = await downloadFile(cred.evidence_key)
+    // Only ever advertise a known-safe content type; sandbox the response so a bad byte stream cannot execute.
+    const t = SAFE_EVIDENCE_TYPES.has(cred.evidence_type) ? cred.evidence_type : 'application/octet-stream'
+    res.setHeader('Content-Type', t)
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; img-src 'self' data:; object-src 'self'")
+    res.setHeader('Cache-Control', 'private, no-store')
+    const disposition = t === 'application/octet-stream' ? 'attachment' : 'inline'
+    res.setHeader('Content-Disposition', `${disposition}; filename="${(cred.evidence_name ?? 'document').replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
+    res.send(buf)
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not fetch the file.', 500) }
+})
+
+// DELETE /workforce/staff/:userId/credentials/:type/document — remove just the document.
+workforceRouter.delete('/staff/:userId/credentials/:type/document', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const cred = await findCredential(tenantId, String(req.params.userId), String(req.params.type))
+  if (cred?.evidence_key) {
+    await deleteFile(cred.evidence_key).catch(() => {})
+    await (prisma as any).staffCredential.update({
+      where: { id: cred.id },
+      data:  { evidence_key: null, evidence_name: null, evidence_type: null, evidence_size: null, evidence_uploaded_at: null },
+    })
+  }
   ok(res, { deleted: true })
 })

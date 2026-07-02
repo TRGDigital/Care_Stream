@@ -40,6 +40,17 @@ export interface PlanFeatures {
   annual_license:         LicenseUsage
 }
 
+// A workforce compliance credential (DBS / right to work / registration / reference).
+export interface Credential {
+  present:    boolean
+  reference:  string | null
+  issued_at:  string | null
+  expires_at: string | null
+  notes:      string | null
+  status:     string
+  document:   { name: string; type: string; size: number; uploaded_at: string } | null
+}
+
 export interface Citation {
   policy_id:         string
   policy_name:       string
@@ -391,16 +402,27 @@ export function createApiClient(token: string) {
         apiFetch<{
           types: string[]
           total_staff: number
-          summary: { valid: number; expiring: number; expired: number; missing: number }
-          staff: Array<{
-            id: string; name: string; job_role: string | null
-            credentials: Record<string, { present: boolean; reference: string | null; issued_at: string | null; expires_at: string | null; notes: string | null; status: string }>
-          }>
+          summary: { valid: number; expiring: number; expired: number; missing: number; documents: number }
+          staff: Array<{ id: string; name: string; job_role: string | null; credentials: Record<string, Credential> }>
         }>('/workforce/register', token),
+      staff: (userId: string) =>
+        apiFetch<{ user: { id: string; name: string; job_role: string | null }; types: string[]; credentials: Record<string, Credential> }>(`/workforce/staff/${userId}`, token),
       saveCredential: (userId: string, type: string, data: { reference?: string; issued_at?: string | null; expires_at?: string | null; notes?: string }) =>
-        apiFetch<{ credential: any }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'PUT', body: JSON.stringify(data) }),
+        apiFetch<{ credential: Credential }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       deleteCredential: (userId: string, type: string) =>
         apiFetch<{ deleted: boolean }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'DELETE' }),
+      uploadDocument: (userId: string, type: string, file: File) => {
+        const fd = new FormData(); fd.append('file', file)
+        return apiFetch<{ credential: Credential }>(`/workforce/staff/${userId}/credentials/${type}/document`, token, { method: 'POST', body: fd })
+      },
+      documentUrl: (userId: string, type: string) => `${API_URL}/workforce/staff/${userId}/credentials/${type}/document`,
+      downloadDocument: async (userId: string, type: string): Promise<Blob> => {
+        const r = await fetch(`${API_URL}/workforce/staff/${userId}/credentials/${type}/document`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok) throw new Error('Could not fetch the document.')
+        return r.blob()
+      },
+      deleteDocument: (userId: string, type: string) =>
+        apiFetch<{ deleted: boolean }>(`/workforce/staff/${userId}/credentials/${type}/document`, token, { method: 'DELETE' }),
     },
 
     onboarding: {

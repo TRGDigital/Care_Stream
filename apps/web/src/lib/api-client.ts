@@ -367,6 +367,22 @@ export function createApiClient(token: string) {
         apiFetch<{ access_token: string; refresh_token: string; tenant: { id: string; name: string }; user: { id: string; name: string; email: string } }>(
           '/auth/switch-site', token, { method: 'POST', body: JSON.stringify({ tenant_id: tenantId }) }
         ),
+
+      overview: () =>
+        apiFetch<{
+          group_root_id: string
+          current_tenant_id: string
+          is_group: boolean
+          summary: { sites: number; staff: number; training_pct: number | null; onboarding_pct: number | null; audit_pct: number | null; overall_pct: number | null }
+          sites: Array<{
+            id: string; name: string; account_number: string; subscription_status: string
+            is_current: boolean; is_root: boolean; staff: number
+            training:   { complete: number; total: number; pct: number | null }
+            onboarding: { complete: number; total: number; overdue: number; pct: number | null }
+            audits:     { completed: number; total: number; pct: number | null }
+            overdue: number; overall_pct: number | null
+          }>
+        }>('/sites/overview', token),
     },
 
     onboarding: {

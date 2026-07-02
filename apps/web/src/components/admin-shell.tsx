@@ -73,7 +73,7 @@ const NAV_SECTIONS = [
 // Nav a training-only (gateway-tier) tenant can use. Everything else is shown
 // greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
 // once that page exists.
-const TRAINING_ONLY_NAV = new Set(['/dashboard', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
+const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
 
 interface AdminShellProps {
   userName:   string
@@ -151,7 +151,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 
       {/* Sidebar (desktop / tablet ≥ md) */}
       <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -166,7 +166,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} onNavigate={() => setMobileNav(false)} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} onNavigate={() => setMobileNav(false)} />
           </aside>
         </div>
       )}
@@ -267,13 +267,19 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, onNavigate }: { pathname: string; trainingOnly?: boolean; onNavigate?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, multiSite, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; onNavigate?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
-  const sections = trainingOnly
+  let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
         ? { ...s, items: [{ href: '/licences', label: 'Licences', Icon: KeyRound }, ...s.items] }
         : s)
     : NAV_SECTIONS
+  // Multi-site (group) accounts get a Group console at the top of Overview.
+  if (multiSite) {
+    sections = sections.map(s => s.heading === 'Overview'
+      ? { ...s, items: [{ href: '/group', label: 'Group', Icon: Building2 }, ...s.items] }
+      : s)
+  }
   const allHrefs = sections.flatMap(s => s.items.map(i => i.href))
   const hasExactMatch = allHrefs.some(href => href === pathname)
   return (

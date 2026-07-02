@@ -106,7 +106,9 @@ function ActionMenu({
         ref={btnRef}
         onClick={openMenu}
         disabled={working}
-        className="flex items-center gap-0.5 rounded p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark disabled:opacity-40"
+        className={`flex items-center rounded-lg p-1.5 transition-colors disabled:opacity-40 ${
+          open ? 'bg-teal-light/40 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'
+        }`}
         title="Actions"
       >
         <MoreVertical size={15} />
@@ -114,7 +116,7 @@ function ActionMenu({
 
       {open && (
         <div
-          className="fixed z-50 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="dropdown-pop fixed z-50 w-56 origin-top-right overflow-hidden rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl ring-1 ring-black/5"
           style={{
             top:    menuPos.top    !== undefined ? menuPos.top    : undefined,
             bottom: menuPos.bottom !== undefined ? menuPos.bottom : undefined,
@@ -123,39 +125,40 @@ function ActionMenu({
         >
           <button
             onClick={() => { setOpen(false); onEdit(user) }}
-            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+            className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
           >
-            <Pencil size={14} className="text-neutral-mid" />
+            <Pencil size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
             Edit details
           </button>
           <button
             onClick={handleReset}
-            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+            className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
           >
-            <Mail size={14} className="text-neutral-mid" />
+            <Mail size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
             Re-send login
           </button>
           <button
             onClick={handleReset}
-            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-neutral-dark hover:bg-neutral-light"
+            className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
           >
-            <KeyRound size={14} className="text-neutral-mid" />
+            <KeyRound size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
             Reset password
           </button>
+          <div className="mx-2 my-1.5 border-t border-gray-100" />
           {user.is_active ? (
             <button
               onClick={handleDeactivate}
-              className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
             >
-              <UserMinus size={14} />
+              <UserMinus size={15} className="shrink-0 text-red-400 transition-colors group-hover:text-red-600" />
               Archive staff member
             </button>
           ) : (
             <button
               onClick={handleReactivate}
-              className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+              className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-green-700 transition-colors hover:bg-green-50"
             >
-              <UserPlus size={14} />
+              <UserPlus size={15} className="shrink-0 text-green-500 transition-colors group-hover:text-green-700" />
               Restore to active staff
             </button>
           )}

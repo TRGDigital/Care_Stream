@@ -1754,6 +1754,25 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Workforce Compliance Register (Enterprise) */}
+      <RefSection icon={Building2} title="Workforce Compliance Register (Enterprise)">
+        <p className="leading-relaxed text-neutral-mid">
+          Enterprise-only staff credential register: DBS, right to work, professional registration and references,
+          with expiry-driven Red/Amber/Green status. Gated by a new plan feature flag; the register itself is the
+          first slice (V1) of the Workforce compliance feature. Added 2026-07-02.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Feature flag"    value="plans.has_workforce_compliance (boolean). true on the Enterprise plan only. PlanFeature 'has_workforce_compliance' → FEATURE_TIER Enterprise (apps/api/src/lib/plan-limits.ts). Surfaced via GET /billing/summary → features.has_workforce_compliance." />
+          <RefRow label="DB table"        value="staff_credentials (text ids to match Prisma): tenant_id, user_id, type, reference, issued_at, expires_at, notes. UNIQUE(user_id, type). RLS enabled with tenant_isolation policy for carestreamai_api (tenant_id = get_current_tenant_id()), same as other tenant tables." />
+          <RefRow label="Credential types" value="dbs | right_to_work | professional_registration | reference. A missing row = 'missing' (or 'outstanding' for references). No row is created until a credential is recorded." />
+          <RefRow label="Status logic"    value="Computed at read time, NOT stored: reference → received/outstanding; others → expired (past) | expiring (≤30 days) | valid | missing. See statusFor() in routes/workforce.ts." />
+          <RefRow label="Endpoints"       value="GET /workforce/register (grid + summary), PUT /workforce/staff/:userId/credentials/:type (upsert), DELETE …/:type (clear). Router is requireAdmin + checkFeature('has_workforce_compliance') → 402 if not Enterprise." />
+          <RefRow label="Web UI"          value="apps/web/src/app/(admin)/workforce/page.tsx. Nav item 'Compliance' (BadgeCheck) in the Team section, shown greyed/locked on non-Enterprise via usePlanFeatures()/hasFeature in admin-shell.tsx. Direct /workforce visits show an upgrade card." />
+          <RefRow label="api-client"      value="createApiClient(token).workforce.register() / .saveCredential(userId, type, data) / .deleteCredential(userId, type)." />
+          <RefRow label="Roadmap"         value="V1 = register + manual entry (done). V2 = evidence uploads (reuse F2F scanned pipeline) + expiry alerts. V3 = mandatory training matrix + Care Certificate. V4 = supervisions/appraisals + CQC evidence export + group rollup." />
+        </div>
+      </RefSection>
+
       {/* Onboarding Email Drip */}
       <RefSection icon={Mail} title="Onboarding Email Drip (Email Marketing)">
         <p className="leading-relaxed text-neutral-mid">

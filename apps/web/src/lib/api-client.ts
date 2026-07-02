@@ -36,6 +36,7 @@ export interface PlanFeatures {
   has_custom_audits:      boolean
   has_effectiveness:      boolean
   has_training_impact:    boolean
+  has_workforce_compliance: boolean
   annual_license:         LicenseUsage
 }
 
@@ -383,6 +384,23 @@ export function createApiClient(token: string) {
             overdue: number; overall_pct: number | null
           }>
         }>('/sites/overview', token),
+    },
+
+    workforce: {
+      register: () =>
+        apiFetch<{
+          types: string[]
+          total_staff: number
+          summary: { valid: number; expiring: number; expired: number; missing: number }
+          staff: Array<{
+            id: string; name: string; job_role: string | null
+            credentials: Record<string, { present: boolean; reference: string | null; issued_at: string | null; expires_at: string | null; notes: string | null; status: string }>
+          }>
+        }>('/workforce/register', token),
+      saveCredential: (userId: string, type: string, data: { reference?: string; issued_at?: string | null; expires_at?: string | null; notes?: string }) =>
+        apiFetch<{ credential: any }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'PUT', body: JSON.stringify(data) }),
+      deleteCredential: (userId: string, type: string) =>
+        apiFetch<{ deleted: boolean }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'DELETE' }),
     },
 
     onboarding: {

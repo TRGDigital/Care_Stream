@@ -151,6 +151,7 @@ model Plan {
   has_custom_audits            Boolean  @default(false)  // build-your-own audits
   has_effectiveness            Boolean  @default(false)  // Effectiveness of Training analytics
   has_training_impact          Boolean  @default(false)  // audits linked to training + Training Impact analytics
+  has_workforce_compliance     Boolean  @default(false)  // Enterprise: workforce compliance register (DBS/RTW/registration/references)
   monthly_ai_credit_limit      Int?     // AI generation credits/month (training, CQC, onboarding…); null = unlimited
   monthly_annual_license_limit Int?     // annual-training-module allocations per month (1 = one module to one staff member); null = unlimited
   price_monthly_pence          Int                       // stored in pence (UK)
@@ -160,6 +161,27 @@ model Plan {
   tenants                      Tenant[]
 
   @@map("plans")
+}
+
+// Workforce compliance register (Enterprise). One row per staff member per
+// credential type; a missing row means the credential is not yet recorded.
+// Status (valid / expiring / expired / missing) is computed from expires_at at
+// read time, not stored. Plain columns (no relations) to keep it self-contained.
+model StaffCredential {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  type       String    // dbs | right_to_work | professional_registration | reference
+  reference  String?   // certificate / registration number, RTW document type, or reference note
+  issued_at  DateTime?
+  expires_at DateTime?
+  notes      String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@unique([user_id, type])
+  @@index([tenant_id])
+  @@map("staff_credentials")
 }
 
 // ─── Training licences (training-only gateway tier) ─────────────────────────────

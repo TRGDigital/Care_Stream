@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
-  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2,
+  LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -1448,6 +1448,41 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
         </SectionBlock>
         <Tip>Each home keeps its own policies, staff and records. The Group overview never mixes them, it simply totals and compares them so you can manage the whole group from one place.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'workforce',
+    icon:    BadgeCheck,
+    title:   'Workforce compliance register (Enterprise)',
+    summary: 'DBS, right to work, registration and references, all in one place',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is">
+          <p className="text-sm text-neutral-mid">
+            The Workforce compliance register is an <strong>Enterprise feature</strong>. It keeps each staff member&rsquo;s &ldquo;safe to work&rdquo; credentials in one place, with expiry dates and a live Red/Amber/Green view. It is the evidence CQC looks for under safe recruitment (Regulation 19), so nothing quietly lapses.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">Open it from <strong>Compliance</strong> in the Team section of the sidebar. It tracks four credentials per person:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">DBS check</strong> (certificate number and renewal date)</li>
+            <li><strong className="text-neutral-dark">Right to work</strong> (document type, plus expiry for time-limited visas)</li>
+            <li><strong className="text-neutral-dark">Professional registration</strong> (for example NMC, with renewal date)</li>
+            <li><strong className="text-neutral-dark">References</strong> (received or outstanding)</li>
+          </ul>
+        </SectionBlock>
+        <SectionBlock title="The register">
+          <p className="text-sm text-neutral-mid">
+            The register shows every active staff member with a colour-coded status for each credential: <strong className="text-green-700">green</strong> when it is valid, <strong className="text-amber-700">amber</strong> when it expires within 30 days, and <strong className="text-red-600">red</strong> when it is expired or missing. The summary cards at the top total how many are valid, expiring soon, expired or missing across your whole team.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Recording a credential">
+          <div className="space-y-3">
+            <Step n={1}>Click a staff member&rsquo;s row to open their compliance record.</Step>
+            <Step n={2}>For each credential, enter the reference (for example the DBS certificate number), the issue date, and the expiry or renewal date, then click <strong>Save</strong>.</Step>
+            <Step n={3}>The register updates straight away, and the colour reflects the new expiry date. Use <strong>Clear</strong> to remove a credential if it was added by mistake.</Step>
+          </div>
+        </SectionBlock>
+        <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
       </div>
     ),
   },

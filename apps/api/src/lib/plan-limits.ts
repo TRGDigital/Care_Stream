@@ -32,6 +32,7 @@ interface PlanData {
   has_custom_audits:           boolean
   has_effectiveness:           boolean
   has_training_impact:         boolean
+  has_workforce_compliance:    boolean
   monthly_annual_license_limit: number | null
 }
 
@@ -57,6 +58,7 @@ async function loadTenantPlan(tenantId: string): Promise<{
           has_custom_audits:           true,
           has_effectiveness:           true,
           has_training_impact:         true,
+          has_workforce_compliance:    true,
           monthly_annual_license_limit: true,
         },
       },
@@ -257,16 +259,18 @@ export async function checkManualKnowledgeLimit(tenantId: string): Promise<void>
 export type PlanFeature =
   | 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics'
   | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact'
+  | 'has_workforce_compliance'
 
 // Which plan unlocks each feature — used for the upgrade message.
 const FEATURE_TIER: Record<PlanFeature, string> = {
-  has_gap_detection:      'Professional',
-  has_cqc_report:         'Professional',
-  has_advanced_analytics: 'Professional',
-  has_face_to_face:       'Professional',
-  has_custom_audits:      'Enterprise',
-  has_effectiveness:      'Enterprise',
-  has_training_impact:    'Enterprise',
+  has_gap_detection:        'Professional',
+  has_cqc_report:           'Professional',
+  has_advanced_analytics:   'Professional',
+  has_face_to_face:         'Professional',
+  has_custom_audits:        'Enterprise',
+  has_effectiveness:        'Enterprise',
+  has_training_impact:      'Enterprise',
+  has_workforce_compliance: 'Enterprise',
 }
 
 // Check whether the tenant's plan includes a boolean feature.
@@ -298,6 +302,7 @@ export interface PlanFeatures {
   has_custom_audits:       boolean
   has_effectiveness:       boolean
   has_training_impact:     boolean
+  has_workforce_compliance: boolean
   annual_license:          Usage  // monthly annual-module allocation quota
 }
 
@@ -311,6 +316,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
           name: true, price_monthly_pence: true, price_annual_pence: true,
           has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
           has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
+          has_workforce_compliance: true,
         },
       },
     },
@@ -327,6 +333,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
     has_custom_audits:      !!p?.has_custom_audits,
     has_effectiveness:      !!p?.has_effectiveness,
     has_training_impact:    !!p?.has_training_impact,
+    has_workforce_compliance: !!p?.has_workforce_compliance,
     annual_license:         await getAnnualLicenseUsage(tenantId),
   }
 }

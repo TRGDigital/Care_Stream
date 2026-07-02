@@ -63,6 +63,8 @@ const PLANS = [
       'Build your own audits',
       'Effectiveness of training analytics',
       'Audits linked to training + Training Impact',
+      'Multi-site group console and benchmarking',
+      'Workforce compliance register (DBS, right to work, registration, references)',
       'Priority support and a dedicated manager',
     ],
   },
@@ -120,6 +122,13 @@ const MATRIX: Group[] = [
       { label: 'Effectiveness of training',        values: [false, false, true] },
       { label: 'Audits linked to training',        values: [false, false, true] },
       { label: 'Training Impact',                  values: [false, false, true] },
+    ],
+  },
+  {
+    section: 'Multi-site and workforce',
+    rows: [
+      { label: 'Multi-site group console and benchmarking', values: [false, false, true] },
+      { label: 'Workforce compliance register (DBS, right to work, registration, references)', values: [false, false, true] },
     ],
   },
   {

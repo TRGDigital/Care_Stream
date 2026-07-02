@@ -11,9 +11,10 @@ import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
-  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound,
+  Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
+import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache } from '@/lib/page-cache'
 
 const NAV_SECTIONS = [
@@ -38,6 +39,7 @@ const NAV_SECTIONS = [
     iconColor: 'text-purple-400',
     items: [
       { href: '/staff', label: 'Staff', Icon: Users },
+      { href: '/workforce', label: 'Compliance', Icon: BadgeCheck, enterprise: true },
     ],
   },
   {
@@ -86,6 +88,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const router          = useRouter()
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
+  const { features } = usePlanFeatures()
+  const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
 
   const [sites,      setSites]      = useState<any[]>([])
   const [dropOpen,   setDropOpen]   = useState(false)
@@ -151,7 +155,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 
       {/* Sidebar (desktop / tablet ≥ md) */}
       <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -166,7 +170,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} onNavigate={() => setMobileNav(false)} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} />
           </aside>
         </div>
       )}
@@ -267,7 +271,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, multiSite, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; onNavigate?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; onNavigate?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -299,13 +303,29 @@ function SidebarContent({ pathname, trainingOnly, multiSite, onNavigate }: { pat
             <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
               {heading}
             </p>
-            {items.map(({ href, label, Icon }) => {
+            {items.map((item) => {
+              const { href, label, Icon } = item
+              const enterpriseItem = (item as { enterprise?: boolean }).enterprise
               // Training-only tenants see non-training features greyed (upsell), not gone.
               if (trainingOnly && !TRAINING_ONLY_NAV.has(href)) {
                 return (
                   <div
                     key={href}
                     title="Upgrade to full CareStream to unlock this"
+                    className="mb-0.5 flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/30"
+                  >
+                    <Icon size={16} className="text-white/20" />
+                    <span className="flex-1">{label}</span>
+                    <Lock size={12} className="text-white/30" />
+                  </div>
+                )
+              }
+              // Enterprise-only items are shown greyed (upsell) on lower plans.
+              if (enterpriseItem && !hasWorkforce) {
+                return (
+                  <div
+                    key={href}
+                    title="Upgrade to Enterprise to unlock this"
                     className="mb-0.5 flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/30"
                   >
                     <Icon size={16} className="text-white/20" />

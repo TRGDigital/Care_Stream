@@ -272,6 +272,8 @@ function QuestionBankTab({
 function PerformanceTab({ deliveries, staff }: { deliveries: Delivery[]; staff: StaffUser[] }) {
   const evaluated = deliveries.filter(d => d.status === 'evaluated')
   const pending   = deliveries.filter(d => d.status === 'pending')
+  const [openStaff, setOpenStaff] = useState<string[]>([])
+  const toggleStaff = (id: string) => setOpenStaff(e => e.includes(id) ? e.filter(x => x !== id) : [...e, id])
 
   // Build per-user per-domain avg score map
   type DomainStats = { count: number; total: number }
@@ -448,35 +450,78 @@ function PerformanceTab({ deliveries, staff }: { deliveries: Delivery[]; staff: 
         </div>
       )}
 
-      {/* Recent answers */}
-      {evaluated.length > 0 && (
-        <div className="overflow-hidden rounded-card border border-gray-100 bg-white shadow-card">
-          <div className="border-b border-gray-100 px-5 py-4">
-            <h3 className="text-sm font-semibold text-neutral-dark">Recent answers</h3>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {evaluated.slice(0, 15).map(d => (
-              <div key={d.id} className="flex items-start gap-4 px-5 py-4">
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-neutral-dark">{d.user.name}</span>
-                    <DomainBadge domain={d.question.domain} />
+      {/* Recent answers — grouped into a collapsible accordion per staff member */}
+      {evaluated.length > 0 && (() => {
+        // Most-recent first, then group by staff so each person is one accordion.
+        const recent = [...evaluated].sort((a, b) =>
+          (b.answered_at ?? b.sent_at).localeCompare(a.answered_at ?? a.sent_at)
+        )
+        const order: string[] = []
+        const byStaff = new Map<string, Delivery[]>()
+        for (const d of recent) {
+          if (!byStaff.has(d.user_id)) { byStaff.set(d.user_id, []); order.push(d.user_id) }
+          byStaff.get(d.user_id)!.push(d)
+        }
+        return (
+          <div className="overflow-hidden rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h3 className="text-sm font-semibold text-neutral-dark">Recent answers</h3>
+              <p className="mt-0.5 text-xs text-neutral-mid">Grouped by staff member. Click a name to see their answers.</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {order.map(uid => {
+                const items = byStaff.get(uid)!
+                const person = items[0].user
+                const avg = overallAvg(uid)
+                const open = openStaff.includes(uid)
+                return (
+                  <div key={uid}>
+                    <button
+                      type="button"
+                      onClick={() => toggleStaff(uid)}
+                      className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-neutral-light/40"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-neutral-dark">{person.name}</p>
+                        {person.job_role && <p className="truncate text-xs text-neutral-mid">{person.job_role}</p>}
+                      </div>
+                      <span className="shrink-0 rounded-full bg-neutral-light px-2 py-0.5 text-xs font-medium text-neutral-mid">
+                        {items.length} answer{items.length > 1 ? 's' : ''}
+                      </span>
+                      {avg !== null && (
+                        <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${scoreBadgeClass(avg)}`}>
+                          {avg}
+                        </span>
+                      )}
+                      <ChevronDown size={16} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+                    </button>
+                    {open && (
+                      <div className="divide-y divide-gray-50 border-t border-gray-100 bg-neutral-light/20">
+                        {items.map(d => (
+                          <div key={d.id} className="flex items-start gap-4 px-5 py-4">
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <DomainBadge domain={d.question.domain} />
+                              <p className="text-xs text-neutral-mid">Q: {d.rephrased_q}</p>
+                              <p className="text-sm text-neutral-dark bg-white rounded-lg px-3 py-2">"{d.answer_text}"</p>
+                              {d.feedback && <p className="text-xs text-neutral-mid italic">{d.feedback}</p>}
+                            </div>
+                            <div className="shrink-0 text-center">
+                              <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${scoreBadgeClass(d.score)}`}>
+                                {d.score}
+                              </span>
+                              <p className="text-[10px] text-neutral-mid mt-0.5">/100</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-neutral-mid">Q: {d.rephrased_q}</p>
-                  <p className="text-sm text-neutral-dark bg-neutral-light rounded-lg px-3 py-2">"{d.answer_text}"</p>
-                  {d.feedback && <p className="text-xs text-neutral-mid italic">{d.feedback}</p>}
-                </div>
-                <div className="shrink-0 text-center">
-                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${scoreBadgeClass(d.score)}`}>
-                    {d.score}
-                  </span>
-                  <p className="text-[10px] text-neutral-mid mt-0.5">/100</p>
-                </div>
-              </div>
-            ))}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

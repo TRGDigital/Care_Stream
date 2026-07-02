@@ -163,20 +163,22 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
 
   async function save() {
     if (!name.trim()) { setErr('Flow name is required'); return }
-    if (steps.some(s => !s.title.trim())) { setErr('All steps need a title'); return }
     if (steps.some(s => s.type === 'answer_question' && !s.question?.trim())) { setErr('Question steps need a question'); return }
+    if (steps.some(s => s.type !== 'answer_question' && !s.title.trim())) { setErr('All steps need a title'); return }
     setSaving(true)
     setErr('')
     try {
       // A question step with all 4 options filled is treated as auto-marked MCQ;
-      // otherwise it's a free-text question (options cleared).
+      // otherwise it's a free-text question (options cleared). Question steps have
+      // no title field of their own, so derive one from the question text.
       const normalizedSteps = steps.map(s => {
         if (s.type !== 'answer_question') return s
+        const title = s.title?.trim() || titleFromQuestion(s.question ?? '')
         const opts = s.options ?? []
         const mcq = opts.length === 4 && opts.every(o => o.trim())
         return mcq
-          ? { ...s, options: opts.map(o => o.trim()), correct_option: Math.min(Math.max(s.correct_option ?? 0, 0), 3) }
-          : { ...s, options: [], correct_option: null }
+          ? { ...s, title, options: opts.map(o => o.trim()), correct_option: Math.min(Math.max(s.correct_option ?? 0, 0), 3) }
+          : { ...s, title, options: [], correct_option: null }
       })
       const payload = { name: name.trim(), description: description.trim() || undefined, job_roles: jobRoles, steps: normalizedSteps }
       const result = initial
@@ -245,20 +247,22 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
                     <span className="text-xs font-medium text-neutral-mid">Step {i + 1} — {step.type === 'read_policy' ? 'Read Policy' : 'Answer Question'}</span>
                     <button onClick={() => removeStep(i)} className="ml-auto text-gray-300 hover:text-red-400"><X size={14} /></button>
                   </div>
-                  <input value={step.title} onChange={e => updateStep(i, { title: e.target.value })}
-                    placeholder="Step title (e.g. Read Medication Policy)"
-                    className="mb-2 w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
                   {step.type === 'read_policy' && (
-                    <PolicyPicker
-                      policies={policies}
-                      loading={policiesLoading}
-                      value={step.policy_id}
-                      onChange={id => updateStep(i, { policy_id: id })}
-                    />
+                    <>
+                      <input value={step.title} onChange={e => updateStep(i, { title: e.target.value })}
+                        placeholder="Step title (e.g. Read Medication Policy)"
+                        className="mb-2 w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                      <PolicyPicker
+                        policies={policies}
+                        loading={policiesLoading}
+                        value={step.policy_id}
+                        onChange={id => updateStep(i, { policy_id: id })}
+                      />
+                    </>
                   )}
                   {step.type === 'answer_question' && (
                     <div className="space-y-2">
-                      <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value })}
+                      <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value, title: e.target.value.slice(0, 120) })}
                         placeholder="The question staff must answer"
                         rows={2}
                         className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />

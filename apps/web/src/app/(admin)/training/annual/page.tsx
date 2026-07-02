@@ -105,6 +105,7 @@ export default function AnnualTrainingPage() {
               </ul>
             </div>
             <p>A topic shows <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-xs font-medium text-teal">Standard available — free</span> when a ready-made module exists. If you tailor your own, your version is used instead.</p>
+            <p><strong className="text-neutral-dark">Live &amp; Archived</strong> — the <strong className="text-neutral-dark">Live / Archived</strong> toggle lets you keep only the topics relevant to your service in view. Click the <span className="inline-flex items-center gap-1 align-middle"><Archive size={13} /></span> archive icon on any topic to tuck it away. Archiving is per service, it only affects your list, never the shared catalogue or other services, and any modules you&apos;ve already generated or assigned are untouched. Switch to <strong className="text-neutral-dark">Archived</strong> and click <span className="inline-flex items-center gap-1 align-middle"><RotateCcw size={13} /> Restore</span> to bring a topic back into Live whenever you need it.</p>
             <p className="flex items-start gap-2 text-xs"><ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-500" /><span>Topics marked <strong>&ldquo;practical also required&rdquo;</strong> (e.g. Moving &amp; Handling, Medication) — the module is the knowledge part only; record the observed/practical assessment on the staff record.</span></p>
           </div>
         )}

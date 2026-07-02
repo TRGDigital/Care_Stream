@@ -1079,6 +1079,26 @@ trainingRouter.get('/modules/:id/versions', async (req: Request, res: Response) 
   }
 })
 
+// GET /training/versions — ALL version history for this tenant's modules in one call.
+// Replaces the per-module fan-out on the Question History tab; browser-cached for a
+// minute so re-opening the tab / reloading the page doesn't refetch every time.
+trainingRouter.get('/versions', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const mods = await (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId }, select: { id: true } })
+    const ids  = (mods as any[]).map(m => m.id)
+    const rows = ids.length
+      ? await (prisma as any).trainingQuestionVersion.findMany({ where: { module_id: { in: ids } }, orderBy: [{ module_id: 'asc' }, { version: 'desc' }] })
+      : []
+    const byModule: Record<string, any[]> = {}
+    for (const v of (rows as any[])) { (byModule[v.module_id] ??= []).push(v) }
+    res.setHeader('Cache-Control', 'private, max-age=60')
+    ok(res, { versions: byModule })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
 // ─── AI generation helpers ────────────────────────────────────────────────────
 
 const FALLBACK_QUESTION_PROMPT = `You are a training question writer for UK care homes.

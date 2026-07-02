@@ -507,6 +507,11 @@ export function createApiClient(token: string) {
         apiFetch<{ versions: Array<{ id: string; module_id: string; version: number; questions: any[]; created_at: string; created_by: string | null }> }>(
           `/training/modules/${moduleId}/versions`, token
         ),
+      // All version history for the tenant's modules in one browser-cached call (keyed by module id).
+      allModuleVersions: () =>
+        apiFetch<{ versions: Record<string, Array<{ id: string; module_id: string; version: number; questions: any[]; created_at: string; created_by: string | null }>> }>(
+          '/training/versions', token
+        ),
 
       generateQuestions: (moduleId: string, count = 8) =>
         apiFetch<{ questions: Array<{ id: string; text: string; options: string[]; correct: number }> }>(

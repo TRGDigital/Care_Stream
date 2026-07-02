@@ -649,6 +649,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         <p><strong className="text-neutral-dark">Questions-only modules</strong> — if you just want an assessment with no lesson, use <strong className="text-purple-700">Questions only</strong> (or write your own question texts and use <strong className="text-purple-700">Generate answer options</strong> to fill in the A/B/C/D choices). These appear in My Training as a simple question list.</p>
         <p><strong className="text-neutral-dark">Question format</strong> — every question has four options (A, B, C, D). Click the letter circle next to an option to mark it correct (it highlights teal). A question is complete when it has a text and all four options. Incomplete questions are flagged in amber.</p>
         <p><strong className="text-neutral-dark">Saving, versions &amp; locking</strong> — click <strong className="text-neutral-dark">Save changes</strong> to save (each save is a new version in Question History). After saving a complete set, <strong className="text-neutral-dark">Lock questions</strong> records a date-stamped audit trail for CQC evidence; <strong className="text-neutral-dark">Unlock to edit</strong> reopens it.</p>
+        <p><strong className="text-neutral-dark">Live &amp; Archived</strong> — use the <strong className="text-neutral-dark">Live / Archived</strong> toggle at the top to keep your list focused on the modules that matter to your service. Click the <span className="inline-flex items-center gap-1 align-middle"><Archive size={11} /></span> archive icon on any module to move it out of the way. Archived modules are hidden from staff and don&apos;t appear in their hub, but nothing is deleted, no questions, versions or history are lost. Switch to <strong className="text-neutral-dark">Archived</strong> at any time and click <span className="inline-flex items-center gap-1 align-middle"><RotateCcw size={11} /> Restore</span> to move a module straight back into the live section.</p>
 
         <div className="mt-3 rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Button guide</p>
@@ -786,23 +787,28 @@ function HistoryTab({ api, modules }: {
   const [filterFrom,  setFilterFrom]  = useState('')
   const [filterTo,    setFilterTo]    = useState('')
 
+  // One browser-cached call for the whole tenant (was one request per module), and a
+  // stable dependency so switching tabs / re-rendering doesn't refetch every time.
+  const moduleKey = modules.map(m => m.id).join(',')
   useEffect(() => {
+    let cancelled = false
     async function load() {
-      const results = await Promise.all(
-        modules.map(async m => {
-          try {
-            const { versions } = await api.training.moduleVersions(m.id)
-            return { module: m, versions }
-          } catch {
-            return { module: m, versions: [] }
-          }
-        })
-      )
-      setAllVersions(results.filter(r => r.versions.length > 0))
-      setLoading(false)
+      try {
+        const { versions } = await api.training.allModuleVersions()
+        if (cancelled) return
+        const results = modules
+          .map(m => ({ module: m, versions: versions[m.id] ?? [] }))
+          .filter(r => r.versions.length > 0)
+        setAllVersions(results)
+      } catch {
+        if (!cancelled) setAllVersions([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
     load()
-  }, [modules])
+    return () => { cancelled = true }
+  }, [moduleKey])   // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter versions by date range
   const fromMs = filterFrom ? new Date(filterFrom).setHours(0,  0,  0, 0) : null

@@ -469,89 +469,101 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-neutral-dark">{initial ? 'Edit session' : 'New face-to-face session'}</h2>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Training topic</label>
-        <select value={moduleId} onChange={e => setModuleId(e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
-          <option value="">— Choose a module —</option>
-          {modules.map(m => <option key={m.id} value={m.id}>{m.name}{m.ready === false ? ' (not built yet)' : ''}</option>)}
-        </select>
-        {moduleId && modules.find(m => m.id === moduleId)?.ready === false && (
-          <p className="-mt-2 mb-3 text-xs text-amber-600">This module hasn&apos;t been built yet. You can still schedule the session, but you won&apos;t be able to send it digitally until it has a lesson or questions.</p>
-        )}
+        <div className="mb-4 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+          {/* Training topic */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Training topic</label>
+            <select value={moduleId} onChange={e => setModuleId(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+              <option value="">— Choose a module —</option>
+              {modules.map(m => <option key={m.id} value={m.id}>{m.name}{m.ready === false ? ' (not built yet)' : ''}</option>)}
+            </select>
+            {moduleId && modules.find(m => m.id === moduleId)?.ready === false && (
+              <p className="mt-1 text-xs text-amber-600">This module hasn&apos;t been built yet. You can still schedule the session, but you won&apos;t be able to send it digitally until it has a lesson or questions.</p>
+            )}
+          </div>
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Title {moduleName ? '(defaults to the module name)' : ''}</label>
-        <input value={title} onChange={e => setTitle(e.target.value)} placeholder={moduleName ?? 'e.g. Moving & Handling refresher'} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          {/* Title */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Title {moduleName ? '(defaults to the module name)' : ''}</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder={moduleName ?? 'e.g. Moving & Handling refresher'} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+          </div>
 
-        <div className="mb-3 flex gap-3">
-          <div className="flex-1">
+          {/* Date */}
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
-          <div className="w-36">
+          {/* Length */}
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Length</label>
             <select value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
               {[1, 2, 3, 4, 5].map(h => <option key={h} value={h}>{h} hour{h > 1 ? 's' : ''}</option>)}
             </select>
           </div>
-        </div>
-        <p className="-mt-1 mb-3 text-xs text-neutral-mid">The session length sets how many hours staff who attended <strong className="text-neutral-dark">off shift</strong> are owed on the payroll report.</p>
+          <p className="-mt-2 text-xs text-neutral-mid sm:col-span-2">The session length sets how many hours staff who attended <strong className="text-neutral-dark">off shift</strong> are owed on the payroll report.</p>
 
-        {/* Optional logistics: time, location, capacity */}
-        <div className="mb-3 flex flex-wrap gap-3">
-          <div className="w-28">
+          {/* Optional logistics: time, location, capacity */}
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Start time</label>
-            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
-          <div className="w-28">
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">End time</label>
-            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
-          <div className="w-24">
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Capacity</label>
-            <input type="number" min="1" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="—" className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-teal focus:outline-none" />
+            <input type="number" min="1" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="—" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
-          <div className="min-w-[8rem] flex-1">
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Location / room</label>
             <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Training room 2" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
           </div>
-        </div>
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Renews after</label>
-        <select value={renewMonths} onChange={e => setRenewMonths(e.target.value)} className="mb-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
-          <option value="">No expiry</option>
-          <option value="6">6 months</option>
-          <option value="12">12 months (annual)</option>
-          <option value="24">24 months</option>
-          <option value="36">36 months</option>
-        </select>
-        <p className="mb-3 text-xs text-neutral-mid">If the training expires, set how long it stays valid. The compliance matrix then flags people as due soon or overdue.</p>
-        {!initial && (
-          <div className="mb-3">
-            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Repeat</label>
-            <select value={repeatMonths} onChange={e => setRepeatMonths(Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
-              <option value={0}>Just this date</option>
-              {[1, 2, 3, 5, 11].map(n => <option key={n} value={n}>Monthly for {n + 1} months</option>)}
+          {/* Renews after */}
+          <div className={initial ? 'sm:col-span-2' : undefined}>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Renews after</label>
+            <select value={renewMonths} onChange={e => setRenewMonths(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+              <option value="">No expiry</option>
+              <option value="6">6 months</option>
+              <option value="12">12 months (annual)</option>
+              <option value="24">24 months</option>
+              <option value="36">36 months</option>
             </select>
-            {repeatMonths > 0 && <p className="mt-1 text-xs text-neutral-mid">Creates {repeatMonths + 1} sessions, one a month from this date, each with the same details and allocated staff.</p>}
+            <p className="mt-1 text-xs text-neutral-mid">If the training expires, set how long it stays valid. The compliance matrix then flags people as due soon or overdue.</p>
           </div>
-        )}
+          {!initial && (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-neutral-mid">Repeat</label>
+              <select value={repeatMonths} onChange={e => setRepeatMonths(Number(e.target.value))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+                <option value={0}>Just this date</option>
+                {[1, 2, 3, 5, 11].map(n => <option key={n} value={n}>Monthly for {n + 1} months</option>)}
+              </select>
+              {repeatMonths > 0 && <p className="mt-1 text-xs text-neutral-mid">Creates {repeatMonths + 1} sessions, one a month from this date, each with the same details and allocated staff.</p>}
+            </div>
+          )}
 
-        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Delivered by</label>
-        <div className="mb-1 flex gap-2 text-xs">
-          <button onClick={() => setTrainerMode('staff')} className={`rounded-lg border px-2.5 py-1 font-medium ${trainerMode === 'staff' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid'}`}>Staff member</button>
-          <button onClick={() => setTrainerMode('external')} className={`rounded-lg border px-2.5 py-1 font-medium ${trainerMode === 'external' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid'}`}>External / other</button>
+          {/* Delivered by */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Delivered by</label>
+            <div className="mb-1 flex gap-2 text-xs">
+              <button onClick={() => setTrainerMode('staff')} className={`rounded-lg border px-2.5 py-1 font-medium ${trainerMode === 'staff' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid'}`}>Staff member</button>
+              <button onClick={() => setTrainerMode('external')} className={`rounded-lg border px-2.5 py-1 font-medium ${trainerMode === 'external' ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid'}`}>External / other</button>
+            </div>
+            {trainerMode === 'staff'
+              ? <select value={trainerStaff} onChange={e => setTrainerStaff(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
+                  <option value="">— Choose a staff member —</option>
+                  {staff.map(s => <option key={s.id} value={s.id}>{s.name}{s.job_role ? ` (${s.job_role})` : ''}</option>)}
+                </select>
+              : <input value={trainerName} onChange={e => setTrainerName(e.target.value)} placeholder="Trainer name" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />}
+          </div>
         </div>
-        {trainerMode === 'staff'
-          ? <select value={trainerStaff} onChange={e => setTrainerStaff(e.target.value)} className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
-              <option value="">— Choose a staff member —</option>
-              {staff.map(s => <option key={s.id} value={s.id}>{s.name}{s.job_role ? ` (${s.job_role})` : ''}</option>)}
-            </select>
-          : <input value={trainerName} onChange={e => setTrainerName(e.target.value)} placeholder="Trainer name" className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />}
 
         <label className="mb-1 flex items-center justify-between text-xs font-semibold text-neutral-mid">
           <span>Allocated staff ({attendees.size})</span>

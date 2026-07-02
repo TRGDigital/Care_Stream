@@ -387,6 +387,10 @@ export function createApiClient(token: string) {
         apiFetch<{ flow: any }>(`/onboarding/flows/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deleteFlow: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/onboarding/flows/${id}`, token, { method: 'DELETE' }),
+      generateQuestions: (policy_id: string, count = 3) =>
+        apiFetch<{ questions: Array<{ question: string; options: string[]; correct_option: number }> }>(
+          '/onboarding/generate-questions', token, { method: 'POST', body: JSON.stringify({ policy_id, count }) }
+        ),
       enroll: (flowId: string, data: { user_ids: string[]; due_date?: string }) =>
         apiFetch<{ enrolled: number }>(`/onboarding/flows/${flowId}/enroll`, token, { method: 'POST', body: JSON.stringify(data) }),
       flowProgress: (flowId: string) =>

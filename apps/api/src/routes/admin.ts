@@ -4,7 +4,7 @@ import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { getAiCreditUsage, getQueryUsage } from '../lib/plan-limits'
-import { DEFAULT_ONBOARDING_FLOW_PROMPT } from './onboarding-templates'
+import { DEFAULT_ONBOARDING_FLOW_PROMPT, DEFAULT_ONBOARDING_QUESTIONS_PROMPT } from './onboarding-templates'
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
@@ -1894,6 +1894,7 @@ const USAGE_LABELS: Record<string, string> = {
   cqc_answer_evaluation:          'CQC Staff Prep — Answer Evaluation',
   audit_recommendations:          'Monthly Audit — AI Recommendations',
   onboarding_flow_generation:     'Onboarding Flow Generation',
+  onboarding_questions_from_policy: 'Onboarding — Questions from Policy',
   policy_anonymisation:           'Policy Seed Anonymisation',
   training_module_generation:     'Annual Training — Module Generation',
   training_image_generation:       'Annual Training — Cover Image',
@@ -1921,6 +1922,7 @@ async function ensurePromptsSeeded() {
     cqc_answer_evaluation:    DEFAULT_ANSWER_EVALUATION_PROMPT,
     audit_recommendations:    DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT,
     onboarding_flow_generation: DEFAULT_ONBOARDING_FLOW_PROMPT,
+    onboarding_questions_from_policy: DEFAULT_ONBOARDING_QUESTIONS_PROMPT,
     policy_anonymisation:       DEFAULT_POLICY_ANONYMISE_PROMPT,
     training_module_generation: DEFAULT_TRAINING_MODULE_PROMPT,
     training_image_generation:  DEFAULT_TRAINING_IMAGE_PROMPT,

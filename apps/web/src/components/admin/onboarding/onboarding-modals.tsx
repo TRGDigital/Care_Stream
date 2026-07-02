@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus } from 'lucide-react'
+import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus, Sparkles, Loader2 } from 'lucide-react'
 import type { Step, Flow } from './onboarding-shared'
 
 // ─── Policy typeahead (for "read policy" steps) ───────────────────────────────
@@ -119,6 +119,54 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
     setSteps(prev => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s))
   }
 
+  // Policies already linked in this flow's "read policy" steps — the AI can
+  // generate knowledge-check questions from any of them.
+  const linkedPolicies = [...new Set(steps.filter(s => s.type === 'read_policy' && s.policy_id).map(s => s.policy_id as string))]
+    .map(id => ({ id, name: policies.find(p => p.id === id)?.name ?? 'Linked policy' }))
+
+  const [genSel,  setGenSel]  = useState<Record<number, { policy?: string; count?: number }>>({})
+  const [genBusy, setGenBusy] = useState<number | null>(null)
+
+  function titleFromQuestion(q: string): string {
+    const t = q.trim()
+    return t.length > 70 ? t.slice(0, 67) + '…' : t
+  }
+
+  async function generateForStep(i: number, policyId: string, count: number) {
+    if (!policyId || genBusy !== null) return
+    setGenBusy(i); setErr('')
+    try {
+      const { questions } = await api.onboarding.generateQuestions(policyId, count)
+      if (!questions?.length) { setErr('No questions were generated. Please try again.'); return }
+      setSteps(prev => {
+        const next = [...prev]
+        const cur   = next[i]
+        const first = questions[0]
+        next[i] = {
+          ...cur,
+          type:           'answer_question',
+          title:          cur.title?.trim() ? cur.title : titleFromQuestion(first.question),
+          question:       first.question,
+          options:        first.options,
+          correct_option: first.correct_option,
+        }
+        const extra: Step[] = questions.slice(1).map(q => ({
+          title:          titleFromQuestion(q.question),
+          type:           'answer_question',
+          question:       q.question,
+          options:        q.options,
+          correct_option: q.correct_option,
+        }))
+        next.splice(i + 1, 0, ...extra)
+        return next
+      })
+    } catch (e: any) {
+      setErr(e?.message ?? 'Could not generate questions. Please try again.')
+    } finally {
+      setGenBusy(null)
+    }
+  }
+
   async function save() {
     if (!name.trim()) { setErr('Flow name is required'); return }
     if (steps.some(s => !s.title.trim())) { setErr('All steps need a title'); return }
@@ -216,6 +264,44 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
                   )}
                   {step.type === 'answer_question' && (
                     <div className="space-y-2">
+                      {linkedPolicies.length > 0 ? (
+                        <div className="rounded-md border border-teal/30 bg-teal/5 p-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="flex items-center gap-1 text-[11px] font-semibold text-teal"><Sparkles size={12} /> Generate from policy</span>
+                            {linkedPolicies.length > 1 && (
+                              <select
+                                value={genSel[i]?.policy ?? linkedPolicies[0].id}
+                                onChange={e => setGenSel(prev => ({ ...prev, [i]: { ...prev[i], policy: e.target.value } }))}
+                                className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] focus:border-teal focus:outline-none">
+                                {linkedPolicies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                              </select>
+                            )}
+                            <select
+                              value={genSel[i]?.count ?? 3}
+                              onChange={e => setGenSel(prev => ({ ...prev, [i]: { ...prev[i], count: Number(e.target.value) } }))}
+                              className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] focus:border-teal focus:outline-none">
+                              {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} question{n > 1 ? 's' : ''}</option>)}
+                            </select>
+                            <button
+                              type="button"
+                              disabled={genBusy !== null}
+                              onClick={() => generateForStep(i, genSel[i]?.policy ?? linkedPolicies[0].id, genSel[i]?.count ?? 3)}
+                              className="inline-flex items-center gap-1 rounded bg-teal px-2.5 py-1 text-[11px] font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                              {genBusy === i
+                                ? <><Loader2 size={12} className="animate-spin" /> Generating…</>
+                                : <><Sparkles size={12} /> Generate with AI</>}
+                            </button>
+                          </div>
+                          <p className="mt-1 text-[10px] text-neutral-mid">
+                            {linkedPolicies.length === 1 ? <>Based on &ldquo;{linkedPolicies[0].name}&rdquo;. </> : null}
+                            AI reads the policy and writes the question(s). Extra questions are added as their own steps.
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="rounded-md border border-dashed border-gray-300 bg-white px-2 py-1.5 text-[11px] text-neutral-mid">
+                          Tip: add a <strong>Read policy</strong> step and link a policy, then you can generate questions from it with AI.
+                        </p>
+                      )}
                       <textarea value={step.question ?? ''} onChange={e => updateStep(i, { question: e.target.value })}
                         placeholder="The question staff must answer"
                         rows={2}

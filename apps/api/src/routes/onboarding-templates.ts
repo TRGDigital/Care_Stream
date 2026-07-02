@@ -351,6 +351,33 @@ AVOID: overly academic language, ambiguous answers, trick questions, unsafe advi
 Output ONLY valid JSON in exactly this shape — no markdown, no commentary:
 {"areas":[{"policy_section":"<exact area name from POLICY_AREAS>","question":"<question text>","options":["option 1","option 2","option 3","option 4"],"correct_option":<0-based index of the correct option>}]}`
 
+// Editable in platform /prompts. Generates onboarding knowledge-check questions
+// from a single uploaded policy the tenant has linked to a "read policy" step.
+// Placeholders: {{policy_name}}, {{count}}, {{policy_text}}.
+export const DEFAULT_ONBOARDING_QUESTIONS_PROMPT = `You create onboarding knowledge-check questions for care home staff, based strictly on the home's own policy document.
+
+Policy name:
+{{policy_name}}
+
+Policy content:
+"""
+{{policy_text}}
+"""
+
+Write {{count}} multiple-choice question(s) that check whether a staff member has actually read and understood this specific policy.
+
+RULES:
+- Base every question and every answer only on the policy content above. Do not invent facts, figures or procedures that are not in the policy.
+- Each question must have EXACTLY 4 options with ONE clearly correct answer grounded in the policy. The other 3 must be plausible but wrong.
+- Randomise the position of the correct answer across the questions.
+- Where there is more than one question, cover different parts of the policy so they do not overlap.
+- Reflect UK adult social care standards and CQC expectations. Use UK English spelling and plain, practical language for frontline care staff. Test understanding, not trick the learner.
+- Avoid "all of the above" / "none of the above". Do not use dashes in the text; use commas or full stops.
+
+Output ONLY a JSON array, no markdown and no commentary, in exactly this shape:
+[{"question":"...","options":["option 1","option 2","option 3","option 4"],"correct_option":0}]
+correct_option is the 0-based index of the correct option.`
+
 const PROMPT_VAR_LABELS: Record<string, string> = {
   JOB_ROLE:           'Role or specialism',
   CARE_SETTING:       'Care setting',

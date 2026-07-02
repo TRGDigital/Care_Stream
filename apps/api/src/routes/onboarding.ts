@@ -7,6 +7,7 @@ import { notifyUsers, notifyFollowUp } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
+import { DEFAULT_ONBOARDING_QUESTIONS_PROMPT } from './onboarding-templates'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { siteUrl } from '../lib/urls'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
@@ -30,6 +31,66 @@ async function invalidStepPolicyIds(steps: any[], tenantId: string): Promise<str
   const ok = new Set(found.map(p => p.id))
   return ids.filter(id => !ok.has(id))
 }
+
+// ─── Admin: AI question generation from a policy ──────────────────────────────
+
+async function getQuestionsPrompt(): Promise<string> {
+  try {
+    const p = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'onboarding_questions_from_policy' } })
+    if (p?.content?.trim()) return p.content
+  } catch { /* fall through to default */ }
+  return DEFAULT_ONBOARDING_QUESTIONS_PROMPT
+}
+
+// Generate multiple-choice onboarding questions from a policy the tenant has
+// uploaded, so a "read policy" step can be paired with a knowledge check drawn
+// from that policy's own wording. Prompt is editable in platform /prompts.
+onboardingRouter.post('/generate-questions', requireAdmin, async (req, res) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.body?.policy_id ?? '')
+  const count    = Math.min(Math.max(Number(req.body?.count) || 3, 1), 5)
+
+  if (!policyId) {
+    res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'A policy is required.' } })
+    return
+  }
+  const policy = await prisma.policy.findFirst({ where: { id: policyId, tenant_id: tenantId } })
+  if (!policy) {
+    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Policy not found.' } })
+    return
+  }
+  const text = await downloadExtractedText(tenantId, policyId).catch(() => null)
+  if (!text || !text.trim()) {
+    res.status(422).json({ success: false, error: { code: 'NO_TEXT', message: 'This policy has no readable text yet. It may still be processing. Please try again shortly.' } })
+    return
+  }
+
+  try {
+    const tpl = await getQuestionsPrompt()
+    const userMessage = tpl
+      .replace(/\{\{policy_name\}\}/g, policy.name)
+      .replace(/\{\{count\}\}/g,       String(count))
+      .replace(/\{\{policy_text\}\}/g, text.slice(0, 12000))
+    const raw = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, temperature: 0.4 })
+    const noFence = raw.replace(/```(?:json)?/gi, '').trim()
+    const arr = JSON.parse(noFence.slice(noFence.indexOf('['), noFence.lastIndexOf(']') + 1))
+    const questions = (Array.isArray(arr) ? arr : [])
+      .filter((q: any) => q && typeof q.question === 'string' && Array.isArray(q.options) && q.options.length === 4)
+      .slice(0, count)
+      .map((q: any) => ({
+        question:       String(q.question),
+        options:        q.options.map((o: any) => String(o)),
+        correct_option: (typeof q.correct_option === 'number' && q.correct_option >= 0 && q.correct_option <= 3) ? q.correct_option : 0,
+      }))
+    if (questions.length === 0) {
+      res.status(502).json({ success: false, error: { code: 'AI_EMPTY', message: 'Could not generate questions from this policy. Please try again.' } })
+      return
+    }
+    res.json({ success: true, data: { questions } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e?.message ?? 'Generation failed.' } })
+  }
+})
 
 // ─── Admin: Flows CRUD ────────────────────────────────────────────────────────
 

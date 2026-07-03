@@ -363,18 +363,28 @@ function AccessLevelField({ token, role, auditIds, onChange }: {
 // endpoint (resolves the typed name to an ISO code where possible, else a
 // private-use code, and stores it on the tenant) so the language appears in the
 // dropdowns here and next time. onAdded selects it for the field.
-function AddLanguageControl({ token, onAdded, onLanguagesChange }: {
+function AddLanguageControl({ token, onAdded, onLanguagesChange, catalog, existing }: {
   token: string
   onAdded: (code: string) => void
   onLanguagesChange?: (langs: { code: string; name: string }[]) => void
+  catalog?: { code: string; name: string }[]
+  existing?: { code: string; name: string }[]
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
   const [err,  setErr]  = useState('')
 
-  async function add() {
-    const n = name.trim()
+  // Suggest known languages not already available, so admins pick a correctly
+  // spelled name (which resolves to a proper ISO code for translation).
+  const existingCodes = new Set((existing ?? []).map(l => l.code))
+  const q = name.trim().toLowerCase()
+  const suggestions = q
+    ? (catalog ?? []).filter(c => !existingCodes.has(c.code) && c.name.toLowerCase().includes(q)).slice(0, 8)
+    : []
+
+  async function add(languageName: string) {
+    const n = languageName.trim()
     if (!n) return
     setBusy(true); setErr('')
     try {
@@ -394,20 +404,30 @@ function AddLanguageControl({ token, onAdded, onLanguagesChange }: {
     )
   }
   return (
-    <div className="mt-1.5">
+    <div className="relative mt-1.5">
       <div className="flex gap-1.5">
         <input autoFocus value={name} onChange={e => { setName(e.target.value); setErr('') }}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
-          placeholder="e.g. Twi, Shona"
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(name) } }}
+          placeholder="Start typing, e.g. Twi"
           className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
-        <button type="button" onClick={add} disabled={busy || !name.trim()}
+        <button type="button" onClick={() => add(name)} disabled={busy || !name.trim()}
           className="inline-flex shrink-0 items-center gap-1 rounded-md bg-teal px-2.5 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
           {busy ? <Loader2 size={12} className="animate-spin" /> : null} Add
         </button>
         <button type="button" onClick={() => { setOpen(false); setName(''); setErr('') }}
           className="shrink-0 rounded-md px-1.5 py-1.5 text-xs text-neutral-mid hover:text-neutral-dark">Cancel</button>
       </div>
-      <p className="mt-1 text-[11px] text-neutral-mid">Type the language&rsquo;s English name. It&rsquo;s added so you can pick it here and next time.</p>
+      {suggestions.length > 0 && (
+        <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+          {suggestions.map(s => (
+            <button key={s.code} type="button" onMouseDown={e => e.preventDefault()} onClick={() => add(s.name)} disabled={busy}
+              className="block w-full px-3 py-1.5 text-left text-sm text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="mt-1 text-[11px] text-neutral-mid">Pick a suggestion, or type the language&rsquo;s English name and Add. It&rsquo;s saved so you can reuse it.</p>
       {err && <p className="mt-1 text-[11px] text-red-500">{err}</p>}
     </div>
   )
@@ -422,6 +442,7 @@ export function InviteModal({
   staffRoles,
   specialistRoles,
   languages,
+  languageCatalog,
   onLanguagesChange,
   onClose,
   onInvited,
@@ -430,6 +451,7 @@ export function InviteModal({
   staffRoles:      string[]
   specialistRoles: string[]
   languages:       { code: string; name: string }[]
+  languageCatalog?: { code: string; name: string }[]
   onLanguagesChange?: (langs: { code: string; name: string }[]) => void
   onClose:         () => void
   onInvited:       () => void
@@ -627,7 +649,7 @@ export function InviteModal({
                   >
                     {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                   </select>
-                  <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} onAdded={code => setForm(f => ({ ...f, first_language: code }))} />
+                  <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} catalog={languageCatalog} existing={languages} onAdded={code => setForm(f => ({ ...f, first_language: code }))} />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-neutral-dark">
@@ -644,7 +666,7 @@ export function InviteModal({
                       <option key={l.code} value={l.code}>{l.name}</option>
                     ))}
                   </select>
-                  <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} onAdded={code => setForm(f => ({ ...f, second_language: code }))} />
+                  <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} catalog={languageCatalog} existing={languages} onAdded={code => setForm(f => ({ ...f, second_language: code }))} />
                 </div>
               </div>
               <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
@@ -699,6 +721,7 @@ export function EditModal({
   staffRoles,
   specialistRoles,
   languages,
+  languageCatalog,
   onLanguagesChange,
   onClose,
   onSaved,
@@ -708,6 +731,7 @@ export function EditModal({
   staffRoles:      string[]
   specialistRoles: string[]
   languages:       { code: string; name: string }[]
+  languageCatalog?: { code: string; name: string }[]
   onLanguagesChange?: (langs: { code: string; name: string }[]) => void
   onClose:         () => void
   onSaved:         (updated: any) => void
@@ -867,7 +891,7 @@ export function EditModal({
                 >
                   {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                 </select>
-                <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} onAdded={code => setForm(f => ({ ...f, first_language: code }))} />
+                <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} catalog={languageCatalog} existing={languages} onAdded={code => setForm(f => ({ ...f, first_language: code }))} />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-neutral-dark">
@@ -884,7 +908,7 @@ export function EditModal({
                     <option key={l.code} value={l.code}>{l.name}</option>
                   ))}
                 </select>
-                <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} onAdded={code => setForm(f => ({ ...f, second_language: code }))} />
+                <AddLanguageControl token={token} onLanguagesChange={onLanguagesChange} catalog={languageCatalog} existing={languages} onAdded={code => setForm(f => ({ ...f, second_language: code }))} />
               </div>
             </div>
             <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />

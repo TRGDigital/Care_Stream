@@ -264,7 +264,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Each staff member has an <strong>“Always communicate in their first language”</strong> toggle (in the Add / Edit forms and on their detail card). When it's <strong>on</strong>: the default, every message CareStream sends them is translated into their first language. Turn it <strong>off</strong> for staff who'd rather receive everything in English. You can flip it instantly from the detail card.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, add it in <strong>Settings → Languages</strong> (type its English name, e.g. “Shona”) and it appears in the first &amp; second language dropdowns straight away.
+            Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, you don't have to leave the form: click <strong>“Language not listed? Add it”</strong> beneath the first or second language dropdown and start typing the language's English name. Matching languages appear as you type, so pick one from the list to avoid misspellings (e.g. start typing “Sho” and choose “Shona”). If it isn't in our catalogue, type the full name and press <strong>Add</strong>. Either way it's saved to your account, selected on the form, and appears in the first &amp; second language dropdowns from then on. You can also add or remove languages any time in <strong>Settings → Languages</strong>.
           </p>
         </SectionBlock>
         <SectionBlock title="Letting staff switch a set into their second language">

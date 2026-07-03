@@ -181,6 +181,12 @@ const CATALOG: Language[] = (() => {
   return [...byCode.values()]
 })()
 
+// The full known-language catalog (for the "add a language" typeahead), sorted
+// by name. Merged with the tenant's custom languages by the caller if needed.
+export function languageCatalog(): Language[] {
+  return [...CATALOG].sort((a, b) => a.name.localeCompare(b.name))
+}
+
 const CODE_TO_NAME: Record<string, string> = Object.fromEntries(CATALOG.map(l => [l.code, l.name]))
 
 // name (lowercased) → code, including a handful of common aliases.

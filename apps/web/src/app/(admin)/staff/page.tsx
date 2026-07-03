@@ -177,6 +177,7 @@ export default function StaffPage() {
   const [staffRoles,   setStaffRoles]  = useState<string[]>([])
   const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
   const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(LANGUAGES)
+  const [catalog,      setCatalog]     = useState<{ code: string; name: string }[]>([])
   const [loading,      setLoading]     = useState(true)
   const [showInvite,   setShowInvite]  = useState(false)
   const [tab,          setTab]         = useState<'active' | 'archived'>('active')
@@ -193,20 +194,22 @@ export default function StaffPage() {
         const roles = (settings as any).staff_roles ?? []
         const specialists = (settings as any).specialist_roles ?? []
         const langs = (settings as any).languages ?? LANGUAGES
-        setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists); setLanguages(langs)
-        persistentCache.set(`admin-staff-${userId}`, { users: list, staffRoles: roles, specialistRoles: specialists, languages: langs })
+        const cat = (settings as any).language_catalog ?? []
+        setUsers(list); setStaffRoles(roles); setSpecialistRoles(specialists); setLanguages(langs); setCatalog(cat)
+        persistentCache.set(`admin-staff-${userId}`, { users: list, staffRoles: roles, specialistRoles: specialists, languages: langs, catalog: cat })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    const cached = persistentCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[] }>(`admin-staff-${userId}`)
+    const cached = persistentCache.get<{ users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[]; catalog?: { code: string; name: string }[] }>(`admin-staff-${userId}`)
     if (cached) {
       setUsers(cached.users)
       setStaffRoles(cached.staffRoles)
       setSpecialistRoles(cached.specialistRoles)
       setLanguages(cached.languages ?? LANGUAGES)
+      setCatalog(cached.catalog ?? [])
       setLoading(false)
     }
   }, [userId])
@@ -269,6 +272,7 @@ export default function StaffPage() {
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
           languages={languages}
+          languageCatalog={catalog}
           onLanguagesChange={setLanguages}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
@@ -283,6 +287,7 @@ export default function StaffPage() {
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
           languages={languages}
+          languageCatalog={catalog}
           onLanguagesChange={setLanguages}
           onClose={() => setEditUser(null)}
           onSaved={(updated: any) => {

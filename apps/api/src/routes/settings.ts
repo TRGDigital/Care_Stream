@@ -6,7 +6,7 @@ import { ok, err } from '../lib/response'
 import { effectiveSections } from '../lib/policy-sections'
 import { normaliseCategories } from '../lib/policy-categories'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
-import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES } from '../data/languages'
+import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES, languageCatalog } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
 import { runCredentialExpiryForTenant } from '../services/workforce/credentialExpiry'
 
@@ -91,6 +91,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     specialist_roles:   effectiveSpecialistRoles(tenant.specialist_roles as string[]),
     languages:          effectiveLanguages(tenant.custom_languages),
     default_language_codes: DEFAULT_LANGUAGES.map(l => l.code),
+    language_catalog:   languageCatalog(),
     room_count:         (tenant.room_count as number) ?? 0,
   })
 })

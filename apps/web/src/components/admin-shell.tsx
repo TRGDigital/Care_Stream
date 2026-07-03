@@ -12,6 +12,7 @@ import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
+  PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
@@ -95,7 +96,20 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const [dropOpen,   setDropOpen]   = useState(false)
   const [switching,  setSwitching]  = useState<string | null>(null)
   const [mobileNav,  setMobileNav]  = useState(false)
+  const [collapsed,  setCollapsed]  = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+
+  // Restore the collapsed-sidebar preference once, on mount (desktop only).
+  useEffect(() => {
+    try { if (localStorage.getItem('cs-admin-sidebar-collapsed') === '1') setCollapsed(true) } catch {}
+  }, [])
+  function toggleCollapsed() {
+    setCollapsed(c => {
+      const next = !c
+      try { localStorage.setItem('cs-admin-sidebar-collapsed', next ? '1' : '0') } catch {}
+      return next
+    })
+  }
 
   // Close the mobile nav drawer whenever the route changes.
   useEffect(() => { setMobileNav(false) }, [pathname])
@@ -154,8 +168,11 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
     <div className="flex h-screen overflow-hidden bg-neutral-light">
 
       {/* Sidebar (desktop / tablet ≥ md) */}
-      <aside className="hidden w-60 flex-shrink-0 flex-col bg-[#1A0830] md:flex print:hidden">
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} />
+      <aside className={clsx(
+        'hidden flex-shrink-0 flex-col bg-[#1A0830] transition-[width] duration-200 md:flex print:hidden',
+        collapsed ? 'w-16' : 'w-60',
+      )}>
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -188,6 +205,16 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
               className="-ml-1 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark md:hidden"
             >
               <Menu size={20} />
+            </button>
+
+            {/* Collapse / expand the sidebar (desktop only) */}
+            <button
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="-ml-1 hidden rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark md:inline-flex"
+            >
+              {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
             </button>
 
           {/* Site name / switcher */}
@@ -271,7 +298,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; onNavigate?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, collapsed, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -289,20 +316,24 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNav
   return (
     <>
       {/* Logo */}
-      <div className="border-b border-white/10 px-5 pb-5 pt-6">
-        <SiteImage src="/logo-white.png" alt="CareStreamAI" className="h-12 w-auto max-w-full object-contain" />
-        <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-          Admin Portal
-        </p>
+      <div className={clsx('border-b border-white/10', collapsed ? 'flex justify-center px-2 pb-4 pt-5' : 'px-5 pb-5 pt-6')}>
+        <SiteImage src="/logo-white.png" alt="CareStreamAI" className={clsx('w-auto max-w-full object-contain', collapsed ? 'h-8' : 'h-12')} />
+        {!collapsed && (
+          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+            Admin Portal
+          </p>
+        )}
       </div>
 
       {/* Nav */}
       <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
         {sections.map(({ heading, iconColor, items }) => (
           <div key={heading} className="mb-4">
-            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
-              {heading}
-            </p>
+            {!collapsed && (
+              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+                {heading}
+              </p>
+            )}
             {items.map((item) => {
               const { href, label, Icon } = item
               const enterpriseItem = (item as { enterprise?: boolean }).enterprise
@@ -311,12 +342,11 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNav
                 return (
                   <div
                     key={href}
-                    title="Upgrade to full CareStream to unlock this"
-                    className="mb-0.5 flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/30"
+                    title={collapsed ? `${label} — upgrade to full CareStream` : 'Upgrade to full CareStream to unlock this'}
+                    className={clsx('mb-0.5 flex cursor-not-allowed items-center rounded-md py-2 text-sm font-medium text-white/30', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
                   >
                     <Icon size={16} className="text-white/20" />
-                    <span className="flex-1">{label}</span>
-                    <Lock size={12} className="text-white/30" />
+                    {!collapsed && <><span className="flex-1">{label}</span><Lock size={12} className="text-white/30" /></>}
                   </div>
                 )
               }
@@ -325,12 +355,11 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNav
                 return (
                   <div
                     key={href}
-                    title="Upgrade to Enterprise to unlock this"
-                    className="mb-0.5 flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/30"
+                    title={collapsed ? `${label} — upgrade to Enterprise` : 'Upgrade to Enterprise to unlock this'}
+                    className={clsx('mb-0.5 flex cursor-not-allowed items-center rounded-md py-2 text-sm font-medium text-white/30', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
                   >
                     <Icon size={16} className="text-white/20" />
-                    <span className="flex-1">{label}</span>
-                    <Lock size={12} className="text-white/30" />
+                    {!collapsed && <><span className="flex-1">{label}</span><Lock size={12} className="text-white/30" /></>}
                   </div>
                 )
               }
@@ -340,16 +369,18 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNav
                   key={href}
                   href={href}
                   onClick={onNavigate}
+                  title={collapsed ? label : undefined}
                   className={clsx(
-                    'mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'mb-0.5 flex items-center rounded-md py-2 text-sm font-medium transition-colors',
+                    collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                     active
-                      ? 'border-l-2 border-teal-light bg-white/10 text-white'
+                      ? clsx('bg-white/10 text-white', !collapsed && 'border-l-2 border-teal-light')
                       : 'text-white/70 hover:bg-white/10 hover:text-white',
                   )}
                   aria-current={active ? 'page' : undefined}
                 >
                   <Icon size={16} className={active ? 'text-teal-light' : iconColor} />
-                  {label}
+                  {!collapsed && label}
                 </Link>
               )
             })}
@@ -362,10 +393,11 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, onNav
         <Link
           href="/chat"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white"
+          title={collapsed ? 'Chat Hub' : undefined}
+          className={clsx('flex items-center rounded-md py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
         >
           <MessageSquare size={16} className="text-white/50" />
-          Chat Hub
+          {!collapsed && 'Chat Hub'}
         </Link>
       </div>
     </>

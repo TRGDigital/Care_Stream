@@ -11,7 +11,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { SupervisionsView } from '@/components/admin/workforce/supervisions-view'
-import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail } from 'lucide-react'
+import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail, Info, ChevronDown } from 'lucide-react'
 
 type Register = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['register']>>
 type StaffRow = Register['staff'][number]
@@ -40,6 +40,26 @@ function fmtDate(iso: string | null): string {
 }
 function toInputDate(iso: string | null): string {
   return iso ? new Date(iso).toISOString().slice(0, 10) : ''
+}
+
+// Collapsible "how to use this tab" helper — same style as the rest of the site.
+function HelpAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-teal-light/40">
+        <Info size={13} className="shrink-0 text-teal" />
+        <span className="flex-1 text-xs font-semibold text-teal">{title}</span>
+        <ChevronDown size={13} className={`shrink-0 text-teal transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="space-y-2 border-t border-teal/10 px-4 py-3 text-xs leading-relaxed text-neutral-mid">
+          {children}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SummaryCard({ label, value, cls, Icon }: { label: string; value: number; cls: string; Icon: any }) {
@@ -157,6 +177,14 @@ export default function WorkforcePage() {
       {tab === 'supervisions' && session?.accessToken && <SupervisionsView token={session.accessToken} userId={userId} />}
 
       {tab === 'credentials' && (<>
+      <HelpAccordion title="How to use the Credentials register">
+        <p>This register is your single view of the safe-recruitment documents CQC expects for every member of staff: <strong>DBS check</strong>, <strong>right to work</strong>, <strong>passport</strong> (important for overseas staff), <strong>professional registration</strong> (e.g. NMC) and <strong>references</strong>.</p>
+        <p>Each staff member is a row and each credential a column, colour-coded so you can see status at a glance: <span className="font-medium text-green-700">Valid</span> (in date), <span className="font-medium text-amber-700">Expiring</span> (within 30 days), <span className="font-medium text-red-600">Expired / Missing</span> (action needed).</p>
+        <p><strong>To record or update a credential</strong>, click a staff member&rsquo;s row. Enter the reference (e.g. DBS certificate number), the issued and expiry dates, any notes, and optionally <strong>upload the document itself</strong> (PDF or photo) so it&rsquo;s stored securely against their record.</p>
+        <p><strong>Expiry alerts:</strong> use <strong>Email expiry alerts</strong> (top right) to send your admins a digest of anything expired or expiring within 30 days. Staff with a passport nearing renewal are emailed automatically. These also run on a schedule, so nothing slips through.</p>
+        <p>The four cards above summarise the whole team, giving you an instant, inspection-ready compliance picture.</p>
+      </HelpAccordion>
+
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <SummaryCard label="Valid"        value={s.valid}    cls="text-green-600" Icon={CheckCircle2} />

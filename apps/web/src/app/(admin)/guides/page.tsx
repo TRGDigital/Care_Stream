@@ -264,8 +264,22 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Each staff member has an <strong>“Always communicate in their first language”</strong> toggle (in the Add / Edit forms and on their detail card). When it's <strong>on</strong>: the default, every message CareStream sends them is translated into their first language. Turn it <strong>off</strong> for staff who'd rather receive everything in English. You can flip it instantly from the detail card.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Over 50 languages are supported out of the box. If your team speaks one that isn't already listed, you don't have to leave the form: click <strong>“Language not listed? Add it”</strong> beneath the first or second language dropdown and start typing the language's English name. Matching languages appear as you type, so pick one from the list to avoid misspellings (e.g. start typing “Sho” and choose “Shona”). If it isn't in our catalogue, type the full name and press <strong>Add</strong>. Either way it's saved to your account, selected on the form, and appears in the first &amp; second language dropdowns from then on. You can also add or remove languages any time in <strong>Settings → Languages</strong>.
+            Over 180 languages are supported. If your team speaks one that isn't already listed, you don't have to leave the form: click <strong>“Language not listed? Add it”</strong> beneath the first or second language dropdown and start typing the language's English name. Matching languages appear as you type, so pick one from the list to avoid misspellings (e.g. start typing “Sho” and choose “Shona”). If it isn't in our catalogue, type the full name and press <strong>Add</strong>. Either way it's saved to your account, selected on the form, and appears in the first &amp; second language dropdowns from then on. You can also add or remove languages any time in <strong>Settings → Languages</strong>.
           </p>
+          <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
+            <p className="text-sm font-semibold text-teal">A note on translation quality</p>
+            <p className="mt-1 text-sm text-neutral-mid">
+              CareStream translates content into a staff member's language on demand, so it isn't limited to a fixed list, you can add almost any language. Quality does vary by how widely a language is written online:
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+              <li><strong>Excellent</strong> for the languages most of your team are likely to speak, for example Polish, Romanian, Portuguese, Spanish, Arabic, Urdu, Hindi and the major Indian languages, Tagalog, Swahili, Yoruba, Somali, Amharic and all European languages.</li>
+              <li><strong>Good</strong> for most other widely spoken languages, such as Shona, Twi, Igbo, Nepali and Sinhala.</li>
+              <li><strong>Best effort</strong> for very small or rarely written languages. Here the translation may be partial, and if it can't be produced reliably CareStream <strong>falls back to clear English</strong> rather than showing anything incorrect, so a staff member is never left with a broken screen.</li>
+            </ul>
+            <p className="mt-2 text-sm text-neutral-mid">
+              In short: adding a language always makes it selectable, and for the languages your workforce actually speaks the translation is dependable. To get the best results, set the staff member's <strong>first language</strong> to the one they read most comfortably, and keep the &ldquo;always communicate in their first language&rdquo; toggle on.
+            </p>
+          </div>
         </SectionBlock>
         <SectionBlock title="Letting staff switch a set into their second language">
           <p className="text-sm text-neutral-mid">

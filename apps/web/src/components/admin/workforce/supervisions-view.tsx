@@ -7,7 +7,27 @@
 import { useEffect, useState } from 'react'
 import { createApiClient, type SupRecord } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { Loader2, X, Trash2, AlertTriangle, Users, Plus } from 'lucide-react'
+import { Loader2, X, Trash2, AlertTriangle, Users, Plus, Info, ChevronDown } from 'lucide-react'
+
+// Collapsible "how to use this tab" helper — same style as the rest of the site.
+function HelpAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-teal-light/40">
+        <Info size={13} className="shrink-0 text-teal" />
+        <span className="flex-1 text-xs font-semibold text-teal">{title}</span>
+        <ChevronDown size={13} className={`shrink-0 text-teal transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="space-y-2 border-t border-teal/10 px-4 py-3 text-xs leading-relaxed text-neutral-mid">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type Overview = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['supervisions']>>
 type Row = Overview['staff'][number]
@@ -75,6 +95,13 @@ export function SupervisionsView({ token, userId }: { token: string; userId: str
 
   return (
     <div className="space-y-6">
+      <HelpAccordion title="How to use Supervisions &amp; appraisals">
+        <p>This tab tracks the <strong>1:1 supervisions</strong> and <strong>annual appraisals</strong> CQC expects you to hold with every staff member. Each person shows their last and next-due date for both, colour-coded: <span className="font-medium text-green-700">On track</span>, <span className="font-medium text-amber-700">Due soon</span> (within 30 days) or <span className="font-medium text-red-600">Overdue</span>.</p>
+        <p><strong>To book or log a session</strong>, click a staff member&rsquo;s row. Choose <em>Supervision</em> or <em>Appraisal</em>, then pick a date: a <strong>future date books</strong> an upcoming session (the staff member is emailed straight away and reminded the day before, along with admins), while a <strong>past date records</strong> one already held. Add who conducted it, the next-due date, and any notes.</p>
+        <p>Their full history is kept on the same screen, so you always have a dated, inspection-ready record of supervision and appraisal activity.</p>
+        <p>The four cards above summarise where the whole team stands, so overdue supervisions and appraisals are never a surprise.</p>
+      </HelpAccordion>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <SummaryCard label="Supervisions overdue" value={s.supervisions_overdue} cls="text-red-600"     Icon={AlertTriangle} />
         <SummaryCard label="Appraisals overdue"   value={s.appraisals_overdue}   cls="text-red-600"     Icon={AlertTriangle} />

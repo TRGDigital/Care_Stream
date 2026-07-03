@@ -826,17 +826,35 @@ function FaqEditor({
 }
 
 function PageForm({
-  initial, onSave, onCancel, saving, saveError,
+  initial, onSave, onCancel, saving, saveError, token,
 }: {
   initial:    (Partial<SitePage> & { path: string }) | null
   onSave:     (data: any) => void
   onCancel:   () => void
   saving:     boolean
   saveError:  string
+  token:      string | null
 }) {
   const isNew = !initial?.id
   const [form, setForm] = useState<any>({ ...EMPTY_PAGE, ...initial })
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
+
+  const [ogUploading, setOgUploading] = useState(false)
+  const [ogError,     setOgError]     = useState('')
+  const ogImgInputRef = useRef<HTMLInputElement>(null)
+  async function handleOgImage(file: File) {
+    if (!token) return
+    setOgUploading(true); setOgError('')
+    try {
+      const prepared = await resizeImageForUpload(file)
+      if (prepared.size > 4_400_000) { setOgError('Image is too large even after compression. Please use a smaller image.'); return }
+      set('og_image_url', await uploadBlogImage(token, prepared))
+    } catch (e: any) {
+      setOgError(e.message ?? 'Upload failed')
+    } finally {
+      setOgUploading(false)
+    }
+  }
 
   return (
     <div className="space-y-3 rounded-xl border border-gray-200 bg-neutral-light p-4">
@@ -897,7 +915,7 @@ function PageForm({
               {form.description?.length ?? 0}/160 chars
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <div>
               <label className="mb-1 block text-xs font-semibold text-neutral-mid">OG Title</label>
               <input value={form.og_title ?? ''} onChange={e => set('og_title', e.target.value)}
@@ -905,12 +923,30 @@ function PageForm({
                 className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-neutral-mid">OG Image URL</label>
+              <label className="mb-1 block text-xs font-semibold text-neutral-mid">Social sharing image</label>
+              <div className="flex items-center gap-3">
+                {form.og_image_url
+                  ? <img src={form.og_image_url} alt="" className="h-16 w-28 shrink-0 rounded border border-gray-200 object-cover" />
+                  : <div className="flex h-16 w-28 shrink-0 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-[10px] text-neutral-mid">No image</div>}
+                <div className="flex flex-col items-start gap-1">
+                  <input ref={ogImgInputRef} type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleOgImage(f); e.target.value = '' }} />
+                  <button type="button" onClick={() => ogImgInputRef.current?.click()} disabled={ogUploading}
+                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                    {ogUploading ? 'Uploading…' : (form.og_image_url ? 'Replace image' : 'Upload image')}
+                  </button>
+                  {form.og_image_url && (
+                    <button type="button" onClick={() => set('og_image_url', '')} className="text-xs text-neutral-mid hover:text-red-500">Remove</button>
+                  )}
+                </div>
+              </div>
               <input value={form.og_image_url ?? ''} onChange={e => set('og_image_url', e.target.value)}
-                placeholder="Defaults to /og-image.png"
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+                placeholder="Upload above, or paste an image URL. Defaults to /og-image.png"
+                className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+              {ogError && <p className="mt-1 text-xs text-red-500">{ogError}</p>}
+              <p className="mt-1 text-xs text-neutral-mid">Shown only when this page&rsquo;s URL is shared on social media (it does not appear on the page). Recommended 1200×630.</p>
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <label className="mb-1 block text-xs font-semibold text-neutral-mid">OG Description</label>
               <input value={form.og_description ?? ''} onChange={e => set('og_description', e.target.value)}
                 placeholder="Short social-share description (defaults to meta description)"
@@ -1443,6 +1479,7 @@ export default function BlogPage() {
                     onCancel={() => setShowPage(false)}
                     saving={savingPage}
                     saveError={pageError}
+                    token={token}
                   />
                 )}
 
@@ -1521,6 +1558,7 @@ export default function BlogPage() {
                                 onCancel={() => setEditPage(null)}
                                 saving={savingPage}
                                 saveError={pageError}
+                                token={token}
                               />
                             </div>
                           )}

@@ -5,6 +5,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 export interface MetaFallback {
   title: string
   description: string
+  // Fallback social sharing image (absolute URL) used when the page has no
+  // og_image_url set in the Pages tab — e.g. the staff-training hero image.
+  image?: string
 }
 
 // Build page metadata from the site_pages database record for `path`, managed in
@@ -16,7 +19,9 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
   let description = fallback.description
   let ogTitle: string | undefined
   let ogDescription: string | undefined
-  let ogImage: string | undefined
+  // Default to the supplied fallback image (e.g. the staff-training hero); an
+  // og_image_url set in the Pages tab overrides it.
+  let ogImage: string | undefined = fallback.image
 
   try {
     const res = await fetch(`${API_URL}/public/site-pages?path=${encodeURIComponent(path)}`, {
@@ -30,7 +35,7 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
         if (p.description) description = p.description
         ogTitle = p.og_title || undefined
         ogDescription = p.og_description || undefined
-        ogImage = p.og_image_url || undefined
+        if (p.og_image_url) ogImage = p.og_image_url
       }
     }
   } catch {
@@ -47,5 +52,7 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
       url: `https://carestreamai.com${path}`,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
+    // Twitter/X card so shares there also show the image.
+    ...(ogImage ? { twitter: { card: 'summary_large_image', title: ogTitle || title, description: ogDescription || description, images: [ogImage] } } : {}),
   }
 }

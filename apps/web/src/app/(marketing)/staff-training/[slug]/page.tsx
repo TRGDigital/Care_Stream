@@ -92,7 +92,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Module-derived fallback; overridden by the Pages tab (site_pages) when set.
   const title = `${m.title} Training for Care Staff | CareStreamAI`
   const description = careSetting(m.summary ?? m.description) || `${m.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it in any language.`
-  return pageMetadata(`/staff-training/${slug}`, { title, description })
+  // Reuse the page's hero illustration as the social sharing image.
+  const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
+  return pageMetadata(`/staff-training/${slug}`, { title, description, image })
 }
 
 export default async function TrainingModulePage({ params }: { params: Promise<{ slug: string }> }) {

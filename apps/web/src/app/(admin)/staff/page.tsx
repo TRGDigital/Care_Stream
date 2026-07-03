@@ -269,6 +269,7 @@ export default function StaffPage() {
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
           languages={languages}
+          onLanguagesChange={setLanguages}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
         />
@@ -282,6 +283,7 @@ export default function StaffPage() {
           staffRoles={staffRoles}
           specialistRoles={specialistRoles}
           languages={languages}
+          onLanguagesChange={setLanguages}
           onClose={() => setEditUser(null)}
           onSaved={(updated: any) => {
             setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))

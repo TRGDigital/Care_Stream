@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient, type SupRecord } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Loader2, X, Trash2, AlertTriangle, Users, Plus } from 'lucide-react'
 
 type Overview = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['supervisions']>>
@@ -49,19 +50,25 @@ function Cell({ cell }: { cell: Row['supervision'] }) {
   )
 }
 
-export function SupervisionsView({ token }: { token: string }) {
+export function SupervisionsView({ token, userId }: { token: string; userId: string }) {
+  const cacheKey = `admin-workforce-supervisions-${userId}`
   const [data, setData] = useState<Overview | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Row | null>(null)
 
   async function load() {
-    try { setData(await createApiClient(token).workforce.supervisions()) }
+    try { const d = await createApiClient(token).workforce.supervisions(); setData(d); persistentCache.set(cacheKey, d) }
     catch { /* ignore */ }
     finally { setLoading(false) }
   }
-  useEffect(() => { load() }, [token])
+  // Paint instantly from the last-loaded snapshot, then revalidate.
+  useEffect(() => {
+    const cached = persistentCache.get<Overview>(cacheKey)
+    if (cached) { setData(cached); setLoading(false) }
+    load()
+  }, [token])
 
-  if (loading) return <div className="h-72 animate-pulse rounded-card bg-gray-100" />
+  if (loading && !data) return <div className="h-72 animate-pulse rounded-card bg-gray-100" />
 
   const s = data?.summary ?? { supervisions_overdue: 0, appraisals_overdue: 0, no_supervision: 0, no_appraisal: 0 }
   const staff = data?.staff ?? []

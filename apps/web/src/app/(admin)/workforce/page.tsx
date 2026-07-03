@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { SupervisionsView } from '@/components/admin/workforce/supervisions-view'
 import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail } from 'lucide-react'
@@ -58,6 +59,8 @@ export default function WorkforcePage() {
   const { features, loading: planLoading } = usePlanFeatures()
   const enabled = hasFeature(features, 'has_workforce_compliance')
 
+  const userId = session?.user?.email ?? 'guest'
+  const regKey = `admin-workforce-register-${userId}`
   const [data, setData] = useState<Register | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<StaffRow | null>(null)
@@ -80,10 +83,15 @@ export default function WorkforcePage() {
 
   async function load() {
     if (!session?.accessToken) return
-    try { setData(await createApiClient(session.accessToken).workforce.register()) }
+    try { const d = await createApiClient(session.accessToken).workforce.register(); setData(d); persistentCache.set(regKey, d) }
     catch { /* gated or error */ }
     finally { setLoading(false) }
   }
+  // Paint instantly from the last-loaded snapshot, then revalidate in the background.
+  useEffect(() => {
+    const cached = persistentCache.get<Register>(regKey)
+    if (cached) { setData(cached); setLoading(false) }
+  }, [regKey])
   useEffect(() => { if (enabled) load() }, [session?.accessToken, enabled])
 
   // ── Enterprise gate ─────────────────────────────────────────────────────────
@@ -104,7 +112,7 @@ export default function WorkforcePage() {
     )
   }
 
-  if (loading || planLoading) {
+  if ((loading || planLoading) && !data) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-64 animate-pulse rounded bg-gray-100" />
@@ -146,7 +154,7 @@ export default function WorkforcePage() {
         ))}
       </div>
 
-      {tab === 'supervisions' && session?.accessToken && <SupervisionsView token={session.accessToken} />}
+      {tab === 'supervisions' && session?.accessToken && <SupervisionsView token={session.accessToken} userId={userId} />}
 
       {tab === 'credentials' && (<>
       {/* Summary */}

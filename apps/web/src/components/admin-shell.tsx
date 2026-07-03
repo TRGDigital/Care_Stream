@@ -317,7 +317,7 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
     <>
       {/* Logo */}
       <div className={clsx('border-b border-white/10', collapsed ? 'flex justify-center px-2 pb-4 pt-5' : 'px-5 pb-5 pt-6')}>
-        <SiteImage src="/logo-white.png" alt="CareStreamAI" className={clsx('w-auto max-w-full object-contain', collapsed ? 'h-8' : 'h-12')} />
+        <SiteImage src={collapsed ? '/logo-icon-white.png' : '/logo-white.png'} alt="CareStreamAI" className={clsx('w-auto max-w-full object-contain', collapsed ? 'h-9' : 'h-12')} />
         {!collapsed && (
           <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
             Admin Portal

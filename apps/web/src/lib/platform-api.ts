@@ -10,7 +10,7 @@ export function platformAssetUrl(path?: string | null): string | null {
 }
 
 export interface TrainingSeoIndex {
-  pages:  Array<{ path: string; title: string; description: string }>
+  pages:  Array<{ path: string; title: string; description: string; image: string | null }>  // image = hero, API-relative
   images: Array<{ src: string; alt: string }>   // src is API-relative
 }
 

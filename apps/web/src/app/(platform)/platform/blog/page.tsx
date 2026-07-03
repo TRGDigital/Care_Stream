@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
@@ -826,14 +828,15 @@ function FaqEditor({
 }
 
 function PageForm({
-  initial, onSave, onCancel, saving, saveError, token,
+  initial, onSave, onCancel, saving, saveError, token, inheritedImage,
 }: {
-  initial:    (Partial<SitePage> & { path: string }) | null
-  onSave:     (data: any) => void
-  onCancel:   () => void
-  saving:     boolean
-  saveError:  string
-  token:      string | null
+  initial:        (Partial<SitePage> & { path: string }) | null
+  onSave:         (data: any) => void
+  onCancel:       () => void
+  saving:         boolean
+  saveError:      string
+  token:          string | null
+  inheritedImage?: string | null
 }) {
   const isNew = !initial?.id
   const [form, setForm] = useState<any>({ ...EMPTY_PAGE, ...initial })
@@ -927,7 +930,9 @@ function PageForm({
               <div className="flex items-center gap-3">
                 {form.og_image_url
                   ? <img src={form.og_image_url} alt="" className="h-16 w-28 shrink-0 rounded border border-gray-200 object-cover" />
-                  : <div className="flex h-16 w-28 shrink-0 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-[10px] text-neutral-mid">No image</div>}
+                  : inheritedImage
+                    ? <img src={inheritedImage} alt="" className="h-16 w-28 shrink-0 rounded border border-teal/30 object-cover" />
+                    : <div className="flex h-16 w-28 shrink-0 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-[10px] text-neutral-mid">No image</div>}
                 <div className="flex flex-col items-start gap-1">
                   <input ref={ogImgInputRef} type="file" accept="image/*" className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) handleOgImage(f); e.target.value = '' }} />
@@ -940,6 +945,9 @@ function PageForm({
                   )}
                 </div>
               </div>
+              {!form.og_image_url && inheritedImage && (
+                <p className="mt-1 text-xs text-teal">Currently using this page&rsquo;s hero image as the social image. Upload an image to override it.</p>
+              )}
               <input value={form.og_image_url ?? ''} onChange={e => set('og_image_url', e.target.value)}
                 placeholder="Upload above, or paste an image URL. Defaults to /og-image.png"
                 className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
@@ -1052,7 +1060,7 @@ export default function BlogPage() {
   const [pageSearch,  setPageSearch]  = useState('')
   // Data-driven staff-training module pages (from the public SEO index), shown as
   // editable rows alongside the coded pages.
-  const [trainingPages, setTrainingPages] = useState<Array<{ path: string; title: string; description: string }>>([])
+  const [trainingPages, setTrainingPages] = useState<Array<{ path: string; title: string; description: string; image: string | null }>>([])
   const pageEditRef = useRef<HTMLDivElement>(null)
 
   // When a page is opened for editing (including from the Footer Links tab),
@@ -1219,6 +1227,13 @@ export default function BlogPage() {
       page_type: 'marketing', status: 'published', created_at: '', updated_at: '',
     } as SitePage))
   const allPages = [...codedAndDbPages, ...trainingVirtual]
+
+  // Absolute hero image per staff-training path — reused as the social image when
+  // no og_image_url is set. The effective image = explicit og_image_url, else hero.
+  const heroByPath: Record<string, string> = Object.fromEntries(
+    trainingPages.filter(t => t.image).map(t => [t.path, `${API_URL}${t.image}`]),
+  )
+  const effectiveImage = (p: SitePage): string | null => p.og_image_url || heroByPath[p.path] || null
 
   const filteredPages = pageSearch
     ? allPages.filter(p => p.path.includes(pageSearch.toLowerCase()) || p.title.toLowerCase().includes(pageSearch.toLowerCase()))
@@ -1493,6 +1508,12 @@ export default function BlogPage() {
                       {filteredPages.map(page => (
                         <div key={page.path}>
                           <div className={`flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-light/50 ${editPage?.path === page.path ? 'bg-teal-light/30' : ''}`}>
+                              {(() => {
+                                const img = effectiveImage(page)
+                                return img
+                                  ? <img src={img} alt="" title="Social sharing image" className="h-9 w-14 shrink-0 rounded border border-gray-200 object-cover" />
+                                  : <div className="flex h-9 w-14 shrink-0 items-center justify-center rounded border border-dashed border-gray-200 text-[9px] text-neutral-mid" title="No social sharing image">none</div>
+                              })()}
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <Globe size={12} className="shrink-0 text-neutral-mid" />
@@ -1559,6 +1580,7 @@ export default function BlogPage() {
                                 saving={savingPage}
                                 saveError={pageError}
                                 token={token}
+                                inheritedImage={editPage ? heroByPath[editPage.path] ?? null : null}
                               />
                             </div>
                           )}

@@ -245,7 +245,7 @@ publicTrainingRouter.get('/seo-index', async (_req: Request, res: Response) => {
       modsByTopic.get(m.topic_id)!.push(m)
     }
 
-    const pages: Array<{ path: string; title: string; description: string }> = []
+    const pages: Array<{ path: string; title: string; description: string; image: string | null }> = []
     const images: Array<{ src: string; alt: string }> = []
     const seenSrc = new Set<string>()
     const pushImg = (key: string | null | undefined, alt: string) => {
@@ -263,14 +263,16 @@ publicTrainingRouter.get('/seo-index', async (_req: Request, res: Response) => {
       const lc = (best.learning_content ?? {}) as any
       const slug = slugify(t.title)
       const summary = careSetting(typeof lc.summary === 'string' ? lc.summary : (best.description ?? ''))
+      // Cover (any version that has one) — also the page's hero, reused as its social image.
+      const coverMod = mods.find(x => x.illustration_key)
       pages.push({
         path:        `/staff-training/${slug}`,
         title:       `${t.title} Training for Care Staff | CareStreamAI`,
         description: summary || `${t.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it in any language.`,
+        image:       coverMod?.illustration_key ? illustrationUrl(coverMod.illustration_key) : null,
       })
 
-      // Cover (any version that has one), then section illustrations by index.
-      const coverMod = mods.find(x => x.illustration_key)
+      // Section illustrations by index (cover already captured above).
       pushImg(coverMod?.illustration_key, careSetting(`${t.title} training`))
 
       const headings: string[] = Array.isArray(lc.sections) ? lc.sections.map((s: any) => String(s?.heading ?? '')) : []

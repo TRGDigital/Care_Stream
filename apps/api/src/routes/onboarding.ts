@@ -398,7 +398,7 @@ onboardingRouter.get('/my', async (req, res) => {
         orderBy: { enrolled_at: 'asc' },
       }),
       (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
-      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }),
       // Training modules with a cover illustration (this tenant's + shared platform
       // ones) — candidates for auto-matching a thumbnail to each induction flow.
       (prisma as any).trainingModule.findMany({
@@ -455,8 +455,8 @@ onboardingRouter.get('/my', async (req, res) => {
           return -1
         }))
         const [tTexts, tQs] = await Promise.all([
-          translateTextsBatch(texts, langCode, langName),
-          translateQuestionsBatch(qFlat, langCode, langName),
+          translateTextsBatch(texts, langCode, langName, tenant?.translation_glossary),
+          translateQuestionsBatch(qFlat, langCode, langName, tenant?.translation_glossary),
         ])
         return baseline.map((e, ei) => ({
           ...e,

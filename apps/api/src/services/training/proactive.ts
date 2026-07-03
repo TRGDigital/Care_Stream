@@ -82,7 +82,7 @@ export async function sendProactiveTrainingQuestions(
   // Load tenant settings + slug
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { training_settings: true, slug: true, custom_languages: true },
+    select: { training_settings: true, slug: true, custom_languages: true, translation_glossary: true },
   })
 
   const settings = (tenant?.training_settings as any) ?? {}
@@ -132,6 +132,7 @@ export async function sendProactiveTrainingQuestions(
           { text: firstQ.text, options: (firstQ.options as string[]) ?? [] },
           userLang,
           userLangName,
+          tenant?.translation_glossary,
         )
         const questionForFmt = { ...firstQ, text: translatedQ.text, options: translatedQ.options }
 

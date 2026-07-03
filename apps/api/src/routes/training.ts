@@ -885,10 +885,11 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
         orderBy: { created_at: 'asc' },
       }),
       (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
-      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }),
       (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId, user_id: userId, area: 'training' }, select: { ref: true } }),
     ])
     const ratedRefs = new Set((ratings as any[]).map(r => r.ref))
+    const glossary = tenant?.translation_glossary as any
 
     // Honour the staff member's language preference: when their comms toggle is
     // on (default) and their first language isn't English, deliver the module
@@ -930,8 +931,8 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
           for (const q of qs) qFlat.push({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] })
         }
         const [tNames, tQs] = await Promise.all([
-          translateTextsBatch(names, langCode, langName),
-          translateQuestionsBatch(qFlat, langCode, langName),
+          translateTextsBatch(names, langCode, langName, glossary),
+          translateQuestionsBatch(qFlat, langCode, langName, glossary),
         ])
         return (baseline as any[]).map((e: any, i: number) => {
           const [start, count] = qSpan[i]

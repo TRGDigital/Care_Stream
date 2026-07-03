@@ -280,6 +280,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
               In short: adding a language always makes it selectable, and for the languages your workforce actually speaks the translation is dependable. To get the best results, set the staff member's <strong>first language</strong> to the one they read most comfortably, and keep the &ldquo;always communicate in their first language&rdquo; toggle on.
             </p>
           </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            <strong>Translation glossary (term-locking).</strong> You can make translations more consistent by pinning important terms in <strong>Settings → Translation glossary</strong>. Add words that should <strong>never</strong> be translated, your home&rsquo;s name, staff names, medication names, systems like &ldquo;CQC&rdquo; or &ldquo;eMAR&rdquo;, and role titles, so they stay in English in every language. You can also add a short <strong>note</strong> explaining what a term means (for example &ldquo;eMAR&rdquo; = &ldquo;electronic Medication Administration Record&rdquo;) so it&rsquo;s translated correctly every time. The glossary applies everywhere CareStream translates, training questions, annual modules, inductions, CQC prep, policies and staff messages, and takes effect straight away.
+          </p>
         </SectionBlock>
         <SectionBlock title="Letting staff switch a set into their second language">
           <p className="text-sm text-neutral-mid">

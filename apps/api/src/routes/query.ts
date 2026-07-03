@@ -124,14 +124,14 @@ queryRouter.post('/suggested', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
 
   const [tenantSettings, me] = await Promise.all([
-    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }),
     (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { first_language: true, comms_always_first_language: true } }),
   ])
   const lang = me?.comms_always_first_language === false ? 'eng' : ((me?.first_language as string) ?? 'eng')
   if (!lang || lang === 'eng') { ok(res, { questions }); return }
 
   try {
-    const translated = await translateTextsBatch(questions, lang, languageNameForCode(lang, tenantSettings?.custom_languages))
+    const translated = await translateTextsBatch(questions, lang, languageNameForCode(lang, tenantSettings?.custom_languages), tenantSettings?.translation_glossary)
     ok(res, { questions: translated })
   } catch (e) {
     console.error('[query/suggested] translate failed:', e)
@@ -156,12 +156,12 @@ queryRouter.post('/translate', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
 
   const tenantSettings = await (prisma as any).tenant.findUnique({
-    where: { id: tenantId }, select: { custom_languages: true },
+    where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true },
   })
   const name = languageNameForCode(language, tenantSettings?.custom_languages)
 
   try {
-    const translated = await withTranslationBudget(translateHtmlToLanguage(html, name), 60_000, html)
+    const translated = await withTranslationBudget(translateHtmlToLanguage(html, name, tenantSettings?.translation_glossary), 60_000, html)
     ok(res, { html: translated })
   } catch (e) {
     console.error('[query/translate] failed:', e)

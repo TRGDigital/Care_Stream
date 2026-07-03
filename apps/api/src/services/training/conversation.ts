@@ -89,7 +89,7 @@ export async function handleTrainingConversation({
         where: { id: userId }, select: { first_language: true, comms_always_first_language: true },
       }).catch(() => null),
       (prisma as any).tenant.findUnique({
-        where: { id: tenantId }, select: { custom_languages: true },
+        where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true },
       }).catch(() => null),
     ])
     const userLang: string = userRecord?.comms_always_first_language === false
@@ -207,6 +207,7 @@ export async function handleTrainingConversation({
         { text: nextQ.text, options: (nextQ.options as string[]) ?? [] },
         userLang,
         userLangName,
+        tenantRecord?.translation_glossary,
       )
       const nextQFmt = { ...nextQ, text: translated.text, options: translated.options }
 

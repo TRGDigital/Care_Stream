@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
-  AlertTriangle, Bell, BedDouble, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
+  AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
 
@@ -170,6 +170,10 @@ export default function SettingsPage() {
   const [newLanguage,    setNewLanguage]    = useState('')
   const [savingLanguage, setSavingLanguage] = useState(false)
   const [languageNote,   setLanguageNote]   = useState('')
+  const [glossary,       setGlossary]       = useState<Array<{ term: string; keep: boolean; note: string }>>([])
+  const [newTerm,        setNewTerm]        = useState('')
+  const [newTermNote,    setNewTermNote]    = useState('')
+  const [savingGlossary, setSavingGlossary] = useState(false)
   const [policySections, setPolicySections] = useState<string[]>([])
   const [newSection,     setNewSection]     = useState('')
   const [savingSections, setSavingSections] = useState(false)
@@ -226,6 +230,7 @@ export default function SettingsPage() {
       setSpecialistRoles(data.specialist_roles ?? [])
       setLanguages(data.languages ?? [])
       setDefaultLangCodes(data.default_language_codes ?? [])
+      setGlossary(data.translation_glossary ?? [])
       setPolicySections(data.policy_sections ?? [])
       setPolicyCategories(data.policy_categories ?? [])
       setResponseStyle(data.response_style ?? 'standard')
@@ -269,6 +274,7 @@ export default function SettingsPage() {
         setSpecialistRoles((data as any).specialist_roles ?? [])
         setLanguages((data as any).languages ?? [])
         setDefaultLangCodes((data as any).default_language_codes ?? [])
+        setGlossary((data as any).translation_glossary ?? [])
         setPolicySections((data as any).policy_sections ?? [])
         setPolicyCategories((data as any).policy_categories ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
@@ -393,6 +399,31 @@ export default function SettingsPage() {
       if ((data as any).languages) setLanguages((data as any).languages)
     } catch (e: any) { setError(e.message ?? 'Failed to remove language') }
     finally { setSavingLanguage(false) }
+  }
+
+  // ── Translation glossary (term-locking) ──────────────────────────────────
+  async function saveGlossary(updated: Array<{ term: string; keep: boolean; note: string }>) {
+    if (!session?.accessToken) return
+    setGlossary(updated)                       // optimistic
+    setSavingGlossary(true); setError('')
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ translation_glossary: updated })
+      if ((data as any).translation_glossary) setGlossary((data as any).translation_glossary)
+    } catch (e: any) { setError(e.message ?? 'Failed to save glossary') }
+    finally { setSavingGlossary(false) }
+  }
+  function addGlossaryTerm() {
+    const term = newTerm.trim()
+    if (!term) return
+    if (glossary.some(g => g.term.toLowerCase() === term.toLowerCase())) { setError('That term is already in the glossary.'); return }
+    saveGlossary([...glossary, { term, keep: true, note: newTermNote.trim() }])
+    setNewTerm(''); setNewTermNote('')
+  }
+  function removeGlossaryTerm(term: string) {
+    saveGlossary(glossary.filter(g => g.term !== term))
+  }
+  function toggleGlossaryKeep(term: string) {
+    saveGlossary(glossary.map(g => g.term === term ? { ...g, keep: !g.keep } : g))
   }
 
   async function saveSections(updated: string[]) {
@@ -856,6 +887,47 @@ export default function SettingsPage() {
             </div>
           )}
           {savingLanguage && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
+        </SettingSection>
+
+        {/* ── Translation glossary ──────────────────────────────────────────── */}
+        <SettingSection icon={BookLock} title="Translation glossary" description="Pin words that must never be translated, or add a note on what they mean, so translations stay consistent.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            When CareStream translates training, policies and messages into a staff member’s language, the terms you add here are handled exactly as you specify. Use it for words that should always stay in English, your home’s name, staff names, medication names, systems like <strong>CQC</strong> or <strong>eMAR</strong>, and role titles, or add a short note explaining a term so it’s translated correctly every time.
+          </p>
+          <div className="mb-2 flex flex-col gap-2 sm:flex-row">
+            <input type="text" value={newTerm} onChange={e => { setNewTerm(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addGlossaryTerm()} placeholder="Term, e.g. eMAR" className={`${INPUT} sm:max-w-[38%]`} />
+            <input type="text" value={newTermNote} onChange={e => setNewTermNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && addGlossaryTerm()} placeholder="Optional note, e.g. “electronic Medication Administration Record”" className={INPUT} />
+            <Button onClick={addGlossaryTerm} disabled={savingGlossary || !newTerm.trim()} size="md">
+              <Plus size={14} className="mr-1.5" />Add
+            </Button>
+          </div>
+          <p className="mb-4 text-xs text-neutral-mid">New terms are set to <strong>Keep in English</strong> by default. Turn that off for a term you only want to add a translation note for.</p>
+          {glossary.length === 0 ? (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No pinned terms yet. Adding a few of your most-used names and acronyms keeps every translation on-message.</p>
+          ) : (
+            <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+              {glossary.map(g => (
+                <div key={g.term} className="flex items-center gap-3 px-4 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{g.term}</p>
+                    {g.note && <p className="truncate text-xs text-neutral-mid">{g.note}</p>}
+                  </div>
+                  <button
+                    onClick={() => toggleGlossaryKeep(g.term)}
+                    disabled={savingGlossary}
+                    title={g.keep ? 'Kept in English — click to allow translating this term' : 'Translated — click to keep this term in English'}
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${g.keep ? 'border-teal/30 bg-teal-light/30 text-teal' : 'border-gray-200 bg-neutral-light text-neutral-mid'}`}
+                  >
+                    {g.keep ? 'Keep in English' : 'Translatable'}
+                  </button>
+                  <button onClick={() => removeGlossaryTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {savingGlossary && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>
 
         {/* ── Policy sections ───────────────────────────────────────────────── */}

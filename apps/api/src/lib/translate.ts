@@ -30,6 +30,31 @@ export function langName(code: string): string {
   return LANG_NAMES[code] ?? languageNameForCode(code)
 }
 
+// ─── Translation glossary (term-locking) ──────────────────────────────────────
+// A tenant can pin terms so translation stays consistent: keep them verbatim
+// (care terms, drug names, the home's name, "CQC", role titles) and/or give the
+// model a short note on what a term means. buildGlossary() turns the tenant's
+// list into a prompt instruction plus a short signature used to partition the
+// translation cache, so changing the glossary never serves a stale translation.
+export type GlossaryTerm = { term: string; keep?: boolean; note?: string }
+
+export function buildGlossary(terms?: GlossaryTerm[] | null): { instruction: string; sig: string } | null {
+  const clean = (Array.isArray(terms) ? terms : [])
+    .filter(t => t && typeof t.term === 'string' && t.term.trim())
+    .map(t => ({ term: t.term.trim(), keep: t.keep !== false, note: (t.note ?? '').trim() }))
+  if (!clean.length) return null
+
+  const keeps = clean.filter(t => t.keep).map(t => `"${t.term}"`)
+  const notes = clean.filter(t => t.note).map(t => `"${t.term}" — ${t.note}`)
+  const lines: string[] = []
+  if (keeps.length) lines.push(`Keep these terms EXACTLY as written in English, do not translate, transliterate or alter them: ${keeps.join(', ')}.`)
+  if (notes.length) lines.push(`Follow this guidance for these terms: ${notes.join('; ')}.`)
+
+  const instruction = `\n\nIMPORTANT GLOSSARY (must follow): ${lines.join(' ')}`
+  const sig = createHash('sha256').update(JSON.stringify(clean)).digest('hex').slice(0, 12)
+  return { instruction, sig }
+}
+
 // Decide the target language for a hub content request (training / induction / CQC /
 // follow-ups). Honours a `?lang=2` (or `?lang=second`) override that flips a single set
 // into the staff member's SECOND language — but only when an admin enabled switching for
@@ -51,11 +76,13 @@ export async function translateTrainingQuestion(
   question: { text: string; options: string[] },
   targetLang: string,
   targetLangName?: string,   // explicit name (e.g. a tenant's custom language) — overrides code lookup
+  glossary?: GlossaryTerm[],
 ): Promise<{ text: string; options: string[] }> {
   if (!targetLang || targetLang === 'eng') return question
 
   const name = targetLangName ?? langName(targetLang)
   const opts  = question.options ?? []
+  const gloss = buildGlossary(glossary)
 
   const prompt = [
     `Translate the following care training question and its answer options into ${name}.`,
@@ -67,7 +94,7 @@ export async function translateTrainingQuestion(
     ``,
     `OPTIONS:`,
     ...opts.map((o, i) => `${i + 1}. ${o}`),
-  ].join('\n')
+  ].join('\n') + (gloss?.instruction ?? '')
 
   try {
     const msg = await anthropic.messages.create({
@@ -145,11 +172,17 @@ export async function translateQuestionsBatch(
   questions: Array<{ text: string; options: string[] }>,
   langCode: string,
   langName?: string,
+  glossary?: GlossaryTerm[],
 ): Promise<Array<{ text: string; options: string[] }>> {
   if (!langCode || langCode === 'eng') return questions.map(q => ({ text: q.text, options: q.options ?? [] }))
 
+  // Partition the cache per glossary version so a glossary change never serves a
+  // previously-cached translation (real language is still passed to Haiku).
+  const gloss = buildGlossary(glossary)
+  const cacheLang = gloss ? `${langCode}#${gloss.sig}` : langCode
+
   const results = new Array<{ text: string; options: string[] }>(questions.length)
-  const memKey  = (q: { text: string; options: string[] }) => `${langCode}::${q.text}::${(q.options ?? []).join('|')}`
+  const memKey  = (q: { text: string; options: string[] }) => `${cacheLang}::${q.text}::${(q.options ?? []).join('|')}`
   const need: number[] = []
 
   for (let i = 0; i < questions.length; i++) {
@@ -162,7 +195,7 @@ export async function translateQuestionsBatch(
   if (!need.length) return results
 
   const hashes = new Map<number, string>(need.map(i => [i, qHash(questions[i])]))
-  const fromDb = await cacheReadMany(langCode, need.map(i => hashes.get(i)!))
+  const fromDb = await cacheReadMany(cacheLang, need.map(i => hashes.get(i)!))
   const stillNeed: number[] = []
   for (const i of need) {
     const t = fromDb.get(hashes.get(i)!)
@@ -171,40 +204,42 @@ export async function translateQuestionsBatch(
   }
 
   if (stillNeed.length) {
-    const fresh = await mapLimit(stillNeed, 6, async (i) => ({ i, t: await translateTrainingQuestion(questions[i], langCode, langName) }))
+    const fresh = await mapLimit(stillNeed, 6, async (i) => ({ i, t: await translateTrainingQuestion(questions[i], langCode, langName, glossary) }))
     const toWrite: Array<{ hash: string; translated: any }> = []
     for (const { i, t } of fresh) {
       results[i] = t
       _qCache.set(memKey(questions[i]), t)
       toWrite.push({ hash: hashes.get(i)!, translated: t })
     }
-    await cacheWriteMany(langCode, toWrite)
+    await cacheWriteMany(cacheLang, toWrite)
   }
   return results
 }
 
 // Batch-translate short strings (step titles, module names) into langCode.
-export async function translateTextsBatch(texts: string[], langCode: string, langName?: string): Promise<string[]> {
+export async function translateTextsBatch(texts: string[], langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string[]> {
   if (!langCode || langCode === 'eng') return texts
   const name = langName ?? langName_internal(langCode)
+  const gloss = buildGlossary(glossary)
+  const cacheLang = gloss ? `${langCode}#${gloss.sig}` : langCode
 
   const results = new Array<string>(texts.length)
   const need: number[] = []
   for (let i = 0; i < texts.length; i++) {
     const text = texts[i]
     if (!text) { results[i] = text; continue }
-    const hit = _tCache.get(`${langCode}::${text}`)
+    const hit = _tCache.get(`${cacheLang}::${text}`)
     if (hit) { results[i] = hit; continue }
     need.push(i)
   }
   if (!need.length) return results
 
   const hashes = new Map<number, string>(need.map(i => [i, tHash(texts[i])]))
-  const fromDb = await cacheReadMany(langCode, need.map(i => hashes.get(i)!))
+  const fromDb = await cacheReadMany(cacheLang, need.map(i => hashes.get(i)!))
   const stillNeed: number[] = []
   for (const i of need) {
     const t = fromDb.get(hashes.get(i)!)
-    if (t) { results[i] = t.text ?? texts[i]; _tCache.set(`${langCode}::${texts[i]}`, results[i]) }
+    if (t) { results[i] = t.text ?? texts[i]; _tCache.set(`${cacheLang}::${texts[i]}`, results[i]) }
     else stillNeed.push(i)
   }
 
@@ -214,7 +249,7 @@ export async function translateTextsBatch(texts: string[], langCode: string, lan
         const msg = await anthropic.messages.create({
           model:      'claude-haiku-4-5-20251001',
           max_tokens: 400,
-          messages:   [{ role: 'user', content: `Translate the following short text into ${name}. Return ONLY the translation — no quotes, labels, or explanation.\n\n${texts[i]}` }],
+          messages:   [{ role: 'user', content: `Translate the following short text into ${name}. Return ONLY the translation — no quotes, labels, or explanation.\n\n${texts[i]}${gloss?.instruction ?? ''}` }],
         })
         recordUsage('claude-haiku-4-5-20251001', msg.usage)
         const out = ((msg.content[0] as any).text as string).trim()
@@ -227,10 +262,10 @@ export async function translateTextsBatch(texts: string[], langCode: string, lan
     const toWrite: Array<{ hash: string; translated: any }> = []
     for (const { i, v } of fresh) {
       results[i] = v
-      _tCache.set(`${langCode}::${texts[i]}`, v)
+      _tCache.set(`${cacheLang}::${texts[i]}`, v)
       if (v !== texts[i]) toWrite.push({ hash: hashes.get(i)!, translated: { text: v } })
     }
-    await cacheWriteMany(langCode, toWrite)
+    await cacheWriteMany(cacheLang, toWrite)
   }
   return results
 }
@@ -241,14 +276,15 @@ export async function translateQuestionCached(
   question: { text: string; options: string[] },
   langCode: string,
   langName?: string,
+  glossary?: GlossaryTerm[],
 ): Promise<{ text: string; options: string[] }> {
   if (!langCode || langCode === 'eng' || !question.text) return question
-  return (await translateQuestionsBatch([question], langCode, langName))[0]
+  return (await translateQuestionsBatch([question], langCode, langName, glossary))[0]
 }
 
-export async function translateText(text: string, langCode: string, langName?: string): Promise<string> {
+export async function translateText(text: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string> {
   if (!text || !langCode || langCode === 'eng') return text
-  return (await translateTextsBatch([text], langCode, langName))[0]
+  return (await translateTextsBatch([text], langCode, langName, glossary))[0]
 }
 
 function langName_internal(code: string): string {
@@ -260,7 +296,8 @@ function langName_internal(code: string): string {
 // stages each stay within budget.
 // Core HTML translator: chunk by chunk, preserving every tag, into a named
 // language. Works for ANY target language (including English).
-async function translateHtmlChunks(html: string, name: string): Promise<string> {
+async function translateHtmlChunks(html: string, name: string, glossary?: GlossaryTerm[]): Promise<string> {
+  const gloss = buildGlossary(glossary)
   const parts = html.split(/(?<=<\/(?:p|li|h2|h3|h4|ul|ol|div)>)/i)
   const chunks: string[] = []
   let cur = ''
@@ -276,7 +313,7 @@ async function translateHtmlChunks(html: string, name: string): Promise<string> 
         model:      'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         messages:   [{ role: 'user', content:
-          `Translate the human-readable text in this HTML fragment into ${name}. Keep EVERY HTML tag and attribute exactly as-is — only translate the text between tags. Do not add, remove, summarise or reformat anything. Return ONLY the HTML.\n\n${chunk}` }],
+          `Translate the human-readable text in this HTML fragment into ${name}. Keep EVERY HTML tag and attribute exactly as-is — only translate the text between tags. Do not add, remove, summarise or reformat anything. Return ONLY the HTML.${gloss?.instruction ?? ''}\n\n${chunk}` }],
       })
       recordUsage('claude-haiku-4-5-20251001', msg.usage)
       return ((msg.content[0] as any).text as string).replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim()
@@ -290,16 +327,16 @@ async function translateHtmlChunks(html: string, name: string): Promise<string> 
 
 // Translate already-English HTML into another language (no-op for English, where
 // the source is already English). Used after the English formatting pass.
-export async function translateHtmlPreservingTags(html: string, langCode: string, langName?: string): Promise<string> {
+export async function translateHtmlPreservingTags(html: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string> {
   if (!html || !langCode || langCode === 'eng') return html
-  return translateHtmlChunks(html, langName ?? langName_internal(langCode))
+  return translateHtmlChunks(html, langName ?? langName_internal(langCode), glossary)
 }
 
 // Translate HTML into ANY language, including English — used to flip an already
 // generated chat answer between a staff member's first and second language.
-export async function translateHtmlToLanguage(html: string, langName: string): Promise<string> {
+export async function translateHtmlToLanguage(html: string, langName: string, glossary?: GlossaryTerm[]): Promise<string> {
   if (!html || !langName) return html
-  return translateHtmlChunks(html, langName)
+  return translateHtmlChunks(html, langName, glossary)
 }
 
 // Generate a few short, practical questions a care worker might ask about a
@@ -332,8 +369,9 @@ export async function generatePolicyQuestions(policyText: string, langCode: stri
 // letterhead/contact details and Word image-descriptions, structures it with
 // headings + lists, and translates into `langCode` when it isn't English.
 // Output is HTML (h2/h3/p/ul/ol/li/strong only). Caller caches the result.
-export async function formatPolicyHtml(rawText: string, langCode: string, langName?: string): Promise<string | null> {
+export async function formatPolicyHtml(rawText: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string | null> {
   const name = (langCode && langCode !== 'eng') ? (langName ?? langName_internal(langCode)) : null
+  const gloss = name ? buildGlossary(glossary) : null
 
   // Light deterministic pre-clean: drop Word auto image-description lines
   // (the rest of the letterhead is removed by the formatting pass below).
@@ -350,6 +388,7 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
     'Then format the remaining content as clean HTML: the policy title as a single <h2>; section/sub-section headings as <h3>; lists of items or steps as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels.',
     'Preserve ALL policy content, meaning, headings and wording exactly — do NOT summarise, shorten, reword, or omit anything substantive. Only restructure and tidy.',
     translateLine,
+    gloss?.instruction ? gloss.instruction.trim() : '',
     'Return ONLY the HTML body — no <html>, <head> or <body> tags, and no markdown code fences.',
     '',
     'POLICY TEXT:',
@@ -378,9 +417,10 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
 // long policies don't blow the token budget. Preserves structure; falls back to
 // the original text on any chunk failure. Caller is responsible for caching the
 // result (it's expensive — see policy_translations).
-export async function translatePolicyText(text: string, langCode: string, langName?: string): Promise<string> {
+export async function translatePolicyText(text: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string> {
   if (!text || !langCode || langCode === 'eng') return text
   const name = langName ?? langName_internal(langCode)
+  const gloss = buildGlossary(glossary)
 
   const chunks: string[] = []
   let cur = ''
@@ -396,7 +436,7 @@ export async function translatePolicyText(text: string, langCode: string, langNa
         model:      'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         messages:   [{ role: 'user', content:
-          `Translate this UK care-home policy text into ${name}. Preserve all headings, structure, lists and line breaks, and keep the exact meaning. Do not summarise, add, or remove anything. Return ONLY the translation, no preamble.\n\n${chunk}` }],
+          `Translate this UK care-home policy text into ${name}. Preserve all headings, structure, lists and line breaks, and keep the exact meaning. Do not summarise, add, or remove anything. Return ONLY the translation, no preamble.${gloss?.instruction ?? ''}\n\n${chunk}` }],
       })
       recordUsage('claude-haiku-4-5-20251001', msg.usage)
       return ((msg.content[0] as any).text as string).trim()
@@ -413,11 +453,12 @@ export async function translatePolicyText(text: string, langCode: string, langNa
 // "My Progress" page). Cached per language so it's translated once per process.
 const _bundleCache = new Map<string, Record<string, string>>()
 
-export async function translateBundle(strings: Record<string, string>, langCode: string, langName?: string): Promise<Record<string, string>> {
+export async function translateBundle(strings: Record<string, string>, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<Record<string, string>> {
   if (!langCode || langCode === 'eng') return strings
   const name = langName ?? langName_internal(langCode)
+  const gloss = buildGlossary(glossary)
   const keys = Object.keys(strings)
-  const cacheKey = `${langCode}::${keys.join(',')}::${Object.values(strings).join('|').length}`
+  const cacheKey = `${langCode}${gloss ? '#' + gloss.sig : ''}::${keys.join(',')}::${Object.values(strings).join('|').length}`
   const hit = _bundleCache.get(cacheKey)
   if (hit) return hit
   try {
@@ -425,7 +466,7 @@ export async function translateBundle(strings: Record<string, string>, langCode:
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 1800,
       messages:   [{ role: 'user', content:
-        `Translate the VALUES of this JSON object into ${name}. Keep every key exactly the same. Keep anything inside curly braces like {n} or {total} unchanged. Use warm, simple language a care worker would understand. Return ONLY valid minified JSON and nothing else.\n\n${JSON.stringify(strings)}` }],
+        `Translate the VALUES of this JSON object into ${name}. Keep every key exactly the same. Keep anything inside curly braces like {n} or {total} unchanged. Use warm, simple language a care worker would understand. Return ONLY valid minified JSON and nothing else.${gloss?.instruction ?? ''}\n\n${JSON.stringify(strings)}` }],
     })
     recordUsage('claude-haiku-4-5-20251001', msg.usage)
     const raw   = ((msg.content[0] as any).text as string)

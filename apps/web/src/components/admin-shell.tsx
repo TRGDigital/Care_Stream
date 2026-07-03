@@ -313,6 +313,18 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
   }
   const allHrefs = sections.flatMap(s => s.items.map(i => i.href))
   const hasExactMatch = allHrefs.some(href => href === pathname)
+
+  // Instant label tooltip for the collapsed rail. Fixed-positioned to the
+  // viewport so it isn't clipped by the sidebar's own scroll/overflow.
+  const [tip, setTip] = useState<{ label: string; top: number } | null>(null)
+  const tipProps = (label: string) => collapsed ? {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      const r = e.currentTarget.getBoundingClientRect()
+      setTip({ label, top: r.top + r.height / 2 })
+    },
+    onMouseLeave: () => setTip(null),
+  } : {}
+
   return (
     <>
       {/* Logo */}
@@ -342,7 +354,8 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
                 return (
                   <div
                     key={href}
-                    title={collapsed ? `${label} — upgrade to full CareStream` : 'Upgrade to full CareStream to unlock this'}
+                    {...tipProps(`${label} — upgrade to full CareStream`)}
+                    title={collapsed ? undefined : 'Upgrade to full CareStream to unlock this'}
                     className={clsx('mb-0.5 flex cursor-not-allowed items-center rounded-md py-2 text-sm font-medium text-white/30', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
                   >
                     <Icon size={16} className="text-white/20" />
@@ -355,7 +368,8 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
                 return (
                   <div
                     key={href}
-                    title={collapsed ? `${label} — upgrade to Enterprise` : 'Upgrade to Enterprise to unlock this'}
+                    {...tipProps(`${label} — upgrade to Enterprise`)}
+                    title={collapsed ? undefined : 'Upgrade to Enterprise to unlock this'}
                     className={clsx('mb-0.5 flex cursor-not-allowed items-center rounded-md py-2 text-sm font-medium text-white/30', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
                   >
                     <Icon size={16} className="text-white/20" />
@@ -368,8 +382,8 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
                 <Link
                   key={href}
                   href={href}
-                  onClick={onNavigate}
-                  title={collapsed ? label : undefined}
+                  onClick={() => { setTip(null); onNavigate?.() }}
+                  {...tipProps(label)}
                   className={clsx(
                     'mb-0.5 flex items-center rounded-md py-2 text-sm font-medium transition-colors',
                     collapsed ? 'justify-center px-0' : 'gap-3 px-3',
@@ -392,14 +406,25 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
       <div className="border-t border-white/10 px-3 py-3">
         <Link
           href="/chat"
-          onClick={onNavigate}
-          title={collapsed ? 'Chat Hub' : undefined}
+          onClick={() => { setTip(null); onNavigate?.() }}
+          {...tipProps('Chat Hub')}
           className={clsx('flex items-center rounded-md py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
         >
           <MessageSquare size={16} className="text-white/50" />
           {!collapsed && 'Chat Hub'}
         </Link>
       </div>
+
+      {/* Instant hover label for the collapsed rail (fixed to the viewport so the
+          sidebar's scroll never clips it). */}
+      {collapsed && tip && (
+        <div
+          style={{ top: tip.top }}
+          className="pointer-events-none fixed left-[68px] z-[60] -translate-y-1/2 whitespace-nowrap rounded-md bg-neutral-dark px-2.5 py-1 text-xs font-medium text-white shadow-lg"
+        >
+          {tip.label}
+        </div>
+      )}
     </>
   )
 }

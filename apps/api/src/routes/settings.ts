@@ -70,7 +70,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, room_count: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, room_count: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -92,9 +92,27 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     languages:          effectiveLanguages(tenant.custom_languages),
     default_language_codes: DEFAULT_LANGUAGES.map(l => l.code),
     language_catalog:   languageCatalog(),
+    translation_glossary: sanitiseGlossary(tenant.translation_glossary),
     room_count:         (tenant.room_count as number) ?? 0,
   })
 })
+
+// Normalise a stored glossary into clean [{ term, keep, note }] entries.
+function sanitiseGlossary(raw: unknown): { term: string; keep: boolean; note: string }[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const out: { term: string; keep: boolean; note: string }[] = []
+  for (const e of raw as any[]) {
+    const term = typeof e?.term === 'string' ? e.term.trim() : ''
+    if (!term) continue
+    const key = term.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ term, keep: e?.keep !== false, note: typeof e?.note === 'string' ? e.note.trim().slice(0, 200) : '' })
+    if (out.length >= 200) break
+  }
+  return out
+}
 
 // ─── PATCH /settings ─────────────────────────────────────────────────────────
 // Admin only. Replaces the full email allowlist.
@@ -107,7 +125,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, policy_categories, add_language, remove_language, room_count } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, policy_categories, add_language, remove_language, translation_glossary, room_count } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -272,6 +290,14 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     updateData.custom_languages = customList
   }
 
+  // ── Translation glossary (term-locking): full-list replace ──────────────────
+  if (translation_glossary !== undefined) {
+    if (!Array.isArray(translation_glossary)) {
+      return err(res, 'INVALID_INPUT', 'translation_glossary must be an array', 400)
+    }
+    updateData.translation_glossary = sanitiseGlossary(translation_glossary)
+  }
+
   // ── Room count (for the per-room audit picker) ──────────────────────────────
   if (room_count !== undefined) {
     const n = Number(room_count)
@@ -284,7 +310,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, room_count: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, room_count: true },
   })
 
   ok(res, {
@@ -298,6 +324,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     policy_categories: (updated.policy_categories as string[]) ?? [],
     languages:         effectiveLanguages(updated.custom_languages),
     added_language:    addedLanguage,
+    translation_glossary: sanitiseGlossary(updated.translation_glossary),
     room_count:        (updated.room_count as number) ?? 0,
   })
 })

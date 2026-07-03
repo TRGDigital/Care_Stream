@@ -19,6 +19,7 @@ type StaffRow = Register['staff'][number]
 const TYPES: { key: string; label: string; short: string; refLabel: string; refPlaceholder: string; hasExpiry: boolean }[] = [
   { key: 'dbs',                        label: 'DBS check',              short: 'DBS',          refLabel: 'Certificate number',        refPlaceholder: 'e.g. 001234567890', hasExpiry: true },
   { key: 'right_to_work',              label: 'Right to work',          short: 'Right to work', refLabel: 'Document type',            refPlaceholder: 'e.g. British passport, Skilled Worker visa', hasExpiry: true },
+  { key: 'passport',                   label: 'Passport',               short: 'Passport',     refLabel: 'Passport number',           refPlaceholder: 'e.g. 123456789', hasExpiry: true },
   { key: 'professional_registration', label: 'Professional registration', short: 'Registration', refLabel: 'Body & registration number', refPlaceholder: 'e.g. NMC 12A3456B', hasExpiry: true },
   { key: 'reference',                  label: 'References',             short: 'References',   refLabel: 'Reference notes',           refPlaceholder: 'e.g. 2 of 2 received', hasExpiry: false },
 ]
@@ -69,8 +70,10 @@ export default function WorkforcePage() {
     setAlertState('sending'); setAlertMsg('')
     try {
       const r = await createApiClient(session.accessToken).settings.sendComplianceExpiryAlerts()
+      const passportNote = r.passport_staff > 0 ? ` ${r.passport_staff} staff emailed about their passport.` : ''
       if (r.expired === 0 && r.expiring === 0) { setAlertState('sent'); setAlertMsg('Nothing expired or expiring in the next 30 days.') }
-      else if (r.sent && r.recipients > 0) { setAlertState('sent'); setAlertMsg(`Emailed ${r.recipients} admin${r.recipients === 1 ? '' : 's'}: ${r.expired} expired, ${r.expiring} expiring soon.`) }
+      else if (r.sent && r.recipients > 0) { setAlertState('sent'); setAlertMsg(`Emailed ${r.recipients} admin${r.recipients === 1 ? '' : 's'}: ${r.expired} expired, ${r.expiring} expiring soon.${passportNote}`) }
+      else if (r.passport_staff > 0) { setAlertState('sent'); setAlertMsg(`No admin recipients, but${passportNote}`) }
       else { setAlertState('sent'); setAlertMsg('No admin recipients to email.') }
     } catch { setAlertState('error'); setAlertMsg('Could not send the alerts.') }
   }

@@ -38,7 +38,7 @@ workforceRouter.use(async (req: Request, res: Response, next) => {
   catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } next(e) }
 })
 
-const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'professional_registration', 'reference'] as const
+const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'passport', 'professional_registration', 'reference'] as const
 type CredType = typeof CREDENTIAL_TYPES[number]
 
 // Traffic-light status for a credential of a given type.

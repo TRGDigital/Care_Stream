@@ -1462,10 +1462,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             The Workforce compliance register is an <strong>Enterprise feature</strong>. It keeps each staff member&rsquo;s &ldquo;safe to work&rdquo; credentials in one place, with expiry dates and a live Red/Amber/Green view. It is the evidence CQC looks for under safe recruitment (Regulation 19), so nothing quietly lapses.
           </p>
-          <p className="mt-2 text-sm text-neutral-mid">Open it from <strong>Compliance</strong> in the Team section of the sidebar. It tracks four credentials per person:</p>
+          <p className="mt-2 text-sm text-neutral-mid">Open it from <strong>Compliance</strong> in the Team section of the sidebar. It tracks five credentials per person:</p>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
             <li><strong className="text-neutral-dark">DBS check</strong> (certificate number and renewal date)</li>
             <li><strong className="text-neutral-dark">Right to work</strong> (document type, plus expiry for time-limited visas)</li>
+            <li><strong className="text-neutral-dark">Passport</strong> (number and expiry date, important for overseas staff)</li>
             <li><strong className="text-neutral-dark">Professional registration</strong> (for example NMC, with renewal date)</li>
             <li><strong className="text-neutral-dark">References</strong> (received or outstanding)</li>
           </ul>
@@ -1496,6 +1497,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             You can also send it on demand: on the <strong>Compliance</strong> page, click <strong>Email expiry alerts</strong> at the top right and your admins get the digest straight away.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            <strong>Passports</strong> are treated a little differently: as well as the admin digest, the <strong>staff member is emailed personally</strong> as their passport comes up for renewal (and if it has expired), so overseas staff can keep it valid. All of these emails use the <strong>Compliance credential expiry</strong> toggle under Settings.
           </p>
         </SectionBlock>
         <SectionBlock title="Supervisions and appraisals">

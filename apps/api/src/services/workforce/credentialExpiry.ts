@@ -12,14 +12,19 @@ import { sendTrainingUpdateEmail } from '../email/outbound'
 
 const WINDOW_DAYS = 30
 
+// Days-to-expiry on which a staff member is personally emailed about their own
+// passport (rather than every day it sits in the 30-day window).
+const PASSPORT_STAFF_THRESHOLDS = new Set([30, 14, 7, 3, 1, 0])
+
 const TYPE_LABELS: Record<string, string> = {
   dbs:                       'DBS check',
   right_to_work:             'Right to work',
+  passport:                  'Passport',
   professional_registration: 'Professional registration',
   reference:                 'References',
 }
 
-type Flag = { name: string; type: string; expires_at: Date; when: 'expired' | 'soon' }
+type Flag = { user_id: string; name: string; type: string; expires_at: Date; when: 'expired' | 'soon' }
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
@@ -54,11 +59,11 @@ function buildDigestHtml(flags: Flag[]): string {
   `
 }
 
-export interface ExpiryResult { sent: boolean; expiring: number; expired: number; recipients: number }
+export interface ExpiryResult { sent: boolean; expiring: number; expired: number; recipients: number; passport_staff: number }
 
 // Run the digest for one tenant. force = bypass the email preference (manual button).
 export async function runCredentialExpiryForTenant(tenantId: string, opts?: { force?: boolean }): Promise<ExpiryResult> {
-  const empty: ExpiryResult = { sent: false, expiring: 0, expired: 0, recipients: 0 }
+  const empty: ExpiryResult = { sent: false, expiring: 0, expired: 0, recipients: 0, passport_staff: 0 }
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
@@ -78,16 +83,16 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
   // Only flag active staff.
   const userIds = [...new Set(creds.map((c: any) => c.user_id))]
   const users   = await (prisma as any).user.findMany({
-    where: { id: { in: userIds }, tenant_id: tenantId, is_active: true }, select: { id: true, name: true },
+    where: { id: { in: userIds }, tenant_id: tenantId, is_active: true }, select: { id: true, name: true, email: true },
   })
-  const nameById = new Map<string, string>(users.map((u: any) => [u.id, u.name]))
+  const userById = new Map<string, { name: string; email: string }>(users.map((u: any) => [u.id, { name: u.name, email: u.email }]))
 
   const flags: Flag[] = []
   for (const c of creds) {
-    const name = nameById.get(c.user_id)
-    if (!name) continue
+    const u = userById.get(c.user_id)
+    if (!u) continue
     const exp = new Date(c.expires_at)
-    flags.push({ name, type: c.type, expires_at: exp, when: exp.getTime() < now.getTime() ? 'expired' : 'soon' })
+    flags.push({ user_id: c.user_id, name: u.name, type: c.type, expires_at: exp, when: exp.getTime() < now.getTime() ? 'expired' : 'soon' })
   }
   if (flags.length === 0) return empty
   flags.sort((a, b) => a.expires_at.getTime() - b.expires_at.getTime())
@@ -96,13 +101,30 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
   const expiring = flags.filter(f => f.when === 'soon').length
 
   if (!opts?.force && !(await isEmailEnabled(tenantId, 'compliance_expiry_alerts'))) {
-    return { sent: false, expiring, expired, recipients: 0 }
+    return { sent: false, expiring, expired, recipients: 0, passport_staff: 0 }
+  }
+
+  // Personal reminders to staff about their OWN passport (overseas staff). On the
+  // daily cron this only fires on renewal thresholds; the manual button always sends.
+  let passportStaff = 0
+  for (const f of flags) {
+    if (f.type !== 'passport') continue
+    const u = userById.get(f.user_id)
+    if (!u?.email) continue
+    const daysUntil = Math.ceil((f.expires_at.getTime() - now.getTime()) / 86_400_000)
+    if (!opts?.force && !PASSPORT_STAFF_THRESHOLDS.has(daysUntil)) continue
+    const dateStr = fmt(f.expires_at)
+    const bodyHtml = f.when === 'expired'
+      ? `<p style="font-size:15px;margin:0 0 8px">Your passport <strong style="color:#dc2626">has expired</strong> (expiry ${dateStr}). Please renew it as soon as possible and let your manager know once it is done.</p>`
+      : `<p style="font-size:15px;margin:0 0 8px">Your passport is due to expire on <strong>${dateStr}</strong>. Please arrange to renew it in good time and let your manager know once it is done.</p>`
+    await sendTrainingUpdateEmail({ to: u.email, name: u.name, orgName: tenant.name, subject: f.when === 'expired' ? 'Your passport has expired' : 'Your passport is expiring soon', bodyHtml }).catch(() => {})
+    passportStaff++
   }
 
   const admins = await (prisma as any).user.findMany({
     where: { tenant_id: tenantId, role: 'admin', is_active: true }, select: { email: true, name: true },
   })
-  if (admins.length === 0) return { sent: false, expiring, expired, recipients: 0 }
+  if (admins.length === 0) return { sent: passportStaff > 0, expiring, expired, recipients: 0, passport_staff: passportStaff }
 
   const subject  = `Workforce compliance: ${expired} expired, ${expiring} expiring soon`
   const bodyHtml = buildDigestHtml(flags)
@@ -110,7 +132,7 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
     sendTrainingUpdateEmail({ to: a.email, name: a.name, orgName: tenant.name, subject, bodyHtml }).catch(() => {}),
   ))
 
-  return { sent: true, expiring, expired, recipients: admins.length }
+  return { sent: true, expiring, expired, recipients: admins.length, passport_staff: passportStaff }
 }
 
 // Run for every Enterprise tenant (cron).

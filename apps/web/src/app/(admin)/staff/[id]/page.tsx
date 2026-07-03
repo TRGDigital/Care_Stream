@@ -611,6 +611,7 @@ export default function StaffRecordPage() {
               {[
                 { key: 'dbs',                        label: 'DBS check' },
                 { key: 'right_to_work',              label: 'Right to work' },
+                { key: 'passport',                   label: 'Passport' },
                 { key: 'professional_registration',  label: 'Professional registration' },
                 { key: 'reference',                  label: 'References' },
               ].map(t => {

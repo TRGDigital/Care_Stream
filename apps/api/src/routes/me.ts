@@ -7,6 +7,7 @@ import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
 import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget, hubContentLang } from '../lib/translate'
+import { overrideHash } from '../lib/overrides'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
 import { getOrCreateLesson } from '../lib/remediation'
@@ -68,7 +69,7 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
   const [user, tenant] = await Promise.all([
     (prisma as any).user.findUnique({
       where:  { id: userId },
-      select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true },
+      select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true },
     }).catch(() => null),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
   ])
@@ -80,7 +81,53 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
     comms_always_first_language: user?.comms_always_first_language !== false,
     // Whether this staff member may flip a single hub set into their second language.
     allow_language_switching:    !!user?.allow_language_switching && !!second,
+    // Whether this staff member may suggest better translations from the hub.
+    can_suggest_translations:    !!user?.can_suggest_translations,
   })
+})
+
+// ─── POST /me/translation-suggestion ──────────────────────────────────────────
+// A permitted staff member proposes a better translation of a specific piece of
+// content in their language. Stored per (tenant, language, source) as pending for
+// admin approval, unless the tenant has enabled auto-approve. Consumed by
+// apps/api/src/lib/overrides.ts once approved.
+meRouter.post('/translation-suggestion', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const { source_text, suggested_text, lang_code, machine_text, content_kind, context_label } = req.body ?? {}
+
+  if (typeof source_text !== 'string' || !source_text.trim())       return err(res, 'INVALID_INPUT', 'source_text is required', 400)
+  if (typeof suggested_text !== 'string' || !suggested_text.trim()) return err(res, 'INVALID_INPUT', 'suggested_text is required', 400)
+  if (typeof lang_code !== 'string' || !lang_code.trim() || lang_code === 'eng') return err(res, 'INVALID_INPUT', 'a non-English lang_code is required', 400)
+
+  const [user, tenant] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, can_suggest_translations: true } }).catch(() => null),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { translation_suggestions_auto_approve: true } }).catch(() => null),
+  ])
+  if (!user?.can_suggest_translations) return err(res, 'FORBIDDEN', 'You do not have permission to suggest translations', 403)
+
+  const autoApprove = !!tenant?.translation_suggestions_auto_approve
+  const status = autoApprove ? 'approved' : 'pending'
+  const source_hash = overrideHash(source_text)
+  const base = {
+    source_text:       source_text.trim(),
+    suggested_text:    suggested_text.trim(),
+    machine_text:      typeof machine_text === 'string' ? machine_text.trim().slice(0, 4000) : '',
+    content_kind:      typeof content_kind === 'string' ? content_kind.slice(0, 40) : 'text',
+    context_label:     typeof context_label === 'string' ? context_label.slice(0, 200) : '',
+    suggested_by_user_id: userId,
+    suggested_by_name: (user?.name as string) ?? '',
+    status,
+    reviewed_by:       autoApprove ? 'Auto-approved' : '',
+    reviewed_at:       autoApprove ? new Date() : null,
+    updated_at:        new Date(),
+  }
+  const row = await (prisma as any).translationOverride.upsert({
+    where:  { tenant_id_lang_code_source_hash: { tenant_id: tenantId, lang_code: lang_code, source_hash } },
+    update: base,
+    create: { tenant_id: tenantId, lang_code, source_hash, ...base },
+  })
+  ok(res, { status: row.status })
 })
 
 // ─── GET /me/document-categories ──────────────────────────────────────────────
@@ -238,8 +285,8 @@ meRouter.get('/follow-up', async (req: Request, res: Response) => {
     const uniqTopics = [...new Set(items.map((it: any) => it.topic ?? '').filter(Boolean))]
     const translated = await withTranslationBudget(
       Promise.all([
-        translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName, tenant?.translation_glossary),
-        uniqTopics.length ? translateTextsBatch(uniqTopics, lang, langName, tenant?.translation_glossary) : Promise.resolve([] as string[]),
+        translateQuestionsBatch(items.map((it: any) => ({ text: it.text ?? '', options: it.options })), lang, langName, tenant?.translation_glossary, tenantId),
+        uniqTopics.length ? translateTextsBatch(uniqTopics, lang, langName, tenant?.translation_glossary, tenantId) : Promise.resolve([] as string[]),
       ]).then(([qs, tts]) => {
         const tmap = new Map(uniqTopics.map((t, i) => [t, tts[i] ?? t]))
         return items.map((it: any, i: number) => ({ ...it, text: qs[i].text, options: qs[i].options, topic: tmap.get(it.topic ?? '') ?? it.topic }))
@@ -438,7 +485,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng' && items.length) {
     items = await withTranslationBudget(
-      translateTextsBatch(items.map((it: any) => it.name), lang, langName, tenant?.translation_glossary)
+      translateTextsBatch(items.map((it: any) => it.name), lang, langName, tenant?.translation_glossary, tenantId)
         .then(names => items.map((it: any, i: number) => ({ ...it, name: names[i] }))),
       12_000, items,
     )
@@ -499,8 +546,8 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
         ...(sections as any[]).map((sec: any) => ({ text: sec.check.question ?? '', options: sec.check.options })),
       ]
       const [tTexts, tQs] = await Promise.all([
-        translateTextsBatch(texts, lang, langName, tenant?.translation_glossary),
-        translateQuestionsBatch(qs, lang, langName, tenant?.translation_glossary),
+        translateTextsBatch(texts, lang, langName, tenant?.translation_glossary, tenantId),
+        translateQuestionsBatch(qs, lang, langName, tenant?.translation_glossary, tenantId),
       ])
       let p = 0
       const s  = tTexts[p++]
@@ -800,9 +847,9 @@ meRouter.get('/progress', async (req: Request, res: Response) => {
   const localise = (async () => {
     const [ui, tItems, oItems, timeline] = await Promise.all([
       translateBundle(UI_STRINGS, langCode, langName, tenant?.translation_glossary),
-      mapLimit(record.training.items, 6, async (m: any) => ({ ...m, module_name: await translateText(m.module_name, langCode, langName, tenant?.translation_glossary) })),
-      mapLimit(record.onboarding.items, 6, async (f: any) => ({ ...f, flow_name: await translateText(f.flow_name, langCode, langName, tenant?.translation_glossary) })),
-      mapLimit(record.timeline.slice(0, 6), 6, async (e: any) => ({ ...e, label: await translateText(e.label, langCode, langName, tenant?.translation_glossary) })),
+      mapLimit(record.training.items, 6, async (m: any) => ({ ...m, module_name: await translateText(m.module_name, langCode, langName, tenant?.translation_glossary, tenantId) })),
+      mapLimit(record.onboarding.items, 6, async (f: any) => ({ ...f, flow_name: await translateText(f.flow_name, langCode, langName, tenant?.translation_glossary, tenantId) })),
+      mapLimit(record.timeline.slice(0, 6), 6, async (e: any) => ({ ...e, label: await translateText(e.label, langCode, langName, tenant?.translation_glossary, tenantId) })),
     ])
     return {
       ...record, ui,

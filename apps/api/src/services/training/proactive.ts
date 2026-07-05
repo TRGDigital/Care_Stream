@@ -133,6 +133,7 @@ export async function sendProactiveTrainingQuestions(
           userLang,
           userLangName,
           tenant?.translation_glossary,
+          tenantId,
         )
         const questionForFmt = { ...firstQ, text: translatedQ.text, options: translatedQ.options }
 

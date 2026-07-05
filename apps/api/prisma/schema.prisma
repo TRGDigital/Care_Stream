@@ -280,6 +280,7 @@ model Tenant {
   training_settings       Json               @default("{}")
   custom_languages        Json               @default("[]")                     // admin-added staff languages: [{ code, name }]
   translation_glossary    Json               @default("[]")                     // term-locking for translation: [{ term, keep, note }]
+  translation_suggestions_auto_approve Boolean @default(false)                   // false → staff translation suggestions need admin approval (default)
   rooms                   String[]           @default([])                       // custom room/bed names for per-room audits
   room_count              Int                @default(0)                        // number of rooms in the home (generates 1..N for the audit room picker)
   training_enrollments    TrainingEnrollment[]
@@ -323,6 +324,7 @@ model User {
   second_language        String?                            // optional secondary language
   comms_always_first_language Boolean   @default(true)      // true → translate outbound comms into first_language; false → English
   allow_language_switching Boolean      @default(false)     // staff may flip a single hub set into their second_language (session-only)
+  can_suggest_translations Boolean      @default(false)     // staff may suggest better translations from the hub (admin-granted, not default)
   created_at             DateTime       @default(now())
   tenant                 Tenant         @relation(fields: [tenant_id], references: [id])
   queries                QueryRecord[]
@@ -691,6 +693,30 @@ model PlatformGlossary {
   created_at DateTime @default(now())
 
   @@map("platform_glossary")
+}
+
+model TranslationOverride {
+  id                   String    @id @default(uuid())
+  tenant_id            String
+  lang_code            String
+  source_hash          String
+  source_text          String
+  machine_text         String    @default("")
+  suggested_text       String
+  content_kind         String    @default("text")
+  context_label        String    @default("")
+  status               String    @default("pending")   // pending | approved | rejected
+  suggested_by_user_id String?
+  suggested_by_name    String    @default("")
+  reviewed_by          String    @default("")
+  reviewed_at          DateTime?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @default(now())
+
+  @@unique([tenant_id, lang_code, source_hash])
+  @@index([tenant_id, lang_code, status])
+  @@index([status, updated_at])
+  @@map("translation_overrides")
 }
 
 model PlatformCustomSeed {

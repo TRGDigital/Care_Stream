@@ -43,7 +43,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     where:   { tenant_id: tenantId },
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
+      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
     },
     orderBy: { created_at: 'asc' },
@@ -63,7 +63,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     where:  { id },
     select: {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
-      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true,
+      shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
     },
   })
@@ -302,7 +302,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       // staff receive no verification email). Without this, invited staff cannot log in.
       email_verified:  true,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, created_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -388,6 +388,7 @@ const UpdateSchema = z.object({
   second_language: z.string().length(3).nullable().optional(),
   comms_always_first_language: z.boolean().optional(),
   allow_language_switching: z.boolean().optional(),
+  can_suggest_translations: z.boolean().optional(),
   audit_template_ids: z.array(z.string().uuid()).optional(),
 })
 
@@ -453,6 +454,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.second_language !== undefined) updateData.second_language = parsed.data.second_language
   if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
   if (parsed.data.allow_language_switching !== undefined) updateData.allow_language_switching = parsed.data.allow_language_switching
+  if (parsed.data.can_suggest_translations !== undefined) updateData.can_suggest_translations = parsed.data.can_suggest_translations
 
   // Audit allocation: admins implicitly have all (store empty); for staff, persist the
   // validated allocation when provided (sent as [] to downgrade to plain staff).
@@ -466,7 +468,7 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.update({
     where:  { id },
     data:   updateData,
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
+    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true },
   })
 
   ok(res, { user })

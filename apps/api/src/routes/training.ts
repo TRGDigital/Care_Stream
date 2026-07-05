@@ -931,8 +931,8 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
           for (const q of qs) qFlat.push({ text: q.text ?? '', options: Array.isArray(q.options) ? q.options : [] })
         }
         const [tNames, tQs] = await Promise.all([
-          translateTextsBatch(names, langCode, langName, glossary),
-          translateQuestionsBatch(qFlat, langCode, langName, glossary),
+          translateTextsBatch(names, langCode, langName, glossary, tenantId),
+          translateQuestionsBatch(qFlat, langCode, langName, glossary, tenantId),
         ])
         return (baseline as any[]).map((e: any, i: number) => {
           const [start, count] = qSpan[i]

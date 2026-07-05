@@ -208,6 +208,7 @@ export async function handleTrainingConversation({
         userLang,
         userLangName,
         tenantRecord?.translation_glossary,
+        tenantId,
       )
       const nextQFmt = { ...nextQ, text: translated.text, options: translated.options }
 

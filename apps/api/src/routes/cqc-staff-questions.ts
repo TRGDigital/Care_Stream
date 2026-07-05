@@ -505,9 +505,9 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
       safe = await withTranslationBudget((async () => {
         const gloss = tenant?.translation_glossary
         const [qT, mT, fT] = await Promise.all([
-          translateTextsBatch(safe.map(d => d.rephrased_q ?? ''), lang, langName, gloss),
-          translateTextsBatch(safe.map(d => d.question.model_answer ?? ''), lang, langName, gloss),
-          translateTextsBatch(safe.map(d => d.feedback ?? ''), lang, langName, gloss),
+          translateTextsBatch(safe.map(d => d.rephrased_q ?? ''), lang, langName, gloss, tenantId),
+          translateTextsBatch(safe.map(d => d.question.model_answer ?? ''), lang, langName, gloss, tenantId),
+          translateTextsBatch(safe.map(d => d.feedback ?? ''), lang, langName, gloss, tenantId),
         ])
         return safe.map((d, i) => ({
           ...d,
@@ -602,8 +602,8 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
         const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null)
         const langName = languageNameForCode(lang, tenant?.custom_languages)
         const [f, m] = await Promise.all([
-          translateText(feedback, lang, langName, tenant?.translation_glossary),
-          delivery.question.model_answer ? translateText(delivery.question.model_answer, lang, langName, tenant?.translation_glossary) : Promise.resolve(null),
+          translateText(feedback, lang, langName, tenant?.translation_glossary, tenantId),
+          delivery.question.model_answer ? translateText(delivery.question.model_answer, lang, langName, tenant?.translation_glossary, tenantId) : Promise.resolve(null),
         ])
         outFeedback = f || feedback
         outModelAnswer = m

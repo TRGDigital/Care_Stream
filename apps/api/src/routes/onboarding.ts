@@ -455,8 +455,8 @@ onboardingRouter.get('/my', async (req, res) => {
           return -1
         }))
         const [tTexts, tQs] = await Promise.all([
-          translateTextsBatch(texts, langCode, langName, tenant?.translation_glossary),
-          translateQuestionsBatch(qFlat, langCode, langName, tenant?.translation_glossary),
+          translateTextsBatch(texts, langCode, langName, tenant?.translation_glossary, tenantId),
+          translateQuestionsBatch(qFlat, langCode, langName, tenant?.translation_glossary, tenantId),
         ])
         return baseline.map((e, ei) => ({
           ...e,

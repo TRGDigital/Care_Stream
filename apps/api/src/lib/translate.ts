@@ -7,6 +7,7 @@ import { createHash } from 'crypto'
 import { recordUsage } from './token-usage'
 import { languageNameForCode } from '../data/languages'
 import { prisma } from '../db/client'
+import { approvedOverrideMap, overrideHash, applyOverrides } from './overrides'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -112,6 +113,7 @@ export async function translateTrainingQuestion(
   targetLang: string,
   targetLangName?: string,   // explicit name (e.g. a tenant's custom language) — overrides code lookup
   glossary?: GlossaryTerm[],
+  tenantId?: string,         // enables human-verified override lookup
 ): Promise<{ text: string; options: string[] }> {
   if (!targetLang || targetLang === 'eng') return question
 
@@ -149,14 +151,34 @@ export async function translateTrainingQuestion(
       .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
       .filter(Boolean)
 
-    return {
+    const machine = {
       text:    translatedText,
       options: translatedOpts.length === opts.length ? translatedOpts : opts,
     }
+    return applyQuestionOverride(tenantId, targetLang, question, machine)
   } catch (e) {
     console.error('[translate] Failed to translate question:', e)
     return question
   }
+}
+
+// Overlay any approved human override onto a machine-translated question — the
+// question text and each option are matched to their English source string.
+async function applyQuestionOverride(
+  tenantId: string | undefined,
+  langCode: string,
+  source: { text: string; options: string[] },
+  machine: { text: string; options: string[] },
+): Promise<{ text: string; options: string[] }> {
+  if (!tenantId) return machine
+  const map = await approvedOverrideMap(tenantId, langCode)
+  if (!map.size) return machine
+  const text = source.text ? (map.get(overrideHash(source.text)) ?? machine.text) : machine.text
+  const options = machine.options.map((m, i) => {
+    const src = (source.options ?? [])[i]
+    return src ? (map.get(overrideHash(src)) ?? m) : m
+  })
+  return { text, options }
 }
 
 // ─── Cached helpers for portal rendering (training & onboarding views) ─────────
@@ -208,6 +230,7 @@ export async function translateQuestionsBatch(
   langCode: string,
   langName?: string,
   glossary?: GlossaryTerm[],
+  tenantId?: string,
 ): Promise<Array<{ text: string; options: string[] }>> {
   if (!langCode || langCode === 'eng') return questions.map(q => ({ text: q.text, options: q.options ?? [] }))
 
@@ -227,7 +250,7 @@ export async function translateQuestionsBatch(
     if (hit) { results[i] = hit; continue }
     need.push(i)
   }
-  if (!need.length) return results
+  if (!need.length) return overlayQuestions(tenantId, langCode, questions, results)
 
   const hashes = new Map<number, string>(need.map(i => [i, qHash(questions[i])]))
   const fromDb = await cacheReadMany(cacheLang, need.map(i => hashes.get(i)!))
@@ -248,11 +271,33 @@ export async function translateQuestionsBatch(
     }
     await cacheWriteMany(cacheLang, toWrite)
   }
-  return results
+  return overlayQuestions(tenantId, langCode, questions, results)
+}
+
+// Overlay approved human overrides onto a batch of machine-translated questions.
+async function overlayQuestions(
+  tenantId: string | undefined,
+  langCode: string,
+  sources: Array<{ text: string; options: string[] }>,
+  machine: Array<{ text: string; options: string[] }>,
+): Promise<Array<{ text: string; options: string[] }>> {
+  if (!tenantId) return machine
+  const map = await approvedOverrideMap(tenantId, langCode)
+  if (!map.size) return machine
+  return machine.map((r, i) => {
+    if (!r) return r
+    const s = sources[i]
+    const text = s?.text ? (map.get(overrideHash(s.text)) ?? r.text) : r.text
+    const options = (r.options ?? []).map((m, oi) => {
+      const src = (s?.options ?? [])[oi]
+      return src ? (map.get(overrideHash(src)) ?? m) : m
+    })
+    return { text, options }
+  })
 }
 
 // Batch-translate short strings (step titles, module names) into langCode.
-export async function translateTextsBatch(texts: string[], langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string[]> {
+export async function translateTextsBatch(texts: string[], langCode: string, langName?: string, glossary?: GlossaryTerm[], tenantId?: string): Promise<string[]> {
   if (!langCode || langCode === 'eng') return texts
   const name = langName ?? langName_internal(langCode)
   const gloss = buildGlossary(await effectiveGlossary(glossary))
@@ -267,7 +312,7 @@ export async function translateTextsBatch(texts: string[], langCode: string, lan
     if (hit) { results[i] = hit; continue }
     need.push(i)
   }
-  if (!need.length) return results
+  if (!need.length) return applyOverrides(tenantId, langCode, texts, results)
 
   const hashes = new Map<number, string>(need.map(i => [i, tHash(texts[i])]))
   const fromDb = await cacheReadMany(cacheLang, need.map(i => hashes.get(i)!))
@@ -302,7 +347,7 @@ export async function translateTextsBatch(texts: string[], langCode: string, lan
     }
     await cacheWriteMany(cacheLang, toWrite)
   }
-  return results
+  return applyOverrides(tenantId, langCode, texts, results)
 }
 
 // Single-item wrappers (kept for callers that translate one item at a time, e.g.
@@ -312,14 +357,15 @@ export async function translateQuestionCached(
   langCode: string,
   langName?: string,
   glossary?: GlossaryTerm[],
+  tenantId?: string,
 ): Promise<{ text: string; options: string[] }> {
   if (!langCode || langCode === 'eng' || !question.text) return question
-  return (await translateQuestionsBatch([question], langCode, langName, glossary))[0]
+  return (await translateQuestionsBatch([question], langCode, langName, glossary, tenantId))[0]
 }
 
-export async function translateText(text: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string> {
+export async function translateText(text: string, langCode: string, langName?: string, glossary?: GlossaryTerm[], tenantId?: string): Promise<string> {
   if (!text || !langCode || langCode === 'eng') return text
-  return (await translateTextsBatch([text], langCode, langName, glossary))[0]
+  return (await translateTextsBatch([text], langCode, langName, glossary, tenantId))[0]
 }
 
 function langName_internal(code: string): string {

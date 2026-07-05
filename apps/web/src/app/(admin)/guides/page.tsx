@@ -301,6 +301,31 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every time a staff member flips a set, CareStream records it so you can see where the language and training gaps are. The team-wide picture is on <strong>Analytics → Overview</strong> (“Second-language switching”) and the per-staff breakdown is on <strong>Analytics → Staff</strong>. If you see the same set switched often, it is a good prompt to offer extra support or simplify the wording.
           </p>
         </SectionBlock>
+        <SectionBlock title="Improving translations: glossary &amp; staff review">
+          <p className="text-sm text-neutral-mid">
+            CareStream translates training, lessons, induction, CQC prep and messages into each staff member&rsquo;s language automatically. Two tools let you make those translations more accurate for your care setting, and they work together.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">1. Translation glossary (pin the right words)</p>
+          <p className="mt-1 text-sm text-neutral-mid">
+            In <strong>Settings → Translation glossary</strong> you pin terms so they&rsquo;re always handled your way, either <strong>kept in English</strong> (your care setting&rsquo;s name, staff names, medication names, systems like CQC or eMAR, role titles) or with a short <strong>note</strong> explaining what a term means. The <strong>Saved terms</strong> at the top are common sector words CareStream maintains for every care setting (CQC, DoLS, eMAR, NMC and so on); you can Remove any that don&rsquo;t suit you and add them back later. Your own entry for a term always wins.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">2. Staff-verified translations (Translation Review)</p>
+          <p className="mt-1 text-sm text-neutral-mid">
+            The glossary fixes individual words; this fixes whole phrases. A trusted bilingual team member can propose better wording directly, and you approve it. Here&rsquo;s the flow:
+          </p>
+          <ul className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Grant permission.</strong> On a staff member&rsquo;s <strong>Edit</strong> screen (or their detail card when you click their name), turn on <strong>&ldquo;Let them suggest better translations&rdquo;</strong>. It&rsquo;s off for everyone by default, so only the people you choose can suggest.</li>
+            <li><strong>They suggest.</strong> When that person views training, a lesson, an induction step or CQC prep <em>in their own language</em>, they see a small <strong>&ldquo;Suggest a better translation&rdquo;</strong> link. It opens the current wording, they improve it and send it.</li>
+            <li><strong>You review.</strong> Suggestions arrive under <strong>Translation Review</strong> in the sidebar (with a count on the Pending tab). Each shows the English source, the current machine translation and the staff member&rsquo;s version side by side. You can <strong>Approve</strong>, <strong>Edit &amp; approve</strong>, or <strong>Reject</strong>.</li>
+            <li><strong>It goes live.</strong> Once approved, that wording replaces the machine translation for that exact phrase, in that language, for your care setting, everywhere it appears, instantly and permanently.</li>
+          </ul>
+          <p className="mt-3 text-sm text-neutral-mid">
+            <strong>Approval is required by default</strong>, so nothing your staff suggest changes what others see until you&rsquo;ve checked it. If you&rsquo;d rather your permitted staff&rsquo;s suggestions go live immediately, turn on <strong>Auto-approve</strong> at the top of Translation Review. Rejecting a suggestion simply keeps the machine translation. Over time this builds a library of human-checked translations, useful evidence for inspection that staff can understand their training in their own language.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Nothing here can make a translation worse: if a phrase has no approved wording, staff simply see the normal machine translation (which always falls back to clear English if a language can&rsquo;t be produced reliably).
+          </p>
+        </SectionBlock>
         <SectionBlock title="Approved senders (added automatically)">
           <p className="text-sm text-neutral-mid">
             When you add a staff member, their email address is automatically added to the <strong>Approved sender addresses</strong> list in <em>Settings</em>. You don't need to add them in two places.

@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { Languages, Loader2 } from 'lucide-react'
+import { Languages, Loader2, Pencil, Check, X } from 'lucide-react'
 
 export interface SuggestField {
   label: string
@@ -15,6 +15,71 @@ export interface SuggestField {
   current: string    // current translation (pre-fill)
   kind: string       // 'question' | 'option' | 'lesson' | 'answer' | 'feedback' | 'text'
   multiline?: boolean
+}
+
+// Inline "click to edit" for a single block of translated text (e.g. a lesson
+// heading or paragraph). Reads normally; a permitted staff member can click it (or
+// the pencil) to correct the wording in place. Falls back to plain text when the
+// person can't suggest or the content isn't translated.
+export function InlineEditableText({ token, langCode, contextLabel, source, current, kind, editable, className = '' }: {
+  token: string
+  langCode: string
+  contextLabel: string
+  source: string           // English source
+  current: string          // current translation (what's shown)
+  kind: string
+  editable: boolean
+  className?: string
+}) {
+  const canEdit = editable && !!source?.trim() && !!current?.trim() && !!langCode && langCode !== 'eng'
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState(current)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<'pending' | 'approved' | null>(null)
+  const [err, setErr] = useState('')
+
+  if (!canEdit) return <p className={className}>{current}</p>
+
+  async function save() {
+    if (!val.trim() || val.trim() === current) { setEditing(false); return }
+    setBusy(true); setErr('')
+    try {
+      const r = await createApiClient(token).me.suggestTranslation({
+        source_text: source, suggested_text: val.trim(), lang_code: langCode,
+        machine_text: current, content_kind: kind, context_label: contextLabel,
+      })
+      setDone(r.status); setEditing(false)
+    } catch (e: any) { setErr(e?.message ?? 'Could not send your suggestion.') }
+    finally { setBusy(false) }
+  }
+
+  if (editing) {
+    return (
+      <div className="rounded-lg border border-teal/40 bg-teal-light/10 p-2">
+        <textarea autoFocus value={val} onChange={e => setVal(e.target.value)} rows={Math.min(8, Math.max(2, Math.ceil(val.length / 60)))}
+          className={`w-full rounded border border-gray-200 px-2 py-1 focus:border-teal focus:outline-none ${className}`} />
+        {err && <p className="mt-1 text-[11px] text-red-600">{err}</p>}
+        <div className="mt-1 flex items-center justify-end gap-2">
+          <button type="button" onClick={() => { setEditing(false); setVal(current) }} className="inline-flex items-center gap-1 text-[11px] text-neutral-mid hover:text-neutral-dark"><X size={11} /> Cancel</button>
+          <button type="button" onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1 text-[11px] font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Send</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <span className="group/edit relative inline">
+      <span className={className}>{done ? val : current}</span>
+      {done ? (
+        <span className="ml-1.5 whitespace-nowrap text-[11px] font-medium text-teal">{done === 'approved' ? '✓ now live' : '✓ sent for approval'}</span>
+      ) : (
+        <button type="button" onClick={() => { setVal(current); setEditing(true) }} title="Suggest a better translation for this text"
+          className="ml-1 inline-flex translate-y-0.5 items-center rounded p-0.5 text-neutral-mid/50 opacity-0 transition-opacity hover:text-teal group-hover/edit:opacity-100">
+          <Pencil size={12} />
+        </button>
+      )}
+    </span>
+  )
 }
 
 export function SuggestTranslation({ token, langCode, contextLabel, fields }: {

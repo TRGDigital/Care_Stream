@@ -2020,6 +2020,10 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   // letters, so submission is unchanged.
   const [secondEnr,  setSecondEnr]   = useState<Record<string, any> | null>(null)
   const [loadingLang, setLoadingLang] = useState(false)
+  const [canSuggest,  setCanSuggest]  = useState(false)
+  const [langCode,    setLangCode]    = useState('eng')
+  const [canSuggest2, setCanSuggest2] = useState(false)
+  const [langCode2,   setLangCode2]   = useState('eng')
   function toggleModule(id: string) {
     setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
@@ -2027,7 +2031,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     if (secondEnr || loadingLang) return
     setLoadingLang(true)
     api.training.myEnrollments('2')
-      .then(d => { const map: Record<string, any> = {}; for (const e of d.enrollments) map[e.id] = e; setSecondEnr(map) })
+      .then(d => { const map: Record<string, any> = {}; for (const e of d.enrollments) map[e.id] = e; setSecondEnr(map); setCanSuggest2(!!d.can_suggest); setLangCode2(d.lang_code ?? 'eng') })
       .catch(() => {}).finally(() => setLoadingLang(false))
   }
   function toggleQ(enrollmentId: string, questionId: string, setName?: string) {
@@ -2045,6 +2049,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     try {
       const d = await api.training.myEnrollments()
       setEnrollments(d.enrollments)
+      setCanSuggest(!!d.can_suggest); setLangCode(d.lang_code ?? 'eng')
       persistentCache.set(ck, d.enrollments)
     } finally {
       setLoading(false)
@@ -2396,6 +2401,20 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
                             </button>
                           </div>
                         )}
+                        {(() => {
+                          const flipped = !!langByQ[question.id]
+                          const canSug = flipped ? canSuggest2 : canSuggest
+                          const lc = flipped ? langCode2 : langCode
+                          const src = qv.source_en
+                          if (!canSug || !src) return null
+                          return (
+                            <SuggestTranslation token={token} langCode={lc} contextLabel={enrollment.module.name}
+                              fields={[
+                                { label: 'Question', source: src.text, current: qv.text, kind: 'question', multiline: true },
+                                ...(opts as string[]).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: src.options[oi], current: opt, kind: 'option' })),
+                              ]} />
+                          )
+                        })()}
                       </div>
                     )
                   })}

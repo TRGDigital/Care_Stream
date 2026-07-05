@@ -582,7 +582,7 @@ export function createApiClient(token: string) {
         apiFetch<{ enrollment: any }>(`/training/enrollments/${enrollmentId}/complete`, token, { method: 'POST', body: JSON.stringify(data ?? {}) }),
 
       myEnrollments: (lang?: '2') =>
-        apiFetch<{ enrollments: any[] }>(`/training/my-enrollments${lang ? `?lang=${lang}` : ''}`, token),
+        apiFetch<{ enrollments: any[]; lang_code?: string; can_suggest?: boolean }>(`/training/my-enrollments${lang ? `?lang=${lang}` : ''}`, token),
 
       removeEnrollment: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/training/enrollments/${id}`, token, { method: 'DELETE' }),

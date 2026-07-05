@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
-import { SuggestTranslation } from '@/components/hub/suggest-translation'
+import { SuggestTranslation, InlineEditableText } from '@/components/hub/suggest-translation'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
@@ -460,8 +460,22 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                   <div className="p-5">
                     {cur.type === 'teach' ? (
                       <>
-                        {sec.heading && <p className="mb-1.5 text-base font-bold text-neutral-dark">{sec.heading}</p>}
-                        {sec.body && <p className="text-sm leading-relaxed text-neutral-dark">{sec.body}</p>}
+                        {(() => {
+                          const src = learnActive?.can_suggest ? learnActive.source_sections?.[cur.i] : null
+                          const editable = !!(learnActive?.can_suggest && src)
+                          return (<>
+                            {sec.heading && (
+                              <p className="mb-1.5 text-base font-bold text-neutral-dark">
+                                <InlineEditableText token={token} langCode={learnActive?.lang_code} contextLabel={`${name} — lesson`} source={src?.heading ?? ''} current={sec.heading} kind="lesson" editable={editable} />
+                              </p>
+                            )}
+                            {sec.body && (
+                              <p className="text-sm leading-relaxed text-neutral-dark">
+                                <InlineEditableText token={token} langCode={learnActive?.lang_code} contextLabel={`${name} — lesson`} source={src?.body ?? ''} current={sec.body} kind="lesson" editable={editable} />
+                              </p>
+                            )}
+                          </>)
+                        })()}
                         {sec.scenario?.situation && (
                           <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
                             <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
@@ -471,13 +485,6 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                               ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
                               : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
                           </div>
-                        )}
-                        {learnActive?.can_suggest && learnActive.source_sections?.[cur.i] && learnActive.learning?.sections?.[cur.i] && (
-                          <SuggestTranslation token={token} langCode={learnActive.lang_code} contextLabel={`${name} — lesson`}
-                            fields={[
-                              { label: 'Heading', source: learnActive.source_sections[cur.i].heading, current: learnActive.learning.sections[cur.i].heading, kind: 'lesson' },
-                              { label: 'Lesson text', source: learnActive.source_sections[cur.i].body, current: learnActive.learning.sections[cur.i].body, kind: 'lesson', multiline: true },
-                            ]} />
                         )}
                       </>
                     ) : (

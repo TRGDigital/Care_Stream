@@ -884,7 +884,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
         },
         orderBy: { created_at: 'asc' },
       }),
-      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }),
       (prisma as any).trainingRating.findMany({ where: { tenant_id: tenantId, user_id: userId, area: 'training' }, select: { ref: true } }),
     ])
@@ -938,7 +938,8 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
           const [start, count] = qSpan[i]
           const questions = ((e.module.questions as any[]) ?? []).map((q: any, j: number) => {
             const t = tQs[start + j]
-            return { ...q, text: t.text, options: t.options }
+            // Keep the English source so permitted staff can suggest a better translation.
+            return { ...q, text: t.text, options: t.options, source_en: { text: String(q.text ?? ''), options: Array.isArray(q.options) ? q.options : [] } }
           })
           return { ...e, module: { ...e.module, name: tNames[i], questions } }
         })
@@ -947,7 +948,7 @@ trainingRouter.get('/my-enrollments', async (req: Request, res: Response) => {
       // budget; in-flight work still warms the cache for the next (fast) load.
       sanitised = await withTranslationBudget(translateAll, 18_000, baseline)
     }
-    ok(res, { enrollments: sanitised })
+    ok(res, { enrollments: sanitised, lang_code: langCode, can_suggest: langCode !== 'eng' && !!(user as any)?.can_suggest_translations })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }

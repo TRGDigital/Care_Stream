@@ -2452,6 +2452,8 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
   const [loading,     setLoading]     = useState(!cachedInd)
   const [canSuggest,  setCanSuggest]  = useState(false)
   const [langCode,    setLangCode]    = useState('eng')
+  const [canSuggest2, setCanSuggest2] = useState(false)
+  const [langCode2,   setLangCode2]   = useState('eng')
   const [completing,  setCompleting]  = useState<string | null>(null)
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
   const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
@@ -2469,7 +2471,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
     if (secondEnr || loadingLang || !secondLang) return
     setLoadingLang(true)
     api.onboarding.myEnrollments('2')
-      .then(d => { const map: Record<string, any> = {}; for (const e of d.enrollments) map[e.enrollment_id] = e; setSecondEnr(map) })
+      .then(d => { const map: Record<string, any> = {}; for (const e of d.enrollments) map[e.enrollment_id] = e; setSecondEnr(map); setCanSuggest2(!!d.can_suggest); setLangCode2(d.lang_code ?? 'eng') })
       .catch(() => {}).finally(() => setLoadingLang(false))
   }
   function toggleStep(enrollmentId: string, stepId: string, setName?: string) {
@@ -2661,13 +2663,21 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
                                 {step.progress?.answer_correct === false && (
                                   <p className="text-xs text-amber-600">That&rsquo;s not quite right — review the policy and try again.</p>
                                 )}
-                                {canSuggest && step.source_en && !langByStep[step.id] && (
-                                  <SuggestTranslation token={token} langCode={langCode} contextLabel={`${e.flow_name} — induction`}
-                                    fields={[
-                                      { label: 'Question', source: step.source_en.question, current: step.question, kind: 'question', multiline: true },
-                                      ...((step.options as string[]) ?? []).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: step.source_en.options[oi], current: opt, kind: 'option' })),
-                                    ]} />
-                                )}
+                                {(() => {
+                                  // Suggest against whichever language is on screen for this step.
+                                  const flipped = !!langByStep[step.id]
+                                  const canSug = flipped ? canSuggest2 : canSuggest
+                                  const lc = flipped ? langCode2 : langCode
+                                  const src = vstep.source_en
+                                  if (!canSug || !src) return null
+                                  return (
+                                    <SuggestTranslation token={token} langCode={lc} contextLabel={`${e.flow_name} — induction`}
+                                      fields={[
+                                        { label: 'Question', source: src.question, current: vstep.question, kind: 'question', multiline: true },
+                                        ...((vstep.options as string[]) ?? []).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: src.options[oi], current: opt, kind: 'option' })),
+                                      ]} />
+                                  )
+                                })()}
                               </div>
                             )}
 

@@ -472,11 +472,11 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                               : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
                           </div>
                         )}
-                        {data?.can_suggest && !showSecond && data.source_sections?.[cur.i] && data.learning?.sections?.[cur.i] && (
-                          <SuggestTranslation token={token} langCode={data.lang_code} contextLabel={`${name} — lesson`}
+                        {learnActive?.can_suggest && learnActive.source_sections?.[cur.i] && learnActive.learning?.sections?.[cur.i] && (
+                          <SuggestTranslation token={token} langCode={learnActive.lang_code} contextLabel={`${name} — lesson`}
                             fields={[
-                              { label: 'Heading', source: data.source_sections[cur.i].heading, current: data.learning.sections[cur.i].heading, kind: 'lesson' },
-                              { label: 'Lesson text', source: data.source_sections[cur.i].body, current: data.learning.sections[cur.i].body, kind: 'lesson', multiline: true },
+                              { label: 'Heading', source: learnActive.source_sections[cur.i].heading, current: learnActive.learning.sections[cur.i].heading, kind: 'lesson' },
+                              { label: 'Lesson text', source: learnActive.source_sections[cur.i].body, current: learnActive.learning.sections[cur.i].body, kind: 'lesson', multiline: true },
                             ]} />
                         )}
                       </>
@@ -562,13 +562,20 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                         </label>
                       ))}
                     </div>
-                    {data.can_suggest && data.source_questions?.[qi] && (
-                      <SuggestTranslation token={token} langCode={data.lang_code} contextLabel={name}
-                        fields={[
-                          { label: 'Question', source: data.source_questions[qi].text, current: q.text, kind: 'question', multiline: true },
-                          ...(q.options as string[]).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: data.source_questions[qi].options[oi], current: opt, kind: 'option' })),
-                        ]} />
-                    )}
+                    {(() => {
+                      // Suggest against whichever language is on screen for this
+                      // question: the 2nd-language copy when flipped, else the 1st.
+                      const activeQData = (qLang[q.id] && data2) ? data2 : data
+                      const srcQ = activeQData?.source_questions?.[qi]
+                      if (!activeQData?.can_suggest || !srcQ) return null
+                      return (
+                        <SuggestTranslation token={token} langCode={activeQData.lang_code} contextLabel={name}
+                          fields={[
+                            { label: 'Question', source: srcQ.text, current: qd.text, kind: 'question', multiline: true },
+                            ...(qd.options as string[]).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: srcQ.options[oi], current: opt, kind: 'option' })),
+                          ]} />
+                      )
+                    })()}
                   </div>
                 )
               })}

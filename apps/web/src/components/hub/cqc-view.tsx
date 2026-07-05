@@ -271,6 +271,8 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   const [langById, setLangById] = useState<Record<string, boolean>>({})
   const [canSuggest, setCanSuggest] = useState(false)
   const [langCode, setLangCode] = useState('eng')
+  const [canSuggest2, setCanSuggest2] = useState(false)
+  const [langCode2, setLangCode2] = useState('eng')
   const toggleDomain = (key: string) =>
     setOpenDomains(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
 
@@ -278,7 +280,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
     if (second || loadingSecond || !secondLang) return
     setLoadingSecond(true)
     createApiClient(token).cqcQuestions.myDeliveries('2')
-      .then(res => { const m: Record<string, Delivery> = {}; for (const d of res.deliveries) m[d.id] = d; setSecond(m) })
+      .then(res => { const m: Record<string, Delivery> = {}; for (const d of res.deliveries) m[d.id] = d; setSecond(m); setCanSuggest2(!!res.can_suggest); setLangCode2(res.lang_code ?? 'eng') })
       .catch(() => {}).finally(() => setLoadingSecond(false))
   }
   function toggleQ(id: string) {
@@ -290,6 +292,22 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   function viewD(d: Delivery): Delivery {
     const s = langById[d.id] ? second?.[d.id] : null
     return s ? { ...d, rephrased_q: s.rephrased_q, question: { ...d.question, model_answer: s.question?.model_answer ?? d.question?.model_answer } } : d
+  }
+  // "Suggest a better translation" for a delivery — against whichever language is
+  // on screen (1st, or the flipped 2nd language). Question + model answer only
+  // (the AI feedback is specific to one answer, so it isn't a reusable override).
+  function suggestFor(d: Delivery) {
+    const flipped = !!(langById[d.id] && second?.[d.id])
+    const canSug  = flipped ? canSuggest2 : canSuggest
+    const src     = flipped ? second![d.id].source_en : d.source_en
+    const lc      = flipped ? langCode2 : langCode
+    if (!canSug || !src) return null
+    const vd = viewD(d)
+    const fields = [
+      { label: 'Question', source: src.question, current: vd.rephrased_q, kind: 'question', multiline: true },
+      ...(vd.question?.model_answer ? [{ label: 'Model answer', source: src.model_answer, current: vd.question.model_answer as string, kind: 'answer', multiline: true }] : []),
+    ]
+    return <SuggestTranslation token={token} langCode={lc} contextLabel="CQC prep" fields={fields} />
   }
   // A compact per-question translate toggle, shown when a question is open.
   function QLangToggle({ id }: { id: string }) {
@@ -416,10 +434,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                                 <QLangToggle id={d.id} />
                                 <AnswerForm delivery={d} token={token}
                                   onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); setExpanded(null); onChange?.() }} />
-                                {canSuggest && d.source_en && (
-                                  <SuggestTranslation token={token} langCode={langCode} contextLabel="CQC prep"
-                                    fields={[{ label: 'Question', source: d.source_en.question, current: d.rephrased_q, kind: 'question', multiline: true }]} />
-                                )}
+                                {suggestFor(d)}
                               </div>
                             )}
                           </div>
@@ -476,14 +491,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                                 <QLangToggle id={d.id} />
                                 <ResultCard delivery={viewD(d)} token={token} showRating={freshlyAnswered.has(d.id)}
                                   onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.() }} />
-                                {canSuggest && d.source_en && (
-                                  <SuggestTranslation token={token} langCode={langCode} contextLabel="CQC prep"
-                                    fields={[
-                                      { label: 'Question', source: d.source_en.question, current: d.rephrased_q, kind: 'question', multiline: true },
-                                      ...(d.question?.model_answer ? [{ label: 'Model answer', source: d.source_en.model_answer, current: d.question.model_answer, kind: 'answer', multiline: true }] : []),
-                                      ...(d.feedback ? [{ label: 'Feedback', source: d.source_en.feedback, current: d.feedback, kind: 'feedback', multiline: true }] : []),
-                                    ]} />
-                                )}
+                                {suggestFor(d)}
                               </div>
                             )}
                           </div>

@@ -536,7 +536,16 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
   // translation so the hub can offer a "suggest a better translation" control
   // keyed to the source string.
   const enQuestions = (questions as any[]).map((q: any) => ({ text: String(q.text ?? ''), options: (q.options as string[]) ?? [] }))
-  const enSections = (sections as any[]).map((s: any) => ({ heading: String(s.heading ?? ''), body: String(s.body ?? '') }))
+  const enOverview = { summary: String(summary ?? ''), outcomes: (outcomes as string[]).map(String), key_points: (keyPoints as string[]).map(String) }
+  const enSections = (sections as any[]).map((s: any) => ({
+    heading:       String(s.heading ?? ''),
+    body:          String(s.body ?? ''),
+    situation:     String(s.scenario?.situation ?? ''),
+    prompt:        String(s.scenario?.prompt ?? ''),
+    answer:        String(s.scenario?.answer ?? ''),
+    check_question: String(s.check?.question ?? ''),
+    check_options: Array.isArray(s.check?.options) ? s.check.options.map(String) : [],
+  }))
 
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng') {
@@ -585,6 +594,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     can_suggest: lang !== 'eng' && !!(user as any)?.can_suggest_translations,
     source_questions: lang !== 'eng' ? enQuestions : undefined,
     source_sections: lang !== 'eng' ? enSections : undefined,
+    source_overview: lang !== 'eng' ? enOverview : undefined,
   })
 })
 

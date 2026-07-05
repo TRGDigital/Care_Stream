@@ -437,20 +437,31 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><BookOpen size={13} /> Learning — what to read first</p>
                       {learnActive.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {learnActive.duration_minutes} min</span> : null}
                     </div>
-                    {learnActive.learning?.summary && <p className="text-sm text-neutral-dark">{learnActive.learning.summary}</p>}
-                    {Array.isArray(learnActive.learning?.outcomes) && learnActive.learning.outcomes.length > 0 && (
-                      <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
-                        <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
-                        <ul className="space-y-1">
-                          {learnActive.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{o}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                    {sections.length === 0 && Array.isArray(learnActive.learning?.key_points) && learnActive.learning.key_points.length > 0 && (
-                      <ul className="mt-3 space-y-1.5">
-                        {learnActive.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
-                      </ul>
-                    )}
+                    {(() => {
+                      const ov = learnActive?.can_suggest ? learnActive.source_overview : null
+                      const editable = !!(learnActive?.can_suggest && ov)
+                      const lc = learnActive?.lang_code
+                      return (<>
+                        {learnActive.learning?.summary && (
+                          <p className="text-sm text-neutral-dark">
+                            <InlineEditableText token={token} langCode={lc} contextLabel={`${name} — lesson`} source={ov?.summary ?? ''} current={learnActive.learning.summary} kind="lesson" editable={editable} />
+                          </p>
+                        )}
+                        {Array.isArray(learnActive.learning?.outcomes) && learnActive.learning.outcomes.length > 0 && (
+                          <div className="mt-3 rounded-lg bg-neutral-light/50 p-3">
+                            <p className="mb-1.5 text-xs font-semibold text-neutral-dark">What you&apos;ll be able to do</p>
+                            <ul className="space-y-1">
+                              {learnActive.learning.outcomes.map((o: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" /><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — lesson`} source={ov?.outcomes?.[i] ?? ''} current={o} kind="lesson" editable={editable} /></li>)}
+                            </ul>
+                          </div>
+                        )}
+                        {sections.length === 0 && Array.isArray(learnActive.learning?.key_points) && learnActive.learning.key_points.length > 0 && (
+                          <ul className="mt-3 space-y-1.5">
+                            {learnActive.learning.key_points.map((p: string, i: number) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" /><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — lesson`} source={ov?.key_points?.[i] ?? ''} current={p} kind="lesson" editable={editable} /></li>)}
+                          </ul>
+                        )}
+                      </>)
+                    })()}
                   </div>
                 </div>
               ) : sec ? (
@@ -476,16 +487,21 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                             )}
                           </>)
                         })()}
-                        {sec.scenario?.situation && (
+                        {sec.scenario?.situation && (() => {
+                          const ssrc = learnActive?.can_suggest ? learnActive.source_sections?.[cur.i] : null
+                          const sedit = !!(learnActive?.can_suggest && ssrc)
+                          const lc = learnActive?.lang_code
+                          return (
                           <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
                             <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
-                            <p className="text-sm text-neutral-dark">{sec.scenario.situation}</p>
-                            {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark">{sec.scenario.prompt}</p>}
+                            <p className="text-sm text-neutral-dark"><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — scenario`} source={ssrc?.situation ?? ''} current={sec.scenario.situation} kind="lesson" editable={sedit} /></p>
+                            {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark"><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — scenario`} source={ssrc?.prompt ?? ''} current={sec.scenario.prompt} kind="lesson" editable={sedit} /></p>}
                             {revealed[sec.id]
-                              ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span>{sec.scenario.answer}</p>
+                              ? <p className="mt-2 rounded-md bg-white/70 p-2 text-sm text-neutral-dark"><span className="font-semibold text-teal">Answer: </span><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — scenario`} source={ssrc?.answer ?? ''} current={sec.scenario.answer} kind="lesson" editable={sedit} /></p>
                               : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
                           </div>
-                        )}
+                          )
+                        })()}
                       </>
                     ) : (
                       <>
@@ -507,6 +523,13 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                           })}
                         </div>
                         {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
+                        {learnActive?.can_suggest && learnActive.source_sections?.[cur.i] && (
+                          <SuggestTranslation token={token} langCode={learnActive.lang_code} contextLabel={`${name} — quick check`}
+                            fields={[
+                              { label: 'Question', source: learnActive.source_sections[cur.i].check_question, current: sec.check.question, kind: 'question', multiline: true },
+                              ...(sec.check.options as string[]).map((o: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: learnActive.source_sections[cur.i].check_options[oi], current: o, kind: 'option' })),
+                            ]} />
+                        )}
                       </>
                     )}
                   </div>

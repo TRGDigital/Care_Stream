@@ -171,6 +171,8 @@ export default function SettingsPage() {
   const [savingLanguage, setSavingLanguage] = useState(false)
   const [languageNote,   setLanguageNote]   = useState('')
   const [glossary,       setGlossary]       = useState<Array<{ term: string; keep: boolean; note: string }>>([])
+  const [platformGlossary, setPlatformGlossary] = useState<Array<{ term: string; keep: boolean; note: string }>>([])
+  const [glossaryExcludes, setGlossaryExcludes] = useState<string[]>([])
   const [newTerm,        setNewTerm]        = useState('')
   const [newTermNote,    setNewTermNote]    = useState('')
   const [savingGlossary, setSavingGlossary] = useState(false)
@@ -231,6 +233,8 @@ export default function SettingsPage() {
       setLanguages(data.languages ?? [])
       setDefaultLangCodes(data.default_language_codes ?? [])
       setGlossary(data.translation_glossary ?? [])
+      setPlatformGlossary(data.platform_glossary ?? [])
+      setGlossaryExcludes(data.glossary_excludes ?? [])
       setPolicySections(data.policy_sections ?? [])
       setPolicyCategories(data.policy_categories ?? [])
       setResponseStyle(data.response_style ?? 'standard')
@@ -275,6 +279,8 @@ export default function SettingsPage() {
         setLanguages((data as any).languages ?? [])
         setDefaultLangCodes((data as any).default_language_codes ?? [])
         setGlossary((data as any).translation_glossary ?? [])
+        setPlatformGlossary((data as any).platform_glossary ?? [])
+        setGlossaryExcludes((data as any).glossary_excludes ?? [])
         setPolicySections((data as any).policy_sections ?? [])
         setPolicyCategories((data as any).policy_categories ?? [])
         setResponseStyle((data as any).response_style ?? 'standard')
@@ -402,28 +408,46 @@ export default function SettingsPage() {
   }
 
   // ── Translation glossary (term-locking) ──────────────────────────────────
-  async function saveGlossary(updated: Array<{ term: string; keep: boolean; note: string }>) {
+  // Persist the home's own terms plus its opt-outs (exclude markers) of universal
+  // terms in one call — the server stores them together on the tenant.
+  async function persistGlossary(own: Array<{ term: string; keep: boolean; note: string }>, excludes: string[]) {
     if (!session?.accessToken) return
-    setGlossary(updated)                       // optimistic
+    setGlossary(own); setGlossaryExcludes(excludes)          // optimistic
     setSavingGlossary(true); setError('')
     try {
-      const data = await createApiClient(session.accessToken).settings.update({ translation_glossary: updated })
+      const payload = [
+        ...own.map(g => ({ term: g.term, keep: g.keep, note: g.note })),
+        ...excludes.map(term => ({ term, exclude: true })),
+      ]
+      const data = await createApiClient(session.accessToken).settings.update({ translation_glossary: payload })
       if ((data as any).translation_glossary) setGlossary((data as any).translation_glossary)
+      if ((data as any).glossary_excludes) setGlossaryExcludes((data as any).glossary_excludes)
     } catch (e: any) { setError(e.message ?? 'Failed to save glossary') }
     finally { setSavingGlossary(false) }
   }
   function addGlossaryTerm() {
     const term = newTerm.trim()
     if (!term) return
-    if (glossary.some(g => g.term.toLowerCase() === term.toLowerCase())) { setError('That term is already in the glossary.'); return }
-    saveGlossary([...glossary, { term, keep: true, note: newTermNote.trim() }])
+    if (glossary.some(g => g.term.toLowerCase() === term.toLowerCase()) || platformGlossary.some(g => g.term.toLowerCase() === term.toLowerCase() && !glossaryExcludes.some(e => e.toLowerCase() === term.toLowerCase()))) {
+      setError('That term is already in the glossary.'); return
+    }
+    // Adding a term also clears any prior opt-out of the same universal term.
+    persistGlossary([...glossary, { term, keep: true, note: newTermNote.trim() }], glossaryExcludes.filter(e => e.toLowerCase() !== term.toLowerCase()))
     setNewTerm(''); setNewTermNote('')
   }
   function removeGlossaryTerm(term: string) {
-    saveGlossary(glossary.filter(g => g.term !== term))
+    persistGlossary(glossary.filter(g => g.term !== term), glossaryExcludes)
   }
   function toggleGlossaryKeep(term: string) {
-    saveGlossary(glossary.map(g => g.term === term ? { ...g, keep: !g.keep } : g))
+    persistGlossary(glossary.map(g => g.term === term ? { ...g, keep: !g.keep } : g), glossaryExcludes)
+  }
+  // Universal (platform) terms: a home can opt out (remove) and opt back in.
+  function removeUniversalTerm(term: string) {
+    if (glossaryExcludes.some(e => e.toLowerCase() === term.toLowerCase())) return
+    persistGlossary(glossary, [...glossaryExcludes, term])
+  }
+  function restoreUniversalTerm(term: string) {
+    persistGlossary(glossary, glossaryExcludes.filter(e => e.toLowerCase() !== term.toLowerCase()))
   }
 
   async function saveSections(updated: string[]) {
@@ -581,6 +605,14 @@ export default function SettingsPage() {
   // ─── Shared input / toggle styles ──────────────────────────────────────────
 
   const INPUT = 'flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark placeholder:text-neutral-mid focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal'
+
+  // Split the universal (platform) glossary for this home: active (applied),
+  // versus removed (opted out). Terms the home has redefined itself are hidden
+  // from the universal list (the home's own entry takes over).
+  const glossaryExcludeSet = new Set(glossaryExcludes.map(e => e.toLowerCase()))
+  const glossaryOwnSet     = new Set(glossary.map(g => g.term.toLowerCase()))
+  const universalActive  = platformGlossary.filter(p => !glossaryExcludeSet.has(p.term.toLowerCase()) && !glossaryOwnSet.has(p.term.toLowerCase()))
+  const universalRemoved = platformGlossary.filter(p => glossaryExcludeSet.has(p.term.toLowerCase()))
 
   function OnOffToggle({ name, isOn, onChange, disabled }: { name: string; isOn: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
     return (
@@ -902,30 +934,73 @@ export default function SettingsPage() {
             </Button>
           </div>
           <p className="mb-4 text-xs text-neutral-mid">New terms are set to <strong>Keep in English</strong> by default. Turn that off for a term you only want to add a translation note for.</p>
-          {glossary.length === 0 ? (
-            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No pinned terms yet. Adding a few of your most-used names and acronyms keeps every translation on-message.</p>
-          ) : (
-            <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
-              {glossary.map(g => (
-                <div key={g.term} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-dark">{g.term}</p>
-                    {g.note && <p className="truncate text-xs text-neutral-mid">{g.note}</p>}
+
+          {/* Universal (saved) terms — managed by CareStream, applied to every home. */}
+          {(universalActive.length > 0 || universalRemoved.length > 0) && (
+            <div className="mb-4">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Saved terms (used across all homes)</p>
+              <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                {universalActive.map(g => (
+                  <div key={`u-${g.term}`} className="flex items-center gap-3 px-4 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{g.term}</p>
+                      {g.note && <p className="truncate text-xs text-neutral-mid">{g.note}</p>}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-600">Saved</span>
+                    <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${g.keep ? 'border-teal/30 bg-teal-light/30 text-teal' : 'border-gray-200 bg-neutral-light text-neutral-mid'}`}>
+                      {g.keep ? 'Keep in English' : 'Translatable'}
+                    </span>
+                    <button onClick={() => removeUniversalTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove from this home">
+                      <X size={11} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => toggleGlossaryKeep(g.term)}
-                    disabled={savingGlossary}
-                    title={g.keep ? 'Kept in English — click to allow translating this term' : 'Translated — click to keep this term in English'}
-                    className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${g.keep ? 'border-teal/30 bg-teal-light/30 text-teal' : 'border-gray-200 bg-neutral-light text-neutral-mid'}`}
-                  >
-                    {g.keep ? 'Keep in English' : 'Translatable'}
-                  </button>
-                  <button onClick={() => removeGlossaryTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove">
-                    <X size={11} />
-                  </button>
-                </div>
-              ))}
+                ))}
+                {universalRemoved.map(g => (
+                  <div key={`ur-${g.term}`} className="flex items-center gap-3 px-4 py-2.5 opacity-60">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-neutral-mid line-through">{g.term}</p>
+                    </div>
+                    <span className="shrink-0 text-[11px] font-medium text-neutral-mid">Removed</span>
+                    <button onClick={() => restoreUniversalTerm(g.term)} disabled={savingGlossary} className="shrink-0 rounded-full border border-teal/30 px-2.5 py-1 text-xs font-medium text-teal hover:bg-teal-light/30 disabled:opacity-40">
+                      Add back
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] text-neutral-mid">These are maintained by CareStream and apply to every home. Remove any you don&rsquo;t want for your home, or add it back later.</p>
             </div>
+          )}
+
+          {/* This home's own terms. */}
+          {glossary.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Your home&rsquo;s terms</p>
+              <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                {glossary.map(g => (
+                  <div key={g.term} className="flex items-center gap-3 px-4 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{g.term}</p>
+                      {g.note && <p className="truncate text-xs text-neutral-mid">{g.note}</p>}
+                    </div>
+                    <button
+                      onClick={() => toggleGlossaryKeep(g.term)}
+                      disabled={savingGlossary}
+                      title={g.keep ? 'Kept in English — click to allow translating this term' : 'Translated — click to keep this term in English'}
+                      className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${g.keep ? 'border-teal/30 bg-teal-light/30 text-teal' : 'border-gray-200 bg-neutral-light text-neutral-mid'}`}
+                    >
+                      {g.keep ? 'Keep in English' : 'Translatable'}
+                    </button>
+                    <button onClick={() => removeGlossaryTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {glossary.length === 0 && universalActive.length === 0 && universalRemoved.length === 0 && (
+            <p className="rounded-md bg-neutral-light px-4 py-3 text-sm text-neutral-mid">No pinned terms yet. Adding a few of your most-used names and acronyms keeps every translation on-message.</p>
           )}
           {savingGlossary && <p className="mt-3 text-xs text-neutral-mid">Saving…</p>}
         </SettingSection>

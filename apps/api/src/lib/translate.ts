@@ -36,11 +36,13 @@ export function langName(code: string): string {
 // model a short note on what a term means. buildGlossary() turns the tenant's
 // list into a prompt instruction plus a short signature used to partition the
 // translation cache, so changing the glossary never serves a stale translation.
-export type GlossaryTerm = { term: string; keep?: boolean; note?: string }
+// A tenant list entry with `exclude: true` isn't a real term — it opts the home
+// OUT of a universal (platform) term of the same name (see effectiveGlossary).
+export type GlossaryTerm = { term: string; keep?: boolean; note?: string; exclude?: boolean }
 
 export function buildGlossary(terms?: GlossaryTerm[] | null): { instruction: string; sig: string } | null {
   const clean = (Array.isArray(terms) ? terms : [])
-    .filter(t => t && typeof t.term === 'string' && t.term.trim())
+    .filter(t => t && !t.exclude && typeof t.term === 'string' && t.term.trim())
     .map(t => ({ term: t.term.trim(), keep: t.keep !== false, note: (t.note ?? '').trim() }))
   if (!clean.length) return null
 
@@ -74,15 +76,17 @@ async function getPlatformGlossary(): Promise<GlossaryTerm[]> {
   }
 }
 
-// Merge the platform glossary with a tenant's glossary. Case-insensitive by term;
-// the tenant's entry overrides the platform one so a home can tailor a shared term.
+// Merge the platform (universal) glossary with a tenant's glossary. The tenant
+// list may contain: real terms (override/add) and `exclude` markers (opt the home
+// out of a universal term). Case-insensitive by term; the tenant's own entry wins.
 async function effectiveGlossary(tenantGlossary?: GlossaryTerm[] | null): Promise<GlossaryTerm[]> {
   const plat = await getPlatformGlossary()
-  const tenant = (Array.isArray(tenantGlossary) ? tenantGlossary : []).filter(t => t && typeof t.term === 'string' && t.term.trim())
-  if (!plat.length) return tenant
+  const raw  = (Array.isArray(tenantGlossary) ? tenantGlossary : []).filter(t => t && typeof t.term === 'string' && t.term.trim())
+  const excludes = new Set(raw.filter(t => t.exclude === true).map(t => t.term.trim().toLowerCase()))
+  const own      = raw.filter(t => t.exclude !== true)
   const byKey = new Map<string, GlossaryTerm>()
-  for (const t of plat)   byKey.set(t.term.trim().toLowerCase(), t)
-  for (const t of tenant) byKey.set(t.term.trim().toLowerCase(), t)
+  for (const t of plat) { const k = t.term.trim().toLowerCase(); if (!excludes.has(k)) byKey.set(k, t) }
+  for (const t of own)  byKey.set(t.term.trim().toLowerCase(), t)
   return [...byKey.values()]
 }
 

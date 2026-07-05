@@ -75,6 +75,9 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
 
+  const { own: glossaryOwn, excludes: glossaryExcludes } = splitGlossary(normaliseGlossary(tenant.translation_glossary))
+  const platformGlossary = await platformGlossaryList()
+
   ok(res, {
     inbound_email:      `policies@${tenant.slug}.${INBOUND_DOMAIN}`,
     account_number:     tenant.account_number as string,
@@ -92,26 +95,52 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     languages:          effectiveLanguages(tenant.custom_languages),
     default_language_codes: DEFAULT_LANGUAGES.map(l => l.code),
     language_catalog:   languageCatalog(),
-    translation_glossary: sanitiseGlossary(tenant.translation_glossary),
+    translation_glossary: glossaryOwn,
+    glossary_excludes:    glossaryExcludes,
+    platform_glossary:    platformGlossary,
     room_count:         (tenant.room_count as number) ?? 0,
   })
 })
 
-// Normalise a stored glossary into clean [{ term, keep, note }] entries.
-function sanitiseGlossary(raw: unknown): { term: string; keep: boolean; note: string }[] {
+// Normalise a stored tenant glossary. Entries are either real terms
+// ({ term, keep, note }) or opt-out markers ({ term, exclude: true }) that remove
+// a universal (platform) term for this home. Deduped case-insensitively, capped.
+type GlossaryEntry = { term: string; keep: boolean; note: string; exclude?: boolean }
+function normaliseGlossary(raw: unknown): GlossaryEntry[] {
   if (!Array.isArray(raw)) return []
   const seen = new Set<string>()
-  const out: { term: string; keep: boolean; note: string }[] = []
+  const out: GlossaryEntry[] = []
   for (const e of raw as any[]) {
     const term = typeof e?.term === 'string' ? e.term.trim() : ''
     if (!term) continue
     const key = term.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
-    out.push({ term, keep: e?.keep !== false, note: typeof e?.note === 'string' ? e.note.trim().slice(0, 200) : '' })
-    if (out.length >= 200) break
+    if (e?.exclude === true) out.push({ term, keep: false, note: '', exclude: true })
+    else out.push({ term, keep: e?.keep !== false, note: typeof e?.note === 'string' ? e.note.trim().slice(0, 200) : '' })
+    if (out.length >= 300) break
   }
   return out
+}
+
+// Split stored entries into the home's own terms and the universal terms it has
+// opted out of (by term string).
+function splitGlossary(entries: GlossaryEntry[]): { own: { term: string; keep: boolean; note: string }[]; excludes: string[] } {
+  const own: { term: string; keep: boolean; note: string }[] = []
+  const excludes: string[] = []
+  for (const e of entries) {
+    if (e.exclude) excludes.push(e.term)
+    else own.push({ term: e.term, keep: e.keep, note: e.note })
+  }
+  return { own, excludes }
+}
+
+// The active universal glossary, shown in each tenant's settings as "saved terms".
+async function platformGlossaryList(): Promise<{ term: string; keep: boolean; note: string }[]> {
+  try {
+    const rows = await (prisma as any).platformGlossary.findMany({ orderBy: { term: 'asc' }, select: { term: true, keep: true, note: true } })
+    return (rows as any[]).map(r => ({ term: r.term, keep: r.keep !== false, note: r.note ?? '' }))
+  } catch { return [] }
 }
 
 // ─── PATCH /settings ─────────────────────────────────────────────────────────
@@ -295,7 +324,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (!Array.isArray(translation_glossary)) {
       return err(res, 'INVALID_INPUT', 'translation_glossary must be an array', 400)
     }
-    updateData.translation_glossary = sanitiseGlossary(translation_glossary)
+    updateData.translation_glossary = normaliseGlossary(translation_glossary)
   }
 
   // ── Room count (for the per-room audit picker) ──────────────────────────────
@@ -324,7 +353,8 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     policy_categories: (updated.policy_categories as string[]) ?? [],
     languages:         effectiveLanguages(updated.custom_languages),
     added_language:    addedLanguage,
-    translation_glossary: sanitiseGlossary(updated.translation_glossary),
+    translation_glossary: splitGlossary(normaliseGlossary(updated.translation_glossary)).own,
+    glossary_excludes:    splitGlossary(normaliseGlossary(updated.translation_glossary)).excludes,
     room_count:        (updated.room_count as number) ?? 0,
   })
 })

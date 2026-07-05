@@ -924,7 +924,7 @@ export default function SettingsPage() {
         {/* ── Translation glossary ──────────────────────────────────────────── */}
         <SettingSection icon={BookLock} title="Translation glossary" description="Pin words that must never be translated, or add a note on what they mean, so translations stay consistent.">
           <p className="mb-4 text-sm text-neutral-mid">
-            When CareStream translates training, policies and messages into a staff member’s language, the terms you add here are handled exactly as you specify. Use it for words that should always stay in English, your home’s name, staff names, medication names, systems like <strong>CQC</strong> or <strong>eMAR</strong>, and role titles, or add a short note explaining a term so it’s translated correctly every time.
+            When CareStream translates training, policies and messages into a staff member’s language, the terms you add here are handled exactly as you specify. Use it for words that should always stay in English, your care setting’s name, staff names, medication names, systems like <strong>CQC</strong> or <strong>eMAR</strong>, and role titles, or add a short note explaining a term so it’s translated correctly every time.
           </p>
           <div className="mb-2 flex flex-col gap-2 sm:flex-row">
             <input type="text" value={newTerm} onChange={e => { setNewTerm(e.target.value); setError('') }} onKeyDown={e => e.key === 'Enter' && addGlossaryTerm()} placeholder="Term, e.g. eMAR" className={`${INPUT} sm:max-w-[38%]`} />
@@ -938,7 +938,7 @@ export default function SettingsPage() {
           {/* Universal (saved) terms — managed by CareStream, applied to every home. */}
           {(universalActive.length > 0 || universalRemoved.length > 0) && (
             <div className="mb-4">
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Saved terms (used across all homes)</p>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Saved terms (used across all care settings)</p>
               <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
                 {universalActive.map(g => (
                   <div key={`u-${g.term}`} className="flex items-center gap-3 px-4 py-2.5">
@@ -950,7 +950,7 @@ export default function SettingsPage() {
                     <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${g.keep ? 'border-teal/30 bg-teal-light/30 text-teal' : 'border-gray-200 bg-neutral-light text-neutral-mid'}`}>
                       {g.keep ? 'Keep in English' : 'Translatable'}
                     </span>
-                    <button onClick={() => removeUniversalTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove from this home">
+                    <button onClick={() => removeUniversalTerm(g.term)} disabled={savingGlossary} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark disabled:opacity-40" title="Remove from this care setting">
                       <X size={11} />
                     </button>
                   </div>
@@ -967,14 +967,14 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] text-neutral-mid">These are maintained by CareStream and apply to every home. Remove any you don&rsquo;t want for your home, or add it back later.</p>
+              <p className="mt-1.5 text-[11px] text-neutral-mid">These are maintained by CareStream and apply to every care setting. Remove any you don&rsquo;t want for your care setting, or add it back later.</p>
             </div>
           )}
 
           {/* This home's own terms. */}
           {glossary.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Your home&rsquo;s terms</p>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Your care setting&rsquo;s terms</p>
               <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
                 {glossary.map(g => (
                   <div key={g.term} className="flex items-center gap-3 px-4 py-2.5">

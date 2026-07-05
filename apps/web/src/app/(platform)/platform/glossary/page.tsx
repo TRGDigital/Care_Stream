@@ -62,11 +62,11 @@ export default function PlatformGlossaryPage() {
           <h1 className="text-2xl font-bold text-neutral-dark">Universal translation glossary</h1>
         </div>
         <p className="mb-6 max-w-2xl text-sm text-neutral-mid">
-          Terms here apply to <strong>every tenant</strong> when CareStream translates training, policies, CQC prep
+          Terms here apply to <strong>every care setting</strong> when CareStream translates training, policies, CQC prep
           and staff messages. Use it for sector-wide words that should always stay in English (e.g. <strong>CQC</strong>,
-          <strong> DoLS</strong>, <strong>eMAR</strong>, <strong>NMC</strong>, <strong>safeguarding</strong>) or add a
-          note explaining what a term means so it&rsquo;s translated correctly everywhere. Each tenant can add their own
-          terms on top in their Settings, and a tenant&rsquo;s own entry for the same term overrides the universal one.
+          <strong> DoLS</strong>, <strong>eMAR</strong>, <strong>NMC</strong>) or add a
+          note explaining what a term means so it&rsquo;s translated correctly everywhere. Each care setting can add its own
+          terms on top in their Settings, and a care setting&rsquo;s own entry for the same term overrides the universal one.
           Changes take effect within a few minutes.
         </p>
 
@@ -89,7 +89,7 @@ export default function PlatformGlossaryPage() {
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={15} className="animate-spin" /> Loading…</div>
         ) : terms.length === 0 ? (
-          <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">No universal terms yet. Add sector-wide acronyms like CQC, DoLS, eMAR or NMC to keep them consistent across every tenant.</p>
+          <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">No universal terms yet. Add sector-wide acronyms like CQC, DoLS, eMAR or NMC to keep them consistent across every care setting.</p>
         ) : (
           <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
             {terms.map(t => (

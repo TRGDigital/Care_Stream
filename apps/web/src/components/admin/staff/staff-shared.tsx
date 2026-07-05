@@ -132,6 +132,38 @@ export function LanguageSwitchToggle({ on, onChange, secondLangName, disabled }:
   )
 }
 
+export function SuggestTranslationsToggle({ on, onChange, disabled }: {
+  on: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="flex items-center gap-1 text-xs font-medium text-neutral-dark">
+          Let them suggest better translations
+          <InfoTip text="When on, this staff member sees a 'Suggest a better translation' option on translated training and content in their hub. Their suggestions come to you for approval; once approved, the improved wording is shown to everyone who reads that content in that language. Grant this only to staff you trust to improve translations, e.g. a fluent bilingual team member." align="right" />
+        </p>
+        <p className="mt-0.5 text-xs text-neutral-mid">
+          {on
+            ? 'They can propose improvements to translated content; changes need your approval before going live.'
+            : 'They cannot suggest translation changes (default).'}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        disabled={disabled}
+        onClick={() => onChange(!on)}
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-teal' : 'bg-gray-300'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : 'translate-x-0.5'}`} />
+      </button>
+    </div>
+  )
+}
+
 export function InitialAvatar({ name, role }: { name: string; role: string }) {
   const initial = (name ?? '?').charAt(0).toUpperCase()
   const bg = role === 'admin' ? 'bg-teal' : 'bg-purple-500'

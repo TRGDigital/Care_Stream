@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText,
 } from 'lucide-react'
 
 const NAV = [
@@ -23,6 +23,7 @@ const NAV = [
   { href: '/platform/seeds',           label: 'Knowledge Seeds',  Icon: Sparkles        },
   { href: '/platform/prompts',         label: 'AI Prompts',       Icon: FileText        },
   { href: '/platform/glossary',        label: 'Translation Glossary', Icon: Languages   },
+  { href: '/platform/translation-changes', label: 'Translation Changes', Icon: MessageSquareText },
   { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },
   { href: '/platform/blog',            label: 'Blog',             Icon: Newspaper       },
   { href: '/platform/email-marketing', label: 'Email Marketing',  Icon: Mail            },

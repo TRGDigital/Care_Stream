@@ -55,6 +55,23 @@ export interface Credential {
 export interface SupCell { last_on: string | null; conducted_by: string | null; next_on: string | null; next_due: string | null; status: string }
 export interface SupRecord { id: string; type: string; held_on: string; conducted_by: string | null; next_due: string | null; notes: string | null }
 
+export interface TranslationSuggestion {
+  id: string
+  lang_code: string
+  lang_name: string
+  source_text: string
+  machine_text: string
+  suggested_text: string
+  content_kind: string
+  context_label: string
+  status: 'pending' | 'approved' | 'rejected'
+  suggested_by_name: string
+  reviewed_by: string
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Citation {
   policy_id:         string
   policy_name:       string
@@ -252,7 +269,7 @@ export function createApiClient(token: string) {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean }) =>
+      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean; can_suggest_translations?: boolean }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),
@@ -314,14 +331,20 @@ export function createApiClient(token: string) {
     },
 
     settings: {
-      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; policy_categories: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise'; branding_signoff: string; languages?: Array<{ code: string; name: string }>; default_language_codes?: string[]; language_catalog?: Array<{ code: string; name: string }>; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; platform_glossary?: Array<{ term: string; keep: boolean; note: string }>; room_count?: number }>('/settings', token),
-      update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; email_preferences?: Record<string, boolean>; staff_roles?: string[]; specialist_roles?: string[]; policy_sections?: string[]; policy_categories?: string[]; response_style?: 'standard' | 'concise'; branding_signoff?: string; add_language?: string; remove_language?: string; translation_glossary?: Array<{ term: string; keep?: boolean; note?: string; exclude?: boolean }>; room_count?: number }) =>
+      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; policy_categories: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise'; branding_signoff: string; languages?: Array<{ code: string; name: string }>; default_language_codes?: string[]; language_catalog?: Array<{ code: string; name: string }>; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; platform_glossary?: Array<{ term: string; keep: boolean; note: string }>; translation_suggestions_auto_approve?: boolean; room_count?: number }>('/settings', token),
+      update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; email_preferences?: Record<string, boolean>; staff_roles?: string[]; specialist_roles?: string[]; policy_sections?: string[]; policy_categories?: string[]; response_style?: 'standard' | 'concise'; branding_signoff?: string; add_language?: string; remove_language?: string; translation_glossary?: Array<{ term: string; keep?: boolean; note?: string; exclude?: boolean }>; translation_suggestions_auto_approve?: boolean; room_count?: number }) =>
         apiFetch<{ email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; policy_sections: string[]; policy_categories: string[]; response_style: 'standard' | 'concise'; languages?: Array<{ code: string; name: string }>; added_language?: { code: string; name: string; resolved: boolean } | null; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; room_count?: number }>('/settings', token, {
           method: 'PATCH',
           body:   JSON.stringify(data),
         }),
       sendKnowledgeGapDigest: () =>
         apiFetch<{ digest_sent: boolean; refreshers: number }>('/settings/knowledge-gap-digest/send', token, { method: 'POST' }),
+      translationSuggestions: (status?: string) =>
+        apiFetch<{ suggestions: TranslationSuggestion[]; pending_count: number }>(`/translation-suggestions${status ? `?status=${status}` : ''}`, token),
+      reviewTranslationSuggestion: (id: string, data: { action?: 'approve' | 'reject' | 'pending'; suggested_text?: string }) =>
+        apiFetch<{ suggestion: TranslationSuggestion }>(`/translation-suggestions/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      deleteTranslationSuggestion: (id: string) =>
+        apiFetch<{ deleted: boolean }>(`/translation-suggestions/${id}`, token, { method: 'DELETE' }),
       sendComplianceExpiryAlerts: () =>
         apiFetch<{ sent: boolean; expiring: number; expired: number; recipients: number; passport_staff: number }>('/settings/compliance-expiry/send', token, { method: 'POST' }),
       uploadLogo: (file: File) => {
@@ -716,7 +739,9 @@ export function createApiClient(token: string) {
       saveModuleReview: (module_id: string, data: { notes?: string; status?: string }) =>
         apiFetch<{ saved: boolean }>('/me/module-reviews', token, { method: 'POST', body: JSON.stringify({ module_id, ...data }) }),
       progress: () => apiFetch<any>('/me/progress', token),
-      profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean }>('/me/profile', token),
+      profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean; can_suggest_translations: boolean }>('/me/profile', token),
+      suggestTranslation: (data: { source_text: string; suggested_text: string; lang_code: string; machine_text?: string; content_kind?: string; context_label?: string }) =>
+        apiFetch<{ status: 'pending' | 'approved' }>('/me/translation-suggestion', token, { method: 'POST', body: JSON.stringify(data) }),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number }>('/me/counts', token),
       documentCategories: () => apiFetch<{ available: string[] }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>

@@ -809,7 +809,32 @@ export function createPlatformClient(token: string) {
         adminFetch<{ term: GlossaryTerm }>(`/platform-glossary/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) => adminFetch<{ deleted: boolean }>(`/platform-glossary/${id}`, token, { method: 'DELETE' }),
     },
+    translationChanges: {
+      list: (status?: string) =>
+        adminFetch<{ changes: TranslationChange[]; counts: { total: number; pending: number; approved: number; rejected: number } }>(`/translation-changes${status ? `?status=${status}` : ''}`, token),
+      remove: (id: string) => adminFetch<{ deleted: boolean }>(`/translation-changes/${id}`, token, { method: 'DELETE' }),
+    },
   }
+}
+
+export interface TranslationChange {
+  id: string
+  tenant_id: string
+  tenant_name: string
+  account_number: string
+  lang_code: string
+  lang_name: string
+  source_text: string
+  machine_text: string
+  suggested_text: string
+  content_kind: string
+  context_label: string
+  status: 'pending' | 'approved' | 'rejected'
+  suggested_by_name: string
+  reviewed_by: string
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface GlossaryTerm {

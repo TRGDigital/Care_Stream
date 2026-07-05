@@ -12,7 +12,7 @@ import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Languages,
 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
@@ -41,6 +41,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/staff', label: 'Staff', Icon: Users },
       { href: '/workforce', label: 'Compliance', Icon: BadgeCheck, enterprise: true },
+      { href: '/translation-review', label: 'Translation Review', Icon: Languages },
     ],
   },
   {

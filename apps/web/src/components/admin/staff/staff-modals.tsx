@@ -12,6 +12,7 @@ import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from
 import {
   CommsLanguageToggle,
   LanguageSwitchToggle,
+  SuggestTranslationsToggle,
   CredentialsPanel,
   InitialAvatar,
   fmtDate,
@@ -750,6 +751,7 @@ export function EditModal({
   const [auditIds, setAuditIds]           = useState<string[]>(Array.isArray(user.audit_template_ids) ? user.audit_template_ids : [])
   const [commsFirstLang, setCommsFirstLang] = useState<boolean>(user.comms_always_first_language !== false)
   const [allowSwitch, setAllowSwitch] = useState<boolean>((user as any).allow_language_switching === true)
+  const [canSuggest, setCanSuggest] = useState<boolean>((user as any).can_suggest_translations === true)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -775,6 +777,7 @@ export function EditModal({
       second_language: form.second_language || null,
       comms_always_first_language: commsFirstLang,
       allow_language_switching: allowSwitch && !!form.second_language,
+      can_suggest_translations: canSuggest,
     }).catch((err: Error) => { setError(err.message); return null })
     setLoading(false)
     if (res) onSaved(res.user)
@@ -913,6 +916,7 @@ export function EditModal({
             </div>
             <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
             <LanguageSwitchToggle on={allowSwitch} onChange={setAllowSwitch} secondLangName={form.second_language ? langNameOf(form.second_language, languages) : null} />
+            <SuggestTranslationsToggle on={canSuggest} onChange={setCanSuggest} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

@@ -502,7 +502,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
       include: { module: { select: { name: true, source: true, learning_content: true, questions: true, pass_mark: true, requires_practical: true, frequency: true, policy_refs: true, illustration_key: true, duration_minutes: true } }, answers: { select: { question_id: true, answer_text: true, is_correct: true } } },
     }),
-    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
   ])
   if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
@@ -532,6 +532,9 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
   })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
+  // English source of the quiz questions, snapshotted before translation so the
+  // hub can offer a "suggest a better translation" control keyed to the source.
+  const enQuestions = (questions as any[]).map((q: any) => ({ text: String(q.text ?? ''), options: (q.options as string[]) ?? [] }))
 
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng') {
@@ -574,6 +577,11 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     policies,
     answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),
     status: enr.status,
+    // Translation-suggestion context: only when the module is being shown in a
+    // non-English language AND this staff member is permitted to suggest.
+    lang_code: lang,
+    can_suggest: lang !== 'eng' && !!(user as any)?.can_suggest_translations,
+    source_questions: lang !== 'eng' ? enQuestions : undefined,
   })
 })
 

@@ -15,6 +15,7 @@ import { analyticsRouter } from './routes/analytics'
 import { adminRouter } from './routes/admin'
 import { onboardingTemplatesRouter } from './routes/onboarding-templates'
 import { policySeedsRouter } from './routes/policy-seeds'
+import { platformGlossaryRouter } from './routes/platform-glossary'
 import { settingsRouter } from './routes/settings'
 import { knowledgeRouter } from './routes/knowledge'
 import { sitesRouter } from './routes/sites'
@@ -93,6 +94,7 @@ app.use('/auth', authRouter)
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
+app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled

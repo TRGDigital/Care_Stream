@@ -683,6 +683,16 @@ model KnowledgeEntry {
 
 // Custom seeds added by the platform owner via the admin UI.
 // Merged with PLATFORM_KNOWLEDGE_SEEDS at runtime and seeded into every tenant.
+model PlatformGlossary {
+  id         String   @id @default(uuid())
+  term       String   @unique
+  keep       Boolean  @default(true)
+  note       String   @default("")
+  created_at DateTime @default(now())
+
+  @@map("platform_glossary")
+}
+
 model PlatformCustomSeed {
   id          String   @id @default(uuid())
   slug        String   @unique

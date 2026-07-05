@@ -55,6 +55,37 @@ export function buildGlossary(terms?: GlossaryTerm[] | null): { instruction: str
   return { instruction, sig }
 }
 
+// Platform-wide glossary — a universal term list the platform owner manages that
+// applies to EVERY tenant, merged under each tenant's own glossary (a tenant entry
+// for the same term wins). Cached in-memory with a short TTL so translation calls
+// don't hit the DB every time; edits on the platform take effect within the TTL.
+let _platGloss: { at: number; terms: GlossaryTerm[] } | null = null
+const PLAT_GLOSS_TTL_MS = 300_000
+async function getPlatformGlossary(): Promise<GlossaryTerm[]> {
+  const now = Date.now()
+  if (_platGloss && now - _platGloss.at < PLAT_GLOSS_TTL_MS) return _platGloss.terms
+  try {
+    const rows = await (prisma as any).platformGlossary.findMany({ select: { term: true, keep: true, note: true } })
+    const terms = (rows as any[]).map(r => ({ term: r.term, keep: r.keep !== false, note: r.note ?? '' }))
+    _platGloss = { at: now, terms }
+    return terms
+  } catch {
+    return _platGloss?.terms ?? []   // table missing / DB blip → fall back to last-known (or none)
+  }
+}
+
+// Merge the platform glossary with a tenant's glossary. Case-insensitive by term;
+// the tenant's entry overrides the platform one so a home can tailor a shared term.
+async function effectiveGlossary(tenantGlossary?: GlossaryTerm[] | null): Promise<GlossaryTerm[]> {
+  const plat = await getPlatformGlossary()
+  const tenant = (Array.isArray(tenantGlossary) ? tenantGlossary : []).filter(t => t && typeof t.term === 'string' && t.term.trim())
+  if (!plat.length) return tenant
+  const byKey = new Map<string, GlossaryTerm>()
+  for (const t of plat)   byKey.set(t.term.trim().toLowerCase(), t)
+  for (const t of tenant) byKey.set(t.term.trim().toLowerCase(), t)
+  return [...byKey.values()]
+}
+
 // Decide the target language for a hub content request (training / induction / CQC /
 // follow-ups). Honours a `?lang=2` (or `?lang=second`) override that flips a single set
 // into the staff member's SECOND language — but only when an admin enabled switching for
@@ -82,7 +113,7 @@ export async function translateTrainingQuestion(
 
   const name = targetLangName ?? langName(targetLang)
   const opts  = question.options ?? []
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
 
   const prompt = [
     `Translate the following care training question and its answer options into ${name}.`,
@@ -178,7 +209,7 @@ export async function translateQuestionsBatch(
 
   // Partition the cache per glossary version so a glossary change never serves a
   // previously-cached translation (real language is still passed to Haiku).
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
   const cacheLang = gloss ? `${langCode}#${gloss.sig}` : langCode
 
   const results = new Array<{ text: string; options: string[] }>(questions.length)
@@ -220,7 +251,7 @@ export async function translateQuestionsBatch(
 export async function translateTextsBatch(texts: string[], langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string[]> {
   if (!langCode || langCode === 'eng') return texts
   const name = langName ?? langName_internal(langCode)
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
   const cacheLang = gloss ? `${langCode}#${gloss.sig}` : langCode
 
   const results = new Array<string>(texts.length)
@@ -297,7 +328,7 @@ function langName_internal(code: string): string {
 // Core HTML translator: chunk by chunk, preserving every tag, into a named
 // language. Works for ANY target language (including English).
 async function translateHtmlChunks(html: string, name: string, glossary?: GlossaryTerm[]): Promise<string> {
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
   const parts = html.split(/(?<=<\/(?:p|li|h2|h3|h4|ul|ol|div)>)/i)
   const chunks: string[] = []
   let cur = ''
@@ -371,7 +402,7 @@ export async function generatePolicyQuestions(policyText: string, langCode: stri
 // Output is HTML (h2/h3/p/ul/ol/li/strong only). Caller caches the result.
 export async function formatPolicyHtml(rawText: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string | null> {
   const name = (langCode && langCode !== 'eng') ? (langName ?? langName_internal(langCode)) : null
-  const gloss = name ? buildGlossary(glossary) : null
+  const gloss = name ? buildGlossary(await effectiveGlossary(glossary)) : null
 
   // Light deterministic pre-clean: drop Word auto image-description lines
   // (the rest of the letterhead is removed by the formatting pass below).
@@ -420,7 +451,7 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
 export async function translatePolicyText(text: string, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<string> {
   if (!text || !langCode || langCode === 'eng') return text
   const name = langName ?? langName_internal(langCode)
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
 
   const chunks: string[] = []
   let cur = ''
@@ -456,7 +487,7 @@ const _bundleCache = new Map<string, Record<string, string>>()
 export async function translateBundle(strings: Record<string, string>, langCode: string, langName?: string, glossary?: GlossaryTerm[]): Promise<Record<string, string>> {
   if (!langCode || langCode === 'eng') return strings
   const name = langName ?? langName_internal(langCode)
-  const gloss = buildGlossary(glossary)
+  const gloss = buildGlossary(await effectiveGlossary(glossary))
   const keys = Object.keys(strings)
   const cacheKey = `${langCode}${gloss ? '#' + gloss.sig : ''}::${keys.join(',')}::${Object.values(strings).join('|').length}`
   const hit = _bundleCache.get(cacheKey)

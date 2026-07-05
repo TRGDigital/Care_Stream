@@ -801,7 +801,23 @@ export function createPlatformClient(token: string) {
       aiClean: (id: string) =>
         adminFetch<{ seed: PolicySeed }>(`/policy-seeds/${id}/ai-clean`, token, { method: 'POST' }),
     },
+    platformGlossary: {
+      list: () => adminFetch<{ terms: GlossaryTerm[] }>('/platform-glossary', token),
+      add: (data: { term: string; keep?: boolean; note?: string }) =>
+        adminFetch<{ term: GlossaryTerm }>('/platform-glossary', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<{ keep: boolean; note: string }>) =>
+        adminFetch<{ term: GlossaryTerm }>(`/platform-glossary/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      remove: (id: string) => adminFetch<{ deleted: boolean }>(`/platform-glossary/${id}`, token, { method: 'DELETE' }),
+    },
   }
+}
+
+export interface GlossaryTerm {
+  id: string
+  term: string
+  keep: boolean
+  note: string
+  created_at: string
 }
 
 export interface PolicySeedMeta {

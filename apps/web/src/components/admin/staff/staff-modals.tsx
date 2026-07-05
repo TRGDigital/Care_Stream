@@ -968,6 +968,7 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
   const [view,        setView]        = useState<'detail' | 'assign' | 'onboard'>('detail')
   const [savingComms, setSavingComms] = useState(false)
   const [savingSwitch, setSavingSwitch] = useState(false)
+  const [savingSuggest, setSavingSuggest] = useState(false)
 
   function load() {
     setLoading(true)
@@ -1000,6 +1001,18 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
     } catch {
       setData(prev => prev ? { ...prev, user: { ...prev.user, allow_language_switching: !v } } : prev)
     } finally { setSavingSwitch(false) }
+  }
+
+  async function toggleCanSuggest(v: boolean) {
+    if (!data) return
+    setSavingSuggest(true)
+    setData(prev => prev ? { ...prev, user: { ...prev.user, can_suggest_translations: v } } : prev)
+    try {
+      const res = await createApiClient(token).users.update(userId, { can_suggest_translations: v })
+      onChanged(res.user)
+    } catch {
+      setData(prev => prev ? { ...prev, user: { ...prev.user, can_suggest_translations: !v } } : prev)
+    } finally { setSavingSuggest(false) }
   }
 
   const user = data?.user
@@ -1094,6 +1107,9 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
                 </div>
                 <div className="col-span-2">
                   <LanguageSwitchToggle on={user.allow_language_switching === true} onChange={toggleAllowSwitch} secondLangName={user.second_language ? langNameOf(user.second_language, languages) : null} disabled={savingSwitch} />
+                </div>
+                <div className="col-span-2">
+                  <SuggestTranslationsToggle on={user.can_suggest_translations === true} onChange={toggleCanSuggest} disabled={savingSuggest} />
                 </div>
               </div>
             </div>

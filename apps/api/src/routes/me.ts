@@ -532,9 +532,11 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
   })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
-  // English source of the quiz questions, snapshotted before translation so the
-  // hub can offer a "suggest a better translation" control keyed to the source.
+  // English source of the quiz questions + lesson sections, snapshotted before
+  // translation so the hub can offer a "suggest a better translation" control
+  // keyed to the source string.
   const enQuestions = (questions as any[]).map((q: any) => ({ text: String(q.text ?? ''), options: (q.options as string[]) ?? [] }))
+  const enSections = (sections as any[]).map((s: any) => ({ heading: String(s.heading ?? ''), body: String(s.body ?? '') }))
 
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
   if (lang !== 'eng') {
@@ -582,6 +584,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     lang_code: lang,
     can_suggest: lang !== 'eng' && !!(user as any)?.can_suggest_translations,
     source_questions: lang !== 'eng' ? enQuestions : undefined,
+    source_sections: lang !== 'eng' ? enSections : undefined,
   })
 })
 

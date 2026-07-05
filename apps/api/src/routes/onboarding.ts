@@ -397,7 +397,7 @@ onboardingRouter.get('/my', async (req, res) => {
         },
         orderBy: { enrolled_at: 'asc' },
       }),
-      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }),
       // Training modules with a cover illustration (this tenant's + shared platform
       // ones) — candidates for auto-matching a thumbnail to each induction flow.
@@ -464,7 +464,7 @@ onboardingRouter.get('/my', async (req, res) => {
           steps: e.steps.map((s: any, si: number) => {
             const title = tTexts[titleIdx[ei][si]]
             const qi = qIdx[ei][si]
-            if (qi >= 0) { const t = tQs[qi]; return { ...s, title, question: t.text, options: t.options as any } }
+            if (qi >= 0) { const t = tQs[qi]; return { ...s, title, question: t.text, options: t.options as any, source_en: { question: s.question, options: Array.isArray(s.options) ? (s.options as string[]) : [] } } }
             return { ...s, title }
           }),
         }))
@@ -472,7 +472,7 @@ onboardingRouter.get('/my', async (req, res) => {
       result = await withTranslationBudget(translateAll, 18_000, baseline)
     }
 
-    res.json({ success: true, data: { enrollments: result } })
+    res.json({ success: true, data: { enrollments: result, lang_code: langCode, can_suggest: langCode !== 'eng' && !!(user as any)?.can_suggest_translations } })
   } catch (e: any) {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
   }

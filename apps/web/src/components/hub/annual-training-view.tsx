@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
+import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
@@ -193,71 +194,6 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
         ))}
       </div>
       <div className="mt-1 flex justify-between text-[10px] text-neutral-mid"><span>{low}</span><span>{high}</span></div>
-    </div>
-  )
-}
-
-// ─── Suggest a better translation (permitted staff, non-English content) ───────
-// Lets a trusted bilingual staff member propose improved wording for a translated
-// question and its options. Each field is pre-filled with the current translation;
-// changed ones are submitted for admin approval (or applied straight away if the
-// care setting has auto-approve on).
-function SuggestTranslation({ token, langCode, contextLabel, source, current }: {
-  token: string
-  langCode: string
-  contextLabel: string
-  source: { text: string; options: string[] }        // English source
-  current: { text: string; options: string[] }        // current translation
-}) {
-  const [open, setOpen] = useState(false)
-  const [text, setText] = useState(current.text)
-  const [opts, setOpts] = useState<string[]>(current.options)
-  const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState<'pending' | 'approved' | null>(null)
-  const [err, setErr]   = useState('')
-
-  async function submit() {
-    setBusy(true); setErr('')
-    const api = createApiClient(token)
-    const jobs: Array<Promise<{ status: 'pending' | 'approved' }>> = []
-    if (text.trim() && text.trim() !== current.text && source.text)
-      jobs.push(api.me.suggestTranslation({ source_text: source.text, suggested_text: text.trim(), lang_code: langCode, machine_text: current.text, content_kind: 'question', context_label: contextLabel }))
-    opts.forEach((o, i) => {
-      const src = source.options[i]
-      if (o.trim() && o.trim() !== current.options[i] && src)
-        jobs.push(api.me.suggestTranslation({ source_text: src, suggested_text: o.trim(), lang_code: langCode, machine_text: current.options[i], content_kind: 'option', context_label: contextLabel }))
-    })
-    if (!jobs.length) { setOpen(false); setBusy(false); return }
-    try {
-      const results = await Promise.all(jobs)
-      setDone(results.some(r => r.status === 'approved') ? 'approved' : 'pending')
-      setOpen(false)
-    } catch (e: any) { setErr(e?.message ?? 'Could not send your suggestion.') }
-    finally { setBusy(false) }
-  }
-
-  if (done) {
-    return <p className="mt-2 text-[11px] font-medium text-teal">{done === 'approved' ? '✓ Thanks — your improved translation is now live.' : '✓ Thanks — your suggestion was sent for approval.'}</p>
-  }
-  if (!open) {
-    return <button type="button" onClick={() => { setText(current.text); setOpts(current.options); setOpen(true) }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-neutral-mid hover:text-teal"><Languages size={11} /> Suggest a better translation</button>
-  }
-  return (
-    <div className="mt-2 rounded-lg border border-teal/30 bg-teal-light/10 p-3">
-      <p className="mb-1.5 text-[11px] font-semibold text-teal">Improve this translation</p>
-      <label className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-neutral-mid">Question</label>
-      <textarea value={text} onChange={e => setText(e.target.value)} rows={2} className="mb-2 w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
-      {opts.map((o, i) => (
-        <div key={i} className="mb-1.5">
-          <label className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-neutral-mid">Answer {i + 1}</label>
-          <input value={o} onChange={e => setOpts(prev => prev.map((x, xi) => xi === i ? e.target.value : x))} className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
-        </div>
-      ))}
-      {err && <p className="mb-1 text-[11px] text-red-600">{err}</p>}
-      <div className="mt-1 flex items-center justify-end gap-2">
-        <button type="button" onClick={() => setOpen(false)} className="text-[11px] text-neutral-mid hover:text-neutral-dark">Cancel</button>
-        <button type="button" onClick={submit} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1 text-[11px] font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={11} className="animate-spin" /> : null} Send</button>
-      </div>
     </div>
   )
 }
@@ -536,6 +472,13 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                               : sec.scenario.answer && <button onClick={() => setRevealed(r => ({ ...r, [sec.id]: true }))} className="mt-2 text-xs font-semibold text-teal hover:underline">Show the answer</button>}
                           </div>
                         )}
+                        {data?.can_suggest && !showSecond && data.source_sections?.[cur.i] && data.learning?.sections?.[cur.i] && (
+                          <SuggestTranslation token={token} langCode={data.lang_code} contextLabel={`${name} — lesson`}
+                            fields={[
+                              { label: 'Heading', source: data.source_sections[cur.i].heading, current: data.learning.sections[cur.i].heading, kind: 'lesson' },
+                              { label: 'Lesson text', source: data.source_sections[cur.i].body, current: data.learning.sections[cur.i].body, kind: 'lesson', multiline: true },
+                            ]} />
+                        )}
                       </>
                     ) : (
                       <>
@@ -619,9 +562,12 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                         </label>
                       ))}
                     </div>
-                    {data.can_suggest && data.lang_code && data.lang_code !== 'eng' && data.source_questions?.[qi] && (
+                    {data.can_suggest && data.source_questions?.[qi] && (
                       <SuggestTranslation token={token} langCode={data.lang_code} contextLabel={name}
-                        source={data.source_questions[qi]} current={{ text: q.text, options: q.options }} />
+                        fields={[
+                          { label: 'Question', source: data.source_questions[qi].text, current: q.text, kind: 'question', multiline: true },
+                          ...(q.options as string[]).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: data.source_questions[qi].options[oi], current: opt, kind: 'option' })),
+                        ]} />
                     )}
                   </div>
                 )

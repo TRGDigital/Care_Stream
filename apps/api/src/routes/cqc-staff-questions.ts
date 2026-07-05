@@ -487,7 +487,7 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
         include: { question: { select: { domain: true, model_answer: true } } },
         orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
       }),
-      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+      (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true } }),
       (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
     ])
 
@@ -496,6 +496,9 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
       ...d,
       question: { domain: d.question.domain, model_answer: d.status === 'evaluated' ? d.question.model_answer : null },
     }))
+    // English source of each field, snapshotted before translation for the hub's
+    // "suggest a better translation" control.
+    const enSource = safe.map(d => ({ question: d.rephrased_q ?? '', model_answer: d.question.model_answer ?? '', feedback: d.feedback ?? '' }))
 
     // Deliver CQC questions in the staff member's own language (parity with training,
     // induction and chat). Translate the question, the revealed model answer and the
@@ -514,11 +517,12 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
           rephrased_q: qT[i] || d.rephrased_q,
           feedback:    d.feedback ? (fT[i] || d.feedback) : d.feedback,
           question:    { ...d.question, model_answer: d.question.model_answer ? (mT[i] || d.question.model_answer) : null },
+          source_en:   enSource[i],
         }))
       })(), 18_000, safe)
     }
 
-    ok(res, { deliveries: safe })
+    ok(res, { deliveries: safe, lang_code: lang, can_suggest: lang !== 'eng' && !!(user as any)?.can_suggest_translations })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }

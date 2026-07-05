@@ -16,6 +16,7 @@ import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { ProgressView } from '@/components/hub/progress-view'
+import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -2449,6 +2450,8 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
   const cachedInd = persistentCache.get<any[]>(ck)
   const [enrollments, setEnrollments] = useState<any[]>(cachedInd ?? [])
   const [loading,     setLoading]     = useState(!cachedInd)
+  const [canSuggest,  setCanSuggest]  = useState(false)
+  const [langCode,    setLangCode]    = useState('eng')
   const [completing,  setCompleting]  = useState<string | null>(null)
   const [answers,     setAnswers]     = useState<Record<string, string>>({})
   const [viewer,      setViewer]      = useState<{ policyId: string; stepId: string; enrollmentId: string } | null>(null)
@@ -2486,7 +2489,7 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
 
   useEffect(() => {
     api.onboarding.myEnrollments()
-      .then(d => { setEnrollments(d.enrollments); persistentCache.set(ck, d.enrollments) })
+      .then(d => { setEnrollments(d.enrollments); setCanSuggest(!!d.can_suggest); setLangCode(d.lang_code ?? 'eng'); persistentCache.set(ck, d.enrollments) })
       .finally(() => setLoading(false))
     // Reflect already-saved policies so the Save button persists across refresh.
     api.me.savedPolicies()
@@ -2657,6 +2660,13 @@ function InductionView({ token, userId, onSavedChange, onTalkToPolicy, secondLan
                                 </button>
                                 {step.progress?.answer_correct === false && (
                                   <p className="text-xs text-amber-600">That&rsquo;s not quite right — review the policy and try again.</p>
+                                )}
+                                {canSuggest && step.source_en && !langByStep[step.id] && (
+                                  <SuggestTranslation token={token} langCode={langCode} contextLabel={`${e.flow_name} — induction`}
+                                    fields={[
+                                      { label: 'Question', source: step.source_en.question, current: step.question, kind: 'question', multiline: true },
+                                      ...((step.options as string[]) ?? []).map((opt: string, oi: number) => ({ label: `Answer ${oi + 1}`, source: step.source_en.options[oi], current: opt, kind: 'option' })),
+                                    ]} />
                                 )}
                               </div>
                             )}

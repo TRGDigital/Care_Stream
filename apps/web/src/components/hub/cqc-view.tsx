@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
+import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronRight,
   ClipboardList, Globe, Loader2, RotateCcw, Send, Star,
@@ -22,6 +23,7 @@ type Delivery = {
   answered_at: string | null
   attempts?:   number
   question:    { domain: string; model_answer?: string | null }
+  source_en?:  { question: string; model_answer: string; feedback: string }
 }
 
 const RETRY_BELOW = 60
@@ -267,6 +269,8 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   const [second, setSecond] = useState<Record<string, Delivery> | null>(null)  // 2nd-language copies by id (lazy)
   const [loadingSecond, setLoadingSecond] = useState(false)
   const [langById, setLangById] = useState<Record<string, boolean>>({})
+  const [canSuggest, setCanSuggest] = useState(false)
+  const [langCode, setLangCode] = useState('eng')
   const toggleDomain = (key: string) =>
     setOpenDomains(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
 
@@ -310,6 +314,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
       const api = createApiClient(token)
       const res = await api.cqcQuestions.myDeliveries()
       setDeliveries(res.deliveries)
+      setCanSuggest(!!res.can_suggest); setLangCode(res.lang_code ?? 'eng')
       const first = res.deliveries.find((d: Delivery) => d.status === 'pending')
       if (first) { setExpanded(first.id); setOpenDomains(new Set([`p:${first.question.domain}`])) }
     } catch (e: any) {
@@ -411,6 +416,10 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                                 <QLangToggle id={d.id} />
                                 <AnswerForm delivery={d} token={token}
                                   onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); setExpanded(null); onChange?.() }} />
+                                {canSuggest && d.source_en && (
+                                  <SuggestTranslation token={token} langCode={langCode} contextLabel="CQC prep"
+                                    fields={[{ label: 'Question', source: d.source_en.question, current: d.rephrased_q, kind: 'question', multiline: true }]} />
+                                )}
                               </div>
                             )}
                           </div>
@@ -467,6 +476,14 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                                 <QLangToggle id={d.id} />
                                 <ResultCard delivery={viewD(d)} token={token} showRating={freshlyAnswered.has(d.id)}
                                   onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.() }} />
+                                {canSuggest && d.source_en && (
+                                  <SuggestTranslation token={token} langCode={langCode} contextLabel="CQC prep"
+                                    fields={[
+                                      { label: 'Question', source: d.source_en.question, current: d.rephrased_q, kind: 'question', multiline: true },
+                                      ...(d.question?.model_answer ? [{ label: 'Model answer', source: d.source_en.model_answer, current: d.question.model_answer, kind: 'answer', multiline: true }] : []),
+                                      ...(d.feedback ? [{ label: 'Feedback', source: d.source_en.feedback, current: d.feedback, kind: 'feedback', multiline: true }] : []),
+                                    ]} />
+                                )}
                               </div>
                             )}
                           </div>

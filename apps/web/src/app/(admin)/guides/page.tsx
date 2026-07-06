@@ -597,7 +597,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'chat-portal',
     icon:    MessageSquare,
     title:   'Chat Hub',
-    summary: 'Web-based chat interface for staff to ask policy questions',
+    summary: 'Web-based chat interface for staff to ask policy questions, with role-tailored, rotating suggested questions in each staff member\'s language',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it does">
@@ -641,6 +641,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
               <li><strong>Auditing:</strong> "What actions are outstanding from our most recent audits?"</li>
               <li><strong>Business Continuity:</strong> "What should I do if we have a serious staff shortage?"</li>
             </ul>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Suggested questions are tailored to each staff member">
+          <div className="space-y-2 text-sm text-neutral-mid">
+            <p>
+              When a staff member starts a new chat and picks a topic, the <strong>suggested starter questions</strong> aren&rsquo;t a fixed list, CareStream generates them for <strong>that person&rsquo;s job role</strong>. A nurse, a care assistant, a cook and a maintenance person will each see prompts relevant to their day-to-day work.
+            </p>
+            <p>
+              The suggestions also <strong>rotate</strong>, so a returning staff member isn&rsquo;t shown the same three prompts every time, and they take account of <strong>what that person has recently asked</strong>, offering fresh, related questions rather than repeating ones they&rsquo;ve already used. Everything is shown in the staff member&rsquo;s own language.
+            </p>
+            <p className="rounded-md border border-teal/20 bg-teal-light/20 px-3 py-2 text-neutral-dark">
+              <strong>To get the most from this:</strong> make sure each staff member has their <strong>Position</strong> set on their profile (Staff &rarr; add or edit a staff member). Staff with no position still get useful, rotating prompts, just not role-specific ones. There&rsquo;s nothing else to switch on, it works automatically.
+            </p>
           </div>
         </SectionBlock>
         <SectionBlock title="Follow-up questions">

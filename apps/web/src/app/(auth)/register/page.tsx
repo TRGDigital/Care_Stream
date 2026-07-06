@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [error,        setError]        = useState('')
   const [loading,      setLoading]      = useState(false)
   const [success,      setSuccess]      = useState(false)
+  const [agreed,       setAgreed]       = useState(false)
   // Training-only signup (à la carte training modules, no subscription) when the
   // page is reached as /register?tier=training_only. Read client-side to avoid an
   // SSR/hydration mismatch.
@@ -40,6 +41,10 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!agreed) {
+      setError('Please confirm you have read and agree to the Terms & Conditions and Privacy Policy.')
+      return
+    }
     setError('')
     setLoading(true)
 
@@ -91,13 +96,28 @@ export default function RegisterPage() {
             />
           </div>
         ))}
+        {/* Terms & Conditions — must be ticked to create an account. */}
+        <label className="flex cursor-pointer items-start gap-2.5 pt-1 text-sm text-neutral-mid">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={e => { setAgreed(e.target.checked); if (e.target.checked) setError('') }}
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-gray-300 text-teal accent-teal focus:ring-teal"
+          />
+          <span>
+            I have read and agree to the{' '}
+            <Link href="/terms" target="_blank" className="font-medium text-teal hover:underline">Terms &amp; Conditions</Link>
+            {' '}and{' '}
+            <Link href="/privacy" target="_blank" className="font-medium text-teal hover:underline">Privacy Policy</Link>.
+          </span>
+        </label>
         {error && <p className="text-sm text-status-error">{error}</p>}
         {success && (
           <p className="rounded-md bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
             Account created! We&apos;ve sent a verification email — check your inbox.
           </p>
         )}
-        <Button type="submit" className="w-full" size="lg" disabled={loading || success}>
+        <Button type="submit" className="w-full" size="lg" disabled={loading || success || !agreed}>
           {loading ? 'Creating account…' : success ? 'Account created!' : 'Create account'}
         </Button>
       </form>

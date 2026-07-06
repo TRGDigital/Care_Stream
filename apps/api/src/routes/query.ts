@@ -8,6 +8,7 @@ import { ok, err } from '../lib/response'
 import { checkQueryLimit, PlanLimitError } from '../lib/plan-limits'
 import { languageNameForCode } from '../data/languages'
 import { translateTextsBatch, translateHtmlToLanguage, withTranslationBudget } from '../lib/translate'
+import { callClaude } from '../services/ai/claude'
 
 export const queryRouter = Router()
 
@@ -138,6 +139,106 @@ queryRouter.post('/suggested', async (req: Request, res: Response) => {
     ok(res, { questions }) // fall back to English rather than break the chat
   }
 })
+
+// ─── GET /query/starters ─────────────────────────────────────────────────────
+// Role-linked, rotating starter questions for a new chat. Generated per staff
+// member from their job role + the chat topic, informed by what they've recently
+// asked (so questions stay relevant and don't repeat). Returned in their own
+// language. A pool is cached briefly per (user, category); the client shows a
+// rotating subset, so new chats aren't always the same. Falls back to the static
+// defaults sent by the client on any failure.
+
+// Static fallbacks by category (mirror the client's defaults) so a generation
+// failure still yields sensible prompts.
+const STARTER_FALLBACK: Record<string, string[]> = {
+  internal_policy:     ['What is our falls prevention policy?', 'How should I report a medication error?', 'What are our infection control procedures?'],
+  staff_handbook:      ['What are my annual leave entitlements?', 'What is the process for reporting absence?', 'What are the disciplinary procedures?'],
+  training_module:     ['Can you explain the key principles of safeguarding adults?', 'What do I need to know about the Mental Capacity Act?', 'What are the main infection prevention and control measures?'],
+  cqc_report:          ['What were the key findings from our last CQC inspection?', 'Do we have any gaps against the CQC Safe key question?', 'What should I expect during a CQC inspection?'],
+  audit_report:        ['What actions are outstanding from our most recent audits?', 'Are there any recurring issues across our monthly audits?', 'Which areas have the most recommendations?'],
+  business_continuity: ['What should I do if we have a serious staff shortage during a shift?', 'Who do I contact if we have a power or IT outage?', 'What is the procedure if we need to evacuate the building?'],
+}
+const CATEGORY_TOPIC: Record<string, string> = {
+  internal_policy:     'the care setting\'s policies and procedures (care, clinical and operational)',
+  staff_handbook:      'the staff handbook (HR, employment and staff guidance)',
+  training_module:     'their training and professional development',
+  cqc_report:          'CQC inspection readiness and regulatory compliance',
+  audit_report:        'internal audits and their outstanding actions',
+  business_continuity: 'business continuity and emergency procedures',
+}
+
+// Short-lived per-(user, category) pool cache. Rotation happens client-side from
+// the returned pool; regeneration only after the TTL, so cost stays low.
+const _starterPool = new Map<string, { at: number; questions: string[] }>()
+const STARTER_TTL_MS = 30 * 60 * 1000
+
+queryRouter.get('/starters', async (req: Request, res: Response) => {
+  const category = String(req.query.category ?? 'internal_policy')
+  const fallback = STARTER_FALLBACK[category] ?? STARTER_FALLBACK.internal_policy
+  const tenantId = getTenantId()
+  const userId   = req.user!.sub
+
+  const [me, tenantSettings] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { job_role: true, first_language: true, comms_always_first_language: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true, facility_type: true } }),
+  ])
+  const lang    = me?.comms_always_first_language === false ? 'eng' : ((me?.first_language as string) ?? 'eng')
+  const role    = (me?.job_role as string)?.trim() || 'care worker'
+  const setting = (tenantSettings?.facility_type as string)?.trim() || 'care setting'
+
+  const cacheKey = `${userId}:${category}`
+  const cached = _starterPool.get(cacheKey)
+  const now = Date.now()
+  if (cached && now - cached.at < STARTER_TTL_MS && cached.questions.length) {
+    return ok(res, { questions: await localiseStarters(cached.questions, lang, tenantSettings) })
+  }
+
+  // What this staff member has recently asked in this topic — so we generate
+  // fresh, related-but-different questions and avoid repeating them.
+  let recent: string[] = []
+  try {
+    const rows = await (prisma as any).queryRecord.findMany({
+      where:  { tenant_id: tenantId, user_id: userId, channel: 'chat' },
+      select: { query_text: true },
+      orderBy: { created_at: 'desc' },
+      take: 20,
+    })
+    recent = [...new Set((rows as any[]).map(r => String(r.query_text || '').trim()).filter(Boolean))].slice(0, 15)
+  } catch { /* history is best-effort */ }
+
+  let pool: string[] = []
+  try {
+    const sys = 'You write short, natural starter questions that a care-sector staff member might tap to begin a chat with an internal knowledge assistant. Return ONLY a JSON array of strings.'
+    const recentBlock = recent.length
+      ? `\n\nThey have recently asked these (do NOT repeat them, but you may explore related themes they seem interested in):\n- ${recent.join('\n- ')}`
+      : ''
+    const user = [
+      `Write 6 starter questions for a "${role}" working at a ${setting}, about ${CATEGORY_TOPIC[category] ?? 'their work'}.`,
+      `Make them genuinely relevant to that job role's day-to-day responsibilities and realistic questions they'd actually ask.`,
+      `Keep each under 14 words, practical and specific (not generic). Vary the topics so the set feels fresh.`,
+      recentBlock,
+      `Return ONLY a JSON array of 6 strings in English.`,
+    ].filter(Boolean).join('\n')
+    const raw = await callClaude(sys, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 500, temperature: 0.8 })
+    const start = raw.indexOf('['), end = raw.lastIndexOf(']')
+    const arr = JSON.parse(raw.slice(start, end + 1))
+    pool = Array.isArray(arr) ? arr.filter((q: any) => typeof q === 'string' && q.trim()).map((q: string) => q.trim()).slice(0, 6) : []
+  } catch (e) {
+    console.error('[query/starters] generation failed:', e)
+  }
+
+  if (pool.length < 3) pool = fallback
+  _starterPool.set(cacheKey, { at: now, questions: pool })
+
+  ok(res, { questions: await localiseStarters(pool, lang, tenantSettings) })
+})
+
+async function localiseStarters(questions: string[], lang: string, tenantSettings: any): Promise<string[]> {
+  if (!lang || lang === 'eng') return questions
+  try {
+    return await translateTextsBatch(questions, lang, languageNameForCode(lang, tenantSettings?.custom_languages), tenantSettings?.translation_glossary)
+  } catch { return questions }
+}
 
 // ─── POST /query/translate ────────────────────────────────────────────────────
 // Re-render an already-generated chat answer in another language. Used by the hub

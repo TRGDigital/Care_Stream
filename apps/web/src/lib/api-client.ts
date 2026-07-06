@@ -175,6 +175,9 @@ export function createApiClient(token: string) {
       // Translate the starter questions into the staff member's first language.
       suggested: (questions: string[]) =>
         apiFetch<{ questions: string[] }>('/query/suggested', token, { method: 'POST', body: JSON.stringify({ questions }) }),
+      // Role-linked, rotating starter questions for a new chat in the given topic.
+      starters: (category: string) =>
+        apiFetch<{ questions: string[] }>(`/query/starters?category=${encodeURIComponent(category)}`, token),
       // Re-render an already-generated answer in another language (for the chat
       // language toggle) — works both directions, including back to English.
       translate: (html: string, language: string) =>

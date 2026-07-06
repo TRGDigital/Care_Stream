@@ -6,7 +6,7 @@
 // Features: suggested queries, typing indicator, collapsible citations,
 //           language chip for non-English responses, localStorage session history.
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, Suspense } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
@@ -474,17 +474,19 @@ function ChatPageInner() {
       .catch(() => { /* falls back to auto-detect */ })
   }, [session?.accessToken, userId])
 
-  // Translate the starter questions into the staff member's first language (cached
-  // server-side, so this is cheap). English-default staff keep the English defaults.
+  // Role-linked starter questions for the chosen topic: generated from the staff
+  // member's job role + what they've recently asked, returned in their language.
+  // The server returns a small pool (cached briefly); the client rotates which few
+  // are shown per new chat, so they aren't always the same. Falls back to the
+  // static defaults if generation is unavailable.
   useEffect(() => {
-    if (!category || !session?.accessToken || !firstLang || firstLang === 'eng') return
-    const key = `${firstLang}:${category}`
-    if (startersFetched.current.has(key)) return
-    startersFetched.current.add(key)
-    createApiClient(session.accessToken).query.suggested(SUGGESTED[category])
+    if (!category || !session?.accessToken) return
+    if (startersFetched.current.has(category)) return
+    startersFetched.current.add(category)
+    createApiClient(session.accessToken).query.starters(category)
       .then(d => { if (Array.isArray(d.questions) && d.questions.length) setLocalizedStarters(prev => ({ ...prev, [category]: d.questions })) })
-      .catch(() => { startersFetched.current.delete(key) })
-  }, [category, firstLang, session?.accessToken])
+      .catch(() => { startersFetched.current.delete(category) })
+  }, [category, session?.accessToken])
 
 
   // Sidebar badge counts — shown instantly from a localStorage cache, then
@@ -1156,7 +1158,7 @@ function ChatPageInner() {
           ) : pinnedPolicy && isEmpty ? (
             <PolicyChatIntro title={pinnedPolicy.title} questions={policyQuestions} onSelect={sendMessage} />
           ) : isEmpty ? (
-            <EmptyState category={category} onSelect={sendMessage} questions={localizedStarters[category]} />
+            <EmptyState category={category} onSelect={sendMessage} questions={localizedStarters[category]} rotateKey={sessionId} />
           ) : (
             <div className="mx-auto max-w-6xl space-y-6">
               {messages.map(msg => (
@@ -1375,9 +1377,18 @@ function CategorySelect({ onSelect, available }: { onSelect: (c: DocumentCategor
   )
 }
 
-function EmptyState({ category, onSelect, questions }: { category: DocumentCategory; onSelect: (q: string) => void; questions?: string[] }) {
+function EmptyState({ category, onSelect, questions, rotateKey }: { category: DocumentCategory; onSelect: (q: string) => void; questions?: string[]; rotateKey?: string }) {
   const label = CATEGORY_LABELS[category]
-  const starters = questions && questions.length ? questions : SUGGESTED[category]
+  const pool = questions && questions.length ? questions : SUGGESTED[category]
+  // Show up to 3, rotating which ones per new chat (rotateKey changes each time),
+  // so a returning staff member isn't shown the same prompts every time.
+  const starters = useMemo(() => {
+    if (pool.length <= 3) return pool
+    const arr = [...pool]
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]] }
+    return arr.slice(0, 3)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool, rotateKey])
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 text-center">
       <div>

@@ -1596,6 +1596,9 @@ function ChannelRoutingMap() {
           detail="The last 10 messages are trimmed and sent as conversationHistory. Claude maintains context across follow-up questions within the same session. Sessions persist in localStorage (up to 50 per user)." />
         <RoutingStep num={4} title="Response + suggested follow-up questions" color="gray"
           detail="Claude appends <!--FOLLOWUP:[...]-->  to its response. The API strips this before delivery and returns suggestedQuestions. Thumbs up/down feedback is recorded per query." />
+        <div className="mt-1 rounded-lg border border-teal/20 bg-teal-light/20 px-3 py-2 text-xs text-teal">
+          <strong>New-chat starter questions (role-linked + rotating):</strong> <span className="text-neutral-dark">GET <code className="font-mono">/query/starters?category=</code> generates a pool of 6 prompts per (user, category) via Haiku (temp 0.8), seeded with the staff member&rsquo;s <code className="font-mono">job_role</code> + <code className="font-mono">facility_type</code> + their last ~15 chat queries (from the <code className="font-mono">queries</code> table) so prompts stay relevant and don&rsquo;t repeat. Pool cached in-memory 30 min per (user, category); localised via translateTextsBatch (glossary/overrides applied). Client (EmptyState) shows a random 3 from the pool, re-rolled on each new chat via sessionId. Falls back to the static SUGGESTED defaults if generation fails or the user has no job role.</span>
+        </div>
         <div className="mt-1 space-y-1.5">
           <div className="rounded-lg border border-teal/20 bg-teal-light/20 px-3 py-2 text-xs text-teal">
             <strong>Auditing category:</strong> Uses completed AuditRun.ai_recommendations from Postgres as context — no Pinecone search. Fetches up to 6 most recent completed audits for the tenant. Prompt slot: <code className="font-mono">audit_report_chat</code>.

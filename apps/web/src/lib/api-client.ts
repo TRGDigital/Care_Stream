@@ -692,8 +692,8 @@ export function createApiClient(token: string) {
         apiFetch<{ deliveries: any[] }>('/cqc-questions/deliveries', token),
       myDeliveries: (lang?: '2') =>
         apiFetch<{ deliveries: any[]; lang_code?: string; can_suggest?: boolean }>(`/cqc-questions/my-deliveries${lang ? `?lang=${lang}` : ''}`, token),
-      submitAnswer: (deliveryId: string, answer_text: string) =>
-        apiFetch<{ delivery: any; score: number; feedback: string; model_answer: string | null }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text }) }),
+      submitAnswer: (deliveryId: string, answer_text: string, lang?: '2') =>
+        apiFetch<{ delivery: any; score: number; feedback: string; model_answer: string | null }>(`/cqc-questions/deliveries/${deliveryId}/answer`, token, { method: 'POST', body: JSON.stringify({ answer_text, ...(lang ? { lang } : {}) }) }),
     },
 
     featureRequests: {

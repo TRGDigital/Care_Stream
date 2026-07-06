@@ -595,13 +595,15 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
       },
     })
 
-    // Show the feedback in the staff member's language right away (the stored copy
-    // stays English so the admin Performance view is consistent).
+    // Show the feedback in the language the staff member is currently reading in
+    // (their first language, or their second language when they've flipped this
+    // question via ?lang=2). The stored copy stays English so the admin Performance
+    // view is consistent.
     let outFeedback = feedback
     let outModelAnswer = delivery.question.model_answer as string | null
     try {
       const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } })
-      const lang = u?.comms_always_first_language === false ? 'eng' : ((u?.first_language as string) ?? 'eng')
+      const { code: lang } = hubContentLang(u, { lang: req.body?.lang }, undefined)
       if (lang !== 'eng') {
         const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null)
         const langName = languageNameForCode(lang, tenant?.custom_languages)

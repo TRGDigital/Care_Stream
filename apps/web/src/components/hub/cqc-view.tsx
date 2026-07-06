@@ -73,10 +73,11 @@ function groupByDomain(list: Delivery[]): Array<[string, Delivery[]]> {
 
 // ─── Answer Form ──────────────────────────────────────────────────────────────
 
-function AnswerForm({ delivery, token, onAnswered }: {
+function AnswerForm({ delivery, token, onAnswered, lang }: {
   delivery:   Delivery
   token:      string
   onAnswered: (updated: Delivery) => void
+  lang?:      '2'
 }) {
   const [answer, setAnswer]   = useState('')
   const [submitting, setSub]  = useState(false)
@@ -87,7 +88,7 @@ function AnswerForm({ delivery, token, onAnswered }: {
     setSub(true); setError('')
     try {
       const api = createApiClient(token)
-      const res = await api.cqcQuestions.submitAnswer(delivery.id, answer)
+      const res = await api.cqcQuestions.submitAnswer(delivery.id, answer, lang)
       onAnswered({ ...delivery, ...res.delivery, score: res.score, feedback: res.feedback, question: { ...delivery.question, model_answer: res.model_answer } })
     } catch (e: any) {
       setError(e.message)
@@ -129,11 +130,12 @@ function AnswerForm({ delivery, token, onAnswered }: {
 
 // ─── Result Card ──────────────────────────────────────────────────────────────
 
-function ResultCard({ delivery, token, onUpdated, showRating = false }: {
+function ResultCard({ delivery, token, onUpdated, showRating = false, lang }: {
   delivery:  Delivery
   token:     string
   onUpdated: (updated: Delivery) => void
   showRating?: boolean
+  lang?:     '2'
 }) {
   const score = delivery.score ?? 0
   const [retrying, setRetrying]   = useState(false)
@@ -147,7 +149,7 @@ function ResultCard({ delivery, token, onUpdated, showRating = false }: {
     try {
       const api = createApiClient(token)
       await api.cqcQuestions.retry(delivery.id)
-      const res = await api.cqcQuestions.submitAnswer(delivery.id, answer)
+      const res = await api.cqcQuestions.submitAnswer(delivery.id, answer, lang)
       onUpdated({
         ...delivery,
         answer_text: res.delivery?.answer_text ?? answer,
@@ -287,11 +289,17 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
     if (!langById[id]) { ensureSecond(); createApiClient(token).me.recordLanguageSwitch({ area: 'cqc' }).catch(() => {}) }
     setLangById(m => ({ ...m, [id]: !m[id] }))
   }
-  // Flip just the question text + model answer into the 2nd language; keep the
-  // learner's own answer, feedback, score and status from the live record.
+  // Flip the question text, model answer AND feedback into the 2nd language; keep
+  // the learner's own answer, score and status from the live record. Feedback only
+  // swaps when the 2nd-language copy actually has it (i.e. already evaluated).
   function viewD(d: Delivery): Delivery {
     const s = langById[d.id] ? second?.[d.id] : null
-    return s ? { ...d, rephrased_q: s.rephrased_q, question: { ...d.question, model_answer: s.question?.model_answer ?? d.question?.model_answer } } : d
+    return s ? {
+      ...d,
+      rephrased_q: s.rephrased_q,
+      feedback:    d.feedback ? (s.feedback || d.feedback) : d.feedback,
+      question:    { ...d.question, model_answer: s.question?.model_answer ?? d.question?.model_answer },
+    } : d
   }
   // "Suggest a better translation" for a delivery — against whichever language is
   // on screen (1st, or the flipped 2nd language). Question + model answer only
@@ -432,7 +440,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                             {expanded === d.id && (
                               <div className="pb-4">
                                 <QLangToggle id={d.id} />
-                                <AnswerForm delivery={d} token={token}
+                                <AnswerForm delivery={d} token={token} lang={langById[d.id] ? '2' : undefined}
                                   onAnswered={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); setExpanded(null); onChange?.() }} />
                                 {suggestFor(d)}
                               </div>
@@ -489,8 +497,15 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                             {expanded === d.id && (
                               <div className="pb-4">
                                 <QLangToggle id={d.id} />
-                                <ResultCard delivery={viewD(d)} token={token} showRating={freshlyAnswered.has(d.id)}
-                                  onUpdated={updated => { setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x)); setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.() }} />
+                                <ResultCard delivery={viewD(d)} token={token} showRating={freshlyAnswered.has(d.id)} lang={langById[d.id] ? '2' : undefined}
+                                  onUpdated={updated => {
+                                    setDeliveries(ds => ds.map(x => x.id === updated.id ? updated : x))
+                                    // If answered while flipped, the returned feedback/model answer are in
+                                    // the 2nd language — keep the cached 2nd-language copy fresh so viewD
+                                    // doesn't show the pre-retry translation.
+                                    if (langById[updated.id]) setSecond(prev => (prev && prev[updated.id]) ? { ...prev, [updated.id]: { ...prev[updated.id], feedback: updated.feedback, question: { ...prev[updated.id].question, model_answer: updated.question?.model_answer ?? prev[updated.id].question?.model_answer } } } : prev)
+                                    setFreshlyAnswered(p => new Set(p).add(updated.id)); onChange?.()
+                                  }} />
                                 {suggestFor(d)}
                               </div>
                             )}

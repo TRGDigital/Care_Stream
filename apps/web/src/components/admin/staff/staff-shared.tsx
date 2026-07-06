@@ -6,8 +6,51 @@
 import { useState } from 'react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
-import { Check, Copy, Loader2, Mail } from 'lucide-react'
+import { Check, Copy, Loader2, Mail, Plus, X } from 'lucide-react'
 import { InfoTip } from '@/components/info-tip'
+
+// Sentinel value used by the Position / Specialist dropdowns for the
+// "+ Add a new …" option.
+export const ADD_NEW_ROLE = '__add_new_role__'
+
+// Inline free-text field shown when a tenant picks "+ Add a new …". Trims,
+// blocks duplicates (case-insensitive), Enter to add / Escape to cancel.
+export function InlineAddRole({ placeholder, existing, onAdd, onCancel, busy }: {
+  placeholder: string
+  existing: string[]
+  onAdd: (value: string) => void
+  onCancel: () => void
+  busy?: boolean
+}) {
+  const [val, setVal] = useState('')
+  const [err, setErr] = useState('')
+  function submit() {
+    const v = val.trim()
+    if (!v) return
+    if (existing.some(r => r.toLowerCase() === v.toLowerCase())) { setErr('That already exists.'); return }
+    onAdd(v)
+  }
+  return (
+    <div className="mt-1.5">
+      <div className="flex gap-1.5">
+        <input
+          autoFocus
+          value={val}
+          onChange={e => { setVal(e.target.value); setErr('') }}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } if (e.key === 'Escape') onCancel() }}
+          placeholder={placeholder}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+        />
+        <button type="button" onClick={submit} disabled={busy || !val.trim()}
+          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-teal px-3 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Add
+        </button>
+        <button type="button" onClick={onCancel} className="inline-flex shrink-0 items-center rounded-md border border-gray-300 px-2.5 py-2 text-sm text-neutral-mid hover:text-neutral-dark" title="Cancel"><X size={14} /></button>
+      </div>
+      {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+    </div>
+  )
+}
 
 // ─── Language options ─────────────────────────────────────────────────────────
 

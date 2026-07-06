@@ -15,6 +15,8 @@ import {
   SuggestTranslationsToggle,
   CredentialsPanel,
   InitialAvatar,
+  InlineAddRole,
+  ADD_NEW_ROLE,
   fmtDate,
   langNameOf,
 } from './staff-shared'
@@ -445,6 +447,8 @@ export function InviteModal({
   languages,
   languageCatalog,
   onLanguagesChange,
+  onStaffRolesChange,
+  onSpecialistRolesChange,
   onClose,
   onInvited,
 }: {
@@ -454,6 +458,8 @@ export function InviteModal({
   languages:       { code: string; name: string }[]
   languageCatalog?: { code: string; name: string }[]
   onLanguagesChange?: (langs: { code: string; name: string }[]) => void
+  onStaffRolesChange?: (roles: string[]) => void
+  onSpecialistRolesChange?: (roles: string[]) => void
   onClose:         () => void
   onInvited:       () => void
 }) {
@@ -464,7 +470,29 @@ export function InviteModal({
   const [auditIds,  setAuditIds]  = useState<string[]>([])
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
+  const [addingRole, setAddingRole]       = useState(false)
+  const [addingSpecialist, setAddingSpecialist] = useState(false)
+  const [savingRole, setSavingRole]       = useState(false)
   const [commsFirstLang, setCommsFirstLang] = useState(true)
+
+  // Persist a new position to Settings (staff_roles) and select it here.
+  async function addStaffRole(name: string) {
+    setSavingRole(true)
+    try {
+      const data = await createApiClient(token).settings.update({ staff_roles: [...new Set([...staffRoles, name])] })
+      if ((data as any).staff_roles) onStaffRolesChange?.((data as any).staff_roles)
+      setForm(f => ({ ...f, job_role: name })); setAddingRole(false)
+    } finally { setSavingRole(false) }
+  }
+  // Persist a new specialist role to Settings and add it to this staff member.
+  async function addSpecialistRole(name: string) {
+    setSavingRole(true)
+    try {
+      const data = await createApiClient(token).settings.update({ specialist_roles: [...new Set([...specialistRoles, name])] })
+      if ((data as any).specialist_roles) onSpecialistRolesChange?.((data as any).specialist_roles)
+      setSpecialisms(prev => [...new Set([...prev, name])]); setAddingSpecialist(false)
+    } finally { setSavingRole(false) }
+  }
   const [allowSwitch, setAllowSwitch] = useState(false)
   const [error,     setError]     = useState('')
   const [loading,   setLoading]   = useState(false)
@@ -543,13 +571,18 @@ export function InviteModal({
                 <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
                 <select
                   value={form.job_role}
-                  onChange={update('job_role')}
+                  onChange={e => { if (e.target.value === ADD_NEW_ROLE) { setAddingRole(true) } else { setForm(f => ({ ...f, job_role: e.target.value })); setAddingRole(false) } }}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                 >
                   <option value="">— select a position —</option>
                   {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value={ADD_NEW_ROLE}>＋ Add a new position…</option>
                 </select>
-                <p className="mt-1 text-xs text-neutral-mid">Drives their onboarding &amp; training. Add more positions in Settings.</p>
+                {addingRole && (
+                  <InlineAddRole placeholder="e.g. Activities Coordinator" existing={staffRoles} busy={savingRole}
+                    onAdd={addStaffRole} onCancel={() => setAddingRole(false)} />
+                )}
+                <p className="mt-1 text-xs text-neutral-mid">Drives their onboarding &amp; training. New positions are saved to Settings too.</p>
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Staff type</label>
@@ -626,13 +659,18 @@ export function InviteModal({
                   )}
                   <select
                     value=""
-                    onChange={e => { if (e.target.value) setSpecialisms(prev => [...new Set([...prev, e.target.value])]) }}
+                    onChange={e => { if (e.target.value === ADD_NEW_ROLE) { setAddingSpecialist(true) } else if (e.target.value) { setSpecialisms(prev => [...new Set([...prev, e.target.value])]) } }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
                   >
                     <option value="">— add a specialist role —</option>
                     {specialistRoles.filter(r => !specialisms.includes(r)).map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value={ADD_NEW_ROLE}>＋ Add a new specialist role…</option>
                   </select>
-                  <p className="mt-1 text-xs text-neutral-mid">Adds the matching specialist onboarding/training. Add more in Settings.</p>
+                  {addingSpecialist && (
+                    <InlineAddRole placeholder="e.g. Dementia Lead" existing={specialistRoles} busy={savingRole}
+                      onAdd={addSpecialistRole} onCancel={() => setAddingSpecialist(false)} />
+                  )}
+                  <p className="mt-1 text-xs text-neutral-mid">Adds the matching specialist onboarding/training. New roles are saved to Settings too.</p>
                 </div>
               )}
             </div>
@@ -724,6 +762,8 @@ export function EditModal({
   languages,
   languageCatalog,
   onLanguagesChange,
+  onStaffRolesChange,
+  onSpecialistRolesChange,
   onClose,
   onSaved,
 }: {
@@ -734,6 +774,8 @@ export function EditModal({
   languages:       { code: string; name: string }[]
   languageCatalog?: { code: string; name: string }[]
   onLanguagesChange?: (langs: { code: string; name: string }[]) => void
+  onStaffRolesChange?: (roles: string[]) => void
+  onSpecialistRolesChange?: (roles: string[]) => void
   onClose:         () => void
   onSaved:         (updated: any) => void
 }) {
@@ -752,8 +794,30 @@ export function EditModal({
   const [commsFirstLang, setCommsFirstLang] = useState<boolean>(user.comms_always_first_language !== false)
   const [allowSwitch, setAllowSwitch] = useState<boolean>((user as any).allow_language_switching === true)
   const [canSuggest, setCanSuggest] = useState<boolean>((user as any).can_suggest_translations === true)
+  const [addingRole, setAddingRole]       = useState(false)
+  const [addingSpecialist, setAddingSpecialist] = useState(false)
+  const [savingRole, setSavingRole]       = useState(false)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Persist a new position to Settings (staff_roles) and select it here.
+  async function addStaffRole(name: string) {
+    setSavingRole(true)
+    try {
+      const data = await createApiClient(token).settings.update({ staff_roles: [...new Set([...staffRoles, name])] })
+      if ((data as any).staff_roles) onStaffRolesChange?.((data as any).staff_roles)
+      setForm(f => ({ ...f, job_role: name })); setAddingRole(false)
+    } finally { setSavingRole(false) }
+  }
+  // Persist a new specialist role to Settings and add it to this staff member.
+  async function addSpecialistRole(name: string) {
+    setSavingRole(true)
+    try {
+      const data = await createApiClient(token).settings.update({ specialist_roles: [...new Set([...specialistRoles, name])] })
+      if ((data as any).specialist_roles) onSpecialistRolesChange?.((data as any).specialist_roles)
+      setSpecialisms(prev => [...new Set([...prev, name])]); setAddingSpecialist(false)
+    } finally { setSavingRole(false) }
+  }
 
   function update(k: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -806,12 +870,17 @@ export function EditModal({
             <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Position</label>
             <select
               value={form.job_role}
-              onChange={update('job_role')}
+              onChange={e => { if (e.target.value === ADD_NEW_ROLE) { setAddingRole(true) } else { setForm(f => ({ ...f, job_role: e.target.value })); setAddingRole(false) } }}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
             >
               <option value="">— select a position —</option>
               {staffRoles.map(r => <option key={r} value={r}>{r}</option>)}
+              <option value={ADD_NEW_ROLE}>＋ Add a new position…</option>
             </select>
+            {addingRole && (
+              <InlineAddRole placeholder="e.g. Activities Coordinator" existing={staffRoles} busy={savingRole}
+                onAdd={addStaffRole} onCancel={() => setAddingRole(false)} />
+            )}
           </div>
 
           <div>
@@ -862,11 +931,16 @@ export function EditModal({
                     ))}
                   </div>
                 )}
-                <select value="" onChange={e => { if (e.target.value) setSpecialisms(prev => [...new Set([...prev, e.target.value])]) }}
+                <select value="" onChange={e => { if (e.target.value === ADD_NEW_ROLE) { setAddingSpecialist(true) } else if (e.target.value) { setSpecialisms(prev => [...new Set([...prev, e.target.value])]) } }}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20">
                   <option value="">— add a specialist role —</option>
                   {specialistRoles.filter(r => !specialisms.includes(r)).map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value={ADD_NEW_ROLE}>＋ Add a new specialist role…</option>
                 </select>
+                {addingSpecialist && (
+                  <InlineAddRole placeholder="e.g. Dementia Lead" existing={specialistRoles} busy={savingRole}
+                    onAdd={addSpecialistRole} onCancel={() => setAddingSpecialist(false)} />
+                )}
               </div>
             )}
           </div>

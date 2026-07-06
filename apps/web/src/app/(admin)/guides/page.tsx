@@ -255,6 +255,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             Both lists are managed in <strong>Settings → Positions</strong> and <strong>Settings → Specialist roles</strong>. The standard care/nursing positions and specialisms are already there; add any extras specific to your home and they'll appear in the dropdowns straight away.
           </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            You can also add one <strong>without leaving the staff form</strong>: in the <strong>Position</strong> or <strong>Specialist role</strong> dropdown (when adding or editing a staff member) choose <strong>&ldquo;＋ Add a new position&rdquo;</strong> (or <strong>&ldquo;＋ Add a new specialist role&rdquo;</strong>), type the new one and click <strong>Add</strong>. It's selected for that staff member <em>and</em> saved to your <strong>Settings</strong> list, so it's available for everyone from then on, no need to go to Settings first.
+          </p>
         </SectionBlock>
         <SectionBlock title="Language preferences">
           <p className="text-sm text-neutral-mid">

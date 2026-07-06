@@ -274,6 +274,8 @@ export default function StaffPage() {
           languages={languages}
           languageCatalog={catalog}
           onLanguagesChange={setLanguages}
+          onStaffRolesChange={setStaffRoles}
+          onSpecialistRolesChange={setSpecialistRoles}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
         />
@@ -289,6 +291,8 @@ export default function StaffPage() {
           languages={languages}
           languageCatalog={catalog}
           onLanguagesChange={setLanguages}
+          onStaffRolesChange={setStaffRoles}
+          onSpecialistRolesChange={setSpecialistRoles}
           onClose={() => setEditUser(null)}
           onSaved={(updated: any) => {
             setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))

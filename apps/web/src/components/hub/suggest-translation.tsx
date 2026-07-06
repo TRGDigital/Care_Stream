@@ -38,7 +38,10 @@ export function InlineEditableText({ token, langCode, contextLabel, source, curr
   const [done, setDone] = useState<'pending' | 'approved' | null>(null)
   const [err, setErr] = useState('')
 
-  if (!canEdit) return <p className={className}>{current}</p>
+  // Use only phrasing-content elements (span) so the control is valid inside a
+  // <p>/<li> and never gets auto-closed. `block`/`flex` come from CSS, so the edit
+  // panel still expands to the full width of its container.
+  if (!canEdit) return <span className={className}>{current}</span>
 
   async function save() {
     if (!val.trim() || val.trim() === current) { setEditing(false); return }
@@ -55,20 +58,21 @@ export function InlineEditableText({ token, langCode, contextLabel, source, curr
 
   if (editing) {
     return (
-      <div className="rounded-lg border border-teal/40 bg-teal-light/10 p-2">
-        <textarea autoFocus value={val} onChange={e => setVal(e.target.value)} rows={Math.min(8, Math.max(2, Math.ceil(val.length / 60)))}
-          className={`w-full rounded border border-gray-200 px-2 py-1 focus:border-teal focus:outline-none ${className}`} />
-        {err && <p className="mt-1 text-[11px] text-red-600">{err}</p>}
-        <div className="mt-1 flex items-center justify-end gap-2">
-          <button type="button" onClick={() => { setEditing(false); setVal(current) }} className="inline-flex items-center gap-1 text-[11px] text-neutral-mid hover:text-neutral-dark"><X size={11} /> Cancel</button>
-          <button type="button" onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1 text-[11px] font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Send</button>
-        </div>
-      </div>
+      <span className="mt-1 block w-full min-w-0 flex-1 rounded-lg border border-teal/40 bg-teal-light/10 p-3 not-italic">
+        <span className="mb-1.5 block text-[11px] font-semibold text-teal">Improve this translation</span>
+        <textarea autoFocus value={val} onChange={e => setVal(e.target.value)} rows={Math.min(12, Math.max(4, Math.ceil((val.length || 1) / 55)))}
+          className="block w-full resize-y rounded border border-gray-200 px-3 py-2 text-sm leading-relaxed text-neutral-dark focus:border-teal focus:outline-none" />
+        {err && <span className="mt-1 block text-[11px] text-red-600">{err}</span>}
+        <span className="mt-2 flex items-center justify-end gap-2">
+          <button type="button" onClick={() => { setEditing(false); setVal(current) }} className="inline-flex items-center gap-1 text-xs text-neutral-mid hover:text-neutral-dark"><X size={12} /> Cancel</button>
+          <button type="button" onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Send</button>
+        </span>
+      </span>
     )
   }
 
   return (
-    <span className="group/edit relative inline">
+    <span className="group/edit">
       <span className={className}>{done ? val : current}</span>
       {done ? (
         <span className="ml-1.5 whitespace-nowrap text-[11px] font-medium text-teal">{done === 'approved' ? '✓ now live' : '✓ sent for approval'}</span>
@@ -127,22 +131,25 @@ export function SuggestTranslation({ token, langCode, contextLabel, fields }: {
     )
   }
   return (
-    <div className="mt-2 rounded-lg border border-teal/30 bg-teal-light/10 p-3">
-      <p className="mb-1.5 text-[11px] font-semibold text-teal">Improve this translation</p>
+    <div className="mt-2 w-full rounded-lg border border-teal/30 bg-teal-light/10 p-4">
+      <p className="mb-2.5 text-xs font-semibold text-teal">Improve this translation</p>
       {usable.map((f, i) => (
-        <div key={i} className="mb-2">
-          <label className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-neutral-mid">{f.label}</label>
+        <div key={i} className="mb-3">
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-neutral-mid">{f.label}</label>
           {f.multiline ? (
-            <textarea value={vals[i]} onChange={e => setVals(prev => prev.map((x, xi) => xi === i ? e.target.value : x))} rows={3} className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+            <textarea value={vals[i]} onChange={e => setVals(prev => prev.map((x, xi) => xi === i ? e.target.value : x))}
+              rows={Math.min(10, Math.max(3, Math.ceil(((vals[i] || '').length || 1) / 55)))}
+              className="block w-full resize-y rounded-md border border-gray-200 px-3 py-2 text-sm leading-relaxed text-neutral-dark focus:border-teal focus:outline-none" />
           ) : (
-            <input value={vals[i]} onChange={e => setVals(prev => prev.map((x, xi) => xi === i ? e.target.value : x))} className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+            <input value={vals[i]} onChange={e => setVals(prev => prev.map((x, xi) => xi === i ? e.target.value : x))}
+              className="block w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none" />
           )}
         </div>
       ))}
-      {err && <p className="mb-1 text-[11px] text-red-600">{err}</p>}
+      {err && <p className="mb-1.5 text-xs text-red-600">{err}</p>}
       <div className="mt-1 flex items-center justify-end gap-2">
-        <button type="button" onClick={() => setOpen(false)} className="text-[11px] text-neutral-mid hover:text-neutral-dark">Cancel</button>
-        <button type="button" onClick={submit} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1 text-[11px] font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={11} className="animate-spin" /> : null} Send</button>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-neutral-mid hover:text-neutral-dark">Cancel</button>
+        <button type="button" onClick={submit} disabled={busy} className="inline-flex items-center gap-1 rounded-lg bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{busy ? <Loader2 size={12} className="animate-spin" /> : null} Send</button>
       </div>
     </div>
   )

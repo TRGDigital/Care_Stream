@@ -262,6 +262,8 @@ export function createApiClient(token: string) {
         apiFetch<{ notes: Array<{ id: string; name: string; matched_name: string; content_pct: number | null }> }>('/policies/similar-named', token),
       dismissSimilarNamed: (id: string) =>
         apiFetch<{ dismissed: boolean }>(`/policies/${id}/similar-named/dismiss`, token, { method: 'POST' }),
+      backfillSignatures: (limit = 40) =>
+        apiFetch<{ done: number; remaining: number }>('/policies/backfill-signatures', token, { method: 'POST', body: JSON.stringify({ limit }) }),
     },
 
     users: {

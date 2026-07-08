@@ -9,10 +9,31 @@ import { contentSignature, contentSimilarity, asSignature, DUPLICATE_THRESHOLD }
 
 export { contentSignature, DUPLICATE_THRESHOLD }
 
-// Cap on how many existing policies we'll backfill a signature for in one pass, so
-// detection stays bounded on very large libraries. Over successive uploads the
-// whole library gets backfilled; a manual rebuild is also available.
-const BACKFILL_CAP = 150
+// Ingestion runs INLINE on serverless, so the upload response waits for detection.
+// Keep the inline backfill small so uploads stay fast; the rest of the library is
+// warmed separately via backfillSignatures() (a background loop from the Policies
+// page), so coverage builds without ever blocking an upload.
+const INLINE_BACKFILL_CAP = 25
+
+// Backfill content signatures for a tenant's active policies that don't have one
+// yet (uploaded before the feature). Bounded; returns how many remain so a caller
+// can loop. Pure hashing — no AI cost.
+export async function backfillSignatures(tenantId: string, limit: number): Promise<{ done: number; remaining: number }> {
+  const rows = await (prisma as any).policy.findMany({
+    where:  { tenant_id: tenantId, status: 'active' },
+    select: { id: true, content_signature: true },
+  }) as Array<{ id: string; content_signature: unknown }>
+  const pending = rows.filter(r => !asSignature(r.content_signature)).map(r => r.id)
+  const batch = pending.slice(0, limit)
+  let done = 0
+  await mapPool(batch, 6, async (id) => {
+    const text = await downloadExtractedText(tenantId, id).catch(() => null)
+    if (!text) return
+    await (prisma as any).policy.update({ where: { id }, data: { content_signature: contentSignature(text) as any } }).catch(() => {})
+    done++
+  })
+  return { done, remaining: Math.max(0, pending.length - batch.length) }
+}
 
 // Run async work with bounded concurrency (backfill runs inline during upload).
 async function mapPool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
@@ -60,7 +81,7 @@ export async function detectContentDuplicate(opts: {
   // Backfill signatures for existing policies that don't have one yet (uploaded
   // before this feature), so a duplicate of an older policy is still caught. Runs
   // with bounded concurrency because ingestion is inline on serverless.
-  const needBackfill = candidates.filter(c => !asSignature(c.content_signature)).slice(0, BACKFILL_CAP)
+  const needBackfill = candidates.filter(c => !asSignature(c.content_signature)).slice(0, INLINE_BACKFILL_CAP)
   await mapPool(needBackfill, 6, async (c) => {
     const text = await downloadExtractedText(tenantId, c.id).catch(() => null)
     if (!text) return

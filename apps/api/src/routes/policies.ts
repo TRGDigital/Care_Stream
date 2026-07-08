@@ -8,6 +8,7 @@ import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
+import { backfillSignatures } from '../lib/policy-dedup'
 import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories'
 import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
@@ -153,6 +154,21 @@ policiesRouter.get('/duplicates', requireAdmin, async (_req: Request, res: Respo
     score: p.duplicate_score, match: byId.get(p.duplicate_of) ?? null,
   })).filter(d => d.match)   // only surface if the matched policy still exists
   ok(res, { duplicates })
+})
+
+// ─── POST /policies/backfill-signatures ───────────────────────────────────────
+// Warm content fingerprints for existing policies (uploaded before dedup) in the
+// background, decoupled from uploads so an upload never blocks on a big backfill.
+// The client loops this until remaining = 0.
+policiesRouter.post('/backfill-signatures', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const limit = Math.min(Math.max(parseInt(String(req.body?.limit ?? '40'), 10) || 40, 1), 80)
+  try {
+    const { done, remaining } = await backfillSignatures(tenantId, limit)
+    ok(res, { done, remaining })
+  } catch (e: any) {
+    err(res, 'BACKFILL_FAILED', e.message ?? 'Backfill failed', 500)
+  }
 })
 
 // ─── GET /policies/similar-named ──────────────────────────────────────────────

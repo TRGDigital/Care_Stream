@@ -501,7 +501,7 @@ function PolicyGroup({
               <col className="w-28" />
               <col className="w-20" />
               <col className="w-28" />
-              <col className="w-32" />
+              <col className="w-40" />
             </colgroup>
             <thead>
               <tr className="border-b border-gray-100 text-left">
@@ -510,7 +510,7 @@ function PolicyGroup({
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Status</th>
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Version</th>
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Uploaded</th>
-                <th className="px-6 py-4 text-xs font-medium text-neutral-mid text-right">Actions</th>
+                <th className="px-4 py-4 text-xs font-medium text-neutral-mid text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -536,13 +536,13 @@ function PolicyGroup({
                   <td className="px-6 py-4 text-neutral-mid">
                     {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : '—'}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
+                  <td className="px-4 py-4 text-right">
+                    <div className="flex flex-nowrap items-center justify-end gap-1.5">
                       {p.status === 'active' && (
                         <button
                           onClick={() => onPreview(p)}
                           title="Preview how this policy renders for staff (letterhead & footers stripped)"
-                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
                         >
                           <Eye size={13} /> Preview
                         </button>

@@ -264,6 +264,8 @@ export function createApiClient(token: string) {
         apiFetch<{ dismissed: boolean }>(`/policies/${id}/similar-named/dismiss`, token, { method: 'POST' }),
       backfillSignatures: (limit = 40) =>
         apiFetch<{ done: number; remaining: number }>('/policies/backfill-signatures', token, { method: 'POST', body: JSON.stringify({ limit }) }),
+      preview: (id: string) =>
+        apiFetch<{ policy_id: string; name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }>(`/policies/${id}/preview`, token),
     },
 
     users: {

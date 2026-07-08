@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2 } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText } from 'lucide-react'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -70,6 +70,7 @@ export default function PoliciesPage() {
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
+  const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
@@ -347,6 +348,13 @@ export default function PoliciesPage() {
           onUploaded={() => { setVersionTarget(null); setLoading(true); load(); loadDuplicates() }}
         />
       )}
+      {previewPolicy && session?.accessToken && (
+        <PolicyPreviewModal
+          token={session.accessToken}
+          policy={previewPolicy}
+          onClose={() => setPreviewPolicy(null)}
+        />
+      )}
 
       {/* Archived notice */}
       {tab === 'archived' && !loading && (
@@ -404,7 +412,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="Staff Handbooks"
@@ -414,7 +422,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="CQC Reports"
@@ -424,7 +432,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
           />
           {/* Custom categories — shown only when they actually contain documents. */}
           {Array.from(new Set(visiblePolicies.map(p => p.document_category as string)))
@@ -440,7 +448,7 @@ export default function PoliciesPage() {
                 onRetry={p => retry(p.id)}
                 onArchive={p => archive(p.id, p.name)}
                 onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
               />
             ))}
         </div>
@@ -461,6 +469,7 @@ function PolicyGroup({
   onArchive,
   onDelete,
   onToggleGeneric,
+  onPreview,
 }: {
   heading:      string
   policies:     any[]
@@ -471,6 +480,7 @@ function PolicyGroup({
   onArchive:    (p: any) => void
   onDelete:     (p: any) => void
   onToggleGeneric: (p: any) => void
+  onPreview:    (p: any) => void
 }) {
   return (
     <div className="rounded-card bg-white shadow-card">
@@ -527,14 +537,25 @@ function PolicyGroup({
                     {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <PolicyActions
-                      policy={p}
-                      onNewVersion={() => onNewVersion(p)}
-                      onRetry={() => onRetry(p)}
-                      onArchive={() => onArchive(p)}
-                      onDelete={() => onDelete(p)}
-                      onToggleGeneric={() => onToggleGeneric(p)}
-                    />
+                    <div className="flex items-center justify-end gap-1.5">
+                      {p.status === 'active' && (
+                        <button
+                          onClick={() => onPreview(p)}
+                          title="Preview how this policy renders for staff (letterhead & footers stripped)"
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                        >
+                          <Eye size={13} /> Preview
+                        </button>
+                      )}
+                      <PolicyActions
+                        policy={p}
+                        onNewVersion={() => onNewVersion(p)}
+                        onRetry={() => onRetry(p)}
+                        onArchive={() => onArchive(p)}
+                        onDelete={() => onDelete(p)}
+                        onToggleGeneric={() => onToggleGeneric(p)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -636,6 +657,69 @@ function PolicyActions({
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// ─── Policy Preview (how it renders for staff) ────────────────────────────────
+function PolicyPreviewModal({ token, policy, onClose }: {
+  token: string
+  policy: { id: string; name: string }
+  onClose: () => void
+}) {
+  const [data, setData]     = useState<{ name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean } | null>(null)
+  const [loading, setLoad]  = useState(true)
+  const [error, setError]   = useState('')
+  const [showRaw, setShowRaw] = useState(false)
+
+  useEffect(() => {
+    createApiClient(token).policies.preview(policy.id)
+      .then(setData)
+      .catch((e: any) => setError(e.message ?? 'Could not load the preview.'))
+      .finally(() => setLoad(false))
+  }, [token, policy.id])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={onClose}>
+      <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold text-neutral-dark">{policy.name}</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">How this policy looks to your staff (letterhead, contacts &amp; footers removed).</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        {data?.has_raw && (
+          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-2.5">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-medium">
+              <button onClick={() => setShowRaw(false)} className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${!showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><Eye size={12} /> As staff see it</button>
+              <button onClick={() => setShowRaw(true)} className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><FileText size={12} /> Original text</button>
+            </div>
+            {data && !data.cached && !showRaw && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-600">Rendered just now</span>}
+          </div>
+        )}
+
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+          {loading ? (
+            <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Rendering the policy…</div>
+          ) : error ? (
+            <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+          ) : !data?.has_raw ? (
+            <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">This policy isn&rsquo;t ready to preview yet{data?.status === 'processing' ? ' — it&rsquo;s still processing.' : '.'}</p>
+          ) : showRaw ? (
+            <pre className="whitespace-pre-wrap break-words rounded-lg bg-neutral-light/50 p-4 text-xs leading-relaxed text-neutral-dark">{data.raw}</pre>
+          ) : data.html ? (
+            <div className="policy-content" dangerouslySetInnerHTML={{ __html: data.html }} />
+          ) : (
+            <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">Could not render this policy. Try &ldquo;Original text&rdquo; to see the source.</p>
+          )}
+        </div>
+
+        <div className="flex justify-end border-t border-gray-100 px-6 py-3">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>
+        </div>
+      </div>
     </div>
   )
 }

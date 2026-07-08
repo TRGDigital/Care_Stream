@@ -13,7 +13,8 @@ import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories
 import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
-import { checkPolicyLimit, remainingPolicySlots, PlanLimitError } from '../lib/plan-limits'
+import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
+import { formatPolicyHtml } from '../lib/translate'
 
 export const policiesRouter = Router()
 
@@ -591,6 +592,42 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   })
 
   ok(res, { results, errors, skipped, total: files.length }, 201)
+})
+
+// ─── GET /policies/:id/preview ────────────────────────────────────────────────
+// Render a policy exactly as staff see it: the header/footer-stripped, formatted
+// English HTML (same content served in the hub / induction full-copy view), plus
+// the original extracted text so the admin can see what was removed. Uses the
+// cached formatted HTML when present; generates + caches it on demand otherwise.
+policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.params.id)
+  try {
+    const policy = await (prisma as any).policy.findFirst({
+      where: { id: policyId, tenant_id: tenantId }, select: { id: true, name: true, filename: true, status: true },
+    })
+    if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+
+    const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+
+    const cachedEng = await (prisma as any).policyTranslation.findUnique({
+      where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
+    }).catch(() => null)
+
+    let html: string | null = cachedEng?.content ?? null
+    const cached = !!html
+    if (!html && raw) {
+      html = await formatPolicyHtml(raw, 'eng')
+      if (html) {
+        await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: html } }).catch(() => {})
+        trackAiAction(tenantId, 'policy_format', policyId)
+      }
+    }
+
+    ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached, html: html ?? '', raw: raw ?? '', has_raw: !!raw })
+  } catch (e: any) {
+    err(res, 'PREVIEW_FAILED', e.message ?? 'Preview failed', 500)
+  }
 })
 
 // ─── GET /policies/:id ────────────────────────────────────────────────────────

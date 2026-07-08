@@ -218,6 +218,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
             The reverse also happens: if a new policy has a <strong>similar name</strong> to one you already have but the content is actually different (for example a &ldquo;Staff Alcohol Policy&rdquo; and an &ldquo;Alcohol &amp; Drug Use&rdquo; policy), CareStream shows a short <strong>&ldquo;checked, kept as separate policies&rdquo;</strong> note with the content match score, so you can see we compared them properly and that they&rsquo;re genuinely different documents, both worth keeping.
           </p>
         </SectionBlock>
+        <SectionBlock title="Preview how a policy reads for staff">
+          <p className="text-sm text-neutral-mid">
+            Click <strong>Preview</strong> on any active policy to see it exactly as your staff do when they open the full copy or read it in their induction, with the letterhead, address, phone/email and footers <strong>removed</strong> and the text tidied into clean, readable sections. There&rsquo;s a toggle to switch between <strong>&ldquo;As staff see it&rdquo;</strong> and the <strong>&ldquo;Original text&rdquo;</strong>, so you can check nothing important was stripped. It&rsquo;s a quick way to make sure a policy looks right before your team relies on it.
+          </p>
+        </SectionBlock>
         <Tip>If you update a policy, you can upload the new file and choose <strong>Replace</strong> when the duplicate panel appears, or use the version option on the existing policy. Either way CareStream re-indexes automatically.</Tip>
       </div>
     ),

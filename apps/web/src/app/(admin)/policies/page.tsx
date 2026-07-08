@@ -497,19 +497,19 @@ function PolicyGroup({
           <table className="w-full table-fixed text-sm">
             <colgroup>
               <col />
-              {showSection && <col className="w-44" />}
+              {showSection && <col className="w-40" />}
               <col className="w-28" />
-              <col className="w-20" />
+              <col className="w-16" />
               <col className="w-28" />
-              <col className="w-40" />
+              <col className="w-28" />
             </colgroup>
             <thead>
               <tr className="border-b border-gray-100 text-left">
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Name</th>
                 {showSection && <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Section</th>}
-                <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Status</th>
-                <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Version</th>
-                <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Uploaded</th>
+                <th className="px-3 py-4 text-xs font-medium text-neutral-mid">Status</th>
+                <th className="px-3 py-4 text-xs font-medium text-neutral-mid">Version</th>
+                <th className="px-3 py-4 text-xs font-medium text-neutral-mid">Uploaded</th>
                 <th className="px-4 py-4 text-xs font-medium text-neutral-mid text-right">Actions</th>
               </tr>
             </thead>
@@ -527,24 +527,25 @@ function PolicyGroup({
                         : <span className="text-xs italic text-neutral-mid/50">—</span>}
                     </td>
                   )}
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4">
                     <Badge variant={statusVariant(p.status)}>
                       {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4 text-neutral-mid">v{p.version}</td>
-                  <td className="px-6 py-4 text-neutral-mid">
+                  <td className="px-3 py-4 text-neutral-mid">v{p.version}</td>
+                  <td className="whitespace-nowrap px-3 py-4 text-neutral-mid">
                     {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <div className="flex flex-nowrap items-center justify-end gap-1.5">
+                    <div className="flex flex-nowrap items-center justify-end gap-1">
                       {p.status === 'active' && (
                         <button
                           onClick={() => onPreview(p)}
                           title="Preview how this policy renders for staff (letterhead & footers stripped)"
-                          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                          aria-label="Preview policy"
+                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal"
                         >
-                          <Eye size={13} /> Preview
+                          <Eye size={15} />
                         </button>
                       )}
                       <PolicyActions

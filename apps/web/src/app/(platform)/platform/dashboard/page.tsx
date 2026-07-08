@@ -2757,6 +2757,7 @@ function SystemReference() {
           </div>
         </div>
         <div className="mt-3 space-y-1">
+          <RefRow label="Policy gaps (INTERNAL)" value="Cross-setting gap analysis — /platform/policy-gaps (admin/policy-gaps route). policy-classifier.ts classifies each active policy into a canonical policy_type via Haiku (guided by SEED_POLICY_TYPES + already-seen types so names converge), stored on policies.policy_type. Peers = tenants whose facilityTypeToSetting(facility_type) matches the target's. Peer catalogue = types ≥1 peer has (minus policy_type_curation 'ignored'); missing = catalogue types the target lacks, ranked by peer coverage %. GET /:tenantId report, POST /:tenantId/classify (batched loop), POST /types/ignore. Platform-only; never shares one client's policy content with another (types + counts only). Future: write & sell the gap." />
           <RefRow label="Upload UI"          value="apps/web/src/app/(admin)/policies/page.tsx — single + bulk; bulk auto-chunks by size/count, runs a duplicate-check review step, shows per-file progress." />
           <RefRow label="Duplicate check"    value="POST /policies/check — SHA-256 + normalised-name match vs active policies. Exact dupes auto-skip; name matches prompt Replace/Keep both. content_hash column + policies_tenant_hash_idx." />
           <RefRow label="API"                value="POST /policies (single), POST /policies/bulk (≤50 files), GET /policies. apps/api/src/routes/policies.ts." />

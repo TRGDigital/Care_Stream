@@ -821,6 +821,16 @@ export function createPlatformClient(token: string) {
         adminFetch<{ changes: TranslationChange[]; counts: { total: number; pending: number; approved: number; rejected: number } }>(`/translation-changes${status ? `?status=${status}` : ''}`, token),
       remove: (id: string) => adminFetch<{ deleted: boolean }>(`/translation-changes/${id}`, token, { method: 'DELETE' }),
     },
+    policyGaps: {
+      clients: () =>
+        adminFetch<{ clients: Array<{ id: string; name: string; account_number: string; setting: string; setting_label: string; policies: number; classified: number }> }>('/policy-gaps', token),
+      classify: (tenantId: string) =>
+        adminFetch<{ classified: number; remaining: number; total: number }>(`/policy-gaps/${tenantId}/classify`, token, { method: 'POST' }),
+      report: (tenantId: string) =>
+        adminFetch<{ tenant: { id: string; name: string; setting: string; setting_label: string }; peer_count: number; unclassified: number; have: string[]; missing: Array<{ type: string; peer_count: number; peer_pct: number }> }>(`/policy-gaps/${tenantId}`, token),
+      ignoreType: (name: string, care_setting?: string | null) =>
+        adminFetch<{ ignored: boolean }>('/policy-gaps/types/ignore', token, { method: 'POST', body: JSON.stringify({ name, care_setting }) }),
+    },
   }
 }
 

@@ -355,6 +355,9 @@ model Policy {
   duplicate_of         String?                              // matched existing policy id when flagged as a possible content duplicate
   duplicate_score      Float?                               // similarity (0..1) to duplicate_of
   duplicate_status     String    @default("none")           // none | flagged | dismissed
+  policy_type          String?                              // AI-classified canonical policy type (e.g. "Annual Leave Policy") — cross-setting gap analysis
+  policy_type_confidence Float?
+  policy_type_at       DateTime?
   section              String?                              // internal-policy section/taxonomy (tenant-configurable)
   generic_onboarding   Boolean   @default(false)             // flagged as a generic onboarding policy → allocatable as a one-step onboarding flow
   tags                 Json      @default("[]")
@@ -689,6 +692,17 @@ model KnowledgeEntry {
 
 // Custom seeds added by the platform owner via the admin UI.
 // Merged with PLATFORM_KNOWLEDGE_SEEDS at runtime and seeded into every tenant.
+model PolicyTypeCuration {
+  id           String   @id @default(uuid())
+  care_setting String?
+  name         String
+  status       String   @default("ignored")   // ignored = excluded from the expected-policy catalogue
+  created_at   DateTime @default(now())
+
+  @@unique([care_setting, name])
+  @@map("policy_type_curation")
+}
+
 model PlatformGlossary {
   id         String   @id @default(uuid())
   term       String   @unique

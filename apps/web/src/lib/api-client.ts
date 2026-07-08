@@ -258,6 +258,10 @@ export function createApiClient(token: string) {
         ),
       resolveDuplicate: (id: string, action: 'keep_both' | 'replace' | 'cancel') =>
         apiFetch<{ resolved: boolean; action: string }>(`/policies/${id}/duplicate/resolve`, token, { method: 'POST', body: JSON.stringify({ action }) }),
+      similarNamed: () =>
+        apiFetch<{ notes: Array<{ id: string; name: string; matched_name: string; content_pct: number | null }> }>('/policies/similar-named', token),
+      dismissSimilarNamed: (id: string) =>
+        apiFetch<{ dismissed: boolean }>(`/policies/${id}/similar-named/dismiss`, token, { method: 'POST' }),
     },
 
     users: {

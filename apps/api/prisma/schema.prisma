@@ -355,6 +355,8 @@ model Policy {
   duplicate_of         String?                              // matched existing policy id when flagged as a possible content duplicate
   duplicate_score      Float?                               // similarity (0..1) to duplicate_of
   duplicate_status     String    @default("none")           // none | flagged | dismissed
+  similar_named_note   Json?                                // { policy_id, name, content_pct } — a similarly-named but content-distinct policy ("checked, kept separate")
+  similar_named_status String    @default("none")           // none | noted | dismissed
   policy_type          String?                              // AI-classified canonical policy type (e.g. "Annual Leave Policy") — cross-setting gap analysis
   policy_type_confidence Float?
   policy_type_at       DateTime?

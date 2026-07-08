@@ -155,6 +155,32 @@ policiesRouter.get('/duplicates', requireAdmin, async (_req: Request, res: Respo
   ok(res, { duplicates })
 })
 
+// ─── GET /policies/similar-named ──────────────────────────────────────────────
+// Policies we kept despite a similar name to an existing one (content differed) —
+// surfaced as a reassuring "we checked, these are different, both kept" note.
+policiesRouter.get('/similar-named', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const rows = await (prisma as any).policy.findMany({
+    where:   { tenant_id: tenantId, similar_named_status: 'noted', status: { in: ['active', 'processing'] } },
+    select:  { id: true, name: true, similar_named_note: true, created_at: true },
+    orderBy: { created_at: 'desc' },
+  })
+  const notes = (rows as any[]).map(p => {
+    const n = (p.similar_named_note ?? {}) as any
+    return { id: p.id, name: p.name, matched_name: n.name ?? '', content_pct: typeof n.content_pct === 'number' ? n.content_pct : null }
+  }).filter(n => n.matched_name)
+  ok(res, { notes })
+})
+
+// ─── POST /policies/:id/similar-named/dismiss ─────────────────────────────────
+policiesRouter.post('/:id/similar-named/dismiss', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const existing = await (prisma as any).policy.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+  await (prisma as any).policy.update({ where: { id: existing.id }, data: { similar_named_status: 'dismissed' } })
+  ok(res, { dismissed: true })
+})
+
 // ─── POST /policies/:id/duplicate/resolve ─────────────────────────────────────
 // Resolve a flagged content duplicate. action:
 //   keep_both — dismiss the flag, keep the new policy alongside the existing one.

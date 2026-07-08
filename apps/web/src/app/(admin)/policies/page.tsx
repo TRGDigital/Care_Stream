@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2 } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2 } from 'lucide-react'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -74,6 +74,7 @@ export default function PoliciesPage() {
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
   const [resolvingDup,   setResolvingDup]   = useState<string | null>(null)
+  const [similarNamed,   setSimilarNamed]   = useState<Array<{ id: string; name: string; matched_name: string; content_pct: number | null }>>([])
 
   function load() {
     if (!session?.accessToken) return
@@ -86,9 +87,15 @@ export default function PoliciesPage() {
 
   function loadDuplicates() {
     if (!session?.accessToken) return
-    createApiClient(session.accessToken).policies.duplicates()
-      .then(d => setDuplicates(d?.duplicates ?? []))
-      .catch(() => {})
+    const api = createApiClient(session.accessToken)
+    api.policies.duplicates().then(d => setDuplicates(d?.duplicates ?? [])).catch(() => {})
+    api.policies.similarNamed().then(d => setSimilarNamed(d?.notes ?? [])).catch(() => {})
+  }
+
+  async function dismissSimilar(id: string) {
+    if (!session?.accessToken) return
+    setSimilarNamed(prev => prev.filter(n => n.id !== id))
+    try { await createApiClient(session.accessToken).policies.dismissSimilarNamed(id) } catch { /* stays until next load */ }
   }
 
   async function resolveDuplicate(id: string, action: 'keep_both' | 'replace' | 'cancel') {
@@ -278,6 +285,34 @@ export default function PoliciesPage() {
                 <p className="mt-1.5 text-[11px] text-neutral-mid">
                   <strong>Replace</strong> archives the existing policy and keeps this one. <strong>Keep both</strong> saves them side by side. <strong>Discard</strong> archives this new upload.
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reassurance: similarly-named but content-distinct policies (checked, both kept) */}
+      {tab === 'active' && similarNamed.length > 0 && (
+        <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/20 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <CheckCircle2 size={15} className="text-teal" />
+            <p className="text-sm font-semibold text-teal">Checked for duplicates, kept as separate policies</p>
+          </div>
+          <p className="mb-3 text-xs text-neutral-mid">
+            These policies have a similar name to one you already have, so we compared their full content. They&rsquo;re <strong>different policies</strong>, not duplicates, so we&rsquo;ve kept both.
+          </p>
+          <div className="space-y-2">
+            {similarNamed.map(n => (
+              <div key={n.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-teal/10 bg-white px-3 py-2 text-sm">
+                <span className="font-medium text-neutral-dark">{n.name}</span>
+                <span className="text-xs text-neutral-mid">and</span>
+                <span className="font-medium text-neutral-dark">{n.matched_name}</span>
+                <span className="text-xs text-neutral-mid">share similar wording but are</span>
+                <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[11px] font-medium text-teal">
+                  {n.content_pct != null ? `only ${n.content_pct}% content match` : 'different content'}
+                </span>
+                <span className="text-xs text-neutral-mid">, both kept.</span>
+                <button onClick={() => dismissSimilar(n.id)} className="ml-auto text-xs font-medium text-neutral-mid hover:text-neutral-dark">Dismiss</button>
               </div>
             ))}
           </div>

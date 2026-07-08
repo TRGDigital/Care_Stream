@@ -369,6 +369,12 @@ export function FlowPreview({ api, flow, onClose, onChanged }: {
   }, [api])
 
   const policyName = (id?: string | null) => (id ? policies.find(p => p.id === id)?.name : undefined)
+  // Ready-made flows are adopted from a CareStream role template: their questions
+  // are written in CareStream's backend (saving the tenant AI costs), then matched
+  // to the tenant's own policies to read. So questions in these flows are sourced
+  // from "CareStream Sources", not the tenant's policies. A tenant's own flow shows
+  // the tenant policy each question was generated from.
+  const isReadyMade = !!flow.source_flow_id
 
   async function deleteStep(index: number) {
     setSaving(true); setErr('')
@@ -437,11 +443,13 @@ export function FlowPreview({ api, flow, onClose, onChanged }: {
                     )}
                     <p className="mt-2 text-[11px] text-neutral-mid">
                       <span className="font-medium text-neutral-dark">Source: </span>
-                      {srcName
-                        ? <>Generated from <span className="text-neutral-dark">{srcName}</span></>
-                        : s.policy_id
-                          ? 'Source policy no longer available'
-                          : 'Source not recorded'}
+                      {isReadyMade
+                        ? <span className="font-medium text-teal">CareStream Sources</span>
+                        : srcName
+                          ? <>Generated from <span className="text-neutral-dark">{srcName}</span></>
+                          : s.policy_id
+                            ? 'Source policy no longer available'
+                            : 'Source not recorded'}
                     </p>
                   </>
                 ) : (

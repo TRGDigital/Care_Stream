@@ -594,8 +594,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             On any flow in <strong>Active flows</strong>, click <strong>Preview</strong> to see the whole flow exactly as your staff work through it, each policy to read and each question with its answers (the correct one highlighted). It&rsquo;s the quickest way to sense-check a flow before you enrol anyone.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Under every question you&rsquo;ll see its <strong>source</strong>, the policy the AI generated it from (for example &ldquo;Generated from Infection Control Policy&rdquo;). Questions you typed yourself, or older ones created before this was added, show &ldquo;Source not recorded&rdquo;. This makes it easy to spot a question that isn&rsquo;t relevant to the role or your policies.
+            Under every question you&rsquo;ll see its <strong>source</strong>, which depends on the type of flow:
           </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Ready-made role flows</strong> (adopted from CareStream) show <strong className="text-teal">&ldquo;CareStream Sources&rdquo;</strong>. We write and generate those questions for you in our own system, so they cost you no AI credits. The &lsquo;read policy&rsquo; steps in these flows are still matched to <em>your</em> policies.</li>
+            <li><strong>Flows you build yourself</strong> show <strong>your own policy</strong> for each question (for example &ldquo;Generated from Infection Control Policy&rdquo;), because those questions are drawn from the policy <em>you</em> chose. A question you typed by hand, or an older one, shows &ldquo;Source not recorded&rdquo;.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">This makes it easy to see where each question came from and to spot one that isn&rsquo;t relevant to the role or your policies.</p>
           <p className="mt-2 text-sm text-neutral-mid">
             If a question or a policy step doesn&rsquo;t belong, click the <strong>×</strong> on it in the Preview and confirm, it&rsquo;s removed from the flow straight away, no need to open the full editor. For bigger changes (rewording a question, adding steps, changing answers), use <strong>Edit</strong>.
           </p>

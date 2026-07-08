@@ -8,13 +8,24 @@ import { Loader2, Trash2, Check, Download, ChevronDown, ChevronUp, AlertCircle, 
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
+// Canonical care-setting taxonomy — must match apps/api/src/lib/care-setting.ts
+// (the values the DB stores and the onboarding grounding queries by). Previously
+// this page used a legacy 4-value list (nursing_home/care_home/…) that never
+// matched the stored slugs, so every tab showed (0).
 const SETTINGS: { value: string; label: string }[] = [
-  { value: 'nursing_home', label: 'Nursing home' },
-  { value: 'care_home',    label: 'Care home' },
-  { value: 'home_care',    label: 'Home care' },
-  { value: 'other',        label: 'Other' },
+  { value: 'residential-care',      label: 'Residential Care' },
+  { value: 'nursing-homes',         label: 'Nursing Homes' },
+  { value: 'domiciliary-care',      label: 'Domiciliary Care' },
+  { value: 'live-in-care',          label: 'Live-in Care' },
+  { value: 'complex-care',          label: 'Complex Care' },
+  { value: 'shared-lives',          label: 'Shared Lives' },
+  { value: 'substance-misuse',      label: 'Substance Misuse & Rehab' },
+  { value: 'hospices',              label: 'Hospices' },
+  { value: 'independent-hospitals', label: 'Independent Hospitals' },
+  { value: 'gp-practices',          label: 'GP & Primary Care' },
+  { value: 'dental-practices',      label: 'Dental Practices' },
 ]
-const settingLabel = (v: string | null) => SETTINGS.find(s => s.value === v)?.label ?? (v ?? 'Unset')
+const settingLabel = (v: string | null) => SETTINGS.find(s => s.value === v)?.label ?? (v ?? 'Universal')
 
 export default function PolicySeedsPage() {
   const token = usePlatformAuth()
@@ -25,8 +36,8 @@ export default function PolicySeedsPage() {
   const [error,   setError]   = useState('')
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [importing, setImporting] = useState(false)
-  const [importSetting, setImportSetting] = useState('nursing_home')
-  const [settingTab, setSettingTab] = useState('nursing_home')
+  const [importSetting, setImportSetting] = useState('nursing-homes')
+  const [settingTab, setSettingTab] = useState('nursing-homes')
   const [editing, setEditing] = useState<PolicySeed | null>(null)
   const [cleaningId, setCleaningId] = useState<string | null>(null)
   const [bulkCleaning, setBulkCleaning] = useState(false)
@@ -131,10 +142,10 @@ export default function PolicySeedsPage() {
     setBulkCleaning(false)
   }
 
-  const tabSeeds = seeds.filter(s => (s.care_setting ?? 'other') === settingTab)
+  const tabSeeds = seeds.filter(s => s.care_setting === settingTab)
   const sections = Array.from(new Set(tabSeeds.map(s => s.section ?? 'Uncategorised'))).sort()
   const reviewedCount = tabSeeds.filter(s => s.reviewed).length
-  const settingCount = (v: string) => seeds.filter(s => (s.care_setting ?? 'other') === v).length
+  const settingCount = (v: string) => seeds.filter(s => s.care_setting === v).length
 
   return (
     <PlatformShell>
@@ -146,6 +157,19 @@ export default function PolicySeedsPage() {
               Anonymised reference policies used to ground onboarding question generation. Import from a real home, then review each before it&rsquo;s used.
             </p>
           </div>
+        </div>
+
+        {/* How the seeds are used */}
+        <div className="rounded-xl border border-teal/20 bg-teal-light/20 p-4">
+          <p className="text-sm font-semibold text-teal">How these policies are used</p>
+          <p className="mt-1.5 text-sm text-neutral-dark">
+            When we generate a ready-made onboarding flow for a role (Platform → Onboarding Flows → <strong>AI draft</strong>), the questions are grounded in <strong>real, anonymised policy text</strong> from these seeds, not generic guesses. For the flow&rsquo;s care setting, we pull one reviewed seed per policy area and feed those excerpts to the model so questions reflect how policies are actually written. Only <strong>reviewed</strong> seeds are used.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>Seeds are matched by <strong>care setting</strong>. If a setting has no seeds yet, generation falls back to a clinically-similar setting (ultimately Nursing Homes / Residential Care), so it never breaks, but coverage per setting means better-grounded questions.</li>
+            <li>Every identifier (home name, address, people, contact details) is stripped on import; still review each seed before relying on it.</li>
+            <li><strong>Goal:</strong> seed every care setting below so each has its own grounding. The count on each tab shows current coverage.</li>
+          </ul>
         </div>
 
         {/* Import bar */}
@@ -194,14 +218,23 @@ export default function PolicySeedsPage() {
           </div>
         ) : (
           <>
-            {/* Care-setting tabs */}
-            <div className="flex gap-1 border-b border-gray-200">
-              {SETTINGS.map(s => (
-                <button key={s.value} onClick={() => setSettingTab(s.value)}
-                  className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${settingTab === s.value ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}>
-                  {s.label} <span className="text-xs text-neutral-mid">({settingCount(s.value)})</span>
-                </button>
-              ))}
+            {/* Care-setting tabs — one per setting we ground content for. The count
+                shows coverage at a glance; the goal is to seed every setting. */}
+            <div className="flex flex-wrap gap-1.5">
+              {SETTINGS.map(s => {
+                const n = settingCount(s.value)
+                const active = settingTab === s.value
+                return (
+                  <button key={s.value} onClick={() => setSettingTab(s.value)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active ? 'border-teal bg-teal text-white'
+                      : n > 0 ? 'border-gray-200 bg-white text-neutral-dark hover:border-teal/40'
+                      : 'border-dashed border-gray-200 bg-neutral-light/40 text-neutral-mid hover:border-teal/40'}`}>
+                    {s.label}{' '}
+                    <span className={`ml-0.5 rounded-full px-1.5 text-xs ${active ? 'bg-white/20 text-white' : n > 0 ? 'bg-teal/10 text-teal' : 'bg-gray-100 text-gray-400'}`}>{n}</span>
+                  </button>
+                )
+              })}
             </div>
 
             {tabSeeds.length === 0 ? (

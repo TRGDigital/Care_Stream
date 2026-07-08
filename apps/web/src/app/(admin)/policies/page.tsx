@@ -117,26 +117,6 @@ export default function PoliciesPage() {
   useEffect(load, [session?.accessToken])
   useEffect(loadDuplicates, [session?.accessToken])
 
-  // Warm content fingerprints for older policies in the background, so uploads
-  // never block on a big backfill. Runs once per page load, loops until done.
-  const warmedRef = useRef(false)
-  useEffect(() => {
-    if (!session?.accessToken || warmedRef.current) return
-    warmedRef.current = true
-    let cancelled = false
-    const api = createApiClient(session.accessToken)
-    ;(async () => {
-      // eslint-disable-next-line no-constant-condition
-      while (!cancelled) {
-        try {
-          const r = await api.policies.backfillSignatures(60)
-          if (!r || r.remaining <= 0) break
-        } catch { break }
-      }
-    })()
-    return () => { cancelled = true }
-  }, [session?.accessToken])
-
   // While any policy is still processing, refresh the list + duplicate flags every
   // few seconds so a newly-detected duplicate surfaces without a manual reload.
   useEffect(() => {

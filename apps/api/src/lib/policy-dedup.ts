@@ -78,11 +78,17 @@ export async function detectContentDuplicate(opts: {
     select: { id: true, name: true, content_signature: true },
   }) as Array<{ id: string; name: string; content_signature: unknown }>
 
-  // Backfill signatures for existing policies that don't have one yet (uploaded
-  // before this feature), so a duplicate of an older policy is still caught. Runs
-  // with bounded concurrency because ingestion is inline on serverless.
-  const needBackfill = candidates.filter(c => !asSignature(c.content_signature)).slice(0, INLINE_BACKFILL_CAP)
-  await mapPool(needBackfill, 6, async (c) => {
+  // Backfill signatures for candidates that don't have one yet (uploaded before
+  // the feature). We PRIORITISE policies whose NAME resembles the new one — those
+  // are the likely duplicates — so an exact/near duplicate is always compared even
+  // though the inline budget is small. Low concurrency to stay gentle on the DB
+  // connection pool (ingestion is inline on serverless).
+  const missing = candidates.filter(c => !asSignature(c.content_signature))
+  const shares = (n: string) => { const ck = nameKeywords(n); for (const w of myKeywords) if (ck.has(w)) return true; return false }
+  const nameSimilar = missing.filter(c => shares(c.name))
+  const others      = missing.filter(c => !shares(c.name))
+  const needBackfill = [...nameSimilar, ...others].slice(0, Math.max(INLINE_BACKFILL_CAP, nameSimilar.length))
+  await mapPool(needBackfill, 3, async (c) => {
     const text = await downloadExtractedText(tenantId, c.id).catch(() => null)
     if (!text) return
     const sig = contentSignature(text)

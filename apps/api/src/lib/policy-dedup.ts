@@ -14,6 +14,14 @@ export { contentSignature, DUPLICATE_THRESHOLD }
 // whole library gets backfilled; a manual rebuild is also available.
 const BACKFILL_CAP = 150
 
+// Run async work with bounded concurrency (backfill runs inline during upload).
+async function mapPool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+  let i = 0
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (i < items.length) { const idx = i++; await fn(items[idx]) }
+  }))
+}
+
 export async function detectContentDuplicate(opts: {
   tenantId: string
   policyId: string
@@ -30,18 +38,16 @@ export async function detectContentDuplicate(opts: {
   }) as Array<{ id: string; name: string; content_signature: unknown }>
 
   // Backfill signatures for existing policies that don't have one yet (uploaded
-  // before this feature), so a duplicate of an older policy is still caught.
-  let backfilled = 0
-  for (const c of candidates) {
-    if (asSignature(c.content_signature)) continue
-    if (backfilled >= BACKFILL_CAP) break
+  // before this feature), so a duplicate of an older policy is still caught. Runs
+  // with bounded concurrency because ingestion is inline on serverless.
+  const needBackfill = candidates.filter(c => !asSignature(c.content_signature)).slice(0, BACKFILL_CAP)
+  await mapPool(needBackfill, 6, async (c) => {
     const text = await downloadExtractedText(tenantId, c.id).catch(() => null)
-    if (!text) continue
+    if (!text) return
     const sig = contentSignature(text)
     c.content_signature = sig
-    backfilled++
     await (prisma as any).policy.update({ where: { id: c.id }, data: { content_signature: sig as any } }).catch(() => {})
-  }
+  })
 
   // Best match above the threshold.
   let best: { id: string; score: number } | null = null

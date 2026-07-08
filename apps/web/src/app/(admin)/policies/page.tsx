@@ -326,7 +326,7 @@ export default function PoliciesPage() {
           sections={sections}
           categories={categoryOptions}
           onClose={() => setShowUpload(false)}
-          onUploaded={() => { setShowUpload(false); setLoading(true); load() }}
+          onUploaded={() => { setShowUpload(false); setLoading(true); load(); loadDuplicates() }}
         />
       )}
       {showBulkUpload && (
@@ -335,7 +335,7 @@ export default function PoliciesPage() {
           sections={sections}
           categories={categoryOptions}
           onClose={() => setShowBulkUpload(false)}
-          onUploaded={() => { setShowBulkUpload(false); setLoading(true); load() }}
+          onUploaded={() => { setShowBulkUpload(false); setLoading(true); load(); loadDuplicates() }}
         />
       )}
       {versionTarget && (
@@ -344,7 +344,7 @@ export default function PoliciesPage() {
           policyId={versionTarget.id}
           policyName={versionTarget.name}
           onClose={() => setVersionTarget(null)}
-          onUploaded={() => { setVersionTarget(null); setLoading(true); load() }}
+          onUploaded={() => { setVersionTarget(null); setLoading(true); load(); loadDuplicates() }}
         />
       )}
 

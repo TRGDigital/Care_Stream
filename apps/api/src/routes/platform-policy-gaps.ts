@@ -59,6 +59,62 @@ platformPolicyGapsRouter.post('/:tenantId/classify', async (req: Request, res: R
   }
 })
 
+// ─── GET /matrix?setting= — setting-wide gap matrix (the sales pipeline) ───────
+// For one care setting: every assessable client (has ≥1 classified policy) × the
+// peer-derived catalogue of policy types, so we can see who's missing what.
+platformPolicyGapsRouter.get('/matrix', async (req: Request, res: Response) => {
+  const setting = String(req.query.setting ?? '')
+  if (!setting) return err(res, 'INVALID_INPUT', 'setting is required', 400)
+
+  const allTenants = await (prisma as any).tenant.findMany({ select: { id: true, name: true, facility_type: true } })
+  const inSetting = (allTenants as any[]).filter(t => facilityTypeToSetting(t.facility_type) === setting)
+  const nameById = new Map(inSetting.map(t => [t.id, t.name]))
+  const ids = inSetting.map(t => t.id)
+
+  const rows = ids.length
+    ? await (prisma as any).policy.findMany({
+        where: { tenant_id: { in: ids }, status: 'active', policy_type: { not: null } },
+        select: { tenant_id: true, policy_type: true },
+      })
+    : []
+
+  // client → set of types; type → set of clients.
+  const typesByClient = new Map<string, Set<string>>()
+  const clientsByType = new Map<string, Set<string>>()
+  for (const r of rows as any[]) {
+    if (!typesByClient.has(r.tenant_id)) typesByClient.set(r.tenant_id, new Set())
+    typesByClient.get(r.tenant_id)!.add(r.policy_type)
+    if (!clientsByType.has(r.policy_type)) clientsByType.set(r.policy_type, new Set())
+    clientsByType.get(r.policy_type)!.add(r.tenant_id)
+  }
+  const assessableIds = [...typesByClient.keys()]   // clients with ≥1 classified policy
+
+  const ignores = await (prisma as any).policyTypeCuration.findMany({
+    where: { status: 'ignored', OR: [{ care_setting: setting }, { care_setting: null }] }, select: { name: true },
+  }).catch(() => [])
+  const ignored = new Set((ignores as any[]).map(r => r.name.toLowerCase()))
+
+  const total = assessableIds.length
+  const types = [...clientsByType.entries()]
+    .filter(([type]) => !ignored.has(type.toLowerCase()))
+    .map(([type, haveSet]) => ({
+      type,
+      have_count: haveSet.size,
+      have_pct: total ? Math.round((haveSet.size / total) * 100) : 0,
+      missing: assessableIds.filter(id => !haveSet.has(id)).map(id => ({ id, name: nameById.get(id) ?? 'Unknown' })),
+    }))
+    .sort((a, b) => b.have_count - a.have_count || a.type.localeCompare(b.type))
+
+  const expectedTypes = types.map(t => t.type)
+  const clients = assessableIds.map(id => {
+    const have = typesByClient.get(id) ?? new Set()
+    const missing = expectedTypes.filter(t => !have.has(t)).length
+    return { id, name: nameById.get(id) ?? 'Unknown', have: have.size, missing }
+  }).sort((a, b) => b.missing - a.missing || a.name.localeCompare(b.name))
+
+  ok(res, { setting, setting_label: settingLabel(setting), client_count: total, type_count: types.length, types, clients })
+})
+
 // ─── GET /:tenantId — the gap report vs peers of the same setting ──────────────
 platformPolicyGapsRouter.get('/:tenantId', async (req: Request, res: Response) => {
   const tenantId = String(req.params.tenantId)

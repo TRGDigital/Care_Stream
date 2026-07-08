@@ -828,6 +828,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ classified: number; remaining: number; total: number }>(`/policy-gaps/${tenantId}/classify`, token, { method: 'POST' }),
       report: (tenantId: string) =>
         adminFetch<{ tenant: { id: string; name: string; setting: string; setting_label: string }; peer_count: number; unclassified: number; have: string[]; missing: Array<{ type: string; peer_count: number; peer_pct: number }> }>(`/policy-gaps/${tenantId}`, token),
+      matrix: (setting: string) =>
+        adminFetch<{ setting: string; setting_label: string; client_count: number; type_count: number; types: Array<{ type: string; have_count: number; have_pct: number; missing: Array<{ id: string; name: string }> }>; clients: Array<{ id: string; name: string; have: number; missing: number }> }>(`/policy-gaps/matrix?setting=${encodeURIComponent(setting)}`, token),
       ignoreType: (name: string, care_setting?: string | null) =>
         adminFetch<{ ignored: boolean }>('/policy-gaps/types/ignore', token, { method: 'POST', body: JSON.stringify({ name, care_setting }) }),
     },

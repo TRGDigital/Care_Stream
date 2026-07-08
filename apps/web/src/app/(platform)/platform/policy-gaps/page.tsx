@@ -9,10 +9,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPlatformClient } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PlatformShell } from '@/components/platform-shell'
-import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock } from 'lucide-react'
+import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User } from 'lucide-react'
 
 type Client = { id: string; name: string; account_number: string; setting: string; setting_label: string; policies: number; classified: number }
 type Report = { tenant: { id: string; name: string; setting: string; setting_label: string }; peer_count: number; unclassified: number; have: string[]; missing: Array<{ type: string; peer_count: number; peer_pct: number }> }
+type Matrix = { setting: string; setting_label: string; client_count: number; type_count: number; types: Array<{ type: string; have_count: number; have_pct: number; missing: Array<{ id: string; name: string }> }>; clients: Array<{ id: string; name: string; have: number; missing: number }> }
 
 export default function PolicyGapsPage() {
   const token = usePlatformAuth()
@@ -24,6 +25,11 @@ export default function PolicyGapsPage() {
   const [reportLoading, setReportLoading] = useState(false)
   const [classifying, setClassifying] = useState(false)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  const [view, setView] = useState<'client' | 'setting'>('client')
+  const [matrixSetting, setMatrixSetting] = useState('')
+  const [matrix, setMatrix] = useState<Matrix | null>(null)
+  const [matrixLoading, setMatrixLoading] = useState(false)
+  const [expandedType, setExpandedType] = useState<string | null>(null)
 
   function loadClients() {
     if (!token) return
@@ -77,6 +83,22 @@ export default function PolicyGapsPage() {
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   }, [clients])
 
+  // Distinct settings that have clients (for the matrix selector).
+  const settings = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const c of clients) m.set(c.setting, c.setting_label)
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+  }, [clients])
+
+  async function loadMatrix(setting: string) {
+    if (!token || !setting) { setMatrix(null); return }
+    setMatrixLoading(true); setMatrix(null); setError(''); setExpandedType(null)
+    try { setMatrix(await createPlatformClient(token).policyGaps.matrix(setting)) }
+    catch (e: any) { setError(e.message) }
+    finally { setMatrixLoading(false) }
+  }
+  function pickSetting(setting: string) { setMatrixSetting(setting); loadMatrix(setting) }
+
   return (
     <PlatformShell>
       <div className="max-w-4xl">
@@ -91,6 +113,25 @@ export default function PolicyGapsPage() {
 
         {error && <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
+        {/* View toggle */}
+        <div className="mb-4 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
+          <button onClick={() => setView('client')} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'client' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><User size={13} /> Per client</button>
+          <button onClick={() => setView('setting')} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'setting' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><Grid3x3 size={13} /> By setting</button>
+        </div>
+
+        {view === 'setting' ? (
+          <SettingMatrix
+            settings={settings}
+            value={matrixSetting}
+            onPick={pickSetting}
+            matrix={matrix}
+            loading={matrixLoading}
+            expandedType={expandedType}
+            setExpandedType={setExpandedType}
+            onIgnore={(name) => { ignoreType(name, matrix?.setting ?? ''); setMatrix(prev => prev ? { ...prev, types: prev.types.filter(t => t.type !== name) } : prev) }}
+            onOpenClient={(id) => { setView('client'); pick(id) }}
+          />
+        ) : (<>
         {/* Client picker */}
         <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4">
           <label className="mb-1.5 block text-xs font-medium text-neutral-mid">Choose a client</label>
@@ -176,7 +217,92 @@ export default function PolicyGapsPage() {
         ) : selected ? null : (
           <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">Pick a client above to see which policies they&rsquo;re missing compared to their peers.</p>
         )}
+        </>)}
       </div>
     </PlatformShell>
+  )
+}
+
+// ─── Setting-wide matrix (the sales pipeline view) ────────────────────────────
+function SettingMatrix({ settings, value, onPick, matrix, loading, expandedType, setExpandedType, onIgnore, onOpenClient }: {
+  settings: Array<[string, string]>
+  value: string
+  onPick: (setting: string) => void
+  matrix: Matrix | null
+  loading: boolean
+  expandedType: string | null
+  setExpandedType: (t: string | null) => void
+  onIgnore: (name: string) => void
+  onOpenClient: (id: string) => void
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <label className="mb-1.5 block text-xs font-medium text-neutral-mid">Choose a care setting</label>
+        <select value={value} onChange={e => onPick(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal">
+          <option value="">— select a setting —</option>
+          {settings.map(([slug, label]) => <option key={slug} value={slug}>{label}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={15} className="animate-spin" /> Building the matrix…</div>
+      ) : !matrix ? (
+        <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">Pick a setting to see, across every client, which policies each is missing.</p>
+      ) : matrix.client_count === 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm text-amber-800">No {matrix.setting_label} clients have classified policies yet. Classify a few clients (Per client tab) to build the picture.</div>
+      ) : (
+        <>
+          <p className="text-sm text-neutral-mid">
+            <strong className="text-neutral-dark">{matrix.setting_label}</strong> · {matrix.client_count} assessable client{matrix.client_count === 1 ? '' : 's'} · {matrix.type_count} policy types in the peer catalogue.
+          </p>
+
+          {/* Policy types → who's missing (the sales list) */}
+          <div className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-3"><h2 className="text-sm font-semibold text-neutral-dark">Policies &amp; who&rsquo;s missing them</h2></div>
+            <ul className="divide-y divide-gray-50">
+              {matrix.types.map(t => {
+                const open = expandedType === t.type
+                return (
+                  <li key={t.type}>
+                    <div className="flex items-center gap-3 px-5 py-2.5">
+                      <button onClick={() => setExpandedType(open ? null : t.type)} className="flex flex-1 items-center gap-2 text-left">
+                        {t.missing.length > 0 ? (open ? <ChevronDown size={14} className="text-neutral-mid" /> : <ChevronRight size={14} className="text-neutral-mid" />) : <span className="w-3.5" />}
+                        <span className="text-sm font-medium text-neutral-dark">{t.type}</span>
+                      </button>
+                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-teal" style={{ width: `${t.have_pct}%` }} /></div>
+                      <span className="w-10 text-right text-xs text-neutral-mid">{t.have_pct}%</span>
+                      <span className={`w-24 text-right text-xs font-medium ${t.missing.length ? 'text-amber-700' : 'text-green-600'}`}>{t.missing.length ? `${t.missing.length} missing` : 'all have it'}</span>
+                      <button onClick={() => onIgnore(t.type)} title="Not a real policy type — hide it" className="text-neutral-mid hover:text-neutral-dark"><EyeOff size={13} /></button>
+                    </div>
+                    {open && t.missing.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 bg-neutral-light/40 px-5 py-2.5">
+                        {t.missing.map(c => (
+                          <button key={c.id} onClick={() => onOpenClient(c.id)} className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">{c.name}</button>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+
+          {/* Clients ranked by number of gaps */}
+          <div className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-3"><h2 className="text-sm font-semibold text-neutral-dark">Clients by gap count</h2></div>
+            <ul className="divide-y divide-gray-50">
+              {matrix.clients.map(c => (
+                <li key={c.id} className="flex items-center gap-3 px-5 py-2.5">
+                  <button onClick={() => onOpenClient(c.id)} className="flex-1 text-left text-sm font-medium text-neutral-dark hover:text-teal">{c.name}</button>
+                  <span className="text-xs text-neutral-mid">{c.have} policies</span>
+                  <span className={`w-24 text-right text-xs font-medium ${c.missing ? 'text-amber-700' : 'text-green-600'}`}>{c.missing ? `${c.missing} gap${c.missing === 1 ? '' : 's'}` : 'no gaps'}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

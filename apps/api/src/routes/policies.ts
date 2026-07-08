@@ -333,6 +333,10 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     err(res, 'UPLOAD_FAILED', 'Policy upload failed. Check server logs.', 500)
     return
   }
+
+  // Success — respond so the client's upload overlay closes. (Without this the
+  // request hangs even though the policy processed fine.)
+  ok(res, { policy })
 })
 
 // ─── PATCH /policies/:id ──────────────────────────────────────────────────────

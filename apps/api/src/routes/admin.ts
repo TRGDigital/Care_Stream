@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '../middleware/auth'
-import { getAiCreditUsage, getQueryUsage } from '../lib/plan-limits'
+import { getAiCreditUsage, getQueryUsage, trackAiAction } from '../lib/plan-limits'
 import { DEFAULT_ONBOARDING_FLOW_PROMPT, DEFAULT_ONBOARDING_QUESTIONS_PROMPT } from './onboarding-templates'
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
@@ -728,6 +728,52 @@ adminRouter.post('/tenants/:id/format-policies', async (req: Request, res: Respo
     ok(res, { formatted, failed, processed: batch.length, remaining: Math.max(0, todo.length - batch.length), total_active: policies.length, total_cached: cachedSet.size + formatted })
   } catch (e: any) {
     err(res, 'FORMAT_FAILED', e.message ?? 'Format failed', 500)
+  }
+})
+
+// ─── GET /admin/tenants/:id/policies/:policyId/preview ────────────────────────
+// Platform QA: render a policy exactly as staff see it (the header/footer-stripped,
+// formatted English HTML), alongside the original extracted text, so we can verify
+// the stripping worked. Uses the cached formatted HTML when present (same content
+// staff are served); generates + caches it on demand otherwise.
+adminRouter.get('/tenants/:id/policies/:policyId/preview', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const policyId = String(req.params.policyId)
+  try {
+    const policy = await (prisma as any).policy.findFirst({
+      where: { id: policyId, tenant_id: tenantId }, select: { id: true, filename: true, name: true, status: true },
+    })
+    if (!policy) return err(res, 'NOT_FOUND', 'Policy not found', 404)
+
+    const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+
+    // Prefer the cached English formatted HTML — this is exactly what staff receive.
+    const cachedEng = await (prisma as any).policyTranslation.findUnique({
+      where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
+    }).catch(() => null)
+
+    let html: string | null = cachedEng?.content ?? null
+    let cached = !!html
+
+    if (!html && raw) {
+      html = await formatPolicyHtml(raw, 'eng')
+      if (html) {
+        await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: html } }).catch(() => {})
+        trackAiAction(tenantId, 'policy_format', policyId)
+      }
+    }
+
+    ok(res, {
+      policy_id: policyId,
+      name:      policy.name || policy.filename,
+      status:    policy.status,
+      cached,
+      html:      html ?? '',
+      raw:       raw ?? '',
+      has_raw:   !!raw,
+    })
+  } catch (e: any) {
+    err(res, 'PREVIEW_FAILED', e.message ?? 'Preview failed', 500)
   }
 })
 

@@ -566,6 +566,13 @@ export function createPlatformClient(token: string) {
           `/tenants/${id}/policies/reset`, token, { method: 'POST' }
         ),
 
+      // Render a policy as staff see it (header/footer-stripped, formatted HTML)
+      // plus the original extracted text, to verify the stripping.
+      policyPreview: (tenantId: string, policyId: string) =>
+        adminFetch<{ policy_id: string; name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }>(
+          `/tenants/${tenantId}/policies/${policyId}/preview`, token
+        ),
+
       insights: (id: string) =>
         adminFetch<TenantInsights>(`/tenants/${id}/insights`, token),
 

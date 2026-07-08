@@ -10,6 +10,7 @@ import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
   ClipboardCheck, Copy, ExternalLink, KeyRound, Loader2, Mail, MoreVertical, Plus,
   Sparkles, UserMinus, UserPlus, UserX, HardDrive, Database, RefreshCw, Receipt, GraduationCap,
+  Eye, FileText, X,
 } from 'lucide-react'
 
 const fmtUsd = (n: number) => n <= 0 ? '$0.00' : n < 0.01 ? '<$0.01' : `$${n.toFixed(2)}`
@@ -415,6 +416,7 @@ export default function ClientDetailPage() {
   const [seeding,     setSeeding]     = useState(false)
   const [seedMsg,     setSeedMsg]     = useState('')
   const [opening,     setOpening]     = useState(false)
+  const [previewPolicy, setPreviewPolicy] = useState<{ id: string; name: string } | null>(null)
 
   // Sign into the client's own dashboard in a new tab (one-time magic link).
   async function handleOpenAccount() {
@@ -1199,6 +1201,7 @@ export default function ClientDetailPage() {
                     <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2 text-right">Version</th>
                     <th className="px-4 py-2">Uploaded</th>
+                    <th className="px-4 py-2 text-right">Preview</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -1218,6 +1221,15 @@ export default function ClientDetailPage() {
                       <td className="px-4 py-2 text-right text-xs text-neutral-mid">v{p.version}</td>
                       <td className="px-4 py-2 text-xs text-neutral-mid">
                         {new Date(p.created_at).toLocaleDateString('en-GB')}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={() => setPreviewPolicy({ id: p.id, name: p.name })}
+                          title="Preview how this policy renders for staff (header/footer stripped)"
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                        >
+                          <Eye size={13} /> Preview
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1282,8 +1294,82 @@ export default function ClientDetailPage() {
             </div>
           </div>
         )}
+
+        {previewPolicy && token && (
+          <PolicyPreviewModal
+            token={token}
+            tenantId={id}
+            policy={previewPolicy}
+            onClose={() => setPreviewPolicy(null)}
+          />
+        )}
       </div>
     </PlatformShell>
+  )
+}
+
+// ─── Policy preview (how it renders for staff) ────────────────────────────────
+function PolicyPreviewModal({ token, tenantId, policy, onClose }: {
+  token: string
+  tenantId: string
+  policy: { id: string; name: string }
+  onClose: () => void
+}) {
+  const [data, setData]     = useState<{ name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean } | null>(null)
+  const [loading, setLoad]  = useState(true)
+  const [error, setError]   = useState('')
+  const [showRaw, setShowRaw] = useState(false)
+
+  useEffect(() => {
+    createPlatformClient(token).tenants.policyPreview(tenantId, policy.id)
+      .then(setData)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoad(false))
+  }, [token, tenantId, policy.id])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={onClose}>
+      <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold text-neutral-dark">{policy.name}</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">How this policy renders for staff (letterhead, contacts &amp; footers stripped).</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        {/* Toggle: cleaned vs original extracted text */}
+        {data?.has_raw && (
+          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-2.5">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-medium">
+              <button onClick={() => setShowRaw(false)} className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${!showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><Eye size={12} /> Rendered (as staff see it)</button>
+              <button onClick={() => setShowRaw(true)} className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><FileText size={12} /> Original extracted text</button>
+            </div>
+            {data && !data.cached && !showRaw && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-600">Rendered just now</span>}
+          </div>
+        )}
+
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+          {loading ? (
+            <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Rendering the policy…</div>
+          ) : error ? (
+            <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+          ) : !data?.has_raw ? (
+            <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">No extracted text is available for this policy yet{data?.status === 'processing' ? ' — it&rsquo;s still processing.' : '.'}</p>
+          ) : showRaw ? (
+            <pre className="whitespace-pre-wrap break-words rounded-lg bg-neutral-light/50 p-4 text-xs leading-relaxed text-neutral-dark">{data.raw}</pre>
+          ) : data.html ? (
+            <div className="policy-content" dangerouslySetInnerHTML={{ __html: data.html }} />
+          ) : (
+            <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">Could not render this policy. Try the original extracted text to see the source.</p>
+          )}
+        </div>
+
+        <div className="flex justify-end border-t border-gray-100 px-6 py-3">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>
+        </div>
+      </div>
+    </div>
   )
 }
 

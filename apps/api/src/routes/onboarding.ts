@@ -138,6 +138,54 @@ onboardingRouter.get('/flows', requireAdmin, async (_req, res) => {
   }
 })
 
+// POST /onboarding/question-feedback — a tenant admin rates a ready-made-flow
+// question (good / not relevant / not good). Feeds the platform template review.
+onboardingRouter.post('/question-feedback', requireAdmin, async (req, res) => {
+  try {
+    const tenantId = getTenantId()
+    const { flow_id, step_id, question, rating, comment } = req.body ?? {}
+    if (!['good', 'not_relevant', 'not_good'].includes(String(rating))) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'rating must be good, not_relevant or not_good' } })
+    }
+    if (typeof question !== 'string' || !question.trim()) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'question is required' } })
+    }
+
+    // Resolve the source template + policy area from the flow/step (server-side,
+    // so the feedback is reliably linked back to the CareStream template).
+    let source_flow_id: string | null = null
+    let policy_section: string | null = null
+    if (flow_id) {
+      const flow = await prisma.onboardingFlow.findFirst({ where: { id: String(flow_id), tenant_id: tenantId }, select: { source_flow_id: true } })
+      source_flow_id = (flow?.source_flow_id as string) ?? null
+    }
+    if (step_id) {
+      const step = await (prisma as any).onboardingStep.findUnique({ where: { id: String(step_id) }, select: { policy_section: true } }).catch(() => null)
+      policy_section = step?.policy_section ?? null
+    }
+
+    const user = await (prisma as any).user.findUnique({ where: { id: (req as any).user!.sub }, select: { name: true } }).catch(() => null)
+
+    await (prisma as any).onboardingQuestionFeedback.create({
+      data: {
+        tenant_id:       tenantId,
+        flow_id:         flow_id ? String(flow_id) : null,
+        step_id:         step_id ? String(step_id) : null,
+        source_flow_id,
+        policy_section,
+        question:        String(question).slice(0, 1000),
+        rating:          String(rating),
+        comment:         typeof comment === 'string' ? comment.trim().slice(0, 1000) : '',
+        created_by:      (req as any).user!.sub,
+        created_by_name: user?.name ?? '',
+      },
+    })
+    res.json({ success: true, data: { recorded: true } })
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: e.message } })
+  }
+})
+
 // POST /onboarding/flows
 onboardingRouter.post('/flows', requireAdmin, async (req, res) => {
   const { name, description, job_roles, steps } = req.body

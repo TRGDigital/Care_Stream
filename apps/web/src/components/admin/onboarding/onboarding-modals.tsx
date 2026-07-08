@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus, Sparkles, Loader2 } from 'lucide-react'
+import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus, Sparkles, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react'
 import type { Step, Flow } from './onboarding-shared'
 
 // ─── Policy typeahead (for "read policy" steps) ───────────────────────────────
@@ -350,6 +350,55 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
 // question (with its answers and where it came from). Tenants can delete a step
 // they don't want (e.g. an irrelevant generated question) right here.
 
+// Lets a tenant admin tell us whether a ready-made (CareStream-sourced) question is
+// relevant/good. Feeds the platform template review so questions improve over time.
+function QuestionFeedback({ api, flowId, stepId, question }: {
+  api: ReturnType<typeof createApiClient>
+  flowId?: string
+  stepId?: string
+  question: string
+}) {
+  const [mode, setMode] = useState<'idle' | 'reason' | 'done'>('idle')
+  const [busy, setBusy] = useState(false)
+  const [comment, setComment] = useState('')
+
+  async function send(rating: 'good' | 'not_relevant' | 'not_good') {
+    setBusy(true)
+    try {
+      await api.onboarding.questionFeedback({ flow_id: flowId, step_id: stepId, question, rating, comment: comment.trim() || undefined })
+      setMode('done')
+    } catch { /* leave the control so they can retry */ }
+    finally { setBusy(false) }
+  }
+
+  if (mode === 'done') return <p className="mt-2 text-[11px] font-medium text-teal">✓ Thanks, your feedback helps CareStream improve these questions.</p>
+
+  return (
+    <div className="mt-2">
+      {mode === 'idle' ? (
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-mid">
+          <span>Is this question relevant to the role?</span>
+          <button onClick={() => send('good')} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 font-medium hover:border-green-300 hover:text-green-600 disabled:opacity-50"><ThumbsUp size={11} /> Yes</button>
+          <button onClick={() => setMode('reason')} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 font-medium hover:border-amber-300 hover:text-amber-700 disabled:opacity-50"><ThumbsDown size={11} /> No</button>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-2.5">
+          <p className="mb-1.5 text-[11px] font-medium text-neutral-dark">What&rsquo;s the issue? (optional comment below)</p>
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            <button onClick={() => send('not_relevant')} disabled={busy} className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium text-neutral-dark hover:border-amber-300 disabled:opacity-50">Not relevant to the role</button>
+            <button onClick={() => send('not_good')} disabled={busy} className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium text-neutral-dark hover:border-amber-300 disabled:opacity-50">Not a good question</button>
+          </div>
+          <textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} placeholder="Optional: tell us more…" className="w-full rounded border border-gray-200 px-2 py-1 text-[11px] focus:border-teal focus:outline-none" />
+          <div className="mt-1 flex items-center justify-end gap-2">
+            {busy && <Loader2 size={11} className="animate-spin text-neutral-mid" />}
+            <button onClick={() => { setMode('idle'); setComment('') }} className="text-[11px] text-neutral-mid hover:text-neutral-dark">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function FlowPreview({ api, flow, onClose, onChanged }: {
   api: ReturnType<typeof createApiClient>
   flow: Flow
@@ -451,6 +500,9 @@ export function FlowPreview({ api, flow, onClose, onChanged }: {
                             ? 'Source policy no longer available'
                             : 'Source not recorded'}
                     </p>
+                    {isReadyMade && (
+                      <QuestionFeedback api={api} flowId={flow.id} stepId={s.id} question={s.question || s.title} />
+                    )}
                   </>
                 ) : (
                   <>

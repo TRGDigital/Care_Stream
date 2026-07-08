@@ -497,6 +497,8 @@ export function createApiClient(token: string) {
         apiFetch<{ flow: any; already: boolean }>(`/onboarding/generic-policies/${policyId}/adopt`, token, { method: 'POST' }),
       createFlow: (data: { name: string; description?: string; job_roles?: string[]; steps?: Array<{ title: string; type: string; policy_id?: string; policy_section?: string | null; question?: string; options?: string[]; correct_option?: number | null }> }) =>
         apiFetch<{ flow: any }>('/onboarding/flows', token, { method: 'POST', body: JSON.stringify(data) }),
+      questionFeedback: (data: { flow_id?: string; step_id?: string; question: string; rating: 'good' | 'not_relevant' | 'not_good'; comment?: string }) =>
+        apiFetch<{ recorded: boolean }>('/onboarding/question-feedback', token, { method: 'POST', body: JSON.stringify(data) }),
       updateFlow: (id: string, data: { name?: string; description?: string; job_roles?: string[]; is_active?: boolean; steps?: Array<{ title: string; type: string; policy_id?: string; policy_section?: string | null; question?: string; options?: string[]; correct_option?: number | null }> }) =>
         apiFetch<{ flow: any }>(`/onboarding/flows/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deleteFlow: (id: string) =>

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient, type OnboardingTemplate, type OnboardingTemplateStep } from '@/lib/platform-api'
+import { createPlatformClient, type OnboardingTemplate, type OnboardingTemplateStep, type OnboardingFeedbackItem, type OnboardingFeedbackSummary } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen, X } from 'lucide-react'
+import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen, X, MessageSquareText, ThumbsUp, ThumbsDown } from 'lucide-react'
 
 // Standard policy sections (mirrors api DEFAULT_POLICY_SECTIONS) for the step dropdowns.
 const SECTIONS = [
@@ -51,6 +51,7 @@ export default function OnboardingFlowsPage() {
   const [seeding, setSeeding] = useState(false)
   const [note,    setNote]    = useState('')
   const [settingTab, setSettingTab] = useState('nursing-homes')
+  const [view, setView] = useState<'templates' | 'feedback'>('templates')
   const [showNew, setShowNew] = useState(false)
   const [creating, setCreating] = useState(false)
   const [cloning, setCloning] = useState<{ done: number; total: number } | null>(null)
@@ -189,6 +190,15 @@ export default function OnboardingFlowsPage() {
         {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
         {note && <div className="rounded-md border border-teal/30 bg-teal-light/30 px-4 py-3 text-sm text-teal-dark">{note}</div>}
 
+        {/* Top-level view toggle */}
+        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
+          <button onClick={() => setView('templates')} className={`rounded-md px-3 py-1.5 ${view === 'templates' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}>Templates</button>
+          <button onClick={() => setView('feedback')} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'feedback' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><MessageSquareText size={14} /> Feedback</button>
+        </div>
+
+        {view === 'feedback' ? (
+          <FeedbackView token={token ?? ''} />
+        ) : (<>
         {/* Care-setting tabs */}
         <div className="flex gap-1 border-b border-gray-200">
           {SETTINGS.map(s => (
@@ -223,6 +233,7 @@ export default function OnboardingFlowsPage() {
             <FlowGroup title="Secondary roles (specialisms)" flows={secondary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
           </>
         )}
+        </>)}
       </div>
 
       {showNew && (
@@ -234,6 +245,95 @@ export default function OnboardingFlowsPage() {
         />
       )}
     </PlatformShell>
+  )
+}
+
+// ─── Feedback view ────────────────────────────────────────────────────────────
+// Tenant ratings of ready-made-flow questions, so we can see which template
+// questions to improve. Filter by rating; templates ranked by negative feedback.
+const RATING_META: Record<string, { label: string; cls: string }> = {
+  good:         { label: 'Relevant',      cls: 'bg-green-50 text-green-700' },
+  not_relevant: { label: 'Not relevant',  cls: 'bg-amber-50 text-amber-700' },
+  not_good:     { label: 'Not a good Q',  cls: 'bg-red-50 text-red-600' },
+}
+function FeedbackView({ token }: { token: string }) {
+  const [items, setItems]     = useState<OnboardingFeedbackItem[]>([])
+  const [summary, setSummary] = useState<OnboardingFeedbackSummary[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
+  const [filter, setFilter]   = useState<'' | 'not_relevant' | 'not_good' | 'good'>('')
+
+  useEffect(() => {
+    if (!token) return
+    setLoading(true)
+    createPlatformClient(token).onboardingTemplates.feedback(filter || undefined)
+      .then(r => { setItems(r.items); setSummary(r.summary) })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [token, filter])
+
+  const TABS: { key: '' | 'not_relevant' | 'not_good' | 'good'; label: string }[] = [
+    { key: '', label: 'All' }, { key: 'not_relevant', label: 'Not relevant' }, { key: 'not_good', label: 'Not a good Q' }, { key: 'good', label: 'Relevant' },
+  ]
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-neutral-mid">
+        Tenants can rate the questions in <strong>ready-made role flows</strong> from their flow preview. Their ratings collect here so we can see which template questions to improve, refine the question, adjust the difficulty, or re-draft the template with AI.
+      </p>
+
+      {error && <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+      {/* Per-template rollup (worst first) */}
+      {summary.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white">
+          <div className="border-b border-gray-100 px-5 py-3"><h2 className="text-sm font-semibold text-neutral-dark">Templates by feedback</h2></div>
+          <ul className="divide-y divide-gray-50">
+            {summary.map(s => (
+              <li key={s.template_id} className="flex flex-wrap items-center gap-3 px-5 py-2.5 text-sm">
+                <span className="min-w-0 flex-1 truncate font-medium text-neutral-dark">{s.template_role || s.template_name}</span>
+                <span className="inline-flex items-center gap-1 text-xs text-green-700"><ThumbsUp size={12} /> {s.good}</span>
+                <span className="inline-flex items-center gap-1 text-xs text-amber-700">{s.not_relevant} not relevant</span>
+                <span className="inline-flex items-center gap-1 text-xs text-red-600">{s.not_good} poor</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${s.negative > 0 ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'}`}>{s.negative} to review</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Filter + individual feedback */}
+      <div className="flex flex-wrap items-center gap-2">
+        {TABS.map(t => (
+          <button key={t.key} onClick={() => setFilter(t.key)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${filter === t.key ? 'bg-teal text-white' : 'border border-gray-200 bg-white text-neutral-mid hover:text-neutral-dark'}`}>{t.label}</button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={15} className="animate-spin" /> Loading feedback…</div>
+      ) : items.length === 0 ? (
+        <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">No feedback{filter ? ` with this rating` : ''} yet. Tenants leave it from a flow&rsquo;s preview, this builds up over time.</p>
+      ) : (
+        <div className="space-y-2.5">
+          {items.map(it => {
+            const m = RATING_META[it.rating] ?? { label: it.rating, cls: 'bg-gray-100 text-gray-500' }
+            return (
+              <div key={it.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                <div className="mb-1.5 flex flex-wrap items-center gap-2 text-xs">
+                  <span className={`rounded-full px-2 py-0.5 font-medium ${m.cls}`}>{m.label}</span>
+                  <span className="font-medium text-neutral-dark">{it.template_role || it.template_name}</span>
+                  {it.policy_section && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-500">{it.policy_section}</span>}
+                  <span className="ml-auto text-neutral-mid">{it.tenant_name}{it.by ? ` · ${it.by}` : ''} · {new Date(it.created_at).toLocaleDateString('en-GB')}</span>
+                </div>
+                <p className="text-sm text-neutral-dark">{it.question}</p>
+                {it.comment && <p className="mt-1.5 rounded bg-neutral-light/50 px-3 py-2 text-xs text-neutral-mid">&ldquo;{it.comment}&rdquo;</p>}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

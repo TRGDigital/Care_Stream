@@ -34,6 +34,52 @@ onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
   ok(res, { flows })
 })
 
+// ─── GET /feedback — tenant feedback on ready-made-flow questions ──────────────
+// Aggregates the "good / not relevant / not good" ratings tenants leave on adopted
+// (ready-made) flow questions, so we can see which template questions to improve.
+onboardingTemplatesRouter.get('/feedback', async (req: Request, res: Response) => {
+  const rating = typeof req.query.rating === 'string' ? req.query.rating : undefined
+  const where: any = { NOT: { source_flow_id: null } }
+  if (rating && ['good', 'not_relevant', 'not_good'].includes(rating)) where.rating = rating
+
+  const rows = await (prisma as any).onboardingQuestionFeedback.findMany({
+    where, orderBy: { created_at: 'desc' }, take: 1000,
+  })
+
+  // Enrich with template name + tenant name.
+  const templateIds = [...new Set((rows as any[]).map(r => r.source_flow_id).filter(Boolean))]
+  const tenantIds   = [...new Set((rows as any[]).map(r => r.tenant_id).filter(Boolean))]
+  const [templates, tenants] = await Promise.all([
+    templateIds.length ? (prisma as any).onboardingFlow.findMany({ where: { id: { in: templateIds } }, select: { id: true, name: true, job_roles: true } }) : [],
+    tenantIds.length ? (prisma as any).tenant.findMany({ where: { id: { in: tenantIds } }, select: { id: true, name: true } }) : [],
+  ])
+  const tName = new Map((templates as any[]).map(t => [t.id, t.name]))
+  const tRole = new Map((templates as any[]).map(t => [t.id, (t.job_roles ?? [])[0] ?? '']))
+  const cName = new Map((tenants as any[]).map(t => [t.id, t.name]))
+
+  const items = (rows as any[]).map(r => ({
+    id: r.id, rating: r.rating, question: r.question, comment: r.comment,
+    policy_section: r.policy_section, created_at: r.created_at,
+    template_id: r.source_flow_id, template_name: tName.get(r.source_flow_id) ?? 'Unknown template',
+    template_role: tRole.get(r.source_flow_id) ?? '',
+    tenant_name: cName.get(r.tenant_id) ?? 'Unknown', by: r.created_by_name,
+  }))
+
+  // Per-template rollup (all ratings, for the summary regardless of filter).
+  const allRows = rating ? await (prisma as any).onboardingQuestionFeedback.findMany({ where: { NOT: { source_flow_id: null } }, select: { source_flow_id: true, rating: true } }) : rows
+  const byTemplate = new Map<string, { good: number; not_relevant: number; not_good: number }>()
+  for (const r of allRows as any[]) {
+    if (!byTemplate.has(r.source_flow_id)) byTemplate.set(r.source_flow_id, { good: 0, not_relevant: 0, not_good: 0 })
+    const b = byTemplate.get(r.source_flow_id)!; if (b[r.rating as keyof typeof b] !== undefined) b[r.rating as keyof typeof b]++
+  }
+  const summary = [...byTemplate.entries()].map(([id, c]) => ({
+    template_id: id, template_name: tName.get(id) ?? 'Unknown template', template_role: tRole.get(id) ?? '',
+    ...c, negative: c.not_relevant + c.not_good, total: c.good + c.not_relevant + c.not_good,
+  })).sort((a, b) => b.negative - a.negative || b.total - a.total)
+
+  ok(res, { items, summary })
+})
+
 // ─── POST / — create a template ───────────────────────────────────────────────
 onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
   const { name, description, job_roles, flow_kind, care_setting, difficulties, steps } = req.body ?? {}

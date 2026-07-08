@@ -1677,6 +1677,26 @@ model OnboardingEmail {
   @@map("onboarding_emails")
 }
 
+model OnboardingQuestionFeedback {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  flow_id         String?
+  step_id         String?
+  source_flow_id  String?                     // the platform template this adopted flow came from
+  policy_section  String?
+  question        String
+  rating          String                      // good | not_relevant | not_good
+  comment         String   @default("")
+  created_by      String?
+  created_by_name String   @default("")
+  created_at      DateTime @default(now())
+
+  @@index([source_flow_id, rating])
+  @@index([created_at])
+  @@index([tenant_id])
+  @@map("onboarding_question_feedback")
+}
+
 model OnboardingEnrolment {
   id         String   @id @default(uuid())
   tenant_id  String   @unique

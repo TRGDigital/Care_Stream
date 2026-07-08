@@ -794,6 +794,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ created: number }>(`/onboarding-templates/seed-roles${setting ? `?setting=${setting}` : ''}`, token, { method: 'POST' }),
       clone: (id: string, setting: string) =>
         adminFetch<{ skipped: boolean; flow: OnboardingTemplate }>(`/onboarding-templates/${id}/clone`, token, { method: 'POST', body: JSON.stringify({ setting }) }),
+      feedback: (rating?: string) =>
+        adminFetch<{ items: OnboardingFeedbackItem[]; summary: OnboardingFeedbackSummary[] }>(`/onboarding-templates/feedback${rating ? `?rating=${rating}` : ''}`, token),
     },
 
     policySeeds: {
@@ -903,4 +905,29 @@ export interface OnboardingTemplate {
   difficulties: string[]
   is_active:    boolean
   steps:        OnboardingTemplateStep[]
+}
+
+export interface OnboardingFeedbackItem {
+  id: string
+  rating: 'good' | 'not_relevant' | 'not_good'
+  question: string
+  comment: string
+  policy_section: string | null
+  created_at: string
+  template_id: string
+  template_name: string
+  template_role: string
+  tenant_name: string
+  by: string
+}
+
+export interface OnboardingFeedbackSummary {
+  template_id: string
+  template_name: string
+  template_role: string
+  good: number
+  not_relevant: number
+  not_good: number
+  negative: number
+  total: number
 }

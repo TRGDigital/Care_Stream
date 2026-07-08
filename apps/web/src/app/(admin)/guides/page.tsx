@@ -613,6 +613,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
             If a question or a policy step doesn&rsquo;t belong, click the <strong>×</strong> on it in the Preview and confirm, it&rsquo;s removed from the flow straight away, no need to open the full editor. For bigger changes (rewording a question, adding steps, changing answers), use <strong>Edit</strong>.
           </p>
         </SectionBlock>
+        <SectionBlock title="Tell us if a ready-made question isn&rsquo;t right (feedback loop)">
+          <p className="text-sm text-neutral-mid">
+            The questions in <strong>ready-made role flows</strong> are written by CareStream (they show &ldquo;CareStream Sources&rdquo; in the Preview). To help us keep improving them, you can rate each one: in a ready-made flow&rsquo;s <strong>Preview</strong>, under each question you&rsquo;ll see <strong>&ldquo;Is this question relevant to the role?&rdquo;</strong> with a <strong>Yes</strong> and a <strong>No</strong>.
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li>Tap <strong>Yes</strong> if it&rsquo;s a good, relevant question.</li>
+            <li>Tap <strong>No</strong> to tell us it&rsquo;s <strong>not relevant to the role</strong> or <strong>not a good question</strong>, and add an optional comment.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Your feedback goes straight to the CareStream team. We review it to refine or replace weaker questions in the ready-made templates, so the inductions get more relevant for your roles over time. It doesn&rsquo;t change your flow immediately, if you want a question gone from <em>your</em> flow now, just delete it in the Preview as above.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">
             When you add a staff member and choose <strong>New starter</strong>, CareStream automatically enrols them in every active flow (adopted or your own) that matches their <strong>position</strong> or any of their <strong>specialist roles</strong>. So a new Nurse who is also Night Staff joins both the Nurse induction and the Night Staff specialist flow. Set the flows up once and every new starter is enrolled from day one, the confirmation screen tells you how many they joined.

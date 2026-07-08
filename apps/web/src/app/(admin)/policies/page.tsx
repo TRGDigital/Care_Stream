@@ -494,7 +494,15 @@ function PolicyGroup({
         <p className="px-6 py-5 text-sm text-neutral-mid">{emptyText}</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-auto text-sm">
+          <table className="w-full table-fixed text-sm">
+            <colgroup>
+              <col className={showSection ? 'w-[34%]' : 'w-[50%]'} />
+              {showSection && <col className="w-[16%]" />}
+              <col className="w-[12%]" />
+              <col className="w-[8%]" />
+              <col className="w-[14%]" />
+              <col className="w-[16%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-gray-100 text-left">
                 <th className="px-6 py-4 text-xs font-medium text-neutral-mid">Name</th>
@@ -509,7 +517,7 @@ function PolicyGroup({
               {policies.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
                   <td className="px-6 py-4 font-medium text-neutral-dark">
-                    <div className="flex max-w-[26rem] items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate">{p.name}</span>
                       {p.generic_onboarding && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><GraduationCap size={9} /> Onboarding</span>}
                     </div>

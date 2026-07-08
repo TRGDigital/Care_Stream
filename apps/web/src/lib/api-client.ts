@@ -252,6 +252,12 @@ export function createApiClient(token: string) {
         apiFetch<any>(`/policies/${id}/retry`, token, { method: 'POST' }),
       permanentDelete: (id: string) =>
         apiFetch<any>(`/policies/${id}/delete`, token, { method: 'POST' }),
+      duplicates: () =>
+        apiFetch<{ duplicates: Array<{ id: string; name: string; document_category: string; version: number; created_at: string; score: number; match: { id: string; name: string; version: number; created_at: string; status: string } }> }>(
+          '/policies/duplicates', token
+        ),
+      resolveDuplicate: (id: string, action: 'keep_both' | 'replace' | 'cancel') =>
+        apiFetch<{ resolved: boolean; action: string }>(`/policies/${id}/duplicate/resolve`, token, { method: 'POST', body: JSON.stringify({ action }) }),
     },
 
     users: {

@@ -133,6 +133,63 @@ policiesRouter.post('/check', requireAdmin, async (req: Request, res: Response) 
   ok(res, { checks })
 })
 
+// ─── GET /policies/duplicates ─────────────────────────────────────────────────
+// Policies flagged as possible content duplicates of an existing policy, awaiting
+// the tenant's decision (keep both / replace / discard).
+policiesRouter.get('/duplicates', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const flagged = await (prisma as any).policy.findMany({
+    where:   { tenant_id: tenantId, duplicate_status: 'flagged', status: { in: ['active', 'processing'] } },
+    select:  { id: true, name: true, document_category: true, version: true, created_at: true, duplicate_of: true, duplicate_score: true },
+    orderBy: { created_at: 'desc' },
+  })
+  const matchIds = [...new Set((flagged as any[]).map(p => p.duplicate_of).filter(Boolean))]
+  const matches = matchIds.length
+    ? await (prisma as any).policy.findMany({ where: { id: { in: matchIds }, tenant_id: tenantId }, select: { id: true, name: true, version: true, created_at: true, status: true } })
+    : []
+  const byId = new Map((matches as any[]).map(m => [m.id, m]))
+  const duplicates = (flagged as any[]).map(p => ({
+    id: p.id, name: p.name, document_category: p.document_category, version: p.version, created_at: p.created_at,
+    score: p.duplicate_score, match: byId.get(p.duplicate_of) ?? null,
+  })).filter(d => d.match)   // only surface if the matched policy still exists
+  ok(res, { duplicates })
+})
+
+// ─── POST /policies/:id/duplicate/resolve ─────────────────────────────────────
+// Resolve a flagged content duplicate. action:
+//   keep_both — dismiss the flag, keep the new policy alongside the existing one.
+//   replace   — the new policy supersedes the matched existing one (old archived).
+//   cancel    — discard the new upload (archive it), keep the existing policy.
+policiesRouter.post('/:id/duplicate/resolve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const action = String(req.body?.action ?? '')
+  if (!['keep_both', 'replace', 'cancel'].includes(action)) {
+    err(res, 'INVALID_INPUT', 'action must be keep_both, replace or cancel', 400); return
+  }
+  const policy = await (prisma as any).policy.findFirst({
+    where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true, name: true, version: true, document_category: true, duplicate_of: true, duplicate_status: true },
+  })
+  if (!policy) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+
+  async function archive(policyId: string, reason: string) {
+    await (prisma as any).policy.update({ where: { id: policyId }, data: { status: 'archived' } })
+    await writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'policy_archive', entity_type: 'policy', entity_id: policyId, metadata: { reason } })
+  }
+
+  if (action === 'replace') {
+    if (policy.duplicate_of) await archive(policy.duplicate_of, 'replaced_by_duplicate')
+    await (prisma as any).policy.update({ where: { id: policy.id }, data: { duplicate_status: 'dismissed' } })
+  } else if (action === 'cancel') {
+    await archive(policy.id, 'duplicate_discarded')
+    await (prisma as any).policy.update({ where: { id: policy.id }, data: { duplicate_status: 'dismissed' } })
+  } else {
+    // keep_both
+    await (prisma as any).policy.update({ where: { id: policy.id }, data: { duplicate_status: 'dismissed' } })
+  }
+
+  ok(res, { resolved: true, action })
+})
+
 // ─── POST /policies ───────────────────────────────────────────────────────────
 // Upload a new policy document. Admin only.
 // 1. Validate file + form fields

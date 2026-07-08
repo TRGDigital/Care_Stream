@@ -350,7 +350,11 @@ model Policy {
   document_category    String    @default("internal_policy") // §4.5: internal_policy|staff_handbook
   version              Int       @default(1)
   status               String    @default("processing")   // active|processing|archived|superseded
-  content_hash         String?                              // SHA-256 of file bytes — duplicate detection
+  content_hash         String?                              // SHA-256 of file bytes — exact duplicate detection
+  content_signature    Json?                                // bottom-k shingle-hash sketch of the extracted text — near-duplicate detection
+  duplicate_of         String?                              // matched existing policy id when flagged as a possible content duplicate
+  duplicate_score      Float?                               // similarity (0..1) to duplicate_of
+  duplicate_status     String    @default("none")           // none | flagged | dismissed
   section              String?                              // internal-policy section/taxonomy (tenant-configurable)
   generic_onboarding   Boolean   @default(false)             // flagged as a generic onboarding policy → allocatable as a one-step onboarding flow
   tags                 Json      @default("[]")

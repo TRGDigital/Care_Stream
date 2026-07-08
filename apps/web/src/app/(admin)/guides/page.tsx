@@ -154,7 +154,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policies',
     icon:    FileText,
     title:   'Uploading policies & documents',
-    summary: 'How to add, update and categorise your policy documents',
+    summary: 'How to add, update and categorise your policy documents, including duplicate detection when the same policy is uploaded under a different name',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What to upload">
@@ -197,7 +197,25 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
           <div className="mt-3"><Tip>You start with 15 standard sections (Activities, Admission management, Safeguarding, Training, and more). Add as many of your own as you need to match how your policies are grouped.</Tip></div>
         </SectionBlock>
-        <Tip>If you update a policy, delete the old version and re-upload the new one. CareStream will re-index it automatically.</Tip>
+        <SectionBlock title="Duplicate detection">
+          <p className="text-sm text-neutral-mid">
+            When you upload a policy, CareStream checks it against your existing library so you don&rsquo;t end up with the same policy twice. It looks at two things:
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>The file &amp; name</strong>, at the point of upload: an identical file, or one with the same name as an existing policy, is caught straight away and you&rsquo;re offered Replace or Keep both.</li>
+            <li><strong>The actual content</strong>, once the policy has processed: CareStream compares the <em>text</em> of the new policy against your other policies. So if the same policy is uploaded under a different name (for example &ldquo;Holiday Policy&rdquo; and &ldquo;Staff Annual Leave Policy&rdquo;), it&rsquo;s still recognised as a likely duplicate even though the names differ.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            When a content match is found, a <strong>&ldquo;looks like a duplicate&rdquo;</strong> panel appears at the top of your Policies page, showing the match percentage and what it matched. You choose:
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Replace</strong> — the new upload takes over and the existing policy is archived.</li>
+            <li><strong>Keep both</strong> — they&rsquo;re genuinely different; save them side by side.</li>
+            <li><strong>Discard this upload</strong> — the new one was a mistake; archive it and keep the existing policy.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">Nothing is deleted automatically, CareStream only flags a possible match and leaves the decision to you.</p>
+        </SectionBlock>
+        <Tip>If you update a policy, you can upload the new file and choose <strong>Replace</strong> when the duplicate panel appears, or use the version option on the existing policy. Either way CareStream re-indexes automatically.</Tip>
       </div>
     ),
   },

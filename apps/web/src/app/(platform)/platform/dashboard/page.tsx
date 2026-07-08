@@ -2742,6 +2742,19 @@ function SystemReference() {
               Policies uploaded before this feature have no hash yet, so they match by <strong>name</strong> only until re-versioned.
             </p>
           </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-xs">
+            <p className="font-semibold text-neutral-dark mb-1">Content duplicate detection (after ingestion)</p>
+            <p className="text-neutral-mid">
+              The upload check only sees the filename + byte hash, so a same-policy-different-name pair (e.g. &ldquo;Holiday Policy&rdquo; vs &ldquo;Staff Annual Leave Policy&rdquo;) isn&rsquo;t caught there. After ingestion, we compare the <strong>extracted text</strong>:
+              <code className="text-xs bg-gray-100 px-1 rounded ml-1">apps/api/src/lib/content-similarity.ts</code> builds a bottom-k (KMV) sketch of 5-word shingle hashes (<code className="text-xs bg-gray-100 px-1 rounded">policies.content_signature</code>);
+              <code className="text-xs bg-gray-100 px-1 rounded ml-1">policy-dedup.ts</code> compares the new policy against other active policies of the SAME category by Jaccard similarity.
+            </p>
+            <ul className="mt-2 ml-4 list-disc space-y-1 text-neutral-mid">
+              <li>Runs in the ingestion worker (brand-new uploads only; a version swap is skipped). Backfills missing signatures for existing policies on the fly (cap 150/pass), so it self-heals for pre-feature libraries.</li>
+              <li>Similarity ≥ <strong>0.85</strong> (DUPLICATE_THRESHOLD) → sets <code className="text-xs bg-gray-100 px-1 rounded">duplicate_of</code> / <code className="text-xs bg-gray-100 px-1 rounded">duplicate_score</code> / <code className="text-xs bg-gray-100 px-1 rounded">duplicate_status='flagged'</code>. Pure hashing, no AI cost.</li>
+              <li>Tenant resolves on the Policies page: <code className="text-xs bg-gray-100 px-1 rounded">GET /policies/duplicates</code> + <code className="text-xs bg-gray-100 px-1 rounded">POST /policies/:id/duplicate/resolve</code> {`{action: keep_both | replace | cancel}`}. replace archives duplicate_of; cancel archives the new one; all set status='dismissed'.</li>
+            </ul>
+          </div>
         </div>
         <div className="mt-3 space-y-1">
           <RefRow label="Upload UI"          value="apps/web/src/app/(admin)/policies/page.tsx — single + bulk; bulk auto-chunks by size/count, runs a duplicate-check review step, shows per-file progress." />

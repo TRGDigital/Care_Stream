@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2 } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2 } from 'lucide-react'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -72,6 +72,8 @@ export default function PoliciesPage() {
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
+  const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
+  const [resolvingDup,   setResolvingDup]   = useState<string | null>(null)
 
   function load() {
     if (!session?.accessToken) return
@@ -82,12 +84,41 @@ export default function PoliciesPage() {
       .finally(() => setLoading(false))
   }
 
+  function loadDuplicates() {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).policies.duplicates()
+      .then(d => setDuplicates(d?.duplicates ?? []))
+      .catch(() => {})
+  }
+
+  async function resolveDuplicate(id: string, action: 'keep_both' | 'replace' | 'cancel') {
+    if (!session?.accessToken) return
+    setResolvingDup(id)
+    try {
+      await createApiClient(session.accessToken).policies.resolveDuplicate(id, action)
+      setDuplicates(prev => prev.filter(d => d.id !== id))
+      load()   // reflect any archive (replace/cancel)
+    } catch { /* leave it flagged to retry */ }
+    finally { setResolvingDup(null) }
+  }
+
   useEffect(() => {
     const cached = persistentCache.get<any[]>(`admin-policies-${userId}`)
     if (cached) { setPolicies(cached); setLoading(false) }
   }, [userId])
 
   useEffect(load, [session?.accessToken])
+  useEffect(loadDuplicates, [session?.accessToken])
+
+  // While any policy is still processing, refresh the list + duplicate flags every
+  // few seconds so a newly-detected duplicate surfaces without a manual reload.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    if (!policies.some(p => p.status === 'processing')) return
+    const t = setInterval(() => { load(); loadDuplicates() }, 4000)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [policies, session?.accessToken])
 
   // The tenant's configurable internal-policy sections + custom document
   // categories (both drive the upload dropdowns).
@@ -207,6 +238,51 @@ export default function PoliciesPage() {
           )}
         </button>
       </div>
+
+      {/* Possible content duplicates — same policy text under a different name */}
+      {tab === 'active' && duplicates.length > 0 && (
+        <div className="mb-4 rounded-card border border-amber-200 bg-amber-50/60 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Copy size={15} className="text-amber-600" />
+            <p className="text-sm font-semibold text-amber-800">
+              {duplicates.length === 1 ? 'A policy looks like a duplicate' : `${duplicates.length} policies look like duplicates`}
+            </p>
+          </div>
+          <p className="mb-3 text-xs text-neutral-mid">
+            The content of these newly uploaded policies closely matches an existing policy, even though the names differ. Choose what to do with each.
+          </p>
+          <div className="space-y-2.5">
+            {duplicates.map(d => (
+              <div key={d.id} className="rounded-lg border border-amber-100 bg-white p-3">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <span className="font-medium text-neutral-dark">{d.name}</span>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">{Math.round(d.score * 100)}% match</span>
+                  <span className="text-xs text-neutral-mid">looks like</span>
+                  <span className="font-medium text-neutral-dark">{d.match.name}</span>
+                  <span className="text-[11px] text-neutral-mid">(existing)</span>
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <button onClick={() => resolveDuplicate(d.id, 'replace')} disabled={resolvingDup === d.id}
+                    className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+                    {resolvingDup === d.id ? <Loader2 size={12} className="animate-spin" /> : null} Replace &ldquo;{d.match.name}&rdquo;
+                  </button>
+                  <button onClick={() => resolveDuplicate(d.id, 'keep_both')} disabled={resolvingDup === d.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                    Keep both
+                  </button>
+                  <button onClick={() => resolveDuplicate(d.id, 'cancel')} disabled={resolvingDup === d.id}
+                    className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-mid hover:text-red-600 disabled:opacity-50">
+                    <Trash2 size={12} /> Discard this upload
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11px] text-neutral-mid">
+                  <strong>Replace</strong> archives the existing policy and keeps this one. <strong>Keep both</strong> saves them side by side. <strong>Discard</strong> archives this new upload.
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showUpload && (

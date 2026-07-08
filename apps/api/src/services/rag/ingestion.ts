@@ -18,6 +18,7 @@ import {
 } from '../vector/pinecone'
 import type { PolicyVector, ChapterVector } from '../vector/pinecone'
 import { writeAuditLog } from '../../lib/audit'
+import { contentSignature, detectContentDuplicate } from '../../lib/policy-dedup'
 import { generateKnowledgeForPolicy, dedupKnowledgeEntries } from '../knowledge/generator'
 import type { IngestionJobData } from '../../workers/queue'
 import type { HandbookMetadata } from '../../types'
@@ -70,6 +71,9 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
   console.log(`[ingestion] ${cleanText.length} chars after stripping`)
 
   await uploadExtractedText(tenant_id, policy_id, cleanText)
+
+  // Content fingerprint (for near-duplicate detection against other policies).
+  const signature = contentSignature(cleanText)
 
   // ── Step 4: TOC detection (staff_handbook only) ───────────────────────────────
 
@@ -250,9 +254,21 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
       data: {
         status:              'active',
         pinecone_namespace:  activeNamespace,
+        content_signature:   signature as any,
         ...(handbookMeta ? { handbook_metadata: handbookMeta as any } : {}),
       },
     })
+
+    // Near-duplicate detection: only for brand-new uploads (a version swap is an
+    // intentional replacement, not a duplicate). Flags the new policy if its text
+    // closely matches an existing active policy of the same type.
+    if (!previous_version_policy_id) {
+      try {
+        await detectContentDuplicate({ tenantId: tenant_id, policyId: policy_id, documentCategory: document_category, signature })
+      } catch (e) {
+        console.error(`[ingestion] duplicate detection failed for ${policy_id}:`, e)
+      }
+    }
 
     // f. Audit log
     if (previous_version_policy_id) {

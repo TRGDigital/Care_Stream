@@ -589,6 +589,17 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <div className="mt-3"><Tip>No policy linked yet? The panel reminds you to add a <strong>Read policy</strong> step and link a policy first, that policy is what the questions are drawn from.</Tip></div>
         </SectionBlock>
+        <SectionBlock title="Preview a flow &amp; tidy up questions">
+          <p className="text-sm text-neutral-mid">
+            On any flow in <strong>Active flows</strong>, click <strong>Preview</strong> to see the whole flow exactly as your staff work through it, each policy to read and each question with its answers (the correct one highlighted). It&rsquo;s the quickest way to sense-check a flow before you enrol anyone.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Under every question you&rsquo;ll see its <strong>source</strong>, the policy the AI generated it from (for example &ldquo;Generated from Infection Control Policy&rdquo;). Questions you typed yourself, or older ones created before this was added, show &ldquo;Source not recorded&rdquo;. This makes it easy to spot a question that isn&rsquo;t relevant to the role or your policies.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            If a question or a policy step doesn&rsquo;t belong, click the <strong>×</strong> on it in the Preview and confirm, it&rsquo;s removed from the flow straight away, no need to open the full editor. For bigger changes (rewording a question, adding steps, changing answers), use <strong>Edit</strong>.
+          </p>
+        </SectionBlock>
         <SectionBlock title="Automatic enrolment for new starters">
           <p className="text-sm text-neutral-mid">
             When you add a staff member and choose <strong>New starter</strong>, CareStream automatically enrols them in every active flow (adopted or your own) that matches their <strong>position</strong> or any of their <strong>specialist roles</strong>. So a new Nurse who is also Night Staff joins both the Nurse induction and the Night Staff specialist flow. Set the flows up once and every new starter is enrolled from day one, the confirmation screen tells you how many they joined.

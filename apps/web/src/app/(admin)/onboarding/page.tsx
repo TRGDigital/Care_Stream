@@ -5,12 +5,13 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, Loader2 } from 'lucide-react'
+import { BookOpen, ChevronDown, Info, MessageSquare, Plus, Trash2, Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, Loader2, Eye } from 'lucide-react'
 import type { Flow } from '@/components/admin/onboarding/onboarding-shared'
 
 // Flow form & progress modals are lazy-loaded — only fetched when opened.
 const FlowForm = dynamic(() => import('@/components/admin/onboarding/onboarding-modals').then(m => m.FlowForm), { ssr: false })
 const ProgressPanel = dynamic(() => import('@/components/admin/onboarding/onboarding-modals').then(m => m.ProgressPanel), { ssr: false })
+const FlowPreview = dynamic(() => import('@/components/admin/onboarding/onboarding-modals').then(m => m.FlowPreview), { ssr: false })
 
 // ─── Help accordion ───────────────────────────────────────────────────────────
 
@@ -237,6 +238,7 @@ export default function OnboardingPage() {
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [previewFlow, setPreviewFlow] = useState<Flow | null>(null)
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string | null; flow_kind: string; job_roles: string[]; step_count: number; read_count: number; question_count: number; already_adopted: boolean }>>([])
   const [genericPolicies, setGenericPolicies] = useState<Array<{ id: string; name: string; document_category: string; already_adopted: boolean }>>([])
   const [hasPolicies, setHasPolicies] = useState(true)   // default true to avoid flashing the warning pre-load
@@ -521,6 +523,13 @@ export default function OnboardingPage() {
                     <Users size={13} /> Allocate to Staff
                   </button>
                   <button
+                    onClick={() => setPreviewFlow(flow)}
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-teal"
+                    title="Preview the flow as staff see it, and remove any irrelevant steps"
+                  >
+                    <Eye size={13} /> Preview
+                  </button>
+                  <button
                     onClick={() => { setSelected(flow); setShowForm(true) }}
                     className="rounded-md px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-teal"
                   >
@@ -570,6 +579,20 @@ export default function OnboardingPage() {
           api={api!}
           flow={selected}
           onClose={() => setSelected(null)}
+        />
+      )}
+
+      {previewFlow && (
+        <FlowPreview
+          api={api!}
+          flow={previewFlow}
+          onClose={() => setPreviewFlow(null)}
+          onChanged={(updated) => {
+            const safe = { ...updated, enrollments: updated.enrollments ?? [], steps: updated.steps ?? [] }
+            setFlows(prev => prev.map(f => f.id === safe.id ? safe : f))
+            setPreviewFlow(safe)
+            if (selected?.id === safe.id) setSelected(safe)
+          }}
         />
       )}
     </div>

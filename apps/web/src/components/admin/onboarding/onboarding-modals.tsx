@@ -147,6 +147,7 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
       const generated: Step[] = questions.map(q => ({
         title:          titleFromQuestion(q.question),
         type:           'answer_question',
+        policy_id:      policyId,   // source: the policy these questions were generated from
         question:       q.question,
         options:        q.options,
         correct_option: q.correct_option,
@@ -338,6 +339,128 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
             className="rounded-lg bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
             {saving ? 'Saving…' : initial ? 'Save changes' : 'Create flow'}
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Flow Preview ─────────────────────────────────────────────────────────────
+// A read-only view of a flow as staff experience it — each policy to read and each
+// question (with its answers and where it came from). Tenants can delete a step
+// they don't want (e.g. an irrelevant generated question) right here.
+
+export function FlowPreview({ api, flow, onClose, onChanged }: {
+  api: ReturnType<typeof createApiClient>
+  flow: Flow
+  onClose: () => void
+  onChanged: (flow: Flow) => void
+}) {
+  const [steps, setSteps]       = useState<Array<Step & { id?: string; order?: number }>>(() => [...(flow.steps ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+  const [policies, setPolicies] = useState<PolicyLite[]>([])
+  const [saving, setSaving]     = useState(false)
+  const [confirmDel, setConfirmDel] = useState<number | null>(null)
+  const [err, setErr]           = useState('')
+
+  useEffect(() => {
+    api.policies.list({ limit: '2000' })
+      .then((d: any) => setPolicies((d?.policies ?? []).map((p: any) => ({ id: p.id, name: p.name, document_category: p.document_category, status: p.status }))))
+      .catch(() => {})
+  }, [api])
+
+  const policyName = (id?: string | null) => (id ? policies.find(p => p.id === id)?.name : undefined)
+
+  async function deleteStep(index: number) {
+    setSaving(true); setErr('')
+    const remaining = steps.filter((_, i) => i !== index)
+    try {
+      const payload = remaining.map(s => ({ title: s.title, type: s.type, policy_id: s.policy_id, policy_section: s.policy_section ?? null, question: s.question, options: s.options ?? [], correct_option: s.correct_option ?? 0 }))
+      const { flow: updated } = await api.onboarding.updateFlow(flow.id, { steps: payload })
+      const safe = { ...flow, ...updated, steps: updated?.steps ?? [] } as Flow
+      setSteps([...(safe.steps ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+      setConfirmDel(null)
+      onChanged(safe)
+    } catch (e: any) { setErr(e?.message ?? 'Could not delete the step.') }
+    finally { setSaving(false) }
+  }
+
+  let qNum = 0
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold text-neutral-dark">{flow.name}</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">Preview of what staff work through, {steps.length} step{steps.length !== 1 ? 's' : ''}. Remove any step that isn&rsquo;t relevant.</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        {err && <p className="mx-6 mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+
+        <div className="max-h-[70vh] space-y-3 overflow-y-auto px-6 py-5">
+          {steps.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-200 px-4 py-10 text-center text-sm text-neutral-mid">This flow has no steps.</p>
+          ) : steps.map((s, i) => {
+            const isQ = s.type === 'answer_question'
+            if (isQ) qNum++
+            const srcName = policyName(s.policy_id)
+            return (
+              <div key={s.id ?? i} className="rounded-xl border border-gray-200 p-4">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${isQ ? 'bg-blue-50 text-blue-700' : 'bg-teal-light/40 text-teal'}`}>
+                    {isQ ? <><Sparkles size={11} /> Question {qNum}</> : <><CheckCircle2 size={11} /> Read a policy</>}
+                  </span>
+                  {confirmDel === i ? (
+                    <span className="flex items-center gap-1.5 text-xs">
+                      <span className="text-neutral-mid">Delete this?</span>
+                      <button onClick={() => deleteStep(i)} disabled={saving} className="inline-flex items-center gap-1 rounded bg-red-500 px-2 py-0.5 font-medium text-white hover:bg-red-600 disabled:opacity-50">{saving ? <Loader2 size={11} className="animate-spin" /> : null} Delete</button>
+                      <button onClick={() => setConfirmDel(null)} className="rounded px-1.5 py-0.5 text-neutral-mid hover:text-neutral-dark">Cancel</button>
+                    </span>
+                  ) : (
+                    <button onClick={() => setConfirmDel(i)} title="Remove this step from the flow" className="shrink-0 rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-500"><X size={14} /></button>
+                  )}
+                </div>
+
+                {isQ ? (
+                  <>
+                    <p className="text-sm font-medium text-neutral-dark">{s.question || s.title}</p>
+                    {Array.isArray(s.options) && s.options.length > 0 && (
+                      <ul className="mt-2 space-y-1">
+                        {s.options.map((opt, oi) => (
+                          <li key={oi} className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${oi === s.correct_option ? 'border-green-300 bg-green-50 text-neutral-dark' : 'border-gray-200 text-neutral-dark'}`}>
+                            {oi === s.correct_option ? <CheckCircle2 size={13} className="shrink-0 text-green-500" /> : <span className="inline-block h-3 w-3 shrink-0 rounded-full border border-gray-300" />}
+                            {opt}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="mt-2 text-[11px] text-neutral-mid">
+                      <span className="font-medium text-neutral-dark">Source: </span>
+                      {srcName
+                        ? <>Generated from <span className="text-neutral-dark">{srcName}</span></>
+                        : s.policy_id
+                          ? 'Source policy no longer available'
+                          : 'Source not recorded'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-neutral-dark">{s.title}</p>
+                    <p className="mt-1 text-[11px] text-neutral-mid">
+                      {srcName
+                        ? <><span className="font-medium text-neutral-dark">Reads: </span>{srcName}</>
+                        : <span className="text-amber-700">Not linked to a policy yet</span>}
+                    </p>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="flex justify-end border-t border-gray-100 px-6 py-3">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Done</button>
         </div>
       </div>
     </div>

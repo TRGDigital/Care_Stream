@@ -932,6 +932,17 @@ export function createApiClient(token: string) {
         meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }
       }>('/analytics/gaps', token),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
+      gapDetail: (referenceKey: string, force = false) => apiFetch<{
+        reference_key:    string
+        official_name:    string
+        original_status:  'partial' | 'gap'
+        effective_status: 'partial' | 'gap' | 'covered'
+        evidence_policy:  { id: string; name: string } | null
+        covered_quotes:   string[]
+        requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null }>
+        disclaimer:       string
+        generated_at:     string
+      }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${force ? '?force=1' : ''}`, token, { method: 'POST' }),
       engagement: () => apiFetch<{
         wau: { active: number; total_staff: number; pct: number | null }
         logged_in_7d: number

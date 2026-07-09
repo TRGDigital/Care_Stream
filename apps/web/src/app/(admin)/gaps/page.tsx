@@ -6,7 +6,8 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
-import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react'
+import { GapDetailModal } from '@/components/admin/gap-detail-modal'
+import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2 } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -46,6 +47,9 @@ export default function GapsPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [analysing, setAnalysing] = useState(false)
+  // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
+  const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
+  const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
@@ -119,8 +123,10 @@ export default function GapsPage() {
 
   if (!data) return null
 
-  const gapRegs     = data.regulation_gaps.filter(r => r.status === 'gap')
-  const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial')
+  // A drill-in can find a "gap/partial" is actually covered across the library — drop
+  // those from the actionable lists immediately (the DB verdict is corrected too).
+  const gapRegs     = data.regulation_gaps.filter(r => r.status === 'gap' && !correctedToCovered.has(r.reference_key))
+  const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial' && !correctedToCovered.has(r.reference_key))
   const coveredRegs = data.regulation_gaps.filter(r => r.status === 'covered')
   const score       = data.coverage_score
 
@@ -272,9 +278,12 @@ export default function GapsPage() {
                     {reg.status === 'partial' && reg.evidence_policy_name && (
                       <p className="mb-2 flex items-center gap-1.5 text-xs text-neutral-mid"><FileText size={12} className="text-teal" /> Partially covered by <span className="font-medium text-neutral-dark">{reg.evidence_policy_name}</span></p>
                     )}
-                    <a href="/policies" className="text-xs font-semibold text-teal hover:underline">
-                      {reg.status === 'gap' ? 'Add a policy →' : 'Strengthen this policy →'}
-                    </a>
+                    <button
+                      onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
+                    >
+                      <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage & what to add'}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -302,6 +311,16 @@ export default function GapsPage() {
         </div>
 
       </div>
+
+      {detailReg && session?.accessToken && (
+        <GapDetailModal
+          token={session.accessToken}
+          referenceKey={detailReg.reference_key}
+          officialName={detailReg.official_name}
+          onClose={() => setDetailReg(null)}
+          onVerdictCovered={key => setCorrectedToCovered(prev => new Set(prev).add(key))}
+        />
+      )}
 
       {data.meta.no_match_total === 0 && data.unanswered_themes.length === 0 && (
         <div className="mt-6 flex items-center gap-3 rounded-card border border-green-100 bg-green-50 px-6 py-5">

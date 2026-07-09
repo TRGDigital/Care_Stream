@@ -550,6 +550,22 @@ model RegulationCoverage {
   @@map("regulation_coverage")
 }
 
+// On-demand deep-dive for a partial/gap regulation: the highlight quotes + the
+// "what to add" suggestions, each verified against the WHOLE policy corpus so we
+// never recommend adding something the tenant already holds elsewhere. Generated
+// lazily when an admin drills in; cleared when coverage is re-analysed.
+model GapDetailCache {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  reference_key String
+  payload       Json
+  created_at    DateTime @default(now())
+
+  @@unique([tenant_id, reference_key])
+  @@index([tenant_id])
+  @@map("gap_detail_cache")
+}
+
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.

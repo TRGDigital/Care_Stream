@@ -257,9 +257,11 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
     }
   })
 
-  // Replace this tenant's cached coverage atomically.
+  // Replace this tenant's cached coverage atomically, and clear the on-demand
+  // gap detail cache so re-opened drill-ins reflect the fresh analysis.
   const now = new Date()
   await prisma.$transaction([
+    (prisma as any).gapDetailCache.deleteMany({ where: { tenant_id: tenantId } }),
     (prisma as any).regulationCoverage.deleteMany({ where: { tenant_id: tenantId } }),
     (prisma as any).regulationCoverage.createMany({
       data: rows.map(r => ({

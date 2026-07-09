@@ -10,6 +10,7 @@ import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
+import { getGapDetail } from '../services/analytics/gap-detail'
 
 export const analyticsRouter = Router()
 
@@ -420,6 +421,27 @@ analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: R
     })
   } catch (e: any) {
     err(res, 'ANALYSIS_FAILED', e.message, 500)
+  }
+})
+
+// ─── POST /analytics/gaps/:reference_key/detail ──────────────────────────────
+// Deep-dive for a partial/gap regulation (Professional+): the highlight quotes and
+// the "what to add" suggestions, each verified against the whole policy corpus so we
+// never recommend adding something already held elsewhere. Uses Sonnet; cached until
+// the next coverage re-run. Pass ?force=1 to regenerate.
+analyticsRouter.post('/gaps/:reference_key/detail', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const detail = await getGapDetail(tenantId, String(req.params.reference_key), req.query.force === '1')
+    ok(res, detail)
+  } catch (e: any) {
+    err(res, 'DETAIL_FAILED', e.message ?? 'Could not build the coverage detail.', 500)
   }
 })
 

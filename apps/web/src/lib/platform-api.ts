@@ -309,6 +309,9 @@ export interface Regulation {
   care_company_interaction: string
   practical_meaning:        string
   source_urls:              string[]
+  match_terms:              string[]
+  distinguish_from:         string[]
+  expected_policy_titles:   string[]
   is_active:                boolean
   pinecone_vector_id:       string | null
   last_synced_at:           string | null

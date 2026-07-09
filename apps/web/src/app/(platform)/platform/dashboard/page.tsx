@@ -2335,9 +2335,28 @@ function SystemReference() {
         <div className="mt-2 space-y-1">
           <RefRow label="Model"               value="ExternalRegulation — official_name, summary, care_home_context, source_url, is_active" />
           <RefRow label="Admin"               value="/platform/regulations — add, edit, toggle active" />
-          <RefRow label="Google Sheets sync"  value="Bidirectional sync via GOOGLE_SHEETS_ID — same pattern as CQC seeds" />
+          <RefRow label="Google Sheets sync"  value="Bidirectional sync via GOOGLE_SHEETS_ID (cols A–I) — same pattern as CQC seeds" />
           <RefRow label="Injection"           value="fetchRegulationContextByQueryText() — keyword match on query text → injected as [RELATED REGULATIONS] in context" />
           <RefRow label="Scope"               value="Cited in all pipeline paths when a regulation matches the query — not just CQC path" />
+        </div>
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching (Policy Gaps)</p>
+          <p className="mt-1 text-xs leading-relaxed text-amber-800">
+            Three curated fields (edited on /platform/regulations, NOT in the Sheet, so a sync never wipes them) drive
+            regulation-coverage candidate selection in <span className="font-mono">analytics/regulation-coverage.ts</span>:
+          </p>
+          <div className="mt-2 space-y-1">
+            <RefRow label="expected_policy_titles" value="Canonical policy document names that satisfy this reg → title match against the home's library" />
+            <RefRow label="match_terms"            value="Discriminating tokens a policy on this reg contains (e.g. section 117, AMHP) → term match" />
+            <RefRow label="distinguish_from"       value="Near-neighbour regs (e.g. MHA 1983 ↔ MCA 2005 / DoLS) injected as a 'do NOT count as coverage' boundary for the judge" />
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-amber-800">
+            Matcher: candidate-select the home's policies by these signals → diversified wide vector pass (best chunk per
+            distinct policy, K=20) + targeted per-policy pull for any candidate the wide pass missed → Haiku judges
+            covered/partial/gap. Fixes the old top-5 collision where a held policy (e.g. Guardianship / MHA 1983) was
+            reported as a gap because MCA/DoLS neighbours crowded the sample. Regs without curated signals fall back to
+            the diversified pass. Re-run per tenant via POST /analytics/gaps/analyse.
+          </p>
         </div>
       </RefSection>
 

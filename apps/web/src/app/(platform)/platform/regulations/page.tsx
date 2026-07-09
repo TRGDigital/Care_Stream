@@ -190,6 +190,9 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       care_company_interaction: reg.care_company_interaction,
       practical_meaning:        reg.practical_meaning,
       source_urls:              reg.source_urls,
+      match_terms:              reg.match_terms ?? [],
+      distinguish_from:         reg.distinguish_from ?? [],
+      expected_policy_titles:   reg.expected_policy_titles ?? [],
       is_active:                reg.is_active,
     })
     onEdit()
@@ -243,6 +246,36 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
               onChange={e => setForm(f => ({ ...f, source_urls: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
             />
           </Field>
+
+          <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching signals</p>
+            <p className="text-xs text-amber-800 leading-relaxed">Used by the Policy Gaps regulation-coverage analysis to pick which of a home&rsquo;s policies to test against this regulation, and to stop near-neighbour regulations being confused. These are separate from &ldquo;Also known as&rdquo; (which drives the staff chatbot).</p>
+            <Field label="Expected policy titles (comma-separated) — canonical document names that satisfy this regulation">
+              <input
+                className={INPUT}
+                placeholder="Mental Health Act Policy, Guardianship (Section 7) Policy"
+                value={(form.expected_policy_titles ?? []).join(', ')}
+                onChange={e => setForm(f => ({ ...f, expected_policy_titles: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+              />
+            </Field>
+            <Field label="Match terms (comma-separated) — discriminating words a policy on this reg contains">
+              <input
+                className={INPUT}
+                placeholder="section 117, sectioning, AMHP, guardianship"
+                value={(form.match_terms ?? []).join(', ')}
+                onChange={e => setForm(f => ({ ...f, match_terms: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+              />
+            </Field>
+            <Field label="Distinguish from (comma-separated) — related regs this must NOT be confused with">
+              <input
+                className={INPUT}
+                placeholder="Mental Capacity Act 2005, Deprivation of Liberty Safeguards (DoLS)"
+                value={(form.distinguish_from ?? []).join(', ')}
+                onChange={e => setForm(f => ({ ...f, distinguish_from: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+              />
+            </Field>
+          </div>
+
           <Field label="Active">
             <select className={INPUT} value={String(form.is_active)} onChange={e => setForm(f => ({ ...f, is_active: e.target.value === 'true' }))}>
               <option value="true">Yes</option>
@@ -297,6 +330,22 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
           <p><span className="font-bold text-neutral-dark">Care home context:</span>{' '}{reg.care_home_context}</p>
           <p><span className="font-bold text-neutral-dark">Care company interaction:</span>{' '}{reg.care_company_interaction}</p>
           <p><span className="font-bold text-neutral-dark">Practical meaning:</span>{' '}{reg.practical_meaning}</p>
+          {(reg.expected_policy_titles?.length || reg.match_terms?.length || reg.distinguish_from?.length) ? (
+            <div className="rounded-md border border-amber-100 bg-amber-50/60 px-3 py-2.5 space-y-1.5 text-xs">
+              <p className="font-bold uppercase tracking-wide text-amber-700">Coverage matching</p>
+              {reg.expected_policy_titles?.length > 0 && (
+                <p><span className="font-semibold text-neutral-dark">Expected policy titles:</span>{' '}{reg.expected_policy_titles.join(', ')}</p>
+              )}
+              {reg.match_terms?.length > 0 && (
+                <p><span className="font-semibold text-neutral-dark">Match terms:</span>{' '}{reg.match_terms.join(', ')}</p>
+              )}
+              {reg.distinguish_from?.length > 0 && (
+                <p><span className="font-semibold text-neutral-dark">Distinguish from:</span>{' '}{reg.distinguish_from.join(', ')}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-mid italic">No coverage-matching signals set yet. Add them via Edit to tighten Policy Gaps analysis.</p>
+          )}
           {reg.source_urls.length > 0 && (
             <p><span className="font-bold text-neutral-dark">Sources:</span>{' '}
               {reg.source_urls.map(url => (
@@ -317,7 +366,7 @@ function RegulationForm({ token, onClose, onSaved }: {
   onClose: () => void
   onSaved: (r: Regulation) => void
 }) {
-  const [form,   setForm]   = useState<Partial<Regulation & { also_known_as_str: string; source_urls_str: string }>>({ is_active: true })
+  const [form,   setForm]   = useState<Partial<Regulation & { also_known_as_str: string; source_urls_str: string; expected_policy_titles_str: string; match_terms_str: string; distinguish_from_str: string }>>({ is_active: true })
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
 
@@ -327,8 +376,11 @@ function RegulationForm({ token, onClose, onSaved }: {
     try {
       const payload = {
         ...form,
-        also_known_as: form.also_known_as_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
-        source_urls:   form.source_urls_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        also_known_as:          form.also_known_as_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        source_urls:            form.source_urls_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        expected_policy_titles: form.expected_policy_titles_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        match_terms:            form.match_terms_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        distinguish_from:       form.distinguish_from_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
       }
       const reg = await createPlatformClient(token).regulations.create(payload)
       onSaved(reg)
@@ -366,6 +418,20 @@ function RegulationForm({ token, onClose, onSaved }: {
         <Field label="Source URLs (comma-separated)" className="sm:col-span-2">
           <input className={INPUT} placeholder="https://ico.org.uk/..." value={form.source_urls_str ?? ''} onChange={e => setForm(f => ({ ...f, source_urls_str: e.target.value }))} />
         </Field>
+
+        <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching signals (optional)</p>
+          <p className="text-xs text-amber-800 leading-relaxed">Improve Policy Gaps accuracy: which policy documents satisfy this reg, the words that discriminate it, and the related regs it must not be confused with.</p>
+          <Field label="Expected policy titles (comma-separated)">
+            <input className={INPUT} placeholder="Mental Health Act Policy, Guardianship (Section 7) Policy" value={form.expected_policy_titles_str ?? ''} onChange={e => setForm(f => ({ ...f, expected_policy_titles_str: e.target.value }))} />
+          </Field>
+          <Field label="Match terms (comma-separated)">
+            <input className={INPUT} placeholder="section 117, sectioning, AMHP, guardianship" value={form.match_terms_str ?? ''} onChange={e => setForm(f => ({ ...f, match_terms_str: e.target.value }))} />
+          </Field>
+          <Field label="Distinguish from (comma-separated)">
+            <input className={INPUT} placeholder="Mental Capacity Act 2005, Deprivation of Liberty Safeguards (DoLS)" value={form.distinguish_from_str ?? ''} onChange={e => setForm(f => ({ ...f, distinguish_from_str: e.target.value }))} />
+          </Field>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">

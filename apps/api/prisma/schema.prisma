@@ -475,6 +475,10 @@ model ExternalRegulation {
   care_company_interaction String
   practical_meaning        String
   source_urls              String[]
+  // Coverage-matching signals (curated in /platform/regulations, not synced from the Sheet):
+  match_terms              String[]  @default([])   // discriminating tokens a policy on this reg contains
+  distinguish_from         String[]  @default([])   // near-neighbour regs this must NOT be confused with
+  expected_policy_titles   String[]  @default([])   // canonical policy document titles that satisfy this reg
   pinecone_vector_id       String?
   last_synced_at           DateTime?
   is_active                Boolean   @default(true)

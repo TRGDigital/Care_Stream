@@ -1596,6 +1596,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
     reference_key, official_name, also_known_as = [], summary,
     care_home_context, care_company_interaction, practical_meaning,
     source_urls = [], is_active = true,
+    match_terms = [], distinguish_from = [], expected_policy_titles = [],
   } = req.body ?? {}
 
   if (!reference_key || !official_name || !summary) {
@@ -1628,6 +1629,9 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
       practical_meaning:        String(practical_meaning ?? ''),
       source_urls:              Array.isArray(source_urls) ? source_urls : [],
       is_active:                Boolean(is_active),
+      match_terms:              Array.isArray(match_terms) ? match_terms : [],
+      distinguish_from:         Array.isArray(distinguish_from) ? distinguish_from : [],
+      expected_policy_titles:   Array.isArray(expected_policy_titles) ? expected_policy_titles : [],
       pinecone_vector_id:       vectorId,
       last_synced_at:           new Date(),
     },
@@ -1658,6 +1662,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
   const {
     official_name, also_known_as, summary, care_home_context,
     care_company_interaction, practical_meaning, source_urls, is_active,
+    match_terms, distinguish_from, expected_policy_titles,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1671,6 +1676,9 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
       ...(practical_meaning        !== undefined ? { practical_meaning }        : {}),
       ...(source_urls              !== undefined ? { source_urls }              : {}),
       ...(is_active                !== undefined ? { is_active }                : {}),
+      ...(match_terms              !== undefined ? { match_terms }              : {}),
+      ...(distinguish_from         !== undefined ? { distinguish_from }         : {}),
+      ...(expected_policy_titles   !== undefined ? { expected_policy_titles }   : {}),
       last_synced_at: new Date(),
     },
   })

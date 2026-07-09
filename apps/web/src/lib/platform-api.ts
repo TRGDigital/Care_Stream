@@ -670,7 +670,7 @@ export function createPlatformClient(token: string) {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: Partial<Regulation>) =>
+      update: (id: string, data: Partial<Regulation> & { notify_tenants?: boolean }) =>
         adminFetch<Regulation>(`/regulations/${id}`, token, {
           method: 'PATCH',
           body:   JSON.stringify(data),

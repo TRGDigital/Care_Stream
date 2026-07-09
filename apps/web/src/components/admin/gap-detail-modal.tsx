@@ -161,7 +161,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
         ) : loading ? (
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-16">
             <Loader2 size={26} className="animate-spin text-teal" />
-            <p className="text-sm text-neutral-mid">Reading your policies and checking the whole library…</p>
+            <p className="text-sm text-neutral-mid">Loading recommendations…</p>
           </div>
         ) : error ? (
           <div className="m-6 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>

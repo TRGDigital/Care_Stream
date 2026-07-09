@@ -278,6 +278,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
   const [expanded, setExpanded] = useState(false)
   const [form,     setForm]     = useState<Partial<Regulation>>({})
   const [saving,   setSaving]   = useState(false)
+  const [notifyTenants, setNotifyTenants] = useState(false)   // per-save: alert assessed tenants of this change?
   const [versions, setVersions] = useState<Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> | null>(null)
 
   useEffect(() => {
@@ -335,13 +336,14 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       review_note:              reg.review_note ?? '',
       is_active:                reg.is_active,
     })
+    setNotifyTenants(false)
     onEdit()
   }
 
   async function handleSave() {
     setSaving(true)
     try {
-      const updated = await createPlatformClient(token).regulations.update(reg.id, form)
+      const updated = await createPlatformClient(token).regulations.update(reg.id, { ...form, notify_tenants: notifyTenants })
       onSaved(updated)
     } finally {
       setSaving(false)
@@ -546,6 +548,12 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             </select>
           </Field>
         </div>
+        <label className="flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white p-3 text-sm text-neutral-dark">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-gray-300 text-teal focus:ring-teal"
+            checked={notifyTenants}
+            onChange={e => setNotifyTenants(e.target.checked)} />
+          <span><strong>Notify assessed tenants of this change</strong> — tick only for a genuine standards update. It alerts every tenant assessed against this regulation to review and re-check. Leave unticked for content build-out or minor edits (the change is still recorded in the history).</span>
+        </label>
         <div className="flex gap-2">
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-sm text-white hover:bg-teal-dark disabled:opacity-50">
             {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}

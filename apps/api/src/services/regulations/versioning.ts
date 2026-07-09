@@ -34,8 +34,10 @@ function snapshotOf(reg: any): Record<string, unknown> {
 }
 
 // Record a version and (on a material change) fan out tenant alerts. Best-effort:
-// never throw into the caller's request path.
-export async function snapshotAndAlert(before: any, after: any): Promise<void> {
+// never throw into the caller's request path. `notifyTenants` false records the
+// version but suppresses the tenant alerts (used during content build-out / minor
+// edits, so admins aren't spammed for changes that aren't real standards updates).
+export async function snapshotAndAlert(before: any, after: any, opts: { notifyTenants?: boolean } = {}): Promise<void> {
   try {
     const changed = changedFields(before, after)
     if (!changed.length) return
@@ -52,7 +54,7 @@ export async function snapshotAndAlert(before: any, after: any): Promise<void> {
       },
     })
 
-    if (!material) return
+    if (!material || opts.notifyTenants === false) return
 
     // Alert every tenant assessed against this regulation (has a cached coverage row
     // = it's in scope for them and they've run the analysis). Refresh any existing

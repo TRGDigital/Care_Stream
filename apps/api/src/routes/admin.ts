@@ -1721,7 +1721,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     care_company_interaction, practical_meaning, source_urls, is_active,
     match_terms, distinguish_from, expected_policy_titles, required_elements,
     authoritative_requirements, authority_basis, applies_to_settings, required_triggers,
-    needs_update, review_note,
+    needs_update, review_note, notify_tenants,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1764,8 +1764,8 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     }])
   }
 
-  // Record a version and alert assessed tenants on a material (standard-content) change.
-  await snapshotAndAlert(existing, updated)
+  // Record a version and (unless suppressed) alert assessed tenants on a material change.
+  await snapshotAndAlert(existing, updated, { notifyTenants: notify_tenants === true })
 
   ok(res, updated)
 })

@@ -54,11 +54,11 @@ function MegaMenuGrid({ items, onClose }: { items: MenuItem[]; onClose: () => vo
           <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-teal/10 text-teal transition-colors group-hover:bg-teal group-hover:text-white">
             <Icon size={15} />
           </div>
-          <div>
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
-              {label}
-              {badge && <span className="rounded-full bg-amber-brand/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-brand">{badge}</span>}
-            </p>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              <p className="text-sm font-semibold text-neutral-dark">{label}</p>
+              {badge && <span className="whitespace-nowrap rounded-full bg-amber-brand/15 px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-wide text-amber-brand">{badge}</span>}
+            </div>
             <p className="mt-0.5 text-xs leading-snug text-neutral-mid">{desc}</p>
           </div>
         </Link>

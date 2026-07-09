@@ -523,6 +523,24 @@ model TenantRegulationAlert {
   @@map("tenant_regulation_alerts")
 }
 
+// Durable record that a tenant admin accepted a legal disclaimer (e.g. the policy-
+// remediation guidance disclaimer). One row per (tenant, kind); who + when + which
+// version is kept as evidence.
+model LegalAcknowledgement {
+  id                 String   @id @default(uuid())
+  tenant_id          String
+  kind               String
+  disclaimer_version String
+  user_id            String?
+  user_name          String?
+  user_email         String?
+  acknowledged_at    DateTime @default(now())
+
+  @@unique([tenant_id, kind])
+  @@index([tenant_id])
+  @@map("legal_acknowledgements")
+}
+
 // Rotating refresh tokens — one row per issued refresh JWT (id = its jti). On each
 // /auth/refresh the current token is rotated (rotated_at set) and a new one issued;
 // reusing a rotated/unknown token is treated as theft and revokes the user's tokens.

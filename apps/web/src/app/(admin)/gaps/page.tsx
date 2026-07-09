@@ -50,6 +50,7 @@ export default function GapsPage() {
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
+  const [ackOverride, setAckOverride] = useState(false)   // set true once the disclaimer is accepted this session
   // "Regulation updated" alerts — dismissed ids + per-alert training generation state.
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [alertTraining, setAlertTraining] = useState<Record<string, 'loading' | 'done'>>({})
@@ -365,6 +366,9 @@ export default function GapsPage() {
           token={session.accessToken}
           referenceKey={detailReg.reference_key}
           officialName={detailReg.official_name}
+          acknowledged={data.remediation_acknowledged || ackOverride}
+          disclaimer={data.remediation_disclaimer}
+          onAcknowledged={() => setAckOverride(true)}
           onClose={() => setDetailReg(null)}
           onVerdictCovered={key => setCorrectedToCovered(prev => new Set(prev).add(key))}
         />

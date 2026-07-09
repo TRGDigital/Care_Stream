@@ -592,6 +592,7 @@ export function createPlatformClient(token: string) {
           analysed: boolean; analysed_at: string | null
           coverage: { score: number | null; covered: number; partial: number; gap: number; total: number }
           deep_dives: number; gap_training_modules: number; open_alerts: number
+          remediation_ack: { at: string; by: string; version: string } | null
         }>(`/tenants/${id}/gap-usage`, token),
 
       // Mint a one-time sign-in link to open the client's own dashboard.

@@ -449,6 +449,13 @@ function GapUsageSection({ token, tenantId }: { token: string; tenantId: string 
         <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">{data.open_alerts} open &ldquo;regulation updated&rdquo; alert{data.open_alerts === 1 ? '' : 's'} awaiting review.</p>
       )}
 
+      <p className="mb-3 text-xs text-neutral-mid">
+        <span className="font-semibold text-neutral-dark">Remediation disclaimer:</span>{' '}
+        {data.remediation_ack
+          ? <>accepted by {data.remediation_ack.by} on {fmtDate(data.remediation_ack.at)} ({data.remediation_ack.version}).</>
+          : <span className="text-amber-700">not yet accepted — they cannot open the &ldquo;what to add&rdquo; guidance until they do.</span>}
+      </p>
+
       <div>
         <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Service profile</p>
         <div className="flex flex-wrap gap-1.5">

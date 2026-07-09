@@ -283,6 +283,12 @@ function extractKeywords(text: string): string[] {
     .filter(w => w.length > 3 && !STOPWORDS.has(w))
 }
 
+// Policy-remediation legal disclaimer. Bump the version if the wording materially
+// changes, so tenants are asked to re-acknowledge.
+export const REMEDIATION_DISCLAIMER_VERSION = 'v1'
+export const REMEDIATION_DISCLAIMER =
+  'The gaps, requirements and example wording in Policy Gap Detection are guidance to help you improve your policies. They are not legal or compliance advice. You remain responsible for reviewing, adapting and approving any changes. CareStream strongly recommends that any changes you make to your policies are checked by a suitably qualified external specialist before they are adopted.'
+
 analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) => {
   const tenantId   = getTenantId()
 
@@ -326,6 +332,12 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     id: a.id, reference_key: a.reference_key, official_name: a.official_name,
     changed_fields: a.changed_fields ?? [], created_at: a.created_at,
   }))
+
+  // Has this tenant accepted the current policy-remediation disclaimer?
+  const ack = await (prisma as any).legalAcknowledgement.findUnique({
+    where: { tenant_id_kind: { tenant_id: tenantId, kind: 'policy_remediation' } },
+  }).catch(() => null)
+  const remediationAcknowledged = !!ack && ack.disclaimer_version === REMEDIATION_DISCLAIMER_VERSION
 
   // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
   // Score every keyword by how many no-match queries contain it
@@ -408,6 +420,8 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     unanswered_themes: themes,
     regulation_gaps:   regulationGaps.sort((a, b) => rank(a.status) - rank(b.status)),
     regulation_alerts: regulationAlerts,
+    remediation_acknowledged: remediationAcknowledged,
+    remediation_disclaimer:   REMEDIATION_DISCLAIMER,
     meta: {
       no_match_total:      noMatchQueries.length,
       days_analysed:       90,
@@ -523,6 +537,27 @@ analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async
   } catch (e: any) {
     err(res, 'MODULE_FAILED', e.message ?? 'Could not generate the training module.', 500)
   }
+})
+
+// ─── POST /analytics/gaps/acknowledge-remediation ────────────────────────────
+// Record that an admin accepted the policy-remediation disclaimer (once per tenant).
+// Kept as durable evidence: who, when, which version.
+analyticsRouter.post('/gaps/acknowledge-remediation', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const user = (req as any).user ?? {}
+  const data = {
+    disclaimer_version: REMEDIATION_DISCLAIMER_VERSION,
+    user_id:    user.id ?? user.user_id ?? null,
+    user_name:  user.name ?? null,
+    user_email: user.email ?? null,
+    acknowledged_at: new Date(),
+  }
+  await (prisma as any).legalAcknowledgement.upsert({
+    where:  { tenant_id_kind: { tenant_id: tenantId, kind: 'policy_remediation' } },
+    update: data,
+    create: { tenant_id: tenantId, kind: 'policy_remediation', ...data },
+  }).catch(() => {})
+  ok(res, { acknowledged: true })
 })
 
 // ─── POST /analytics/gaps/alerts/:id/dismiss ─────────────────────────────────

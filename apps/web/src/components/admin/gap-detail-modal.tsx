@@ -44,10 +44,13 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
   }
 }
 
-export function GapDetailModal({ token, referenceKey, officialName, onClose, onVerdictCovered }: {
+export function GapDetailModal({ token, referenceKey, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered }: {
   token:            string
   referenceKey:     string
   officialName:     string
+  acknowledged:     boolean
+  disclaimer:       string
+  onAcknowledged:   () => void
   onClose:          () => void
   onVerdictCovered: (referenceKey: string) => void
 }) {
@@ -55,6 +58,22 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [tab,     setTab]     = useState<'add' | 'coverage'>('add')
+  // Legal disclaimer gate — the detail is only fetched once accepted.
+  const [accepted, setAccepted] = useState(acknowledged)
+  const [accepting, setAccepting] = useState(false)
+
+  async function acceptDisclaimer() {
+    setAccepting(true)
+    try {
+      await createApiClient(token).analytics.acknowledgeRemediation()
+      onAcknowledged()
+      setAccepted(true)
+    } catch {
+      setAccepted(true)   // don't hard-block on a failed record; proceed
+    } finally {
+      setAccepting(false)
+    }
+  }
 
   // Coverage tab (policy preview + highlight) — loaded lazily.
   const [html,        setHtml]        = useState<string | null>(null)
@@ -80,13 +99,14 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
   }
 
   useEffect(() => {
+    if (!accepted) return   // don't fetch the remediation detail until the disclaimer is accepted
     let live = true
     createApiClient(token).analytics.gapDetail(referenceKey)
       .then(d => { if (!live) return; setDetail(d); if (d.effective_status === 'covered') onVerdictCovered(referenceKey) })
       .catch(e => { if (live) setError(e.message ?? 'Could not build the detail.') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
-  }, [token, referenceKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token, referenceKey, accepted]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load the evidence policy preview when the Coverage tab is first opened.
   useEffect(() => {
@@ -120,7 +140,25 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
           <button onClick={onClose} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
         </div>
 
-        {loading ? (
+        {!accepted ? (
+          <div className="px-6 py-6">
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4">
+              <Scale size={20} className="mt-0.5 shrink-0 text-amber-600" />
+              <div>
+                <p className="mb-1.5 text-sm font-bold text-amber-900">Before you use these recommendations</p>
+                <p className="text-sm leading-relaxed text-amber-800">{disclaimer}</p>
+              </div>
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-neutral-mid">By continuing, you confirm you understand this and accept responsibility for reviewing, adapting and approving any changes, and for having them checked by a qualified specialist where appropriate. We record this acknowledgement once, with your name and the date.</p>
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button onClick={onClose} className="rounded-btn border border-gray-300 px-4 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light">Cancel</button>
+              <button onClick={acceptDisclaimer} disabled={accepting}
+                className="inline-flex items-center justify-center gap-1.5 rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+                {accepting ? <><Loader2 size={14} className="animate-spin" /> Recording…</> : 'I understand and accept'}
+              </button>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-16">
             <Loader2 size={26} className="animate-spin text-teal" />
             <p className="text-sm text-neutral-mid">Reading your policies and checking the whole library…</p>

@@ -930,9 +930,12 @@ export function createApiClient(token: string) {
         unanswered_themes: Array<{ theme: string; count: number; sample_questions: string[] }>
         regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; status: 'covered' | 'partial' | 'gap' | 'unknown'; covered: boolean; confidence: number | null; evidence_policy_id: string | null; evidence_policy_name: string | null; reason: string | null }>
         regulation_alerts: Array<{ id: string; reference_key: string; official_name: string; changed_fields: string[]; created_at: string }>
+        remediation_acknowledged: boolean
+        remediation_disclaimer: string
         meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }
       }>('/analytics/gaps', token),
       dismissGapAlert: (id: string) => apiFetch<{ dismissed: boolean }>(`/analytics/gaps/alerts/${encodeURIComponent(id)}/dismiss`, token, { method: 'POST' }),
+      acknowledgeRemediation: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-remediation', token, { method: 'POST' }),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string

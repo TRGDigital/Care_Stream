@@ -269,12 +269,13 @@ adminRouter.get('/tenants/:id/gap-usage', async (req: Request, res: Response) =>
   const setting = facilityTypeToSetting(tenant.facility_type)
   const profile = resolveServiceProfile(setting, (tenant.service_profile ?? {}) as Record<string, unknown>)
 
-  const [regs, coverage, deepDives, gapModules, openAlerts] = await Promise.all([
+  const [regs, coverage, deepDives, gapModules, openAlerts, ack] = await Promise.all([
     (prisma as any).externalRegulation.findMany({ where: { is_active: true }, select: { applies_to_settings: true, required_triggers: true } }),
     (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { status: true, analysed_at: true } }),
     (prisma as any).gapDetailCache.count({ where: { tenant_id: tenantId } }),
     (prisma as any).trainingModule.count({ where: { tenant_id: tenantId, slug: { startsWith: 'ai-gap-' } } }),
     (prisma as any).tenantRegulationAlert.count({ where: { tenant_id: tenantId, dismissed_at: null } }),
+    (prisma as any).legalAcknowledgement.findUnique({ where: { tenant_id_kind: { tenant_id: tenantId, kind: 'policy_remediation' } } }).catch(() => null),
   ])
 
   const inScope = (regs as any[]).filter(r => regulationAppliesToTenant(r, setting, profile)).length
@@ -296,6 +297,7 @@ adminRouter.get('/tenants/:id/gap-usage', async (req: Request, res: Response) =>
     deep_dives: deepDives,
     gap_training_modules: gapModules,
     open_alerts: openAlerts,
+    remediation_ack: ack ? { at: ack.acknowledged_at, by: ack.user_name || ack.user_email || 'an admin', version: ack.disclaimer_version } : null,
   })
 })
 

@@ -545,9 +545,9 @@ function PolicyGroup({
                           onClick={() => onPreview(p)}
                           title="Preview how this policy renders for staff (letterhead & footers stripped)"
                           aria-label="Preview policy"
-                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 text-neutral-mid hover:border-teal/40 hover:text-teal"
+                          className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-gray-200 px-2.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal"
                         >
-                          <Eye size={15} />
+                          Policy preview
                         </button>
                       )}
                       <PolicyActions

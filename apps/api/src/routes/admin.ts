@@ -1783,27 +1783,27 @@ adminRouter.post('/regulations/:id/generate-requirements', async (req: Request, 
   if (!reg) { err(res, 'NOT_FOUND', 'Regulation not found', 404); return }
 
   const sources = (reg.source_urls ?? []).filter(Boolean).join('\n')
-  const user = `You are a UK health & social care compliance specialist. Write a faithful, authoritative statement of the requirements that "${reg.official_name}" places on a care provider — as close as you can to what the actual standard, legislation or guidance says, so a compliance lead would recognise it as accurate.
+  const user = `Write a faithful, authoritative statement of the requirements that "${reg.official_name}" places on a UK care provider — as close as you can to what the actual standard, legislation or guidance says, so a compliance lead would recognise it as accurate.
 
 Rules:
-- State the concrete duties/requirements, grouped logically, as clear bullet points.
+- State the concrete duties/requirements, grouped logically, as clear bullet points (use "- ").
 - Where you can, reference the specific provisions (e.g. section, regulation or clause numbers) that impose each requirement.
 - Stay strictly within the scope of THIS instrument — do not import requirements that belong to other laws.
-- End with a "Sources:" line naming the specific legal instrument(s)/guidance this is drawn from.
+- End with a line beginning "Sources:" naming the specific legal instrument(s)/guidance this is drawn from.
+- Output ONLY the requirements text itself — no preamble, no title, no commentary.
 
 CONTEXT (our own summary — use to orient, but the authority is the named instrument itself):
 WHAT IT REQUIRES: ${reg.summary}
 IN A CARE HOME: ${reg.care_home_context}
 PRACTICAL MEANING: ${reg.practical_meaning}
-${sources ? `KNOWN SOURCE URLS:\n${sources}` : ''}
-
-Respond with ONLY minified JSON:
-{"authoritative_requirements":"<the requirements as a single string, using \\n for line breaks and '- ' for bullets, ending with a Sources: line>"}`
+${sources ? `KNOWN SOURCE URLS:\n${sources}` : ''}`
 
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 2200 })
-    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
-    const requirements = typeof parsed.authoritative_requirements === 'string' ? parsed.authoritative_requirements.trim() : ''
+    const text = await callClaude('You are a UK health & social care compliance specialist. Reply with the requested text only, no preamble.', user, { model: 'claude-sonnet-4-5', maxTokens: 4000 })
+    // Plain-text field — strip any stray code fences, never JSON-parse (long prose
+    // in JSON truncates/breaks). Empty response is the only failure case.
+    const requirements = String(text ?? '').replace(/^```[a-z]*\s*|\s*```$/g, '').trim()
+    if (!requirements) { err(res, 'GENERATE_FAILED', 'The model returned an empty response — please try again.', 502); return }
     ok(res, { authoritative_requirements: requirements })
   } catch (e: any) {
     err(res, 'GENERATE_FAILED', e.message ?? 'Could not generate the requirements.', 500)
@@ -1838,14 +1838,16 @@ Respond with ONLY minified JSON:
 {"required_elements":["<one concrete required element>"]}`
 
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 1800 })
-    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
+    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 2800 })
+    const slice = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)
+    if (!slice) { err(res, 'GENERATE_FAILED', 'The model returned an unexpected response — please try again.', 502); return }
+    const parsed = JSON.parse(slice)
     const items = Array.isArray(parsed.required_elements)
       ? parsed.required_elements.map((s: any) => String(s ?? '').trim()).filter(Boolean).slice(0, 20)
       : []
     ok(res, { required_elements: items })
   } catch (e: any) {
-    err(res, 'GENERATE_FAILED', e.message ?? 'Could not generate the checklist.', 500)
+    err(res, 'GENERATE_FAILED', e.message ?? 'Could not generate the checklist. Please try again.', 500)
   }
 })
 

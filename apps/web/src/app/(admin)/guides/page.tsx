@@ -520,6 +520,67 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ),
   },
   {
+    id:      'policy-gap-detection',
+    icon:    ShieldAlert,
+    title:   'Policy Gap Detection',
+    summary: 'Regulation coverage, what to add, legal-change tracking and gap training — Professional & Enterprise',
+    content: (
+      <div className="space-y-5">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-bold text-amber-900">A Professional &amp; Enterprise feature</p>
+          <p className="mt-1 text-sm text-amber-800">Policy Gap Detection is included on the <strong>Professional</strong> and <strong>Enterprise</strong> plans. On Starter, the Gaps page shows an upgrade prompt. You can upgrade in a click from your dashboard.</p>
+        </div>
+
+        <p className="text-sm text-neutral-mid">
+          Policy Gap Detection reads inside your uploaded policies and tells you exactly which regulations you cover and where the gaps are — then shows what to add, why it&rsquo;s required, and which policy to put it in. It only assesses the regulations that apply to <em>your</em> service, tracks changes to the standards, and can turn any change into staff training. Find it under <strong>Gaps</strong> in the menu.
+        </p>
+
+        <SectionBlock title="Regulation coverage, read from your policy content">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Click <strong>Run coverage analysis</strong> (about a minute). For every regulation that applies to your service, CareStream searches the actual content of <em>all</em> your policies and an AI auditor judges whether you substantively cover it:
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-green-500" /><span><strong>Covered</strong> — a policy clearly addresses it (the policy is named).</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-amber-500" /><span><strong>Partial</strong> — touched on but incomplete.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-red-500" /><span><strong>Gap</strong> — not addressed anywhere in your policies.</span></li>
+          </ul>
+          <p className="text-sm text-neutral-dark leading-relaxed">A regulation is only flagged when your documents genuinely don&rsquo;t cover it, never just because no policy is named after it. Re-run it whenever you upload or update policies.</p>
+          <Tip>The coverage score is fully-covered regulations, plus partials at half weight, out of the total that apply to you.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="What to add — and where">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            On any partial or gap, click <strong>See what to add</strong> / <strong>Show coverage &amp; what to add</strong>. CareStream shows the specific requirements you&rsquo;re missing with <strong>example wording you can adapt</strong>, and — importantly — verifies each one against your <em>whole</em> library first, so it never tells you to add something you already hold in another policy.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Where it goes</strong>: it names the existing policy to add the wording to, or tells you a new policy is needed.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Legal basis</strong>: each item is marked <strong>Legally required</strong> or <strong>Advised good practice</strong>, naming the regulation and linking the source.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Highlighting</strong>: on a partial, the &ldquo;Where it&rsquo;s covered&rdquo; tab opens the policy with the covered passages highlighted.</span></li>
+          </ul>
+          <Tip>The example wording is guidance for you to review, adapt and approve — not legal advice. Prefer it done for you? Use &ldquo;Request this policy&rdquo; and our team can write and supply it.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Only what applies to your service">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            We never flag regulations that don&rsquo;t apply to you. In <strong>Settings → Service profile</strong>, confirm a few facts about your service (do you cook on site, administer medicines, employ nurses, use hoists, support people under the Mental Health Act, and so on). These are pre-filled from your facility type — just check them. A home that holds no controlled drugs is never assessed against controlled-drug rules; a service that doesn&rsquo;t support people under the Mental Health Act is never flagged for it. The CQC Fundamental Standards and core legal duties apply to everyone.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="When the rules change, you&rsquo;ll know">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            CareStream tracks changes to the standards you&rsquo;re assessed against. When one changes, a banner appears at the top of your Gaps page listing the affected regulations, so you can review your policies and re-run the analysis before it becomes an inspection finding. Dismiss any you&rsquo;ve dealt with.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Turn a change into staff training">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Once you&rsquo;ve added the recommended wording — or from a &ldquo;regulation updated&rdquo; alert — click <strong>Generate training module</strong>. CareStream drafts a short lesson and assessment built from exactly that change, and it lands as an <strong>unapproved draft in Training</strong> for you to review and publish before it reaches staff. Diagnose the gap, close it, and make sure your team learns it, in one flow. (Uses one AI credit.)
+          </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
     id:      'onboarding',
     icon:    UserPlus,
     title:   'Staff onboarding flows',

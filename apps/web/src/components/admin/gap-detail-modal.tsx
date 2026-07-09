@@ -14,10 +14,16 @@ function quoteToRegex(q: string): RegExp | null {
   try { return new RegExp(escaped.join('\\s+'), 'i') } catch { return null }
 }
 
-// Wrap matched quotes in <mark> within the rendered preview — text nodes only, so
-// tags are never broken. Cross-node matches simply don't highlight (graceful).
+// Distinct highlight colours, one per matched passage. Kept as full class strings
+// so Tailwind includes them; teal is reserved for the search box.
+const QUOTE_PALETTE = ['bg-yellow-200', 'bg-sky-200', 'bg-green-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200', 'bg-lime-200', 'bg-fuchsia-200']
+const quoteColour = (i: number) => QUOTE_PALETTE[i % QUOTE_PALETTE.length]
+
+// Wrap each matched quote in a <mark> coloured + numbered by its position, so the
+// inline highlight maps unambiguously to the numbered passage in the list. Text
+// nodes only, so tags are never broken; cross-node matches simply don't highlight.
 function highlightQuotes(root: HTMLElement, quotes: string[]) {
-  const regexes = quotes.map(quoteToRegex).filter((r): r is RegExp => !!r)
+  const regexes = quotes.map((q, i) => ({ i, re: quoteToRegex(q) })).filter(x => !!x.re) as { i: number; re: RegExp }[]
   if (!regexes.length) return
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
   const nodes: Text[] = []
@@ -26,7 +32,7 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
   for (const node of nodes) {
     const raw = node.nodeValue ?? ''
     if (raw.trim().length < 8) continue
-    for (const re of regexes) {
+    for (const { i, re } of regexes) {
       const m = re.exec(raw)
       if (!m) continue
       const before = raw.slice(0, m.index)
@@ -34,8 +40,12 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
       const frag = document.createDocumentFragment()
       if (before) frag.appendChild(document.createTextNode(before))
       const mark = document.createElement('mark')
-      mark.className = 'bg-yellow-200 rounded px-0.5'
-      mark.textContent = m[0]
+      mark.className = `${quoteColour(i)} rounded px-0.5`
+      const badge = document.createElement('sup')
+      badge.textContent = String(i + 1)
+      badge.className = 'mr-0.5 font-bold'
+      mark.appendChild(badge)
+      mark.appendChild(document.createTextNode(m[0]))
       frag.appendChild(mark)
       if (after) frag.appendChild(document.createTextNode(after))
       node.parentNode?.replaceChild(frag, node)
@@ -363,7 +373,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                         <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{detail.target_policy.name}</span>
                       </p>
-                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Passages that already address this are highlighted in yellow.</p>}
+                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Each passage that already addresses this is highlighted and numbered — see the key below.</p>}
                     </div>
 
                     {/* Search the policy — verify a recommended phrase isn't already there. */}
@@ -398,10 +408,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     )}
                     {detail.covered_quotes.length > 0 && (
                       <div className="mt-5 border-t border-gray-100 pt-4">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Matched passages</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Matched passages — key</p>
                         <ul className="space-y-1.5">
                           {detail.covered_quotes.map((q, i) => (
-                            <li key={i} className="rounded bg-yellow-100 px-2.5 py-1.5 text-xs text-neutral-dark">{q}</li>
+                            <li key={i} className="flex gap-2 text-xs text-neutral-dark">
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`}>{i + 1}</span>
+                              <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
+                            </li>
                           ))}
                         </ul>
                       </div>

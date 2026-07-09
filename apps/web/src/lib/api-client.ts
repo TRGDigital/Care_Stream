@@ -952,8 +952,8 @@ export function createApiClient(token: string) {
         evidence_policy:  { id: string; name: string } | null
         target_policy:    { id: string; name: string } | null
         suggested_new_policy_title: string | null
-        covered_quotes:   string[]
-        requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null; evidence_quote?: string | null; match_index?: number | null }>
+        highlight_quotes: string[]
+        requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null; location_quote?: string | null; match_index?: number | null }>
         disclaimer:       string
         generated_at:     string
       }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${force ? '?force=1' : ''}`, token, { method: 'POST' }),

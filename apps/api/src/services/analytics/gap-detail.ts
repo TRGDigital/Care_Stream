@@ -30,7 +30,8 @@ export type GapRequirement = {
   status:              'missing' | 'already_covered'
   already_covered_in?: string | null
   suggested_addition?: string | null
-  evidence_quote?:     string | null   // the policy sentence that evidences it (target policy only)
+  // For a MISSING requirement: where in the target policy to add or amend it.
+  location_quote?:     string | null   // verbatim policy sentence/heading to add near (or null = new section)
   match_index?:        number | null    // 1-based; links to the numbered/coloured highlight
 }
 
@@ -44,7 +45,7 @@ export type GapDetail = {
   evidence_policy:   { id: string; name: string } | null
   target_policy:     { id: string; name: string } | null   // where to add the missing text (existing policy)
   suggested_new_policy_title: string | null                // when there's no existing policy to add to
-  covered_quotes:    string[]
+  highlight_quotes:  string[]                               // policy passages to highlight = where to add/amend
   requirements:      GapRequirement[]
   disclaimer:        string
   generated_at:      string
@@ -79,7 +80,7 @@ const parseJson = (text: string): any => {
 // when present (authoritative, consistent, traceable). Only when a regulation has no
 // curated checklist do we fall back to model-derived requirements — and even then we
 // bind the model strictly to the regulation description, not outside knowledge.
-async function identify(reg: any, evidenceText: string | null): Promise<{ covered_quotes: string[]; requirements: { requirement: string; in_policy: boolean; quote?: string }[] }> {
+async function identify(reg: any, evidenceText: string | null): Promise<{ requirements: { requirement: string; in_policy: boolean }[] }> {
   const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean).slice(0, MAX_REQUIREMENTS) : []
 
   // ── Partial: check the evidence policy against the requirement checklist. ──
@@ -102,24 +103,21 @@ ${evidenceText.slice(0, POLICY_TEXT_CAP)}
 
 ${checklistBlock}
 
-For each requirement, decide whether THIS policy text substantively addresses it. When it does (in_policy true), set "quote" to the single most relevant sentence from the policy (verbatim, copied character-for-character) that evidences it; otherwise leave "quote" empty.
+For each requirement, decide whether THIS policy text substantively addresses it (in_policy true/false).
 
 Respond with ONLY minified JSON${curated.length ? ' — keep the requirement text identical to the list above and in the same order' : ''}:
-{"requirements":[{"requirement":"<requirement>","in_policy":true|false,"quote":"<verbatim sentence, or empty>"}]}`
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1600 })
+{"requirements":[{"requirement":"<requirement>","in_policy":true|false}]}`
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1400 })
     const p = parseJson(text)
     const requirements = Array.isArray(p.requirements)
-      ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy, quote: typeof r.quote === 'string' ? r.quote.trim() : '' })).filter((r: any) => r.requirement)
+      ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy })).filter((r: any) => r.requirement)
       : []
-    return {
-      covered_quotes: requirements.filter((r: any) => r.in_policy && r.quote).map((r: any) => r.quote),
-      requirements,
-    }
+    return { requirements }
   }
 
   // ── Full gap: no evidence policy. Use the curated checklist verbatim if present. ──
   if (curated.length) {
-    return { covered_quotes: [], requirements: curated.map(e => ({ requirement: e, in_policy: false })) }
+    return { requirements: curated.map(e => ({ requirement: e, in_policy: false })) }
   }
   const groundBlock = reg.authoritative_requirements
     ? `AUTHORITATIVE REQUIREMENTS:\n${reg.authoritative_requirements}`
@@ -134,8 +132,34 @@ Respond with ONLY minified JSON:
   const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1200 })
   const p = parseJson(text)
   return {
-    covered_quotes: [],
     requirements: Array.isArray(p.requirements) ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: false })).filter((r: any) => r.requirement) : [],
+  }
+}
+
+// For each requirement being ADDED, find where in the target policy to add or amend
+// it — a verbatim sentence/heading that's the best insertion/amendment point, or '' if
+// it should be a brand-new section. Returned aligned to the input order.
+async function findLocations(policyText: string, missing: string[]): Promise<string[]> {
+  if (!missing.length || !policyText) return missing.map(() => '')
+  const user = `Here is a UK care-home policy:
+"""
+${policyText.slice(0, POLICY_TEXT_CAP)}
+"""
+
+The following requirements are being ADDED to this policy. For each, identify the single best place IN THIS POLICY to add or amend it — quote the verbatim sentence or heading (copied character-for-character) that is the most relevant existing insertion or amendment point. If there is no sensible existing place and it should be a brand-new section, return an empty string for that item.
+
+REQUIREMENTS:
+${missing.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+
+Respond with ONLY minified JSON — an array in the same order:
+{"locations":["<verbatim sentence or heading, or empty>"]}`
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1600 })
+    const p = parseJson(text)
+    const arr = Array.isArray(p.locations) ? p.locations : []
+    return missing.map((_, i) => typeof arr[i] === 'string' ? arr[i].trim() : '')
+  } catch {
+    return missing.map(() => '')
   }
 }
 
@@ -231,25 +255,15 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
 
   const namespace = getTenantNamespace(tenantId)
 
-  // 1. Identify requirements (+ what the evidence policy already evidences).
+  // 1. Identify which requirements the target policy already addresses (in_policy) vs not.
   const ident = await identify(reg, evidenceText)
 
-  // Requirements the evidence policy already covers → already_covered (in this policy).
-  // Each with an evidencing quote gets a 1-based match_index that links it to the
-  // numbered/coloured highlight in the policy on the right.
-  let matchIdx = 0
+  // Requirements the evidence policy already covers → already_covered (plain, no
+  // highlight — the focus of the highlights is where to ADD, not what's already there).
   const inPolicy: GapRequirement[] = ident.requirements
     .filter(r => r.in_policy)
-    .map(r => {
-      const quote = (r.quote ?? '').trim()
-      return {
-        requirement: r.requirement, status: 'already_covered' as const,
-        already_covered_in: evidencePolicy?.name ?? null, suggested_addition: null,
-        evidence_quote: quote || null, match_index: quote ? ++matchIdx : null,
-      }
-    })
-  // covered_quotes ordered to match the requirement numbering.
-  const orderedQuotes = inPolicy.filter(r => r.evidence_quote).map(r => r.evidence_quote as string)
+    .map(r => ({ requirement: r.requirement, status: 'already_covered' as const, already_covered_in: evidencePolicy?.name ?? null, suggested_addition: null }))
+  const inPolicyCount = inPolicy.length
 
   // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
   const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
@@ -260,7 +274,8 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     : { requirement: v.requirement, status: 'missing', already_covered_in: null, suggested_addition: v.suggested_addition })
 
   const requirements = [...inPolicy, ...verifiedReqs]
-  const missingCount = requirements.filter(r => r.status === 'missing').length
+  const missingReqs = requirements.filter(r => r.status === 'missing')
+  const missingCount = missingReqs.length
 
   // Where to add the missing text: the evidence policy for a partial; for a gap,
   // the best title match among the home's policies (else "you'll need a new policy").
@@ -278,13 +293,35 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`
   }
 
-  // Verdict correction: nothing left to add → it's actually covered across the library.
-  const effectiveStatus: GapDetail['effective_status'] = missingCount === 0 ? 'covered' : originalStatus
-  if (missingCount === 0) {
-    const coveredIn = requirements.find(r => r.already_covered_in)?.already_covered_in ?? evidencePolicy?.name ?? null
+  // 3. For each MISSING requirement, find WHERE in the target policy to add/amend it,
+  //    and number it so the left item links to the same-numbered highlight on the right.
+  const targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
+  const highlightQuotes: string[] = []
+  if (missingReqs.length && targetText) {
+    const locs = await findLocations(targetText, missingReqs.map(r => r.requirement))
+    let idx = 0
+    missingReqs.forEach((r, i) => {
+      const loc = (locs[i] ?? '').trim()
+      if (loc) { r.match_index = ++idx; r.location_quote = loc; highlightQuotes.push(loc) }
+      else { r.match_index = null; r.location_quote = null }
+    })
+  }
+
+  // Verdict: nothing to add → covered across the library. A "partial" whose target
+  // policy actually covers nothing is really a gap (the deep read has the final say).
+  let effectiveStatus: GapDetail['effective_status'] = missingCount === 0 ? 'covered' : originalStatus
+  if (effectiveStatus === 'partial' && inPolicyCount === 0) effectiveStatus = 'gap'
+  if (effectiveStatus !== cov?.status) {
+    const data: any = { status: effectiveStatus }
+    if (effectiveStatus === 'covered') {
+      data.evidence_policy_name = requirements.find(r => r.already_covered_in)?.already_covered_in ?? evidencePolicy?.name ?? undefined
+      data.reason = 'Verified as covered across your policy library.'
+    } else if (effectiveStatus === 'gap') {
+      data.evidence_policy_id = null; data.evidence_policy_name = null
+      data.reason = 'On a full read, this policy does not substantively cover the regulation.'
+    }
     await (prisma as any).regulationCoverage.update({
-      where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
-      data:  { status: 'covered', evidence_policy_name: coveredIn ?? undefined, reason: 'Verified as covered across your policy library.' },
+      where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } }, data,
     }).catch(() => {})
   }
 
@@ -298,7 +335,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
     suggested_new_policy_title: suggestedNewPolicyTitle,
-    covered_quotes:   orderedQuotes.length ? orderedQuotes : ident.covered_quotes,
+    highlight_quotes: highlightQuotes,
     requirements,
     disclaimer:       DISCLAIMER,
     generated_at:     new Date().toISOString(),

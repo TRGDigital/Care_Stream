@@ -172,7 +172,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     const root = previewRef.current
     if (!root || !html || !detail) return
     root.innerHTML = html
-    highlightQuotes(root, detail.covered_quotes)
+    highlightQuotes(root, detail.highlight_quotes ?? [])
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -278,13 +278,23 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     )}
                   </div>
 
-                  {/* Missing requirements + suggested wording */}
+                  {/* Missing requirements + suggested wording + where to add */}
                   {missing.length > 0 && (
                     <div className="space-y-3">
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Plus size={15} className="text-amber-600" /> What to add ({missing.length})</p>
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-                          <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
+                          <div className="flex items-start gap-2">
+                            {r.match_index && (
+                              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Add near highlight ${r.match_index} in the policy`}>{r.match_index}</span>
+                            )}
+                            <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
+                          </div>
+                          <p className="mt-1.5 text-xs text-amber-700">
+                            {r.match_index
+                              ? <>Add or amend near <span className="font-semibold">highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right).</>
+                              : <>Add as a new section{detail.target_policy ? <> in your {detail.target_policy.name}</> : null}.</>}
+                          </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
                               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">Example wording</p>
@@ -296,22 +306,16 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     </div>
                   )}
 
-                  {/* Already covered (in this policy or elsewhere) */}
+                  {/* Already covered (quiet footnote — not the focus) */}
                   {covered.length > 0 && (
                     <div className="space-y-2">
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><CheckCircle2 size={15} className="text-green-600" /> Already covered ({covered.length})</p>
                       {covered.map((r, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg border border-green-100 bg-green-50/50 px-4 py-2.5">
-                          {r.match_index ? (
-                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Highlighted as ${r.match_index} in the policy`}>{r.match_index}</span>
-                          ) : (
-                            <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
-                          )}
+                          <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
                           <div className="min-w-0">
                             <p className="text-sm text-neutral-dark">{r.requirement}</p>
-                            {r.match_index
-                              ? <p className="text-xs text-green-700">See highlight <span className="font-medium">{r.match_index}</span> in your <span className="font-medium">{detail.target_policy?.name ?? 'policy'}</span></p>
-                              : r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span> policy</p>}
+                            {r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span> policy</p>}
                           </div>
                         </div>
                       ))}
@@ -375,11 +379,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                 {detail.target_policy ? (
                   <>
                     <div className="mb-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Check against your policy</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Where to add it</p>
                       <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                         <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{detail.target_policy.name}</span>
                       </p>
-                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Each numbered highlight matches the same-numbered &ldquo;already covered&rdquo; item on the left.</p>}
+                      {(detail.highlight_quotes?.length ?? 0) > 0
+                        ? <p className="mt-0.5 text-xs text-neutral-mid">Each numbered highlight is where to add or amend the same-numbered &ldquo;what to add&rdquo; item on the left.</p>
+                        : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to check the wording on the left isn&rsquo;t already here.</p>}
                     </div>
 
                     {/* Search the policy — verify a recommended phrase isn't already there. */}
@@ -412,11 +418,11 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     ) : (
                       <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
                     )}
-                    {detail.covered_quotes.length > 0 && (
+                    {(detail.highlight_quotes?.length ?? 0) > 0 && (
                       <div className="mt-5 border-t border-gray-100 pt-4">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Matched passages — key</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Where to add — key</p>
                         <ul className="space-y-1.5">
-                          {detail.covered_quotes.map((q, i) => (
+                          {(detail.highlight_quotes ?? []).map((q, i) => (
                             <li key={i} className="flex gap-2 text-xs text-neutral-dark">
                               <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`}>{i + 1}</span>
                               <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>

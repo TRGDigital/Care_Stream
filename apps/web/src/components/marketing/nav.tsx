@@ -6,7 +6,7 @@ import { SiteImage } from '@/components/site-image'
 import {
   Menu, X, ChevronDown,
   GraduationCap, Users, ClipboardList, Shield, HelpCircle, RefreshCw, MessageSquare, FileText,
-  Heart, UserCheck, CheckCircle2, Target, Settings, BarChart2, BookOpen,
+  Heart, UserCheck, CheckCircle2, Target, Settings, BarChart2, BookOpen, ScanSearch,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -15,17 +15,19 @@ type MenuItem = {
   label: string
   desc: string
   Icon: LucideIcon
+  badge?: string
 }
 
 const SERVICES: MenuItem[] = [
-  { href: '/staff-training',       label: 'Staff Training',       desc: 'Policy answers for care staff, instantly',              Icon: GraduationCap },
-  { href: '/hr-policies',          label: 'HR Policies',          desc: 'Staff handbook access in any language',                  Icon: Users },
-  { href: '/care-audits',          label: 'Care Audits',          desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
-  { href: '/cqc-compliance',       label: 'CQC & Compliance',     desc: 'Readiness tracking and evidence management',             Icon: Shield },
-  { href: '/cqc-staff-questions',  label: 'CQC Staff Questions',  desc: 'inspection preparation for your whole team',                   Icon: HelpCircle },
-  { href: '/business-continuity',  label: 'Business Continuity',  desc: 'Plans accessible to every staff member, any time',       Icon: RefreshCw },
-  { href: '/cqc-report-chat',      label: 'CQC Report Chat',      desc: 'Chat directly with your inspection reports',             Icon: MessageSquare },
-  { href: '/care-policies',        label: 'Care Policies',        desc: 'Digital policy management and distribution',             Icon: FileText },
+  { href: '/staff-training',        label: 'Staff Training',        desc: 'Policy answers for care staff, instantly',              Icon: GraduationCap },
+  { href: '/hr-policies',           label: 'HR Policies',           desc: 'Staff handbook access in any language',                  Icon: Users },
+  { href: '/care-audits',           label: 'Care Audits',           desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
+  { href: '/cqc-compliance',        label: 'CQC & Compliance',      desc: 'Readiness tracking and evidence management',             Icon: Shield },
+  { href: '/policy-gap-detection',  label: 'Policy Gap Detection',  desc: 'Find gaps, track legal changes, auto-train staff',       Icon: ScanSearch, badge: 'Pro & Enterprise' },
+  { href: '/cqc-staff-questions',   label: 'CQC Staff Questions',   desc: 'inspection preparation for your whole team',             Icon: HelpCircle },
+  { href: '/business-continuity',   label: 'Business Continuity',   desc: 'Plans accessible to every staff member, any time',       Icon: RefreshCw },
+  { href: '/cqc-report-chat',       label: 'CQC Report Chat',       desc: 'Chat directly with your inspection reports',             Icon: MessageSquare },
+  { href: '/care-policies',         label: 'Care Policies',         desc: 'Digital policy management and distribution',             Icon: FileText },
 ]
 
 const WHO_FOR: MenuItem[] = [
@@ -42,7 +44,7 @@ const WHO_FOR: MenuItem[] = [
 function MegaMenuGrid({ items, onClose }: { items: MenuItem[]; onClose: () => void }) {
   return (
     <div className="grid grid-cols-2 gap-1">
-      {items.map(({ href, label, desc, Icon }) => (
+      {items.map(({ href, label, desc, Icon, badge }) => (
         <Link
           key={href}
           href={href}
@@ -53,7 +55,10 @@ function MegaMenuGrid({ items, onClose }: { items: MenuItem[]; onClose: () => vo
             <Icon size={15} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-neutral-dark">{label}</p>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
+              {label}
+              {badge && <span className="rounded-full bg-amber-brand/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-brand">{badge}</span>}
+            </p>
             <p className="mt-0.5 text-xs leading-snug text-neutral-mid">{desc}</p>
           </div>
         </Link>

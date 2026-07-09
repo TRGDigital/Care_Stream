@@ -43,7 +43,7 @@ const PLANS = [
       'Unlimited policies, handbooks and staff users',
       '5,000 queries per month',
       'Advanced analytics + CQC Readiness Report',
-      'Policy gap detection',
+      'Policy Gap Detection: coverage, what-to-add, legal-change tracking + gap training',
       'Face-to-face training and matrix',
       'Renewal tracking and mandatory-by-role gaps',
       'CQC evidence pack (sign-in sheets, certificates)',
@@ -108,7 +108,18 @@ const MATRIX: Group[] = [
       { label: 'Basic analytics',      values: [true, true, true] },
       { label: 'Advanced analytics',   values: [false, true, true] },
       { label: 'CQC Readiness Report', values: [false, true, true] },
-      { label: 'Policy gap detection', values: [false, true, true] },
+    ],
+  },
+  {
+    section: 'Policy Gap Detection',
+    rows: [
+      { label: 'Regulation coverage analysis (reads inside your policies)', values: [false, true, true] },
+      { label: 'What-to-add remediation with example wording',             values: [false, true, true] },
+      { label: 'Legal basis + source citation on each recommendation',      values: [false, true, true] },
+      { label: 'Where-to-add (target policy) guidance',                     values: [false, true, true] },
+      { label: 'Applicability by care setting + service profile',           values: [false, true, true] },
+      { label: 'Regulation change tracking + update alerts',                values: [false, true, true] },
+      { label: 'Generate staff training from a policy change',              values: [false, true, true] },
     ],
   },
   {
@@ -163,6 +174,10 @@ const FAQS = [
   {
     q: 'Is there a contract?',
     a: 'No. CareStreamAI is a rolling monthly subscription. Cancel any time with no penalty and no notice period.',
+  },
+  {
+    q: 'What is Policy Gap Detection?',
+    a: 'Available on Professional and Enterprise, it reads inside your uploaded policies and tells you which regulations you cover and where the gaps are. For each gap it shows exactly what to add, with example wording, the legal basis (legally required vs advised) and the source, and which policy to add it to. It only assesses the regulations that apply to your service, tracks changes to the standards and alerts you when one changes, and can turn any change into a short staff training module. There is a dedicated overview at /policy-gap-detection.',
   },
   {
     q: 'Do you offer discounts for group operators?',

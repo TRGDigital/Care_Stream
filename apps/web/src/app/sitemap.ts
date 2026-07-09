@@ -17,6 +17,7 @@ const MARKETING: Entry[] = [
   { url: '/',                                      changeFrequency: 'weekly',  priority: 1.0 },
   { url: '/how-it-works',                          changeFrequency: 'monthly', priority: 0.9 },
   { url: '/care-policies',                         changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/policy-gap-detection',                  changeFrequency: 'monthly', priority: 0.9 },
   { url: '/pricing',                               changeFrequency: 'weekly',  priority: 0.9 },
   { url: '/who-its-for',                           changeFrequency: 'monthly', priority: 0.8 },
   { url: '/staff-training',                        changeFrequency: 'monthly', priority: 0.9 },

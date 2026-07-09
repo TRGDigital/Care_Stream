@@ -584,6 +584,16 @@ export function createPlatformClient(token: string) {
       insights: (id: string) =>
         adminFetch<TenantInsights>(`/tenants/${id}/insights`, token),
 
+      gapUsage: (id: string) =>
+        adminFetch<{
+          setting: string; setting_label: string
+          service_profile: Array<{ key: string; label: string; on: boolean }>
+          in_scope_regulations: number
+          analysed: boolean; analysed_at: string | null
+          coverage: { score: number | null; covered: number; partial: number; gap: number; total: number }
+          deep_dives: number; gap_training_modules: number; open_alerts: number
+        }>(`/tenants/${id}/gap-usage`, token),
+
       // Mint a one-time sign-in link to open the client's own dashboard.
       openAccount: (id: string, userId?: string) =>
         adminFetch<{ url: string; signed_in_as: { id: string; name: string; email: string } }>(

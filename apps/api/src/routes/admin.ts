@@ -13,7 +13,8 @@ import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformS
 import { formatPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { TRAINING_TOPICS } from '../data/training-topics'
-import { SETTING_LABELS } from '../lib/care-setting'
+import { SETTING_LABELS, facilityTypeToSetting, settingLabel } from '../lib/care-setting'
+import { SERVICE_TRIGGERS, resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
 import { renderOnboardingEmailHtml } from '../services/onboarding/render'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
@@ -254,6 +255,47 @@ adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => 
         ? 'AI cost is measured from real per-query token usage (input/output tokens × per-model prices). Storage costs are estimated from usage × published unit prices; embeddings shown separately as a one-off.'
         : `AI cost is measured from real token logging for ${costedQueries} of ${queries30} recent queries; the remaining ${uncosted} (logged before token capture) use a ~$0.02/query estimate. Storage costs are estimated; embeddings shown separately.`,
     },
+  })
+})
+
+// ─── GET /admin/tenants/:id/gap-usage ────────────────────────────────────────
+// How a client is using Policy Gap Detection: their applicability scope + service
+// profile, coverage results, and remediation/training activity.
+adminRouter.get('/tenants/:id/gap-usage', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true, service_profile: true } })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  const setting = facilityTypeToSetting(tenant.facility_type)
+  const profile = resolveServiceProfile(setting, (tenant.service_profile ?? {}) as Record<string, unknown>)
+
+  const [regs, coverage, deepDives, gapModules, openAlerts] = await Promise.all([
+    (prisma as any).externalRegulation.findMany({ where: { is_active: true }, select: { applies_to_settings: true, required_triggers: true } }),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { status: true, analysed_at: true } }),
+    (prisma as any).gapDetailCache.count({ where: { tenant_id: tenantId } }),
+    (prisma as any).trainingModule.count({ where: { tenant_id: tenantId, slug: { startsWith: 'ai-gap-' } } }),
+    (prisma as any).tenantRegulationAlert.count({ where: { tenant_id: tenantId, dismissed_at: null } }),
+  ])
+
+  const inScope = (regs as any[]).filter(r => regulationAppliesToTenant(r, setting, profile)).length
+  const cov = coverage as any[]
+  const covered = cov.filter(c => c.status === 'covered').length
+  const partial = cov.filter(c => c.status === 'partial').length
+  const gap     = cov.filter(c => c.status === 'gap').length
+  const analysed = cov.length > 0
+  const analysedAt = analysed ? cov.reduce((m: Date, c: any) => (c.analysed_at > m ? c.analysed_at : m), cov[0].analysed_at) : null
+  const total = covered + partial + gap
+  const score = analysed && total > 0 ? Math.round(((covered + partial * 0.5) / total) * 100) : null
+
+  ok(res, {
+    setting, setting_label: settingLabel(setting),
+    service_profile: SERVICE_TRIGGERS.map(t => ({ key: t.key, label: t.label, on: profile[t.key] === true })),
+    in_scope_regulations: inScope,
+    analysed, analysed_at: analysedAt,
+    coverage: { score, covered, partial, gap, total },
+    deep_dives: deepDives,
+    gap_training_modules: gapModules,
+    open_alerts: openAlerts,
   })
 })
 

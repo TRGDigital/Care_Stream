@@ -405,6 +405,62 @@ function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId:
   )
 }
 
+function GapUsageSection({ token, tenantId }: { token: string; tenantId: string }) {
+  const [data, setData] = useState<Awaited<ReturnType<ReturnType<typeof createPlatformClient>['tenants']['gapUsage']>> | null>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    createPlatformClient(token).tenants.gapUsage(tenantId).then(setData).catch(() => {}).finally(() => setLoaded(true))
+  }, [token, tenantId])
+
+  if (!loaded || !data) return null
+
+  const c = data.coverage
+  const scoreColour = c.score == null ? 'text-neutral-mid' : c.score >= 80 ? 'text-green-600' : c.score >= 50 ? 'text-amber-600' : 'text-red-600'
+  const stat = (n: number | string, label: string, tone = 'text-neutral-dark') => (
+    <div className="rounded-lg border border-gray-100 bg-neutral-light/40 px-3 py-2.5 text-center">
+      <p className={`text-lg font-extrabold tabular-nums ${tone}`}>{n}</p>
+      <p className="text-[10px] leading-tight text-neutral-mid">{label}</p>
+    </div>
+  )
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-neutral-dark">Policy Gap Detection usage</h2>
+        <span className="rounded-full bg-teal-light px-2.5 py-0.5 text-xs font-medium text-teal">{data.setting_label}</span>
+      </div>
+      <p className="mb-4 text-xs text-neutral-mid">
+        {data.analysed
+          ? `Last analysed ${fmtDate(data.analysed_at)} · assessed against ${data.in_scope_regulations} in-scope regulations.`
+          : `Not yet analysed. ${data.in_scope_regulations} regulations are in scope for this service.`}
+      </p>
+
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {stat(c.score == null ? '—' : `${c.score}%`, 'Coverage score', scoreColour)}
+        {stat(c.covered, 'Covered', 'text-green-600')}
+        {stat(c.partial, 'Partial', 'text-amber-600')}
+        {stat(c.gap, 'Gaps', 'text-red-600')}
+        {stat(data.deep_dives, 'Deep-dives run')}
+        {stat(data.gap_training_modules, 'Gap modules')}
+      </div>
+
+      {data.open_alerts > 0 && (
+        <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">{data.open_alerts} open &ldquo;regulation updated&rdquo; alert{data.open_alerts === 1 ? '' : 's'} awaiting review.</p>
+      )}
+
+      <div>
+        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Service profile</p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.service_profile.map(t => (
+            <span key={t.key} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${t.on ? 'bg-teal/10 text-teal' : 'bg-gray-100 text-gray-400 line-through'}`}>{t.label}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ClientDetailPage() {
   const token   = usePlatformAuth()
   const { id }  = useParams<{ id: string }>()
@@ -847,6 +903,9 @@ export default function ClientDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Policy Gap Detection usage */}
+            {token && <GapUsageSection token={token} tenantId={id} />}
 
             {/* Onboarding email activity */}
             {token && <OnboardingEmailsSection token={token} tenantId={id} />}

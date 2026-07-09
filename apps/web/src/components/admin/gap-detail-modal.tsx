@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, GraduationCap } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, GraduationCap, Search } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -44,6 +44,40 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
   }
 }
 
+// Highlight every occurrence of a plain search term in the rendered policy (text
+// nodes only). Returns the match count. Used for the "search this policy" box.
+function highlightSearch(root: HTMLElement, term: string): number {
+  const t = term.trim()
+  if (t.length < 2) return 0
+  const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const nodes: Text[] = []
+  let n: Node | null
+  while ((n = walker.nextNode())) nodes.push(n as Text)
+  let count = 0
+  for (const node of nodes) {
+    const raw = node.nodeValue ?? ''
+    re.lastIndex = 0
+    if (!re.test(raw)) continue
+    re.lastIndex = 0
+    const frag = document.createDocumentFragment()
+    let last = 0, m: RegExpExecArray | null
+    while ((m = re.exec(raw))) {
+      if (m.index > last) frag.appendChild(document.createTextNode(raw.slice(last, m.index)))
+      const mark = document.createElement('mark')
+      mark.className = 'bg-teal-200 rounded px-0.5'
+      mark.textContent = m[0]
+      frag.appendChild(mark)
+      last = m.index + m[0].length
+      count++
+      if (m.index === re.lastIndex) re.lastIndex++
+    }
+    if (last < raw.length) frag.appendChild(document.createTextNode(raw.slice(last)))
+    node.parentNode?.replaceChild(frag, node)
+  }
+  return count
+}
+
 export function GapDetailModal({ token, referenceKey, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered, onCompleted }: {
   token:            string
   referenceKey:     string
@@ -80,6 +114,8 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [html,        setHtml]        = useState<string | null>(null)
   const [previewErr,  setPreviewErr]  = useState('')
   const [previewLoad, setPreviewLoad] = useState(false)
+  const [policySearch, setPolicySearch] = useState('')
+  const [matchCount,   setMatchCount]   = useState<number | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   // Ad-hoc training module generation.
@@ -119,11 +155,21 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       .finally(() => setPreviewLoad(false))
   }, [detail, html, previewLoad, token])
 
-  // Apply highlights after the preview HTML paints.
+  // Re-render highlights whenever the policy loads or the search term changes:
+  // reset to the original HTML, re-apply the coverage highlights (yellow), then the
+  // search highlights (teal).
   useEffect(() => {
-    if (!html || !previewRef.current || !detail) return
-    highlightQuotes(previewRef.current, detail.covered_quotes)
-  }, [html, detail])
+    const root = previewRef.current
+    if (!root || !html || !detail) return
+    root.innerHTML = html
+    highlightQuotes(root, detail.covered_quotes)
+    if (policySearch.trim().length >= 2) {
+      setMatchCount(highlightSearch(root, policySearch))
+      root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    } else {
+      setMatchCount(null)
+    }
+  }, [html, detail, policySearch])
 
   async function markCompleted() {
     setCompleting(true)
@@ -312,7 +358,27 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
               <div className="overflow-y-auto bg-neutral-light/20 px-6 py-5 lg:max-h-[70vh]">
                 {detail.target_policy ? (
                   <>
-                    <p className="mb-3 flex items-center gap-1.5 text-sm text-neutral-mid"><FileText size={13} className="text-teal" /> Check against your <span className="font-medium text-neutral-dark">{detail.target_policy.name}</span> policy{detail.covered_quotes.length > 0 ? ' — matched passages highlighted' : ''}.</p>
+                    <div className="mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Check against your policy</p>
+                      <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
+                        <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{detail.target_policy.name}</span>
+                      </p>
+                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Passages that already address this are highlighted in yellow.</p>}
+                    </div>
+
+                    {/* Search the policy — verify a recommended phrase isn't already there. */}
+                    <div className="relative mb-3">
+                      <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-mid" />
+                      <input
+                        type="text" value={policySearch} onChange={e => setPolicySearch(e.target.value)}
+                        placeholder="Search this policy, e.g. Integrated Care Board…"
+                        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-20 text-sm focus:border-teal focus:outline-none"
+                      />
+                      {policySearch.trim().length >= 2 && (
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-mid">{matchCount ?? 0} match{matchCount === 1 ? '' : 'es'}</span>
+                      )}
+                    </div>
+
                     {previewLoad ? (
                       <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
                     ) : previewErr ? (

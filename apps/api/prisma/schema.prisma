@@ -481,6 +481,7 @@ model ExternalRegulation {
   distinguish_from         String[]  @default([])   // near-neighbour regs this must NOT be confused with
   expected_policy_titles   String[]  @default([])   // canonical policy document titles that satisfy this reg
   required_elements        String[]  @default([])   // authoritative checklist: what a compliant policy must contain
+  authoritative_requirements String  @default("")   // the standard's actual requirements (vetted capture of the source) — primary grounding for the checklist
   applies_to_settings      String[]  @default([])   // care-setting scope; empty = universal (all settings)
   required_triggers        String[]  @default([])   // service-profile triggers that must be true; empty = no gating
   pinecone_vector_id       String?

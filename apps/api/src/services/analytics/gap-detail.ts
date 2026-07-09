@@ -63,7 +63,9 @@ async function identify(reg: any, evidenceText: string | null): Promise<{ covere
   if (evidenceText) {
     const checklistBlock = curated.length
       ? `Assess THIS policy against each of the required elements below. Do not add or invent requirements beyond this list.\nREQUIRED ELEMENTS:\n${curated.map((e, i) => `${i + 1}. ${e}`).join('\n')}`
-      : `Break the regulation into up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must address. Base these ONLY on the regulation description above — do not rely on outside knowledge.`
+      : reg.authoritative_requirements
+        ? `Break the AUTHORITATIVE REQUIREMENTS below into up to ${MAX_REQUIREMENTS} concrete, distinct requirements and assess THIS policy against each. Do not add requirements beyond them.\nAUTHORITATIVE REQUIREMENTS:\n${reg.authoritative_requirements}`
+        : `Break the regulation into up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must address. Base these ONLY on the regulation description above — do not rely on outside knowledge.`
 
     const user = `REGULATION: ${reg.official_name}
 WHAT IT REQUIRES: ${reg.summary}
@@ -93,12 +95,13 @@ Respond with ONLY minified JSON${curated.length ? ' — keep the requirement tex
   if (curated.length) {
     return { covered_quotes: [], requirements: curated.map(e => ({ requirement: e, in_policy: false })) }
   }
+  const groundBlock = reg.authoritative_requirements
+    ? `AUTHORITATIVE REQUIREMENTS:\n${reg.authoritative_requirements}`
+    : `WHAT IT REQUIRES: ${reg.summary}\nIN A CARE HOME: ${reg.care_home_context}\nPRACTICAL MEANING: ${reg.practical_meaning}`
   const user = `REGULATION: ${reg.official_name}
-WHAT IT REQUIRES: ${reg.summary}
-IN A CARE HOME: ${reg.care_home_context}
-PRACTICAL MEANING: ${reg.practical_meaning}
+${groundBlock}
 
-The home has no policy that addresses this regulation. List up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must contain. Base these ONLY on the regulation description above — do not rely on outside knowledge.
+The home has no policy that addresses this regulation. List up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must contain. Base these ONLY on the ${reg.authoritative_requirements ? 'authoritative requirements' : 'regulation description'} above — do not rely on outside knowledge.
 
 Respond with ONLY minified JSON:
 {"requirements":[{"requirement":"<one specific requirement>"}]}`
@@ -177,7 +180,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
 
   const reg = await (prisma as any).externalRegulation.findUnique({
     where:  { reference_key: referenceKey },
-    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true },
+    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true, authoritative_requirements: true },
   })
   if (!reg) throw new Error('Regulation not found')
 

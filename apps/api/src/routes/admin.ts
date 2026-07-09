@@ -1598,7 +1598,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
     care_home_context, care_company_interaction, practical_meaning,
     source_urls = [], is_active = true,
     match_terms = [], distinguish_from = [], expected_policy_titles = [], required_elements = [],
-    applies_to_settings = [], required_triggers = [],
+    authoritative_requirements = '', applies_to_settings = [], required_triggers = [],
   } = req.body ?? {}
 
   if (!reference_key || !official_name || !summary) {
@@ -1635,6 +1635,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
       distinguish_from:         Array.isArray(distinguish_from) ? distinguish_from : [],
       expected_policy_titles:   Array.isArray(expected_policy_titles) ? expected_policy_titles : [],
       required_elements:        Array.isArray(required_elements) ? required_elements : [],
+      authoritative_requirements: typeof authoritative_requirements === 'string' ? authoritative_requirements : '',
       applies_to_settings:      Array.isArray(applies_to_settings) ? applies_to_settings : [],
       required_triggers:        Array.isArray(required_triggers) ? required_triggers : [],
       pinecone_vector_id:       vectorId,
@@ -1668,7 +1669,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     official_name, also_known_as, summary, care_home_context,
     care_company_interaction, practical_meaning, source_urls, is_active,
     match_terms, distinguish_from, expected_policy_titles, required_elements,
-    applies_to_settings, required_triggers,
+    authoritative_requirements, applies_to_settings, required_triggers,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1686,6 +1687,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
       ...(distinguish_from         !== undefined ? { distinguish_from }         : {}),
       ...(expected_policy_titles   !== undefined ? { expected_policy_titles }   : {}),
       ...(required_elements        !== undefined ? { required_elements }        : {}),
+      ...(authoritative_requirements !== undefined ? { authoritative_requirements } : {}),
       ...(applies_to_settings      !== undefined ? { applies_to_settings }      : {}),
       ...(required_triggers        !== undefined ? { required_triggers }        : {}),
       last_synced_at: new Date(),
@@ -1709,26 +1711,67 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
   ok(res, updated)
 })
 
-// ─── POST /admin/regulations/:id/generate-checklist ──────────────────────────
-// Draft the authoritative "required_elements" checklist for a regulation, grounded
-// ONLY in that regulation's own curated fields (summary, care-home context,
-// practical meaning). Returns the draft for review — does NOT save it; the admin
-// edits and saves via PATCH. Source URLs are cited for traceability, not fetched.
-adminRouter.post('/regulations/:id/generate-checklist', async (req: Request, res: Response) => {
+// ─── POST /admin/regulations/:id/generate-requirements ───────────────────────
+// Draft the AUTHORITATIVE REQUIREMENTS for a regulation: a faithful statement of
+// what the actual standard/legislation requires, with the specific provisions and
+// sources cited. Returns a draft for the admin to REVIEW against the cited source
+// and edit — the human review is what makes it authoritative. Does NOT save.
+adminRouter.post('/regulations/:id/generate-requirements', async (req: Request, res: Response) => {
   const reg = await (prisma as any).externalRegulation.findUnique({
     where:  { id: req.params.id },
-    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, source_urls: true },
+    select: { official_name: true, also_known_as: true, summary: true, care_home_context: true, practical_meaning: true, source_urls: true },
   })
   if (!reg) { err(res, 'NOT_FOUND', 'Regulation not found', 404); return }
 
   const sources = (reg.source_urls ?? []).filter(Boolean).join('\n')
-  const user = `You are a UK care-home compliance specialist. Produce the authoritative checklist of concrete elements a compliant care-home policy for this regulation MUST contain. Base the checklist ONLY on the regulation description below — do not rely on outside knowledge or invent requirements beyond what this describes.
+  const user = `You are a UK health & social care compliance specialist. Write a faithful, authoritative statement of the requirements that "${reg.official_name}" places on a care provider — as close as you can to what the actual standard, legislation or guidance says, so a compliance lead would recognise it as accurate.
 
-REGULATION: ${reg.official_name}
+Rules:
+- State the concrete duties/requirements, grouped logically, as clear bullet points.
+- Where you can, reference the specific provisions (e.g. section, regulation or clause numbers) that impose each requirement.
+- Stay strictly within the scope of THIS instrument — do not import requirements that belong to other laws.
+- End with a "Sources:" line naming the specific legal instrument(s)/guidance this is drawn from.
+
+CONTEXT (our own summary — use to orient, but the authority is the named instrument itself):
 WHAT IT REQUIRES: ${reg.summary}
 IN A CARE HOME: ${reg.care_home_context}
 PRACTICAL MEANING: ${reg.practical_meaning}
-${sources ? `REFERENCE SOURCES (for the home's traceability — do not assume content beyond the description above):\n${sources}` : ''}
+${sources ? `KNOWN SOURCE URLS:\n${sources}` : ''}
+
+Respond with ONLY minified JSON:
+{"authoritative_requirements":"<the requirements as a single string, using \\n for line breaks and '- ' for bullets, ending with a Sources: line>"}`
+
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 2200 })
+    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
+    const requirements = typeof parsed.authoritative_requirements === 'string' ? parsed.authoritative_requirements.trim() : ''
+    ok(res, { authoritative_requirements: requirements })
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e.message ?? 'Could not generate the requirements.', 500)
+  }
+})
+
+// ─── POST /admin/regulations/:id/generate-checklist ──────────────────────────
+// Draft the "required_elements" checklist. Grounded PRIMARILY in the regulation's
+// vetted Authoritative requirements when present (the faithful capture of the
+// standard), otherwise its curated summary/context. Returns a draft for review —
+// does NOT save it. Never scrapes; source URLs are for traceability only.
+adminRouter.post('/regulations/:id/generate-checklist', async (req: Request, res: Response) => {
+  const reg = await (prisma as any).externalRegulation.findUnique({
+    where:  { id: req.params.id },
+    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, source_urls: true, authoritative_requirements: true },
+  })
+  if (!reg) { err(res, 'NOT_FOUND', 'Regulation not found', 404); return }
+
+  const sources = (reg.source_urls ?? []).filter(Boolean).join('\n')
+  const groundOnRequirements = typeof reg.authoritative_requirements === 'string' && reg.authoritative_requirements.trim().length > 0
+  const user = `You are a UK care-home compliance specialist. Produce the checklist of concrete elements a compliant care-home policy for this regulation MUST contain. ${groundOnRequirements ? 'Base the checklist ONLY on the AUTHORITATIVE REQUIREMENTS below — do not add requirements beyond them.' : 'Base the checklist ONLY on the regulation description below — do not rely on outside knowledge or invent requirements beyond what this describes.'}
+
+REGULATION: ${reg.official_name}
+${groundOnRequirements
+  ? `AUTHORITATIVE REQUIREMENTS (the vetted statement of what this standard requires):\n${reg.authoritative_requirements}`
+  : `WHAT IT REQUIRES: ${reg.summary}\nIN A CARE HOME: ${reg.care_home_context}\nPRACTICAL MEANING: ${reg.practical_meaning}`}
+${sources ? `REFERENCE SOURCES (traceability only — do not assume content beyond the text above):\n${sources}` : ''}
 
 Write 8 to 15 specific, distinct, self-contained checklist items. Each should name a concrete thing the policy must address (not vague themes). Care-home specific and practical.
 

@@ -174,10 +174,10 @@ export default function RegulationsPage() {
           <div className="rounded-lg border border-amber-300 bg-white px-4 py-3 space-y-1.5">
             <p className="text-xs font-bold uppercase tracking-wide text-amber-700">What the checklist is generated against — important</p>
             <ul className="space-y-1 leading-relaxed text-amber-900">
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Generate</strong> builds the checklist from this regulation&rsquo;s <strong>own curated fields only</strong>: Summary, Care home context, and Practical meaning. The richer those fields, the better the checklist — so deepen them first, then generate.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />It does <strong>not</strong> read tenant policies, does <strong>not</strong> fetch or scrape the Source URLs, and is instructed <strong>not</strong> to use outside knowledge. Source URLs are kept for traceability only.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />Generate returns a <strong>draft to review</strong> — nothing is saved until you edit and click Save. Treat it as authoritative data: check it before saving.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />If a regulation has <strong>no</strong> checklist, the deep-dive still works but falls back to model-derived requirements bound to the regulation description — less consistent, so a curated checklist is always better.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />Each regulation has its <strong>own</strong> checklist, generated against <strong>that regulation&rsquo;s Authoritative requirements</strong> — your vetted statement of what the actual standard/legislation requires, with its provisions and sources cited. (Not the CQC Fundamental Standards as a set — those drive <strong>applicability</strong>, which is a separate thing.)</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />Set the Authoritative requirements first (paste them, or <strong>Generate a draft and review it against the cited sources</strong>). Your review is what makes them authoritative — the model drafts, you verify.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />The checklist Generate then grounds in those requirements. It does <strong>not</strong> read tenant policies, does <strong>not</strong> scrape the Source URLs, and does <strong>not</strong> use outside knowledge. If a regulation has no Authoritative requirements yet, it falls back to the Summary/context — less precise, so set the requirements first.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />Every Generate returns a <strong>draft to review</strong> — nothing is saved until you edit and click Save.</li>
             </ul>
           </div>
         </div>
@@ -241,6 +241,8 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
   const [saving,   setSaving]   = useState(false)
   const [genList,  setGenList]  = useState(false)
   const [genErr,   setGenErr]   = useState<string | null>(null)
+  const [genReqs,  setGenReqs]  = useState(false)
+  const [genReqErr,setGenReqErr]= useState<string | null>(null)
 
   async function generateChecklist() {
     setGenList(true); setGenErr(null)
@@ -251,6 +253,18 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       setGenErr(e.message ?? 'Could not generate the checklist.')
     } finally {
       setGenList(false)
+    }
+  }
+
+  async function generateRequirements() {
+    setGenReqs(true); setGenReqErr(null)
+    try {
+      const { authoritative_requirements } = await createPlatformClient(token).regulations.generateRequirements(reg.id)
+      setForm(f => ({ ...f, authoritative_requirements }))
+    } catch (e: any) {
+      setGenReqErr(e.message ?? 'Could not generate the requirements.')
+    } finally {
+      setGenReqs(false)
     }
   }
 
@@ -267,6 +281,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       distinguish_from:         reg.distinguish_from ?? [],
       expected_policy_titles:   reg.expected_policy_titles ?? [],
       required_elements:        reg.required_elements ?? [],
+      authoritative_requirements: reg.authoritative_requirements ?? '',
       applies_to_settings:      reg.applies_to_settings ?? [],
       required_triggers:        reg.required_triggers ?? [],
       is_active:                reg.is_active,
@@ -352,6 +367,35 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             </Field>
           </div>
 
+          <div className="sm:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Authoritative requirements</p>
+              <button
+                type="button"
+                onClick={generateRequirements}
+                disabled={genReqs}
+                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400 bg-white px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+              >
+                {genReqs ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                Generate a draft
+              </button>
+            </div>
+            <p className="text-xs leading-relaxed text-neutral-mid">A faithful statement of what this standard/legislation actually requires, with the specific provisions and sources cited. This is the <strong>authoritative anchor</strong> the checklist is generated from — so it is grounded in the real standard, not just our summary. Generate a draft, then <strong>review it against the sources below and edit</strong> before saving; your review is what makes it authoritative.</p>
+            <textarea
+              className={INPUT}
+              rows={Math.max(6, Math.min(20, (form.authoritative_requirements ?? '').split('\n').length + 1))}
+              placeholder={'What the standard requires, with provisions cited. e.g.\n- Assess each person’s nutritional and hydration needs (Reg 14(1))\n- ...\nSources: CQC Regulation 14; HSCA 2008 (Regulated Activities) Regs 2014, reg 14'}
+              value={form.authoritative_requirements ?? ''}
+              onChange={e => setForm(f => ({ ...f, authoritative_requirements: e.target.value }))}
+            />
+            {genReqErr && <p className="text-xs text-red-600">{genReqErr}</p>}
+            {(reg.source_urls?.length ?? 0) > 0 && (
+              <p className="text-[11px] text-neutral-mid"><span className="font-semibold text-neutral-dark">Sources:</span>{' '}
+                {reg.source_urls.map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="mr-2 break-all text-emerald-700 hover:underline">{u}</a>)}
+              </p>
+            )}
+          </div>
+
           <div className="sm:col-span-2 rounded-lg border border-teal/20 bg-teal-light/20 p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-bold uppercase tracking-wide text-teal">Required elements checklist</p>
@@ -365,7 +409,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
                 Generate from this regulation&rsquo;s details
               </button>
             </div>
-            <p className="text-xs leading-relaxed text-neutral-mid">The authoritative list of what a compliant policy must contain. Powers the tenant-facing &ldquo;what to add&rdquo; deep-dive. One item per line. Generate a draft from the fields above, then review and edit — this is grounded only in the description you have written, not outside sources.</p>
+            <p className="text-xs leading-relaxed text-neutral-mid">The concrete, per-line checklist a policy is scored against in the tenant &ldquo;what to add&rdquo; deep-dive. <strong>Generate</strong> builds it from the <strong>Authoritative requirements above</strong> when you have set them (otherwise from this regulation&rsquo;s Summary/context), then review and edit. It never scrapes or uses outside knowledge.</p>
             <textarea
               className={INPUT}
               rows={Math.max(6, (form.required_elements ?? []).length + 1)}
@@ -375,7 +419,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             />
             {genErr && <p className="text-xs text-red-600">{genErr}</p>}
             <div className="rounded-md border border-teal/15 bg-white px-3 py-2 text-[11px] leading-relaxed text-neutral-mid space-y-1">
-              <p><span className="font-semibold text-neutral-dark">Generated against:</span> this regulation&rsquo;s <strong>Summary</strong>, <strong>Care home context</strong> and <strong>Practical meaning</strong> only — not tenant policies, and not scraped from the source URLs. Deepen those fields for a richer checklist.</p>
+              <p><span className="font-semibold text-neutral-dark">Generated against:</span> this regulation&rsquo;s <strong>Authoritative requirements</strong> when set (else its Summary/context) — your vetted capture of the standard. Not tenant policies, and not scraped from the source URLs.</p>
               {(reg.source_urls?.length ?? 0) > 0 && (
                 <p><span className="font-semibold text-neutral-dark">Reference sources (traceability, not fetched):</span>{' '}
                   {reg.source_urls.map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="mr-2 break-all text-teal hover:underline">{u}</a>)}
@@ -494,6 +538,14 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
           <p><span className="font-bold text-neutral-dark">Care home context:</span>{' '}{reg.care_home_context}</p>
           <p><span className="font-bold text-neutral-dark">Care company interaction:</span>{' '}{reg.care_company_interaction}</p>
           <p><span className="font-bold text-neutral-dark">Practical meaning:</span>{' '}{reg.practical_meaning}</p>
+          {reg.authoritative_requirements ? (
+            <div className="rounded-md border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wide text-emerald-700">Authoritative requirements</p>
+              <p className="whitespace-pre-wrap text-xs text-neutral-dark">{reg.authoritative_requirements}</p>
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-mid italic">No authoritative requirements set yet — add or Generate them (Edit) so the checklist is grounded in the real standard, not just the summary.</p>
+          )}
           {reg.required_elements?.length > 0 ? (
             <div className="rounded-md border border-teal/20 bg-teal-light/20 px-3 py-2.5">
               <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-teal">Required elements ({reg.required_elements.length})</p>
@@ -630,6 +682,9 @@ function RegulationForm({ token, onClose, onSaved }: {
             <input className={INPUT} placeholder="Mental Capacity Act 2005, Deprivation of Liberty Safeguards (DoLS)" value={form.distinguish_from_str ?? ''} onChange={e => setForm(f => ({ ...f, distinguish_from_str: e.target.value }))} />
           </Field>
         </div>
+        <Field label="Authoritative requirements — what the standard actually requires (you can Generate this after saving)" className="sm:col-span-2">
+          <textarea className={INPUT} rows={4} placeholder={'A faithful statement of the standard’s requirements, with provisions and sources cited. Grounds the checklist. Generate a draft from the Edit view after saving.'} value={form.authoritative_requirements ?? ''} onChange={e => setForm(f => ({ ...f, authoritative_requirements: e.target.value }))} />
+        </Field>
         <Field label="Required elements checklist (one per line) — what a compliant policy must contain" className="sm:col-span-2">
           <textarea className={INPUT} rows={5} placeholder={'One required element per line. You can also Generate this after saving, from the Edit view.'} value={form.required_elements_str ?? ''} onChange={e => setForm(f => ({ ...f, required_elements_str: e.target.value }))} />
         </Field>

@@ -313,6 +313,7 @@ export interface Regulation {
   distinguish_from:         string[]
   expected_policy_titles:   string[]
   required_elements:        string[]
+  authoritative_requirements: string
   applies_to_settings:      string[]
   required_triggers:        string[]
   is_active:                boolean
@@ -665,6 +666,8 @@ export function createPlatformClient(token: string) {
         adminFetch<any>('/regulations/sync', token, { method: 'POST' }),
       generateChecklist: (id: string) =>
         adminFetch<{ required_elements: string[] }>(`/regulations/${id}/generate-checklist`, token, { method: 'POST' }),
+      generateRequirements: (id: string) =>
+        adminFetch<{ authoritative_requirements: string }>(`/regulations/${id}/generate-requirements`, token, { method: 'POST' }),
     },
 
     auditSeeds: {

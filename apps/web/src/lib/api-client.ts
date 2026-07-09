@@ -941,6 +941,7 @@ export function createApiClient(token: string) {
       completeGap: (referenceKey: string) => apiFetch<{ completed: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/complete`, token, { method: 'POST' }),
       reopenGap: (referenceKey: string) => apiFetch<{ reopened: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/reopen`, token, { method: 'POST' }),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
+      pregenerateGaps: () => apiFetch<{ generated: number; remaining: number }>('/analytics/gaps/pregenerate', token, { method: 'POST' }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

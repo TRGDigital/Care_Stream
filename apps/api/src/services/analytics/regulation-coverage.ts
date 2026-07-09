@@ -23,7 +23,6 @@ import { callClaude } from '../ai/claude'
 import { mapLimit } from '../../lib/translate'
 import { facilityTypeToSetting } from '../../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../../lib/service-triggers'
-import { getGapDetail } from './gap-detail'
 
 const HAIKU = 'claude-haiku-4-5-20251001'
 
@@ -142,7 +141,6 @@ function candidateScore(reg: Reg, pol: Pol): number {
   return 0.6 * titleScore + 0.4 * nameScore + Math.min(0.3, 0.15 * hits)
 }
 
-const DETAIL_PREGEN_CAP = 60   // max gap/partial details pre-generated per analysis run
 const CANDIDATE_MIN = 0.5   // below this a policy is not a candidate
 const MAX_CANDIDATES = 4    // per regulation, top-scoring
 const WIDE_K = 20           // diversified vector pass depth
@@ -289,12 +287,9 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
     }),
   ])
 
-  // Pre-generate the "what to add" detail for every gap/partial now, so a tenant's
-  // drill-in is an instant cache hit rather than a slow on-click generation (which
-  // looked like we were re-running the checks live). Bounded to stay within the
-  // function's time budget. Verdict corrections found here also improve the result.
-  const toWarm = rows.filter(r => r.status === 'gap' || r.status === 'partial').map(r => r.reference_key).slice(0, DETAIL_PREGEN_CAP)
-  await mapLimit(toWarm, 4, (key: string) => getGapDetail(tenantId, key, true).catch(() => null))
-
+  // The "what to add" detail for each gap/partial is pre-generated separately, in
+  // small batches, via POST /analytics/gaps/pregenerate — so this request returns
+  // promptly (coverage only) rather than holding the connection open for minutes,
+  // which was timing out the gateway on tenants with many gaps.
   return rows
 }

@@ -47,6 +47,7 @@ export default function GapsPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [analysing, setAnalysing] = useState(false)
+  const [preparing, setPreparing] = useState<number | null>(null)   // remaining details being warmed
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
@@ -111,11 +112,27 @@ export default function GapsPage() {
     try {
       await createApiClient(session.accessToken).analytics.analyseGaps()
       load()
+      warmDetails()   // prepare the "what to add" details in the background
     } catch (e: any) {
       setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false)
     }
+  }
+
+  // Warm the deep-dive details in small batches so drill-ins open instantly, without
+  // one long request. Best-effort: on any failure, details just generate on click.
+  async function warmDetails() {
+    if (!session?.accessToken) return
+    const api = createApiClient(session.accessToken)
+    try {
+      for (let i = 0; i < 20; i++) {   // hard cap on rounds (8/round → up to 160)
+        const r = await api.analytics.pregenerateGaps()
+        setPreparing(r.remaining)
+        if (r.remaining <= 0 || r.generated === 0) break
+      }
+    } catch { /* ignore — on-demand generation covers the rest */ }
+    finally { setPreparing(null); load() }
   }
 
   // Policy gap detection is a Professional+ feature. While the plan is still
@@ -185,6 +202,9 @@ export default function GapsPage() {
             Regulation coverage is checked against the actual content of your policies, plus staff questions that went unanswered.
           </p>
           {analysedWhen && <p className="mt-1 text-xs text-neutral-mid">Coverage last analysed {analysedWhen}</p>}
+          {preparing !== null && preparing > 0 && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-teal"><Loader2 size={11} className="animate-spin" /> Preparing recommendations… {preparing} to go (you can open any gap now)</p>
+          )}
         </div>
         <button onClick={runAnalysis} disabled={analysing}
           className="flex shrink-0 items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
@@ -196,7 +216,7 @@ export default function GapsPage() {
         <p><strong className="text-neutral-dark">What this page is for</strong> — it shows where your policies may not meet the regulations that apply to a registered care setting, and what staff are asking that your policies don&apos;t answer. Use it to find and close gaps before a CQC inspection.</p>
         <p><strong className="text-neutral-dark">Coverage is read from your policy content, not titles</strong> — for each regulation, CareStream finds the most relevant passages across <em>all</em> your uploaded policies (using the same search that powers the staff chat) and an AI auditor judges, from that content alone, whether your policies substantively address it. So a regulation is only flagged when your documents genuinely don&apos;t cover it — not just because no policy happens to be named after it.</p>
         <p><strong className="text-neutral-dark">The three results</strong> — <strong className="text-green-600">Covered</strong>: a policy clearly addresses it (the evidence policy is named). <strong className="text-amber-700">Partial</strong>: it&apos;s touched on but incomplete — the policy that partly covers it is named. <strong className="text-red-600">Gap</strong>: nothing in your policies addresses it.</p>
-        <p><strong className="text-neutral-dark">Running it</strong> — click <strong className="text-neutral-dark">Run coverage analysis</strong> to check all regulations. It reads through your policies and prepares your recommendations up front, so it takes a minute or two, but everything is then saved: the page and every &ldquo;what to add&rdquo; open instantly afterwards. <strong className="text-neutral-dark">Re-run it whenever you upload or update policies</strong> to refresh the picture.</p>
+        <p><strong className="text-neutral-dark">Running it</strong> — click <strong className="text-neutral-dark">Run coverage analysis</strong> to check all regulations. It reads through your policies (about a minute), then quietly prepares each &ldquo;what to add&rdquo; recommendation in the background so drill-ins open instantly. You can start reviewing gaps straight away. <strong className="text-neutral-dark">Re-run it whenever you upload or update policies</strong> to refresh the picture.</p>
         <p><strong className="text-neutral-dark">Unanswered questions</strong> — separately, this page clusters questions staff asked (in chat, email or by voice) that the assistant couldn&apos;t answer from your policies over the last 90 days. Recurring themes are real-world evidence of a missing or unclear policy.</p>
         <p><strong className="text-neutral-dark">Coverage score</strong> — the headline percentage counts fully-covered regulations, plus partials at half weight, out of the total. It only appears once you&apos;ve run the analysis.</p>
       </HelpAccordion>
@@ -207,7 +227,7 @@ export default function GapsPage() {
           <Sparkles size={20} className="mt-0.5 shrink-0 text-teal" />
           <div>
             <p className="font-semibold text-neutral-dark">Run a coverage analysis to check your regulation gaps</p>
-            <p className="mt-0.5 text-sm text-neutral-mid">CareStream reads inside your uploaded policies and judges each regulation against their actual content — not just policy titles. It also prepares your recommendations, so this takes a minute or two, then everything opens instantly.</p>
+            <p className="mt-0.5 text-sm text-neutral-mid">CareStream reads inside your uploaded policies and judges each regulation against their actual content — not just policy titles. This takes about a minute; your recommendations then prepare in the background.</p>
           </div>
         </div>
       )}

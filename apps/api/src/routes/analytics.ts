@@ -12,6 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
+import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
 
@@ -467,6 +468,34 @@ analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: R
     })
   } catch (e: any) {
     err(res, 'ANALYSIS_FAILED', e.message, 500)
+  }
+})
+
+// ─── POST /analytics/gaps/pregenerate ────────────────────────────────────────
+// Warm the "what to add" detail for gaps/partials in small batches, so drill-ins
+// open instantly without holding one long request open (which timed out on tenants
+// with many gaps). The client calls this repeatedly until remaining hits 0.
+const PREGEN_BATCH = 8
+analyticsRouter.post('/gaps/pregenerate', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const [coverage, cached] = await Promise.all([
+      (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId, status: { in: ['gap', 'partial'] } }, select: { reference_key: true } }),
+      (prisma as any).gapDetailCache.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true } }),
+    ])
+    const cachedKeys = new Set((cached as any[]).map(c => c.reference_key))
+    const todo = (coverage as any[]).map(c => c.reference_key).filter(k => !cachedKeys.has(k))
+    const batch = todo.slice(0, PREGEN_BATCH)
+    await mapLimit(batch, 3, (key: string) => getGapDetail(tenantId, key, true).catch(() => null))
+    ok(res, { generated: batch.length, remaining: Math.max(0, todo.length - batch.length) })
+  } catch (e: any) {
+    err(res, 'PREGEN_FAILED', e.message ?? 'Could not prepare recommendations.', 500)
   }
 })
 

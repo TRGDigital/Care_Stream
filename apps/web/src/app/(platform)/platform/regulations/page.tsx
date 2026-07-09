@@ -282,6 +282,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       expected_policy_titles:   reg.expected_policy_titles ?? [],
       required_elements:        reg.required_elements ?? [],
       authoritative_requirements: reg.authoritative_requirements ?? '',
+      authority_basis:          reg.authority_basis ?? 'statutory',
       applies_to_settings:      reg.applies_to_settings ?? [],
       required_triggers:        reg.required_triggers ?? [],
       is_active:                reg.is_active,
@@ -434,6 +435,17 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
               <p className="mt-1 text-xs leading-relaxed text-indigo-900/80">Leave both empty for a <strong>universal</strong> regulation (tested for every tenant, e.g. CQC Fundamental Standards). Otherwise Policy Gaps only tests it when the tenant&rsquo;s setting is selected AND all selected service triggers are true for them.</p>
             </div>
             <div>
+              <p className="mb-1.5 text-xs font-semibold text-neutral-dark">Legal basis <span className="font-normal text-neutral-mid">(shown to tenants on each recommendation)</span></p>
+              <select
+                className={`${INPUT} sm:max-w-xs`}
+                value={form.authority_basis ?? 'statutory'}
+                onChange={e => setForm(f => ({ ...f, authority_basis: e.target.value as 'statutory' | 'advisory' }))}
+              >
+                <option value="statutory">Legally required in policies (statutory)</option>
+                <option value="advisory">Advised — good practice (guidance)</option>
+              </select>
+            </div>
+            <div>
               <p className="mb-1.5 text-xs font-semibold text-neutral-dark">Care settings <span className="font-normal text-neutral-mid">(none selected = all settings)</span></p>
               <div className="flex flex-wrap gap-1.5">
                 {SETTING_OPTIONS.map(o => {
@@ -568,6 +580,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
           )}
           <div className="rounded-md border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 text-xs">
             <p className="mb-1 font-bold uppercase tracking-wide text-indigo-700">Applicability</p>
+            <p className="mb-1 text-neutral-dark"><span className="font-semibold">Legal basis:</span> {reg.authority_basis === 'advisory' ? 'Advised (good practice)' : 'Legally required (statutory)'}</p>
             {(reg.applies_to_settings?.length || reg.required_triggers?.length) ? (
               <div className="space-y-1 text-neutral-dark">
                 <p><span className="font-semibold">Settings:</span> {reg.applies_to_settings?.length ? reg.applies_to_settings.map(settingLabelOf).join(', ') : 'All settings'}</p>

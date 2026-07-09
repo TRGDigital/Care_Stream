@@ -937,7 +937,11 @@ export function createApiClient(token: string) {
         official_name:    string
         original_status:  'partial' | 'gap'
         effective_status: 'partial' | 'gap' | 'covered'
+        authority_basis:  'statutory' | 'advisory'
+        source_urls:      string[]
         evidence_policy:  { id: string; name: string } | null
+        target_policy:    { id: string; name: string } | null
+        suggested_new_policy_title: string | null
         covered_quotes:   string[]
         requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null }>
         disclaimer:       string

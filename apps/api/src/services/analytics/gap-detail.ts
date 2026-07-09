@@ -37,11 +37,32 @@ export type GapDetail = {
   official_name:     string
   original_status:   'partial' | 'gap'
   effective_status:  'partial' | 'gap' | 'covered'
+  authority_basis:   'statutory' | 'advisory'   // legally required vs advised good practice
+  source_urls:       string[]
   evidence_policy:   { id: string; name: string } | null
+  target_policy:     { id: string; name: string } | null   // where to add the missing text (existing policy)
+  suggested_new_policy_title: string | null                // when there's no existing policy to add to
   covered_quotes:    string[]
   requirements:      GapRequirement[]
   disclaimer:        string
   generated_at:      string
+}
+
+// Lightweight title matcher (self-contained) for "which policy to add this to".
+const STOPW = new Set(['policy','policies','procedure','the','of','in','and','for','a','an','our','care','home','homes','staff'])
+function titleTokens(s: string): Set<string> {
+  const out = new Set<string>()
+  for (const t of (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(' ')) {
+    if (!t) continue
+    if (/^\d+$/.test(t)) { out.add(t); continue }
+    if (t.length >= 3 && !STOPW.has(t)) out.add(t)
+  }
+  return out
+}
+function overlap(a: Set<string>, b: Set<string>): number {
+  if (!a.size) return 0
+  let hit = 0; for (const t of a) if (b.has(t)) hit++
+  return hit / a.size
 }
 
 const parseJson = (text: string): any => {
@@ -180,7 +201,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
 
   const reg = await (prisma as any).externalRegulation.findUnique({
     where:  { reference_key: referenceKey },
-    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true, authoritative_requirements: true },
+    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true, authoritative_requirements: true, authority_basis: true, source_urls: true, expected_policy_titles: true },
   })
   if (!reg) throw new Error('Regulation not found')
 
@@ -224,6 +245,22 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   const requirements = [...inPolicy, ...verifiedReqs]
   const missingCount = requirements.filter(r => r.status === 'missing').length
 
+  // Where to add the missing text: the evidence policy for a partial; for a gap,
+  // the best title match among the home's policies (else "you'll need a new policy").
+  let targetPolicy: { id: string; name: string } | null = evidencePolicy
+  let suggestedNewPolicyTitle: string | null = null
+  if (!targetPolicy) {
+    const targets = [...(reg.expected_policy_titles ?? []), reg.official_name].filter(Boolean).map((t: string) => titleTokens(t))
+    let best: { id: string; name: string; score: number } | null = null
+    for (const p of policyRows as any[]) {
+      const pt = titleTokens(p.name)
+      const score = Math.max(0, ...targets.map((t: Set<string>) => overlap(t, pt)))
+      if (score >= 0.5 && (!best || score > best.score)) best = { id: p.id, name: p.name, score }
+    }
+    if (best) targetPolicy = { id: best.id, name: best.name }
+    else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`
+  }
+
   // Verdict correction: nothing left to add → it's actually covered across the library.
   const effectiveStatus: GapDetail['effective_status'] = missingCount === 0 ? 'covered' : originalStatus
   if (missingCount === 0) {
@@ -239,7 +276,11 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     official_name:    reg.official_name,
     original_status:  originalStatus,
     effective_status: effectiveStatus,
+    authority_basis:  reg.authority_basis === 'advisory' ? 'advisory' : 'statutory',
+    source_urls:      (reg.source_urls ?? []).filter(Boolean),
     evidence_policy:  evidencePolicy,
+    target_policy:    targetPolicy,
+    suggested_new_policy_title: suggestedNewPolicyTitle,
     covered_quotes:   ident.covered_quotes,
     requirements,
     disclaimer:       DISCLAIMER,

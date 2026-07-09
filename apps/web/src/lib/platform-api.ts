@@ -314,6 +314,7 @@ export interface Regulation {
   expected_policy_titles:   string[]
   required_elements:        string[]
   authoritative_requirements: string
+  authority_basis:          'statutory' | 'advisory'
   applies_to_settings:      string[]
   required_triggers:        string[]
   is_active:                boolean

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2 } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -134,6 +134,34 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
             <div className="max-h-[62vh] overflow-y-auto px-6 py-5">
               {tab === 'add' ? (
                 <div className="space-y-5">
+                  {/* Legal basis + where to add */}
+                  <div className="space-y-2">
+                    <div className={`flex items-start gap-2 rounded-lg border px-4 py-2.5 ${detail.authority_basis === 'statutory' ? 'border-rose-200 bg-rose-50' : 'border-sky-200 bg-sky-50'}`}>
+                      <Scale size={16} className={`mt-0.5 shrink-0 ${detail.authority_basis === 'statutory' ? 'text-rose-600' : 'text-sky-600'}`} />
+                      <div className="min-w-0 text-sm">
+                        <p className={`font-semibold ${detail.authority_basis === 'statutory' ? 'text-rose-800' : 'text-sky-800'}`}>
+                          {detail.authority_basis === 'statutory' ? 'Legally required in your policies' : 'Advised — good practice'}
+                        </p>
+                        <p className={detail.authority_basis === 'statutory' ? 'text-rose-700' : 'text-sky-700'}>
+                          {detail.authority_basis === 'statutory' ? 'Required by' : 'Recommended by'} {detail.official_name}.
+                          {detail.source_urls.map((u, i) => (
+                            <span key={u}>{i === 0 ? ' ' : ', '}<a href={u} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">source{detail.source_urls.length > 1 ? ` ${i + 1}` : ''}</a></span>
+                          ))}
+                        </p>
+                      </div>
+                    </div>
+                    {(detail.target_policy || detail.suggested_new_policy_title) && detail.effective_status !== 'covered' && (
+                      <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-neutral-light/40 px-4 py-2.5 text-sm">
+                        {detail.target_policy ? <FileText size={15} className="mt-0.5 shrink-0 text-teal" /> : <FilePlus2 size={15} className="mt-0.5 shrink-0 text-teal" />}
+                        <p className="text-neutral-dark">
+                          {detail.target_policy
+                            ? <>Add the wording below to your <span className="font-semibold">{detail.target_policy.name}</span> policy.</>
+                            : <>You don&rsquo;t have a matching policy yet — you&rsquo;ll need a new <span className="font-semibold">{detail.suggested_new_policy_title}</span>.</>}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Missing requirements + suggested wording */}
                   {missing.length > 0 && (
                     <div className="space-y-3">

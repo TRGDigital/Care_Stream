@@ -7,7 +7,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
-import { CheckCircle2, ChevronDown, FileQuestion, FileText, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2 } from 'lucide-react'
+import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2 } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -200,9 +200,94 @@ export default function GapsPage() {
         </div>
       )}
 
-      {/* Regulation-updated alerts */}
+      {/* Headline metrics */}
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className={`rounded-card border px-6 py-5 ${scoreBg}`}>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Coverage score</p>
+          <p className={`text-4xl font-extrabold ${scoreColour}`}>{score == null ? '—' : `${score}%`}</p>
+          <p className="mt-1 text-xs text-neutral-mid">
+            {data.analysed ? `${coveredRegs.length} fully · ${partialRegs.length} partial · ${gapRegs.length} gaps of ${data.meta.regulations_total}` : 'Not yet analysed'}
+          </p>
+        </div>
+
+        <div className="rounded-card border border-gray-100 bg-white px-6 py-5 shadow-card">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Unanswered questions</p>
+          <p className="text-4xl font-extrabold text-neutral-dark">{data.meta.no_match_total}</p>
+          <p className="mt-1 text-xs text-neutral-mid">In the last {data.meta.days_analysed} days</p>
+        </div>
+
+        <div className="rounded-card border border-gray-100 bg-white px-6 py-5 shadow-card">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Regulation gaps</p>
+          <p className="text-4xl font-extrabold text-neutral-dark">{data.analysed ? gapRegs.length : '—'}</p>
+          <p className="mt-1 text-xs text-neutral-mid">Not addressed by any policy</p>
+        </div>
+      </div>
+
+      {/* ── Regulation coverage — full width ─────────────────────────────── */}
+      <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
+          <ShieldAlert size={16} className="text-red-500" />
+          <h2 className="text-sm font-semibold text-neutral-dark">Regulation coverage</h2>
+        </div>
+
+        {!data.analysed ? (
+          <div className="flex items-center gap-3 px-6 py-8">
+            <Sparkles size={18} className="shrink-0 text-teal" />
+            <p className="text-sm text-neutral-mid">Run a coverage analysis to check each regulation against the content of your policies.</p>
+          </div>
+        ) : (
+          <>
+            <div className="divide-y divide-gray-50">
+              {gapRegs.length === 0 && partialRegs.length === 0 ? (
+                <div className="flex items-center gap-3 px-6 py-5">
+                  <CheckCircle2 size={18} className="text-green-500" />
+                  <p className="text-sm text-neutral-mid">Every regulation is addressed by your policies — well done.</p>
+                </div>
+              ) : [...gapRegs, ...partialRegs].map(reg => (
+                <div key={reg.reference_key} className="flex items-center justify-between gap-3 px-6 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
+                    {reg.status === 'partial' && reg.evidence_policy_name && (
+                      <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+                      {reg.status === 'gap' ? 'Gap' : 'Partial'}
+                    </span>
+                    <button
+                      onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
+                    >
+                      <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {coveredRegs.length > 0 && (
+              <details className="border-t border-gray-100">
+                <summary className="cursor-pointer px-6 py-3 text-xs font-medium text-neutral-mid hover:text-neutral-dark">
+                  {coveredRegs.length} regulation{coveredRegs.length > 1 ? 's' : ''} fully covered
+                </summary>
+                <div className="divide-y divide-gray-50">
+                  {coveredRegs.map(reg => (
+                    <div key={reg.reference_key} className="flex items-center gap-3 px-6 py-2.5">
+                      <CheckCircle2 size={14} className="shrink-0 text-green-500" />
+                      <p className="truncate text-sm text-neutral-dark">{reg.official_name}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Regulation-updated alerts — under the coverage section ────────── */}
       {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).length > 0 && (
-        <div className="mb-8 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
+        <div className="mb-6 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
           <div className="mb-2 flex items-center gap-2">
             <Info size={16} className="text-amber-600" />
             <p className="text-sm font-semibold text-amber-900">Regulations you&apos;re assessed against have been updated</p>
@@ -229,136 +314,37 @@ export default function GapsPage() {
         </div>
       )}
 
-      {/* Headline metrics */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className={`rounded-card border px-6 py-5 ${scoreBg}`}>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Coverage score</p>
-          <p className={`text-4xl font-extrabold ${scoreColour}`}>{score == null ? '—' : `${score}%`}</p>
-          <p className="mt-1 text-xs text-neutral-mid">
-            {data.analysed ? `${coveredRegs.length} fully · ${partialRegs.length} partial · ${gapRegs.length} gaps of ${data.meta.regulations_total}` : 'Not yet analysed'}
-          </p>
+      {/* ── Top unanswered question themes — full width ───────────────────── */}
+      <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
+          <FileQuestion size={16} className="text-amber-600" />
+          <h2 className="text-sm font-semibold text-neutral-dark">Top unanswered question themes</h2>
         </div>
-
-        <div className="rounded-card border border-gray-100 bg-white px-6 py-5 shadow-card">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Unanswered questions</p>
-          <p className="text-4xl font-extrabold text-neutral-dark">{data.meta.no_match_total}</p>
-          <p className="mt-1 text-xs text-neutral-mid">In the last {data.meta.days_analysed} days</p>
-        </div>
-
-        <div className="rounded-card border border-gray-100 bg-white px-6 py-5 shadow-card">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Regulation gaps</p>
-          <p className="text-4xl font-extrabold text-neutral-dark">{data.analysed ? gapRegs.length : '—'}</p>
-          <p className="mt-1 text-xs text-neutral-mid">Not addressed by any policy</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-        {/* Unanswered question themes */}
-        <div className="rounded-card border border-gray-100 bg-white shadow-card">
-          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
-            <FileQuestion size={16} className="text-amber-600" />
-            <h2 className="text-sm font-semibold text-neutral-dark">Top unanswered question themes</h2>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {data.unanswered_themes.length === 0 ? (
-              <div className="flex items-center gap-3 px-6 py-5">
-                <CheckCircle2 size={18} className="text-green-500" />
-                <p className="text-sm text-neutral-mid">No recurring unanswered questions — great coverage.</p>
-              </div>
-            ) : data.unanswered_themes.map(theme => (
-              <div key={theme.theme} className="px-6 py-4">
-                <div className="mb-2 flex items-start justify-between gap-4">
-                  <p className="font-semibold capitalize text-neutral-dark">{theme.theme}</p>
-                  <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">
-                    {theme.count} {theme.count === 1 ? 'question' : 'questions'}
-                  </span>
-                </div>
-                <ul className="space-y-1">
-                  {theme.sample_questions.map((q, i) => (
-                    <li key={i} className="truncate text-xs text-neutral-mid">
-                      &ldquo;{q}&rdquo;
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-3">
-                  <a
-                    href="/policies"
-                    className="text-xs font-semibold text-teal hover:underline"
-                  >
-                    Upload a policy to cover this →
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Regulation coverage */}
-        <div className="rounded-card border border-gray-100 bg-white shadow-card">
-          <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
-            <ShieldAlert size={16} className="text-red-500" />
-            <h2 className="text-sm font-semibold text-neutral-dark">Regulation coverage</h2>
-          </div>
-
-          {!data.analysed ? (
-            <div className="flex items-center gap-3 px-6 py-8">
-              <Sparkles size={18} className="shrink-0 text-teal" />
-              <p className="text-sm text-neutral-mid">Run a coverage analysis to check each regulation against the content of your policies.</p>
+        <div className="divide-y divide-gray-50">
+          {data.unanswered_themes.length === 0 ? (
+            <div className="flex items-center gap-3 px-6 py-5">
+              <CheckCircle2 size={18} className="text-green-500" />
+              <p className="text-sm text-neutral-mid">No recurring unanswered questions — great coverage.</p>
             </div>
-          ) : (
-            <>
-              <div className="divide-y divide-gray-50">
-                {gapRegs.length === 0 && partialRegs.length === 0 ? (
-                  <div className="flex items-center gap-3 px-6 py-5">
-                    <CheckCircle2 size={18} className="text-green-500" />
-                    <p className="text-sm text-neutral-mid">Every regulation is addressed by your policies — well done.</p>
-                  </div>
-                ) : [...gapRegs, ...partialRegs].map(reg => (
-                  <div key={reg.reference_key} className="px-6 py-4">
-                    <div className="mb-1 flex items-start justify-between gap-3">
-                      <p className="font-semibold text-neutral-dark">{reg.official_name}</p>
-                      <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                        {reg.status === 'gap' ? 'Gap' : 'Partial'}
-                      </span>
-                    </div>
-                    <p className="mb-1 text-xs text-neutral-mid">{reg.summary}</p>
-                    {reg.reason && <p className="mb-2 text-xs italic text-neutral-mid">{reg.reason}</p>}
-                    {reg.status === 'partial' && reg.evidence_policy_name && (
-                      <p className="mb-2 flex items-center gap-1.5 text-xs text-neutral-mid"><FileText size={12} className="text-teal" /> Partially covered by <span className="font-medium text-neutral-dark">{reg.evidence_policy_name}</span></p>
-                    )}
-                    <button
-                      onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
-                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
-                    >
-                      <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage & what to add'}
-                    </button>
-                  </div>
-                ))}
+          ) : data.unanswered_themes.map(theme => (
+            <div key={theme.theme} className="px-6 py-4">
+              <div className="mb-2 flex items-start justify-between gap-4">
+                <p className="font-semibold capitalize text-neutral-dark">{theme.theme}</p>
+                <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">
+                  {theme.count} {theme.count === 1 ? 'question' : 'questions'}
+                </span>
               </div>
-
-              {coveredRegs.length > 0 && (
-                <details className="border-t border-gray-100">
-                  <summary className="cursor-pointer px-6 py-3 text-xs font-medium text-neutral-mid hover:text-neutral-dark">
-                    {coveredRegs.length} regulation{coveredRegs.length > 1 ? 's' : ''} fully covered
-                  </summary>
-                  <div className="divide-y divide-gray-50">
-                    {coveredRegs.map(reg => (
-                      <div key={reg.reference_key} className="flex items-start gap-3 px-6 py-3">
-                        <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-neutral-dark">{reg.official_name}</p>
-                          {reg.evidence_policy_name && <p className="text-xs text-neutral-mid">Covered by {reg.evidence_policy_name}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </>
-          )}
+              <ul className="space-y-1">
+                {theme.sample_questions.map((q, i) => (
+                  <li key={i} className="truncate text-xs text-neutral-mid">&ldquo;{q}&rdquo;</li>
+                ))}
+              </ul>
+              <div className="mt-3">
+                <a href="/policies" className="text-xs font-semibold text-teal hover:underline">Upload a policy to cover this →</a>
+              </div>
+            </div>
+          ))}
         </div>
-
       </div>
 
       {detailReg && session?.accessToken && (

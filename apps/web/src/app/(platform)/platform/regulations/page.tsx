@@ -340,11 +340,25 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="flex items-start gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="font-medium text-neutral-dark text-sm">{reg.official_name}</p>
             <span className="text-xs text-neutral-mid">({reg.reference_key})</span>
             {!reg.is_active && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Inactive</span>
+            )}
+            {reg.required_elements?.length > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal">
+                <Check size={10} /> Checklist ({reg.required_elements.length})
+              </span>
+            ) : (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">No checklist</span>
+            )}
+            {(reg.match_terms?.length || reg.distinguish_from?.length || reg.expected_policy_titles?.length) ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                <Check size={10} /> Signals
+              </span>
+            ) : (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">No signals</span>
             )}
           </div>
           <p className="mt-1 text-xs text-neutral-mid line-clamp-2">{reg.summary}</p>

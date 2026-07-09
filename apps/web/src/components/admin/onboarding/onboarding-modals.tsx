@@ -371,7 +371,7 @@ function QuestionFeedback({ api, flowId, stepId, question }: {
     finally { setBusy(false) }
   }
 
-  if (mode === 'done') return <p className="mt-2 text-[11px] font-medium text-teal">✓ Thanks, your feedback helps CareStream improve these questions.</p>
+  if (mode === 'done') return <p className="mt-2 text-[11px] font-medium text-teal">✓ Thanks, your feedback helps CareStream improve our generation systems.</p>
 
   return (
     <div className="mt-2">

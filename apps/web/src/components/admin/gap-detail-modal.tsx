@@ -44,7 +44,7 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
   }
 }
 
-export function GapDetailModal({ token, referenceKey, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered }: {
+export function GapDetailModal({ token, referenceKey, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered, onCompleted }: {
   token:            string
   referenceKey:     string
   officialName:     string
@@ -53,11 +53,12 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   onAcknowledged:   () => void
   onClose:          () => void
   onVerdictCovered: (referenceKey: string) => void
+  onCompleted:      (referenceKey: string) => void
 }) {
+  const [completing, setCompleting] = useState(false)
   const [detail,  setDetail]  = useState<Detail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
-  const [tab,     setTab]     = useState<'add' | 'coverage'>('add')
   // Legal disclaimer gate — the detail is only fetched once accepted.
   const [accepted, setAccepted] = useState(acknowledged)
   const [accepting, setAccepting] = useState(false)
@@ -108,21 +109,30 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     return () => { live = false }
   }, [token, referenceKey, accepted]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load the evidence policy preview when the Coverage tab is first opened.
+  // Load the target policy preview (right pane) as soon as the detail is ready.
   useEffect(() => {
-    if (tab !== 'coverage' || !detail?.evidence_policy || html !== null || previewLoad) return
+    if (!detail?.target_policy || html !== null || previewLoad) return
     setPreviewLoad(true)
-    createApiClient(token).policies.preview(detail.evidence_policy.id)
+    createApiClient(token).policies.preview(detail.target_policy.id)
       .then(d => setHtml(d.html || ''))
       .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
       .finally(() => setPreviewLoad(false))
-  }, [tab, detail, html, previewLoad, token])
+  }, [detail, html, previewLoad, token])
 
   // Apply highlights after the preview HTML paints.
   useEffect(() => {
-    if (tab !== 'coverage' || !html || !previewRef.current || !detail) return
+    if (!html || !previewRef.current || !detail) return
     highlightQuotes(previewRef.current, detail.covered_quotes)
-  }, [tab, html, detail])
+  }, [html, detail])
+
+  async function markCompleted() {
+    setCompleting(true)
+    try {
+      await createApiClient(token).analytics.completeGap(referenceKey)
+      onCompleted(referenceKey)
+      onClose()
+    } catch { setCompleting(false) }
+  }
 
   const missing = detail?.requirements.filter(r => r.status === 'missing') ?? []
   const covered = detail?.requirements.filter(r => r.status === 'already_covered') ?? []
@@ -130,7 +140,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={onClose}>
-      <div className="w-full max-w-3xl rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-6xl rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
           <div>
@@ -178,16 +188,11 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
               </div>
             )}
 
-            {/* Tabs (Coverage tab only when there is an evidence policy to open) */}
-            {detail.evidence_policy && (
-              <div className="flex gap-1 px-6 pt-4">
-                <button onClick={() => setTab('add')} className={`rounded-t-md px-3 py-2 text-sm font-medium ${tab === 'add' ? 'bg-neutral-light text-neutral-dark' : 'text-neutral-mid hover:text-neutral-dark'}`}>What to add</button>
-                <button onClick={() => setTab('coverage')} className={`rounded-t-md px-3 py-2 text-sm font-medium ${tab === 'coverage' ? 'bg-neutral-light text-neutral-dark' : 'text-neutral-mid hover:text-neutral-dark'}`}>Where it&rsquo;s covered</button>
-              </div>
-            )}
+            {/* Split screen: what to add (left) · the policy to check it against (right) */}
+            <div className="grid max-h-[68vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[70vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
 
-            <div className="max-h-[62vh] overflow-y-auto px-6 py-5">
-              {tab === 'add' ? (
+              {/* LEFT — what to add */}
+              <div className="overflow-y-auto px-6 py-5 lg:max-h-[70vh]">
                 <div className="space-y-5">
                   {/* Legal basis + where to add */}
                   <div className="space-y-2">
@@ -290,37 +295,53 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                   )}
                   {modErr && <p className="text-xs text-red-600">{modErr}</p>}
 
+                  {/* Mark completed → archive */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <button onClick={markCompleted} disabled={completing}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-green-300 bg-white px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-50 disabled:opacity-50">
+                      {completing ? <><Loader2 size={14} className="animate-spin" /> Archiving…</> : <><CheckCircle2 size={14} /> Mark as completed</>}
+                    </button>
+                    <p className="mt-1.5 text-xs text-neutral-mid">Once you&rsquo;ve made these changes, mark it completed to move it to your archive.</p>
+                  </div>
+
                   <p className="border-t border-gray-100 pt-3 text-xs italic text-neutral-mid">{detail.disclaimer}</p>
                 </div>
-              ) : (
-                // Coverage tab: the evidence policy, with covered passages highlighted.
-                <div>
-                  {detail.evidence_policy && (
-                    <p className="mb-3 flex items-center gap-1.5 text-sm text-neutral-mid"><FileText size={13} className="text-teal" /> Passages in <span className="font-medium text-neutral-dark">{detail.evidence_policy.name}</span> that address this regulation are highlighted.</p>
-                  )}
-                  {previewLoad ? (
-                    <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
-                  ) : previewErr ? (
-                    <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
-                  ) : html ? (
-                    <div ref={previewRef} className="policy-content prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
-                  ) : (
-                    <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
-                  )}
+              </div>
 
-                  {/* Fallback list of matched passages (source of truth if inline highlight misses). */}
-                  {detail.covered_quotes.length > 0 && (
-                    <div className="mt-5 border-t border-gray-100 pt-4">
-                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Matched passages</p>
-                      <ul className="space-y-1.5">
-                        {detail.covered_quotes.map((q, i) => (
-                          <li key={i} className="rounded bg-yellow-100 px-2.5 py-1.5 text-xs text-neutral-dark">{q}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* RIGHT — the policy to check the suggestion against */}
+              <div className="overflow-y-auto bg-neutral-light/20 px-6 py-5 lg:max-h-[70vh]">
+                {detail.target_policy ? (
+                  <>
+                    <p className="mb-3 flex items-center gap-1.5 text-sm text-neutral-mid"><FileText size={13} className="text-teal" /> Check against your <span className="font-medium text-neutral-dark">{detail.target_policy.name}</span> policy{detail.covered_quotes.length > 0 ? ' — matched passages highlighted' : ''}.</p>
+                    {previewLoad ? (
+                      <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
+                    ) : previewErr ? (
+                      <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
+                    ) : html ? (
+                      <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" dangerouslySetInnerHTML={{ __html: html }} />
+                    ) : (
+                      <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
+                    )}
+                    {detail.covered_quotes.length > 0 && (
+                      <div className="mt-5 border-t border-gray-100 pt-4">
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Matched passages</p>
+                        <ul className="space-y-1.5">
+                          {detail.covered_quotes.map((q, i) => (
+                            <li key={i} className="rounded bg-yellow-100 px-2.5 py-1.5 text-xs text-neutral-dark">{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
+                    <FilePlus2 size={28} className="text-teal" />
+                    <p className="text-sm font-semibold text-neutral-dark">No existing policy to check against</p>
+                    <p className="max-w-xs text-sm text-neutral-mid">You don&rsquo;t have a matching policy yet — you&rsquo;ll need a new {detail.suggested_new_policy_title ?? 'policy'}. The wording on the left is your starting point.</p>
+                  </div>
+                )}
+              </div>
+
             </div>
           </>
         ) : null}

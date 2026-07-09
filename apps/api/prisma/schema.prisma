@@ -495,6 +495,20 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// A tenant marking a gap's remediation as done — archives it out of the active list.
+model GapRemediation {
+  id                String   @id @default(uuid())
+  tenant_id         String
+  reference_key     String
+  official_name     String
+  completed_at      DateTime @default(now())
+  completed_by_name String?
+
+  @@unique([tenant_id, reference_key])
+  @@index([tenant_id])
+  @@map("gap_remediations")
+}
+
 // Best-effort monitoring of a regulation's source URLs (legislation.gov.uk, HSE,
 // NICE, gov.uk…). A weekly job fingerprints each URL; when a fingerprint changes we
 // flag the regulation for review (needs_update) — we never auto-edit content.

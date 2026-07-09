@@ -339,6 +339,12 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
   }).catch(() => null)
   const remediationAcknowledged = !!ack && ack.disclaimer_version === REMEDIATION_DISCLAIMER_VERSION
 
+  // Completed (archived) remediations — hidden from the active gap list.
+  const remediations = await (prisma as any).gapRemediation.findMany({
+    where: { tenant_id: tenantId }, orderBy: { completed_at: 'desc' },
+  }).catch(() => [])
+  const completedKeys = new Set((remediations as any[]).map(r => r.reference_key))
+
   // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
   // Score every keyword by how many no-match queries contain it
   const termFreq = new Map<string, { count: number; queries: string[] }>()
@@ -422,6 +428,12 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     regulation_alerts: regulationAlerts,
     remediation_acknowledged: remediationAcknowledged,
     remediation_disclaimer:   REMEDIATION_DISCLAIMER,
+    completed_keys:  [...completedKeys],
+    completed_gaps:  (remediations as any[]).map(r => ({
+      reference_key: r.reference_key, official_name: r.official_name,
+      completed_at: r.completed_at, completed_by_name: r.completed_by_name,
+      status: covByKey.get(r.reference_key)?.status ?? 'unknown',
+    })),
     meta: {
       no_match_total:      noMatchQueries.length,
       days_analysed:       90,
@@ -558,6 +570,31 @@ analyticsRouter.post('/gaps/acknowledge-remediation', requireAdmin, async (req: 
     create: { tenant_id: tenantId, kind: 'policy_remediation', ...data },
   }).catch(() => {})
   ok(res, { acknowledged: true })
+})
+
+// ─── POST /analytics/gaps/:reference_key/complete ────────────────────────────
+// Mark a gap's remediation as done — archives it out of the active list.
+analyticsRouter.post('/gaps/:reference_key/complete', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const user = (req as any).user ?? {}
+  const referenceKey = String(req.params.reference_key)
+  const reg = await (prisma as any).externalRegulation.findUnique({ where: { reference_key: referenceKey }, select: { official_name: true } }).catch(() => null)
+  await (prisma as any).gapRemediation.upsert({
+    where:  { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
+    update: { completed_at: new Date(), completed_by_name: user.name ?? null },
+    create: { tenant_id: tenantId, reference_key: referenceKey, official_name: reg?.official_name ?? referenceKey, completed_by_name: user.name ?? null },
+  }).catch(() => {})
+  ok(res, { completed: true })
+})
+
+// ─── POST /analytics/gaps/:reference_key/reopen ──────────────────────────────
+// Un-archive a completed remediation — brings it back into the active list.
+analyticsRouter.post('/gaps/:reference_key/reopen', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  await (prisma as any).gapRemediation.deleteMany({
+    where: { tenant_id: tenantId, reference_key: String(req.params.reference_key) },
+  }).catch(() => {})
+  ok(res, { reopened: true })
 })
 
 // ─── POST /analytics/gaps/alerts/:id/dismiss ─────────────────────────────────

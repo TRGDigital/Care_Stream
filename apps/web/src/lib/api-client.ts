@@ -932,10 +932,14 @@ export function createApiClient(token: string) {
         regulation_alerts: Array<{ id: string; reference_key: string; official_name: string; changed_fields: string[]; created_at: string }>
         remediation_acknowledged: boolean
         remediation_disclaimer: string
+        completed_keys: string[]
+        completed_gaps: Array<{ reference_key: string; official_name: string; completed_at: string; completed_by_name: string | null; status: 'covered' | 'partial' | 'gap' | 'unknown' }>
         meta: { no_match_total: number; days_analysed: number; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }
       }>('/analytics/gaps', token),
       dismissGapAlert: (id: string) => apiFetch<{ dismissed: boolean }>(`/analytics/gaps/alerts/${encodeURIComponent(id)}/dismiss`, token, { method: 'POST' }),
       acknowledgeRemediation: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-remediation', token, { method: 'POST' }),
+      completeGap: (referenceKey: string) => apiFetch<{ completed: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/complete`, token, { method: 'POST' }),
+      reopenGap: (referenceKey: string) => apiFetch<{ reopened: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/reopen`, token, { method: 'POST' }),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string

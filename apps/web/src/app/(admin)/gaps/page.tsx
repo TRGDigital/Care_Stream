@@ -51,6 +51,16 @@ export default function GapsPage() {
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
   const [ackOverride, setAckOverride] = useState(false)   // set true once the disclaimer is accepted this session
+  const [completedOverride, setCompletedOverride] = useState<Set<string>>(new Set())  // marked completed this session
+  const [showArchive, setShowArchive] = useState(false)
+
+  async function reopenGap(referenceKey: string) {
+    setCompletedOverride(prev => { const n = new Set(prev); n.delete(referenceKey); return n })
+    if (session?.accessToken) {
+      await createApiClient(session.accessToken).analytics.reopenGap(referenceKey).catch(() => {})
+      load()
+    }
+  }
   // "Regulation updated" alerts — dismissed ids + per-alert training generation state.
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [alertTraining, setAlertTraining] = useState<Record<string, 'loading' | 'done'>>({})
@@ -143,11 +153,13 @@ export default function GapsPage() {
 
   if (!data) return null
 
-  // A drill-in can find a "gap/partial" is actually covered across the library — drop
-  // those from the actionable lists immediately (the DB verdict is corrected too).
-  const gapRegs     = data.regulation_gaps.filter(r => r.status === 'gap' && !correctedToCovered.has(r.reference_key))
-  const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial' && !correctedToCovered.has(r.reference_key))
+  // Hide items that are corrected-to-covered (drill-in) or marked completed (archived).
+  const completedKeys = new Set<string>([...data.completed_keys, ...completedOverride])
+  const hidden = (k: string) => correctedToCovered.has(k) || completedKeys.has(k)
+  const gapRegs     = data.regulation_gaps.filter(r => r.status === 'gap' && !hidden(r.reference_key))
+  const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial' && !hidden(r.reference_key))
   const coveredRegs = data.regulation_gaps.filter(r => r.status === 'covered')
+  const archived    = data.completed_gaps.filter(g => completedKeys.has(g.reference_key))
   const score       = data.coverage_score
 
   const scoreColour =
@@ -285,6 +297,34 @@ export default function GapsPage() {
         )}
       </div>
 
+      {/* ── Completed / archived remediations ────────────────────────────── */}
+      {archived.length > 0 && (
+        <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+          <button onClick={() => setShowArchive(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+            <CheckCircle2 size={16} className="text-green-500" />
+            <h2 className="flex-1 text-sm font-semibold text-neutral-dark">Completed ({archived.length})</h2>
+            <ChevronDown size={15} className={`text-neutral-mid transition-transform ${showArchive ? 'rotate-180' : ''}`} />
+          </button>
+          {showArchive && (
+            <div className="divide-y divide-gray-50 border-t border-gray-100">
+              {archived.map(g => (
+                <div key={g.reference_key} className="flex items-center justify-between gap-3 px-6 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-neutral-dark">{g.official_name}</p>
+                    <p className="text-xs text-neutral-mid">
+                      Completed{g.completed_by_name ? ` by ${g.completed_by_name}` : ''}{g.completed_at ? ` · ${fmtWhen(g.completed_at)}` : ''}
+                      {g.status === 'covered' && <span className="ml-1 text-green-600">· now covered</span>}
+                      {(g.status === 'gap' || g.status === 'partial') && <span className="ml-1 text-amber-600">· still flagged at last analysis</span>}
+                    </p>
+                  </div>
+                  <button onClick={() => reopenGap(g.reference_key)} className="shrink-0 text-xs font-semibold text-teal hover:underline">Reopen</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Regulation-updated alerts — under the coverage section ────────── */}
       {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).length > 0 && (
         <div className="mb-6 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
@@ -357,6 +397,7 @@ export default function GapsPage() {
           onAcknowledged={() => setAckOverride(true)}
           onClose={() => setDetailReg(null)}
           onVerdictCovered={key => setCorrectedToCovered(prev => new Set(prev).add(key))}
+          onCompleted={key => setCompletedOverride(prev => new Set(prev).add(key))}
         />
       )}
 

@@ -485,6 +485,9 @@ model ExternalRegulation {
   authority_basis          String    @default("statutory") // 'statutory' = legally required in policies | 'advisory' = advised good practice
   applies_to_settings      String[]  @default([])   // care-setting scope; empty = universal (all settings)
   required_triggers        String[]  @default([])   // service-profile triggers that must be true; empty = no gating
+  needs_update             Boolean   @default(false) // flagged: the legislation/standard changed, this reg needs updating
+  review_note              String    @default("")    // why it needs updating / review notes
+  last_reviewed_at         DateTime?                 // when it was last reviewed/updated
   pinecone_vector_id       String?
   last_synced_at           DateTime?
   is_active                Boolean   @default(true)

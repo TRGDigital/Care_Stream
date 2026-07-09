@@ -41,6 +41,7 @@ export default function RegulationsPage() {
   const [editId,      setEditId]        = useState<string | null>(null)
   const [error,       setError]         = useState<string | null>(null)
   const [search,      setSearch]        = useState('')
+  const [needsUpdateOnly, setNeedsUpdateOnly] = useState(false)
 
   function load() {
     if (!token) return
@@ -81,12 +82,12 @@ export default function RegulationsPage() {
 
   if (!token) return null
 
-  const filtered = search
-    ? regulations.filter(r =>
-        r.official_name.toLowerCase().includes(search.toLowerCase()) ||
-        r.reference_key.toLowerCase().includes(search.toLowerCase())
-      )
-    : regulations
+  const needsUpdateCount = regulations.filter(r => r.needs_update).length
+  const filtered = regulations
+    .filter(r => !needsUpdateOnly || r.needs_update)
+    .filter(r => !search ||
+      r.official_name.toLowerCase().includes(search.toLowerCase()) ||
+      r.reference_key.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <PlatformShell>
@@ -184,6 +185,19 @@ export default function RegulationsPage() {
 
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
+        {/* Needs-update tracker */}
+        {needsUpdateCount > 0 && (
+          <div className="flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-rose-800"><strong>{needsUpdateCount}</strong> regulation{needsUpdateCount === 1 ? '' : 's'} flagged as needing an update (legislation changed or module out of date).</p>
+            <button
+              onClick={() => setNeedsUpdateOnly(v => !v)}
+              className={`shrink-0 rounded-btn px-3 py-1.5 text-xs font-semibold ${needsUpdateOnly ? 'bg-rose-600 text-white' : 'border border-rose-300 bg-white text-rose-700 hover:bg-rose-50'}`}
+            >
+              {needsUpdateOnly ? 'Show all regulations' : 'Show only these'}
+            </button>
+          </div>
         )}
 
         {showAdd && (
@@ -292,6 +306,8 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       authority_basis:          reg.authority_basis ?? 'statutory',
       applies_to_settings:      reg.applies_to_settings ?? [],
       required_triggers:        reg.required_triggers ?? [],
+      needs_update:             reg.needs_update ?? false,
+      review_note:              reg.review_note ?? '',
       is_active:                reg.is_active,
     })
     onEdit()
@@ -484,6 +500,20 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             </div>
           </div>
 
+          <div className="sm:col-span-2 rounded-lg border border-rose-200 bg-rose-50/40 p-4 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-rose-700">Review &amp; legal change tracking</p>
+            <label className="flex items-start gap-2.5 text-sm text-neutral-dark">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                checked={!!form.needs_update}
+                onChange={e => setForm(f => ({ ...f, needs_update: e.target.checked }))} />
+              <span><strong>Flag as needing update</strong> — the legislation or standard has changed, or this module is out of date. It shows a &ldquo;Needs update&rdquo; badge and appears in the filter at the top until resolved.</span>
+            </label>
+            <Field label="Review note (what changed / what to update)">
+              <textarea className={INPUT} rows={2} placeholder="e.g. Regulation updated April 2026 — refresh the Section 117 aftercare wording." value={form.review_note ?? ''} onChange={e => setForm(f => ({ ...f, review_note: e.target.value }))} />
+            </Field>
+            <p className="text-[11px] text-neutral-mid">Saving stamps this regulation as reviewed today. Untick and save once you&rsquo;ve updated it — your edit also alerts the affected tenants.</p>
+          </div>
+
           <Field label="Active">
             <select className={INPUT} value={String(form.is_active)} onChange={e => setForm(f => ({ ...f, is_active: e.target.value === 'true' }))}>
               <option value="true">Yes</option>
@@ -514,6 +544,9 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             <span className="text-xs text-neutral-mid">({reg.reference_key})</span>
             {!reg.is_active && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Inactive</span>
+            )}
+            {reg.needs_update && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">Needs update</span>
             )}
             {reg.authoritative_requirements ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
@@ -592,6 +625,14 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
           ) : (
             <p className="text-xs text-neutral-mid italic">No required-elements checklist yet. Add one via Edit (or Generate) to power the tenant &ldquo;what to add&rdquo; deep-dive authoritatively.</p>
           )}
+          <div className={`rounded-md border px-3 py-2.5 text-xs ${reg.needs_update ? 'border-rose-200 bg-rose-50/60' : 'border-gray-100 bg-gray-50'}`}>
+            <p className={`mb-1 font-bold uppercase tracking-wide ${reg.needs_update ? 'text-rose-700' : 'text-neutral-mid'}`}>Review status</p>
+            {reg.needs_update ? (
+              <p className="text-rose-800"><span className="font-semibold">Needs update.</span> {reg.review_note || 'No note added.'}</p>
+            ) : (
+              <p className="text-neutral-dark">Up to date{reg.last_reviewed_at ? ` — last reviewed ${new Date(reg.last_reviewed_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}.</p>
+            )}
+          </div>
           <div className="rounded-md border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 text-xs">
             <p className="mb-1 font-bold uppercase tracking-wide text-indigo-700">Applicability</p>
             <p className="mb-1 text-neutral-dark"><span className="font-semibold">Legal basis:</span> {reg.authority_basis === 'advisory' ? 'Advised (good practice)' : 'Legally required (statutory)'}</p>

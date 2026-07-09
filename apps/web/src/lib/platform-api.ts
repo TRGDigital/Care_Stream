@@ -317,6 +317,9 @@ export interface Regulation {
   authority_basis:          'statutory' | 'advisory'
   applies_to_settings:      string[]
   required_triggers:        string[]
+  needs_update:             boolean
+  review_note:              string
+  last_reviewed_at:         string | null
   is_active:                boolean
   pinecone_vector_id:       string | null
   last_synced_at:           string | null

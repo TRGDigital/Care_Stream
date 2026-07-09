@@ -18,7 +18,25 @@ function page(title: string, body: string): string {
   </div></body></html>`
 }
 
+// GET only CONFIRMS — it never cancels. This matters because email security
+// scanners / link-prefetchers (Outlook SafeLinks, Mimecast, Gmail, antivirus)
+// auto-fetch every link in an email; a GET that cancelled on visit would
+// unsubscribe people who never clicked. The actual unsubscribe is the POST below,
+// which only fires on a real button click.
 onboardingPublicRouter.get('/unsubscribe', async (req: Request, res: Response) => {
+  const e = String(req.query.e ?? ''), t = String(req.query.t ?? '')
+  if (!e || !verifyUnsub(e, t)) {
+    res.status(400).send(page('Unsubscribe', '<p style="color:#374151">This unsubscribe link is invalid or has expired.</p>'))
+    return
+  }
+  const action = `/onboarding/unsubscribe?e=${encodeURIComponent(e)}&t=${encodeURIComponent(t)}`
+  res.status(200).send(page('Unsubscribe',
+    '<p style="color:#111827;font-weight:600;margin:0 0 8px">Unsubscribe from onboarding tips?</p>' +
+    '<p style="color:#6b7280;font-size:14px;margin:0 0 20px">You will stop receiving onboarding emails for this account. You can still use CareStream as normal.</p>' +
+    `<form method="POST" action="${action}" style="margin:0"><button type="submit" style="background:#9B52B5;color:#fff;border:0;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer">Yes, unsubscribe</button></form>`))
+})
+
+onboardingPublicRouter.post('/unsubscribe', async (req: Request, res: Response) => {
   const e = String(req.query.e ?? ''), t = String(req.query.t ?? '')
   if (!e || !verifyUnsub(e, t)) {
     res.status(400).send(page('Unsubscribe', '<p style="color:#374151">This unsubscribe link is invalid or has expired.</p>'))

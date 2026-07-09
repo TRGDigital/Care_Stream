@@ -1644,6 +1644,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
     source_urls = [], is_active = true,
     match_terms = [], distinguish_from = [], expected_policy_titles = [], required_elements = [],
     authoritative_requirements = '', authority_basis, applies_to_settings = [], required_triggers = [],
+    needs_update = false, review_note = '',
   } = req.body ?? {}
 
   if (!reference_key || !official_name || !summary) {
@@ -1684,6 +1685,9 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
       authority_basis:          authority_basis === 'advisory' ? 'advisory' : 'statutory',
       applies_to_settings:      Array.isArray(applies_to_settings) ? applies_to_settings : [],
       required_triggers:        Array.isArray(required_triggers) ? required_triggers : [],
+      needs_update:             !!needs_update,
+      review_note:              typeof review_note === 'string' ? review_note : '',
+      last_reviewed_at:         new Date(),
       pinecone_vector_id:       vectorId,
       last_synced_at:           new Date(),
     },
@@ -1716,6 +1720,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     care_company_interaction, practical_meaning, source_urls, is_active,
     match_terms, distinguish_from, expected_policy_titles, required_elements,
     authoritative_requirements, authority_basis, applies_to_settings, required_triggers,
+    needs_update, review_note,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1737,6 +1742,9 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
       ...(authority_basis          !== undefined ? { authority_basis: authority_basis === 'advisory' ? 'advisory' : 'statutory' } : {}),
       ...(applies_to_settings      !== undefined ? { applies_to_settings }      : {}),
       ...(required_triggers        !== undefined ? { required_triggers }        : {}),
+      ...(needs_update             !== undefined ? { needs_update: !!needs_update } : {}),
+      ...(review_note              !== undefined ? { review_note: typeof review_note === 'string' ? review_note : '' } : {}),
+      last_reviewed_at: new Date(),
       last_synced_at: new Date(),
     },
   })

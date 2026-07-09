@@ -560,6 +560,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <Tip>The example wording is guidance for you to review, adapt and approve — not legal advice. Prefer it done for you? Use &ldquo;Request this policy&rdquo; and our team can write and supply it.</Tip>
         </SectionBlock>
 
+        <SectionBlock title="A one-time disclaimer before you use the guidance">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            The first time anyone at your service opens the &ldquo;what to add&rdquo; guidance, CareStream shows a short <strong>legal disclaimer</strong> that must be accepted before the recommendations are shown. It makes clear that the gaps and example wording are <strong>guidance, not legal or compliance advice</strong>, that you remain responsible for reviewing and approving any changes, and that we <strong>strongly recommend any changes you make are checked by a suitably qualified external specialist before they are adopted</strong>.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Shown once</strong> — after it&rsquo;s accepted, you won&rsquo;t see it again (unless the wording is materially updated).</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Required</strong> — if it isn&rsquo;t accepted, the &ldquo;what to add&rdquo; guidance stays locked; you can still see your coverage scores and gaps.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Recorded</strong> — we keep a durable record of the acceptance (who accepted it, the date, and the version) as evidence.</span></li>
+          </ul>
+          <Tip>This protects you as much as us: it&rsquo;s a prompt to get a specialist eye on anything significant before you adopt it.</Tip>
+        </SectionBlock>
+
         <SectionBlock title="Only what applies to your service">
           <p className="text-sm text-neutral-dark leading-relaxed">
             We never flag regulations that don&rsquo;t apply to you. In <strong>Settings → Service profile</strong>, confirm a few facts about your service (do you cook on site, administer medicines, employ nurses, use hoists, support people under the Mental Health Act, and so on). These are pre-filled from your facility type — just check them. A home that holds no controlled drugs is never assessed against controlled-drug rules; a service that doesn&rsquo;t support people under the Mental Health Act is never flagged for it. The CQC Fundamental Standards and core legal duties apply to everyone.

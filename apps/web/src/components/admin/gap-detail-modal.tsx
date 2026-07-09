@@ -372,11 +372,19 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       <input
                         type="text" value={policySearch} onChange={e => setPolicySearch(e.target.value)}
                         placeholder="Search this policy, e.g. Integrated Care Board…"
-                        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-20 text-sm focus:border-teal focus:outline-none"
+                        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-24 text-sm focus:border-teal focus:outline-none"
                       />
-                      {policySearch.trim().length >= 2 && (
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-mid">{matchCount ?? 0} match{matchCount === 1 ? '' : 'es'}</span>
-                      )}
+                      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+                        {policySearch.trim().length >= 2 && (
+                          <span className="text-xs font-medium text-neutral-mid">{matchCount ?? 0} match{matchCount === 1 ? '' : 'es'}</span>
+                        )}
+                        {policySearch && (
+                          <button type="button" onClick={() => setPolicySearch('')} aria-label="Clear search"
+                            className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark">
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {previewLoad ? (

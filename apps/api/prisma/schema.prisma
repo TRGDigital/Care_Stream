@@ -479,6 +479,7 @@ model ExternalRegulation {
   match_terms              String[]  @default([])   // discriminating tokens a policy on this reg contains
   distinguish_from         String[]  @default([])   // near-neighbour regs this must NOT be confused with
   expected_policy_titles   String[]  @default([])   // canonical policy document titles that satisfy this reg
+  required_elements        String[]  @default([])   // authoritative checklist: what a compliant policy must contain
   pinecone_vector_id       String?
   last_synced_at           DateTime?
   is_active                Boolean   @default(true)

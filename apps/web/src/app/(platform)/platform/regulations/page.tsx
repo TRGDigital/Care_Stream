@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type Regulation } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
 export default function RegulationsPage() {
   const token                           = usePlatformAuth()
@@ -180,6 +180,20 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
   const [expanded, setExpanded] = useState(false)
   const [form,     setForm]     = useState<Partial<Regulation>>({})
   const [saving,   setSaving]   = useState(false)
+  const [genList,  setGenList]  = useState(false)
+  const [genErr,   setGenErr]   = useState<string | null>(null)
+
+  async function generateChecklist() {
+    setGenList(true); setGenErr(null)
+    try {
+      const { required_elements } = await createPlatformClient(token).regulations.generateChecklist(reg.id)
+      setForm(f => ({ ...f, required_elements }))
+    } catch (e: any) {
+      setGenErr(e.message ?? 'Could not generate the checklist.')
+    } finally {
+      setGenList(false)
+    }
+  }
 
   function startEdit() {
     setForm({
@@ -193,6 +207,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       match_terms:              reg.match_terms ?? [],
       distinguish_from:         reg.distinguish_from ?? [],
       expected_policy_titles:   reg.expected_policy_titles ?? [],
+      required_elements:        reg.required_elements ?? [],
       is_active:                reg.is_active,
     })
     onEdit()
@@ -276,6 +291,30 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             </Field>
           </div>
 
+          <div className="sm:col-span-2 rounded-lg border border-teal/20 bg-teal-light/20 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-teal">Required elements checklist</p>
+              <button
+                type="button"
+                onClick={generateChecklist}
+                disabled={genList}
+                className="inline-flex items-center gap-1.5 rounded-md border border-teal/40 bg-white px-2.5 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/40 disabled:opacity-50"
+              >
+                {genList ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                Generate from this regulation&rsquo;s details
+              </button>
+            </div>
+            <p className="text-xs leading-relaxed text-neutral-mid">The authoritative list of what a compliant policy must contain. Powers the tenant-facing &ldquo;what to add&rdquo; deep-dive. One item per line. Generate a draft from the fields above, then review and edit — this is grounded only in the description you have written, not outside sources.</p>
+            <textarea
+              className={INPUT}
+              rows={Math.max(6, (form.required_elements ?? []).length + 1)}
+              placeholder={'One required element per line, e.g.\nThe process for recognising when the Act applies\nSection 117 aftercare duties and how they are met\nHow staff support access to advocacy (IMHA)'}
+              value={(form.required_elements ?? []).join('\n')}
+              onChange={e => setForm(f => ({ ...f, required_elements: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
+            />
+            {genErr && <p className="text-xs text-red-600">{genErr}</p>}
+          </div>
+
           <Field label="Active">
             <select className={INPUT} value={String(form.is_active)} onChange={e => setForm(f => ({ ...f, is_active: e.target.value === 'true' }))}>
               <option value="true">Yes</option>
@@ -330,6 +369,18 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
           <p><span className="font-bold text-neutral-dark">Care home context:</span>{' '}{reg.care_home_context}</p>
           <p><span className="font-bold text-neutral-dark">Care company interaction:</span>{' '}{reg.care_company_interaction}</p>
           <p><span className="font-bold text-neutral-dark">Practical meaning:</span>{' '}{reg.practical_meaning}</p>
+          {reg.required_elements?.length > 0 ? (
+            <div className="rounded-md border border-teal/20 bg-teal-light/20 px-3 py-2.5">
+              <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-teal">Required elements ({reg.required_elements.length})</p>
+              <ul className="space-y-1">
+                {reg.required_elements.map((el, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-neutral-dark"><span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-teal" />{el}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-mid italic">No required-elements checklist yet. Add one via Edit (or Generate) to power the tenant &ldquo;what to add&rdquo; deep-dive authoritatively.</p>
+          )}
           {(reg.expected_policy_titles?.length || reg.match_terms?.length || reg.distinguish_from?.length) ? (
             <div className="rounded-md border border-amber-100 bg-amber-50/60 px-3 py-2.5 space-y-1.5 text-xs">
               <p className="font-bold uppercase tracking-wide text-amber-700">Coverage matching</p>
@@ -366,7 +417,7 @@ function RegulationForm({ token, onClose, onSaved }: {
   onClose: () => void
   onSaved: (r: Regulation) => void
 }) {
-  const [form,   setForm]   = useState<Partial<Regulation & { also_known_as_str: string; source_urls_str: string; expected_policy_titles_str: string; match_terms_str: string; distinguish_from_str: string }>>({ is_active: true })
+  const [form,   setForm]   = useState<Partial<Regulation & { also_known_as_str: string; source_urls_str: string; expected_policy_titles_str: string; match_terms_str: string; distinguish_from_str: string; required_elements_str: string }>>({ is_active: true })
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
 
@@ -381,6 +432,7 @@ function RegulationForm({ token, onClose, onSaved }: {
         expected_policy_titles: form.expected_policy_titles_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
         match_terms:            form.match_terms_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
         distinguish_from:       form.distinguish_from_str?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
+        required_elements:      form.required_elements_str?.split('\n').map(s => s.trim()).filter(Boolean) ?? [],
       }
       const reg = await createPlatformClient(token).regulations.create(payload)
       onSaved(reg)
@@ -432,6 +484,9 @@ function RegulationForm({ token, onClose, onSaved }: {
             <input className={INPUT} placeholder="Mental Capacity Act 2005, Deprivation of Liberty Safeguards (DoLS)" value={form.distinguish_from_str ?? ''} onChange={e => setForm(f => ({ ...f, distinguish_from_str: e.target.value }))} />
           </Field>
         </div>
+        <Field label="Required elements checklist (one per line) — what a compliant policy must contain" className="sm:col-span-2">
+          <textarea className={INPUT} rows={5} placeholder={'One required element per line. You can also Generate this after saving, from the Edit view.'} value={form.required_elements_str ?? ''} onChange={e => setForm(f => ({ ...f, required_elements_str: e.target.value }))} />
+        </Field>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">

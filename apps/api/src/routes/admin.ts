@@ -36,6 +36,7 @@ import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
+import { callClaude } from '../services/ai/claude'
 
 export const adminRouter = Router()
 
@@ -1596,7 +1597,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
     reference_key, official_name, also_known_as = [], summary,
     care_home_context, care_company_interaction, practical_meaning,
     source_urls = [], is_active = true,
-    match_terms = [], distinguish_from = [], expected_policy_titles = [],
+    match_terms = [], distinguish_from = [], expected_policy_titles = [], required_elements = [],
   } = req.body ?? {}
 
   if (!reference_key || !official_name || !summary) {
@@ -1632,6 +1633,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
       match_terms:              Array.isArray(match_terms) ? match_terms : [],
       distinguish_from:         Array.isArray(distinguish_from) ? distinguish_from : [],
       expected_policy_titles:   Array.isArray(expected_policy_titles) ? expected_policy_titles : [],
+      required_elements:        Array.isArray(required_elements) ? required_elements : [],
       pinecone_vector_id:       vectorId,
       last_synced_at:           new Date(),
     },
@@ -1662,7 +1664,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
   const {
     official_name, also_known_as, summary, care_home_context,
     care_company_interaction, practical_meaning, source_urls, is_active,
-    match_terms, distinguish_from, expected_policy_titles,
+    match_terms, distinguish_from, expected_policy_titles, required_elements,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1679,6 +1681,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
       ...(match_terms              !== undefined ? { match_terms }              : {}),
       ...(distinguish_from         !== undefined ? { distinguish_from }         : {}),
       ...(expected_policy_titles   !== undefined ? { expected_policy_titles }   : {}),
+      ...(required_elements        !== undefined ? { required_elements }        : {}),
       last_synced_at: new Date(),
     },
   })
@@ -1698,6 +1701,44 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
   }
 
   ok(res, updated)
+})
+
+// ─── POST /admin/regulations/:id/generate-checklist ──────────────────────────
+// Draft the authoritative "required_elements" checklist for a regulation, grounded
+// ONLY in that regulation's own curated fields (summary, care-home context,
+// practical meaning). Returns the draft for review — does NOT save it; the admin
+// edits and saves via PATCH. Source URLs are cited for traceability, not fetched.
+adminRouter.post('/regulations/:id/generate-checklist', async (req: Request, res: Response) => {
+  const reg = await (prisma as any).externalRegulation.findUnique({
+    where:  { id: req.params.id },
+    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, source_urls: true },
+  })
+  if (!reg) { err(res, 'NOT_FOUND', 'Regulation not found', 404); return }
+
+  const sources = (reg.source_urls ?? []).filter(Boolean).join('\n')
+  const user = `You are a UK care-home compliance specialist. Produce the authoritative checklist of concrete elements a compliant care-home policy for this regulation MUST contain. Base the checklist ONLY on the regulation description below — do not rely on outside knowledge or invent requirements beyond what this describes.
+
+REGULATION: ${reg.official_name}
+WHAT IT REQUIRES: ${reg.summary}
+IN A CARE HOME: ${reg.care_home_context}
+PRACTICAL MEANING: ${reg.practical_meaning}
+${sources ? `REFERENCE SOURCES (for the home's traceability — do not assume content beyond the description above):\n${sources}` : ''}
+
+Write 8 to 15 specific, distinct, self-contained checklist items. Each should name a concrete thing the policy must address (not vague themes). Care-home specific and practical.
+
+Respond with ONLY minified JSON:
+{"required_elements":["<one concrete required element>"]}`
+
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 1800 })
+    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
+    const items = Array.isArray(parsed.required_elements)
+      ? parsed.required_elements.map((s: any) => String(s ?? '').trim()).filter(Boolean).slice(0, 20)
+      : []
+    ok(res, { required_elements: items })
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e.message ?? 'Could not generate the checklist.', 500)
+  }
 })
 
 // ─── DELETE /admin/regulations/:id ───────────────────────────────────────────

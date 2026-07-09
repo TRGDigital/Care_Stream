@@ -312,6 +312,7 @@ export interface Regulation {
   match_terms:              string[]
   distinguish_from:         string[]
   expected_policy_titles:   string[]
+  required_elements:        string[]
   is_active:                boolean
   pinecone_vector_id:       string | null
   last_synced_at:           string | null
@@ -660,6 +661,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ deleted: boolean }>(`/regulations/${id}`, token, { method: 'DELETE' }),
       sync: () =>
         adminFetch<any>('/regulations/sync', token, { method: 'POST' }),
+      generateChecklist: (id: string) =>
+        adminFetch<{ required_elements: string[] }>(`/regulations/${id}/generate-checklist`, token, { method: 'POST' }),
     },
 
     auditSeeds: {

@@ -51,8 +51,20 @@ const parseJson = (text: string): any => {
 
 // ── Step 1: identify the regulation's requirements + (for partial) what the ──────
 //            evidence policy already evidences.
+//
+// The requirement checklist comes from the regulation's CURATED `required_elements`
+// when present (authoritative, consistent, traceable). Only when a regulation has no
+// curated checklist do we fall back to model-derived requirements — and even then we
+// bind the model strictly to the regulation description, not outside knowledge.
 async function identify(reg: any, evidenceText: string | null): Promise<{ covered_quotes: string[]; requirements: { requirement: string; in_policy: boolean }[] }> {
+  const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean).slice(0, MAX_REQUIREMENTS) : []
+
+  // ── Partial: check the evidence policy against the requirement checklist. ──
   if (evidenceText) {
+    const checklistBlock = curated.length
+      ? `Assess THIS policy against each of the required elements below. Do not add or invent requirements beyond this list.\nREQUIRED ELEMENTS:\n${curated.map((e, i) => `${i + 1}. ${e}`).join('\n')}`
+      : `Break the regulation into up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must address. Base these ONLY on the regulation description above — do not rely on outside knowledge.`
+
     const user = `REGULATION: ${reg.official_name}
 WHAT IT REQUIRES: ${reg.summary}
 IN A CARE HOME: ${reg.care_home_context}
@@ -63,10 +75,12 @@ THE HOME'S POLICY THAT PARTLY COVERS THIS (verbatim text):
 ${evidenceText.slice(0, POLICY_TEXT_CAP)}
 """
 
-Break the regulation into up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must address. For each, decide whether THIS policy text substantively addresses it. Also quote up to 6 exact sentences from the policy (verbatim, copied character-for-character) that evidence the parts it does cover.
+${checklistBlock}
 
-Respond with ONLY minified JSON:
-{"covered_quotes":["<verbatim sentence>"],"requirements":[{"requirement":"<one specific requirement>","in_policy":true|false}]}`
+For each requirement, decide whether THIS policy text substantively addresses it. Also quote up to 6 exact sentences from the policy (verbatim, copied character-for-character) that evidence the parts it does cover.
+
+Respond with ONLY minified JSON${curated.length ? ' — keep the requirement text identical to the list above and in the same order' : ''}:
+{"covered_quotes":["<verbatim sentence>"],"requirements":[{"requirement":"<requirement>","in_policy":true|false}]}`
     const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1500 })
     const p = parseJson(text)
     return {
@@ -75,13 +89,16 @@ Respond with ONLY minified JSON:
     }
   }
 
-  // Full gap — no evidence policy. Ask only for the requirements a compliant policy needs.
+  // ── Full gap: no evidence policy. Use the curated checklist verbatim if present. ──
+  if (curated.length) {
+    return { covered_quotes: [], requirements: curated.map(e => ({ requirement: e, in_policy: false })) }
+  }
   const user = `REGULATION: ${reg.official_name}
 WHAT IT REQUIRES: ${reg.summary}
 IN A CARE HOME: ${reg.care_home_context}
 PRACTICAL MEANING: ${reg.practical_meaning}
 
-The home has no policy that addresses this regulation. List up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must contain.
+The home has no policy that addresses this regulation. List up to ${MAX_REQUIREMENTS} concrete, distinct requirements a compliant care-home policy must contain. Base these ONLY on the regulation description above — do not rely on outside knowledge.
 
 Respond with ONLY minified JSON:
 {"requirements":[{"requirement":"<one specific requirement>"}]}`
@@ -160,7 +177,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
 
   const reg = await (prisma as any).externalRegulation.findUnique({
     where:  { reference_key: referenceKey },
-    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true },
+    select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true },
   })
   if (!reg) throw new Error('Regulation not found')
 

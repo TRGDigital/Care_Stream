@@ -2349,6 +2349,7 @@ function SystemReference() {
             <RefRow label="expected_policy_titles" value="Canonical policy document names that satisfy this reg → title match against the home's library" />
             <RefRow label="match_terms"            value="Discriminating tokens a policy on this reg contains (e.g. section 117, AMHP) → term match" />
             <RefRow label="distinguish_from"       value="Near-neighbour regs (e.g. MHA 1983 ↔ MCA 2005 / DoLS) injected as a 'do NOT count as coverage' boundary for the judge" />
+            <RefRow label="required_elements"      value="Authoritative checklist of what a compliant policy must contain. Curated (Generate-from-details button on /platform/regulations, grounded only in the reg's own fields — not scraped). Becomes the spine of the tenant 'what to add' deep-dive; falls back to model-derived (bound to the reg description) when empty." />
           </div>
           <p className="mt-2 text-xs leading-relaxed text-amber-800">
             Matcher: candidate-select the home's policies by these signals → diversified wide vector pass (best chunk per

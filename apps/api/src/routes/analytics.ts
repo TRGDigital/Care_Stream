@@ -318,6 +318,15 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
   const profile = resolveServiceProfile(setting, (tenant?.service_profile ?? {}) as Record<string, unknown>)
   const regulations = (allRegulations as any[]).filter(r => regulationAppliesToTenant(r, setting, profile))
 
+  // Undismissed "a regulation you're assessed against has changed" alerts.
+  const alertRows = await (prisma as any).tenantRegulationAlert.findMany({
+    where: { tenant_id: tenantId, dismissed_at: null }, orderBy: { created_at: 'desc' }, take: 20,
+  }).catch(() => [])
+  const regulationAlerts = (alertRows as any[]).map(a => ({
+    id: a.id, reference_key: a.reference_key, official_name: a.official_name,
+    changed_fields: a.changed_fields ?? [], created_at: a.created_at,
+  }))
+
   // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
   // Score every keyword by how many no-match queries contain it
   const termFreq = new Map<string, { count: number; queries: string[] }>()
@@ -398,6 +407,7 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     analysed_at:       analysedAt,
     unanswered_themes: themes,
     regulation_gaps:   regulationGaps.sort((a, b) => rank(a.status) - rank(b.status)),
+    regulation_alerts: regulationAlerts,
     meta: {
       no_match_total:      noMatchQueries.length,
       days_analysed:       90,
@@ -513,6 +523,17 @@ analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async
   } catch (e: any) {
     err(res, 'MODULE_FAILED', e.message ?? 'Could not generate the training module.', 500)
   }
+})
+
+// ─── POST /analytics/gaps/alerts/:id/dismiss ─────────────────────────────────
+// Dismiss a "regulation updated" alert for this tenant.
+analyticsRouter.post('/gaps/alerts/:id/dismiss', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  await (prisma as any).tenantRegulationAlert.updateMany({
+    where: { id: String(req.params.id), tenant_id: tenantId, dismissed_at: null },
+    data:  { dismissed_at: new Date() },
+  }).catch(() => {})
+  ok(res, { dismissed: true })
 })
 
 // ─── GET /analytics/daily-activity ───────────────────────────────────────────

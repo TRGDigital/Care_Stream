@@ -50,6 +50,25 @@ export default function GapsPage() {
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
+  // "Regulation updated" alerts — dismissed ids + per-alert training generation state.
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [alertTraining, setAlertTraining] = useState<Record<string, 'loading' | 'done'>>({})
+
+  async function dismissAlert(id: string) {
+    setDismissedAlerts(prev => new Set(prev).add(id))
+    if (session?.accessToken) createApiClient(session.accessToken).analytics.dismissGapAlert(id).catch(() => {})
+  }
+
+  async function trainOnAlert(referenceKey: string) {
+    if (!session?.accessToken) return
+    setAlertTraining(p => ({ ...p, [referenceKey]: 'loading' }))
+    try {
+      await createApiClient(session.accessToken).analytics.gapTrainingModule(referenceKey)
+      setAlertTraining(p => ({ ...p, [referenceKey]: 'done' }))
+    } catch {
+      setAlertTraining(p => { const n = { ...p }; delete n[referenceKey]; return n })
+    }
+  }
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
@@ -176,6 +195,35 @@ export default function GapsPage() {
           <div>
             <p className="font-semibold text-neutral-dark">Run a coverage analysis to check your regulation gaps</p>
             <p className="mt-0.5 text-sm text-neutral-mid">CareStream reads inside your uploaded policies and judges each regulation against their actual content — not just policy titles. This takes about a minute.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Regulation-updated alerts */}
+      {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).length > 0 && (
+        <div className="mb-8 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Info size={16} className="text-amber-600" />
+            <p className="text-sm font-semibold text-amber-900">Regulations you&apos;re assessed against have been updated</p>
+          </div>
+          <p className="mb-3 text-xs text-amber-800">Review your policies for these, then re-run the coverage analysis. You can also generate a short training module on the update for your staff.</p>
+          <div className="space-y-2">
+            {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).map(a => (
+              <div key={a.id} className="flex flex-col gap-2 rounded-lg border border-amber-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-neutral-dark">{a.official_name}</p>
+                <div className="flex flex-shrink-0 items-center gap-3">
+                  {alertTraining[a.reference_key] === 'done' ? (
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Module drafted — see <a href="/training" className="underline">Training</a></span>
+                  ) : (
+                    <button onClick={() => trainOnAlert(a.reference_key)} disabled={alertTraining[a.reference_key] === 'loading'}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-amber-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-50">
+                      {alertTraining[a.reference_key] === 'loading' ? <><Loader2 size={12} className="animate-spin" /> Generating…</> : <><Sparkles size={12} /> Generate training</>}
+                    </button>
+                  )}
+                  <button onClick={() => dismissAlert(a.id)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Dismiss</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

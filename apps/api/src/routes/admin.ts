@@ -37,6 +37,7 @@ import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } 
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
 import { callClaude } from '../services/ai/claude'
+import { snapshotAndAlert } from '../services/regulations/versioning'
 
 export const adminRouter = Router()
 
@@ -1710,7 +1711,21 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     }])
   }
 
+  // Record a version and alert assessed tenants on a material (standard-content) change.
+  await snapshotAndAlert(existing, updated)
+
   ok(res, updated)
+})
+
+// ─── GET /admin/regulations/:id/versions ─────────────────────────────────────
+// Change history for a regulation (most recent first) for the console diff view.
+adminRouter.get('/regulations/:id/versions', async (req: Request, res: Response) => {
+  const reg = await (prisma as any).externalRegulation.findUnique({ where: { id: req.params.id }, select: { reference_key: true } })
+  if (!reg) { err(res, 'NOT_FOUND', 'Regulation not found', 404); return }
+  const versions = await (prisma as any).regulationVersion.findMany({
+    where: { reference_key: reg.reference_key }, orderBy: { created_at: 'desc' }, take: 50,
+  })
+  ok(res, { versions })
 })
 
 // ─── POST /admin/regulations/:id/generate-requirements ───────────────────────

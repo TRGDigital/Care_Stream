@@ -2358,6 +2358,9 @@ function SystemReference() {
             <b>Applicability (Phase 5):</b> a regulation is analysed for a tenant only when its setting is in <span className="font-mono">applies_to_settings</span> AND every one of its <span className="font-mono">required_triggers</span> is true in the tenant&rsquo;s service profile. Out-of-scope regs never become gaps, so we don&rsquo;t recommend e.g. a Mental Health Act policy to a service that doesn&rsquo;t support people under the Act. Universal core (Fundamental Standards + baseline duties) has both empty. Tenant service profile: <span className="font-mono">tenants.service_profile</span> jsonb, resolved over per-setting defaults; edited in the tenant Settings page.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-amber-800">
+            <b>Versioning (Phase 7):</b> every console edit snapshots the regulation to <span className="font-mono">regulation_versions</span> (Change history in the expanded row). A <em>material</em> change (summary / care-home context / practical meaning / authoritative requirements / required elements) fans out <span className="font-mono">tenant_regulation_alerts</span> to every tenant with a coverage row for that reg — surfaced as a banner on their Gaps page with re-check, dismiss, and &ldquo;generate training on the update&rdquo;. Internal tuning (match terms, scope, signals) is versioned but does NOT alert tenants.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-amber-800">
             Matcher: candidate-select the home's policies by these signals → diversified wide vector pass (best chunk per
             distinct policy, K=20) + targeted per-policy pull for any candidate the wide pass missed → Haiku judges
             covered/partial/gap. Fixes the old top-5 collision where a held policy (e.g. Guardianship / MHA 1983) was

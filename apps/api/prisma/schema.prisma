@@ -492,6 +492,37 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Snapshot of a regulation each time it changes (history + diffs). Written on every
+// console edit; `material` marks a change to the standard's content (vs internal
+// tuning like match terms), which is what triggers tenant alerts.
+model RegulationVersion {
+  id             String   @id @default(uuid())
+  reference_key  String
+  official_name  String
+  snapshot       Json
+  changed_fields String[] @default([])
+  material       Boolean  @default(false)
+  created_at     DateTime @default(now())
+
+  @@index([reference_key, created_at])
+  @@map("regulation_versions")
+}
+
+// "A regulation you're assessed against has changed" — one per (tenant, change).
+model TenantRegulationAlert {
+  id             String    @id @default(uuid())
+  tenant_id      String
+  reference_key  String
+  official_name  String
+  version_id     String?
+  changed_fields String[]  @default([])
+  created_at     DateTime  @default(now())
+  dismissed_at   DateTime?
+
+  @@index([tenant_id])
+  @@map("tenant_regulation_alerts")
+}
+
 // Rotating refresh tokens — one row per issued refresh JWT (id = its jti). On each
 // /auth/refresh the current token is rotated (rotated_at set) and a new one issued;
 // reusing a rotated/unknown token is treated as theft and revokes the user's tokens.

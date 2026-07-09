@@ -239,6 +239,13 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
   const [expanded, setExpanded] = useState(false)
   const [form,     setForm]     = useState<Partial<Regulation>>({})
   const [saving,   setSaving]   = useState(false)
+  const [versions, setVersions] = useState<Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> | null>(null)
+
+  useEffect(() => {
+    if (expanded && versions === null) {
+      createPlatformClient(token).regulations.versions(reg.id).then(d => setVersions(d.versions)).catch(() => setVersions([]))
+    }
+  }, [expanded]) // eslint-disable-line react-hooks/exhaustive-deps
   const [genList,  setGenList]  = useState(false)
   const [genErr,   setGenErr]   = useState<string | null>(null)
   const [genReqs,  setGenReqs]  = useState(false)
@@ -508,6 +515,13 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             {!reg.is_active && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Inactive</span>
             )}
+            {reg.authoritative_requirements ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                <Check size={10} /> Requirements
+              </span>
+            ) : (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">No requirements</span>
+            )}
             {reg.required_elements?.length > 0 ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal">
                 <Check size={10} /> Checklist ({reg.required_elements.length})
@@ -615,6 +629,24 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
               ))}
             </p>
           )}
+          <div className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2.5">
+            <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">Change history</p>
+            {versions === null ? (
+              <p className="text-xs text-neutral-mid">Loading…</p>
+            ) : versions.length === 0 ? (
+              <p className="text-xs text-neutral-mid italic">No changes recorded yet. Edits from here on are versioned.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {versions.map(v => (
+                  <li key={v.id} className="flex items-start gap-2 text-xs">
+                    <span className="mt-0.5 text-neutral-mid whitespace-nowrap tabular-nums">{new Date(v.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    {v.material && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">Tenants alerted</span>}
+                    <span className="text-neutral-dark">{v.changed_fields.map(f => f.replace(/_/g, ' ')).join(', ')}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>

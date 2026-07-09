@@ -16,6 +16,7 @@
     { "path": "/cron/credential-expiry", "schedule": "0 8 * * *" },
     { "path": "/cron/supervision-reminders", "schedule": "0 8 * * *" },
     { "path": "/cron/licence-renewals", "schedule": "0 9 * * *" },
-    { "path": "/cron/onboarding-emails", "schedule": "0 9,10 * * *" }
+    { "path": "/cron/onboarding-emails", "schedule": "0 9,10 * * *" },
+    { "path": "/cron/regulation-source-monitor", "schedule": "0 6 * * 1" }
   ]
 }

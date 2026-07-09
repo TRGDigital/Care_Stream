@@ -685,6 +685,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ authoritative_requirements: string }>(`/regulations/${id}/generate-requirements`, token, { method: 'POST' }),
       versions: (id: string) =>
         adminFetch<{ versions: Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> }>(`/regulations/${id}/versions`, token),
+      checkSources: () =>
+        adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
     },
 
     auditSeeds: {

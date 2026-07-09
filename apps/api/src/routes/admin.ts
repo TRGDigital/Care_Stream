@@ -39,6 +39,7 @@ import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
+import { checkRegulationSources } from '../services/regulations/source-monitor'
 
 export const adminRouter = Router()
 
@@ -1767,6 +1768,18 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
   await snapshotAndAlert(existing, updated)
 
   ok(res, updated)
+})
+
+// ─── POST /admin/regulations/check-sources ───────────────────────────────────
+// Manually run the source-URL monitor now (best-effort): fingerprints each active
+// regulation's source pages and flags any that changed for review. Weekly cron too.
+adminRouter.post('/regulations/check-sources', async (_req: Request, res: Response) => {
+  try {
+    const result = await checkRegulationSources()
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'CHECK_FAILED', e.message ?? 'Source check failed', 500)
+  }
 })
 
 // ─── GET /admin/regulations/:id/versions ─────────────────────────────────────

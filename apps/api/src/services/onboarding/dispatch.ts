@@ -12,6 +12,9 @@ const FROM_NAME = 'CareStream'
 const WEB      = process.env.WEB_PUBLIC_URL ?? 'https://www.carestreamai.com'
 const API_BASE = process.env.API_PUBLIC_URL ?? 'https://api.carestreamai.com'
 const UNSUB_SECRET = process.env.ONBOARDING_UNSUB_SECRET ?? process.env.NEXTAUTH_SECRET ?? 'cs-onboarding'
+// Max onboarding emails sent per enrolment per run. Normal operation sends 1/day;
+// after a cron outage this lets the drip catch up a few days at a time (not a burst).
+const CATCHUP_MAX_PER_RUN = 3
 
 let sgReady = false
 function ensureSg(): boolean {
@@ -164,27 +167,51 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
   const enrolments = await (prisma as any).onboardingEnrolment.findMany({
     where: { status: 'active', ...(opts.tenantId ? { tenant_id: opts.tenantId } : {}) },
   })
-  const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, due: [] as any[] }
+  const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, caught_up: 0, due: [] as any[] }
 
   for (const enr of enrolments) {
     const startStr = new Date(enr.start_date).toISOString().slice(0, 10)
-    const dayIndex = workingDayIndex(startStr, dateStr)
-    if (dayIndex == null) continue
+    const todayIdx = workingDayIndex(startStr, dateStr)
+    if (todayIdx == null) continue
 
     const len = await sequenceLength(enr.plan)
-    if (dayIndex > len) {
+
+    // Furthest day already delivered — drives catch-up if the cron missed days.
+    const lastAgg = await (prisma as any).onboardingSend.aggregate({
+      where: { enrolment_id: enr.id, sent_at: { not: null } }, _max: { day_index: true },
+    }).catch(() => null)
+    const lastSent = lastAgg?._max?.day_index ?? 0
+
+    if (lastSent >= len) {                       // whole sequence delivered
       await (prisma as any).onboardingEnrolment.update({ where: { id: enr.id }, data: { status: 'completed' } })
       summary.completed++
       continue
     }
-    const tmpl = await template(enr.plan, dayIndex)
-    if (!tmpl) continue
 
+    const target = Math.min(todayIdx, len)       // furthest day whose time has come
+    if (lastSent >= target) { summary.skipped++; continue }   // up to date, nothing due yet
+
+    // Send the missed days oldest-first, but at most CATCHUP_MAX_PER_RUN per run so a
+    // long outage recovers over a few days rather than firing a burst of emails.
+    const from = lastSent + 1
+    const to   = Math.min(target, from + CATCHUP_MAX_PER_RUN - 1)
     const recipients = await activeAdmins(enr.tenant_id)
-    summary.due.push({ tenant_id: enr.tenant_id, plan: enr.plan, day: dayIndex, recipients: recipients.length })
-    for (const r of recipients) {
-      const outcome = await sendToRecipient({ tenantId: enr.tenant_id, enrolment: enr, tmpl, recipientEmail: r.email, recipientUserId: r.id, scheduledFor: new Date() })
-      summary[outcome]++
+
+    for (let day = from; day <= to; day++) {
+      const tmpl = await template(enr.plan, day)
+      if (!tmpl) continue
+      const isCatchup = day < target
+      if (isCatchup) summary.caught_up++
+      summary.due.push({ tenant_id: enr.tenant_id, plan: enr.plan, day, recipients: recipients.length, catchup: isCatchup })
+      for (const r of recipients) {
+        const outcome = await sendToRecipient({ tenantId: enr.tenant_id, enrolment: enr, tmpl, recipientEmail: r.email, recipientUserId: r.id, scheduledFor: new Date() })
+        summary[outcome]++
+      }
+    }
+
+    if (to >= len) {                             // final day delivered this run
+      await (prisma as any).onboardingEnrolment.update({ where: { id: enr.id }, data: { status: 'completed' } })
+      summary.completed++
     }
   }
   return summary

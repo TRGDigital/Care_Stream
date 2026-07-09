@@ -54,6 +54,22 @@ export default function RegulationsPage() {
 
   useEffect(() => { load() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [checkingSources, setCheckingSources] = useState(false)
+  async function handleCheckSources() {
+    if (!token) return
+    setCheckingSources(true)
+    setError(null)
+    try {
+      const r = await createPlatformClient(token).regulations.checkSources()
+      alert(`Source check complete.\n\nChecked ${r.urls_checked} URLs across ${r.regulations} regulations.\nChanged: ${r.changed} · Flagged for review: ${r.flagged} · Errors: ${r.errors}${r.flagged_regs.length ? `\n\nFlagged:\n${r.flagged_regs.map(f => `• ${f.official_name}`).join('\n')}` : ''}`)
+      load()
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setCheckingSources(false)
+    }
+  }
+
   async function handleSync() {
     if (!token) return
     setSyncing(true)
@@ -107,6 +123,15 @@ export default function RegulationsPage() {
               placeholder="Search…"
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none"
             />
+            <button
+              onClick={handleCheckSources}
+              disabled={checkingSources}
+              title="Fetch each regulation's source pages and flag any that changed for review (best-effort)"
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50"
+            >
+              {checkingSources ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+              Check sources
+            </button>
             <button
               onClick={handleSync}
               disabled={syncing}

@@ -2361,6 +2361,9 @@ function SystemReference() {
             <b>Versioning (Phase 7):</b> every console edit snapshots the regulation to <span className="font-mono">regulation_versions</span> (Change history in the expanded row). A <em>material</em> change (summary / care-home context / practical meaning / authoritative requirements / required elements) fans out <span className="font-mono">tenant_regulation_alerts</span> to every tenant with a coverage row for that reg — surfaced as a banner on their Gaps page with re-check, dismiss, and &ldquo;generate training on the update&rdquo;. Internal tuning (match terms, scope, signals) is versioned but does NOT alert tenants.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-amber-800">
+            <b>Review &amp; source monitoring:</b> flag a reg <span className="font-mono">needs_update</span> (+ note) manually — badge + top-of-page tracker + filter; saving stamps <span className="font-mono">last_reviewed_at</span>. &ldquo;Check sources&rdquo; (and a weekly cron <span className="font-mono">/cron/regulation-source-monitor</span>) fingerprints each <span className="font-mono">source_urls</span> page (ETag/Last-Modified, else stripped-text hash → <span className="font-mono">regulation_source_checks</span>) and auto-flags <span className="font-mono">needs_update</span> on a change. Best-effort: skips PDFs/blocked pages, errs toward flagging, never auto-edits content.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-amber-800">
             Matcher: candidate-select the home's policies by these signals → diversified wide vector pass (best chunk per
             distinct policy, K=20) + targeted per-policy pull for any candidate the wide pass missed → Haiku judges
             covered/partial/gap. Fixes the old top-5 collision where a held policy (e.g. Guardianship / MHA 1983) was

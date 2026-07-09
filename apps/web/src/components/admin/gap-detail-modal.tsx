@@ -282,18 +282,21 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                   {missing.length > 0 && (
                     <div className="space-y-3">
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Plus size={15} className="text-amber-600" /> What to add ({missing.length})</p>
+                      {(() => { const located = missing.filter(r => r.match_index).length; const news = missing.length - located; return (located > 0 && news > 0) ? (
+                        <p className="-mt-1 text-xs text-neutral-mid">{located} fit{located === 1 ? 's' : ''} into an existing section (numbered &amp; highlighted right) · {news} need{news === 1 ? 's' : ''} a new section.</p>
+                      ) : null })()}
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
                           <div className="flex items-start gap-2">
-                            {r.match_index && (
-                              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Add near highlight ${r.match_index} in the policy`}>{r.match_index}</span>
-                            )}
+                            {r.match_index
+                              ? <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Add near highlight ${r.match_index} in the policy`}>{r.match_index}</span>
+                              : <span className="mt-0.5 flex shrink-0 items-center gap-0.5 rounded-full bg-gray-200 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gray-500"><Plus size={9} /> New</span>}
                             <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
                           </div>
                           <p className="mt-1.5 text-xs text-amber-700">
                             {r.match_index
                               ? <>Add or amend near <span className="font-semibold">highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right).</>
-                              : <>Add as a new section{detail.target_policy ? <> in your {detail.target_policy.name}</> : null}.</>}
+                              : <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <> in your {detail.target_policy.name}</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>}
                           </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">

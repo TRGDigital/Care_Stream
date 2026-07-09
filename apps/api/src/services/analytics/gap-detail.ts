@@ -62,11 +62,9 @@ function titleTokens(s: string): Set<string> {
   }
   return out
 }
-function overlap(a: Set<string>, b: Set<string>): number {
-  if (!a.size) return 0
-  let hit = 0; for (const t of a) if (b.has(t)) hit++
-  return hit / a.size
-}
+// Generic policy-title words that must not, on their own, match one policy to another.
+const WEAK_MATCH = new Set(['planning', 'plan', 'management', 'manage', 'procedure', 'process', 'general', 'records', 'record', 'information', 'guidance', 'framework', 'working', 'work', 'service', 'services', 'quality', 'assessment'])
+
 
 const parseJson = (text: string): any => {
   const s = text.indexOf('{'); const a = text.lastIndexOf('}')
@@ -282,12 +280,21 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   let targetPolicy: { id: string; name: string } | null = evidencePolicy
   let suggestedNewPolicyTitle: string | null = null
   if (!targetPolicy) {
+    // Match a home's policy to add to — but ONLY on a strong, distinctive overlap.
+    // A single generic word shared (e.g. "planning" between "Care Planning" and
+    // "Emergency Planning") must NOT count, or we point people at the wrong policy.
     const targets = [...(reg.expected_policy_titles ?? []), reg.official_name].filter(Boolean).map((t: string) => titleTokens(t))
     let best: { id: string; name: string; score: number } | null = null
     for (const p of policyRows as any[]) {
       const pt = titleTokens(p.name)
-      const score = Math.max(0, ...targets.map((t: Set<string>) => overlap(t, pt)))
-      if (score >= 0.5 && (!best || score > best.score)) best = { id: p.id, name: p.name, score }
+      for (const target of targets) {
+        if (!target.size) continue
+        const shared = [...target].filter(x => pt.has(x))
+        if (!shared.length) continue
+        if (shared.length === 1 && WEAK_MATCH.has(shared[0])) continue   // one generic word isn't enough
+        const score = shared.length / target.size
+        if (score >= 0.5 && (!best || score > best.score)) best = { id: p.id, name: p.name, score }
+      }
     }
     if (best) targetPolicy = { id: best.id, name: best.name }
     else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`

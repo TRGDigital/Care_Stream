@@ -254,6 +254,9 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
       if (reg.distinguish_from?.length) {
         user += `\n\nDO NOT COUNT AS COVERAGE — these are different, related regulations that must not be confused with ${reg.official_name}: ${reg.distinguish_from.join('; ')}. A policy that only addresses those does NOT cover ${reg.official_name}.`
       }
+      // Strictness: reject incidental / generic-word matches. Better a false "gap"
+      // than pointing a home at a policy that doesn't really concern this regulation.
+      user += `\n\nBE STRICT. Judge "covered" or "partial" ONLY if a policy DIRECTLY and SUBSTANTIVELY addresses the specific subject of ${reg.official_name}. A policy that merely shares generic words (e.g. "planning", "care", "management", "general", "quality"), or mentions the topic only in passing, does NOT count — judge it "gap". If no extract genuinely concerns this regulation, judge "gap". When in doubt, choose "gap".`
 
       const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250 })
       const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))

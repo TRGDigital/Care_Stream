@@ -30,6 +30,8 @@ export type GapRequirement = {
   status:              'missing' | 'already_covered'
   already_covered_in?: string | null
   suggested_addition?: string | null
+  evidence_quote?:     string | null   // the policy sentence that evidences it (target policy only)
+  match_index?:        number | null    // 1-based; links to the numbered/coloured highlight
 }
 
 export type GapDetail = {
@@ -77,7 +79,7 @@ const parseJson = (text: string): any => {
 // when present (authoritative, consistent, traceable). Only when a regulation has no
 // curated checklist do we fall back to model-derived requirements — and even then we
 // bind the model strictly to the regulation description, not outside knowledge.
-async function identify(reg: any, evidenceText: string | null): Promise<{ covered_quotes: string[]; requirements: { requirement: string; in_policy: boolean }[] }> {
+async function identify(reg: any, evidenceText: string | null): Promise<{ covered_quotes: string[]; requirements: { requirement: string; in_policy: boolean; quote?: string }[] }> {
   const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean).slice(0, MAX_REQUIREMENTS) : []
 
   // ── Partial: check the evidence policy against the requirement checklist. ──
@@ -100,15 +102,18 @@ ${evidenceText.slice(0, POLICY_TEXT_CAP)}
 
 ${checklistBlock}
 
-For each requirement, decide whether THIS policy text substantively addresses it. Also quote up to 6 exact sentences from the policy (verbatim, copied character-for-character) that evidence the parts it does cover.
+For each requirement, decide whether THIS policy text substantively addresses it. When it does (in_policy true), set "quote" to the single most relevant sentence from the policy (verbatim, copied character-for-character) that evidences it; otherwise leave "quote" empty.
 
 Respond with ONLY minified JSON${curated.length ? ' — keep the requirement text identical to the list above and in the same order' : ''}:
-{"covered_quotes":["<verbatim sentence>"],"requirements":[{"requirement":"<requirement>","in_policy":true|false}]}`
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1500 })
+{"requirements":[{"requirement":"<requirement>","in_policy":true|false,"quote":"<verbatim sentence, or empty>"}]}`
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1600 })
     const p = parseJson(text)
+    const requirements = Array.isArray(p.requirements)
+      ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy, quote: typeof r.quote === 'string' ? r.quote.trim() : '' })).filter((r: any) => r.requirement)
+      : []
     return {
-      covered_quotes: Array.isArray(p.covered_quotes) ? p.covered_quotes.filter((q: any) => typeof q === 'string').slice(0, 8) : [],
-      requirements:   Array.isArray(p.requirements) ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy })).filter((r: any) => r.requirement) : [],
+      covered_quotes: requirements.filter((r: any) => r.in_policy && r.quote).map((r: any) => r.quote),
+      requirements,
     }
   }
 
@@ -230,9 +235,21 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   const ident = await identify(reg, evidenceText)
 
   // Requirements the evidence policy already covers → already_covered (in this policy).
+  // Each with an evidencing quote gets a 1-based match_index that links it to the
+  // numbered/coloured highlight in the policy on the right.
+  let matchIdx = 0
   const inPolicy: GapRequirement[] = ident.requirements
     .filter(r => r.in_policy)
-    .map(r => ({ requirement: r.requirement, status: 'already_covered', already_covered_in: evidencePolicy?.name ?? null, suggested_addition: null }))
+    .map(r => {
+      const quote = (r.quote ?? '').trim()
+      return {
+        requirement: r.requirement, status: 'already_covered' as const,
+        already_covered_in: evidencePolicy?.name ?? null, suggested_addition: null,
+        evidence_quote: quote || null, match_index: quote ? ++matchIdx : null,
+      }
+    })
+  // covered_quotes ordered to match the requirement numbering.
+  const orderedQuotes = inPolicy.filter(r => r.evidence_quote).map(r => r.evidence_quote as string)
 
   // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
   const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
@@ -281,7 +298,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
     suggested_new_policy_title: suggestedNewPolicyTitle,
-    covered_quotes:   ident.covered_quotes,
+    covered_quotes:   orderedQuotes.length ? orderedQuotes : ident.covered_quotes,
     requirements,
     disclaimer:       DISCLAIMER,
     generated_at:     new Date().toISOString(),

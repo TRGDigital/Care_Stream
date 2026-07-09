@@ -302,10 +302,16 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><CheckCircle2 size={15} className="text-green-600" /> Already covered ({covered.length})</p>
                       {covered.map((r, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg border border-green-100 bg-green-50/50 px-4 py-2.5">
-                          <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
+                          {r.match_index ? (
+                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Highlighted as ${r.match_index} in the policy`}>{r.match_index}</span>
+                          ) : (
+                            <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
+                          )}
                           <div className="min-w-0">
                             <p className="text-sm text-neutral-dark">{r.requirement}</p>
-                            {r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span> policy</p>}
+                            {r.match_index
+                              ? <p className="text-xs text-green-700">See highlight <span className="font-medium">{r.match_index}</span> in your <span className="font-medium">{detail.target_policy?.name ?? 'policy'}</span></p>
+                              : r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span> policy</p>}
                           </div>
                         </div>
                       ))}
@@ -373,7 +379,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                         <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{detail.target_policy.name}</span>
                       </p>
-                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Each passage that already addresses this is highlighted and numbered — see the key below.</p>}
+                      {detail.covered_quotes.length > 0 && <p className="mt-0.5 text-xs text-neutral-mid">Each numbered highlight matches the same-numbered &ldquo;already covered&rdquo; item on the left.</p>}
                     </div>
 
                     {/* Search the policy — verify a recommended phrase isn't already there. */}

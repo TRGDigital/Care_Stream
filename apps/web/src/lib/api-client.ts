@@ -947,6 +947,7 @@ export function createApiClient(token: string) {
         disclaimer:       string
         generated_at:     string
       }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${force ? '?force=1' : ''}`, token, { method: 'POST' }),
+      gapTrainingModule: (referenceKey: string) => apiFetch<{ module: { id: string; name: string; slug: string } }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/training-module`, token, { method: 'POST' }),
       engagement: () => apiFetch<{
         wau: { active: number; total_staff: number; pct: number | null }
         logged_in_7d: number

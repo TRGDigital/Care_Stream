@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2 } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, GraduationCap } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -61,6 +61,23 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
   const [previewErr,  setPreviewErr]  = useState('')
   const [previewLoad, setPreviewLoad] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // Ad-hoc training module generation.
+  const [modLoad, setModLoad] = useState(false)
+  const [modDone, setModDone] = useState<{ name: string } | null>(null)
+  const [modErr,  setModErr]  = useState('')
+
+  async function generateModule() {
+    setModLoad(true); setModErr('')
+    try {
+      const { module } = await createApiClient(token).analytics.gapTrainingModule(referenceKey)
+      setModDone({ name: module.name })
+    } catch (e: any) {
+      setModErr(e.message ?? 'Could not generate the module.')
+    } finally {
+      setModLoad(false)
+    }
+  }
 
   useEffect(() => {
     let live = true
@@ -212,6 +229,28 @@ export function GapDetailModal({ token, referenceKey, officialName, onClose, onV
                       </a>
                     </div>
                   )}
+
+                  {/* Turn the additions into staff training */}
+                  {missing.length > 0 && (
+                    modDone ? (
+                      <div className="flex items-start gap-2 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm">
+                        <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600" />
+                        <p className="text-green-800">Drafted <span className="font-semibold">{modDone.name}</span>. Review and publish it in <a href="/training" className="underline hover:no-underline">Training</a> before it reaches staff.</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-2">
+                          <GraduationCap size={16} className="mt-0.5 shrink-0 text-indigo-600" />
+                          <p className="text-sm text-neutral-dark">Once you&rsquo;ve added this to your policy, turn it into a short training module so staff learn it.</p>
+                        </div>
+                        <button onClick={generateModule} disabled={modLoad}
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-btn bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+                          {modLoad ? <><Loader2 size={14} className="animate-spin" /> Generating…</> : <><Sparkles size={14} /> Generate training module</>}
+                        </button>
+                      </div>
+                    )
+                  )}
+                  {modErr && <p className="text-xs text-red-600">{modErr}</p>}
 
                   <p className="border-t border-gray-100 pt-3 text-xs italic text-neutral-mid">{detail.disclaimer}</p>
                 </div>

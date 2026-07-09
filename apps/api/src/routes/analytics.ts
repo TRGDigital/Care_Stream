@@ -7,7 +7,8 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
-import { checkFeature, PlanLimitError } from '../lib/plan-limits'
+import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
+import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
@@ -451,6 +452,66 @@ analyticsRouter.post('/gaps/:reference_key/detail', requireAdmin, async (req: Re
     ok(res, detail)
   } catch (e: any) {
     err(res, 'DETAIL_FAILED', e.message ?? 'Could not build the coverage detail.', 500)
+  }
+})
+
+// ─── POST /analytics/gaps/:reference_key/training-module ─────────────────────
+// Draft an ad-hoc training module (Professional+) that teaches staff the content a
+// home is adding to close this gap. Grounded in the regulation's requirements and
+// the specific missing points — lands in the tenant's training review flow as an
+// unapproved draft. Consumes an AI credit, like other tailored generation.
+analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const detail = await getGapDetail(tenantId, String(req.params.reference_key))
+    const missing = detail.requirements.filter(r => r.status === 'missing')
+    if (!detail.requirements.length) { err(res, 'NOTHING_TO_TRAIN', 'No requirements to build a module from.', 400); return }
+
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+    const setting = facilityTypeToSetting(tenant?.facility_type)
+
+    const grounding = [
+      `This training module teaches staff to meet ${detail.official_name}${detail.authority_basis === 'statutory' ? ' — a legal requirement for the service.' : ' — recommended good practice.'}`,
+      ``,
+      `Requirements staff must understand and apply:`,
+      ...detail.requirements.map(r => `- ${r.requirement}`),
+      missing.length ? `\nPoints the home is adding to its policies — teach these concretely:` : ``,
+      ...missing.map(r => `- ${r.requirement}${r.suggested_addition ? `: ${r.suggested_addition}` : ''}`),
+    ].filter(Boolean).join('\n')
+
+    const title = `${detail.official_name}: what staff need to know`
+    const draft = await generateAnnualModuleDraft(tenantId, { title, care_setting: setting }, { groundingText: grounding })
+    if (!draft.questions.length) { err(res, 'GENERATION_FAILED', 'No questions were generated — try again.', 502); return }
+
+    const slug = ('ai-gap-' + String(req.params.reference_key)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80)
+    const data = {
+      name: draft.title, description: (draft.learning_content.summary || title).slice(0, 500),
+      category: 'statutory', questions: draft.questions, is_annual: false,
+      source: 'ai_generated', approved: false, approved_at: null, approved_by: null,
+      learning_content: draft.learning_content, requires_practical: false,
+      frequency: 'adhoc', renewal_months: null, pass_mark: 80,
+      duration_minutes: draft.estimated_minutes, image_key: 'statutory',
+      policy_refs: draft.policy_refs, group_key: 'compliance',
+      standards: [{ label: detail.official_name }],
+    }
+    const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: tenantId, slug } })
+    const module = existing
+      ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
+      : await (prisma as any).trainingModule.create({ data: { tenant_id: tenantId, slug, ...data } })
+
+    await logAiCredit(tenantId, 'training', slug)
+    ok(res, { module: { id: module.id, name: module.name, slug: module.slug } })
+  } catch (e: any) {
+    err(res, 'MODULE_FAILED', e.message ?? 'Could not generate the training module.', 500)
   }
 })
 

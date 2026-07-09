@@ -207,9 +207,13 @@ export function normaliseQuestion(text: string): string {
 export async function generateAnnualModuleDraft(
   tenantId: string | null,
   topic: { title: string; aliases?: string[]; requires_practical?: boolean; care_setting?: string | null },
-  opts: { excludeQuestions?: string[] } = {},
+  opts: { excludeQuestions?: string[]; groundingText?: string } = {},
 ): Promise<GeneratedModule> {
-  const { text, refs } = await buildGrounding(tenantId, topic)
+  // A caller can supply explicit grounding (e.g. a compliance gap's requirements)
+  // instead of the tenant's own policy extracts — used for ad-hoc gap modules.
+  const { text, refs } = opts.groundingText
+    ? { text: opts.groundingText, refs: [] as GeneratedModule['policy_refs'] }
+    : await buildGrounding(tenantId, topic)
   const promptTpl = await getPrompt()
   const practicalNote = topic.requires_practical
     ? 'NOTE: this topic also requires a practical/observed competency assessment in real life — this module is the KNOWLEDGE component only. Do not imply it certifies practical competence.'

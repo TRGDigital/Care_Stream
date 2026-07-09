@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
-  AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, Copy, Loader2,
+  AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
 } from 'lucide-react'
 
@@ -154,6 +154,10 @@ export default function SettingsPage() {
   const [accountNumber,  setAccountNumber]  = useState('')
   const [allowlist,      setAllowlist]      = useState<string[]>([])
   const [facilityType,   setFacilityType]   = useState('')
+  const [serviceProfile, setServiceProfile] = useState<Record<string, boolean>>({})
+  const [serviceTriggers,setServiceTriggers]= useState<Array<{ key: string; label: string; desc: string }>>([])
+  const [savingProfile,  setSavingProfile]  = useState(false)
+  const [profileSaved,   setProfileSaved]   = useState(false)
   const [roomCount,      setRoomCount]      = useState<number>(0)
   const [savingRooms,    setSavingRooms]    = useState(false)
   const [roomsSaved,     setRoomsSaved]     = useState(false)
@@ -271,6 +275,8 @@ export default function SettingsPage() {
         setAccountNumber((data as any).account_number ?? '')
         setAllowlist(data.email_allowlist)
         setFacilityType((data as any).facility_type ?? 'care home')
+        setServiceProfile((data as any).service_profile ?? {})
+        setServiceTriggers((data as any).service_triggers ?? [])
         setRoomCount((data as any).room_count ?? 0)
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
@@ -299,6 +305,18 @@ export default function SettingsPage() {
     try { await createApiClient(session.accessToken).settings.update({ facility_type: facilityType.trim() } as any) }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingFacility(false) }
+  }
+
+  async function saveServiceProfile() {
+    if (!session?.accessToken) return
+    setSavingProfile(true)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ service_profile: serviceProfile } as any)
+      if ((data as any).service_profile) setServiceProfile((data as any).service_profile)
+      setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2500)
+    }
+    catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingProfile(false) }
   }
 
   async function saveRoomCount() {
@@ -718,6 +736,44 @@ export default function SettingsPage() {
             </Button>
           </div>
         </SettingSection>
+
+        {/* ── Service profile ───────────────────────────────────────────────── */}
+        {serviceTriggers.length > 0 && (
+        <SettingSection icon={ClipboardList} title="Service profile" description="Tells Policy Gap Detection which regulations actually apply to your service.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            These are pre-set from your facility type — just confirm or adjust them. They decide which regulations we check your policies against, so we never flag something that doesn&apos;t apply to your service (for example, controlled-drug rules if you don&apos;t hold controlled drugs).
+          </p>
+          <div className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+            {serviceTriggers.map(t => {
+              const on = serviceProfile[t.key] === true
+              return (
+                <div key={t.key} className="flex items-start justify-between gap-4 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-neutral-dark">{t.label}</p>
+                    <p className="text-xs text-neutral-mid">{t.desc}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={on}
+                    aria-label={t.label}
+                    onClick={() => setServiceProfile(p => ({ ...p, [t.key]: !on }))}
+                    className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${on ? 'bg-teal' : 'bg-gray-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <Button onClick={saveServiceProfile} disabled={savingProfile} size="md">
+              {savingProfile ? 'Saving…' : 'Save service profile'}
+            </Button>
+            {profileSaved && <span className="flex items-center gap-1 text-sm text-green-600"><Check size={15} /> Saved</span>}
+          </div>
+        </SettingSection>
+        )}
 
         {/* ── Rooms ─────────────────────────────────────────────────────────── */}
         <SettingSection icon={BedDouble} title="Rooms" description="The number of rooms/beds in your home — used for per-room audits (e.g. bedroom checks).">

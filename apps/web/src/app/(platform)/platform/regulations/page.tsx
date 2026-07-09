@@ -6,6 +6,32 @@ import { createPlatformClient, type Regulation } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
+// Mirrors apps/api/src/lib/care-setting.ts and service-triggers.ts.
+const SETTING_OPTIONS: Array<{ slug: string; label: string }> = [
+  { slug: 'residential-care', label: 'Residential Care' },
+  { slug: 'nursing-homes', label: 'Nursing Homes' },
+  { slug: 'domiciliary-care', label: 'Domiciliary Care' },
+  { slug: 'live-in-care', label: 'Live-in Care' },
+  { slug: 'complex-care', label: 'Complex Care' },
+  { slug: 'shared-lives', label: 'Shared Lives' },
+  { slug: 'substance-misuse', label: 'Substance Misuse & Rehab' },
+  { slug: 'hospices', label: 'Hospices' },
+  { slug: 'independent-hospitals', label: 'Independent Hospitals' },
+  { slug: 'gp-practices', label: 'GP & Primary Care' },
+  { slug: 'dental-practices', label: 'Dental Practices' },
+]
+const TRIGGER_OPTIONS: Array<{ key: string; label: string }> = [
+  { key: 'prepares_food', label: 'Prepares food on site' },
+  { key: 'manages_medicines', label: 'Manages / administers medicines' },
+  { key: 'handles_controlled_drugs', label: 'Handles controlled drugs' },
+  { key: 'employs_nurses', label: 'Employs nurses / provides nursing' },
+  { key: 'uses_moving_handling_equipment', label: 'Uses hoists / moving & handling equipment' },
+  { key: 'supports_mha', label: 'Supports people under the Mental Health Act' },
+  { key: 'operates_premises', label: 'Operates its own care premises' },
+]
+const triggerLabel = (k: string) => TRIGGER_OPTIONS.find(t => t.key === k)?.label ?? k
+const settingLabelOf = (s: string) => SETTING_OPTIONS.find(o => o.slug === s)?.label ?? s
+
 export default function RegulationsPage() {
   const token                           = usePlatformAuth()
   const [regulations, setRegulations]   = useState<Regulation[]>([])
@@ -123,6 +149,39 @@ export default function RegulationsPage() {
           </div>
         </div>
 
+        {/* How Policy Gaps uses these regulations */}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 text-sm space-y-4">
+          <p className="font-semibold text-amber-900">How Policy Gaps uses these regulations (tenant &ldquo;Regulation coverage&rdquo; + &ldquo;what to add&rdquo;)</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching signals</p>
+              <p className="leading-relaxed text-amber-900">Three fields decide which of a home&rsquo;s policies get tested against this regulation, and stop near-neighbour regulations being confused. Separate from &ldquo;Also known as&rdquo; (which drives the staff chatbot):</p>
+              <ul className="mt-1 space-y-1 text-amber-900">
+                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Expected policy titles</strong> — canonical document names that satisfy this reg.</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Match terms</strong> — discriminating words a policy on this reg contains (e.g. &ldquo;section 117&rdquo;, &ldquo;AMHP&rdquo;).</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Distinguish from</strong> — the related regs this must NOT be counted as (e.g. MHA 1983 vs MCA 2005 / DoLS).</li>
+              </ul>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Required elements checklist</p>
+              <p className="leading-relaxed text-amber-900">The authoritative list of what a compliant policy for this regulation must contain. It is the spine of the tenant-facing &ldquo;what to add&rdquo; deep-dive: a home&rsquo;s policy is checked against this list, and anything missing (and not already covered elsewhere in their library) is what we suggest they add.</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/70 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Applicability — who each regulation is tested for</p>
+            <p className="leading-relaxed text-indigo-900/90">A regulation is only checked against a tenant when its <strong>care-setting scope</strong> includes their setting AND all its <strong>required service triggers</strong> are true for them (the tenant confirms these in Settings, pre-filled from their facility type). Leave both empty for a <strong>universal</strong> regulation, tested for everyone. This is why we never flag, say, a Mental Health Act policy for a service that doesn&rsquo;t support people under the Act, or controlled-drug rules for a home that holds none. Set it per regulation in Edit; the row badge shows <strong>Universal</strong> or <strong>Scoped</strong>.</p>
+          </div>
+          <div className="rounded-lg border border-amber-300 bg-white px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">What the checklist is generated against — important</p>
+            <ul className="space-y-1 leading-relaxed text-amber-900">
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Generate</strong> builds the checklist from this regulation&rsquo;s <strong>own curated fields only</strong>: Summary, Care home context, and Practical meaning. The richer those fields, the better the checklist — so deepen them first, then generate.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />It does <strong>not</strong> read tenant policies, does <strong>not</strong> fetch or scrape the Source URLs, and is instructed <strong>not</strong> to use outside knowledge. Source URLs are kept for traceability only.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />Generate returns a <strong>draft to review</strong> — nothing is saved until you edit and click Save. Treat it as authoritative data: check it before saving.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />If a regulation has <strong>no</strong> checklist, the deep-dive still works but falls back to model-derived requirements bound to the regulation description — less consistent, so a curated checklist is always better.</li>
+            </ul>
+          </div>
+        </div>
+
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
@@ -208,6 +267,8 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
       distinguish_from:         reg.distinguish_from ?? [],
       expected_policy_titles:   reg.expected_policy_titles ?? [],
       required_elements:        reg.required_elements ?? [],
+      applies_to_settings:      reg.applies_to_settings ?? [],
+      required_triggers:        reg.required_triggers ?? [],
       is_active:                reg.is_active,
     })
     onEdit()
@@ -313,6 +374,51 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
               onChange={e => setForm(f => ({ ...f, required_elements: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
             />
             {genErr && <p className="text-xs text-red-600">{genErr}</p>}
+            <div className="rounded-md border border-teal/15 bg-white px-3 py-2 text-[11px] leading-relaxed text-neutral-mid space-y-1">
+              <p><span className="font-semibold text-neutral-dark">Generated against:</span> this regulation&rsquo;s <strong>Summary</strong>, <strong>Care home context</strong> and <strong>Practical meaning</strong> only — not tenant policies, and not scraped from the source URLs. Deepen those fields for a richer checklist.</p>
+              {(reg.source_urls?.length ?? 0) > 0 && (
+                <p><span className="font-semibold text-neutral-dark">Reference sources (traceability, not fetched):</span>{' '}
+                  {reg.source_urls.map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="mr-2 break-all text-teal hover:underline">{u}</a>)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 space-y-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Applicability — who this regulation is tested for</p>
+              <p className="mt-1 text-xs leading-relaxed text-indigo-900/80">Leave both empty for a <strong>universal</strong> regulation (tested for every tenant, e.g. CQC Fundamental Standards). Otherwise Policy Gaps only tests it when the tenant&rsquo;s setting is selected AND all selected service triggers are true for them.</p>
+            </div>
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-neutral-dark">Care settings <span className="font-normal text-neutral-mid">(none selected = all settings)</span></p>
+              <div className="flex flex-wrap gap-1.5">
+                {SETTING_OPTIONS.map(o => {
+                  const on = (form.applies_to_settings ?? []).includes(o.slug)
+                  return (
+                    <button key={o.slug} type="button"
+                      onClick={() => setForm(f => { const cur = f.applies_to_settings ?? []; return { ...f, applies_to_settings: on ? cur.filter(s => s !== o.slug) : [...cur, o.slug] } })}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${on ? 'border-indigo-400 bg-indigo-600 text-white' : 'border-gray-300 bg-white text-neutral-mid hover:border-indigo-300'}`}>
+                      {o.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-neutral-dark">Required service triggers <span className="font-normal text-neutral-mid">(all must be true for the tenant)</span></p>
+              <div className="flex flex-wrap gap-1.5">
+                {TRIGGER_OPTIONS.map(o => {
+                  const on = (form.required_triggers ?? []).includes(o.key)
+                  return (
+                    <button key={o.key} type="button"
+                      onClick={() => setForm(f => { const cur = f.required_triggers ?? []; return { ...f, required_triggers: on ? cur.filter(s => s !== o.key) : [...cur, o.key] } })}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${on ? 'border-indigo-400 bg-indigo-600 text-white' : 'border-gray-300 bg-white text-neutral-mid hover:border-indigo-300'}`}>
+                      {o.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
 
           <Field label="Active">
@@ -360,6 +466,11 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
             ) : (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">No signals</span>
             )}
+            {(reg.applies_to_settings?.length || reg.required_triggers?.length) ? (
+              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-700">Scoped</span>
+            ) : (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">Universal</span>
+            )}
           </div>
           <p className="mt-1 text-xs text-neutral-mid line-clamp-2">{reg.summary}</p>
         </div>
@@ -391,10 +502,31 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
                   <li key={i} className="flex items-start gap-2 text-xs text-neutral-dark"><span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-teal" />{el}</li>
                 ))}
               </ul>
+              <div className="mt-2 border-t border-teal/15 pt-2 text-[11px] leading-relaxed text-neutral-mid space-y-1">
+                <p><span className="font-semibold text-neutral-dark">Generated against:</span> this regulation&rsquo;s Summary, Care home context and Practical meaning only — not tenant policies, and not scraped from the source URLs.</p>
+                {reg.source_urls?.length > 0 && (
+                  <p><span className="font-semibold text-neutral-dark">Reference sources:</span>{' '}
+                    {reg.source_urls.map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="mr-2 break-all text-teal hover:underline">{u}</a>)}
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-xs text-neutral-mid italic">No required-elements checklist yet. Add one via Edit (or Generate) to power the tenant &ldquo;what to add&rdquo; deep-dive authoritatively.</p>
           )}
+          <div className="rounded-md border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 text-xs">
+            <p className="mb-1 font-bold uppercase tracking-wide text-indigo-700">Applicability</p>
+            {(reg.applies_to_settings?.length || reg.required_triggers?.length) ? (
+              <div className="space-y-1 text-neutral-dark">
+                <p><span className="font-semibold">Settings:</span> {reg.applies_to_settings?.length ? reg.applies_to_settings.map(settingLabelOf).join(', ') : 'All settings'}</p>
+                {reg.required_triggers?.length > 0 && (
+                  <p><span className="font-semibold">Requires:</span> {reg.required_triggers.map(triggerLabel).join(', ')}</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-neutral-dark"><span className="font-semibold">Universal</span> — tested for every tenant, regardless of setting or service.</p>
+            )}
+          </div>
           {(reg.expected_policy_titles?.length || reg.match_terms?.length || reg.distinguish_from?.length) ? (
             <div className="rounded-md border border-amber-100 bg-amber-50/60 px-3 py-2.5 space-y-1.5 text-xs">
               <p className="font-bold uppercase tracking-wide text-amber-700">Coverage matching</p>

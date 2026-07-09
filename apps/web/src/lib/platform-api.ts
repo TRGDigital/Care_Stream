@@ -313,6 +313,8 @@ export interface Regulation {
   distinguish_from:         string[]
   expected_policy_titles:   string[]
   required_elements:        string[]
+  applies_to_settings:      string[]
+  required_triggers:        string[]
   is_active:                boolean
   pinecone_vector_id:       string | null
   last_synced_at:           string | null

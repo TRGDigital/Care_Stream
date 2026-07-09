@@ -2350,7 +2350,12 @@ function SystemReference() {
             <RefRow label="match_terms"            value="Discriminating tokens a policy on this reg contains (e.g. section 117, AMHP) → term match" />
             <RefRow label="distinguish_from"       value="Near-neighbour regs (e.g. MHA 1983 ↔ MCA 2005 / DoLS) injected as a 'do NOT count as coverage' boundary for the judge" />
             <RefRow label="required_elements"      value="Authoritative checklist of what a compliant policy must contain. Curated (Generate-from-details button on /platform/regulations, grounded only in the reg's own fields — not scraped). Becomes the spine of the tenant 'what to add' deep-dive; falls back to model-derived (bound to the reg description) when empty." />
+            <RefRow label="applies_to_settings"    value="Care-setting scope (empty = universal / all). A reg is only tested for a tenant whose facilityTypeToSetting() is in this list." />
+            <RefRow label="required_triggers"      value="Service-profile triggers that must ALL be true for the tenant (empty = no gating). E.g. Mental Health Act → supports_mha; Food Safety → prepares_food. Tenant profile is set in Settings, pre-filled from setting defaults (lib/service-triggers.ts)." />
           </div>
+          <p className="mt-2 text-xs leading-relaxed text-amber-800">
+            <b>Applicability (Phase 5):</b> a regulation is analysed for a tenant only when its setting is in <span className="font-mono">applies_to_settings</span> AND every one of its <span className="font-mono">required_triggers</span> is true in the tenant&rsquo;s service profile. Out-of-scope regs never become gaps, so we don&rsquo;t recommend e.g. a Mental Health Act policy to a service that doesn&rsquo;t support people under the Act. Universal core (Fundamental Standards + baseline duties) has both empty. Tenant service profile: <span className="font-mono">tenants.service_profile</span> jsonb, resolved over per-setting defaults; edited in the tenant Settings page.
+          </p>
           <p className="mt-2 text-xs leading-relaxed text-amber-800">
             Matcher: candidate-select the home's policies by these signals → diversified wide vector pass (best chunk per
             distinct policy, K=20) + targeted per-policy pull for any candidate the wide pass missed → Haiku judges

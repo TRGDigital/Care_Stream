@@ -21,6 +21,8 @@ import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
 import { callClaude } from '../ai/claude'
 import { mapLimit } from '../../lib/translate'
+import { facilityTypeToSetting } from '../../lib/care-setting'
+import { resolveServiceProfile, regulationAppliesToTenant } from '../../lib/service-triggers'
 
 const HAIKU = 'claude-haiku-4-5-20251001'
 
@@ -117,6 +119,7 @@ function termHits(matchTerms: string[], policyTokens: Set<string>): number {
 type Reg = {
   reference_key: string; official_name: string; summary: string; care_home_context: string
   match_terms: string[]; distinguish_from: string[]; expected_policy_titles: string[]
+  applies_to_settings: string[]; required_triggers: string[]
 }
 type Pol = { id: string; name: string; tokens: Set<string> }
 
@@ -145,13 +148,26 @@ const MAX_EXCERPT_POLICIES = 10
 
 // Analyse every active regulation against a tenant's policy corpus and cache the result.
 export async function analyseRegulationCoverage(tenantId: string): Promise<CoverageRow[]> {
-  const regulations: Reg[] = await (prisma as any).externalRegulation.findMany({
+  const allRegulations: Reg[] = await (prisma as any).externalRegulation.findMany({
     where:  { is_active: true },
     select: {
       reference_key: true, official_name: true, summary: true, care_home_context: true,
       match_terms: true, distinguish_from: true, expected_policy_titles: true,
+      applies_to_settings: true, required_triggers: true,
     },
   })
+  if (!allRegulations.length) return []
+
+  // Only analyse regulations that actually apply to THIS service — scoped by the
+  // tenant's care setting and its self-declared service profile. Out-of-scope regs
+  // never become gaps (we don't recommend, e.g., a Mental Health Act policy to a
+  // service that doesn't support people under the Act).
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId }, select: { facility_type: true, service_profile: true },
+  })
+  const setting = facilityTypeToSetting(tenant?.facility_type)
+  const profile = resolveServiceProfile(setting, (tenant?.service_profile ?? {}) as Record<string, unknown>)
+  const regulations = allRegulations.filter(r => regulationAppliesToTenant(r, setting, profile))
   if (!regulations.length) return []
 
   // The home's active policies, tokenised once for candidate matching.

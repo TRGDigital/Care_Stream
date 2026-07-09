@@ -11,6 +11,8 @@ import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
+import { facilityTypeToSetting } from '../lib/care-setting'
+import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
 
 export const analyticsRouter = Router()
 
@@ -295,7 +297,7 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000)
 
-  const [noMatchQueries, regulations, coverage] = await Promise.all([
+  const [noMatchQueries, allRegulations, coverage, tenant] = await Promise.all([
     (prisma as any).queryRecord.findMany({
       where:   { tenant_id: tenantId, no_match: true, created_at: { gte: ninetyDaysAgo } },
       select:  { id: true, query_text: true, created_at: true },
@@ -303,10 +305,17 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     }),
     (prisma as any).externalRegulation.findMany({
       where:  { is_active: true },
-      select: { reference_key: true, official_name: true, summary: true, care_home_context: true },
+      select: { reference_key: true, official_name: true, summary: true, care_home_context: true, applies_to_settings: true, required_triggers: true },
     }),
     (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true, service_profile: true } }),
   ])
+
+  // Scope regulations to this service (setting + service profile) so out-of-scope
+  // regulations never surface as gaps — mirrors the analysis in regulation-coverage.ts.
+  const setting = facilityTypeToSetting(tenant?.facility_type)
+  const profile = resolveServiceProfile(setting, (tenant?.service_profile ?? {}) as Record<string, unknown>)
+  const regulations = (allRegulations as any[]).filter(r => regulationAppliesToTenant(r, setting, profile))
 
   // ── 1. Cluster unanswered queries into themes ─────────────────────────────────
   // Score every keyword by how many no-match queries contain it

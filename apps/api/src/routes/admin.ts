@@ -1598,6 +1598,7 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
     care_home_context, care_company_interaction, practical_meaning,
     source_urls = [], is_active = true,
     match_terms = [], distinguish_from = [], expected_policy_titles = [], required_elements = [],
+    applies_to_settings = [], required_triggers = [],
   } = req.body ?? {}
 
   if (!reference_key || !official_name || !summary) {
@@ -1634,6 +1635,8 @@ adminRouter.post('/regulations', async (req: Request, res: Response) => {
       distinguish_from:         Array.isArray(distinguish_from) ? distinguish_from : [],
       expected_policy_titles:   Array.isArray(expected_policy_titles) ? expected_policy_titles : [],
       required_elements:        Array.isArray(required_elements) ? required_elements : [],
+      applies_to_settings:      Array.isArray(applies_to_settings) ? applies_to_settings : [],
+      required_triggers:        Array.isArray(required_triggers) ? required_triggers : [],
       pinecone_vector_id:       vectorId,
       last_synced_at:           new Date(),
     },
@@ -1665,6 +1668,7 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
     official_name, also_known_as, summary, care_home_context,
     care_company_interaction, practical_meaning, source_urls, is_active,
     match_terms, distinguish_from, expected_policy_titles, required_elements,
+    applies_to_settings, required_triggers,
   } = req.body ?? {}
 
   const updated = await (prisma as any).externalRegulation.update({
@@ -1682,6 +1686,8 @@ adminRouter.patch('/regulations/:id', async (req: Request, res: Response) => {
       ...(distinguish_from         !== undefined ? { distinguish_from }         : {}),
       ...(expected_policy_titles   !== undefined ? { expected_policy_titles }   : {}),
       ...(required_elements        !== undefined ? { required_elements }        : {}),
+      ...(applies_to_settings      !== undefined ? { applies_to_settings }      : {}),
+      ...(required_triggers        !== undefined ? { required_triggers }        : {}),
       last_synced_at: new Date(),
     },
   })

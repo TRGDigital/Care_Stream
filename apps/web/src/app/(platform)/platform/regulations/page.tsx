@@ -233,6 +233,19 @@ export default function RegulationsPage() {
               </li>
             </ul>
           </div>
+
+          <div className="rounded-lg border border-violet-200 bg-violet-50/70 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-700">How the suggested wording is generated (the tenant &ldquo;what to add&rdquo;)</p>
+            <p className="leading-relaxed text-violet-900/90">For each missing requirement, the deep-dive drafts wording the home can drop straight into their policy. It is built like this:</p>
+            <ol className="mt-1 space-y-1 leading-relaxed text-violet-900">
+              <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">1.</span><span><strong>Grounded, and checked against the whole library.</strong> Each suggestion is based on this regulation&rsquo;s <strong>Required elements</strong>, and is only offered after checking every policy the home holds. If they already cover it somewhere else, we say where instead of suggesting it. We never tell a home to add something it already has.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">2.</span><span><strong>Combine and expand, never replace wholesale.</strong> When the home already has related wording, we rewrite <strong>from their own sentence</strong>, keeping every specific already there (named roles, legal references, defined terms) and folding in what was missing. Nothing they wrote is lost.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">3.</span><span><strong>Written in the policy&rsquo;s own voice.</strong> Suggestions read like a policy, not a regulation. We sample the target policy and <strong>mirror its voice</strong>: declarative &ldquo;will&rdquo;, and the home&rsquo;s own subject (&ldquo;we&rdquo;, &ldquo;the service&rdquo;, &ldquo;staff&rdquo;, &ldquo;the registered manager&rdquo;). We do <strong>not</strong> switch to regulation language (&ldquo;must&rdquo;, &ldquo;shall&rdquo;, &ldquo;the provider must ensure&rdquo;) unless the policy itself uses that style. With no clear sample we default to declarative policy voice.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">4.</span><span><strong>Key terminology guardrail.</strong> The glossary below is applied here: protected terms are retained and used in their correct form, never genericised or dropped.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">5.</span><span><strong>Placed where it belongs.</strong> Every suggestion is given a destination and a number: <strong>amend</strong> a highlighted sentence, <strong>add a subsection</strong> under a heading, or a numbered <strong>new section</strong> at the end of the policy. The numbers run top to bottom so the tenant can follow them in order.</span></li>
+            </ol>
+            <p className="text-[11px] leading-relaxed text-violet-800/80">All of this runs when a tenant re-runs their analysis and is cached, so opening &ldquo;see what to add&rdquo; costs nothing extra. Re-running regenerates it with the current regulation fields and glossary.</p>
+          </div>
         </div>
 
         <GlossaryManager token={token} />

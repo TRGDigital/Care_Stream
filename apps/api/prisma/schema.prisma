@@ -495,6 +495,19 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// Global key-terminology glossary for the Policy Gap suggestion engine. A curated list
+// of important care-sector terms/phrases that must be retained (when present in a policy)
+// and used in their correct form, never genericised or dropped, when the AI drafts or
+// combines suggested policy wording. One shared list, injected as a guardrail.
+model GlossaryTerm {
+  id         String   @id @default(uuid())
+  term       String   @unique                 // e.g. 'lasting power of attorney (LPA)'
+  note       String   @default("")            // preferred form / short guidance for correct use
+  created_at DateTime @default(now())
+
+  @@map("glossary_terms")
+}
+
 // A tenant marking a gap's remediation as done — archives it out of the active list.
 model GapRemediation {
   id                String   @id @default(uuid())

@@ -299,6 +299,13 @@ export interface SitePage {
   updated_at:     string
 }
 
+export interface GlossaryTerm {
+  id:         string
+  term:       string
+  note:       string
+  created_at: string
+}
+
 export interface Regulation {
   id:                       string
   reference_key:            string
@@ -687,6 +694,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ versions: Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> }>(`/regulations/${id}/versions`, token),
       checkSources: () =>
         adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
+    },
+
+    glossary: {
+      list: () =>
+        adminFetch<{ terms: GlossaryTerm[]; total: number }>('/glossary', token),
+      create: (data: { term: string; note?: string }) =>
+        adminFetch<{ term: GlossaryTerm }>('/glossary', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: { term?: string; note?: string }) =>
+        adminFetch<{ term: GlossaryTerm }>(`/glossary/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      delete: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/glossary/${id}`, token, { method: 'DELETE' }),
     },
 
     auditSeeds: {

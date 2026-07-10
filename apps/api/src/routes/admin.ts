@@ -1635,6 +1635,47 @@ adminRouter.get('/regulations', async (_req: Request, res: Response) => {
   ok(res, { regulations, total: regulations.length })
 })
 
+// ─── Key-terminology glossary (global) ────────────────────────────────────────
+// A curated guardrail for the Policy Gap suggestion engine: terms that must be kept
+// and used in their correct form, never genericised or dropped, when the AI drafts or
+// combines suggested policy wording.
+adminRouter.get('/glossary', async (_req: Request, res: Response) => {
+  const terms = await (prisma as any).glossaryTerm.findMany({ orderBy: { term: 'asc' } })
+  ok(res, { terms, total: terms.length })
+})
+
+adminRouter.post('/glossary', async (req: Request, res: Response) => {
+  const term = String(req.body?.term ?? '').trim()
+  const note = String(req.body?.note ?? '').trim()
+  if (!term) { err(res, 'VALIDATION_ERROR', 'term is required'); return }
+  try {
+    const created = await (prisma as any).glossaryTerm.create({ data: { term, note } })
+    ok(res, { term: created })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That term is already in the glossary', 409); return }
+    throw e
+  }
+})
+
+adminRouter.patch('/glossary/:id', async (req: Request, res: Response) => {
+  const data: any = {}
+  if (typeof req.body?.term === 'string') { const t = req.body.term.trim(); if (!t) { err(res, 'VALIDATION_ERROR', 'term cannot be empty'); return } data.term = t }
+  if (typeof req.body?.note === 'string') data.note = req.body.note.trim()
+  try {
+    const updated = await (prisma as any).glossaryTerm.update({ where: { id: String(req.params.id) }, data })
+    ok(res, { term: updated })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That term is already in the glossary', 409); return }
+    if (e?.code === 'P2025') { err(res, 'NOT_FOUND', 'Term not found', 404); return }
+    throw e
+  }
+})
+
+adminRouter.delete('/glossary/:id', async (req: Request, res: Response) => {
+  await (prisma as any).glossaryTerm.delete({ where: { id: String(req.params.id) } }).catch(() => {})
+  ok(res, { deleted: true })
+})
+
 // ─── POST /admin/regulations ──────────────────────────────────────────────────
 // Create a new external regulation + embed to Pinecone.
 

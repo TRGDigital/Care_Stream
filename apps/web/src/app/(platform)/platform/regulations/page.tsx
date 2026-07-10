@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient, type Regulation } from '@/lib/platform-api'
+import { createPlatformClient, type Regulation, type GlossaryTerm } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
@@ -234,6 +234,8 @@ export default function RegulationsPage() {
             </ul>
           </div>
         </div>
+
+        <GlossaryManager token={token} />
 
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -857,6 +859,114 @@ function Field({ label, children, className }: { label: string; children: React.
     <div className={className}>
       <label className="mb-1 block text-xs font-medium text-neutral-mid">{label}</label>
       {children}
+    </div>
+  )
+}
+
+// Global key-terminology glossary manager — the guardrail the Policy Gap suggestion
+// engine uses so it never drops or genericises important terms when drafting or
+// combining wording.
+function GlossaryManager({ token }: { token: string | null }) {
+  const [terms,   setTerms]   = useState<GlossaryTerm[]>([])
+  const [loading, setLoading] = useState(true)
+  const [open,    setOpen]    = useState(false)
+  const [term,    setTerm]    = useState('')
+  const [note,    setNote]    = useState('')
+  const [saving,  setSaving]  = useState(false)
+  const [err,     setErr]     = useState('')
+  const [editId,   setEditId]   = useState<string | null>(null)
+  const [editTerm, setEditTerm] = useState('')
+  const [editNote, setEditNote] = useState('')
+
+  function load() {
+    if (!token) return
+    setLoading(true)
+    createPlatformClient(token).glossary.list()
+      .then(d => setTerms(d.terms)).catch(e => setErr(e.message)).finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function add() {
+    if (!token || !term.trim()) return
+    setSaving(true); setErr('')
+    try { await createPlatformClient(token).glossary.create({ term: term.trim(), note: note.trim() }); setTerm(''); setNote(''); load() }
+    catch (e: any) { setErr(e.message ?? 'Could not add the term.') }
+    finally { setSaving(false) }
+  }
+  async function saveEdit(id: string) {
+    if (!token || !editTerm.trim()) return
+    setErr('')
+    try { await createPlatformClient(token).glossary.update(id, { term: editTerm.trim(), note: editNote.trim() }); setEditId(null); load() }
+    catch (e: any) { setErr(e.message ?? 'Could not save.') }
+  }
+  async function remove(id: string) {
+    if (!token) return
+    if (!confirm('Remove this term from the glossary?')) return
+    setErr('')
+    try { await createPlatformClient(token).glossary.delete(id); load() }
+    catch (e: any) { setErr(e.message ?? 'Could not remove.') }
+  }
+
+  return (
+    <div className="rounded-xl border border-teal-200 bg-teal-50/40 p-5">
+      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between gap-3 text-left">
+        <div>
+          <p className="font-semibold text-teal-900">Key terminology glossary</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-teal-800/80">A global guardrail for the Policy Gap suggestion engine. These terms are kept and used in their correct form, never dropped or genericised, when it drafts or combines suggested policy wording. {terms.length} term{terms.length === 1 ? '' : 's'}.</p>
+        </div>
+        {open ? <ChevronUp size={18} className="shrink-0 text-teal-700" /> : <ChevronDown size={18} className="shrink-0 text-teal-700" />}
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-3">
+          {err && <p className="text-xs text-red-600">{err}</p>}
+
+          <div className="space-y-2 rounded-lg border border-teal-200 bg-white p-3">
+            <input value={term} onChange={e => setTerm(e.target.value)} placeholder="Term or phrase, e.g. lasting power of attorney (LPA)"
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Preferred form or short guidance (optional)"
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            <button onClick={add} disabled={saving || !term.trim()}
+              className="flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Add term
+            </button>
+          </div>
+
+          {loading ? (
+            <p className="text-xs text-teal-800/70">Loading…</p>
+          ) : terms.length === 0 ? (
+            <p className="text-xs text-teal-800/70">No terms yet. Add the terms you never want dropped from suggested wording.</p>
+          ) : (
+            <ul className="divide-y divide-teal-100 rounded-lg border border-teal-100 bg-white">
+              {terms.map(t => (
+                <li key={t.id} className="p-3">
+                  {editId === t.id ? (
+                    <div className="space-y-2">
+                      <input value={editTerm} onChange={e => setEditTerm(e.target.value)} className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                      <textarea value={editNote} onChange={e => setEditNote(e.target.value)} rows={2} className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                      <div className="flex gap-2">
+                        <button onClick={() => saveEdit(t.id)} disabled={!editTerm.trim()} className="flex items-center gap-1 rounded-btn bg-teal px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"><Check size={12} /> Save</button>
+                        <button onClick={() => setEditId(null)} className="rounded-btn border border-gray-200 px-2.5 py-1 text-xs text-neutral-mid hover:bg-gray-50">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-neutral-dark">{t.term}</p>
+                        {t.note && <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">{t.note}</p>}
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <button onClick={() => { setEditId(t.id); setEditTerm(t.term); setEditNote(t.note) }} className="rounded p-1 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark" aria-label="Edit"><Pencil size={13} /></button>
+                        <button onClick={() => remove(t.id)} className="rounded p-1 text-neutral-mid hover:bg-red-50 hover:text-red-600" aria-label="Remove"><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   )
 }

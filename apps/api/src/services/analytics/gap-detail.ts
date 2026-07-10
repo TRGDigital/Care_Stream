@@ -25,6 +25,28 @@ const POLICY_TEXT_CAP = 12000
 const DISCLAIMER =
   'Example wording to review, adapt and approve for your service. This is guidance, not legal or compliance advice.'
 
+// ── Global key-terminology glossary ──────────────────────────────────────────
+// A curated guardrail (editable in the platform console) so the suggestion engine
+// never drops or genericises important care-sector terms (e.g. "lasting power of
+// attorney") when drafting or combining wording. One shared list, injected into the
+// suggestion + amendment prompts.
+type GlossaryTerm = { term: string; note: string }
+
+async function getGlossary(): Promise<GlossaryTerm[]> {
+  try {
+    const rows = await (prisma as any).glossaryTerm.findMany({ orderBy: { term: 'asc' } })
+    return (rows as any[]).map(r => ({ term: String(r.term), note: String(r.note ?? '') }))
+  } catch {
+    return []
+  }
+}
+
+function glossaryBlock(glossary: GlossaryTerm[]): string {
+  if (!glossary.length) return ''
+  const lines = glossary.map(g => `- ${g.term}${g.note ? `: ${g.note}` : ''}`).join('\n')
+  return `\n\nKEY TERMINOLOGY. Retain any of these that already appear in the existing wording, use the correct form when it is relevant to the requirement, and NEVER genericise, abbreviate away, or drop them:\n${lines}`
+}
+
 export type Placement = 'amend' | 'add_under_heading' | 'new_section'
 
 export type GapRequirement = {
@@ -156,7 +178,12 @@ The following requirements are being ADDED to this policy. For EACH, identify th
 - If there is a specific existing SENTENCE that should be amended, or that the new wording should sit directly beside, quote that sentence verbatim (character for character) and set "is_heading": false.
 - Otherwise, if the right home for it is under an existing SECTION HEADING whose content does not yet cover this requirement (so a new subsection should be added BENEATH that heading), quote the heading line verbatim and set "is_heading": true.
 - If there is no sensible existing place at all and it should be a brand-new section, return an empty quote.
-Always prefer a body sentence to amend over a bare heading when a genuinely relevant sentence exists. Never invent text — quotes must appear verbatim in the policy above.
+
+Important:
+- Give each requirement a DISTINCT anchor. Do not send two different requirements to the same sentence or the same heading; if the only fit for a second requirement is a place already used, return an empty quote for it instead (it becomes a new section).
+- Avoid vague one-word headings such as "Implementation", "Introduction", "Scope", "Purpose" or "Policy" as anchors. Prefer a specific sentence; if you must use a heading, choose the most specific relevant one.
+- Always prefer a body sentence to amend over a bare heading when a genuinely relevant sentence exists.
+- Never invent text. Quotes must appear verbatim in the policy above.
 
 REQUIREMENTS:
 ${missing.map((r, i) => `${i + 1}. ${r}`).join('\n')}
@@ -178,6 +205,38 @@ Respond with ONLY minified JSON, an array in the same order as the requirements:
   }
 }
 
+// ── Step 2b: for AMEND locations, rewrite the existing sentence into one improved ──
+//             passage that KEEPS everything already there and folds in the requirement.
+//             This is why an amendment reads as a richer version of the home's own
+//             wording rather than a generic block that silently drops their specifics.
+async function refineAmendments(
+  items: { requirement: string; existing: string; suggestion: string | null }[],
+  glossary: GlossaryTerm[],
+): Promise<string[]> {
+  if (!items.length) return []
+  const payload = items.map((it, i) =>
+    `[${i + 1}]\nEXISTING POLICY WORDING: "${it.existing}"\nMUST ALSO MEET THIS REQUIREMENT: ${it.requirement}${it.suggestion ? `\nDRAFT ADDITION (reference only): ${it.suggestion}` : ''}`
+  ).join('\n\n')
+  const user = `You are improving specific sentences in a UK care-home policy. For EACH item, rewrite the EXISTING POLICY WORDING into a single improved passage that:
+- keeps EVERY specific detail already present (named roles, legal references, Act citations, defined terms),
+- folds in what is needed to meet the requirement,
+- reads as one coherent passage the home can use to REPLACE the existing wording.
+Never lose anything from the existing wording. Never invent facts. Keep it practical and specific to a care setting.${glossaryBlock(glossary)}
+
+${payload}
+
+Respond with ONLY minified JSON, an array in the same order:
+{"rewrites":["<combined improved passage>"]}`
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2600 })
+    const p = parseJson(text)
+    const arr = Array.isArray(p.rewrites) ? p.rewrites : []
+    return items.map((it, i) => (typeof arr[i] === 'string' && arr[i].trim()) ? arr[i].trim() : (it.suggestion ?? ''))
+  } catch {
+    return items.map(it => it.suggestion ?? '')
+  }
+}
+
 // ── Step 2: verify each candidate-missing requirement against the WHOLE corpus, ──
 //            and for the genuinely-absent ones, draft example wording.
 async function verifyAndSuggest(
@@ -185,6 +244,7 @@ async function verifyAndSuggest(
   candidates: string[],
   namespace: string,
   nameById: Map<string, string>,
+  glossary: GlossaryTerm[],
 ): Promise<{ requirement: string; already_covered: boolean; covered_in: string | null; suggested_addition: string | null }[]> {
   if (!candidates.length) return []
 
@@ -214,7 +274,7 @@ For each requirement below, the excerpts are the most relevant passages found ac
 - If the excerpts show the requirement is ALREADY substantively addressed in one of the home's policies, set already_covered=true and name that policy in covered_in. Do NOT then suggest wording.
 - Otherwise set already_covered=false and write concise example wording (2 to 4 sentences) the home could add to a policy to meet the requirement. Ground it in the requirement; keep it practical and care-home specific.
 
-${payload}
+${payload}${glossaryBlock(glossary)}
 
 Respond with ONLY minified JSON — an array in the same order:
 {"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>"}]}`
@@ -281,8 +341,11 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   const inPolicyCount = inPolicy.length
 
   // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
+  //    The global key-terminology glossary is injected as a guardrail so drafts keep the
+  //    correct terms (e.g. "lasting power of attorney") and never genericise them.
+  const glossary = await getGlossary()
   const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
-  const verified = await verifyAndSuggest(reg, candidates, namespace, nameById)
+  const verified = await verifyAndSuggest(reg, candidates, namespace, nameById, glossary)
 
   const verifiedReqs: GapRequirement[] = verified.map(v => v.already_covered
     ? { requirement: v.requirement, status: 'already_covered', already_covered_in: v.covered_in, suggested_addition: null }
@@ -329,13 +392,26 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   if (missingReqs.length && targetText) {
     const hits = await findLocations(targetText, missingReqs.map(r => r.requirement))
     const lower = targetText.toLowerCase()
-    // Pair each located requirement with the position of its anchor in the document.
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
+    // Keep only anchors that are ACTUALLY present in the policy (pos >= 0), so a number
+    // never points at nothing. Dedupe AMEND anchors (two rewrites of one sentence makes
+    // no sense) while allowing several items under the same heading. Whatever is left
+    // over becomes a proper "new section" instead of a phantom highlight.
+    const seenAmend = new Set<string>()
     const located = missingReqs
       .map((r, i) => ({ r, hit: hits[i] }))
       .filter(x => x.hit && x.hit.quote)
-      .map(x => ({ ...x, pos: lower.indexOf(x.hit.quote.toLowerCase()) }))
-      .sort((a, b) => (a.pos < 0 ? Number.MAX_SAFE_INTEGER : a.pos) - (b.pos < 0 ? Number.MAX_SAFE_INTEGER : b.pos))
-    // Assign sequential numbers in that document order and build the aligned highlight arrays.
+      .map(x => ({ r: x.r, hit: x.hit, pos: lower.indexOf(x.hit.quote.toLowerCase()) }))
+      .filter(x => x.pos >= 0)
+      .filter(x => {
+        if (x.hit.is_heading) return true
+        const k = norm(x.hit.quote)
+        if (seenAmend.has(k)) return false
+        seenAmend.add(k)
+        return true
+      })
+      .sort((a, b) => a.pos - b.pos)
+    // Assign sequential numbers in document order and build the aligned highlight arrays.
     located.forEach((x, k) => {
       const placement: Placement = x.hit.is_heading ? 'add_under_heading' : 'amend'
       x.r.match_index    = k + 1
@@ -345,10 +421,22 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
       highlightPlacements.push(placement)
       highlightLabels.push(x.r.requirement.slice(0, 90))
     })
-    // Anything without an anchor is a brand-new section.
+    // Anything without a kept anchor is a brand-new section.
     missingReqs.forEach(r => {
       if (r.match_index == null) { r.match_index = null; r.location_quote = null; r.placement = 'new_section' }
     })
+
+    // Combine-and-expand: rewrite each AMEND target from its existing wording so nothing
+    // already in the policy is lost and the missing requirement is folded in, guarded by
+    // the key-terminology glossary. Heading/new-section items keep their fresh wording.
+    const amendReqs = located.filter(x => x.r.placement === 'amend').map(x => x.r)
+    if (amendReqs.length) {
+      const rewrites = await refineAmendments(
+        amendReqs.map(r => ({ requirement: r.requirement, existing: r.location_quote as string, suggestion: r.suggested_addition ?? null })),
+        glossary,
+      )
+      amendReqs.forEach((r, i) => { if (rewrites[i]) r.suggested_addition = rewrites[i] })
+    }
   } else {
     missingReqs.forEach(r => { r.placement = 'new_section' })
   }

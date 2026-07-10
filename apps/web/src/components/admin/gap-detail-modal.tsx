@@ -19,19 +19,49 @@ function quoteToRegex(q: string): RegExp | null {
 const QUOTE_PALETTE = ['bg-yellow-200', 'bg-sky-200', 'bg-green-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200', 'bg-lime-200', 'bg-fuchsia-200']
 const quoteColour = (i: number) => QUOTE_PALETTE[i % QUOTE_PALETTE.length]
 
-// The nearest heading ancestor (H1–H6) of a node, bounded to within `root`.
-function closestHeading(el: HTMLElement | null, root: HTMLElement): HTMLElement | null {
-  let n: HTMLElement | null = el
-  while (n && n !== root) {
-    if (/^H[1-6]$/.test(n.tagName)) return n
-    n = n.parentElement
+type HighlightItem = { i: number; quote: string; placement: string; label?: string }
+
+const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+
+// Pass A — AMEND anchors: wrap the matched sentence in a coloured, numbered <mark>.
+// Text nodes only, so tags are never broken; each item is placed at most once.
+function highlightSentences(root: HTMLElement, items: HighlightItem[]) {
+  const regexes = items.map(it => ({ it, re: quoteToRegex(it.quote) })).filter(x => !!x.re) as { it: HighlightItem; re: RegExp }[]
+  if (!regexes.length) return
+  const remaining = new Set(regexes.map(x => x.it.i))
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const nodes: Text[] = []
+  let n: Node | null
+  while ((n = walker.nextNode())) nodes.push(n as Text)
+  for (const node of nodes) {
+    const raw = node.nodeValue ?? ''
+    if (raw.trim().length < 8) continue
+    for (const { it, re } of regexes) {
+      if (!remaining.has(it.i)) continue
+      const m = re.exec(raw)
+      if (!m) continue
+      const before = raw.slice(0, m.index)
+      const after  = raw.slice(m.index + m[0].length)
+      const frag = document.createDocumentFragment()
+      if (before) frag.appendChild(document.createTextNode(before))
+      const mark = document.createElement('mark')
+      mark.className = `${quoteColour(it.i)} rounded px-0.5`
+      const badge = document.createElement('sup')
+      badge.textContent = String(it.i + 1)
+      badge.className = 'mr-0.5 font-bold'
+      mark.appendChild(badge)
+      mark.appendChild(document.createTextNode(m[0]))
+      frag.appendChild(mark)
+      if (after) frag.appendChild(document.createTextNode(after))
+      node.parentNode?.replaceChild(frag, node)
+      remaining.delete(it.i)
+      break
+    }
   }
-  return null
 }
 
-// A dashed "add a subsection here" callout, inserted right after a heading when the
-// missing requirement belongs under that heading (rather than amending a sentence).
-function insertHeadingMarker(heading: HTMLElement, i: number, label?: string) {
+// A dashed "add a subsection here" callout element.
+function buildHeadingMarker(i: number, label?: string): HTMLElement {
   const marker = document.createElement('div')
   marker.className = 'not-prose my-2 flex items-start gap-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
   const badge = document.createElement('span')
@@ -44,51 +74,46 @@ function insertHeadingMarker(heading: HTMLElement, i: number, label?: string) {
   body.appendChild(document.createTextNode(label ? label : `See item ${i + 1} on the left.`))
   marker.appendChild(badge)
   marker.appendChild(body)
-  heading.after(marker)
+  return marker
 }
 
-// Wrap each matched quote in a <mark> coloured + numbered by its position, so the
-// inline highlight maps unambiguously to the numbered passage in the list. Text
-// nodes only, so tags are never broken; cross-node matches simply don't highlight.
-// When a quote is a section heading (placement 'add_under_heading'), we also drop a
-// dashed "add a subsection here" callout below that heading — a heading title on its
-// own doesn't tell the reader the CONTENT beneath it is what's missing.
-function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
-  const regexes = quotes.map((q, i) => ({ i, re: quoteToRegex(q) })).filter(x => !!x.re) as { i: number; re: RegExp }[]
-  if (!regexes.length) return
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const nodes: Text[] = []
-  let n: Node | null
-  while ((n = walker.nextNode())) nodes.push(n as Text)
-  for (const node of nodes) {
-    const raw = node.nodeValue ?? ''
-    if (raw.trim().length < 8) continue
-    for (const { i, re } of regexes) {
-      const m = re.exec(raw)
-      if (!m) continue
-      const before = raw.slice(0, m.index)
-      const after  = raw.slice(m.index + m[0].length)
-      const frag = document.createDocumentFragment()
-      if (before) frag.appendChild(document.createTextNode(before))
-      const mark = document.createElement('mark')
-      mark.className = `${quoteColour(i)} rounded px-0.5`
-      const badge = document.createElement('sup')
-      badge.textContent = String(i + 1)
-      badge.className = 'mr-0.5 font-bold'
-      mark.appendChild(badge)
-      mark.appendChild(document.createTextNode(m[0]))
-      frag.appendChild(mark)
-      if (after) frag.appendChild(document.createTextNode(after))
-      const parent = node.parentNode
-      parent?.replaceChild(frag, node)
-      // If this anchor is (or sits inside) a heading, add the "add below" callout.
-      if (placements[i] === 'add_under_heading') {
-        const heading = closestHeading(mark.parentElement, root)
-        if (heading) insertHeadingMarker(heading, i, labels[i])
-      }
-      break
+// Pass B — HEADING anchors: find the heading element and drop a numbered "add a
+// subsection here" callout directly below it. Handled separately from the inline pass
+// so several items under the SAME heading each get their own callout (the old single
+// text-node pass could only mark one, which is why some numbers never appeared).
+function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[]) {
+  if (!items.length) return
+  const headings = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
+  const byHeading = new Map<HTMLElement, HighlightItem[]>()
+  for (const it of items) {
+    const q = normText(it.quote)
+    if (!q) continue
+    const target = headings.find(h => {
+      const ht = normText(h.textContent || '')
+      return ht === q || (q.length >= 6 && ht.length >= 6 && (ht.includes(q) || q.includes(ht)))
+    })
+    if (!target) continue
+    if (!byHeading.has(target)) byHeading.set(target, [])
+    byHeading.get(target)!.push(it)
+  }
+  for (const [heading, its] of byHeading) {
+    let anchor: HTMLElement = heading
+    for (const it of its) {
+      const marker = buildHeadingMarker(it.i, it.label)
+      anchor.after(marker)
+      anchor = marker
     }
   }
+}
+
+// Number and locate every "what to add" item in the policy: amend anchors get an inline
+// highlight on the sentence; heading anchors get a dashed "add a subsection here" callout
+// below the heading — a heading title on its own doesn't tell the reader that the CONTENT
+// beneath it is what's missing.
+function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
+  const items: HighlightItem[] = quotes.map((quote, i) => ({ i, quote, placement: placements[i] ?? 'amend', label: labels[i] }))
+  highlightSentences(root, items.filter(it => it.placement !== 'add_under_heading'))
+  insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading'))
 }
 
 // Highlight every occurrence of a plain search term in the rendered policy (text
@@ -346,12 +371,12 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                             {r.match_index
                               ? (r.placement === 'add_under_heading'
                                   ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
-                                  : <>Add or amend near <span className="font-semibold">highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right).</>)
+                                  : <><span className="font-semibold">Replace highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the improved wording below. It keeps your existing wording and adds what&rsquo;s missing.</>)
                               : <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <> in your {detail.target_policy.name}</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>}
                           </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
-                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">Example wording</p>
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">{r.placement === 'amend' ? 'Suggested replacement (keeps your wording, adds the rest)' : 'Example wording'}</p>
                               <p className="text-sm leading-relaxed text-neutral-dark">{r.suggested_addition}</p>
                             </div>
                           )}

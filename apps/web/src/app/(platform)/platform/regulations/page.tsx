@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type Regulation, type GlossaryTerm } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, RefreshCw, X, Check, ChevronDown, ChevronUp, Sparkles, Search } from 'lucide-react'
 
 // Mirrors apps/api/src/lib/care-setting.ts and service-triggers.ts.
 const SETTING_OPTIONS: Array<{ slug: string; label: string }> = [
@@ -877,6 +877,10 @@ function GlossaryManager({ token }: { token: string | null }) {
   const [editId,   setEditId]   = useState<string | null>(null)
   const [editTerm, setEditTerm] = useState('')
   const [editNote, setEditNote] = useState('')
+  const [query,    setQuery]    = useState('')
+
+  const q = query.trim().toLowerCase()
+  const filtered = q ? terms.filter(t => t.term.toLowerCase().includes(q) || t.note.toLowerCase().includes(q)) : terms
 
   function load() {
     if (!token) return
@@ -932,13 +936,30 @@ function GlossaryManager({ token }: { token: string | null }) {
             </button>
           </div>
 
+          {terms.length > 0 && (
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-mid" />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search terms and notes…"
+                className="w-full rounded-md border border-gray-200 bg-white py-2 pl-8 pr-16 text-sm focus:border-teal focus:outline-none" />
+              <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+                {q && <span className="text-xs text-neutral-mid">{filtered.length}</span>}
+                {query && (
+                  <button type="button" onClick={() => setQuery('')} aria-label="Clear search"
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><X size={13} /></button>
+                )}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-xs text-teal-800/70">Loading…</p>
           ) : terms.length === 0 ? (
             <p className="text-xs text-teal-800/70">No terms yet. Add the terms you never want dropped from suggested wording.</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-xs text-teal-800/70">No terms match &ldquo;{query}&rdquo;.</p>
           ) : (
             <ul className="divide-y divide-teal-100 rounded-lg border border-teal-100 bg-white">
-              {terms.map(t => (
+              {filtered.map(t => (
                 <li key={t.id} className="p-3">
                   {editId === t.id ? (
                     <div className="space-y-2">

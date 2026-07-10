@@ -32,7 +32,7 @@ function buildPrintDoc(policyName: string, contentHtml: string, version: string,
     .addr { font-size: 9pt; color: #555; white-space: pre-line; }
     h1.title { font-size: 19pt; margin: 20px 0 4px; }
     .meta { font-size: 9pt; color: #555; margin-bottom: 18px; }
-    h2 { font-size: 13pt; margin: 20px 0 6px; border-bottom: 1px solid #e2e2e2; padding-bottom: 3px; }
+    h2 { font-size: 13pt; margin: 20px 0 6px; }
     h3 { font-size: 11.5pt; margin: 14px 0 4px; }
     p, li { margin: 6px 0; }
     ul, ol { padding-left: 20px; }
@@ -185,14 +185,17 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   useEffect(load, [token, policyId]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { createApiClient(token).analytics.adoptionContext().then(setOrg).catch(() => setOrg(null)) }, [token])
 
-  // Open a print-ready version of the CURRENT view (clean or tracked) for Save-as-PDF.
+  // Open a print-ready CLEAN copy (no change markers — the filed hard copy) for Save-as-PDF.
+  // Built from a detached render so it's always clean regardless of the on-screen toggle.
   function downloadPolicy() {
-    const root = previewRef.current
-    if (!root) return
-    const html = buildPrintDoc(policyName, root.innerHTML, doc?.document?.version || '1.0', tracked, org)
+    if (!doc?.document || html === null) return
+    const div = document.createElement('div')
+    div.innerHTML = html
+    applyChanges(div, doc.changes ?? [], false)
+    const printHtml = buildPrintDoc(policyName, div.innerHTML, doc.document.version || '1.0', false, org)
     const w = window.open('', '_blank')
     if (!w) { setError('Please allow pop-ups to download the policy.'); return }
-    w.document.open(); w.document.write(html); w.document.close()
+    w.document.open(); w.document.write(printHtml); w.document.close()
   }
 
   const pending = (doc?.changes ?? []).filter(c => !c.published)
@@ -244,7 +247,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               <GitCompare size={13} /> {tracked ? 'Tracked' : 'Clean'}
             </button>
             <button onClick={downloadPolicy} disabled={!doc?.document}
-              title={`Download the ${tracked ? 'tracked-changes' : 'clean'} copy for print / PDF`}
+              title="Download the clean policy for print / PDF (letterhead + sign-off)"
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
               <Download size={13} /> Download
             </button>

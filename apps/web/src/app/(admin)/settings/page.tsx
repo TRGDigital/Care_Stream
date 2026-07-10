@@ -846,10 +846,50 @@ export default function SettingsPage() {
             {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
           </div>
 
-          {/* Pulled from elsewhere — not re-entered here. */}
+          {/* Role-holders — editable, suggested from staff, and support MORE THAN ONE person. */}
+          {orgContext.role_holders.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
+              <p className="mt-1 text-xs text-neutral-mid">Suggested from staff specialist roles, and editable here. Enter more than one name separated by commas if a role is shared, then you pick which person when you adopt text into a policy. Leave a field blank to use the staff-derived name automatically.</p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                {orgContext.role_holders.map(rh => {
+                  const fromStaff = rh.names.join(', ')
+                  return (
+                    <div key={rh.key}>
+                      <label className="mb-1 block text-sm font-medium text-neutral-dark">{rh.role}</label>
+                      <input
+                        type="text"
+                        value={orgDetails[rh.key] ?? ''}
+                        onChange={e => setOrgDetails(d => ({ ...d, [rh.key]: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
+                        placeholder={fromStaff || 'Type a name, or assign the specialist role to staff'}
+                        maxLength={250}
+                        className={INPUT}
+                      />
+                      {fromStaff && (
+                        <p className="mt-1 text-xs text-neutral-mid">
+                          From staff: {fromStaff}
+                          {(orgDetails[rh.key] ?? '') !== fromStaff && (
+                            <button type="button" onClick={() => setOrgDetails(d => ({ ...d, [rh.key]: fromStaff }))} className="ml-1.5 font-medium text-teal hover:underline">Use</button>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <Button onClick={saveOrgDetails} disabled={savingOrg} size="md">
+                  {savingOrg ? 'Saving…' : 'Save'}
+                </Button>
+                {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
+              </div>
+            </div>
+          )}
+
+          {/* Pulled from your account — not re-entered here. */}
           <div className="mt-6 rounded-lg border border-gray-200 bg-neutral-light/30 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Pulled from your account and staff</p>
-            <p className="mt-1 text-xs text-neutral-mid">These are managed elsewhere and used automatically, so you don&rsquo;t re-enter them here.</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Pulled from your account</p>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex items-start justify-between gap-4">
                 <dt className="text-neutral-mid">Home / service name</dt>
@@ -859,16 +899,7 @@ export default function SettingsPage() {
                 <dt className="text-neutral-mid">Logo</dt>
                 <dd className="text-right font-medium text-neutral-dark">{orgContext.has_logo ? 'Set (used on downloads)' : 'Not set — add one under Branding'}</dd>
               </div>
-              {orgContext.role_holders.map(rh => (
-                <div key={rh.key} className="flex items-start justify-between gap-4">
-                  <dt className="text-neutral-mid">{rh.role}</dt>
-                  <dd className="text-right font-medium text-neutral-dark">
-                    {rh.names.length ? rh.names.join(', ') : <span className="font-normal text-neutral-mid">Not assigned — set a staff member&rsquo;s specialist role</span>}
-                  </dd>
-                </div>
-              ))}
             </dl>
-            <p className="mt-3 text-xs text-neutral-mid">Role-holders come from staff specialist roles. Assign the matching specialist role to a staff member and they appear here automatically.</p>
           </div>
         </SettingSection>
         )}

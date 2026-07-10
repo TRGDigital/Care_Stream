@@ -248,10 +248,14 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
     const ALLOWED = new Set(['registered_manager', 'nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver'])
+    // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
+    // one at adoption. Manual values here override the staff-derived suggestion.
+    const ROLE_KEYS = new Set(['safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
-      if (!ALLOWED.has(k) || typeof v !== 'string') continue
-      const val = v.trim().slice(0, k === 'address' ? 300 : 120)
+      if (!(ALLOWED.has(k) || ROLE_KEYS.has(k)) || typeof v !== 'string') continue
+      const cap = k === 'address' ? 300 : ROLE_KEYS.has(k) ? 250 : 120
+      const val = v.trim().slice(0, cap)
       if (val) clean[k] = val
     }
     updateData.organisation_details = clean

@@ -496,8 +496,8 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const mailto = `mailto:hello@carestreamai.com?subject=${encodeURIComponent('Policy authoring request: ' + officialName)}&body=${encodeURIComponent(`We would like CareStream to write and supply a policy that covers ${officialName}.`)}`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={onClose}>
-      <div className="w-full max-w-6xl rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-5" onClick={onClose}>
+      <div className="w-full max-w-[96rem] rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
           <div>
@@ -546,10 +546,10 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
             )}
 
             {/* Split screen: what to add (left) · the policy to check it against (right) */}
-            <div className="grid max-h-[68vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[70vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+            <div className="grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[87vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
 
               {/* LEFT — what to add */}
-              <div className="overflow-y-auto px-6 py-5 lg:max-h-[70vh]">
+              <div className="overflow-y-auto px-6 py-5 lg:max-h-[87vh]">
                 <div className="space-y-5">
                   {/* Legal basis + where to add */}
                   <div className="space-y-2">
@@ -738,7 +738,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
               </div>
 
               {/* RIGHT — the policy to check the suggestion against */}
-              <div className="overflow-y-auto bg-neutral-light/20 px-6 py-5 lg:max-h-[70vh]">
+              <div className="overflow-y-auto bg-neutral-light/20 px-6 py-5 lg:max-h-[87vh]">
                 {detail.target_policy ? (
                   <>
                     <div className="mb-3">

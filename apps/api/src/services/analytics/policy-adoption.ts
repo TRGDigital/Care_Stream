@@ -77,17 +77,79 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
     data: {
       document_id: doc.id, tenant_id: tenantId, reference_key: input.reference_key,
       requirement: input.requirement.slice(0, 500), placement: input.placement,
-      old_text: input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000), applied_by: input.applied_by,
+      old_text: input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000),
+      section_title: (input.section_title ?? '').slice(0, 200), applied_by: input.applied_by,
     },
   })
-  const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false } })
+  const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false, reverted: false } })
   return { applied, pending, document_id: doc.id, change_id: change.id }
+}
+
+// Rebuild the draft from the original + every still-active change, in order. Used after a
+// revert so removing one change cleanly recomposes the document.
+async function rebuildDraft(documentId: string): Promise<void> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { id: documentId } })
+  if (!doc) return
+  const changes = await (prisma as any).policyDocumentChange.findMany({
+    where: { document_id: documentId, reverted: false }, orderBy: { applied_at: 'asc' },
+  })
+  let content = doc.original_content as string
+  for (const c of changes as any[]) {
+    content = applyChange(content, c.placement, c.old_text, c.new_text, c.section_title || undefined).content
+  }
+  await (prisma as any).policyDocument.update({ where: { id: documentId }, data: { draft_content: content } })
+}
+
+// Revert one adopted change and recompose the draft.
+export async function revertChange(tenantId: string, changeId: string): Promise<{ pending: number } | null> {
+  const change = await (prisma as any).policyDocumentChange.findUnique({ where: { id: changeId } })
+  if (!change || change.tenant_id !== tenantId) return null
+  await (prisma as any).policyDocumentChange.update({ where: { id: changeId }, data: { reverted: true } })
+  await rebuildDraft(change.document_id)
+  const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: change.document_id, published: false, reverted: false } })
+  return { pending }
+}
+
+// Publish: snapshot the draft as the published version, bump the version, and mark every
+// active pending change as published. The uploaded original is still preserved.
+export async function publishDocument(tenantId: string, policyId: string, publishedBy: string): Promise<{ version: string; published: number } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  const nextVersion = bumpVersion(doc.version as string)
+  const res = await (prisma as any).policyDocumentChange.updateMany({
+    where: { document_id: doc.id, published: false, reverted: false }, data: { published: true },
+  })
+  await (prisma as any).policyDocument.update({
+    where: { id: doc.id },
+    data: { published_content: doc.draft_content, published_at: new Date(), published_by: publishedBy, version: nextVersion },
+  })
+  return { version: nextVersion, published: res.count ?? 0 }
+}
+
+// 1.0 → 1.1 → 1.2 … starting at 1.0 when unset.
+function bumpVersion(current: string): string {
+  const m = /^(\d+)\.(\d+)$/.exec((current || '').trim())
+  if (!m) return '1.0'
+  return `${m[1]}.${Number(m[2]) + 1}`
+}
+
+// Per-policy summary for the Policies list: how many changes are waiting to be published.
+export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null }>> {
+  const docs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true },
+  })
+  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null }> = []
+  for (const d of docs as any[]) {
+    const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } })
+    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null })
+  }
+  return out
 }
 
 export async function getPolicyDocument(tenantId: string, policyId: string): Promise<{ document: any; changes: any[] } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
-  const changes = await (prisma as any).policyDocumentChange.findMany({ where: { document_id: doc.id }, orderBy: { applied_at: 'desc' } })
+  const changes = await (prisma as any).policyDocumentChange.findMany({ where: { document_id: doc.id, reverted: false }, orderBy: { applied_at: 'desc' } })
   return { document: doc, changes }
 }
 

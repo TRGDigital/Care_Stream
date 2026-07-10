@@ -9,7 +9,8 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine } from 'lucide-react'
+import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
 const UploadModal = dynamic(() => import('@/components/admin/policies/policy-modals').then(m => m.UploadModal), { ssr: false })
@@ -71,6 +72,8 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
+  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string }>>([])
+  const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
@@ -84,6 +87,13 @@ export default function PoliciesPage() {
       .then(data => { const list = data?.policies ?? []; setPolicies(list); persistentCache.set(`admin-policies-${userId}`, list) })
       .catch(() => {})
       .finally(() => setLoading(false))
+    loadReviewSummary()
+  }
+
+  function loadReviewSummary() {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).analytics.policyDocumentsSummary()
+      .then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
   }
 
   function loadDuplicates() {
@@ -355,6 +365,15 @@ export default function PoliciesPage() {
           onClose={() => setPreviewPolicy(null)}
         />
       )}
+      {reviewTarget && session?.accessToken && (
+        <PolicyChangesModal
+          token={session.accessToken}
+          policyId={reviewTarget.id}
+          policyName={reviewTarget.name}
+          onClose={() => { setReviewTarget(null); loadReviewSummary() }}
+          onPublished={() => loadReviewSummary()}
+        />
+      )}
 
       {/* Archived notice */}
       {tab === 'archived' && !loading && (
@@ -363,6 +382,33 @@ export default function PoliciesPage() {
           queries or used by the AI assistant. They are kept here for your records only.
         </p>
       )}
+
+      {/* Adopted changes to review (Policy Change Adoption) */}
+      {(() => {
+        const toReview = reviewSummary.filter(d => d.pending > 0)
+        if (!toReview.length) return null
+        return (
+          <div className="mb-4 rounded-card border border-teal-200 bg-teal-50/50 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-teal-900"><FilePenLine size={15} /> Adopted changes to review</p>
+            <p className="mt-0.5 text-xs text-teal-800/80">You have adopted policy changes waiting to be approved and published.</p>
+            <ul className="mt-3 space-y-2">
+              {toReview.map(d => {
+                const name = policies.find((p: any) => p.id === d.policy_id)?.name ?? 'Policy'
+                return (
+                  <li key={d.policy_id} className="flex items-center justify-between gap-3 rounded-lg border border-teal-100 bg-white px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{name}</p>
+                      <p className="text-xs text-neutral-mid">{d.pending} change{d.pending === 1 ? '' : 's'} to review{d.version ? ` · current version ${d.version}` : ''}</p>
+                    </div>
+                    <button onClick={() => setReviewTarget({ id: d.policy_id, name })}
+                      className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark">Review changes</button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )
+      })()}
 
       {/* Search */}
       {!loading && tabPolicies.length > 0 && (

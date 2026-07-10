@@ -587,7 +587,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         <p className="-mt-1 text-xs text-neutral-mid">{located} fit{located === 1 ? 's' : ''} into an existing section (numbered &amp; highlighted right) · {news} need{news === 1 ? 's' : ''} a new section (numbered at the end).</p>
                       ) : null })()}
                       {adoption?.enabled && pendingCount !== null && pendingCount > 0 && detail.target_policy && (
-                        <p className="-mt-1 flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1.5 text-xs text-teal-900"><FilePenLine size={12} className="shrink-0" /> {pendingCount} change{pendingCount === 1 ? '' : 's'} adopted into your {detail.target_policy.name} draft. Review and publish it from Policies (coming next).</p>
+                        <p className="-mt-1 flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1.5 text-xs text-teal-900"><FilePenLine size={12} className="shrink-0" /> {pendingCount} change{pendingCount === 1 ? '' : 's'} adopted into your {detail.target_policy.name} draft. Review and publish it from <a href="/policies" className="font-semibold underline hover:no-underline">Policies</a>.</p>
                       )}
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">

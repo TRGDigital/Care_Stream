@@ -12,7 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, publishDocument, summariseDocuments } from '../services/analytics/policy-adoption'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -594,6 +594,54 @@ analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req:
     ok(res, doc ?? { document: null, changes: [] })
   } catch (e: any) {
     err(res, 'DOC_FAILED', e.message ?? 'Could not load the policy document.', 500)
+  }
+})
+
+// GET /analytics/gaps/policy-documents-summary — pending-change counts for the Policies list.
+analyticsRouter.get('/gaps/policy-documents-summary', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const summary = await summariseDocuments(tenantId)
+    ok(res, { documents: summary })
+  } catch (e: any) {
+    err(res, 'SUMMARY_FAILED', e.message ?? 'Could not load the policy documents.', 500)
+  }
+})
+
+// POST /analytics/gaps/policy-change/:changeId/revert — undo one adopted change.
+analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await requireTenantFlag(tenantId, 'has_policy_adoption')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const r = await revertChange(tenantId, String(req.params.changeId))
+    if (!r) { err(res, 'NOT_FOUND', 'Change not found', 404); return }
+    ok(res, r)
+  } catch (e: any) {
+    err(res, 'REVERT_FAILED', e.message ?? 'Could not revert the change.', 500)
+  }
+})
+
+// POST /analytics/gaps/policy-document/:policyId/publish — publish the draft.
+analyticsRouter.post('/gaps/policy-document/:policyId/publish', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await requireTenantFlag(tenantId, 'has_policy_adoption')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const me = await (prisma as any).user.findUnique({ where: { id: (req as any).user.sub }, select: { name: true, email: true } })
+    const r = await publishDocument(tenantId, String(req.params.policyId), me?.name || me?.email || 'Admin')
+    if (!r) { err(res, 'NOT_FOUND', 'No draft to publish', 404); return }
+    ok(res, r)
+  } catch (e: any) {
+    err(res, 'PUBLISH_FAILED', e.message ?? 'Could not publish the policy.', 500)
   }
 })
 

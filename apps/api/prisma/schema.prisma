@@ -518,6 +518,9 @@ model PolicyDocument {
   policy_id        String   @unique
   original_content String   @default("")   // immutable snapshot of the extracted text at first init
   draft_content    String   @default("")   // working copy adopted changes are applied to
+  published_content String  @default("")   // last published snapshot
+  published_at     DateTime?
+  published_by     String   @default("")
   version          String   @default("")
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
@@ -537,9 +540,11 @@ model PolicyDocumentChange {
   placement     String   @default("amend")   // amend | add_under_heading | new_section
   old_text      String   @default("")
   new_text      String   @default("")
+  section_title String   @default("")
   applied_by    String   @default("")
   applied_at    DateTime @default(now())
   published     Boolean  @default(false)
+  reverted      Boolean  @default(false)
   document      PolicyDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
 
   @@index([document_id])

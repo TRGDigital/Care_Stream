@@ -965,7 +965,10 @@ export function createApiClient(token: string) {
       adoptionContext: () => apiFetch<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }> }>('/analytics/gaps/adoption-context', token),
       adoptSuggestion: (body: { policy_id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title?: string }) =>
         apiFetch<{ applied: boolean; pending: number; document_id: string; change_id: string }>('/analytics/gaps/adopt', token, { method: 'POST', body: JSON.stringify(body) }),
-      policyDocument: (policyId: string) => apiFetch<{ document: { id: string; policy_id: string; draft_content: string; original_content: string } | null; changes: Array<{ id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; applied_by: string; applied_at: string; published: boolean }> }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}`, token),
+      policyDocument: (policyId: string) => apiFetch<{ document: { id: string; policy_id: string; draft_content: string; original_content: string; published_content: string; version: string; published_at: string | null; published_by: string } | null; changes: Array<{ id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title: string; applied_by: string; applied_at: string; published: boolean }> }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}`, token),
+      policyDocumentsSummary: () => apiFetch<{ documents: Array<{ policy_id: string; pending: number; version: string; published_at: string | null }> }>('/analytics/gaps/policy-documents-summary', token),
+      revertPolicyChange: (changeId: string) => apiFetch<{ pending: number }>(`/analytics/gaps/policy-change/${encodeURIComponent(changeId)}/revert`, token, { method: 'POST' }),
+      publishPolicyDocument: (policyId: string) => apiFetch<{ version: string; published: number }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/publish`, token, { method: 'POST' }),
       engagement: () => apiFetch<{
         wau: { active: number; total_staff: number; pct: number | null }
         logged_in_7d: number

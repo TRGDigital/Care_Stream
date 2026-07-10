@@ -2,10 +2,64 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download } from 'lucide-react'
 
 type Doc = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyDocument']>>
 type Change = Doc['changes'][number]
+type OrgCtx = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['adoptionContext']>>
+
+const esc = (s: string) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// A print-ready (A4) HTML document: letterhead from the tenant's organisation details, the
+// policy content, and a sign-off block. Opened in a new tab for Save-as-PDF / print. No AI,
+// no server rendering — reuses the already-rendered policy DOM.
+function buildPrintDoc(policyName: string, contentHtml: string, version: string, tracked: boolean, org: OrgCtx | null): string {
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const months = Number(org?.review_cycle_months || '12') || 12
+  const next = new Date(); next.setMonth(next.getMonth() + months)
+  const nextReview = next.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const homeName = esc(org?.home_name || '')
+  const approver = esc(org?.default_approver || org?.registered_manager || '')
+  const manager  = esc(org?.registered_manager || '')
+  const line = '<span style="display:inline-block;min-width:200px;border-bottom:1px solid #999">&nbsp;</span>'
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(policyName)}</title><style>
+    @page { size: A4; margin: 20mm 18mm 22mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; font-size: 11pt; line-height: 1.55; margin: 0; }
+    .letterhead { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #0d9488; padding-bottom: 12px; }
+    .letterhead img { max-height: 60px; max-width: 200px; }
+    .home { font-size: 15pt; font-weight: bold; }
+    .addr { font-size: 9pt; color: #555; white-space: pre-line; }
+    h1.title { font-size: 19pt; margin: 20px 0 4px; }
+    .meta { font-size: 9pt; color: #555; margin-bottom: 18px; }
+    h2 { font-size: 13pt; margin: 20px 0 6px; border-bottom: 1px solid #e2e2e2; padding-bottom: 3px; }
+    h3 { font-size: 11.5pt; margin: 14px 0 4px; }
+    p, li { margin: 6px 0; }
+    ul, ol { padding-left: 20px; }
+    [class*="bg-green"] { background: #dcfce7; padding: 1px 3px; border-radius: 3px; }
+    [class*="border-green"] { border: 1px solid #86efac; border-radius: 5px; padding: 8px 12px; margin: 10px 0; background: #f0fdf4; }
+    .signoff { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 14px; font-size: 10pt; }
+    .signoff table { border-collapse: collapse; }
+    .signoff td { padding: 5px 14px 5px 0; vertical-align: top; }
+    .signoff td:first-child { color: #555; white-space: nowrap; }
+    .foot { margin-top: 24px; border-top: 1px solid #eee; padding-top: 8px; font-size: 8pt; color: #999; }
+    @media print { .foot { position: fixed; bottom: 8mm; left: 18mm; right: 18mm; } }
+  </style></head><body>
+    <div class="letterhead">${org?.logo_url ? `<img src="${org.logo_url}" alt="">` : ''}<div><div class="home">${homeName}</div><div class="addr">${esc(org?.address || '')}</div></div></div>
+    <h1 class="title">${esc(policyName)}</h1>
+    <div class="meta">Version ${esc(version || '1.0')} &middot; ${tracked ? 'Tracked changes copy' : 'Approved copy'} &middot; Printed ${today}</div>
+    <div class="content">${contentHtml}</div>
+    <div class="signoff"><table>
+      <tr><td>Registered manager:</td><td>${manager || line}</td></tr>
+      <tr><td>Approved by:</td><td>${approver || line}</td></tr>
+      <tr><td>Date approved:</td><td>${today}</td></tr>
+      <tr><td>Next review:</td><td>${nextReview}</td></tr>
+      <tr><td>Signature:</td><td>${line}</td></tr>
+    </table></div>
+    <div class="foot">${homeName} &middot; ${esc(policyName)} &middot; v${esc(version || '1.0')} &middot; Uncontrolled when printed</div>
+    <script>window.onload=function(){setTimeout(function(){window.print()},350)}</script>
+  </body></html>`
+}
 
 const norm = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
 const placementLabel = (p: string) => p === 'amend' ? 'Amended a paragraph' : p === 'add_under_heading' ? 'Added a subsection' : 'New section'
@@ -118,6 +172,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [tracked, setTracked] = useState(true)
   const [busy, setBusy]       = useState<string | null>(null)   // 'publish' | change id
   const [publishedMsg, setPublishedMsg] = useState('')
+  const [org, setOrg] = useState<OrgCtx | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
@@ -129,6 +184,17 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
       .finally(() => setLoading(false))
   }
   useEffect(load, [token, policyId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { createApiClient(token).analytics.adoptionContext().then(setOrg).catch(() => setOrg(null)) }, [token])
+
+  // Open a print-ready version of the CURRENT view (clean or tracked) for Save-as-PDF.
+  function downloadPolicy() {
+    const root = previewRef.current
+    if (!root) return
+    const html = buildPrintDoc(policyName, root.innerHTML, doc?.document?.version || '1.0', tracked, org)
+    const w = window.open('', '_blank')
+    if (!w) { setError('Please allow pop-ups to download the policy.'); return }
+    w.document.open(); w.document.write(html); w.document.close()
+  }
 
   const pending = (doc?.changes ?? []).filter(c => !c.published)
 
@@ -177,6 +243,11 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
             <button onClick={() => setTracked(t => !t)}
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">
               <GitCompare size={13} /> {tracked ? 'Tracked' : 'Clean'}
+            </button>
+            <button onClick={downloadPolicy} disabled={!doc?.document}
+              title={`Download the ${tracked ? 'tracked-changes' : 'clean'} copy for print / PDF`}
+              className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
+              <Download size={13} /> Download
             </button>
             <button onClick={publish} disabled={busy !== null || pending.length === 0}
               className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">

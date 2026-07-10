@@ -164,9 +164,16 @@ export async function getAdoptionContext(tenantId: string): Promise<{
   enabled: boolean
   variables: Array<{ key: string; label: string; value: string }>
   role_holders: Array<{ key: string; role: string; candidates: string[] }>
+  logo_url: string | null
+  home_name: string
+  address: string
+  registered_manager: string
+  default_approver: string
+  review_cycle_months: string
+  version_scheme: string
 }> {
   const tenant = await (prisma as any).tenant.findUnique({
-    where: { id: tenantId }, select: { name: true, organisation_details: true, feature_flags: true },
+    where: { id: tenantId }, select: { name: true, organisation_details: true, feature_flags: true, logo_url: true },
   })
   const enabled = !!((tenant?.feature_flags ?? {}) as Record<string, unknown>).has_policy_adoption
   const od = (tenant?.organisation_details ?? {}) as Record<string, string>
@@ -191,5 +198,14 @@ export async function getAdoptionContext(tenantId: string): Promise<{
     { key: 'address',              label: 'Address',             value: od.address ?? '' },
   ].filter(v => v.value)
 
-  return { enabled, variables, role_holders }
+  return {
+    enabled, variables, role_holders,
+    logo_url: (tenant?.logo_url as string) ?? null,
+    home_name: String(tenant?.name ?? ''),
+    address: od.address ?? '',
+    registered_manager: od.registered_manager ?? '',
+    default_approver: od.default_approver ?? '',
+    review_cycle_months: od.review_cycle_months ?? '',
+    version_scheme: od.version_scheme ?? '',
+  }
 }

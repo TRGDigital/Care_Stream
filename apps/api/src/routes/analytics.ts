@@ -7,11 +7,12 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
-import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
+import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit, requireTenantFlag } from '../lib/plan-limits'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -538,6 +539,61 @@ analyticsRouter.post('/gaps/pregenerate', requireAdmin, async (_req: Request, re
     ok(res, { generated: batch.length, remaining: Math.max(0, todo.length - batch.length) })
   } catch (e: any) {
     err(res, 'PREGEN_FAILED', e.message ?? 'Could not prepare recommendations.', 500)
+  }
+})
+
+// ─── Policy Change Adoption (beta; per-tenant flag) ──────────────────────────
+// Adopt a gap suggestion into the tenant's editable policy. Gated by the plan feature
+// AND the per-tenant has_policy_adoption flag (Ferndale test only for now).
+
+// GET /analytics/gaps/adoption-context — variables + role-holders for the adopt UI.
+analyticsRouter.get('/gaps/adoption-context', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const ctx = await getAdoptionContext(tenantId)
+    ok(res, ctx)
+  } catch (e: any) {
+    err(res, 'CONTEXT_FAILED', e.message ?? 'Could not load adoption context.', 500)
+  }
+})
+
+// POST /analytics/gaps/adopt — apply one suggestion into a policy's draft.
+analyticsRouter.post('/gaps/adopt', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+    await requireTenantFlag(tenantId, 'has_policy_adoption')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  const { policy_id, reference_key, requirement, placement, old_text, new_text, section_title } = req.body ?? {}
+  if (!policy_id || !new_text || !placement) { err(res, 'VALIDATION_ERROR', 'policy_id, placement and new_text are required'); return }
+  // Confirm the policy belongs to this tenant.
+  const policy = await (prisma as any).policy.findFirst({ where: { id: String(policy_id), tenant_id: tenantId }, select: { id: true } })
+  if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found', 404); return }
+  try {
+    const me = await (prisma as any).user.findUnique({ where: { id: (req as any).user.sub }, select: { name: true, email: true } })
+    const appliedBy = me?.name || me?.email || 'Admin'
+    const result = await adoptSuggestion(tenantId, String(policy_id), {
+      reference_key: String(reference_key ?? ''), requirement: String(requirement ?? ''),
+      placement: String(placement), old_text: String(old_text ?? ''), new_text: String(new_text),
+      section_title: section_title ? String(section_title) : undefined, applied_by: appliedBy,
+    })
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'ADOPT_FAILED', e.message ?? 'Could not adopt the change.', 500)
+  }
+})
+
+// GET /analytics/gaps/policy-document/:policyId — the draft content + change log.
+analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const doc = await getPolicyDocument(tenantId, String(req.params.policyId))
+    ok(res, doc ?? { document: null, changes: [] })
+  } catch (e: any) {
+    err(res, 'DOC_FAILED', e.message ?? 'Could not load the policy document.', 500)
   }
 })
 

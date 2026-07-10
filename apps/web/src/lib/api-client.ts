@@ -962,6 +962,10 @@ export function createApiClient(token: string) {
         generated_at:     string
       }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${force ? '?force=1' : ''}`, token, { method: 'POST' }),
       gapTrainingModule: (referenceKey: string) => apiFetch<{ module: { id: string; name: string; slug: string } }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/training-module`, token, { method: 'POST' }),
+      adoptionContext: () => apiFetch<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }> }>('/analytics/gaps/adoption-context', token),
+      adoptSuggestion: (body: { policy_id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title?: string }) =>
+        apiFetch<{ applied: boolean; pending: number; document_id: string; change_id: string }>('/analytics/gaps/adopt', token, { method: 'POST', body: JSON.stringify(body) }),
+      policyDocument: (policyId: string) => apiFetch<{ document: { id: string; policy_id: string; draft_content: string; original_content: string } | null; changes: Array<{ id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; applied_by: string; applied_at: string; published: boolean }> }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}`, token),
       engagement: () => apiFetch<{
         wau: { active: number; total_staff: number; pct: number | null }
         logged_in_7d: number

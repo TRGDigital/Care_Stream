@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, GraduationCap, Search } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -265,6 +265,71 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [matchCount,   setMatchCount]   = useState<number | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
+  // Policy Change Adoption (beta) — adopt a suggestion into the policy's draft.
+  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }> } | null>(null)
+  const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
+  const [adoptText,    setAdoptText]    = useState('')
+  const [adoptTitle,   setAdoptTitle]   = useState('')
+  const [adoptBusy,    setAdoptBusy]    = useState(false)
+  const [adoptErr,     setAdoptErr]     = useState('')
+  const [adoptedReqs,  setAdoptedReqs]  = useState<Set<string>>(new Set())
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+  const adoptRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (!accepted) return
+    createApiClient(token).analytics.adoptionContext().then(setAdoption).catch(() => setAdoption(null))
+  }, [accepted, token])
+
+  // Reflect changes already adopted into this policy's draft (prior sessions).
+  useEffect(() => {
+    if (!accepted || !adoption?.enabled || !detail?.target_policy) return
+    createApiClient(token).analytics.policyDocument(detail.target_policy.id)
+      .then(d => {
+        const changes = d.changes ?? []
+        setPendingCount(changes.filter(c => !c.published).length)
+        setAdoptedReqs(new Set(changes.map(c => c.requirement)))
+      })
+      .catch(() => {})
+  }, [accepted, adoption?.enabled, detail?.target_policy, token])
+
+  function openAdopt(r: { requirement: string; suggested_addition?: string | null; section_title?: string | null }) {
+    setAdoptingReq(r.requirement)
+    setAdoptText(r.suggested_addition ?? '')
+    setAdoptTitle(r.section_title ?? '')
+    setAdoptErr('')
+  }
+
+  // Insert a variable/name at the cursor in the adopt textarea.
+  function insertChip(name: string) {
+    const ta = adoptRef.current
+    if (!ta) { setAdoptText(t => `${t}${name}`); return }
+    const start = ta.selectionStart ?? adoptText.length
+    const end   = ta.selectionEnd ?? adoptText.length
+    setAdoptText(adoptText.slice(0, start) + name + adoptText.slice(end))
+    requestAnimationFrame(() => { ta.focus(); const pos = start + name.length; ta.setSelectionRange(pos, pos) })
+  }
+
+  async function doAdopt(r: { requirement: string; placement?: string | null; location_quote?: string | null }) {
+    if (!detail?.target_policy || !adoptText.trim()) return
+    setAdoptBusy(true); setAdoptErr('')
+    try {
+      const res = await createApiClient(token).analytics.adoptSuggestion({
+        policy_id: detail.target_policy.id, reference_key: detail.reference_key, requirement: r.requirement,
+        placement: r.placement ?? 'new_section', old_text: r.location_quote ?? '', new_text: adoptText.trim(),
+        section_title: r.placement === 'new_section' ? (adoptTitle.trim() || undefined) : undefined,
+      })
+      setAdoptedReqs(s => new Set(s).add(r.requirement))
+      setPendingCount(res.pending)
+      setAdoptingReq(null)
+      if (!res.applied) setAdoptErr('Adopted and logged, but we could not auto-place it exactly — check the draft when you review.')
+    } catch (e: any) {
+      setAdoptErr(e.message ?? 'Could not adopt this change.')
+    } finally {
+      setAdoptBusy(false)
+    }
+  }
+
   // Ad-hoc training module generation.
   const [modLoad, setModLoad] = useState(false)
   const [modDone, setModDone] = useState<{ name: string } | null>(null)
@@ -434,6 +499,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       {(() => { const located = missing.filter(r => r.placement === 'amend' || r.placement === 'add_under_heading').length; const news = missing.filter(r => r.placement === 'new_section').length; return (located > 0 && news > 0) ? (
                         <p className="-mt-1 text-xs text-neutral-mid">{located} fit{located === 1 ? 's' : ''} into an existing section (numbered &amp; highlighted right) · {news} need{news === 1 ? 's' : ''} a new section (numbered at the end).</p>
                       ) : null })()}
+                      {adoption?.enabled && pendingCount !== null && pendingCount > 0 && detail.target_policy && (
+                        <p className="-mt-1 flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1.5 text-xs text-teal-900"><FilePenLine size={12} className="shrink-0" /> {pendingCount} change{pendingCount === 1 ? '' : 's'} adopted into your {detail.target_policy.name} draft. Review and publish it from Policies (coming next).</p>
+                      )}
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
                           <div className="flex items-start gap-2">
@@ -455,6 +523,59 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                               )}
                               <p className="text-sm leading-relaxed text-neutral-dark">{r.suggested_addition}</p>
                             </div>
+                          )}
+
+                          {/* Adopt into the policy (beta) */}
+                          {adoption?.enabled && detail.target_policy && r.suggested_addition && (
+                            adoptedReqs.has(r.requirement) ? (
+                              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-700"><Check size={13} /> Adopted into your {detail.target_policy.name} draft</p>
+                            ) : adoptingReq === r.requirement ? (
+                              <div className="mt-2 rounded-md border border-teal-200 bg-teal-50/40 p-3">
+                                {r.placement === 'amend' && r.location_quote && (
+                                  <div className="mb-2">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Replacing this paragraph</p>
+                                    <p className="mt-0.5 rounded bg-white/70 px-2 py-1 text-xs text-neutral-mid line-through decoration-neutral-300">{r.location_quote}</p>
+                                  </div>
+                                )}
+                                {r.placement === 'new_section' && (
+                                  <div className="mb-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Section heading</label>
+                                    <input value={adoptTitle} onChange={e => setAdoptTitle(e.target.value)} className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                                  </div>
+                                )}
+                                <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Wording to add (edit before adopting)</label>
+                                <textarea ref={adoptRef} value={adoptText} onChange={e => setAdoptText(e.target.value)} rows={5}
+                                  className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm leading-relaxed focus:border-teal focus:outline-none" />
+                                {(adoption.variables.length > 0 || adoption.role_holders.some(rh => rh.candidates.length > 0)) && (
+                                  <div className="mt-2">
+                                    <p className="text-[10px] text-neutral-mid">Insert a name (click to add at the cursor):</p>
+                                    <div className="mt-1 flex flex-wrap gap-1.5">
+                                      {adoption.variables.filter(v => v.key !== 'address').map(v => (
+                                        <button key={v.key} type="button" onClick={() => insertChip(v.value)} title={v.label}
+                                          className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-neutral-dark hover:border-teal hover:text-teal">{v.value}</button>
+                                      ))}
+                                      {adoption.role_holders.flatMap(rh => rh.candidates.map(c => (
+                                        <button key={`${rh.key}-${c}`} type="button" onClick={() => insertChip(c)} title={rh.role}
+                                          className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-neutral-dark hover:border-teal hover:text-teal">{c} <span className="text-neutral-mid">· {rh.role}</span></button>
+                                      )))}
+                                    </div>
+                                  </div>
+                                )}
+                                {adoptErr && <p className="mt-2 text-xs text-amber-700">{adoptErr}</p>}
+                                <div className="mt-2 flex items-center gap-2">
+                                  <button onClick={() => doAdopt(r)} disabled={adoptBusy || !adoptText.trim()}
+                                    className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                                    {adoptBusy ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : <><Check size={13} /> Adopt into {detail.target_policy.name}</>}
+                                  </button>
+                                  <button onClick={() => setAdoptingReq(null)} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs text-neutral-mid hover:bg-gray-50">Cancel</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button onClick={() => openAdopt(r)}
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-teal/40 bg-white px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/30">
+                                <FilePenLine size={13} /> Adopt into {detail.target_policy.name}
+                              </button>
+                            )
                           )}
                         </div>
                       ))}

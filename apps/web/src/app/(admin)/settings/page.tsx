@@ -163,6 +163,7 @@ export default function SettingsPage() {
   const [roomsSaved,     setRoomsSaved]     = useState(false)
   const [featureFlags,   setFeatureFlags]   = useState<Record<string, boolean>>({})
   const [orgDetails,     setOrgDetails]     = useState<Record<string, string>>({})
+  const [orgContext,     setOrgContext]     = useState<{ home_name: string; has_logo: boolean; role_holders: Array<{ key: string; role: string; names: string[] }> }>({ home_name: '', has_logo: false, role_holders: [] })
   const [savingOrg,      setSavingOrg]      = useState(false)
   const [orgSaved,       setOrgSaved]       = useState(false)
   const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
@@ -284,6 +285,7 @@ export default function SettingsPage() {
         setRoomCount((data as any).room_count ?? 0)
         setFeatureFlags((data as any).feature_flags ?? {})
         setOrgDetails((data as any).organisation_details ?? {})
+        if ((data as any).org_context) setOrgContext((data as any).org_context)
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
@@ -795,27 +797,78 @@ export default function SettingsPage() {
 
         {/* ── Organisation details (policy variables) — Policy Change Adoption beta ── */}
         {featureFlags.has_policy_adoption && (
-        <SettingSection icon={UserRound} title="Organisation details" description="Names and details used to personalise your policies. Set them once and they are referenced across your policies, so if a role holder changes you update it here and the policies follow.">
+        <SettingSection icon={UserRound} title="Organisation details" description="Names and details used to personalise your policies. Set them once and they are referenced across your policies, so if something changes you update it here and the policies follow.">
           <p className="mb-4 text-sm text-neutral-mid">
-            Your <strong>registered manager</strong> is used in suggested policy wording and on the sign-off of any policy you download. When the manager changes, update it here and re-adopt or re-download to refresh your policies.
+            These are your policy <strong>merge fields</strong>. They are used in suggested policy wording and on the sign-off and header of any policy you download. Update them here and re-adopt or re-download to refresh your policies.
           </p>
-          <div className="max-w-md">
-            <label className="mb-1 block text-sm font-medium text-neutral-dark">Registered manager</label>
-            <input
-              type="text"
-              value={orgDetails.registered_manager ?? ''}
-              onChange={e => setOrgDetails(d => ({ ...d, registered_manager: e.target.value }))}
-              onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
-              placeholder="e.g. Jane Smith"
-              maxLength={120}
-              className={INPUT}
-            />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { key: 'registered_manager',  label: 'Registered manager',   ph: 'e.g. Jane Smith' },
+              { key: 'nominated_individual', label: 'Nominated individual', ph: 'e.g. John Brown' },
+              { key: 'default_approver',    label: 'Default approver',     ph: 'Who signs policies off (defaults to the registered manager)' },
+              { key: 'cqc_location_id',     label: 'CQC location ID',       ph: 'e.g. 1-000000001' },
+              { key: 'cqc_provider_id',     label: 'CQC provider ID',       ph: 'e.g. 1-000000002' },
+              { key: 'review_cycle_months', label: 'Review cycle (months)', ph: 'e.g. 12' },
+              { key: 'version_scheme',      label: 'Starting version',      ph: 'e.g. 1.0' },
+            ].map(f => (
+              <div key={f.key}>
+                <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
+                <input
+                  type="text"
+                  value={orgDetails[f.key] ?? ''}
+                  onChange={e => setOrgDetails(d => ({ ...d, [f.key]: e.target.value }))}
+                  onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
+                  placeholder={f.ph}
+                  maxLength={120}
+                  className={INPUT}
+                />
+              </div>
+            ))}
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm font-medium text-neutral-dark">Address</label>
+              <input
+                type="text"
+                value={orgDetails.address ?? ''}
+                onChange={e => setOrgDetails(d => ({ ...d, address: e.target.value }))}
+                onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
+                placeholder="Full address as it should appear on policies"
+                maxLength={300}
+                className={INPUT}
+              />
+            </div>
           </div>
+
           <div className="mt-4 flex items-center gap-3">
             <Button onClick={saveOrgDetails} disabled={savingOrg} size="md">
               {savingOrg ? 'Saving…' : 'Save'}
             </Button>
             {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
+          </div>
+
+          {/* Pulled from elsewhere — not re-entered here. */}
+          <div className="mt-6 rounded-lg border border-gray-200 bg-neutral-light/30 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Pulled from your account and staff</p>
+            <p className="mt-1 text-xs text-neutral-mid">These are managed elsewhere and used automatically, so you don&rsquo;t re-enter them here.</p>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-neutral-mid">Home / service name</dt>
+                <dd className="text-right font-medium text-neutral-dark">{orgContext.home_name || '—'}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-neutral-mid">Logo</dt>
+                <dd className="text-right font-medium text-neutral-dark">{orgContext.has_logo ? 'Set (used on downloads)' : 'Not set — add one under Branding'}</dd>
+              </div>
+              {orgContext.role_holders.map(rh => (
+                <div key={rh.key} className="flex items-start justify-between gap-4">
+                  <dt className="text-neutral-mid">{rh.role}</dt>
+                  <dd className="text-right font-medium text-neutral-dark">
+                    {rh.names.length ? rh.names.join(', ') : <span className="font-normal text-neutral-mid">Not assigned — set a staff member&rsquo;s specialist role</span>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-xs text-neutral-mid">Role-holders come from staff specialist roles. Assign the matching specialist role to a staff member and they appear here automatically.</p>
           </div>
         </SettingSection>
         )}

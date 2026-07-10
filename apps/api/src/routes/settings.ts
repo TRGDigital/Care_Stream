@@ -80,6 +80,26 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
   const setting = facilityTypeToSetting(tenant.facility_type as string)
   const serviceProfile = resolveServiceProfile(setting, (tenant.service_profile ?? {}) as Record<string, unknown>)
 
+  // Policy role-holders are DERIVED from staff specialisms, not re-entered — a staff member
+  // assigned the matching specialist role becomes that role-holder in the policy variables.
+  const staff = await (prisma as any).user.findMany({
+    where: { tenant_id: tenantId }, select: { name: true, specialisms: true },
+  }).catch(() => [])
+  const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
+    { key: 'safeguarding_lead',  role: 'Safeguarding lead',                     match: /safeguard/i },
+    { key: 'caldicott_guardian', role: 'Caldicott Guardian',                    match: /caldicott/i },
+    { key: 'ipc_lead',           role: 'Infection prevention & control lead',   match: /infection|(?:^|\b)ipc\b/i },
+    { key: 'fire_safety_officer',role: 'Fire safety officer',                   match: /fire/i },
+    { key: 'dignity_champion',   role: 'Dignity champion',                      match: /dignity/i },
+  ]
+  const roleHolders = ROLE_MAP.map(m => ({
+    key:   m.key,
+    role:  m.role,
+    names: (staff as any[])
+      .filter(s => Array.isArray(s.specialisms) && s.specialisms.some((sp: string) => m.match.test(String(sp))))
+      .map(s => String(s.name)).filter(Boolean),
+  }))
+
   const { own: glossaryOwn, excludes: glossaryExcludes } = splitGlossary(normaliseGlossary(tenant.translation_glossary))
   const platformGlossary = await platformGlossaryList()
 
@@ -109,6 +129,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     room_count:         (tenant.room_count as number) ?? 0,
     feature_flags:      (tenant.feature_flags ?? {}) as Record<string, boolean>,
     organisation_details: (tenant.organisation_details ?? {}) as Record<string, string>,
+    org_context:        { home_name: tenant.name as string, has_logo: !!tenant.logo_url, role_holders: roleHolders },
   })
 })
 
@@ -226,11 +247,11 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
-    const ALLOWED = new Set(['registered_manager', 'nominated_individual', 'home_name', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer'])
+    const ALLOWED = new Set(['registered_manager', 'nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
       if (!ALLOWED.has(k) || typeof v !== 'string') continue
-      const val = v.trim().slice(0, 120)
+      const val = v.trim().slice(0, k === 'address' ? 300 : 120)
       if (val) clean[k] = val
     }
     updateData.organisation_details = clean

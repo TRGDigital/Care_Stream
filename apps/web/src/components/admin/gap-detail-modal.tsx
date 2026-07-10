@@ -21,9 +21,10 @@ const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').tri
 // invite the tenant to swap part of a sentence and end up with a garbled hybrid. We locate
 // via the short anchor (reliable) but always highlight the full block it belongs to, and
 // pick the smallest block that contains the anchor.
-function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
+// The smallest block (paragraph/bullet/cell) whose text contains the anchor phrase.
+function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
   const needle = normText(anchor)
-  if (needle.length < 6) return false
+  if (needle.length < 6) return null
   const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote')) as HTMLElement[]
   let target: HTMLElement | null = null
   for (const b of blocks) {
@@ -31,6 +32,12 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
       if (!target || (b.textContent?.length ?? 0) < (target.textContent?.length ?? 0)) target = b
     }
   }
+  return target
+}
+
+// Highlight the whole containing block (tint + number) for a "where to add" amend anchor.
+function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
+  const target = findBlock(root, anchor)
   if (!target) return false
   target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
   const badge = document.createElement('sup')
@@ -40,15 +47,70 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   return true
 }
 
-// Pass A — AMEND anchors: highlight the whole containing block. Returns the items it could
-// NOT place, so they never silently disappear — they fall through to an end-of-policy
-// callout that quotes the wording to find.
-function highlightSentences(root: HTMLElement, items: HighlightItem[]): HighlightItem[] {
-  const unplaced: HighlightItem[] = []
-  for (const it of items) {
-    if (!markBlock(root, it.quote, it.i)) unplaced.push(it)
+function greenBadge(i: number): HTMLElement {
+  const b = document.createElement('span')
+  b.textContent = String(i + 1)
+  b.className = 'flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-200 text-[11px] font-bold text-green-900'
+  return b
+}
+
+// A green "Adopted" block — used for adopted headings/new sections, or an adopted amend we
+// could not place in situ.
+function adoptedBlock(i: number, text: string, title?: string): HTMLElement {
+  const wrap = document.createElement('div')
+  wrap.className = 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
+  const head = document.createElement('div')
+  head.className = 'mb-1 flex items-center gap-2'
+  head.appendChild(greenBadge(i))
+  const tag = document.createElement('span')
+  tag.className = 'text-[10px] font-bold uppercase tracking-wide text-green-700'
+  tag.textContent = 'Adopted'
+  head.appendChild(tag)
+  wrap.appendChild(head)
+  if (title) {
+    const h = document.createElement('p')
+    h.className = 'text-sm font-bold text-green-900'
+    h.textContent = title
+    wrap.appendChild(h)
   }
-  return unplaced
+  const p = document.createElement('p')
+  p.className = 'whitespace-pre-line text-sm leading-relaxed text-green-900'
+  p.textContent = text
+  wrap.appendChild(p)
+  return wrap
+}
+
+// Amend ADOPTED: replace the whole block content in place with the adopted wording (green).
+function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText: string): boolean {
+  const target = findBlock(root, anchor)
+  if (!target) return false
+  target.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+  target.textContent = ''
+  const badge = document.createElement('sup')
+  badge.textContent = String(i + 1)
+  badge.className = 'mr-0.5 font-bold text-green-700'
+  target.appendChild(badge)
+  target.appendChild(document.createTextNode(newText))
+  return true
+}
+
+type AdoptedMap = Map<number, { new_text: string; section_title?: string; placement: string }>
+
+// Pass A — AMEND anchors: adopted ones show the applied change in place; the rest are
+// tinted as "where to add". Returns items we could not place: non-adopted (dashed "amend
+// near") and adopted-but-unplaced (rendered as a green block at the end).
+function highlightSentences(root: HTMLElement, items: HighlightItem[], adopted: AdoptedMap): { unplaced: HighlightItem[]; adoptedExtra: Array<{ i: number; text: string }> } {
+  const unplaced: HighlightItem[] = []
+  const adoptedExtra: Array<{ i: number; text: string }> = []
+  for (const it of items) {
+    const a = adopted.get(it.i)
+    if (a) {
+      if (!markBlockAdopted(root, it.quote, it.i, a.new_text)) adoptedExtra.push({ i: it.i, text: a.new_text })
+    } else if (!markBlock(root, it.quote, it.i)) {
+      unplaced.push(it)
+    }
+  }
+  return { unplaced, adoptedExtra }
 }
 
 function numberBadge(i: number): HTMLElement {
@@ -81,17 +143,26 @@ function insertBeforeEndMatter(root: HTMLElement, node: HTMLElement) {
 // Pass C — NEW-SECTION items (and any amend anchor we could not pin) get a numbered
 // callout inserted at the end of the BODY but above the sign-off/dates. New sections
 // lead with their suggested H2 title so they read as self-contained sections.
-function appendEndCallouts(root: HTMLElement, unplacedAmend: HighlightItem[], newSections: HighlightItem[]) {
-  if (!unplacedAmend.length && !newSections.length) return
+function appendEndCallouts(root: HTMLElement, unplacedAmend: HighlightItem[], newSections: HighlightItem[], adopted: AdoptedMap, adoptedExtra: Array<{ i: number; text: string }>) {
+  const adoptedNew = newSections.filter(it => adopted.has(it.i))
+  const pendingNew = newSections.filter(it => !adopted.has(it.i))
+  if (!unplacedAmend.length && !pendingNew.length && !adoptedNew.length && !adoptedExtra.length) return
   const wrap = document.createElement('div')
-  wrap.className = 'not-prose mt-4 space-y-2 border-t border-dashed border-teal-300 pt-3'
+  wrap.className = 'not-prose mt-4 space-y-2 border-t border-dashed border-gray-300 pt-3'
 
-  if (newSections.length) {
+  // Adopted new sections + adopted amends that could not be placed in situ → green blocks.
+  for (const it of adoptedNew) {
+    const a = adopted.get(it.i)!
+    wrap.appendChild(adoptedBlock(it.i, a.new_text, a.section_title ?? it.label))
+  }
+  for (const ex of adoptedExtra) wrap.appendChild(adoptedBlock(ex.i, ex.text))
+
+  if (pendingNew.length) {
     const h = document.createElement('p')
     h.className = 'text-[10px] font-bold uppercase tracking-wide text-teal-700'
     h.textContent = 'Add these as new sections here (above the dates and sign-off)'
     wrap.appendChild(h)
-    for (const it of newSections) {
+    for (const it of pendingNew) {
       const row = document.createElement('div')
       row.className = 'rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
       const head = document.createElement('div')
@@ -154,7 +225,7 @@ function buildHeadingMarker(i: number, label?: string): HTMLElement {
 // subsection here" callout directly below it. Handled separately from the inline pass
 // so several items under the SAME heading each get their own callout (the old single
 // text-node pass could only mark one, which is why some numbers never appeared).
-function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[]) {
+function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[], adopted: AdoptedMap) {
   if (!items.length) return
   const headings = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
   const byHeading = new Map<HTMLElement, HighlightItem[]>()
@@ -172,23 +243,24 @@ function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[]) {
   for (const [heading, its] of byHeading) {
     let anchor: HTMLElement = heading
     for (const it of its) {
-      const marker = buildHeadingMarker(it.i, it.label)
-      anchor.after(marker)
-      anchor = marker
+      const a = adopted.get(it.i)
+      // Adopted → the actual subsection lands under the heading (green); else the dashed marker.
+      const node = a ? adoptedBlock(it.i, a.new_text) : buildHeadingMarker(it.i, it.label)
+      anchor.after(node)
+      anchor = node
     }
   }
 }
 
-// Number and locate every "what to add" item in the policy: amend anchors get an inline
-// highlight on the sentence; heading anchors get a dashed "add a subsection here" callout
-// below the heading — a heading title on its own doesn't tell the reader that the CONTENT
-// beneath it is what's missing.
-function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
+// Number and locate every "what to add" item in the policy. Adopted items render as the
+// applied change (green) so the tenant sees the wording land in the policy; the rest show
+// as "where to add" markers (inline tint for amend, dashed callouts for headings/sections).
+function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = [], adopted: AdoptedMap = new Map()) {
   const items: HighlightItem[] = quotes.map((quote, i) => ({ i, quote, placement: placements[i] ?? 'amend', label: labels[i] }))
-  const unplacedAmend = highlightSentences(root, items.filter(it => it.placement === 'amend' && it.quote))
-  insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading' && it.quote))
+  const { unplaced, adoptedExtra } = highlightSentences(root, items.filter(it => it.placement === 'amend' && it.quote), adopted)
+  insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading' && it.quote), adopted)
   const newSections = items.filter(it => it.placement === 'new_section')
-  appendEndCallouts(root, unplacedAmend, newSections)
+  appendEndCallouts(root, unplaced, newSections, adopted, adoptedExtra)
 }
 
 // Highlight every occurrence of a plain search term in the rendered policy (text
@@ -273,6 +345,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [adoptBusy,    setAdoptBusy]    = useState(false)
   const [adoptErr,     setAdoptErr]     = useState('')
   const [adoptedReqs,  setAdoptedReqs]  = useState<Set<string>>(new Set())
+  const [adoptedContent, setAdoptedContent] = useState<Record<string, { new_text: string; section_title?: string }>>({})
   const [pendingCount, setPendingCount] = useState<number | null>(null)
   const adoptRef = useRef<HTMLTextAreaElement>(null)
 
@@ -289,6 +362,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
         const changes = d.changes ?? []
         setPendingCount(changes.filter(c => !c.published).length)
         setAdoptedReqs(new Set(changes.map(c => c.requirement)))
+        setAdoptedContent(Object.fromEntries(changes.map(c => [c.requirement, { new_text: c.new_text }])))
       })
       .catch(() => {})
   }, [accepted, adoption?.enabled, detail?.target_policy, token])
@@ -320,6 +394,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
         section_title: r.placement === 'new_section' ? (adoptTitle.trim() || undefined) : undefined,
       })
       setAdoptedReqs(s => new Set(s).add(r.requirement))
+      setAdoptedContent(m => ({ ...m, [r.requirement]: { new_text: adoptText.trim(), section_title: adoptTitle.trim() || undefined } }))
       setPendingCount(res.pending)
       setAdoptingReq(null)
       if (!res.applied) setAdoptErr('Adopted and logged, but we could not auto-place it exactly — check the draft when you review.')
@@ -380,15 +455,27 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   useEffect(() => {
     const root = previewRef.current
     if (!root || !html || !detail) return
+    // Adopted suggestions show as the applied change (green) in the preview, so the tenant
+    // sees the wording land in the policy; the rest still show as "where to add" markers.
+    const adopted = new Map<number, { new_text: string; section_title?: string; placement: string }>()
+    for (const r of detail.requirements ?? []) {
+      if (r.status !== 'missing' || !adoptedReqs.has(r.requirement) || r.match_index == null) continue
+      const c = adoptedContent[r.requirement]
+      adopted.set(r.match_index - 1, {
+        new_text: c?.new_text ?? r.suggested_addition ?? '',
+        section_title: c?.section_title ?? r.section_title ?? undefined,
+        placement: r.placement ?? 'new_section',
+      })
+    }
     root.innerHTML = html
-    highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [])
+    highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [], adopted)
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     } else {
       setMatchCount(null)
     }
-  }, [html, detail, policySearch])
+  }, [html, detail, policySearch, adoptedReqs, adoptedContent])
 
   async function markCompleted() {
     setCompleting(true)

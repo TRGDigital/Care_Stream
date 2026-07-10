@@ -48,7 +48,6 @@ export default function GapsPage() {
   const [error,   setError]   = useState('')
   const [analysing, setAnalysing] = useState(false)
   const [analyseProgress, setAnalyseProgress] = useState<{ done: number; total: number } | null>(null)
-  const [preparing, setPreparing] = useState<number | null>(null)   // remaining details being warmed
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
@@ -124,27 +123,16 @@ export default function GapsPage() {
         if (p.remaining <= 0) break
       }
       load()
-      warmDetails()   // prepare the "what to add" details in the background
+      // Deep-dive "what to add" detail is generated LAZILY, only when a gap is opened
+      // (then cached). We deliberately do NOT pre-generate every gap here: that was ~5
+      // Sonnet calls per gap across all gaps on every re-run, which burned credits for
+      // gaps the tenant never opened. Now the coverage run is the only cost of re-running,
+      // and the expensive detail is paid for only when a tenant actually views a gap.
     } catch (e: any) {
       setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
     }
-  }
-
-  // Warm the deep-dive details in small batches so drill-ins open instantly, without
-  // one long request. Best-effort: on any failure, details just generate on click.
-  async function warmDetails() {
-    if (!session?.accessToken) return
-    const api = createApiClient(session.accessToken)
-    try {
-      for (let i = 0; i < 20; i++) {   // hard cap on rounds (8/round → up to 160)
-        const r = await api.analytics.pregenerateGaps()
-        setPreparing(r.remaining)
-        if (r.remaining <= 0 || r.generated === 0) break
-      }
-    } catch { /* ignore — on-demand generation covers the rest */ }
-    finally { setPreparing(null); load() }
   }
 
   // Policy gap detection is a Professional+ feature. While the plan is still
@@ -214,9 +202,6 @@ export default function GapsPage() {
             Regulation coverage is checked against the actual content of your policies, plus staff questions that went unanswered.
           </p>
           {analysedWhen && <p className="mt-1 text-xs text-neutral-mid">Coverage last analysed {analysedWhen}</p>}
-          {preparing !== null && preparing > 0 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-teal"><Loader2 size={11} className="animate-spin" /> Preparing recommendations… {preparing} to go (you can open any gap now)</p>
-          )}
         </div>
         <button onClick={runAnalysis} disabled={analysing}
           className="flex shrink-0 items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">

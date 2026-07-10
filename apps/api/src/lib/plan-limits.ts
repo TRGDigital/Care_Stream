@@ -273,6 +273,21 @@ const FEATURE_TIER: Record<PlanFeature, string> = {
   has_workforce_compliance: 'Enterprise',
 }
 
+// ─── Per-tenant beta flags ────────────────────────────────────────────────────
+// Some features are opt-in per tenant (e.g. a beta enabled only for one test account),
+// independent of the plan. Stored on tenant.feature_flags. Use these instead of the
+// plan-feature gating when you need to enable something for specific tenants only.
+export async function tenantHasFlag(tenantId: string, flag: string): Promise<boolean> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } })
+  return !!((t?.feature_flags ?? {}) as Record<string, unknown>)[flag]
+}
+
+export async function requireTenantFlag(tenantId: string, flag: string): Promise<void> {
+  if (!(await tenantHasFlag(tenantId, flag))) {
+    throw new PlanLimitError('FEATURE_NOT_AVAILABLE', 'This feature is not enabled for your account yet.')
+  }
+}
+
 // Check whether the tenant's plan includes a boolean feature.
 export async function checkFeature(
   tenantId: string,

@@ -8,7 +8,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
-  Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, X,
+  Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, UserRound, X,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
@@ -161,6 +161,10 @@ export default function SettingsPage() {
   const [roomCount,      setRoomCount]      = useState<number>(0)
   const [savingRooms,    setSavingRooms]    = useState(false)
   const [roomsSaved,     setRoomsSaved]     = useState(false)
+  const [featureFlags,   setFeatureFlags]   = useState<Record<string, boolean>>({})
+  const [orgDetails,     setOrgDetails]     = useState<Record<string, string>>({})
+  const [savingOrg,      setSavingOrg]      = useState(false)
+  const [orgSaved,       setOrgSaved]       = useState(false)
   const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
   const [newEmail,       setNewEmail]       = useState('')
   const [staffRoles,     setStaffRoles]     = useState<string[]>([])
@@ -278,6 +282,8 @@ export default function SettingsPage() {
         setServiceProfile((data as any).service_profile ?? {})
         setServiceTriggers((data as any).service_triggers ?? [])
         setRoomCount((data as any).room_count ?? 0)
+        setFeatureFlags((data as any).feature_flags ?? {})
+        setOrgDetails((data as any).organisation_details ?? {})
         setLogoUrl((data as any).logo_url ?? null)
         setEmailPrefs((data as any).email_preferences ?? {})
         setStaffRoles((data as any).staff_roles ?? [])
@@ -326,6 +332,18 @@ export default function SettingsPage() {
     try { await createApiClient(session.accessToken).settings.update({ room_count: n } as any); setRoomCount(n); setRoomsSaved(true); setTimeout(() => setRoomsSaved(false), 2500) }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingRooms(false) }
+  }
+
+  async function saveOrgDetails() {
+    if (!session?.accessToken) return
+    setSavingOrg(true); setOrgSaved(false)
+    try {
+      const data = await createApiClient(session.accessToken).settings.update({ organisation_details: orgDetails } as any)
+      if ((data as any).organisation_details) setOrgDetails((data as any).organisation_details)
+      setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2500)
+    }
+    catch (e: any) { setError(e.message ?? 'Failed to save') }
+    finally { setSavingOrg(false) }
   }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
@@ -771,6 +789,33 @@ export default function SettingsPage() {
               {savingProfile ? 'Saving…' : 'Save service profile'}
             </Button>
             {profileSaved && <span className="flex items-center gap-1 text-sm text-green-600"><Check size={15} /> Saved</span>}
+          </div>
+        </SettingSection>
+        )}
+
+        {/* ── Organisation details (policy variables) — Policy Change Adoption beta ── */}
+        {featureFlags.has_policy_adoption && (
+        <SettingSection icon={UserRound} title="Organisation details" description="Names and details used to personalise your policies. Set them once and they are referenced across your policies, so if a role holder changes you update it here and the policies follow.">
+          <p className="mb-4 text-sm text-neutral-mid">
+            Your <strong>registered manager</strong> is used in suggested policy wording and on the sign-off of any policy you download. When the manager changes, update it here and re-adopt or re-download to refresh your policies.
+          </p>
+          <div className="max-w-md">
+            <label className="mb-1 block text-sm font-medium text-neutral-dark">Registered manager</label>
+            <input
+              type="text"
+              value={orgDetails.registered_manager ?? ''}
+              onChange={e => setOrgDetails(d => ({ ...d, registered_manager: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
+              placeholder="e.g. Jane Smith"
+              maxLength={120}
+              className={INPUT}
+            />
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <Button onClick={saveOrgDetails} disabled={savingOrg} size="md">
+              {savingOrg ? 'Saving…' : 'Save'}
+            </Button>
+            {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
           </div>
         </SettingSection>
         )}

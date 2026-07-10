@@ -72,7 +72,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
 
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
-    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, service_profile: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, translation_suggestions_auto_approve: true, room_count: true },
+    select: { slug: true, name: true, account_number: true, email_allowlist: true, phone_allowlist: true, facility_type: true, service_profile: true, feature_flags: true, organisation_details: true, response_style: true, branding_signoff: true, logo_url: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, translation_suggestions_auto_approve: true, room_count: true },
   })
 
   if (!tenant) return err(res, 'NOT_FOUND', 'Tenant not found', 404)
@@ -107,6 +107,8 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     platform_glossary:    platformGlossary,
     translation_suggestions_auto_approve: tenant.translation_suggestions_auto_approve === true,
     room_count:         (tenant.room_count as number) ?? 0,
+    feature_flags:      (tenant.feature_flags ?? {}) as Record<string, boolean>,
+    organisation_details: (tenant.organisation_details ?? {}) as Record<string, string>,
   })
 })
 
@@ -162,7 +164,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     return err(res, 'FORBIDDEN', 'Only admins can update settings', 403)
   }
 
-  const { email_allowlist, phone_allowlist, facility_type, service_profile, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, policy_categories, add_language, remove_language, translation_glossary, translation_suggestions_auto_approve, room_count } = req.body
+  const { email_allowlist, phone_allowlist, facility_type, service_profile, organisation_details, response_style, branding_signoff, email_preferences, staff_roles, specialist_roles, policy_sections, policy_categories, add_language, remove_language, translation_glossary, translation_suggestions_auto_approve, room_count } = req.body
 
   if (email_allowlist !== undefined && !Array.isArray(email_allowlist)) {
     return err(res, 'INVALID_INPUT', 'email_allowlist must be an array', 400)
@@ -216,6 +218,22 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
 
   if (service_profile !== undefined) {
     updateData.service_profile = sanitiseServiceProfile(service_profile)
+  }
+
+  // Organisation details / policy variables (registered manager, etc.) — merge fields used
+  // to personalise policy wording and downloads. Whitelisted keys, trimmed and capped.
+  if (organisation_details !== undefined) {
+    if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
+      return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
+    }
+    const ALLOWED = new Set(['registered_manager', 'nominated_individual', 'home_name', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer'])
+    const clean: Record<string, string> = {}
+    for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
+      if (!ALLOWED.has(k) || typeof v !== 'string') continue
+      const val = v.trim().slice(0, 120)
+      if (val) clean[k] = val
+    }
+    updateData.organisation_details = clean
   }
 
   if (response_style !== undefined) {
@@ -355,7 +373,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
   const updated = await (prisma as any).tenant.update({
     where: { id: tenantId },
     data:  updateData,
-    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, service_profile: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, room_count: true },
+    select: { email_allowlist: true, phone_allowlist: true, facility_type: true, service_profile: true, organisation_details: true, email_preferences: true, staff_roles: true, specialist_roles: true, policy_sections: true, policy_categories: true, custom_languages: true, translation_glossary: true, room_count: true },
   })
 
   ok(res, {
@@ -363,6 +381,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     phone_allowlist:   updated.phone_allowlist ?? [],
     facility_type:     updated.facility_type,
     service_profile:   resolveServiceProfile(facilityTypeToSetting(updated.facility_type as string), (updated.service_profile ?? {}) as Record<string, unknown>),
+    organisation_details: (updated.organisation_details ?? {}) as Record<string, string>,
     email_preferences: mergePrefs(updated.email_preferences),
     staff_roles:       effectiveStaffRoles(updated.staff_roles),
     specialist_roles:  effectiveSpecialistRoles(updated.specialist_roles),

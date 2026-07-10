@@ -254,6 +254,8 @@ model Tenant {
   branding_signoff    String             @default("The CareStream Team") // §4.3.4
   facility_type       String             @default("care home")              // e.g. nursing home, residential home
   service_profile     Json               @default("{}")                     // Policy Gaps service triggers (prepares_food, manages_medicines, …); missing keys fall back to setting defaults
+  feature_flags       Json               @default("{}")                     // per-tenant beta flags, e.g. { has_policy_adoption: true }; overrides plan gating for opt-in features
+  organisation_details Json              @default("{}")                     // policy variables / merge fields: { registered_manager, nominated_individual, … } — personalise policies
   response_style      String             @default("standard")               // "standard" | "concise"
   email_allowlist        String[]           @default([])                       // approved inbound sender addresses
   phone_allowlist        String[]           @default([])                       // approved WhatsApp sender numbers (+447...)

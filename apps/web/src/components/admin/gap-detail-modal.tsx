@@ -79,41 +79,98 @@ function markBlockFallback(root: HTMLElement, quote: string, i: number): boolean
   return true
 }
 
-// Pass A — AMEND anchors: highlight the sentence, guaranteeing the number appears.
-function highlightSentences(root: HTMLElement, items: HighlightItem[]) {
+// Pass A — AMEND anchors: highlight the sentence. Returns the items it could NOT place,
+// so they never silently disappear — they fall through to an end-of-policy callout.
+function highlightSentences(root: HTMLElement, items: HighlightItem[]): HighlightItem[] {
+  const unplaced: HighlightItem[] = []
   for (const it of items) {
     const re = quoteToRegex(it.quote)
-    if (!re) continue
-    if (!markAcrossNodes(root, re, it.i)) markBlockFallback(root, it.quote, it.i)
+    if (!re) { unplaced.push(it); continue }
+    if (!markAcrossNodes(root, re, it.i) && !markBlockFallback(root, it.quote, it.i)) unplaced.push(it)
   }
+  return unplaced
 }
 
-// Pass C — NEW-SECTION items: no anchor exists, so show a destination anyway with a
-// numbered "new section" callout appended at the end of the policy.
-function appendNewSectionCallouts(root: HTMLElement, items: HighlightItem[]) {
-  if (!items.length) return
+function numberBadge(i: number): HTMLElement {
+  const b = document.createElement('span')
+  b.textContent = String(i + 1)
+  b.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`
+  return b
+}
+
+// Trailing "end matter" a new section must sit ABOVE: dates, signatures, version and
+// company info. We find the topmost block of that trailing run and insert before it.
+const END_MATTER_RE = /\b(date|dated|signed|signature|reviewed|review date|next review|version|approved by|authorised by|policy owner|©|copyright|registered (office|number|charity)|company (number|registration)|\bltd\b|limited)\b/i
+function endMatterAnchor(root: HTMLElement): HTMLElement | null {
+  const blocks = Array.from(root.children) as HTMLElement[]
+  let anchor: HTMLElement | null = null
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const t = normText(blocks[i].textContent || '')
+    if (!t) continue
+    if (t.length <= 200 && END_MATTER_RE.test(t)) { anchor = blocks[i]; continue }
+    break
+  }
+  return anchor
+}
+function insertBeforeEndMatter(root: HTMLElement, node: HTMLElement) {
+  const anchor = endMatterAnchor(root)
+  if (anchor && anchor.parentNode === root) root.insertBefore(node, anchor)
+  else root.appendChild(node)
+}
+
+// Pass C — NEW-SECTION items (and any amend anchor we could not pin) get a numbered
+// callout inserted at the end of the BODY but above the sign-off/dates. New sections
+// lead with their suggested H2 title so they read as self-contained sections.
+function appendEndCallouts(root: HTMLElement, unplacedAmend: HighlightItem[], newSections: HighlightItem[]) {
+  if (!unplacedAmend.length && !newSections.length) return
   const wrap = document.createElement('div')
   wrap.className = 'not-prose mt-4 space-y-2 border-t border-dashed border-teal-300 pt-3'
-  const heading = document.createElement('p')
-  heading.className = 'text-[10px] font-bold uppercase tracking-wide text-teal-700'
-  heading.textContent = 'Add these as new sections at the end'
-  wrap.appendChild(heading)
-  for (const it of items) {
-    const row = document.createElement('div')
-    row.className = 'flex items-start gap-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
-    const badge = document.createElement('span')
-    badge.textContent = String(it.i + 1)
-    badge.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(it.i)}`
-    const body = document.createElement('span')
-    const strong = document.createElement('strong')
-    strong.textContent = 'New section. '
-    body.appendChild(strong)
-    body.appendChild(document.createTextNode(it.label ? it.label : `See item ${it.i + 1} on the left.`))
-    row.appendChild(badge)
-    row.appendChild(body)
-    wrap.appendChild(row)
+
+  if (newSections.length) {
+    const h = document.createElement('p')
+    h.className = 'text-[10px] font-bold uppercase tracking-wide text-teal-700'
+    h.textContent = 'Add these as new sections here (above the dates and sign-off)'
+    wrap.appendChild(h)
+    for (const it of newSections) {
+      const row = document.createElement('div')
+      row.className = 'rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
+      const head = document.createElement('div')
+      head.className = 'flex items-center gap-2'
+      head.appendChild(numberBadge(it.i))
+      const title = document.createElement('strong')
+      title.className = 'text-sm'
+      title.textContent = it.label ? it.label : `New section ${it.i + 1}`
+      head.appendChild(title)
+      row.appendChild(head)
+      const sub = document.createElement('p')
+      sub.className = 'mt-0.5 text-teal-800/80'
+      sub.textContent = `New H2 section. Use the wording for item ${it.i + 1} on the left.`
+      row.appendChild(sub)
+      wrap.appendChild(row)
+    }
   }
-  root.appendChild(wrap)
+
+  if (unplacedAmend.length) {
+    const h = document.createElement('p')
+    h.className = 'mt-2 text-[10px] font-bold uppercase tracking-wide text-amber-700'
+    h.textContent = 'Also amend these (find the quoted wording in the policy)'
+    wrap.appendChild(h)
+    for (const it of unplacedAmend) {
+      const row = document.createElement('div')
+      row.className = 'flex items-start gap-2 rounded-md border border-dashed border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900'
+      row.appendChild(numberBadge(it.i))
+      const body = document.createElement('span')
+      const strong = document.createElement('strong')
+      strong.textContent = 'Amend near: '
+      body.appendChild(strong)
+      const q = it.quote.length > 140 ? it.quote.slice(0, 140) + '…' : it.quote
+      body.appendChild(document.createTextNode(`“${q}”`))
+      row.appendChild(body)
+      wrap.appendChild(row)
+    }
+  }
+
+  insertBeforeEndMatter(root, wrap)
 }
 
 // A dashed "add a subsection here" callout element.
@@ -168,9 +225,10 @@ function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[]) {
 // beneath it is what's missing.
 function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
   const items: HighlightItem[] = quotes.map((quote, i) => ({ i, quote, placement: placements[i] ?? 'amend', label: labels[i] }))
-  highlightSentences(root, items.filter(it => it.placement === 'amend' && it.quote))
+  const unplacedAmend = highlightSentences(root, items.filter(it => it.placement === 'amend' && it.quote))
   insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading' && it.quote))
-  appendNewSectionCallouts(root, items.filter(it => it.placement === 'new_section'))
+  const newSections = items.filter(it => it.placement === 'new_section')
+  appendEndCallouts(root, unplacedAmend, newSections)
 }
 
 // Highlight every occurrence of a plain search term in the rendered policy (text
@@ -426,12 +484,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                             {r.placement === 'add_under_heading'
                               ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
                               : r.placement === 'new_section'
-                                ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right)</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>
+                                ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right), above the dates and sign-off</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}. Add it with the heading below.</>
                                 : <><span className="font-semibold">Replace highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the improved wording below. It keeps your existing wording and adds what&rsquo;s missing.</>}
                           </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
-                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">{r.placement === 'amend' ? 'Suggested replacement (keeps your wording, adds the rest)' : 'Example wording'}</p>
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">{r.placement === 'amend' ? 'Suggested replacement (keeps your wording, adds the rest)' : r.placement === 'new_section' ? 'New section (add with this heading)' : 'Example wording'}</p>
+                              {r.placement === 'new_section' && r.section_title && (
+                                <p className="mb-1 text-sm font-bold text-neutral-dark">{r.section_title}</p>
+                              )}
                               <p className="text-sm leading-relaxed text-neutral-dark">{r.suggested_addition}</p>
                             </div>
                           )}
@@ -561,7 +622,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                               <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`}>{i + 1}</span>
                               <span className="min-w-0">
                                 {detail.highlight_placements?.[i] === 'new_section'
-                                  ? <span className="text-neutral-dark">New section at the end{detail.highlight_labels?.[i] ? <>: {detail.highlight_labels[i]}</> : null}</span>
+                                  ? <span className="text-neutral-dark">New section{detail.highlight_labels?.[i] ? <>: {detail.highlight_labels[i]}</> : null}</span>
                                   : <>
                                       <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
                                       {detail.highlight_placements?.[i] === 'add_under_heading' && <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>}

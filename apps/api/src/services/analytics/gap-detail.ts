@@ -91,6 +91,7 @@ export type GapRequirement = {
   location_quote?:     string | null   // verbatim policy sentence/heading to add near (or null = new section)
   match_index?:        number | null    // 1-based, in DOCUMENT order (top to bottom); links to the highlight
   placement?:          Placement | null // amend a sentence, add under a heading, or a brand-new section
+  section_title?:      string | null    // for a NEW section: a short H2 heading to add above the wording
 }
 
 export type GapDetail = {
@@ -165,7 +166,7 @@ For each requirement, decide whether THIS policy text substantively addresses it
 
 Respond with ONLY minified JSON${curated.length ? ' — keep the requirement text identical to the list above and in the same order' : ''}:
 {"requirements":[{"requirement":"<requirement>","in_policy":true|false}]}`
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1400 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1400, temperature: 0 })
     const p = parseJson(text)
     const requirements = Array.isArray(p.requirements)
       ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy })).filter((r: any) => r.requirement)
@@ -187,7 +188,7 @@ The home has no policy that addresses this regulation. List up to ${MAX_REQUIREM
 
 Respond with ONLY minified JSON:
 {"requirements":[{"requirement":"<one specific requirement>"}]}`
-  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1200 })
+  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1200, temperature: 0 })
   const p = parseJson(text)
   return {
     requirements: Array.isArray(p.requirements) ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: false })).filter((r: any) => r.requirement) : [],
@@ -208,23 +209,23 @@ ${policyText.slice(0, POLICY_TEXT_CAP)}
 """
 
 The following requirements are being ADDED to this policy. For EACH, identify the single best place IN THIS POLICY to add or amend it, following these rules in order:
-- If there is a specific existing SENTENCE that should be amended, or that the new wording should sit directly beside, quote that sentence verbatim (character for character) and set "is_heading": false.
+- If there is a specific existing SENTENCE that should be amended, or that the new wording should sit directly beside, quote a SHORT DISTINCTIVE PHRASE of 6 to 12 consecutive words copied EXACTLY from that sentence (character for character, same spelling, punctuation and capitalisation) and set "is_heading": false. Pick a phrase that is unusual enough to occur only once in the policy. Do NOT quote a whole long sentence, and do NOT paraphrase, tidy or correct it.
 - Otherwise, if the right home for it is under an existing SECTION HEADING whose content does not yet cover this requirement (so a new subsection should be added BENEATH that heading), quote the heading line verbatim and set "is_heading": true.
 - If there is no sensible existing place at all and it should be a brand-new section, return an empty quote.
 
 Important:
-- Give each requirement a DISTINCT anchor. Do not send two different requirements to the same sentence or the same heading; if the only fit for a second requirement is a place already used, return an empty quote for it instead (it becomes a new section).
-- Avoid vague one-word headings such as "Implementation", "Introduction", "Scope", "Purpose" or "Policy" as anchors. Prefer a specific sentence; if you must use a heading, choose the most specific relevant one.
-- Always prefer a body sentence to amend over a bare heading when a genuinely relevant sentence exists.
-- Never invent text. Quotes must appear verbatim in the policy above.
+- The quote MUST appear word for word in the policy above. Copy it, do not rewrite it. If you are not certain a phrase is present verbatim, return an empty quote (it becomes a new section) rather than guessing.
+- Give each requirement a DISTINCT anchor. Do not send two different requirements to the same phrase or the same heading; if the only fit for a second requirement is a place already used, return an empty quote for it instead.
+- Avoid vague one-word headings such as "Implementation", "Introduction", "Scope", "Purpose" or "Policy" as anchors. Prefer a specific phrase; if you must use a heading, choose the most specific relevant one.
+- Always prefer a body phrase to amend over a bare heading when a genuinely relevant sentence exists.
 
 REQUIREMENTS:
 ${missing.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
 Respond with ONLY minified JSON, an array in the same order as the requirements:
-{"locations":[{"quote":"<verbatim sentence or heading, or empty>","is_heading":true|false}]}`
+{"locations":[{"quote":"<short verbatim phrase or heading, or empty>","is_heading":true|false}]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800, temperature: 0 })
     const p = parseJson(text)
     const arr = Array.isArray(p.locations) ? p.locations : []
     return missing.map((_, i) => {
@@ -263,12 +264,34 @@ ${payload}
 Respond with ONLY minified JSON, an array in the same order:
 {"rewrites":["<combined improved passage>"]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2600 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2600, temperature: 0 })
     const p = parseJson(text)
     const arr = Array.isArray(p.rewrites) ? p.rewrites : []
     return items.map((it, i) => (typeof arr[i] === 'string' && arr[i].trim()) ? arr[i].trim() : (it.suggestion ?? ''))
   } catch {
     return items.map(it => it.suggestion ?? '')
+  }
+}
+
+// A brand-new section needs its own H2 heading so it reads as a self-contained section.
+// Generate a short, plain title for each new-section requirement (deterministic).
+const HAIKU = 'claude-haiku-4-5-20251001'
+async function titleNewSections(requirements: string[]): Promise<string[]> {
+  const fallback = (r: string) => r.replace(/[.:;].*$/, '').split(/\s+/).slice(0, 6).join(' ')
+  if (!requirements.length) return []
+  const user = `For each requirement below, write a SHORT policy section heading (2 to 6 words, Title Case, no full stop) that a care home could use as an H2 in their policy. Plain and descriptive, not a sentence.
+
+${requirements.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+
+Respond with ONLY minified JSON, an array in the same order:
+{"titles":["<short heading>"]}`
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 500, temperature: 0 })
+    const p = parseJson(text)
+    const arr = Array.isArray(p.titles) ? p.titles : []
+    return requirements.map((r, i) => (typeof arr[i] === 'string' && arr[i].trim()) ? arr[i].trim().slice(0, 80) : fallback(r))
+  } catch {
+    return requirements.map(fallback)
   }
 }
 
@@ -315,7 +338,7 @@ ${payload}${glossaryBlock(glossary)}${voiceBlock(voiceSample)}
 Respond with ONLY minified JSON — an array in the same order:
 {"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>"}]}`
 
-  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2500 })
+  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2500, temperature: 0 })
   const p = parseJson(text)
   const results = Array.isArray(p.results) ? p.results : []
   return candidates.map((requirement, i) => {
@@ -335,7 +358,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   if (!force) {
     const cached = await (prisma as any).gapDetailCache.findUnique({
       where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
-    }).catch(() => null)
+    }).catch((e: any) => { console.error('[gap-detail] cache read failed', referenceKey, e?.message); return null })
     if (cached?.payload) return cached.payload as GapDetail
   }
 
@@ -464,13 +487,15 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     // UI can show them a destination (a callout at the end of the policy) instead of
     // leaving them off the numbered plan entirely.
     const newReqs = missingReqs.filter(r => r.match_index == null)
+    const newTitles = await titleNewSections(newReqs.map(r => r.requirement))
     newReqs.forEach((r, j) => {
       r.match_index    = located.length + j + 1
       r.location_quote = null
       r.placement      = 'new_section'
+      r.section_title  = newTitles[j] ?? null
       highlightQuotes.push('')
       highlightPlacements.push('new_section')
-      highlightLabels.push(r.requirement.slice(0, 90))
+      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
     })
 
     // Combine-and-expand: rewrite each AMEND target from its existing wording so nothing
@@ -487,12 +512,14 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }
   } else {
     // No target policy text to anchor against: everything is a numbered new section.
+    const newTitles = await titleNewSections(missingReqs.map(r => r.requirement))
     missingReqs.forEach((r, j) => {
       r.match_index = j + 1
       r.placement   = 'new_section'
+      r.section_title = newTitles[j] ?? null
       highlightQuotes.push('')
       highlightPlacements.push('new_section')
-      highlightLabels.push(r.requirement.slice(0, 90))
+      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
     })
   }
 
@@ -536,7 +563,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     where:  { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
     update: { payload: detail, created_at: new Date() },
     create: { tenant_id: tenantId, reference_key: referenceKey, payload: detail },
-  }).catch(() => {})
+  }).catch((e: any) => { console.error('[gap-detail] cache WRITE failed', referenceKey, e?.message) })
 
   return detail
 }

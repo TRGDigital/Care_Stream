@@ -165,9 +165,16 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       .finally(() => setPreviewLoad(false))
   }, [detail, html, previewLoad, token])
 
-  // Re-render highlights whenever the policy loads or the search term changes:
-  // reset to the original HTML, re-apply the coverage highlights (yellow), then the
-  // search highlights (teal).
+  // This effect is the SOLE owner of the preview node's content — the JSX div is left
+  // empty (no dangerouslySetInnerHTML) on purpose. If React also managed the innerHTML,
+  // any re-render (a background session refresh, the post-analysis reload, or a
+  // scroll-driven ancestor update) would re-assert the raw HTML and wipe the injected
+  // <mark> highlights, which is exactly the "highlights vanish after a bit / on scroll"
+  // bug. Because React never touches this node's children, the marks now persist until
+  // the policy, detail, or search term actually changes.
+  //
+  // Re-render highlights whenever the policy loads or the search term changes: reset to
+  // the original HTML, re-apply the coverage highlights, then the search highlights.
   useEffect(() => {
     const root = previewRef.current
     if (!root || !html || !detail) return
@@ -417,7 +424,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     ) : previewErr ? (
                       <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
                     ) : html ? (
-                      <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" dangerouslySetInnerHTML={{ __html: html }} />
+                      <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
                     ) : (
                       <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
                     )}

@@ -148,7 +148,10 @@ export default function GapsPage() {
     )
   }
 
-  if (planLoading || loading) {
+  // Only show the skeleton when we have nothing cached to render. If the persistent cache
+  // hydrated data, show it immediately (and refresh in the background) rather than blocking
+  // on the plan-features fetch — so the page loads instantly like the other cached pages.
+  if ((planLoading || loading) && !data) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-64 animate-pulse rounded bg-gray-100" />

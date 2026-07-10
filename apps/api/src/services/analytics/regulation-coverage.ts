@@ -119,7 +119,7 @@ function termHits(matchTerms: string[], policyTokens: Set<string>): number {
 type Reg = {
   reference_key: string; official_name: string; summary: string; care_home_context: string
   match_terms: string[]; distinguish_from: string[]; expected_policy_titles: string[]
-  applies_to_settings: string[]; required_triggers: string[]
+  applies_to_settings: string[]; required_triggers: string[]; required_elements: string[]
 }
 type Pol = { id: string; name: string; tokens: Set<string> }
 
@@ -145,30 +145,209 @@ const CANDIDATE_MIN = 0.5   // below this a policy is not a candidate
 const MAX_CANDIDATES = 4    // per regulation, top-scoring
 const WIDE_K = 20           // diversified vector pass depth
 const MAX_EXCERPT_POLICIES = 10
+// #2 Semantic relevance floor: a NON-candidate policy (one with no curated title/term
+// signal) is only shown to the judge if its best chunk is at least this cosine-similar
+// to the regulation. Below this it is topically unrelated, so it can't be named as
+// coverage on incidental word overlap alone. Candidates always pass — a title/term
+// match is itself a strong signal — and are precision-checked by the skeptic instead.
+const RELEVANCE_FLOOR = 0.3
+const COVERAGE_BATCH = 12   // regulations analysed per batched request
 
-// Analyse every active regulation against a tenant's policy corpus and cache the result.
-export async function analyseRegulationCoverage(tenantId: string): Promise<CoverageRow[]> {
+// Resolve the regulations that actually apply to THIS service — scoped by the tenant's
+// care setting and its self-declared service profile. Out-of-scope regs never become
+// gaps (we don't recommend, e.g., a Mental Health Act policy to a service that doesn't
+// support people under the Act).
+async function getScopedRegulations(tenantId: string): Promise<Reg[]> {
   const allRegulations: Reg[] = await (prisma as any).externalRegulation.findMany({
     where:  { is_active: true },
     select: {
       reference_key: true, official_name: true, summary: true, care_home_context: true,
       match_terms: true, distinguish_from: true, expected_policy_titles: true,
-      applies_to_settings: true, required_triggers: true,
+      applies_to_settings: true, required_triggers: true, required_elements: true,
     },
   })
   if (!allRegulations.length) return []
-
-  // Only analyse regulations that actually apply to THIS service — scoped by the
-  // tenant's care setting and its self-declared service profile. Out-of-scope regs
-  // never become gaps (we don't recommend, e.g., a Mental Health Act policy to a
-  // service that doesn't support people under the Act).
   const tenant = await (prisma as any).tenant.findUnique({
     where: { id: tenantId }, select: { facility_type: true, service_profile: true },
   })
   const setting = facilityTypeToSetting(tenant?.facility_type)
   const profile = resolveServiceProfile(setting, (tenant?.service_profile ?? {}) as Record<string, unknown>)
-  const regulations = allRegulations.filter(r => regulationAppliesToTenant(r, setting, profile))
-  if (!regulations.length) return []
+  return allRegulations.filter(r => regulationAppliesToTenant(r, setting, profile))
+}
+
+type Excerpt = { policy_id: string; title: string; text: string; score: number }
+
+// #1 Adversarial confirmation. A first-pass "covered"/"partial" verdict must survive a
+// strict, independent second reviewer whose only job is to REFUTE the match. This kills
+// plausible-but-wrong matches the recall-oriented judge lets through. Fails OPEN — a
+// transient error on the skeptic keeps the original verdict rather than dropping a real
+// match — so it can only ever remove a match a skeptic actively rejects.
+async function confirmMatch(reg: Reg, evidence: Excerpt, status: 'covered' | 'partial'): Promise<boolean> {
+  try {
+    const elems = reg.required_elements?.length
+      ? `\nThe regulation specifically requires: ${reg.required_elements.slice(0, 8).join('; ')}.` : ''
+    const skeptic = `You are a STRICT second compliance reviewer. A first reviewer judged that a care home's policy titled "${evidence.title}" ${status === 'covered' ? 'covers' : 'partly covers'} the regulation "${reg.official_name}". Your job is to CHALLENGE that.
+
+REGULATION: ${reg.official_name} — ${reg.summary}${elems}
+
+EXTRACT FROM THE NAMED POLICY:
+"""${evidence.text.slice(0, 1000)}"""
+
+Does this extract genuinely and substantively concern ${reg.official_name}? Answer false if it is only incidentally related, merely shares generic words, or is really about a different subject. Default to false when unsure.
+
+Respond with ONLY minified JSON: {"genuine":true|false,"why":"<short>"}`
+    const t = await callClaude('Respond only with valid JSON.', skeptic, { model: HAIKU, maxTokens: 120 })
+    const p = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
+    return p.genuine === true
+  } catch {
+    return true   // fail open — never destroy a match because the skeptic call errored
+  }
+}
+
+// Analyse a SINGLE regulation against the tenant's policy corpus. Pure (no writes) so it
+// can be run in batches. Three precision layers: a semantic floor gates what the judge
+// sees, the judge is grounded in the curated required_elements, and a skeptic confirms
+// every non-gap verdict before it stands.
+async function analyseOne(
+  reg: Reg, emb: number[], policies: Pol[], nameById: Map<string, string>,
+  namespace: string, promptTemplate: string,
+): Promise<CoverageRow> {
+  const fallback: CoverageRow = {
+    reference_key: reg.reference_key, status: 'gap', confidence: 0,
+    evidence_policy_id: null, evidence_policy_name: null,
+    reason: 'No policy content addressing this was found.',
+  }
+  try {
+    // 1. Candidate policies by curated title/term/name signal.
+    const candidates = policies
+      .map(p => ({ p, score: candidateScore(reg, p) }))
+      .filter(c => c.score >= CANDIDATE_MIN)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_CANDIDATES)
+      .map(c => c.p)
+    const candidateIds = new Set(candidates.map(c => c.id))
+
+    // 2. Diversified wide pass — best chunk per DISTINCT policy.
+    const wide = await queryVectors(namespace, emb, WIDE_K)
+    const bestByPolicy = new Map<string, Excerpt>()
+    for (const m of wide) {
+      const pid = String(m.metadata.policy_id ?? '')
+      if (!pid) continue
+      const title = nameById.get(pid) ?? policyTitle(m.metadata.source_filename)
+      const text  = String(m.metadata.chunk_text ?? '')
+      const score = m.score ?? 0
+      const prev  = bestByPolicy.get(pid)
+      if (!prev || score > prev.score) bestByPolicy.set(pid, { policy_id: pid, title, text, score })
+    }
+
+    // 3. Targeted pull for any candidate the wide pass missed, so its content is seen.
+    const missing = candidates.filter(c => !bestByPolicy.has(c.id))
+    await Promise.all(missing.map(async c => {
+      const hit = await queryVectors(namespace, emb, 2, { policy_id: c.id })
+      if (hit.length) {
+        const m = hit[0]
+        bestByPolicy.set(c.id, {
+          policy_id: c.id, title: nameById.get(c.id) ?? policyTitle(m.metadata.source_filename),
+          text: String(m.metadata.chunk_text ?? ''), score: m.score ?? 0,
+        })
+      }
+    }))
+
+    if (!bestByPolicy.size) return fallback
+
+    // 4. Order excerpts: candidates first (by vector score), then remaining diversified
+    //    policies that clear the SEMANTIC FLOOR. A vector-only policy that is merely a
+    //    near-neighbour (below the floor) is dropped before the judge ever sees it.
+    const all = [...bestByPolicy.values()]
+    const ordered = [
+      ...all.filter(x => candidateIds.has(x.policy_id)).sort((a, b) => b.score - a.score),
+      ...all.filter(x => !candidateIds.has(x.policy_id) && x.score >= RELEVANCE_FLOOR).sort((a, b) => b.score - a.score),
+    ].slice(0, MAX_EXCERPT_POLICIES)
+
+    if (!ordered.length) return fallback   // no candidate, nothing above the floor → gap
+
+    const excerpts = ordered
+      .map((x, j) => `[${j + 1}] (${x.title}) ${x.text.slice(0, 700)}`)
+      .join('\n\n')
+
+    let user = fillTemplate(promptTemplate, {
+      official_name:     reg.official_name,
+      summary:           reg.summary,
+      care_home_context: reg.care_home_context,
+      excerpts,
+    })
+    // #3 Ground the judge in the curated required elements, not just the summary — so
+    // "partial" means "misses THESE specific requirements", not a vague impression.
+    if (reg.required_elements?.length) {
+      user += `\n\nThe specific required elements of ${reg.official_name} are:\n${reg.required_elements.slice(0, 12).map(e => `- ${e}`).join('\n')}\nJudge coverage by whether a policy substantively addresses THESE elements, not merely the general topic.`
+    }
+    // Inject the disambiguation boundary regardless of the (editable) template shape.
+    if (reg.distinguish_from?.length) {
+      user += `\n\nDO NOT COUNT AS COVERAGE — these are different, related regulations that must not be confused with ${reg.official_name}: ${reg.distinguish_from.join('; ')}. A policy that only addresses those does NOT cover ${reg.official_name}.`
+    }
+    // Strictness: reject incidental / generic-word matches. Better a false "gap"
+    // than pointing a home at a policy that doesn't really concern this regulation.
+    user += `\n\nBE STRICT. Judge "covered" or "partial" ONLY if a policy DIRECTLY and SUBSTANTIVELY addresses the specific subject of ${reg.official_name}. A policy that merely shares generic words (e.g. "planning", "care", "management", "general", "quality"), or mentions the topic only in passing, does NOT count — judge it "gap". If no extract genuinely concerns this regulation, judge "gap". When in doubt, choose "gap".`
+
+    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250 })
+    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
+    let status: CoverageRow['status'] = ['covered', 'partial', 'gap'].includes(parsed.status) ? parsed.status : 'gap'
+    let evidence: Excerpt | null = status === 'gap' ? null : (ordered.find(x => x.title === parsed.policy) ?? ordered[0])
+    let confidence = typeof parsed.confidence === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.confidence))) : null
+    let reason = typeof parsed.reason === 'string' ? parsed.reason.slice(0, 300) : null
+
+    // #1 A non-gap verdict must survive the skeptic. If it can't, it becomes a gap.
+    if (status !== 'gap' && evidence) {
+      const genuine = await confirmMatch(reg, evidence, status)
+      if (!genuine) {
+        status = 'gap'; evidence = null; confidence = null
+        reason = 'A second review found no held policy genuinely addresses this.'
+      }
+    }
+
+    return {
+      reference_key:        reg.reference_key,
+      status,
+      confidence,
+      evidence_policy_id:   evidence?.policy_id ?? null,
+      evidence_policy_name: evidence?.title ?? null,
+      reason,
+    }
+  } catch {
+    return fallback
+  }
+}
+
+// Start a fresh analysis: clear this tenant's cached coverage and the on-demand gap
+// detail cache so re-opened drill-ins reflect the new run. Returns the in-scope total
+// so the caller can drive a progress bar over the batches. The heavy per-regulation
+// work is then done by analyseCoverageBatch, a batch at a time, so no single request is
+// held open for minutes (which was timing out the gateway on large corpora).
+export async function startCoverageAnalysis(tenantId: string): Promise<{ total: number }> {
+  const regs = await getScopedRegulations(tenantId)
+  await prisma.$transaction([
+    (prisma as any).gapDetailCache.deleteMany({ where: { tenant_id: tenantId } }),
+    (prisma as any).regulationCoverage.deleteMany({ where: { tenant_id: tenantId } }),
+  ])
+  return { total: regs.length }
+}
+
+export type CoverageProgress = { done: number; analysed: number; total: number; remaining: number }
+
+// Analyse the next batch of not-yet-done in-scope regulations and upsert their coverage
+// rows. Idempotent and resumable: it processes whichever in-scope regulations don't yet
+// have a coverage row, so the frontend just loops until remaining === 0.
+export async function analyseCoverageBatch(tenantId: string, batchSize = COVERAGE_BATCH): Promise<CoverageProgress> {
+  const regs = await getScopedRegulations(tenantId)
+  const total = regs.length
+  if (!total) return { done: 0, analysed: 0, total: 0, remaining: 0 }
+
+  const existing = await (prisma as any).regulationCoverage.findMany({
+    where: { tenant_id: tenantId }, select: { reference_key: true },
+  })
+  const doneKeys = new Set((existing as any[]).map(e => e.reference_key))
+  const todo = regs.filter(r => !doneKeys.has(r.reference_key)).slice(0, batchSize)
+  if (!todo.length) return { done: 0, analysed: doneKeys.size, total, remaining: 0 }
 
   // The home's active policies, tokenised once for candidate matching.
   const policyRows = await (prisma as any).policy.findMany({
@@ -177,122 +356,45 @@ export async function analyseRegulationCoverage(tenantId: string): Promise<Cover
   })
   const policies: Pol[] = (policyRows as any[]).map(p => ({ id: p.id, name: p.name, tokens: tokenSet(p.name) }))
   const nameById = new Map(policies.map(p => [p.id, p.name]))
-
   const namespace = getTenantNamespace(tenantId)
-
-  // Batch all the regulation queries through the embedder in one pass.
-  const queryTexts = regulations.map(r => `${r.official_name}. ${r.summary} ${r.care_home_context}`.slice(0, 1500))
-  const embeddings = await embedTexts(queryTexts)
-
-  // One DB read for the (editable) judging prompt, reused for every regulation.
   const promptTemplate = await getCoveragePrompt()
 
-  const rows: CoverageRow[] = await mapLimit(regulations, 5, async (reg: Reg, i: number) => {
-    const fallback: CoverageRow = {
-      reference_key: reg.reference_key, status: 'gap', confidence: 0,
-      evidence_policy_id: null, evidence_policy_name: null,
-      reason: 'No policy content addressing this was found.',
-    }
-    try {
-      const emb = embeddings[i]
+  const queryTexts = todo.map(r => `${r.official_name}. ${r.summary} ${r.care_home_context}`.slice(0, 1500))
+  const embeddings = await embedTexts(queryTexts)
 
-      // 1. Candidate policies by curated title/term/name signal.
-      const candidates = policies
-        .map(p => ({ p, score: candidateScore(reg, p) }))
-        .filter(c => c.score >= CANDIDATE_MIN)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, MAX_CANDIDATES)
-        .map(c => c.p)
-      const candidateIds = new Set(candidates.map(c => c.id))
+  const rows = await mapLimit(todo, 5, (reg: Reg, i: number) =>
+    analyseOne(reg, embeddings[i], policies, nameById, namespace, promptTemplate))
 
-      // 2. Diversified wide pass — best chunk per DISTINCT policy.
-      const wide = await queryVectors(namespace, emb, WIDE_K)
-      const bestByPolicy = new Map<string, { policy_id: string; title: string; text: string; score: number }>()
-      for (const m of wide) {
-        const pid = String(m.metadata.policy_id ?? '')
-        if (!pid) continue
-        const title = nameById.get(pid) ?? policyTitle(m.metadata.source_filename)
-        const text  = String(m.metadata.chunk_text ?? '')
-        const score = m.score ?? 0
-        const prev  = bestByPolicy.get(pid)
-        if (!prev || score > prev.score) bestByPolicy.set(pid, { policy_id: pid, title, text, score })
-      }
-
-      // 3. Targeted pull for any candidate the wide pass missed, so its content is seen.
-      const missing = candidates.filter(c => !bestByPolicy.has(c.id))
-      await Promise.all(missing.map(async c => {
-        const hit = await queryVectors(namespace, emb, 2, { policy_id: c.id })
-        if (hit.length) {
-          const m = hit[0]
-          bestByPolicy.set(c.id, {
-            policy_id: c.id, title: nameById.get(c.id) ?? policyTitle(m.metadata.source_filename),
-            text: String(m.metadata.chunk_text ?? ''), score: m.score ?? 0,
-          })
-        }
-      }))
-
-      if (!bestByPolicy.size) return fallback
-
-      // 4. Order excerpts: candidates first (by vector score), then remaining diversified.
-      const all = [...bestByPolicy.values()]
-      const ordered = [
-        ...all.filter(x => candidateIds.has(x.policy_id)).sort((a, b) => b.score - a.score),
-        ...all.filter(x => !candidateIds.has(x.policy_id)).sort((a, b) => b.score - a.score),
-      ].slice(0, MAX_EXCERPT_POLICIES)
-
-      const excerpts = ordered
-        .map((x, j) => `[${j + 1}] (${x.title}) ${x.text.slice(0, 700)}`)
-        .join('\n\n')
-
-      let user = fillTemplate(promptTemplate, {
-        official_name:     reg.official_name,
-        summary:           reg.summary,
-        care_home_context: reg.care_home_context,
-        excerpts,
-      })
-      // Inject the disambiguation boundary regardless of the (editable) template shape.
-      if (reg.distinguish_from?.length) {
-        user += `\n\nDO NOT COUNT AS COVERAGE — these are different, related regulations that must not be confused with ${reg.official_name}: ${reg.distinguish_from.join('; ')}. A policy that only addresses those does NOT cover ${reg.official_name}.`
-      }
-      // Strictness: reject incidental / generic-word matches. Better a false "gap"
-      // than pointing a home at a policy that doesn't really concern this regulation.
-      user += `\n\nBE STRICT. Judge "covered" or "partial" ONLY if a policy DIRECTLY and SUBSTANTIVELY addresses the specific subject of ${reg.official_name}. A policy that merely shares generic words (e.g. "planning", "care", "management", "general", "quality"), or mentions the topic only in passing, does NOT count — judge it "gap". If no extract genuinely concerns this regulation, judge "gap". When in doubt, choose "gap".`
-
-      const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250 })
-      const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
-      const status: CoverageRow['status'] = ['covered', 'partial', 'gap'].includes(parsed.status) ? parsed.status : 'gap'
-      const evidence = ordered.find(x => x.title === parsed.policy) ?? ordered[0]
-
-      return {
-        reference_key:        reg.reference_key,
-        status,
-        confidence:           typeof parsed.confidence === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.confidence))) : null,
-        evidence_policy_id:   status === 'gap' ? null : (evidence?.policy_id ?? null),
-        evidence_policy_name: status === 'gap' ? null : (evidence?.title ?? null),
-        reason:               typeof parsed.reason === 'string' ? parsed.reason.slice(0, 300) : null,
-      }
-    } catch {
-      return fallback
-    }
-  })
-
-  // Replace this tenant's cached coverage atomically, and clear the on-demand
-  // gap detail cache so re-opened drill-ins reflect the fresh analysis.
   const now = new Date()
-  await prisma.$transaction([
-    (prisma as any).gapDetailCache.deleteMany({ where: { tenant_id: tenantId } }),
-    (prisma as any).regulationCoverage.deleteMany({ where: { tenant_id: tenantId } }),
-    (prisma as any).regulationCoverage.createMany({
-      data: rows.map(r => ({
+  await Promise.all(rows.map(r =>
+    (prisma as any).regulationCoverage.upsert({
+      where:  { tenant_id_reference_key: { tenant_id: tenantId, reference_key: r.reference_key } },
+      create: {
         tenant_id: tenantId, reference_key: r.reference_key, status: r.status, confidence: r.confidence,
         evidence_policy_id: r.evidence_policy_id, evidence_policy_name: r.evidence_policy_name, reason: r.reason, analysed_at: now,
-      })),
-    }),
-  ])
+      },
+      update: {
+        status: r.status, confidence: r.confidence,
+        evidence_policy_id: r.evidence_policy_id, evidence_policy_name: r.evidence_policy_name, reason: r.reason, analysed_at: now,
+      },
+    })))
 
-  // The "what to add" detail for each gap/partial is pre-generated separately, in
-  // small batches, via POST /analytics/gaps/pregenerate — so this request returns
-  // promptly (coverage only) rather than holding the connection open for minutes,
-  // which was timing out the gateway on tenants with many gaps.
-  return rows
+  const analysed = doneKeys.size + rows.length
+  return { done: rows.length, analysed, total, remaining: Math.max(0, total - analysed) }
+}
+
+// Full synchronous run — kept for internal callers/back-compat. Clears, then loops the
+// batches to completion, and returns every coverage row. Prefer the start + batch flow
+// from the frontend so no single request runs for minutes.
+export async function analyseRegulationCoverage(tenantId: string): Promise<CoverageRow[]> {
+  await startCoverageAnalysis(tenantId)
+  for (let guard = 0; guard < 200; guard++) {
+    const p = await analyseCoverageBatch(tenantId)
+    if (p.remaining <= 0) break
+  }
+  const rows = await (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId } })
+  return (rows as any[]).map(r => ({
+    reference_key: r.reference_key, status: r.status, confidence: r.confidence,
+    evidence_policy_id: r.evidence_policy_id, evidence_policy_name: r.evidence_policy_name, reason: r.reason,
+  }))
 }

@@ -10,7 +10,7 @@ import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
-import { analyseRegulationCoverage } from '../services/analytics/regulation-coverage'
+import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -446,9 +446,51 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
   })
 })
 
+// ─── POST /analytics/gaps/analyse/start ──────────────────────────────────────
+// Begin a fresh coverage analysis: clear the old coverage + detail cache and return
+// the in-scope regulation total. The client then calls /analyse/batch repeatedly
+// (driving a progress bar) until remaining hits 0. The per-regulation matching is
+// deliberately thorough (semantic floor + requirements-grounded judge + adversarial
+// skeptic), so it can take a few minutes overall — batching keeps every single
+// request short so the gateway never times out mid-analysis.
+analyticsRouter.post('/gaps/analyse/start', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const { total } = await startCoverageAnalysis(tenantId)
+    ok(res, { total })
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e.message, 500)
+  }
+})
+
+// ─── POST /analytics/gaps/analyse/batch ──────────────────────────────────────
+// Analyse the next batch of not-yet-done in-scope regulations. Idempotent and
+// resumable — the client loops until remaining === 0.
+analyticsRouter.post('/gaps/analyse/batch', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const progress = await analyseCoverageBatch(tenantId)
+    ok(res, progress)
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e.message, 500)
+  }
+})
+
 // ─── POST /analytics/gaps/analyse ─────────────────────────────────────────────
-// Run the content-based regulation coverage analysis (semantic retrieval + AI
-// judgement over the tenant's own policies) and cache it. Can take ~1 minute.
+// Legacy single-shot run (start + all batches inline). Kept for back-compat; the
+// frontend uses the batched start/batch flow above. Can take several minutes.
 analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {

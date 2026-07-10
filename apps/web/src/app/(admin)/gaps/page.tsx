@@ -47,6 +47,7 @@ export default function GapsPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [analysing, setAnalysing] = useState(false)
+  const [analyseProgress, setAnalyseProgress] = useState<{ done: number; total: number } | null>(null)
   const [preparing, setPreparing] = useState<number | null>(null)   // remaining details being warmed
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
@@ -106,17 +107,28 @@ export default function GapsPage() {
     load()
   }, [planLoading, locked, load])
 
+  // Run the analysis in batches so no single request is held open for minutes. The
+  // per-regulation matching is deliberately thorough (semantic floor + requirements
+  // grounding + adversarial confirm), so the whole run can take a few minutes — we
+  // show live progress and let each batch return promptly. Details warm afterwards.
   async function runAnalysis() {
     if (!session?.accessToken) return
-    setAnalysing(true); setError('')
+    setAnalysing(true); setError(''); setAnalyseProgress(null)
+    const api = createApiClient(session.accessToken)
     try {
-      await createApiClient(session.accessToken).analytics.analyseGaps()
+      const { total } = await api.analytics.analyseGapsStart()
+      setAnalyseProgress({ done: 0, total })
+      for (let i = 0; i < 200; i++) {   // guard; each batch does ~12 regulations
+        const p = await api.analytics.analyseGapsBatch()
+        setAnalyseProgress({ done: p.analysed, total: p.total })
+        if (p.remaining <= 0) break
+      }
       load()
       warmDetails()   // prepare the "what to add" details in the background
     } catch (e: any) {
       setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
-      setAnalysing(false)
+      setAnalysing(false); setAnalyseProgress(null)
     }
   }
 
@@ -208,7 +220,9 @@ export default function GapsPage() {
         </div>
         <button onClick={runAnalysis} disabled={analysing}
           className="flex shrink-0 items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
-          {analysing ? <><Loader2 size={15} className="animate-spin" /> Analysing…</> : <><RefreshCw size={15} /> {data.analysed ? 'Re-run analysis' : 'Run coverage analysis'}</>}
+          {analysing
+            ? <><Loader2 size={15} className="animate-spin" /> {analyseProgress && analyseProgress.total > 0 ? `Analysing… ${analyseProgress.done}/${analyseProgress.total}` : 'Analysing…'}</>
+            : <><RefreshCw size={15} /> {data.analysed ? 'Re-run analysis' : 'Run coverage analysis'}</>}
         </button>
       </div>
 

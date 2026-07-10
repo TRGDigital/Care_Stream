@@ -25,6 +25,8 @@ const POLICY_TEXT_CAP = 12000
 const DISCLAIMER =
   'Example wording to review, adapt and approve for your service. This is guidance, not legal or compliance advice.'
 
+export type Placement = 'amend' | 'add_under_heading' | 'new_section'
+
 export type GapRequirement = {
   requirement:         string
   status:              'missing' | 'already_covered'
@@ -32,7 +34,8 @@ export type GapRequirement = {
   suggested_addition?: string | null
   // For a MISSING requirement: where in the target policy to add or amend it.
   location_quote?:     string | null   // verbatim policy sentence/heading to add near (or null = new section)
-  match_index?:        number | null    // 1-based; links to the numbered/coloured highlight
+  match_index?:        number | null    // 1-based, in DOCUMENT order (top to bottom); links to the highlight
+  placement?:          Placement | null // amend a sentence, add under a heading, or a brand-new section
 }
 
 export type GapDetail = {
@@ -45,7 +48,9 @@ export type GapDetail = {
   evidence_policy:   { id: string; name: string } | null
   target_policy:     { id: string; name: string } | null   // where to add the missing text (existing policy)
   suggested_new_policy_title: string | null                // when there's no existing policy to add to
-  highlight_quotes:  string[]                               // policy passages to highlight = where to add/amend
+  highlight_quotes:  string[]                               // policy passages to highlight = where to add/amend (document order)
+  highlight_placements: Placement[]                          // aligned to highlight_quotes: 'amend' | 'add_under_heading'
+  highlight_labels:  string[]                                // aligned to highlight_quotes: short requirement label for the inline marker
   requirements:      GapRequirement[]
   disclaimer:        string
   generated_at:      string
@@ -137,27 +142,39 @@ Respond with ONLY minified JSON:
 // For each requirement being ADDED, find where in the target policy to add or amend
 // it — a verbatim sentence/heading that's the best insertion/amendment point, or '' if
 // it should be a brand-new section. Returned aligned to the input order.
-async function findLocations(policyText: string, missing: string[]): Promise<string[]> {
-  if (!missing.length || !policyText) return missing.map(() => '')
+type LocationHit = { quote: string; is_heading: boolean }
+
+async function findLocations(policyText: string, missing: string[]): Promise<LocationHit[]> {
+  const empty = (): LocationHit[] => missing.map(() => ({ quote: '', is_heading: false }))
+  if (!missing.length || !policyText) return empty()
   const user = `Here is a UK care-home policy:
 """
 ${policyText.slice(0, POLICY_TEXT_CAP)}
 """
 
-The following requirements are being ADDED to this policy. For each, identify the single best place IN THIS POLICY to add or amend it — quote the verbatim sentence or heading (copied character-for-character) that is the most relevant existing insertion or amendment point. If there is no sensible existing place and it should be a brand-new section, return an empty string for that item.
+The following requirements are being ADDED to this policy. For EACH, identify the single best place IN THIS POLICY to add or amend it, following these rules in order:
+- If there is a specific existing SENTENCE that should be amended, or that the new wording should sit directly beside, quote that sentence verbatim (character for character) and set "is_heading": false.
+- Otherwise, if the right home for it is under an existing SECTION HEADING whose content does not yet cover this requirement (so a new subsection should be added BENEATH that heading), quote the heading line verbatim and set "is_heading": true.
+- If there is no sensible existing place at all and it should be a brand-new section, return an empty quote.
+Always prefer a body sentence to amend over a bare heading when a genuinely relevant sentence exists. Never invent text — quotes must appear verbatim in the policy above.
 
 REQUIREMENTS:
 ${missing.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
-Respond with ONLY minified JSON — an array in the same order:
-{"locations":["<verbatim sentence or heading, or empty>"]}`
+Respond with ONLY minified JSON, an array in the same order as the requirements:
+{"locations":[{"quote":"<verbatim sentence or heading, or empty>","is_heading":true|false}]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1600 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800 })
     const p = parseJson(text)
     const arr = Array.isArray(p.locations) ? p.locations : []
-    return missing.map((_, i) => typeof arr[i] === 'string' ? arr[i].trim() : '')
+    return missing.map((_, i) => {
+      const it = arr[i]
+      if (it && typeof it === 'object') return { quote: String(it.quote ?? '').trim(), is_heading: !!it.is_heading }
+      if (typeof it === 'string') return { quote: it.trim(), is_heading: false }  // tolerate the old flat-string shape
+      return { quote: '', is_heading: false }
+    })
   } catch {
-    return missing.map(() => '')
+    return empty()
   }
 }
 
@@ -300,18 +317,40 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`
   }
 
-  // 3. For each MISSING requirement, find WHERE in the target policy to add/amend it,
-  //    and number it so the left item links to the same-numbered highlight on the right.
+  // 3. For each MISSING requirement, find WHERE in the target policy to add/amend it.
+  //    Number the highlights in DOCUMENT order (top to bottom) so the badges the reader
+  //    sees down the policy run 1, 2, 3, ... rather than in requirement order. A heading
+  //    anchor is flagged so the UI can show "add a subsection below this heading" instead
+  //    of implying the heading title itself is the fix.
   const targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
   const highlightQuotes: string[] = []
+  const highlightPlacements: Placement[] = []
+  const highlightLabels: string[] = []
   if (missingReqs.length && targetText) {
-    const locs = await findLocations(targetText, missingReqs.map(r => r.requirement))
-    let idx = 0
-    missingReqs.forEach((r, i) => {
-      const loc = (locs[i] ?? '').trim()
-      if (loc) { r.match_index = ++idx; r.location_quote = loc; highlightQuotes.push(loc) }
-      else { r.match_index = null; r.location_quote = null }
+    const hits = await findLocations(targetText, missingReqs.map(r => r.requirement))
+    const lower = targetText.toLowerCase()
+    // Pair each located requirement with the position of its anchor in the document.
+    const located = missingReqs
+      .map((r, i) => ({ r, hit: hits[i] }))
+      .filter(x => x.hit && x.hit.quote)
+      .map(x => ({ ...x, pos: lower.indexOf(x.hit.quote.toLowerCase()) }))
+      .sort((a, b) => (a.pos < 0 ? Number.MAX_SAFE_INTEGER : a.pos) - (b.pos < 0 ? Number.MAX_SAFE_INTEGER : b.pos))
+    // Assign sequential numbers in that document order and build the aligned highlight arrays.
+    located.forEach((x, k) => {
+      const placement: Placement = x.hit.is_heading ? 'add_under_heading' : 'amend'
+      x.r.match_index    = k + 1
+      x.r.location_quote = x.hit.quote
+      x.r.placement      = placement
+      highlightQuotes.push(x.hit.quote)
+      highlightPlacements.push(placement)
+      highlightLabels.push(x.r.requirement.slice(0, 90))
     })
+    // Anything without an anchor is a brand-new section.
+    missingReqs.forEach(r => {
+      if (r.match_index == null) { r.match_index = null; r.location_quote = null; r.placement = 'new_section' }
+    })
+  } else {
+    missingReqs.forEach(r => { r.placement = 'new_section' })
   }
 
   // Verdict: nothing to add → covered across the library. A "partial" whose target
@@ -343,6 +382,8 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     target_policy:    targetPolicy,
     suggested_new_policy_title: suggestedNewPolicyTitle,
     highlight_quotes: highlightQuotes,
+    highlight_placements: highlightPlacements,
+    highlight_labels: highlightLabels,
     requirements,
     disclaimer:       DISCLAIMER,
     generated_at:     new Date().toISOString(),

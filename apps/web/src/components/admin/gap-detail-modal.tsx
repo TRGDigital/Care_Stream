@@ -19,10 +19,41 @@ function quoteToRegex(q: string): RegExp | null {
 const QUOTE_PALETTE = ['bg-yellow-200', 'bg-sky-200', 'bg-green-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200', 'bg-lime-200', 'bg-fuchsia-200']
 const quoteColour = (i: number) => QUOTE_PALETTE[i % QUOTE_PALETTE.length]
 
+// The nearest heading ancestor (H1–H6) of a node, bounded to within `root`.
+function closestHeading(el: HTMLElement | null, root: HTMLElement): HTMLElement | null {
+  let n: HTMLElement | null = el
+  while (n && n !== root) {
+    if (/^H[1-6]$/.test(n.tagName)) return n
+    n = n.parentElement
+  }
+  return null
+}
+
+// A dashed "add a subsection here" callout, inserted right after a heading when the
+// missing requirement belongs under that heading (rather than amending a sentence).
+function insertHeadingMarker(heading: HTMLElement, i: number, label?: string) {
+  const marker = document.createElement('div')
+  marker.className = 'not-prose my-2 flex items-start gap-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
+  const badge = document.createElement('span')
+  badge.textContent = String(i + 1)
+  badge.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`
+  const body = document.createElement('span')
+  const strong = document.createElement('strong')
+  strong.textContent = 'Add a new subsection here. '
+  body.appendChild(strong)
+  body.appendChild(document.createTextNode(label ? label : `See item ${i + 1} on the left.`))
+  marker.appendChild(badge)
+  marker.appendChild(body)
+  heading.after(marker)
+}
+
 // Wrap each matched quote in a <mark> coloured + numbered by its position, so the
 // inline highlight maps unambiguously to the numbered passage in the list. Text
 // nodes only, so tags are never broken; cross-node matches simply don't highlight.
-function highlightQuotes(root: HTMLElement, quotes: string[]) {
+// When a quote is a section heading (placement 'add_under_heading'), we also drop a
+// dashed "add a subsection here" callout below that heading — a heading title on its
+// own doesn't tell the reader the CONTENT beneath it is what's missing.
+function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
   const regexes = quotes.map((q, i) => ({ i, re: quoteToRegex(q) })).filter(x => !!x.re) as { i: number; re: RegExp }[]
   if (!regexes.length) return
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
@@ -48,7 +79,13 @@ function highlightQuotes(root: HTMLElement, quotes: string[]) {
       mark.appendChild(document.createTextNode(m[0]))
       frag.appendChild(mark)
       if (after) frag.appendChild(document.createTextNode(after))
-      node.parentNode?.replaceChild(frag, node)
+      const parent = node.parentNode
+      parent?.replaceChild(frag, node)
+      // If this anchor is (or sits inside) a heading, add the "add below" callout.
+      if (placements[i] === 'add_under_heading') {
+        const heading = closestHeading(mark.parentElement, root)
+        if (heading) insertHeadingMarker(heading, i, labels[i])
+      }
       break
     }
   }
@@ -179,7 +216,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     const root = previewRef.current
     if (!root || !html || !detail) return
     root.innerHTML = html
-    highlightQuotes(root, detail.highlight_quotes ?? [])
+    highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [])
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -197,7 +234,12 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     } catch { setCompleting(false) }
   }
 
-  const missing = detail?.requirements.filter(r => r.status === 'missing') ?? []
+  // Order the list by the highlight number (document order), so the left checklist
+  // reads in the same 1, 2, 3 sequence as the badges down the policy; brand-new
+  // sections (no anchor) fall to the end.
+  const missing = (detail?.requirements.filter(r => r.status === 'missing') ?? [])
+    .slice()
+    .sort((a, b) => (a.match_index ?? Number.MAX_SAFE_INTEGER) - (b.match_index ?? Number.MAX_SAFE_INTEGER))
   const covered = detail?.requirements.filter(r => r.status === 'already_covered') ?? []
   const mailto = `mailto:hello@carestreamai.com?subject=${encodeURIComponent('Policy authoring request: ' + officialName)}&body=${encodeURIComponent(`We would like CareStream to write and supply a policy that covers ${officialName}.`)}`
 
@@ -302,7 +344,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                           </div>
                           <p className="mt-1.5 text-xs text-amber-700">
                             {r.match_index
-                              ? <>Add or amend near <span className="font-semibold">highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right).</>
+                              ? (r.placement === 'add_under_heading'
+                                  ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
+                                  : <>Add or amend near <span className="font-semibold">highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right).</>)
                               : <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <> in your {detail.target_policy.name}</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>}
                           </p>
                           {r.suggested_addition && (
@@ -430,12 +474,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     )}
                     {(detail.highlight_quotes?.length ?? 0) > 0 && (
                       <div className="mt-5 border-t border-gray-100 pt-4">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Where to add — key</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Where to add, key</p>
                         <ul className="space-y-1.5">
                           {(detail.highlight_quotes ?? []).map((q, i) => (
                             <li key={i} className="flex gap-2 text-xs text-neutral-dark">
                               <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`}>{i + 1}</span>
-                              <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
+                              <span className="min-w-0">
+                                <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
+                                {detail.highlight_placements?.[i] === 'add_under_heading' && <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>}
+                              </span>
                             </li>
                           ))}
                         </ul>

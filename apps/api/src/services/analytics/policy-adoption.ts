@@ -7,6 +7,7 @@
 
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
+import { republishPolicyContent } from '../rag/ingestion'
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
 const END_MATTER_RE = /\b(review date|policy review|next review|reviewed|dated?|signed|signature|version|approved by|authorised by|policy owner|source url|declaration|registered (office|number|charity)|company (number|registration)|telephone|\bltd\b|limited|©|copyright)\b/i
@@ -116,7 +117,7 @@ export async function revertChange(tenantId: string, changeId: string): Promise<
 
 // Publish: snapshot the draft as the published version, bump the version, and mark every
 // active pending change as published. The uploaded original is still preserved.
-export async function publishDocument(tenantId: string, policyId: string, publishedBy: string): Promise<{ version: string; published: number } | null> {
+export async function publishDocument(tenantId: string, policyId: string, publishedBy: string): Promise<{ version: string; published: number; reindexed: boolean } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   // Recompose the draft from the original + active changes with the current placement logic,
@@ -133,11 +134,18 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   const res = await (prisma as any).policyDocumentChange.updateMany({
     where: { document_id: doc.id, published: false, reverted: false }, data: { published: true },
   })
+  const publishedContent = fresh?.draft_content ?? doc.draft_content
   await (prisma as any).policyDocument.update({
     where: { id: doc.id },
-    data: { published_content: fresh?.draft_content ?? doc.draft_content, published_at: new Date(), published_by: publishedBy, version: nextVersion },
+    data: { published_content: publishedContent, published_at: new Date(), published_by: publishedBy, version: nextVersion },
   })
-  return { version: nextVersion, published: res.count ?? 0 }
+  // Swap the new content into the live policy (S3 text, format cache, Pinecone) so staff
+  // Q&A and previews use it, and the old version is archived. Best-effort — a re-index
+  // failure does not undo the publish (it is logged and can be retried).
+  let reindexed = false
+  try { await republishPolicyContent(tenantId, policyId, publishedContent); reindexed = true }
+  catch (e: any) { console.error('[publish] republish failed', e?.message) }
+  return { version: nextVersion, published: res.count ?? 0, reindexed }
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.

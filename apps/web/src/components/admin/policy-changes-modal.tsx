@@ -221,7 +221,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     setBusy('publish'); setError('')
     try {
       const r = await createApiClient(token).analytics.publishPolicyDocument(policyId)
-      setPublishedMsg(`Published as version ${r.version}.`)
+      setPublishedMsg(`Published as version ${r.version}.${r.reindexed ? ' The updated policy is now live for staff, and the previous version has been archived.' : ' (Re-indexing the updated policy for staff is still finishing.)'}`)
       onPublished(0)
       load()
     } catch (e: any) { setError(e.message ?? 'Could not publish.') }

@@ -1,5 +1,5 @@
 import { prisma } from '../../db/client'
-import { downloadFile, uploadExtractedText, archiveVersionToS3 } from '../storage/s3'
+import { downloadFile, uploadExtractedText, archiveVersionToS3, buildExtractedTextKey } from '../storage/s3'
 import { extractText, isSupportedMimeType } from './extractor'
 import { stripHeadersFooters } from './stripper'
 import { detectTOC } from './toc-detector'
@@ -314,4 +314,50 @@ async function markFailed(policyId: string, reason: string): Promise<void> {
     where: { id: policyId },
     data:  { status: 'archived' },
   }).catch(() => {/* best-effort */})
+}
+
+// ─── Republish policy content after adoption (Policy Change Adoption) ──────────
+// When adopted changes are published, swap the new content in everywhere so staff Q&A
+// and previews use the updated policy: archive the previous extracted text, overwrite
+// the S3 text, invalidate the formatted-HTML cache, re-index Pinecone, and bump the
+// policy version. The old version is preserved in the S3 archive + PolicyDocument history.
+export async function republishPolicyContent(tenantId: string, policyId: string, content: string): Promise<void> {
+  const policy = await (prisma as any).policy.findUnique({
+    where: { id: policyId }, select: { filename: true, document_category: true, version: true },
+  })
+  if (!policy) return
+  const filename   = (policy.filename as string) ?? 'policy'
+  const category   = (policy.document_category as string) ?? 'internal_policy'
+  const oldVersion = Number(policy.version) || 1
+  const newVersion = oldVersion + 1
+
+  // 1. Archive the previous extracted text (kept for records), then write the new content.
+  await archiveVersionToS3({ sourceKey: buildExtractedTextKey(tenantId, policyId), tenantId, policyId, version: oldVersion, filename }).catch(() => {})
+  await uploadExtractedText(tenantId, policyId, content)
+
+  // 2. Invalidate the cached formatted HTML so the next preview re-formats the new content.
+  await (prisma as any).policyTranslation.deleteMany({ where: { policy_id: policyId } }).catch(() => {})
+
+  // 3. Re-index Pinecone: clear the active vectors, re-chunk/embed, stage, then activate.
+  await deletePolicyVectors(tenantId, policyId).catch((e: any) => console.error('[republish] delete vectors failed', e?.message))
+  const chunks = chunkText(content)
+  if (chunks.length) {
+    const embeddings = await embedTexts(chunks.map(c => c.text))
+    const regs = await Promise.all(chunks.map(c => detectRegulations(c.text)))
+    const vectors: PolicyVector[] = chunks.map((chunk, i) => ({
+      id: `${policyId}_c${chunk.chunkIndex}`,
+      values: embeddings[i],
+      metadata: {
+        policy_id: policyId, tenant_id: tenantId, document_category: category,
+        chunk_index: chunk.chunkIndex, source_filename: filename, chunk_text: chunk.text, version: newVersion,
+        ...(regs[i].length ? { regulations_cited: regs[i] } : {}),
+        ...(chunk.sectionHeading ? { section_heading: chunk.sectionHeading } : {}),
+      },
+    }))
+    await upsertPolicyVectors(tenantId, policyId, vectors)
+    await activateStagedVectors(tenantId, policyId)
+  }
+
+  // 4. Bump the policy version integer (stays active; the old version is archived above).
+  await (prisma as any).policy.update({ where: { id: policyId }, data: { version: newVersion } }).catch(() => {})
 }

@@ -23,9 +23,13 @@ const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
 async function getOrInitDocument(tenantId: string, policyId: string): Promise<any> {
   const existing = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (existing) return existing
-  const text = (await downloadExtractedText(tenantId, policyId).catch(() => null)) ?? ''
+  const [text, policy] = await Promise.all([
+    downloadExtractedText(tenantId, policyId).catch(() => null),
+    (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true } }),
+  ])
+  const base = Number(policy?.version) || 1   // the uploaded original is version 1
   return (prisma as any).policyDocument.create({
-    data: { tenant_id: tenantId, policy_id: policyId, original_content: text, draft_content: text, version: '' },
+    data: { tenant_id: tenantId, policy_id: policyId, original_content: text ?? '', draft_content: text ?? '', version: `${base}.0` },
   })
 }
 
@@ -119,7 +123,13 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   // so the published snapshot is always correct even if it was first applied earlier.
   await rebuildDraft(doc.id)
   const fresh = await (prisma as any).policyDocument.findUnique({ where: { id: doc.id } })
-  const nextVersion = bumpVersion(doc.version as string)
+  // Publishing bumps the MAJOR version. The uploaded original is version 1, so the first
+  // published set of changes is version 2, then 3, and so on.
+  const policy = await (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true } })
+  const base = Number(policy?.version) || 1
+  const curMajor = parseInt(String(doc.version || '').split('.')[0], 10)
+  const nextMajor = (Number.isFinite(curMajor) ? curMajor : base) + 1
+  const nextVersion = `${nextMajor}.0`
   const res = await (prisma as any).policyDocumentChange.updateMany({
     where: { document_id: doc.id, published: false, reverted: false }, data: { published: true },
   })
@@ -128,13 +138,6 @@ export async function publishDocument(tenantId: string, policyId: string, publis
     data: { published_content: fresh?.draft_content ?? doc.draft_content, published_at: new Date(), published_by: publishedBy, version: nextVersion },
   })
   return { version: nextVersion, published: res.count ?? 0 }
-}
-
-// 1.0 → 1.1 → 1.2 … starting at 1.0 when unset.
-function bumpVersion(current: string): string {
-  const m = /^(\d+)\.(\d+)$/.exec((current || '').trim())
-  if (!m) return '1.0'
-  return `${m[1]}.${Number(m[2]) + 1}`
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.

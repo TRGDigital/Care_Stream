@@ -72,7 +72,7 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
-  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string }>>([])
+  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
@@ -166,6 +166,9 @@ export default function PoliciesPage() {
     ? tabPolicies.filter(p =>
         `${p.name ?? ''} ${p.filename ?? ''} ${p.section ?? ''}`.toLowerCase().includes(q))
     : tabPolicies
+
+  // Managed-document summary (adopted changes / published version) keyed by policy id.
+  const docByPolicy = Object.fromEntries(reviewSummary.map(d => [d.policy_id, d]))
 
   async function archive(id: string, name: string) {
     if (!session?.accessToken) return
@@ -458,7 +461,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="Staff Handbooks"
@@ -468,7 +471,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="CQC Reports"
@@ -478,7 +481,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           {/* Custom categories — shown only when they actually contain documents. */}
           {Array.from(new Set(visiblePolicies.map(p => p.document_category as string)))
@@ -494,7 +497,7 @@ export default function PoliciesPage() {
                 onRetry={p => retry(p.id)}
                 onArchive={p => archive(p.id, p.name)}
                 onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
               />
             ))}
         </div>
@@ -516,6 +519,8 @@ function PolicyGroup({
   onDelete,
   onToggleGeneric,
   onPreview,
+  docSummary = {},
+  onReview,
 }: {
   heading:      string
   policies:     any[]
@@ -527,6 +532,8 @@ function PolicyGroup({
   onDelete:     (p: any) => void
   onToggleGeneric: (p: any) => void
   onPreview:    (p: any) => void
+  docSummary?:  Record<string, { pending: number; version: string; published_at: string | null }>
+  onReview?:    (p: any) => void
 }) {
   return (
     <div className="rounded-card bg-white shadow-card">
@@ -566,6 +573,11 @@ function PolicyGroup({
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate">{p.name}</span>
                       {p.generic_onboarding && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><GraduationCap size={9} /> Onboarding</span>}
+                      {docSummary[p.id] && (docSummary[p.id].pending > 0
+                        ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><FilePenLine size={9} /> {docSummary[p.id].pending} to review</span>
+                        : docSummary[p.id].published_at
+                          ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal"><CheckCircle2 size={9} /> Updated · v{docSummary[p.id].version}</span>
+                          : null)}
                     </div>
                   </td>
                   {showSection && (
@@ -586,6 +598,16 @@ function PolicyGroup({
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="flex flex-nowrap items-center justify-end gap-1">
+                      {p.status === 'active' && docSummary[p.id] && onReview && (
+                        <button
+                          onClick={() => onReview(p)}
+                          title="Review adopted changes, download, or publish"
+                          aria-label="Review changes"
+                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-teal/40 px-2.5 text-xs font-medium text-teal hover:bg-teal-light/30"
+                        >
+                          <FilePenLine size={12} /> {docSummary[p.id].pending > 0 ? 'Review' : 'View / download'}
+                        </button>
+                      )}
                       {p.status === 'active' && (
                         <button
                           onClick={() => onPreview(p)}

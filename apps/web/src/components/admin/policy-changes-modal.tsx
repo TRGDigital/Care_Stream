@@ -36,14 +36,13 @@ function buildPrintDoc(policyName: string, contentHtml: string, version: string,
     h3 { font-size: 11.5pt; margin: 14px 0 4px; }
     p, li { margin: 6px 0; }
     ul, ol { padding-left: 20px; }
-    [class*="bg-green"] { background: #dcfce7; padding: 1px 3px; border-radius: 3px; }
-    [class*="border-green"] { border: 1px solid #86efac; border-radius: 5px; padding: 8px 12px; margin: 10px 0; background: #f0fdf4; }
+    [class*="bg-green"] { background: #dcfce7; border-radius: 3px; }
+    [class*="border-l-"] { border-left: 3px solid #4ade80; padding-left: 10px; margin: 8px 0; }
     .signoff { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 14px; font-size: 10pt; }
     .signoff table { border-collapse: collapse; }
     .signoff td { padding: 5px 14px 5px 0; vertical-align: top; }
     .signoff td:first-child { color: #555; white-space: nowrap; }
-    .foot { margin-top: 24px; border-top: 1px solid #eee; padding-top: 8px; font-size: 8pt; color: #999; }
-    @media print { .foot { position: fixed; bottom: 8mm; left: 18mm; right: 18mm; } }
+    .foot { margin-top: 28px; border-top: 1px solid #eee; padding-top: 8px; font-size: 8pt; color: #999; }
   </style></head><body>
     <div class="letterhead">${org?.logo_url ? `<img src="${org.logo_url}" alt="">` : ''}<div><div class="home">${homeName}</div><div class="addr">${esc(org?.address || '')}</div></div></div>
     <h1 class="title">${esc(policyName)}</h1>
@@ -119,17 +118,17 @@ function contentBlock(text: string, tracked: boolean): HTMLElement {
   p.className = tracked ? 'rounded bg-green-100 px-1 py-0.5 whitespace-pre-line' : 'whitespace-pre-line'
   return p
 }
+// A new section reads like a real section: a proper H2 heading + paragraph. In tracked
+// mode a subtle green marker (left border + highlighted text) shows it is a change; in
+// clean mode it is indistinguishable from the rest of the policy.
 function sectionBlock(title: string, text: string, tracked: boolean): HTMLElement {
-  if (tracked) {
-    const wrap = document.createElement('div')
-    wrap.className = 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
-    if (title) { const h = document.createElement('p'); h.className = 'text-sm font-bold text-green-900'; h.textContent = title; wrap.appendChild(h) }
-    const p = document.createElement('p'); p.className = 'whitespace-pre-line text-sm leading-relaxed text-green-900'; p.textContent = text; wrap.appendChild(p)
-    return wrap
-  }
   const wrap = document.createElement('div')
+  if (tracked) wrap.className = 'my-2 border-l-4 border-green-400 pl-3'
   if (title) { const h = document.createElement('h2'); h.textContent = title; wrap.appendChild(h) }
-  const p = document.createElement('p'); p.className = 'whitespace-pre-line'; p.textContent = text; wrap.appendChild(p)
+  const p = document.createElement('p')
+  p.textContent = text
+  p.className = tracked ? 'rounded bg-green-100 px-1 py-0.5 whitespace-pre-line' : 'whitespace-pre-line'
+  wrap.appendChild(p)
   return wrap
 }
 

@@ -421,9 +421,18 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
       highlightPlacements.push(placement)
       highlightLabels.push(x.r.requirement.slice(0, 90))
     })
-    // Anything without a kept anchor is a brand-new section.
-    missingReqs.forEach(r => {
-      if (r.match_index == null) { r.match_index = null; r.location_quote = null; r.placement = 'new_section' }
+    // Anything without a kept anchor is a brand-new section. Number these too, CONTINUING
+    // the sequence after the located items, and emit an aligned (empty-quote) entry so the
+    // UI can show them a destination (a callout at the end of the policy) instead of
+    // leaving them off the numbered plan entirely.
+    const newReqs = missingReqs.filter(r => r.match_index == null)
+    newReqs.forEach((r, j) => {
+      r.match_index    = located.length + j + 1
+      r.location_quote = null
+      r.placement      = 'new_section'
+      highlightQuotes.push('')
+      highlightPlacements.push('new_section')
+      highlightLabels.push(r.requirement.slice(0, 90))
     })
 
     // Combine-and-expand: rewrite each AMEND target from its existing wording so nothing
@@ -438,7 +447,14 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
       amendReqs.forEach((r, i) => { if (rewrites[i]) r.suggested_addition = rewrites[i] })
     }
   } else {
-    missingReqs.forEach(r => { r.placement = 'new_section' })
+    // No target policy text to anchor against: everything is a numbered new section.
+    missingReqs.forEach((r, j) => {
+      r.match_index = j + 1
+      r.placement   = 'new_section'
+      highlightQuotes.push('')
+      highlightPlacements.push('new_section')
+      highlightLabels.push(r.requirement.slice(0, 90))
+    })
   }
 
   // Verdict: nothing to add → covered across the library. A "partial" whose target

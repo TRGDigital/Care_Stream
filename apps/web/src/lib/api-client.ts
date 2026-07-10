@@ -955,7 +955,7 @@ export function createApiClient(token: string) {
         target_policy:    { id: string; name: string } | null
         suggested_new_policy_title: string | null
         highlight_quotes: string[]
-        highlight_placements?: Array<'amend' | 'add_under_heading'>
+        highlight_placements?: Array<'amend' | 'add_under_heading' | 'new_section'>
         highlight_labels?: string[]
         requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null; location_quote?: string | null; match_index?: number | null; placement?: 'amend' | 'add_under_heading' | 'new_section' | null }>
         disclaimer:       string

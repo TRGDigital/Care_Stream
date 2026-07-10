@@ -23,41 +23,97 @@ type HighlightItem = { i: number; quote: string; placement: string; label?: stri
 
 const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
 
-// Pass A — AMEND anchors: wrap the matched sentence in a coloured, numbered <mark>.
-// Text nodes only, so tags are never broken; each item is placed at most once.
-function highlightSentences(root: HTMLElement, items: HighlightItem[]) {
-  const regexes = items.map(it => ({ it, re: quoteToRegex(it.quote) })).filter(x => !!x.re) as { it: HighlightItem; re: RegExp }[]
-  if (!regexes.length) return
-  const remaining = new Set(regexes.map(x => x.it.i))
+// Wrap a match that spans one OR MORE text nodes in a coloured, numbered <mark>. The
+// old approach tested the regex against each text node in isolation, so a sentence the
+// formatted policy split across nodes (e.g. a phrase inside <strong>) never matched and
+// its number silently vanished. Here we search the block's concatenated text and wrap
+// the resulting range, so cross-node sentences highlight correctly.
+function markAcrossNodes(root: HTMLElement, re: RegExp, i: number): boolean {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const nodes: Text[] = []
+  const nodes: Text[] = []; const starts: number[] = []; let full = ''
   let n: Node | null
-  while ((n = walker.nextNode())) nodes.push(n as Text)
-  for (const node of nodes) {
-    const raw = node.nodeValue ?? ''
-    if (raw.trim().length < 8) continue
-    for (const { it, re } of regexes) {
-      if (!remaining.has(it.i)) continue
-      const m = re.exec(raw)
-      if (!m) continue
-      const before = raw.slice(0, m.index)
-      const after  = raw.slice(m.index + m[0].length)
-      const frag = document.createDocumentFragment()
-      if (before) frag.appendChild(document.createTextNode(before))
-      const mark = document.createElement('mark')
-      mark.className = `${quoteColour(it.i)} rounded px-0.5`
-      const badge = document.createElement('sup')
-      badge.textContent = String(it.i + 1)
-      badge.className = 'mr-0.5 font-bold'
-      mark.appendChild(badge)
-      mark.appendChild(document.createTextNode(m[0]))
-      frag.appendChild(mark)
-      if (after) frag.appendChild(document.createTextNode(after))
-      node.parentNode?.replaceChild(frag, node)
-      remaining.delete(it.i)
-      break
+  while ((n = walker.nextNode())) { starts.push(full.length); nodes.push(n as Text); full += (n as Text).nodeValue ?? '' }
+  re.lastIndex = 0
+  const m = re.exec(full)
+  if (!m || !m[0]) return false
+  const startIdx = m.index, endIdx = m.index + m[0].length
+  const locate = (idx: number, isEnd: boolean) => {
+    for (let k = 0; k < nodes.length; k++) {
+      const s = starts[k], e = s + (nodes[k].nodeValue?.length ?? 0)
+      if (isEnd ? (idx > s && idx <= e) : (idx >= s && idx < e)) return { node: nodes[k], off: idx - s }
     }
+    return null
   }
+  const start = locate(startIdx, false), end = locate(endIdx, true)
+  if (!start || !end) return false
+  try {
+    const range = document.createRange()
+    range.setStart(start.node, start.off)
+    range.setEnd(end.node, end.off)
+    const mark = document.createElement('mark')
+    mark.className = `${quoteColour(i)} rounded px-0.5`
+    const badge = document.createElement('sup')
+    badge.textContent = String(i + 1)
+    badge.className = 'mr-0.5 font-bold'
+    const contents = range.extractContents()
+    mark.appendChild(badge)
+    mark.appendChild(contents)
+    range.insertNode(mark)
+    return true
+  } catch { return false }
+}
+
+// Last-resort fallback so a located number can NEVER silently disappear: badge and tint
+// the whole block (paragraph/heading/list item) that contains the quote's opening words.
+function markBlockFallback(root: HTMLElement, quote: string, i: number): boolean {
+  const needle = normText(quote).split(' ').slice(0, 10).join(' ')
+  if (needle.length < 8) return false
+  const blocks = Array.from(root.querySelectorAll('p,li,h1,h2,h3,h4,h5,h6,td,blockquote')) as HTMLElement[]
+  const target = blocks.find(b => normText(b.textContent || '').includes(needle))
+  if (!target) return false
+  target.classList.add(quoteColour(i), 'rounded', 'px-0.5')
+  const badge = document.createElement('sup')
+  badge.textContent = String(i + 1)
+  badge.className = 'mr-0.5 font-bold'
+  target.insertBefore(badge, target.firstChild)
+  return true
+}
+
+// Pass A — AMEND anchors: highlight the sentence, guaranteeing the number appears.
+function highlightSentences(root: HTMLElement, items: HighlightItem[]) {
+  for (const it of items) {
+    const re = quoteToRegex(it.quote)
+    if (!re) continue
+    if (!markAcrossNodes(root, re, it.i)) markBlockFallback(root, it.quote, it.i)
+  }
+}
+
+// Pass C — NEW-SECTION items: no anchor exists, so show a destination anyway with a
+// numbered "new section" callout appended at the end of the policy.
+function appendNewSectionCallouts(root: HTMLElement, items: HighlightItem[]) {
+  if (!items.length) return
+  const wrap = document.createElement('div')
+  wrap.className = 'not-prose mt-4 space-y-2 border-t border-dashed border-teal-300 pt-3'
+  const heading = document.createElement('p')
+  heading.className = 'text-[10px] font-bold uppercase tracking-wide text-teal-700'
+  heading.textContent = 'Add these as new sections at the end'
+  wrap.appendChild(heading)
+  for (const it of items) {
+    const row = document.createElement('div')
+    row.className = 'flex items-start gap-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2 text-xs text-teal-900'
+    const badge = document.createElement('span')
+    badge.textContent = String(it.i + 1)
+    badge.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(it.i)}`
+    const body = document.createElement('span')
+    const strong = document.createElement('strong')
+    strong.textContent = 'New section. '
+    body.appendChild(strong)
+    body.appendChild(document.createTextNode(it.label ? it.label : `See item ${it.i + 1} on the left.`))
+    row.appendChild(badge)
+    row.appendChild(body)
+    wrap.appendChild(row)
+  }
+  root.appendChild(wrap)
 }
 
 // A dashed "add a subsection here" callout element.
@@ -112,8 +168,9 @@ function insertHeadingCallouts(root: HTMLElement, items: HighlightItem[]) {
 // beneath it is what's missing.
 function highlightQuotes(root: HTMLElement, quotes: string[], placements: string[] = [], labels: string[] = []) {
   const items: HighlightItem[] = quotes.map((quote, i) => ({ i, quote, placement: placements[i] ?? 'amend', label: labels[i] }))
-  highlightSentences(root, items.filter(it => it.placement !== 'add_under_heading'))
-  insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading'))
+  highlightSentences(root, items.filter(it => it.placement === 'amend' && it.quote))
+  insertHeadingCallouts(root, items.filter(it => it.placement === 'add_under_heading' && it.quote))
+  appendNewSectionCallouts(root, items.filter(it => it.placement === 'new_section'))
 }
 
 // Highlight every occurrence of a plain search term in the rendered policy (text
@@ -356,23 +413,21 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                   {missing.length > 0 && (
                     <div className="space-y-3">
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Plus size={15} className="text-amber-600" /> What to add ({missing.length})</p>
-                      {(() => { const located = missing.filter(r => r.match_index).length; const news = missing.length - located; return (located > 0 && news > 0) ? (
-                        <p className="-mt-1 text-xs text-neutral-mid">{located} fit{located === 1 ? 's' : ''} into an existing section (numbered &amp; highlighted right) · {news} need{news === 1 ? 's' : ''} a new section.</p>
+                      {(() => { const located = missing.filter(r => r.placement === 'amend' || r.placement === 'add_under_heading').length; const news = missing.filter(r => r.placement === 'new_section').length; return (located > 0 && news > 0) ? (
+                        <p className="-mt-1 text-xs text-neutral-mid">{located} fit{located === 1 ? 's' : ''} into an existing section (numbered &amp; highlighted right) · {news} need{news === 1 ? 's' : ''} a new section (numbered at the end).</p>
                       ) : null })()}
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
                           <div className="flex items-start gap-2">
-                            {r.match_index
-                              ? <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(r.match_index - 1)}`} title={`Add near highlight ${r.match_index} in the policy`}>{r.match_index}</span>
-                              : <span className="mt-0.5 flex shrink-0 items-center gap-0.5 rounded-full bg-gray-200 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gray-500"><Plus size={9} /> New</span>}
+                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour((r.match_index ?? 1) - 1)}`}>{r.match_index}</span>
                             <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
                           </div>
                           <p className="mt-1.5 text-xs text-amber-700">
-                            {r.match_index
-                              ? (r.placement === 'add_under_heading'
-                                  ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
-                                  : <><span className="font-semibold">Replace highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the improved wording below. It keeps your existing wording and adds what&rsquo;s missing.</>)
-                              : <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <> in your {detail.target_policy.name}</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>}
+                            {r.placement === 'add_under_heading'
+                              ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
+                              : r.placement === 'new_section'
+                                ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right)</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}.</>
+                                : <><span className="font-semibold">Replace highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the improved wording below. It keeps your existing wording and adds what&rsquo;s missing.</>}
                           </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
@@ -505,8 +560,12 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                             <li key={i} className="flex gap-2 text-xs text-neutral-dark">
                               <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`}>{i + 1}</span>
                               <span className="min-w-0">
-                                <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
-                                {detail.highlight_placements?.[i] === 'add_under_heading' && <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>}
+                                {detail.highlight_placements?.[i] === 'new_section'
+                                  ? <span className="text-neutral-dark">New section at the end{detail.highlight_labels?.[i] ? <>: {detail.highlight_labels[i]}</> : null}</span>
+                                  : <>
+                                      <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
+                                      {detail.highlight_placements?.[i] === 'add_under_heading' && <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>}
+                                    </>}
                               </span>
                             </li>
                           ))}

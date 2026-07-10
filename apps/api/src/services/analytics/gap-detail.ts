@@ -47,6 +47,39 @@ function glossaryBlock(glossary: GlossaryTerm[]): string {
   return `\n\nKEY TERMINOLOGY. Retain any of these that already appear in the existing wording, use the correct form when it is relevant to the requirement, and NEVER genericise, abbreviate away, or drop them:\n${lines}`
 }
 
+// ── Policy voice ──────────────────────────────────────────────────────────────
+// Suggestions go straight into the home's own policy, so they must read like a policy,
+// not a regulation. We mirror the target policy's own voice where we can, and fall back
+// to a declarative default. A regulation says "the provider must ensure"; a policy says
+// "we will" / "the service will" / "staff will".
+const VOICE_RULES = `WRITE IN POLICY VOICE, NOT REGULATION VOICE. This wording goes straight into the home's own policy, so it must read like the rest of it:
+- Use declarative statements. Prefer "will" (for example "we will", "the service will", "staff will"). Do NOT use "must", "shall", "should", "is required to", "needs to", "the provider must ensure" or "it is a requirement that" unless the policy sample below already uses that style.
+- Use the same subject and person the policy uses (for example "we" and "our", "the service" or "the home", "staff", "the registered manager"). Do not write "the provider" or "the registered person".
+- Match the policy's tense (present versus future).`
+
+// A few representative sentences from the target policy, to show the model its subject,
+// tense and modality so it can mirror them.
+function buildVoiceSample(text: string | null): string {
+  if (!text) return ''
+  const sentences = text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).map(s => s.trim())
+  const picked: string[] = []
+  for (const s of sentences) {
+    if (s.length < 30 || s.length > 240) continue
+    if (/\b(will|must|shall|we|our|staff|the (service|home|manager|registered))\b/i.test(s)) {
+      picked.push(s)
+      if (picked.length >= 4) break
+    }
+  }
+  return picked.join(' ')
+}
+
+function voiceBlock(sample: string): string {
+  const base = `\n\n${VOICE_RULES}`
+  return sample
+    ? `${base}\n\nMATCH THE VOICE OF THIS POLICY (mirror its subject, tense and modality; if it says "will", keep "will"):\n"""${sample}"""`
+    : `${base}\nNo policy sample is available, so default to declarative policy voice ("we will", "the service will", "staff will").`
+}
+
 export type Placement = 'amend' | 'add_under_heading' | 'new_section'
 
 export type GapRequirement = {
@@ -212,6 +245,7 @@ Respond with ONLY minified JSON, an array in the same order as the requirements:
 async function refineAmendments(
   items: { requirement: string; existing: string; suggestion: string | null }[],
   glossary: GlossaryTerm[],
+  voiceSample: string,
 ): Promise<string[]> {
   if (!items.length) return []
   const payload = items.map((it, i) =>
@@ -220,8 +254,9 @@ async function refineAmendments(
   const user = `You are improving specific sentences in a UK care-home policy. For EACH item, rewrite the EXISTING POLICY WORDING into a single improved passage that:
 - keeps EVERY specific detail already present (named roles, legal references, Act citations, defined terms),
 - folds in what is needed to meet the requirement,
+- keeps the voice, subject, tense and modality of the EXISTING POLICY WORDING (if it says "will", keep "will"; do not switch it to "must"),
 - reads as one coherent passage the home can use to REPLACE the existing wording.
-Never lose anything from the existing wording. Never invent facts. Keep it practical and specific to a care setting.${glossaryBlock(glossary)}
+Never lose anything from the existing wording. Never invent facts. Keep it practical and specific to a care setting.${glossaryBlock(glossary)}${voiceBlock(voiceSample)}
 
 ${payload}
 
@@ -245,6 +280,7 @@ async function verifyAndSuggest(
   namespace: string,
   nameById: Map<string, string>,
   glossary: GlossaryTerm[],
+  voiceSample: string,
 ): Promise<{ requirement: string; already_covered: boolean; covered_in: string | null; suggested_addition: string | null }[]> {
   if (!candidates.length) return []
 
@@ -274,7 +310,7 @@ For each requirement below, the excerpts are the most relevant passages found ac
 - If the excerpts show the requirement is ALREADY substantively addressed in one of the home's policies, set already_covered=true and name that policy in covered_in. Do NOT then suggest wording.
 - Otherwise set already_covered=false and write concise example wording (2 to 4 sentences) the home could add to a policy to meet the requirement. Ground it in the requirement; keep it practical and care-home specific.
 
-${payload}${glossaryBlock(glossary)}
+${payload}${glossaryBlock(glossary)}${voiceBlock(voiceSample)}
 
 Respond with ONLY minified JSON — an array in the same order:
 {"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>"}]}`
@@ -340,23 +376,9 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     .map(r => ({ requirement: r.requirement, status: 'already_covered' as const, already_covered_in: evidencePolicy?.name ?? null, suggested_addition: null }))
   const inPolicyCount = inPolicy.length
 
-  // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
-  //    The global key-terminology glossary is injected as a guardrail so drafts keep the
-  //    correct terms (e.g. "lasting power of attorney") and never genericise them.
-  const glossary = await getGlossary()
-  const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
-  const verified = await verifyAndSuggest(reg, candidates, namespace, nameById, glossary)
-
-  const verifiedReqs: GapRequirement[] = verified.map(v => v.already_covered
-    ? { requirement: v.requirement, status: 'already_covered', already_covered_in: v.covered_in, suggested_addition: null }
-    : { requirement: v.requirement, status: 'missing', already_covered_in: null, suggested_addition: v.suggested_addition })
-
-  const requirements = [...inPolicy, ...verifiedReqs]
-  const missingReqs = requirements.filter(r => r.status === 'missing')
-  const missingCount = missingReqs.length
-
-  // Where to add the missing text: the evidence policy for a partial; for a gap,
-  // the best title match among the home's policies (else "you'll need a new policy").
+  // Where to add the missing text: the evidence policy for a partial; for a gap, the best
+  // title match among the home's policies (else "you'll need a new policy"). Resolved FIRST
+  // so we can sample the target policy's voice and draft in it, not in regulation language.
   let targetPolicy: { id: string; name: string } | null = evidencePolicy
   let suggestedNewPolicyTitle: string | null = null
   if (!targetPolicy) {
@@ -379,13 +401,29 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     if (best) targetPolicy = { id: best.id, name: best.name }
     else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`
   }
+  const targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
+  const voiceSample = buildVoiceSample(targetText)
+
+  // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
+  //    The key-terminology glossary keeps the correct terms; the voice sample makes drafts
+  //    read like this home's own policy ("we will", not "the provider must ensure").
+  const glossary = await getGlossary()
+  const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
+  const verified = await verifyAndSuggest(reg, candidates, namespace, nameById, glossary, voiceSample)
+
+  const verifiedReqs: GapRequirement[] = verified.map(v => v.already_covered
+    ? { requirement: v.requirement, status: 'already_covered', already_covered_in: v.covered_in, suggested_addition: null }
+    : { requirement: v.requirement, status: 'missing', already_covered_in: null, suggested_addition: v.suggested_addition })
+
+  const requirements = [...inPolicy, ...verifiedReqs]
+  const missingReqs = requirements.filter(r => r.status === 'missing')
+  const missingCount = missingReqs.length
 
   // 3. For each MISSING requirement, find WHERE in the target policy to add/amend it.
   //    Number the highlights in DOCUMENT order (top to bottom) so the badges the reader
   //    sees down the policy run 1, 2, 3, ... rather than in requirement order. A heading
   //    anchor is flagged so the UI can show "add a subsection below this heading" instead
   //    of implying the heading title itself is the fix.
-  const targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
   const highlightQuotes: string[] = []
   const highlightPlacements: Placement[] = []
   const highlightLabels: string[] = []
@@ -443,6 +481,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
       const rewrites = await refineAmendments(
         amendReqs.map(r => ({ requirement: r.requirement, existing: r.location_quote as string, suggestion: r.suggested_addition ?? null })),
         glossary,
+        voiceSample,
       )
       amendReqs.forEach((r, i) => { if (rewrites[i]) r.suggested_addition = rewrites[i] })
     }

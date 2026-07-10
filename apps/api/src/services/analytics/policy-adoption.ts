@@ -9,7 +9,7 @@ import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
-const END_MATTER_RE = /\b(review date|next review|reviewed|dated?|signed|signature|version|approved by|authorised by|policy owner|registered (office|number|charity)|company (number|registration)|\bltd\b|limited|©|copyright)\b/i
+const END_MATTER_RE = /\b(review date|policy review|next review|reviewed|dated?|signed|signature|version|approved by|authorised by|policy owner|source url|declaration|registered (office|number|charity)|company (number|registration)|telephone|\bltd\b|limited|©|copyright)\b/i
 
 // Role-holder mapping — mirrors settings.ts so the same specialisms drive both.
 const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
@@ -115,13 +115,17 @@ export async function revertChange(tenantId: string, changeId: string): Promise<
 export async function publishDocument(tenantId: string, policyId: string, publishedBy: string): Promise<{ version: string; published: number } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
+  // Recompose the draft from the original + active changes with the current placement logic,
+  // so the published snapshot is always correct even if it was first applied earlier.
+  await rebuildDraft(doc.id)
+  const fresh = await (prisma as any).policyDocument.findUnique({ where: { id: doc.id } })
   const nextVersion = bumpVersion(doc.version as string)
   const res = await (prisma as any).policyDocumentChange.updateMany({
     where: { document_id: doc.id, published: false, reverted: false }, data: { published: true },
   })
   await (prisma as any).policyDocument.update({
     where: { id: doc.id },
-    data: { published_content: doc.draft_content, published_at: new Date(), published_by: publishedBy, version: nextVersion },
+    data: { published_content: fresh?.draft_content ?? doc.draft_content, published_at: new Date(), published_by: publishedBy, version: nextVersion },
   })
   return { version: nextVersion, published: res.count ?? 0 }
 }

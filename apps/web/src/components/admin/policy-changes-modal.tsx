@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare } from 'lucide-react'
 
@@ -8,17 +8,101 @@ type Doc = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['p
 type Change = Doc['changes'][number]
 
 const norm = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+const placementLabel = (p: string) => p === 'amend' ? 'Amended a paragraph' : p === 'add_under_heading' ? 'Added a subsection' : 'New section'
 
-// Split the draft into blocks (headings + paragraphs) for a lightweight, AI-free render.
-function parseBlocks(text: string): Array<{ type: 'h2' | 'p'; text: string }> {
-  return text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean).map(block => {
-    if (block.startsWith('## ')) return { type: 'h2' as const, text: block.slice(3).trim() }
-    if (block.startsWith('# '))  return { type: 'h2' as const, text: block.slice(2).trim() }
-    return { type: 'p' as const, text: block }
-  })
+// The smallest block whose text contains the anchor phrase.
+function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
+  const needle = norm(anchor)
+  if (needle.length < 6) return null
+  const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote')) as HTMLElement[]
+  let target: HTMLElement | null = null
+  for (const b of blocks) {
+    if (norm(b.textContent || '').includes(needle)) {
+      if (!target || (b.textContent?.length ?? 0) < (target.textContent?.length ?? 0)) target = b
+    }
+  }
+  return target
 }
 
-const placementLabel = (p: string) => p === 'amend' ? 'Amended a paragraph' : p === 'add_under_heading' ? 'Added a subsection' : 'New section'
+function findHeading(root: HTMLElement, anchor: string): HTMLElement | null {
+  const q = norm(anchor)
+  if (!q) return null
+  return (Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]).find(h => {
+    const ht = norm(h.textContent || '')
+    return ht === q || (q.length >= 6 && ht.length >= 6 && (ht.includes(q) || q.includes(ht)))
+  }) ?? null
+}
+
+// Trailing sign-off / dates / company info a new section must sit ABOVE.
+const END_MATTER_RE = /\b(signed|signature|date|dated|reviewed|review date|next review|policy review|version|approved by|authorised by|policy owner|source url|declaration|registered (office|number|charity)|company (number|registration)|telephone|©|copyright|\bltd\b|limited)\b/i
+function endMatterAnchor(root: HTMLElement): HTMLElement | null {
+  const blocks = Array.from(root.children) as HTMLElement[]
+  let anchor: HTMLElement | null = null
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const t = norm(blocks[i].textContent || '')
+    if (!t) continue
+    if (t.length <= 240 && END_MATTER_RE.test(t)) { anchor = blocks[i]; continue }
+    break
+  }
+  return anchor
+}
+function insertBeforeEndMatter(root: HTMLElement, node: HTMLElement) {
+  const anchor = endMatterAnchor(root)
+  if (anchor && anchor.parentNode === root) root.insertBefore(node, anchor)
+  else root.appendChild(node)
+}
+
+// Hide the "Source URL: …" metadata line — it isn't part of the policy.
+function stripSourceUrl(root: HTMLElement) {
+  for (const el of Array.from(root.querySelectorAll('p,li,div')) as HTMLElement[]) {
+    if (/^\s*source url\s*[:>]/i.test(el.textContent || '')) el.remove()
+  }
+}
+
+function contentBlock(text: string, tracked: boolean): HTMLElement {
+  const p = document.createElement('p')
+  p.textContent = text
+  p.className = tracked ? 'rounded bg-green-100 px-1 py-0.5 whitespace-pre-line' : 'whitespace-pre-line'
+  return p
+}
+function sectionBlock(title: string, text: string, tracked: boolean): HTMLElement {
+  if (tracked) {
+    const wrap = document.createElement('div')
+    wrap.className = 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
+    if (title) { const h = document.createElement('p'); h.className = 'text-sm font-bold text-green-900'; h.textContent = title; wrap.appendChild(h) }
+    const p = document.createElement('p'); p.className = 'whitespace-pre-line text-sm leading-relaxed text-green-900'; p.textContent = text; wrap.appendChild(p)
+    return wrap
+  }
+  const wrap = document.createElement('div')
+  if (title) { const h = document.createElement('h2'); h.textContent = title; wrap.appendChild(h) }
+  const p = document.createElement('p'); p.className = 'whitespace-pre-line'; p.textContent = text; wrap.appendChild(p)
+  return wrap
+}
+
+// Apply the adopted changes to the rendered (formatted) policy: amend replaces its block,
+// a subsection lands under its heading, a new section lands above the sign-off/dates.
+function applyChanges(root: HTMLElement, changes: Change[], tracked: boolean) {
+  stripSourceUrl(root)
+  for (const c of changes) {
+    if (c.placement === 'amend' && c.old_text) {
+      const block = findBlock(root, c.old_text)
+      if (block) {
+        block.textContent = c.new_text
+        if (tracked) block.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+        block.classList.add('whitespace-pre-line')
+      } else {
+        insertBeforeEndMatter(root, contentBlock(c.new_text, tracked))
+      }
+    } else if (c.placement === 'add_under_heading' && c.old_text) {
+      const heading = findHeading(root, c.old_text)
+      const node = contentBlock(c.new_text, tracked)
+      if (heading) heading.after(node)
+      else insertBeforeEndMatter(root, node)
+    } else {
+      insertBeforeEndMatter(root, sectionBlock(c.section_title, c.new_text, tracked))
+    }
+  }
+}
 
 export function PolicyChangesModal({ token, policyId, policyName, onClose, onPublished }: {
   token: string
@@ -28,29 +112,33 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   onPublished: (pending: number) => void
 }) {
   const [doc, setDoc]         = useState<Doc | null>(null)
+  const [html, setHtml]       = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
   const [tracked, setTracked] = useState(true)
   const [busy, setBusy]       = useState<string | null>(null)   // 'publish' | change id
   const [publishedMsg, setPublishedMsg] = useState('')
+  const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
     setLoading(true)
-    createApiClient(token).analytics.policyDocument(policyId)
-      .then(setDoc).catch(e => setError(e.message ?? 'Could not load the document.')).finally(() => setLoading(false))
+    const api = createApiClient(token)
+    Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId).catch(() => ({ html: '' }))])
+      .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
+      .catch(e => setError(e.message ?? 'Could not load the document.'))
+      .finally(() => setLoading(false))
   }
   useEffect(load, [token, policyId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const pending = (doc?.changes ?? []).filter(c => !c.published)
 
-  // Text that changed, for green highlighting of the affected blocks.
-  const changedTexts = useMemo(() => (doc?.changes ?? []).flatMap(c => [norm(c.new_text), norm(c.section_title)]).filter(Boolean), [doc])
-  const isChanged = (blockText: string) => {
-    const b = norm(blockText)
-    return b.length >= 8 && changedTexts.some(ct => ct.includes(b))
-  }
-
-  const blocks = useMemo(() => parseBlocks(doc?.document?.draft_content ?? ''), [doc])
+  // Render the formatted policy (letterhead stripped, real headings) and apply the changes.
+  useEffect(() => {
+    const root = previewRef.current
+    if (!root || html === null || !doc?.document) return
+    root.innerHTML = html
+    applyChanges(root, doc.changes ?? [], tracked)
+  }, [html, doc, tracked])
 
   async function revert(changeId: string) {
     if (!confirm('Revert this change? It will be removed from the draft.')) return
@@ -107,24 +195,18 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
           <p className="px-6 py-20 text-center text-sm text-neutral-mid">Nothing adopted into this policy yet.</p>
         ) : (
           <div className="grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[86vh] lg:grid-cols-[1fr_22rem] lg:divide-x lg:divide-y-0">
-            {/* Left — the draft with changes highlighted */}
+            {/* Left — the formatted policy with changes applied */}
             <div className="overflow-y-auto px-6 py-5 lg:max-h-[86vh]">
-              {tracked && <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are the adopted changes. Toggle <strong>Clean</strong> to preview the finished policy.</p>}
-              <div className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4">
-                {blocks.map((b, i) => {
-                  const changed = tracked && isChanged(b.text)
-                  const cls = changed ? 'rounded bg-green-100 px-1 py-0.5' : ''
-                  return b.type === 'h2'
-                    ? <h2 key={i} className={cls}>{b.text}</h2>
-                    : <p key={i} className={`${cls} whitespace-pre-line`}>{b.text}</p>
-                })}
-              </div>
+              {tracked
+                ? <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are the adopted changes. Toggle <strong>Clean</strong> to preview the finished policy.</p>
+                : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied.</p>}
+              <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             </div>
 
             {/* Right — the change log with revert */}
             <div className="overflow-y-auto bg-neutral-light/20 px-5 py-5 lg:max-h-[86vh]">
               <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Adopted changes</p>
-              {pending.length === 0 && (doc.changes ?? []).length === 0 && <p className="mt-2 text-sm text-neutral-mid">No changes.</p>}
+              {(doc.changes ?? []).length === 0 && <p className="mt-2 text-sm text-neutral-mid">No changes.</p>}
               <ul className="mt-3 space-y-2">
                 {(doc.changes ?? []).map(c => (
                   <li key={c.id} className={`rounded-lg border px-3 py-2.5 ${c.published ? 'border-gray-100 bg-white' : 'border-green-200 bg-green-50/60'}`}>

@@ -6,14 +6,6 @@ import { X, Loader2, CheckCircle2, Plus, FileText, Sparkles, Mail, Scale, FilePl
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
-// Build a whitespace-tolerant, case-insensitive regex from a quoted sentence.
-function quoteToRegex(q: string): RegExp | null {
-  const words = q.trim().split(/\s+/).filter(Boolean)
-  if (words.length < 3) return null
-  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-  try { return new RegExp(escaped.join('\\s+'), 'i') } catch { return null }
-}
-
 // Distinct highlight colours, one per matched passage. Kept as full class strings
 // so Tailwind includes them; teal is reserved for the search box.
 const QUOTE_PALETTE = ['bg-yellow-200', 'bg-sky-200', 'bg-green-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200', 'bg-lime-200', 'bg-fuchsia-200']
@@ -23,55 +15,24 @@ type HighlightItem = { i: number; quote: string; placement: string; label?: stri
 
 const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
 
-// Wrap a match that spans one OR MORE text nodes in a coloured, numbered <mark>. The
-// old approach tested the regex against each text node in isolation, so a sentence the
-// formatted policy split across nodes (e.g. a phrase inside <strong>) never matched and
-// its number silently vanished. Here we search the block's concatenated text and wrap
-// the resulting range, so cross-node sentences highlight correctly.
-function markAcrossNodes(root: HTMLElement, re: RegExp, i: number): boolean {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const nodes: Text[] = []; const starts: number[] = []; let full = ''
-  let n: Node | null
-  while ((n = walker.nextNode())) { starts.push(full.length); nodes.push(n as Text); full += (n as Text).nodeValue ?? '' }
-  re.lastIndex = 0
-  const m = re.exec(full)
-  if (!m || !m[0]) return false
-  const startIdx = m.index, endIdx = m.index + m[0].length
-  const locate = (idx: number, isEnd: boolean) => {
-    for (let k = 0; k < nodes.length; k++) {
-      const s = starts[k], e = s + (nodes[k].nodeValue?.length ?? 0)
-      if (isEnd ? (idx > s && idx <= e) : (idx >= s && idx < e)) return { node: nodes[k], off: idx - s }
+// Highlight the WHOLE block (paragraph or bullet) the anchor phrase sits in, and badge it
+// with its number. We deliberately tint the entire block, not just the matched phrase: the
+// suggested wording replaces the whole paragraph, so highlighting only a fragment would
+// invite the tenant to swap part of a sentence and end up with a garbled hybrid. We locate
+// via the short anchor (reliable) but always highlight the full block it belongs to, and
+// pick the smallest block that contains the anchor.
+function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
+  const needle = normText(anchor)
+  if (needle.length < 6) return false
+  const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote')) as HTMLElement[]
+  let target: HTMLElement | null = null
+  for (const b of blocks) {
+    if (normText(b.textContent || '').includes(needle)) {
+      if (!target || (b.textContent?.length ?? 0) < (target.textContent?.length ?? 0)) target = b
     }
-    return null
   }
-  const start = locate(startIdx, false), end = locate(endIdx, true)
-  if (!start || !end) return false
-  try {
-    const range = document.createRange()
-    range.setStart(start.node, start.off)
-    range.setEnd(end.node, end.off)
-    const mark = document.createElement('mark')
-    mark.className = `${quoteColour(i)} rounded px-0.5`
-    const badge = document.createElement('sup')
-    badge.textContent = String(i + 1)
-    badge.className = 'mr-0.5 font-bold'
-    const contents = range.extractContents()
-    mark.appendChild(badge)
-    mark.appendChild(contents)
-    range.insertNode(mark)
-    return true
-  } catch { return false }
-}
-
-// Last-resort fallback so a located number can NEVER silently disappear: badge and tint
-// the whole block (paragraph/heading/list item) that contains the quote's opening words.
-function markBlockFallback(root: HTMLElement, quote: string, i: number): boolean {
-  const needle = normText(quote).split(' ').slice(0, 10).join(' ')
-  if (needle.length < 8) return false
-  const blocks = Array.from(root.querySelectorAll('p,li,h1,h2,h3,h4,h5,h6,td,blockquote')) as HTMLElement[]
-  const target = blocks.find(b => normText(b.textContent || '').includes(needle))
   if (!target) return false
-  target.classList.add(quoteColour(i), 'rounded', 'px-0.5')
+  target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
   const badge = document.createElement('sup')
   badge.textContent = String(i + 1)
   badge.className = 'mr-0.5 font-bold'
@@ -79,14 +40,13 @@ function markBlockFallback(root: HTMLElement, quote: string, i: number): boolean
   return true
 }
 
-// Pass A — AMEND anchors: highlight the sentence. Returns the items it could NOT place,
-// so they never silently disappear — they fall through to an end-of-policy callout.
+// Pass A — AMEND anchors: highlight the whole containing block. Returns the items it could
+// NOT place, so they never silently disappear — they fall through to an end-of-policy
+// callout that quotes the wording to find.
 function highlightSentences(root: HTMLElement, items: HighlightItem[]): HighlightItem[] {
   const unplaced: HighlightItem[] = []
   for (const it of items) {
-    const re = quoteToRegex(it.quote)
-    if (!re) { unplaced.push(it); continue }
-    if (!markAcrossNodes(root, re, it.i) && !markBlockFallback(root, it.quote, it.i)) unplaced.push(it)
+    if (!markBlock(root, it.quote, it.i)) unplaced.push(it)
   }
   return unplaced
 }
@@ -485,7 +445,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                               ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
                               : r.placement === 'new_section'
                                 ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right), above the dates and sign-off</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}. Add it with the heading below.</>
-                                : <><span className="font-semibold">Replace highlight {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the improved wording below. It keeps your existing wording and adds what&rsquo;s missing.</>}
+                                : <><span className="font-semibold">Replace the whole highlighted paragraph {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the wording below. It keeps everything already in that paragraph and adds what&rsquo;s missing, so swap the paragraph in full rather than part of it.</>}
                           </p>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
@@ -625,7 +585,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                                   ? <span className="text-neutral-dark">New section{detail.highlight_labels?.[i] ? <>: {detail.highlight_labels[i]}</> : null}</span>
                                   : <>
                                       <span className={`rounded px-1.5 py-0.5 ${quoteColour(i)}`}>{q}</span>
-                                      {detail.highlight_placements?.[i] === 'add_under_heading' && <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>}
+                                      {detail.highlight_placements?.[i] === 'add_under_heading'
+                                        ? <span className="ml-1 text-neutral-mid">(heading, add a subsection below it)</span>
+                                        : <span className="ml-1 text-neutral-mid">(replace the whole highlighted paragraph)</span>}
                                     </>}
                               </span>
                             </li>

@@ -239,7 +239,29 @@ Respond with ONLY minified JSON, an array in the same order as the requirements:
   }
 }
 
-// ── Step 2b: for AMEND locations, rewrite the existing sentence into one improved ──
+// Expand a short matched phrase to the FULL block (paragraph or bullet) it sits in, so a
+// suggested replacement is a clean swap for the whole block, not a fragment that would
+// leave a garbled half-old, half-new sentence. Uses newline paragraphs, falling back to
+// sentence boundaries if the "paragraph" is missing or unreasonably long.
+function expandToBlock(text: string, pos: number, len: number): string {
+  if (pos < 0) return text.slice(0, 0)
+  const end0 = pos + len
+  let ps = text.lastIndexOf('\n', pos); ps = ps < 0 ? 0 : ps + 1
+  let pe = text.indexOf('\n', end0);   pe = pe < 0 ? text.length : pe
+  const para = text.slice(ps, pe).trim()
+  if (para.length >= 20 && para.length <= 700) return para
+  // Sentence fallback within a bounded window around the phrase.
+  const winStart = Math.max(0, pos - 400), winEnd = Math.min(text.length, end0 + 400)
+  const before = text.slice(winStart, pos)
+  const sb = before.lastIndexOf('. ')
+  const start = sb >= 0 ? winStart + sb + 2 : Math.max(ps, winStart)
+  const after = text.slice(end0, winEnd)
+  const sa = after.indexOf('. ')
+  const stop = sa >= 0 ? end0 + sa + 1 : Math.min(pe, winEnd)
+  return text.slice(start, stop).trim() || para
+}
+
+// ── Step 2b: for AMEND locations, rewrite the existing block into one improved ──
 //             passage that KEEPS everything already there and folds in the requirement.
 //             This is why an amendment reads as a richer version of the home's own
 //             wording rather than a generic block that silently drops their specifics.
@@ -475,10 +497,13 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     // Assign sequential numbers in document order and build the aligned highlight arrays.
     located.forEach((x, k) => {
       const placement: Placement = x.hit.is_heading ? 'add_under_heading' : 'amend'
-      x.r.match_index    = k + 1
-      x.r.location_quote = x.hit.quote
-      x.r.placement      = placement
-      highlightQuotes.push(x.hit.quote)
+      x.r.match_index = k + 1
+      x.r.placement   = placement
+      // Ground the rewrite (and what the tenant replaces) on the FULL paragraph/bullet the
+      // anchor sits in, not just the short matching phrase, so the suggestion is a complete
+      // drop-in replacement for the whole block and nothing already in it is lost.
+      x.r.location_quote = placement === 'amend' ? expandToBlock(targetText, x.pos, x.hit.quote.length) : x.hit.quote
+      highlightQuotes.push(x.hit.quote)   // short anchor: reliable to locate; the UI highlights the whole block it sits in
       highlightPlacements.push(placement)
       highlightLabels.push(x.r.requirement.slice(0, 90))
     })

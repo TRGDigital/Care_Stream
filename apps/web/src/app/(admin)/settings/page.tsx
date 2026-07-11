@@ -822,14 +822,15 @@ export default function SettingsPage() {
             These are your policy <strong>merge fields</strong>. They are used in suggested policy wording and on the sign-off and header of any policy you download. Update them here and re-adopt or re-download to refresh your policies.
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             {[
-              { key: 'nominated_individual', label: 'Nominated individual', ph: 'e.g. John Brown' },
-              { key: 'default_approver',    label: 'Default approver',     ph: 'Who signs policies off (defaults to the registered manager)' },
-              { key: 'cqc_location_id',     label: 'CQC location ID',       ph: 'e.g. 1-000000001' },
-              { key: 'cqc_provider_id',     label: 'CQC provider ID',       ph: 'e.g. 1-000000002' },
-              { key: 'review_cycle_months', label: 'Review cycle (months)', ph: 'e.g. 12' },
-              { key: 'version_scheme',      label: 'Starting version',      ph: 'e.g. 1.0' },
+              { key: 'nominated_individual', label: 'Nominated individual', ph: 'e.g. John Brown', max: 120 },
+              { key: 'default_approver',    label: 'Default approver',     ph: 'Who signs policies off (defaults to the registered manager)', max: 120 },
+              { key: 'cqc_location_id',     label: 'CQC location ID',       ph: 'e.g. 1-000000001', max: 120 },
+              { key: 'cqc_provider_id',     label: 'CQC provider ID',       ph: 'e.g. 1-000000002', max: 120 },
+              { key: 'review_cycle_months', label: 'Review cycle (months)', ph: 'e.g. 12', max: 120 },
+              { key: 'version_scheme',      label: 'Starting version',      ph: 'e.g. 1.0', max: 120 },
+              { key: 'address',             label: 'Address',               ph: 'Full address as it should appear on policies', max: 300 },
             ].map(f => (
               <div key={f.key}>
                 <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
@@ -839,23 +840,11 @@ export default function SettingsPage() {
                   onChange={e => setOrgDetails(d => ({ ...d, [f.key]: e.target.value }))}
                   onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
                   placeholder={f.ph}
-                  maxLength={120}
+                  maxLength={f.max}
                   className={INPUT}
                 />
               </div>
             ))}
-            <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-neutral-dark">Address</label>
-              <input
-                type="text"
-                value={orgDetails.address ?? ''}
-                onChange={e => setOrgDetails(d => ({ ...d, address: e.target.value }))}
-                onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
-                placeholder="Full address as it should appear on policies"
-                maxLength={300}
-                className={INPUT}
-              />
-            </div>
           </div>
 
           <div className="mt-4 flex items-center gap-3">

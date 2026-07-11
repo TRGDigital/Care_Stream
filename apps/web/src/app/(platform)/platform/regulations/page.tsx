@@ -166,11 +166,11 @@ export default function RegulationsPage() {
           <div className="rounded-lg border border-blue-200 bg-white px-4 py-3 space-y-1.5">
             <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Important — what this means in practice</p>
             <ul className="space-y-1 text-blue-800 leading-relaxed">
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />A newly added regulation is immediately available to the AI and is searchable by name from the moment it is saved.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />It will <strong>not</strong> appear automatically in responses unless a policy chunk already cites it by its reference key, or a staff member asks a question that names it explicitly.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />Regulations are stored as a single entry — they are <strong>not</strong> chunked like policies. The full summary, care home context, care company interaction, and practical meaning fields are all passed to the AI when the regulation is triggered.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />To link a regulation to existing policies, those policies must be re-ingested so their chunks are tagged with the new regulation's reference key.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />The <strong>Also known as</strong> field is critical for detection — include every abbreviation, short name, and common variant (e.g. for GDPR: "Data Protection, UK GDPR, ICO").</li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>A newly added regulation is immediately available to the AI and is searchable by name from the moment it is saved.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>It will <strong>not</strong> appear automatically in responses unless a policy chunk already cites it by its reference key, or a staff member asks a question that names it explicitly.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>Regulations are stored as a single entry — they are <strong>not</strong> chunked like policies. The full summary, care home context, care company interaction, and practical meaning fields are all passed to the AI when the regulation is triggered.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>To link a regulation to existing policies, those policies must be re-ingested so their chunks are tagged with the new regulation's reference key.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>The <strong>Also known as</strong> field is critical for detection — include every abbreviation, short name, and common variant (e.g. for GDPR: "Data Protection, UK GDPR, ICO").</span></li>
             </ul>
           </div>
         </div>
@@ -182,10 +182,10 @@ export default function RegulationsPage() {
             <div className="space-y-1.5">
               <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching signals</p>
               <p className="leading-relaxed text-amber-900">Three fields decide which of a home&rsquo;s policies get tested against this regulation, and stop near-neighbour regulations being confused. Separate from &ldquo;Also known as&rdquo; (which drives the staff chatbot):</p>
-              <ul className="mt-1 space-y-1 text-amber-900">
-                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Expected policy titles</strong> — canonical document names that satisfy this reg.</li>
-                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Match terms</strong> — discriminating words a policy on this reg contains (e.g. &ldquo;section 117&rdquo;, &ldquo;AMHP&rdquo;).</li>
-                <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><strong>Distinguish from</strong> — the related regs this must NOT be counted as (e.g. MHA 1983 vs MCA 2005 / DoLS).</li>
+              <ul className="mt-1 space-y-1.5 text-amber-900">
+                <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><span><strong>Expected policy titles</strong> — canonical document names that satisfy this reg.</span></li>
+                <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><span><strong>Match terms</strong> — discriminating words a policy on this reg contains (e.g. &ldquo;section 117&rdquo;, &ldquo;AMHP&rdquo;).</span></li>
+                <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" /><span><strong>Distinguish from</strong> — the related regs this must NOT be counted as (e.g. MHA 1983 vs MCA 2005 / DoLS).</span></li>
               </ul>
             </div>
             <div className="space-y-1.5">
@@ -248,12 +248,21 @@ export default function RegulationsPage() {
           </div>
 
           <div className="rounded-lg border border-sky-200 bg-sky-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-sky-700">Role-holder names in policies (the &ldquo;(Name)&rdquo; in brackets)</p>
-            <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings &rarr; Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>
-            <ul className="mt-1 space-y-1 leading-relaxed text-sky-900">
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />The names come from the <strong>role-holders</strong> in Organisation details, which fill automatically from staff: the <strong>Care Manager</strong> position becomes the registered manager, and the matching specialist roles (safeguarding lead, IPC lead, dignity champion, Caldicott Guardian, fire safety officer) become theirs. Admins can add extra names too.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />It is applied at <strong>render time</strong> (the policy preview, the review-changes view, and the downloaded copy) and <strong>never edits the stored policy</strong>, so it is always current: change the role-holder and the name updates everywhere, no re-run needed.</li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" /><strong>First mention only</strong> (so it does not repeat on every line), and where a role is <strong>shared</strong> it lists all the names. If the policy already names the role in brackets, we leave it. It does not yet flow into staff Q&amp;A answers.</li>
+            <p className="text-xs font-bold uppercase tracking-wide text-sky-700">Role-holder names in policies</p>
+            <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings, then Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>
+            <ul className="mt-1 space-y-1.5 leading-relaxed text-sky-900">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
+                <span>The names come from the <strong>role-holders</strong> in Organisation details, which fill automatically from staff: the <strong>Care Manager</strong> position becomes the registered manager, and the matching specialist roles (safeguarding lead, IPC lead, dignity champion, Caldicott Guardian, fire safety officer) become theirs. Admins can add extra names too.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
+                <span>It is applied at <strong>render time</strong> (the policy preview, the review-changes view and the downloaded copy) and <strong>never edits the stored policy</strong>, so it is always current: change the role-holder and the name updates everywhere, no re-run needed.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
+                <span><strong>First mention only</strong> (so it does not repeat on every line), and where a role is <strong>shared</strong> it lists all the names. If the policy already names the role in brackets, we leave it. It does not yet flow into staff Q&amp;A answers.</span>
+              </li>
             </ul>
           </div>
         </div>

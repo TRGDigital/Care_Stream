@@ -80,25 +80,30 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
   const setting = facilityTypeToSetting(tenant.facility_type as string)
   const serviceProfile = resolveServiceProfile(setting, (tenant.service_profile ?? {}) as Record<string, unknown>)
 
-  // Policy role-holders are DERIVED from staff specialisms, not re-entered — a staff member
-  // assigned the matching specialist role becomes that role-holder in the policy variables.
+  // Policy role-holders combine names DERIVED from staff (their position or specialist role)
+  // with any names entered MANUALLY in Organisation details. A staff member with the matching
+  // position/specialism populates the role automatically; admins can add extra names too.
+  const od = (tenant.organisation_details ?? {}) as Record<string, string>
   const staff = await (prisma as any).user.findMany({
-    where: { tenant_id: tenantId }, select: { name: true, specialisms: true },
+    where: { tenant_id: tenantId }, select: { name: true, job_role: true, specialisms: true },
   }).catch(() => [])
-  const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
-    { key: 'safeguarding_lead',  role: 'Safeguarding lead',                     match: /safeguard/i },
-    { key: 'caldicott_guardian', role: 'Caldicott Guardian',                    match: /caldicott/i },
-    { key: 'ipc_lead',           role: 'Infection prevention & control lead',   match: /infection|(?:^|\b)ipc\b/i },
-    { key: 'fire_safety_officer',role: 'Fire safety officer',                   match: /fire/i },
-    { key: 'dignity_champion',   role: 'Dignity champion',                      match: /dignity/i },
+  const bySpecialism = (m: RegExp) => (staff as any[])
+    .filter(s => Array.isArray(s.specialisms) && s.specialisms.some((sp: string) => m.test(String(sp))))
+    .map(s => String(s.name)).filter(Boolean)
+  const byPosition = (m: RegExp) => (staff as any[])
+    .filter(s => m.test(String(s.job_role ?? '')))
+    .map(s => String(s.name)).filter(Boolean)
+  const manualOf = (key: string) => String(od[key] ?? '').split(',').map(s => s.trim()).filter(Boolean)
+
+  const ROLE_DEFS: Array<{ key: string; role: string; derived: string[] }> = [
+    { key: 'registered_manager',  role: 'Registered manager',                  derived: byPosition(/care manager|registered manager/i) },
+    { key: 'safeguarding_lead',   role: 'Safeguarding lead',                   derived: bySpecialism(/safeguard/i) },
+    { key: 'ipc_lead',            role: 'Infection prevention & control lead', derived: bySpecialism(/infection|(?:^|\b)ipc\b/i) },
+    { key: 'dignity_champion',    role: 'Dignity champion',                    derived: bySpecialism(/dignity/i) },
+    { key: 'caldicott_guardian',  role: 'Caldicott Guardian',                  derived: bySpecialism(/caldicott/i) },
+    { key: 'fire_safety_officer', role: 'Fire safety officer',                 derived: bySpecialism(/fire/i) },
   ]
-  const roleHolders = ROLE_MAP.map(m => ({
-    key:   m.key,
-    role:  m.role,
-    names: (staff as any[])
-      .filter(s => Array.isArray(s.specialisms) && s.specialisms.some((sp: string) => m.match.test(String(sp))))
-      .map(s => String(s.name)).filter(Boolean),
-  }))
+  const roleHolders = ROLE_DEFS.map(d => ({ key: d.key, role: d.role, derived: d.derived, manual: manualOf(d.key) }))
 
   const { own: glossaryOwn, excludes: glossaryExcludes } = splitGlossary(normaliseGlossary(tenant.translation_glossary))
   const platformGlossary = await platformGlossaryList()
@@ -247,10 +252,10 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
-    const ALLOWED = new Set(['registered_manager', 'nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver'])
+    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
-    // one at adoption. Manual values here override the staff-derived suggestion.
-    const ROLE_KEYS = new Set(['safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion'])
+    // one at adoption. These add to the names derived from staff positions/specialisms.
+    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
       if (!(ALLOWED.has(k) || ROLE_KEYS.has(k)) || typeof v !== 'string') continue

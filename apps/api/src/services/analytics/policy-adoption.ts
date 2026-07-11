@@ -190,20 +190,24 @@ export async function getAdoptionContext(tenantId: string): Promise<{
   const od = (tenant?.organisation_details ?? {}) as Record<string, string>
 
   const staff = await (prisma as any).user.findMany({
-    where: { tenant_id: tenantId }, select: { name: true, specialisms: true },
+    where: { tenant_id: tenantId }, select: { name: true, job_role: true, specialisms: true },
   }).catch(() => [])
-  const derived = (m: RegExp) => (staff as any[])
+  const bySpec = (m: RegExp) => (staff as any[])
     .filter(s => Array.isArray(s.specialisms) && s.specialisms.some((sp: string) => m.test(String(sp))))
     .map(s => String(s.name)).filter(Boolean)
+  const byPos = (m: RegExp) => (staff as any[])
+    .filter(s => m.test(String(s.job_role ?? ''))).map(s => String(s.name)).filter(Boolean)
+  const manualOf = (key: string) => String(od[key] ?? '').split(',').map(s => s.trim()).filter(Boolean)
+  const union = (a: string[], b: string[]) => [...new Set([...a, ...b])]
 
-  const role_holders = ROLE_MAP.map(m => {
-    const manual = String(od[m.key] ?? '').split(',').map(s => s.trim()).filter(Boolean)
-    return { key: m.key, role: m.role, candidates: manual.length ? manual : derived(m.match) }
-  })
+  const MANAGER_RE = /care manager|registered manager/i
+  const role_holders = [
+    { key: 'registered_manager',  role: 'Registered manager',                  candidates: union(manualOf('registered_manager'), byPos(MANAGER_RE)) },
+    ...ROLE_MAP.map(m => ({ key: m.key, role: m.role, candidates: union(manualOf(m.key), bySpec(m.match)) })),
+  ]
 
   const variables = [
     { key: 'home_name',            label: 'Home / service name', value: String(tenant?.name ?? '') },
-    { key: 'registered_manager',   label: 'Registered manager',  value: od.registered_manager ?? '' },
     { key: 'nominated_individual', label: 'Nominated individual',value: od.nominated_individual ?? '' },
     { key: 'default_approver',     label: 'Approver',            value: od.default_approver ?? '' },
     { key: 'address',              label: 'Address',             value: od.address ?? '' },
@@ -214,7 +218,7 @@ export async function getAdoptionContext(tenantId: string): Promise<{
     logo_url: (tenant?.logo_url as string) ?? null,
     home_name: String(tenant?.name ?? ''),
     address: od.address ?? '',
-    registered_manager: od.registered_manager ?? '',
+    registered_manager: manualOf('registered_manager')[0] || byPos(MANAGER_RE)[0] || '',
     default_approver: od.default_approver ?? '',
     review_cycle_months: od.review_cycle_months ?? '',
     version_scheme: od.version_scheme ?? '',

@@ -163,7 +163,8 @@ export default function SettingsPage() {
   const [roomsSaved,     setRoomsSaved]     = useState(false)
   const [featureFlags,   setFeatureFlags]   = useState<Record<string, boolean>>({})
   const [orgDetails,     setOrgDetails]     = useState<Record<string, string>>({})
-  const [orgContext,     setOrgContext]     = useState<{ home_name: string; has_logo: boolean; role_holders: Array<{ key: string; role: string; names: string[] }> }>({ home_name: '', has_logo: false, role_holders: [] })
+  const [orgContext,     setOrgContext]     = useState<{ home_name: string; has_logo: boolean; role_holders: Array<{ key: string; role: string; derived: string[]; manual: string[] }> }>({ home_name: '', has_logo: false, role_holders: [] })
+  const [roleInput,      setRoleInput]      = useState<Record<string, string>>({})
   const [savingOrg,      setSavingOrg]      = useState(false)
   const [orgSaved,       setOrgSaved]       = useState(false)
   const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
@@ -336,16 +337,35 @@ export default function SettingsPage() {
     finally { setSavingRooms(false) }
   }
 
-  async function saveOrgDetails() {
+  async function saveOrgDetails(override?: Record<string, string>) {
     if (!session?.accessToken) return
+    const payload = override ?? orgDetails
     setSavingOrg(true); setOrgSaved(false)
     try {
-      const data = await createApiClient(session.accessToken).settings.update({ organisation_details: orgDetails } as any)
+      const data = await createApiClient(session.accessToken).settings.update({ organisation_details: payload } as any)
       if ((data as any).organisation_details) setOrgDetails((data as any).organisation_details)
       setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2500)
     }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingOrg(false) }
+  }
+
+  // Role-holder chips: manual names live in organisation_details[key] as a comma-separated
+  // list, shown alongside the names derived from staff. Adding/removing saves immediately.
+  function roleManual(key: string): string[] {
+    return String(orgDetails[key] ?? '').split(',').map(s => s.trim()).filter(Boolean)
+  }
+  function addRoleName(key: string) {
+    const name = (roleInput[key] ?? '').trim()
+    if (!name) return
+    const cur = roleManual(key)
+    if (cur.some(n => n.toLowerCase() === name.toLowerCase())) { setRoleInput(r => ({ ...r, [key]: '' })); return }
+    const next = { ...orgDetails, [key]: [...cur, name].join(', ') }
+    setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
+  }
+  function removeRoleName(key: string, name: string) {
+    const next = { ...orgDetails, [key]: roleManual(key).filter(n => n !== name).join(', ') }
+    setOrgDetails(next); saveOrgDetails(next)
   }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
@@ -804,7 +824,6 @@ export default function SettingsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              { key: 'registered_manager',  label: 'Registered manager',   ph: 'e.g. Jane Smith' },
               { key: 'nominated_individual', label: 'Nominated individual', ph: 'e.g. John Brown' },
               { key: 'default_approver',    label: 'Default approver',     ph: 'Who signs policies off (defaults to the registered manager)' },
               { key: 'cqc_location_id',     label: 'CQC location ID',       ph: 'e.g. 1-000000001' },
@@ -840,50 +859,62 @@ export default function SettingsPage() {
           </div>
 
           <div className="mt-4 flex items-center gap-3">
-            <Button onClick={saveOrgDetails} disabled={savingOrg} size="md">
+            <Button onClick={() => saveOrgDetails()} disabled={savingOrg} size="md">
               {savingOrg ? 'Saving…' : 'Save'}
             </Button>
             {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
           </div>
 
-          {/* Role-holders — editable, suggested from staff, and support MORE THAN ONE person. */}
+          {/* Role-holders — chips: names come automatically from staff (position/specialism)
+              and you can add extras. Same add-and-show-below pattern as Positions. */}
           {orgContext.role_holders.length > 0 && (
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
-              <p className="mt-1 text-xs text-neutral-mid">Suggested from staff specialist roles, and editable here. Enter more than one name separated by commas if a role is shared, then you pick which person when you adopt text into a policy. Leave a field blank to use the staff-derived name automatically.</p>
-              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <p className="mt-1 text-xs text-neutral-mid">Names appear here automatically when you give a staff member the matching position or specialist role (for example a <strong>Care Manager</strong> becomes the registered manager). You can add extra names too. Where a role is shared, you pick which person when you adopt text into a policy.</p>
+              <div className="mt-3 space-y-4">
                 {orgContext.role_holders.map(rh => {
-                  const fromStaff = rh.names.join(', ')
+                  const manual = roleManual(rh.key)
                   return (
                     <div key={rh.key}>
                       <label className="mb-1 block text-sm font-medium text-neutral-dark">{rh.role}</label>
-                      <input
-                        type="text"
-                        value={orgDetails[rh.key] ?? ''}
-                        onChange={e => setOrgDetails(d => ({ ...d, [rh.key]: e.target.value }))}
-                        onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
-                        placeholder={fromStaff || 'Type a name, or assign the specialist role to staff'}
-                        maxLength={250}
-                        className={INPUT}
-                      />
-                      {fromStaff && (
-                        <p className="mt-1 text-xs text-neutral-mid">
-                          From staff: {fromStaff}
-                          {(orgDetails[rh.key] ?? '') !== fromStaff && (
-                            <button type="button" onClick={() => setOrgDetails(d => ({ ...d, [rh.key]: fromStaff }))} className="ml-1.5 font-medium text-teal hover:underline">Use</button>
-                          )}
-                        </p>
+                      <div className="mb-2 flex gap-2">
+                        <input
+                          type="text"
+                          value={roleInput[rh.key] ?? ''}
+                          onChange={e => setRoleInput(r => ({ ...r, [rh.key]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && addRoleName(rh.key)}
+                          placeholder="Add a name…"
+                          maxLength={80}
+                          className={INPUT}
+                        />
+                        <Button onClick={() => addRoleName(rh.key)} disabled={savingOrg || !(roleInput[rh.key] ?? '').trim()} size="md">
+                          <Plus size={14} className="mr-1.5" />Add
+                        </Button>
+                      </div>
+                      {rh.derived.length === 0 && manual.length === 0 ? (
+                        <p className="rounded-md bg-neutral-light px-4 py-2.5 text-sm text-neutral-mid">No one yet — assign the matching role to a staff member, or add a name above.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {rh.derived.map(name => (
+                            <span key={`d-${name}`} className="flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal-light/30 py-1 pl-3 pr-3 text-sm text-neutral-dark" title="From staff records">
+                              {name} <span className="text-[10px] font-semibold uppercase text-teal">staff</span>
+                            </span>
+                          ))}
+                          {manual.filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase())).map(name => (
+                            <span key={`m-${name}`} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
+                              {name}
+                              <button onClick={() => removeRoleName(rh.key, name)} disabled={savingOrg} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                                <X size={10} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   )
                 })}
               </div>
-              <div className="mt-4 flex items-center gap-3">
-                <Button onClick={saveOrgDetails} disabled={savingOrg} size="md">
-                  {savingOrg ? 'Saving…' : 'Save'}
-                </Button>
-                {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
-              </div>
+              {orgSaved && <p className="mt-3 flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</p>}
             </div>
           )}
 

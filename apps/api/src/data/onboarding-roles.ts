@@ -20,14 +20,14 @@ export const PRIMARY_ROLES: string[] = [
 ]
 
 export const SECONDARY_ROLES: string[] = [
-  'Infection Control',
-  'Fire Evacuation',
-  'Safeguarding Lead',
+  'Safeguarding lead',
+  'Infection prevention & control lead',
+  'Dignity champion',
   'Caldicott Guardian',
+  'Fire safety officer',
   'Hydration',
   'Room Checking',
   'Room & Water',
-  'Dignity',
   'Nurse in Charge',
   'Night Staff',
 ]

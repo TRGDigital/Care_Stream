@@ -175,6 +175,8 @@ export async function getAdoptionContext(tenantId: string): Promise<{
   enabled: boolean
   variables: Array<{ key: string; label: string; value: string }>
   role_holders: Array<{ key: string; role: string; candidates: string[] }>
+  role_names: Record<string, string[]>
+  show_role_names: boolean
   logo_url: string | null
   home_name: string
   address: string
@@ -213,8 +215,14 @@ export async function getAdoptionContext(tenantId: string): Promise<{
     { key: 'address',              label: 'Address',             value: od.address ?? '' },
   ].filter(v => v.value)
 
+  // Role phrase → the current holder names, used to append "(Name)" on first mention in a
+  // policy (when the tenant has the toggle on). Always current — resolved from staff + manual.
+  const role_names: Record<string, string[]> = {}
+  for (const r of role_holders) if (r.candidates.length) role_names[r.key] = r.candidates
+
   return {
-    enabled, variables, role_holders,
+    enabled, variables, role_holders, role_names,
+    show_role_names: od.show_role_names !== 'off',
     logo_url: (tenant?.logo_url as string) ?? null,
     home_name: String(tenant?.name ?? ''),
     address: od.address ?? '',

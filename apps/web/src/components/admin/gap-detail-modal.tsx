@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { applyRoleNames } from '@/lib/policy-names'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
@@ -338,7 +339,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const previewRef = useRef<HTMLDivElement>(null)
 
   // Policy Change Adoption (beta) — adopt a suggestion into the policy's draft.
-  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }> } | null>(null)
+  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; show_role_names?: boolean } | null>(null)
   const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
   const [adoptText,    setAdoptText]    = useState('')
   const [adoptTitle,   setAdoptTitle]   = useState('')
@@ -469,13 +470,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     }
     root.innerHTML = html
     highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [], adopted)
+    if (adoption?.show_role_names) applyRoleNames(root, adoption.role_names)
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     } else {
       setMatchCount(null)
     }
-  }, [html, detail, policySearch, adoptedReqs, adoptedContent])
+  }, [html, detail, policySearch, adoptedReqs, adoptedContent, adoption])
 
   async function markCompleted() {
     setCompleting(true)

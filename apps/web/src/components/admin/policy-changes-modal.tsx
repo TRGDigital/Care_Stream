@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { applyRoleNames } from '@/lib/policy-names'
 import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download } from 'lucide-react'
 
 type Doc = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyDocument']>>
@@ -193,6 +194,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     const div = document.createElement('div')
     div.innerHTML = html
     applyChanges(div, doc.changes ?? [], false)
+    if (org?.show_role_names) applyRoleNames(div, org.role_names)
     const printHtml = buildPrintDoc(policyName, div.innerHTML, doc.document.version || '1.0', false, org)
     const w = window.open('', '_blank')
     if (!w) { setError('Please allow pop-ups to download the policy.'); return }
@@ -207,7 +209,8 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     if (!root || html === null || !doc?.document) return
     root.innerHTML = html
     applyChanges(root, doc.changes ?? [], tracked)
-  }, [html, doc, tracked])
+    if (org?.show_role_names) applyRoleNames(root, org.role_names)
+  }, [html, doc, tracked, org])
 
   async function revert(changeId: string) {
     if (!confirm('Revert this change? It will be removed from the draft.')) return

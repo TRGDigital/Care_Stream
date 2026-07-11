@@ -367,6 +367,22 @@ export default function SettingsPage() {
     const next = { ...orgDetails, [key]: roleManual(key).filter(n => n !== name).join(', ') }
     setOrgDetails(next); saveOrgDetails(next)
   }
+  // Single-value fields use the same add-and-show-below chip pattern for a consistent UI.
+  function setScalar(key: string) {
+    const v = (roleInput[key] ?? '').trim()
+    if (!v) return
+    const next = { ...orgDetails, [key]: v }
+    setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
+  }
+  function clearScalar(key: string) {
+    const next = { ...orgDetails, [key]: '' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
+  const showRoleNames = orgDetails.show_role_names !== 'off'
+  function toggleRoleNames() {
+    const next = { ...orgDetails, show_role_names: showRoleNames ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
     if (!session?.accessToken) return
@@ -822,6 +838,19 @@ export default function SettingsPage() {
             These are your policy <strong>merge fields</strong>. They are used in suggested policy wording and on the sign-off and header of any policy you download. Update them here and re-adopt or re-download to refresh your policies.
           </p>
 
+          {/* Show role-holder names in policies — toggle */}
+          <div className="mb-5 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-neutral-dark">Show role-holder names in policies</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">When on, the first mention of a role in a policy shows the person&rsquo;s name in brackets, e.g. &ldquo;Care Manager (Lenny Burgess)&rdquo;. Names come from the role-holders below and stay current as staff change.</p>
+            </div>
+            <button type="button" role="switch" aria-checked={showRoleNames} aria-label="Show role-holder names in policies"
+              onClick={toggleRoleNames}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showRoleNames ? 'bg-teal' : 'bg-gray-300'}`}>
+              <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showRoleNames ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+          </div>
+
           <div className="space-y-4">
             {[
               { key: 'nominated_individual', label: 'Nominated individual', ph: 'e.g. John Brown', max: 120 },
@@ -831,28 +860,43 @@ export default function SettingsPage() {
               { key: 'review_cycle_months', label: 'Review cycle (months)', ph: 'e.g. 12', max: 120 },
               { key: 'version_scheme',      label: 'Starting version',      ph: 'e.g. 1.0', max: 120 },
               { key: 'address',             label: 'Address',               ph: 'Full address as it should appear on policies', max: 300 },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
-                <input
-                  type="text"
-                  value={orgDetails[f.key] ?? ''}
-                  onChange={e => setOrgDetails(d => ({ ...d, [f.key]: e.target.value }))}
-                  onKeyDown={e => e.key === 'Enter' && saveOrgDetails()}
-                  placeholder={f.ph}
-                  maxLength={f.max}
-                  className={INPUT}
-                />
-              </div>
-            ))}
+            ].map(f => {
+              const val = (orgDetails[f.key] ?? '').trim()
+              return (
+                <div key={f.key}>
+                  <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
+                  <div className="mb-2 flex gap-2">
+                    <input
+                      type="text"
+                      value={roleInput[f.key] ?? ''}
+                      onChange={e => setRoleInput(r => ({ ...r, [f.key]: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && setScalar(f.key)}
+                      placeholder={f.ph}
+                      maxLength={f.max}
+                      className={INPUT}
+                    />
+                    <Button onClick={() => setScalar(f.key)} disabled={savingOrg || !(roleInput[f.key] ?? '').trim()} size="md">
+                      <Plus size={14} className="mr-1.5" />{val ? 'Update' : 'Add'}
+                    </Button>
+                  </div>
+                  {val ? (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
+                        {val}
+                        <button onClick={() => clearScalar(f.key)} disabled={savingOrg} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="rounded-md bg-neutral-light px-4 py-2.5 text-sm text-neutral-mid">Not set.</p>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
-            <Button onClick={() => saveOrgDetails()} disabled={savingOrg} size="md">
-              {savingOrg ? 'Saving…' : 'Save'}
-            </Button>
-            {orgSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
-          </div>
+          {orgSaved && <p className="mt-3 flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</p>}
 
           {/* Role-holders — chips: names come automatically from staff (position/specialism)
               and you can add extras. Same add-and-show-below pattern as Positions. */}

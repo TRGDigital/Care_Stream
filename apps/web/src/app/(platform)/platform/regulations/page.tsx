@@ -246,6 +246,16 @@ export default function RegulationsPage() {
             </ol>
             <p className="text-[11px] leading-relaxed text-violet-800/80">All of this runs when a tenant re-runs their analysis and is cached, so opening &ldquo;see what to add&rdquo; costs nothing extra. Re-running regenerates it with the current regulation fields and glossary.</p>
           </div>
+
+          <div className="rounded-lg border border-sky-200 bg-sky-50/70 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-sky-700">Role-holder names in policies (the &ldquo;(Name)&rdquo; in brackets)</p>
+            <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings &rarr; Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>
+            <ul className="mt-1 space-y-1 leading-relaxed text-sky-900">
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />The names come from the <strong>role-holders</strong> in Organisation details, which fill automatically from staff: the <strong>Care Manager</strong> position becomes the registered manager, and the matching specialist roles (safeguarding lead, IPC lead, dignity champion, Caldicott Guardian, fire safety officer) become theirs. Admins can add extra names too.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />It is applied at <strong>render time</strong> (the policy preview, the review-changes view, and the downloaded copy) and <strong>never edits the stored policy</strong>, so it is always current: change the role-holder and the name updates everywhere, no re-run needed.</li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" /><strong>First mention only</strong> (so it does not repeat on every line), and where a role is <strong>shared</strong> it lists all the names. If the policy already names the role in brackets, we leave it. It does not yet flow into staff Q&amp;A answers.</li>
+            </ul>
+          </div>
         </div>
 
         <GlossaryManager token={token} />

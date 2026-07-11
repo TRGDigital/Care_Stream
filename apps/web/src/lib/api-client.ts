@@ -762,6 +762,10 @@ export function createApiClient(token: string) {
       suggestTranslation: (data: { source_text: string; suggested_text: string; lang_code: string; machine_text?: string; content_kind?: string; context_label?: string }) =>
         apiFetch<{ status: 'pending' | 'approved' }>('/me/translation-suggestion', token, { method: 'POST', body: JSON.stringify(data) }),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number }>('/me/counts', token),
+      policyApprovals: () => apiFetch<{ is_manager: boolean; policies: Array<{ policy_id: string; name: string; version: string; changes: number; submitted_at: string }> }>('/me/policy-approvals', token),
+      policyApprovalDetail: (policyId: string) => apiFetch<{ policy_name: string; version: string; html: string; changes: Array<{ id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title: string; applied_by: string; applied_at: string; published: boolean }>; show_role_names: boolean; role_names: Record<string, string[]> }>(`/me/policy-approvals/${encodeURIComponent(policyId)}`, token),
+      approvePolicyAsManager: (policyId: string) => apiFetch<{ status: string; version?: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/approve`, token, { method: 'POST' }),
+      rejectPolicyAsManager: (policyId: string, comment: string) => apiFetch<{ status: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
       documentCategories: () => apiFetch<{ available: string[] }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),

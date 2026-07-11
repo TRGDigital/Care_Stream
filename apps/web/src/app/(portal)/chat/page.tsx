@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
+import { PoliciesView } from '@/components/hub/policies-view'
 import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
@@ -342,7 +343,8 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies'>('chat')
+  const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const { features: planFeatures }                     = usePlanFeatures()
   // F2F is a Professional/Enterprise feature — hide the hub admin tab otherwise.
@@ -423,8 +425,15 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress') setView(v)
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies') setView(v)
   }, [searchParams])
+
+  // Care manager: policies awaiting their approval (drives the Policies sidebar item).
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.policyApprovals()
+      .then(r => setPolicyApprovals({ is_manager: r.is_manager, count: r.policies.length })).catch(() => {})
+  }, [session?.accessToken, view])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the
   // badges, saved policies and language picker all appear together on the first
@@ -930,6 +939,16 @@ function ChatPageInner() {
             {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </button>
           )}
+          {policyApprovals.is_manager && (
+          <button
+            onClick={() => setView('policies')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'policies' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <FileText size={15} />
+            Policies
+            {policyApprovals.count > 0 && <NavBadge count={policyApprovals.count} className="bg-rose-500" />}
+          </button>
+          )}
           {!isReviewer && (
           <button
             onClick={() => setView('progress')}
@@ -1081,6 +1100,11 @@ function ChatPageInner() {
           <CqcView token={session.accessToken} secondLang={secondLang} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
           }} />
+        )}
+
+        {/* Policies to approve (care manager) */}
+        {view === 'policies' && session?.accessToken && (
+          <PoliciesView token={session.accessToken} />
         )}
 
         {/* My Progress view */}

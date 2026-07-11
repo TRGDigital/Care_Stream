@@ -16,6 +16,8 @@ import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
 import { prisma } from '../db/client'
+import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
+import { tenantHasFlag } from '../lib/plan-limits'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
 function policyTitle(filename: string): string {
@@ -208,6 +210,73 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
     } catch { /* ignore */ }
   }
   ok(res, { training, induction, cqc, followup, annual, audits })
+})
+
+// ─── Care manager: policies awaiting their approval (Policy Change Adoption) ──
+async function isCareManager(userId: string): Promise<boolean> {
+  const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { job_role: true } })
+  return /care manager|registered manager/i.test(String(u?.job_role ?? ''))
+}
+
+meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await tenantHasFlag(tenantId, 'has_policy_adoption')) || !(await isCareManager(userId))) {
+    ok(res, { is_manager: false, policies: [] }); return
+  }
+  const docs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId, approval_status: 'pending_manager' },
+    select: { id: true, policy_id: true, version: true, updated_at: true },
+  })
+  const policies = [] as any[]
+  for (const d of docs) {
+    const [policy, changes] = await Promise.all([
+      (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } }),
+      (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } }),
+    ])
+    policies.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, changes, submitted_at: d.updated_at })
+  }
+  ok(res, { is_manager: true, policies })
+})
+
+meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if (!(await isCareManager((req as any).user.sub))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const policyId = String(req.params.policyId)
+  const docRes = await getPolicyDocument(tenantId, policyId)
+  if (!docRes?.document) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { name: true } })
+  let html = ''
+  const cached = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true } }).catch(() => null)
+  if (cached?.content) html = cached.content
+  else {
+    const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+    if (raw) { const h = await formatPolicyHtml(raw, 'eng'); if (h) { html = h; await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: h } }).catch(() => {}) } }
+  }
+  const ctx = await getAdoptionContext(tenantId)
+  ok(res, { policy_name: policy?.name ?? 'Policy', version: docRes.document.version, html, changes: docRes.changes, show_role_names: ctx.show_role_names, role_names: ctx.role_names })
+})
+
+meRouter.post('/policy-approvals/:policyId/approve', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
+  try {
+    const r = await managerApprove(tenantId, String(req.params.policyId), me?.name || me?.email || 'Care manager')
+    if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'APPROVE_FAILED', e.message ?? 'Could not approve.', 500) }
+})
+
+meRouter.post('/policy-approvals/:policyId/reject', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
+  const r = await rejectPolicy(tenantId, String(req.params.policyId), 'manager', me?.name || me?.email || 'Care manager', String(req.body?.comment ?? ''))
+  if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  ok(res, r)
 })
 
 

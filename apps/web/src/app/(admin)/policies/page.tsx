@@ -608,7 +608,7 @@ function PolicyGroup({
                           <FilePenLine size={12} /> {docSummary[p.id].pending > 0 ? 'Review' : 'View / download'}
                         </button>
                       )}
-                      {p.status === 'active' && (
+                      {p.status === 'active' && !docSummary[p.id] && (
                         <button
                           onClick={() => onPreview(p)}
                           title="Preview how this policy renders for staff (letterhead & footers stripped)"

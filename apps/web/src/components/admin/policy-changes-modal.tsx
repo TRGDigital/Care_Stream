@@ -21,6 +21,7 @@ function buildPrintDoc(policyName: string, contentHtml: string, version: string,
   const homeName = esc(org?.home_name || '')
   const approver = esc(org?.default_approver || org?.registered_manager || '')
   const manager  = esc(org?.registered_manager || '')
+  const csLogo   = (typeof window !== 'undefined' ? window.location.origin : '') + '/logo-color.png'
   const line = '<span style="display:inline-block;min-width:200px;border-bottom:1px solid #999">&nbsp;</span>'
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(policyName)}</title><style>
     @page { size: A4; margin: 20mm 18mm 22mm; }
@@ -55,7 +56,7 @@ function buildPrintDoc(policyName: string, contentHtml: string, version: string,
       <tr><td>Next review:</td><td>${nextReview}</td></tr>
       <tr><td>Signature:</td><td>${line}</td></tr>
     </table></div>
-    <div class="foot">${homeName} &middot; ${esc(policyName)} &middot; v${esc(version || '1.0')} &middot; Uncontrolled when printed</div>
+    <div class="foot"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>${homeName} &middot; ${esc(policyName)} &middot; v${esc(version || '1.0')} &middot; Uncontrolled when printed</span><img src="${csLogo}" alt="CareStream" style="height:22px;width:auto"></div></div>
     <script>window.onload=function(){setTimeout(function(){window.print()},350)}</script>
   </body></html>`
 }

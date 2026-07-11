@@ -522,9 +522,14 @@ model PolicyDocument {
   published_at     DateTime?
   published_by     String   @default("")
   version          String   @default("")
+  approval_status  String   @default("draft")  // draft | pending_manager | pending_external | published
+  external_token   String?                     // current external review token
+  external_email   String   @default("")
+  external_name    String   @default("")
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
   changes          PolicyDocumentChange[]
+  approvals        PolicyApproval[]
 
   @@index([tenant_id])
   @@map("policy_documents")
@@ -549,6 +554,23 @@ model PolicyDocumentChange {
 
   @@index([document_id])
   @@map("policy_document_changes")
+}
+
+// One approval / rejection at a stage of the workflow — the audit trail.
+model PolicyApproval {
+  id             String   @id @default(uuid())
+  document_id    String
+  tenant_id      String
+  stage          String                        // admin | manager | external
+  decision       String   @default("approved") // approved | rejected
+  approver_name  String   @default("")
+  approver_email String   @default("")
+  comment        String   @default("")
+  created_at     DateTime @default(now())
+  document       PolicyDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@index([document_id])
+  @@map("policy_approvals")
 }
 
 // A tenant marking a gap's remediation as done — archives it out of the active list.

@@ -174,11 +174,13 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [busy, setBusy]       = useState<string | null>(null)   // 'publish' | change id
   const [publishedMsg, setPublishedMsg] = useState('')
   const [org, setOrg] = useState<OrgCtx | null>(null)
+  const [approval, setApproval] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyApprovals']>> | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
     setLoading(true)
     const api = createApiClient(token)
+    api.analytics.policyApprovals(policyId).then(setApproval).catch(() => {})
     Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId).catch(() => ({ html: '' }))])
       .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
       .catch(e => setError(e.message ?? 'Could not load the document.'))
@@ -220,17 +222,23 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     finally { setBusy(null) }
   }
 
-  async function publish() {
-    if (!confirm(`Publish ${policyName}? This approves the adopted changes as the current version of your policy.`)) return
+  async function submit() {
+    if (!confirm(`Approve ${policyName} and send it to your care manager for their approval?`)) return
     setBusy('publish'); setError('')
     try {
-      const r = await createApiClient(token).analytics.publishPolicyDocument(policyId)
-      setPublishedMsg(`Published as version ${r.version}.${r.reindexed ? ' The updated policy is now live for staff, and the previous version has been archived.' : ' (Re-indexing the updated policy for staff is still finishing.)'}`)
+      await createApiClient(token).analytics.submitPolicyForApproval(policyId)
+      setPublishedMsg('Approved and sent to your care manager for their approval. It goes live to staff once they (and any external reviewer) approve it.')
       onPublished(0)
       load()
-    } catch (e: any) { setError(e.message ?? 'Could not publish.') }
+    } catch (e: any) { setError(e.message ?? 'Could not submit for approval.') }
     finally { setBusy(null) }
   }
+
+  const status = approval?.status ?? 'draft'
+  const statusLabel = status === 'pending_manager' ? 'Awaiting care manager approval'
+    : status === 'pending_external' ? 'Awaiting external approval'
+    : status === 'published' ? 'Published' : null
+  const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External reviewer'
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-5" onClick={onClose}>
@@ -255,10 +263,14 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
               <Download size={13} /> Download
             </button>
-            <button onClick={publish} disabled={busy !== null || pending.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
-              {busy === 'publish' ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : <><FileCheck2 size={14} /> Approve &amp; publish</>}
-            </button>
+            {statusLabel ? (
+              <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">{statusLabel}</span>
+            ) : (
+              <button onClick={submit} disabled={busy !== null || pending.length === 0}
+                className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                {busy === 'publish' ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <><FileCheck2 size={14} /> Approve &amp; send for approval</>}
+              </button>
+            )}
             <button onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><X size={18} /></button>
           </div>
         </div>
@@ -304,7 +316,25 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 ))}
               </ul>
               {(doc.changes ?? []).length > 0 && (
-                <p className="mt-4 text-xs text-neutral-mid">Publishing records the version, keeps your original upload as history, and updates what staff see. You can revert any change before publishing.</p>
+                <p className="mt-4 text-xs text-neutral-mid">Approve to send this to your care manager. It goes live to staff only after every required approval. You can revert any change before approving.</p>
+              )}
+
+              {(approval?.approvals?.length ?? 0) > 0 && (
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Approval trail</p>
+                  <ul className="mt-2 space-y-2">
+                    {(approval?.approvals ?? []).map(a => (
+                      <li key={a.id} className="flex items-start gap-2 text-xs">
+                        <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${a.decision === 'rejected' ? 'bg-rose-400' : 'bg-green-500'}`} />
+                        <div className="min-w-0">
+                          <p className="text-neutral-dark"><span className="font-medium">{stageLabel(a.stage)}</span> {a.decision === 'rejected' ? 'rejected' : 'approved'} · {a.approver_name || '—'}</p>
+                          <p className="text-neutral-mid">{new Date(a.created_at).toLocaleString('en-GB')}</p>
+                          {a.comment && <p className="mt-0.5 italic text-neutral-mid">&ldquo;{a.comment}&rdquo;</p>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           </div>

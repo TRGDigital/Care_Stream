@@ -5,6 +5,7 @@
 // suggestion is applied to draft_content AND recorded as a PolicyDocumentChange (for the
 // highlighted change view, the audit trail and revert). Publishing is Phase 2.
 
+import { randomBytes } from 'crypto'
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
 import { republishPolicyContent } from '../rag/ingestion'
@@ -86,8 +87,102 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
       section_title: (input.section_title ?? '').slice(0, 200), applied_by: input.applied_by,
     },
   })
+  // New adopted changes reset the approval cycle back to draft.
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft' } }).catch(() => {})
   const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false, reverted: false } })
   return { applied, pending, document_id: doc.id, change_id: change.id }
+}
+
+// ─── Approval workflow ────────────────────────────────────────────────────────
+// draft → (admin submits) pending_manager → (manager approves) pending_external? →
+// (external approves) published. A rejection at any stage returns it to draft.
+
+async function recordApproval(documentId: string, tenantId: string, stage: string, decision: string, name: string, email = '', comment = '') {
+  await (prisma as any).policyApproval.create({
+    data: { document_id: documentId, tenant_id: tenantId, stage, decision, approver_name: name.slice(0, 120), approver_email: email.slice(0, 160), comment: comment.slice(0, 2000) },
+  }).catch(() => {})
+}
+
+async function externalRequired(tenantId: string): Promise<boolean> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } })
+  return ((t?.organisation_details ?? {}) as Record<string, string>).require_external_approval === 'on'
+}
+
+// Admin approves the adopted changes and sends them to the care manager.
+export async function submitForApproval(tenantId: string, policyId: string, adminName: string): Promise<{ status: string } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  await rebuildDraft(doc.id)
+  await recordApproval(doc.id, tenantId, 'admin', 'approved', adminName)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager' } })
+  return { status: 'pending_manager' }
+}
+
+// Care manager approves. If external approval is required, generate a review token and hold
+// at pending_external; otherwise finalise and publish.
+export async function managerApprove(tenantId: string, policyId: string, managerName: string): Promise<{ status: string; version?: string; token?: string } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  await recordApproval(doc.id, tenantId, 'manager', 'approved', managerName)
+  if (await externalRequired(tenantId)) {
+    const token = doc.external_token || randomBytes(18).toString('hex')
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
+    return { status: 'pending_external', token }
+  }
+  const r = await publishDocument(tenantId, policyId, managerName)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published' } })
+  return { status: 'published', version: r?.version }
+}
+
+// Set / update who the external review link is addressed to.
+export async function setExternalRecipient(tenantId: string, policyId: string, name: string, email: string): Promise<{ token: string } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  const token = doc.external_token || randomBytes(18).toString('hex')
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_token: token, external_name: name.slice(0, 120), external_email: email.slice(0, 160) } })
+  return { token }
+}
+
+// Reject at a stage (admin, manager or external) — returns to draft for amendment.
+export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string): Promise<{ status: string } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  await recordApproval(doc.id, tenantId, stage, 'rejected', name, '', comment)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft', external_token: null } })
+  return { status: 'draft' }
+}
+
+// The approval status + full history for a policy.
+export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; approvals: any[] } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  const approvals = await (prisma as any).policyApproval.findMany({ where: { document_id: doc.id }, orderBy: { created_at: 'asc' } })
+  return { status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email, external_token: doc.external_token, approvals }
+}
+
+// ── External (public, token-gated) review ──
+export async function getExternalReview(token: string): Promise<{ policy_id: string; policy_name: string; version: string; changes: any[]; home_name: string } | null> {
+  const doc = await (prisma as any).policyDocument.findFirst({ where: { external_token: token } })
+  if (!doc || doc.approval_status !== 'pending_external') return null
+  const [policy, tenant, changes] = await Promise.all([
+    (prisma as any).policy.findUnique({ where: { id: doc.policy_id }, select: { name: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
+    (prisma as any).policyDocumentChange.findMany({ where: { document_id: doc.id, reverted: false }, orderBy: { applied_at: 'asc' } }),
+  ])
+  return { policy_id: doc.policy_id, policy_name: policy?.name ?? 'Policy', version: doc.version ?? '', changes, home_name: tenant?.name ?? '' }
+}
+
+export async function externalDecision(token: string, name: string, comment: string, decision: 'approved' | 'rejected'): Promise<{ status: string } | null> {
+  const doc = await (prisma as any).policyDocument.findFirst({ where: { external_token: token } })
+  if (!doc || doc.approval_status !== 'pending_external') return null
+  await recordApproval(doc.id, doc.tenant_id, 'external', decision, name || doc.external_name, doc.external_email, comment)
+  if (decision === 'rejected') {
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft', external_token: null } })
+    return { status: 'draft' }
+  }
+  await publishDocument(doc.tenant_id, doc.policy_id, name || doc.external_name || 'External approver')
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published', external_token: null } })
+  return { status: 'published' }
 }
 
 // Rebuild the draft from the original + every still-active change, in order. Used after a
@@ -149,14 +244,14 @@ export async function publishDocument(tenantId: string, policyId: string, publis
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.
-export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null }>> {
+export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }>> {
   const docs = await (prisma as any).policyDocument.findMany({
-    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true },
+    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true },
   })
-  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null }> = []
+  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }> = []
   for (const d of docs as any[]) {
     const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } })
-    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null })
+    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null, approval_status: d.approval_status ?? 'draft' })
   }
   return out
 }

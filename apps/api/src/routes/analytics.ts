@@ -12,7 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, publishDocument, summariseDocuments } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, publishDocument, summariseDocuments, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -643,6 +643,71 @@ analyticsRouter.post('/gaps/policy-document/:policyId/publish', requireAdmin, as
   } catch (e: any) {
     err(res, 'PUBLISH_FAILED', e.message ?? 'Could not publish the policy.', 500)
   }
+})
+
+// ─── Policy approval workflow (admin submit → care manager → external) ────────
+const meName = async (req: Request) => {
+  const me = await (prisma as any).user.findUnique({ where: { id: (req as any).user.sub }, select: { name: true, email: true, job_role: true } })
+  return me
+}
+
+// GET approval status + history for a policy.
+analyticsRouter.get('/gaps/policy-approvals/:policyId', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const state = await getApprovalState(tenantId, String(req.params.policyId))
+    ok(res, state ?? { status: 'draft', external_name: '', external_email: '', external_token: null, approvals: [] })
+  } catch (e: any) { err(res, 'STATE_FAILED', e.message, 500) }
+})
+
+// POST admin submits the adopted changes for approval (was: publish).
+analyticsRouter.post('/gaps/policy-document/:policyId/submit', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try {
+    const me = await meName(req)
+    const r = await submitForApproval(tenantId, String(req.params.policyId), me?.name || me?.email || 'Admin')
+    if (!r) { err(res, 'NOT_FOUND', 'No draft to submit', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'SUBMIT_FAILED', e.message ?? 'Could not submit for approval.', 500) }
+})
+
+// POST care manager approves (gated to the Care Manager position).
+analyticsRouter.post('/gaps/policy-document/:policyId/manager-approve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try {
+    const me = await meName(req)
+    if (!/care manager|registered manager/i.test(String(me?.job_role ?? ''))) { err(res, 'FORBIDDEN', 'Only the care manager can give this approval.', 403); return }
+    const r = await managerApprove(tenantId, String(req.params.policyId), me?.name || me?.email || 'Care manager')
+    if (!r) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'APPROVE_FAILED', e.message ?? 'Could not approve.', 500) }
+})
+
+// POST reject at a stage (admin or manager) → back to draft.
+analyticsRouter.post('/gaps/policy-document/:policyId/reject', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const me = await meName(req)
+    const stage = /care manager|registered manager/i.test(String(me?.job_role ?? '')) ? 'manager' : 'admin'
+    const r = await rejectPolicy(tenantId, String(req.params.policyId), stage, me?.name || me?.email || 'Admin', String(req.body?.comment ?? ''))
+    if (!r) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'REJECT_FAILED', e.message ?? 'Could not reject.', 500) }
+})
+
+// POST set the external reviewer (name + email) → returns the review token/link.
+analyticsRouter.post('/gaps/policy-document/:policyId/external-recipient', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const name = String(req.body?.name ?? '').trim()
+  const email = String(req.body?.email ?? '').trim()
+  if (!email) { err(res, 'VALIDATION_ERROR', 'An email address is required'); return }
+  try {
+    const r = await setExternalRecipient(tenantId, String(req.params.policyId), name, email)
+    if (!r) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'RECIPIENT_FAILED', e.message ?? 'Could not set the reviewer.', 500) }
 })
 
 // ─── POST /analytics/gaps/:reference_key/detail ──────────────────────────────

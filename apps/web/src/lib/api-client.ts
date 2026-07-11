@@ -969,6 +969,11 @@ export function createApiClient(token: string) {
       policyDocumentsSummary: () => apiFetch<{ documents: Array<{ policy_id: string; pending: number; version: string; published_at: string | null }> }>('/analytics/gaps/policy-documents-summary', token),
       revertPolicyChange: (changeId: string) => apiFetch<{ pending: number }>(`/analytics/gaps/policy-change/${encodeURIComponent(changeId)}/revert`, token, { method: 'POST' }),
       publishPolicyDocument: (policyId: string) => apiFetch<{ version: string; published: number; reindexed: boolean }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/publish`, token, { method: 'POST' }),
+      policyApprovals: (policyId: string) => apiFetch<{ status: string; external_name: string; external_email: string; external_token: string | null; approvals: Array<{ id: string; stage: string; decision: string; approver_name: string; approver_email: string; comment: string; created_at: string }> }>(`/analytics/gaps/policy-approvals/${encodeURIComponent(policyId)}`, token),
+      submitPolicyForApproval: (policyId: string) => apiFetch<{ status: string }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/submit`, token, { method: 'POST' }),
+      managerApprovePolicy: (policyId: string) => apiFetch<{ status: string; version?: string; token?: string }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/manager-approve`, token, { method: 'POST' }),
+      rejectPolicy: (policyId: string, comment: string) => apiFetch<{ status: string }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
+      setExternalReviewer: (policyId: string, name: string, email: string) => apiFetch<{ token: string }>(`/analytics/gaps/policy-document/${encodeURIComponent(policyId)}/external-recipient`, token, { method: 'POST', body: JSON.stringify({ name, email }) }),
       engagement: () => apiFetch<{
         wau: { active: number; total_staff: number; pct: number | null }
         logged_in_7d: number

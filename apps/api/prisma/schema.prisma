@@ -497,6 +497,29 @@ model ExternalRegulation {
   @@map("external_regulations")
 }
 
+// §6.7 — CQC Single Assessment Framework: the 34 quality statements (platform-level, shared).
+// Each statement carries curated "expectation cues" (the person-centred emphasis a policy's
+// wording is checked against) and a crosswalk of external_regulations.reference_key values, so
+// coverage is inherited from the verified regulation coverage rather than re-matched. Drives
+// the SAF coverage + wording-alignment layer. Stewarded in /platform.
+model QualityStatement {
+  id                  String   @id @default(uuid())
+  reference_key       String   @unique               // slug, e.g. 'safe-safeguarding'
+  key_question        String                          // safe | effective | caring | responsive | well-led
+  number              Int      @default(0)            // 1-34, display order
+  name                String
+  we_statement        String   @default("")           // CQC's verbatim statement text
+  expectation_cues    String[] @default([])           // the person-centred anchors (wording-alignment check)
+  linked_regulations  String[] @default([])           // crosswalk → external_regulations.reference_key[]
+  expected_policies   String[] @default([])           // candidate policy types that evidence it
+  applies_to_settings String[] @default([])           // care-setting scope; empty = universal
+  is_active           Boolean  @default(true)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@map("quality_statements")
+}
+
 // Global key-terminology glossary for the Policy Gap suggestion engine. A curated list
 // of important care-sector terms/phrases that must be retained (when present in a policy)
 // and used in their correct form, never genericised or dropped, when the AI drafts or

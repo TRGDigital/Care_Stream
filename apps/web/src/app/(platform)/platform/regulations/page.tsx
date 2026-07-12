@@ -32,19 +32,21 @@ const TRIGGER_OPTIONS: Array<{ key: string; label: string }> = [
 const triggerLabel = (k: string) => TRIGGER_OPTIONS.find(t => t.key === k)?.label ?? k
 const settingLabelOf = (s: string) => SETTING_OPTIONS.find(o => o.slug === s)?.label ?? s
 
-// Collapsible explainer box (defaults closed) — keeps this long page scannable.
+// Collapsible explainer card (defaults closed) — keeps this long page scannable.
 function InfoAccordion({ title, borderClass, bgClass, titleClass, children }: {
   title: string; borderClass: string; bgClass: string; titleClass: string; children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className={`rounded-lg border ${borderClass} ${bgClass} px-4 py-3`}>
+    <div className={`rounded-xl border ${borderClass} ${bgClass} text-sm`}>
       <button onClick={() => setOpen(o => !o)} aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 text-left">
-        <span className={`text-xs font-bold uppercase tracking-wide ${titleClass}`}>{title}</span>
-        {open ? <ChevronUp size={15} className="shrink-0 text-neutral-mid" /> : <ChevronDown size={15} className="shrink-0 text-neutral-mid" />}
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left">
+        <span className={`font-semibold ${titleClass}`}>{title}</span>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-neutral-mid">
+          {open ? 'Hide' : 'Show'}{open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </span>
       </button>
-      {open && <div className="mt-2 space-y-1.5">{children}</div>}
+      {open && <div className="space-y-3 border-t border-black/5 px-5 pb-5 pt-4">{children}</div>}
     </div>
   )
 }
@@ -263,8 +265,9 @@ export default function RegulationsPage() {
             </ol>
             <p className="text-[11px] leading-relaxed text-violet-800/80">All of this runs when a tenant re-runs their analysis and is cached, so opening &ldquo;see what to add&rdquo; costs nothing extra. Re-running regenerates it with the current regulation fields and glossary.</p>
           </div>
+        </div>
 
-          <InfoAccordion title="Role-holder names in policies" borderClass="border-sky-200" bgClass="bg-sky-50/70" titleClass="text-sky-700">
+        <InfoAccordion title="Role-holder names in policies" borderClass="border-sky-200" bgClass="bg-sky-50/70" titleClass="text-sky-900">
             <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings, then Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>
             <ul className="mt-1 space-y-1.5 leading-relaxed text-sky-900">
               <li className="flex items-start gap-2">
@@ -282,7 +285,7 @@ export default function RegulationsPage() {
             </ul>
           </InfoAccordion>
 
-          <InfoAccordion title="Policy updates and approvals" borderClass="border-emerald-200" bgClass="bg-emerald-50/70" titleClass="text-emerald-700">
+        <InfoAccordion title="Policy updates and approvals" borderClass="border-emerald-200" bgClass="bg-emerald-50/70" titleClass="text-emerald-900">
             <p className="leading-relaxed text-emerald-900/90">Adopting a gap fix applies it to an <strong>editable copy</strong> of the policy as a tracked change (the uploaded original is never touched) and nothing goes live until it is approved. Approvals run in stages the tenant controls with two toggles under <strong>Settings, then Organisation details, in the &ldquo;Policy approvals&rdquo; panel</strong>.</p>
             <ul className="mt-1 space-y-1.5 leading-relaxed text-emerald-900">
               <li className="flex items-start gap-2">
@@ -311,7 +314,6 @@ export default function RegulationsPage() {
               </li>
             </ul>
           </InfoAccordion>
-        </div>
 
         <GlossaryManager token={token} />
 

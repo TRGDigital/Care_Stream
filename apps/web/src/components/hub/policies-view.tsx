@@ -67,12 +67,13 @@ export function PoliciesView({ token }: { token: string }) {
     } catch (e: any) { setError(e.message ?? 'Could not send back.') } finally { setBusy(false) }
   }
 
-  if (loading) return <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={18} className="animate-spin text-teal" /> Loading…</div>
+  if (loading) return <div className="flex flex-1 items-center justify-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={18} className="animate-spin text-teal" /> Loading…</div>
 
   // ── Review / read a single policy ──
   if (selected) {
     const ro = selected.readOnly
     return (
+      <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
         <button onClick={() => setSelected(null)} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-neutral-mid hover:text-teal"><ChevronLeft size={15} /> Back to policies</button>
         <div className="flex items-start justify-between gap-4">
@@ -100,11 +101,13 @@ export function PoliciesView({ token }: { token: string }) {
           <div ref={previewRef} className="policy-content prose prose-sm mt-2 max-w-none rounded-lg border border-gray-100 bg-white p-4" />
         )}
       </div>
+      </div>
     )
   }
 
   // ── List ──
   return (
+    <div className="flex-1 overflow-y-auto px-4 py-6">
     <div className="mx-auto max-w-3xl">
       <h2 className="text-lg font-bold text-neutral-dark">Policies to approve</h2>
       <p className="mt-1 text-sm text-neutral-mid">Policy changes the admin has approved and sent to you for your approval. Review the changes, then approve them or send them back.</p>
@@ -158,6 +161,7 @@ export function PoliciesView({ token }: { token: string }) {
           </ul>
         </div>
       )}
+    </div>
     </div>
   )
 }

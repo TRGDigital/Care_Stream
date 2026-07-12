@@ -10,7 +10,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel, LockChip } from '@/components/admin/upgrade-gate'
-import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb, Globe, Award } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Download, Info, GraduationCap, CheckCircle2, AlertCircle, Clock, ClipboardCheck, Users, Activity, Zap, Brain, RefreshCw, Lightbulb, Globe, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import type { ElementType } from 'react'
 import { clsx } from 'clsx'
 
@@ -171,6 +171,58 @@ function SectionDivider({ title, subtitle }: { title: string; subtitle?: string 
         <h2 className="text-lg font-semibold text-neutral-dark">{title}</h2>
         {subtitle && <p className="mt-0.5 text-sm text-neutral-mid">{subtitle}</p>}
       </div>
+    </div>
+  )
+}
+
+// One updated policy as a collapsible card: header shows the status; opening reveals the
+// full sign-off timeline. Defaults closed so the list stays scannable.
+function PolicyTrailAccordion({ d }: { d: any }) {
+  const [open, setOpen] = useState(false)
+  const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External approver'
+  const chip = d.approval_status === 'published' ? { label: 'Approved & live', cls: 'border-green-200 bg-green-50 text-green-700' }
+    : d.approval_status === 'pending_manager' ? { label: 'With care manager', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
+    : d.approval_status === 'pending_external' ? { label: 'Awaiting external approval', cls: 'border-sky-200 bg-sky-50 text-sky-700' }
+    : { label: 'Draft', cls: 'border-gray-200 bg-gray-50 text-neutral-mid' }
+  return (
+    <div className="mb-3 overflow-hidden rounded-card border border-gray-200 bg-white">
+      <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="flex w-full items-start justify-between gap-3 px-5 py-4 text-left hover:bg-neutral-light/40">
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-neutral-dark">{d.name}</p>
+          <p className="mt-0.5 text-xs text-neutral-mid">The approval trail for this policy: who approved or sent it back, and when. A consistent, auditable sign-off process across every updated policy.</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${chip.cls}`}>{chip.label}</span>
+            {d.version && <span className="text-xs text-neutral-mid">Version {d.version}</span>}
+            {d.published_at && <span className="text-xs text-neutral-mid">· Published {new Date(d.published_at).toLocaleDateString('en-GB')}</span>}
+          </div>
+        </div>
+        <span className="mt-1 flex shrink-0 items-center gap-1 text-xs font-medium text-neutral-mid">{open ? 'Hide' : 'View'}{open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 px-5 py-4">
+          {d.trail.length === 0 ? (
+            <p className="text-sm text-neutral-mid">Changes adopted, not yet submitted for approval.</p>
+          ) : (
+            <ol className="relative space-y-3 border-l border-gray-200 pl-4">
+              {d.trail.map((s: any, i: number) => (
+                <li key={i} className="relative">
+                  <span className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${s.decision === 'rejected' ? 'bg-rose-400' : 'bg-green-500'}`} />
+                  <p className="text-sm text-neutral-dark"><span className="font-medium">{stageLabel(s.stage)}</span> {s.decision === 'rejected' ? 'sent back' : 'approved'}{s.approver_name ? ` · ${s.approver_name}` : ''}</p>
+                  <p className="text-xs text-neutral-mid">{new Date(s.created_at).toLocaleString('en-GB')}</p>
+                  {s.comment && <p className="mt-0.5 text-xs italic text-neutral-mid">&ldquo;{s.comment}&rdquo;</p>}
+                </li>
+              ))}
+              {d.approval_status === 'published' && d.published_at && (
+                <li className="relative">
+                  <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-teal ring-2 ring-white" />
+                  <p className="text-sm font-medium text-teal">Published to staff{d.version ? ` · version ${d.version}` : ''}</p>
+                  <p className="text-xs text-neutral-mid">{new Date(d.published_at).toLocaleString('en-GB')}</p>
+                </li>
+              )}
+            </ol>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -1451,45 +1503,9 @@ export default function AnalyticsPage() {
             <div className="rounded-xl border border-green-100 bg-green-50/40 p-3"><p className="text-2xl font-bold text-green-600">{policiesOverview.summary.published}</p><p className="text-xs text-neutral-mid">Approved &amp; live</p></div>
             <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3"><p className="text-2xl font-bold text-amber-600">{policiesOverview.summary.in_progress}</p><p className="text-xs text-neutral-mid">In approval</p></div>
           </div>
-          {policiesOverview.documents.map((d: any) => {
-            const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External approver'
-            const chip = d.approval_status === 'published' ? { label: 'Approved & live', cls: 'border-green-200 bg-green-50 text-green-700' }
-              : d.approval_status === 'pending_manager' ? { label: 'With care manager', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
-              : d.approval_status === 'pending_external' ? { label: 'Awaiting external approval', cls: 'border-sky-200 bg-sky-50 text-sky-700' }
-              : { label: 'Draft', cls: 'border-gray-200 bg-gray-50 text-neutral-mid' }
-            return (
-              <div key={d.policy_id} className="mb-6">
-                <Card title={d.name} info="The approval trail for this policy: who approved or sent it back, and when. A consistent, auditable sign-off process across every updated policy.">
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${chip.cls}`}>{chip.label}</span>
-                    {d.version && <span className="text-xs text-neutral-mid">Version {d.version}</span>}
-                    {d.published_at && <span className="text-xs text-neutral-mid">· Published {new Date(d.published_at).toLocaleDateString('en-GB')}</span>}
-                  </div>
-                  {d.trail.length === 0 ? (
-                    <p className="text-sm text-neutral-mid">Changes adopted, not yet submitted for approval.</p>
-                  ) : (
-                    <ol className="relative space-y-3 border-l border-gray-200 pl-4">
-                      {d.trail.map((s: any, i: number) => (
-                        <li key={i} className="relative">
-                          <span className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${s.decision === 'rejected' ? 'bg-rose-400' : 'bg-green-500'}`} />
-                          <p className="text-sm text-neutral-dark"><span className="font-medium">{stageLabel(s.stage)}</span> {s.decision === 'rejected' ? 'sent back' : 'approved'}{s.approver_name ? ` · ${s.approver_name}` : ''}</p>
-                          <p className="text-xs text-neutral-mid">{new Date(s.created_at).toLocaleString('en-GB')}</p>
-                          {s.comment && <p className="mt-0.5 text-xs italic text-neutral-mid">&ldquo;{s.comment}&rdquo;</p>}
-                        </li>
-                      ))}
-                      {d.approval_status === 'published' && d.published_at && (
-                        <li className="relative">
-                          <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-teal ring-2 ring-white" />
-                          <p className="text-sm font-medium text-teal">Published to staff{d.version ? ` · version ${d.version}` : ''}</p>
-                          <p className="text-xs text-neutral-mid">{new Date(d.published_at).toLocaleString('en-GB')}</p>
-                        </li>
-                      )}
-                    </ol>
-                  )}
-                </Card>
-              </div>
-            )
-          })}
+          {policiesOverview.documents.map((d: any) => (
+            <PolicyTrailAccordion key={d.policy_id} d={d} />
+          ))}
         </>
       ))}
 

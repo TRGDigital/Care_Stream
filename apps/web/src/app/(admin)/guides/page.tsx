@@ -610,6 +610,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-3 text-sm text-neutral-dark leading-relaxed">Every approval, and every send-back with its reason, is kept in an <strong>approval trail</strong> on the policy, so you always have a record of who signed off and when.</p>
         </SectionBlock>
 
+        <SectionBlock title="Emails you'll receive">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            So you never have to watch the Policies list, CareStream emails your <strong>admins</strong> at the points where the workflow needs you or reaches a result. Every admin on the account receives them, and they come from <strong>&ldquo;CareStream Policies&rdquo;</strong>.
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">Ready to send for external approval.</strong> When external approval is on and a policy has passed its internal approvals, your admins are emailed that it is ready. Open it, add the reviewer&rsquo;s name and email, and send them the one-off link.</li>
+            <li><strong className="text-neutral-dark">Approved and published.</strong> When the external approver approves, your admins are emailed that the policy is now live for staff, with the new version number.</li>
+            <li><strong className="text-neutral-dark">Sent back by your external reviewer.</strong> If the external approver sends it back, your admins are emailed with their feedback and a prompt to make the changes and re-approve.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-dark leading-relaxed">
+            The care manager doesn&rsquo;t need email for this, they see everything they need in their <strong>Policies hub</strong>: what&rsquo;s waiting for them, what they&rsquo;ve sent back, and what&rsquo;s now with the external approver.
+          </p>
+          <Tip>These go to whoever holds the <strong>admin</strong> role on your account. If the right person isn&rsquo;t getting them, check they&rsquo;re set up as an admin under Staff.</Tip>
+        </SectionBlock>
+
         <SectionBlock title="The two approval switches">
           <p className="text-sm text-neutral-dark leading-relaxed">
             You set the workflow under <strong>Settings → Organisation details</strong>, in the <strong>&ldquo;Policy approvals&rdquo;</strong> panel.

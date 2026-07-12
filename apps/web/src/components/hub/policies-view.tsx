@@ -4,18 +4,20 @@ import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyChanges } from '@/lib/policy-render'
 import { applyRoleNames } from '@/lib/policy-names'
-import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History } from 'lucide-react'
+import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History, Undo2 } from 'lucide-react'
 
 const placementLabel = (p: string) => p === 'amend' ? 'Amended paragraph' : p === 'add_under_heading' ? 'Added subsection' : 'New section'
 
 type Item = { policy_id: string; name: string; version: string; changes: number; submitted_at: string }
 type Pub  = { policy_id: string; name: string; version: string; published_at: string; published_by: string }
+type Ret  = { policy_id: string; name: string; version: string; returned_at: string; returned_by: string }
 type Selected = { policy_id: string; name: string; version: string; changes: number; readOnly: boolean }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['policyApprovalDetail']>>
 
 export function PoliciesView({ token, onChange }: { token: string; onChange?: () => void }) {
   const [list, setList]       = useState<Item[]>([])
   const [published, setPublished] = useState<Pub[]>([])
+  const [returned, setReturned]   = useState<Ret[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Selected | null>(null)
   const [detail, setDetail]   = useState<Detail | null>(null)
@@ -31,7 +33,7 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
   function load() {
     setLoading(true)
     createApiClient(token).me.policyApprovals()
-      .then(r => { setList(r.policies); setPublished(r.published ?? []) }).catch(() => {}).finally(() => setLoading(false))
+      .then(r => { setList(r.policies); setPublished(r.published ?? []); setReturned(r.returned ?? []) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [token])
 
@@ -179,6 +181,29 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Sent back to the admin — policies this care manager returned that are now with the
+          admin for the requested changes, and will come back for re-approval. */}
+      {returned.length > 0 && (
+        <div className="mt-9">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-dark"><Undo2 size={15} className="text-amber-500" /> Sent back to the admin</h3>
+          <p className="mt-1 text-sm text-neutral-mid">You returned these with feedback. The admin is making the changes, then they come back to you to approve.</p>
+          <ul className="mt-4 space-y-2">
+            {returned.map(p => (
+              <li key={p.policy_id} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FileText size={16} className="shrink-0 text-amber-500" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{p.name}</p>
+                    <p className="text-xs text-neutral-mid">Sent back {new Date(p.returned_at).toLocaleDateString('en-GB')} · with the admin</p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-btn border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-700">Awaiting changes</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Recently updated — visibility of policies that went live (e.g. when the admin

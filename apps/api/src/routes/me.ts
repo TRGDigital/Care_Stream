@@ -248,7 +248,22 @@ meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
     const policy = await (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } })
     published.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, published_at: d.published_at, published_by: d.published_by })
   }
-  ok(res, { is_manager: true, policies, published })
+
+  // Policies a care manager has sent back that are now with the admin (draft), i.e. the most
+  // recent decision on them was a manager rejection. Shows what is coming back for re-review.
+  const draftDocs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId, approval_status: 'draft' },
+    select: { id: true, policy_id: true, version: true },
+  })
+  const returned = [] as any[]
+  for (const d of draftDocs) {
+    const last = await (prisma as any).policyApproval.findFirst({ where: { document_id: d.id }, orderBy: { created_at: 'desc' } })
+    if (!last || last.stage !== 'manager' || last.decision !== 'rejected') continue
+    const policy = await (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } })
+    returned.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, returned_at: last.created_at, returned_by: last.approver_name })
+  }
+
+  ok(res, { is_manager: true, policies, published, returned })
 })
 
 meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) => {

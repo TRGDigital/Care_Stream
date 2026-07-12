@@ -307,7 +307,7 @@ export default function RegulationsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                <span><strong>Send-back is a full loop, not an auto-approve.</strong> A send-back at any stage returns the policy to <strong>draft</strong>. The admin makes the requested edits and <strong>re-approves</strong>, which sends it to the care manager (and then any external reviewer) <strong>again</strong> to approve the revised version. It is never marked approved on the admin&rsquo;s say-so: whoever asked for changes signs off on the final wording, so the approval trail always matches the version that actually went live. The care manager&rsquo;s notes clear on that re-submit so they get a clean review of the updated policy.</span>
+                <span><strong>Send-back is a full loop, not an auto-approve.</strong> A send-back at any stage returns the policy to <strong>draft</strong>. While it is with the admin it shows in the care manager&rsquo;s hub under <strong>&ldquo;Sent back to the admin&rdquo;</strong>, so they can see what is coming back. The admin makes the requested edits and <strong>re-approves</strong>, which sends it to the care manager (and then any external reviewer) <strong>again</strong> to approve the revised version. It is never marked approved on the admin&rsquo;s say-so: whoever asked for changes signs off on the final wording, so the approval trail always matches the version that actually went live. The care manager&rsquo;s notes clear on that re-submit so they get a clean review of the updated policy.</span>
               </li>
             </ul>
           </InfoAccordion>

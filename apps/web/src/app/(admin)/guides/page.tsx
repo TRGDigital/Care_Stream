@@ -523,7 +523,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'Regulation coverage, what to add, legal-change tracking and gap training — Professional & Enterprise',
+    summary: 'Regulation coverage, what to add, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -588,6 +588,37 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-dark leading-relaxed">
             Once you&rsquo;ve added the recommended wording — or from a &ldquo;regulation updated&rdquo; alert — click <strong>Generate training module</strong>. CareStream drafts a short lesson and assessment built from exactly that change, and it lands as an <strong>unapproved draft in Training</strong> for you to review and publish before it reaches staff. Diagnose the gap, close it, and make sure your team learns it, in one flow. (Uses one AI credit.)
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Adopt a fix into your policy">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            When you accept a recommendation, click <strong>Adopt</strong> and CareStream applies it to an <strong>editable copy</strong> of your policy as a tracked change. Your uploaded original is never touched, and nothing reaches staff until it is approved. Open the policy&rsquo;s <strong>Review changes</strong> screen to see every adopted change highlighted, toggle between a tracked and a clean preview, revert anything you don&rsquo;t want, and download a print-ready copy with your letterhead and sign-off.
+          </p>
+          <Tip>Role-holder names are merged in automatically when the &ldquo;Show role-holder names in policies&rdquo; setting is on, so an amended policy still reads as yours.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Getting an updated policy approved">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Approvals run in stages that you control. An <strong>admin always approves first</strong>. From there the update can go to your care manager, then to an external person, before it is published to staff. The admin&rsquo;s button on the Review changes screen tells you what happens next.
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}>An admin reviews the adopted changes and approves.</Step>
+            <Step n={2}>If care manager approval is on, the update appears in your <strong>care manager&rsquo;s Policies hub</strong> for a second approval. Any of your care managers can approve it.</Step>
+            <Step n={3}>If external approval is on, a <strong>one-off link</strong> is emailed to the person you choose. They read the policy and approve it or send it back with feedback.</Step>
+            <Step n={4}>Once every required approval is in, the new version is <strong>published</strong>: staff Q&amp;A answers from it straight away and the previous version is archived.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-dark leading-relaxed">Every approval, and every send-back with its reason, is kept in an <strong>approval trail</strong> on the policy, so you always have a record of who signed off and when.</p>
+        </SectionBlock>
+
+        <SectionBlock title="The two approval switches">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            You set the workflow under <strong>Settings → Organisation details</strong>, in the <strong>&ldquo;Policy approvals&rdquo;</strong> panel.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Require care manager approval</strong> (on by default). When on, an admin&rsquo;s approval sends the update to your care manager for a second approval. When off, an admin&rsquo;s approval <strong>publishes directly</strong>, and the policy still shows in the care manager&rsquo;s hub under &ldquo;Recently updated&rdquo; so they can see what changed. Turning it off suits smaller homes where an admin approves on their own.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Require external approval</strong> (off by default). When on, after the internal approvals are in, the policy is sent to an external person such as a consultant or trustee, on a one-off link, to approve or send back. It only goes live once they approve. You set who it goes to on the policy review screen.</span></li>
+          </ul>
+          <Tip>Care managers are recognised automatically: give a staff member the <strong>Care Manager</strong> or <strong>Registered Manager</strong> position and a <strong>Policies</strong> item appears in their hub, with a badge for anything waiting on them.</Tip>
         </SectionBlock>
       </div>
     ),

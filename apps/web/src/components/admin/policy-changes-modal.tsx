@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil } from 'lucide-react'
 
 type Doc = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyDocument']>>
 type Change = Doc['changes'][number]
@@ -178,6 +178,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [extName, setExtName]   = useState('')
   const [extEmail, setExtEmail] = useState('')
   const [extSent, setExtSent]   = useState('')
+  const [editId, setEditId]     = useState<string | null>(null)   // change being edited
+  const [editText, setEditText] = useState('')
+  const [editTitle, setEditTitle] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
@@ -225,6 +228,20 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     finally { setBusy(null) }
   }
 
+  function startEdit(c: Change) {
+    setEditId(c.id); setEditText(c.new_text); setEditTitle(c.section_title || ''); setError('')
+  }
+  async function saveEdit() {
+    if (!editId) return
+    if (!editText.trim()) { setError('The wording cannot be empty.'); return }
+    setBusy(editId); setError('')
+    try {
+      await createApiClient(token).analytics.editPolicyChange(editId, editText.trim(), editTitle.trim() || undefined)
+      setEditId(null); load()
+    } catch (e: any) { setError(e.message ?? 'Could not save the change.') }
+    finally { setBusy(null) }
+  }
+
   // What happens when the admin approves depends on the two org toggles.
   const managerRequired  = org?.require_manager_approval !== false
   const externalRequired = org?.require_external_approval === true
@@ -233,6 +250,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     : 'Approve & publish'
 
   async function submit() {
+    // Soft nudge if the admin is re-approving with care manager feedback still unaddressed.
+    const unresolved = (doc?.changes ?? []).filter(c => !c.published && c.manager_feedback && !c.feedback_resolved).length
+    if (unresolved > 0 && !confirm(`${unresolved} care manager note${unresolved === 1 ? '' : 's'} not yet addressed. Approve anyway?`)) return
     const q = managerRequired ? `Approve ${policyName} and send it to your care manager for their approval?`
       : externalRequired ? `Approve ${policyName} and send it to your external reviewer for approval?`
       : `Approve ${policyName} and publish it to your staff now?`
@@ -325,25 +345,62 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               {(doc.changes ?? []).length === 0 && <p className="mt-2 text-sm text-neutral-mid">No changes.</p>}
               <ul className="mt-3 space-y-2">
                 {(doc.changes ?? []).map(c => (
-                  <li key={c.id} className={`rounded-lg border px-3 py-2.5 ${c.published ? 'border-gray-100 bg-white' : 'border-green-200 bg-green-50/60'}`}>
+                  <li key={c.id} className={`rounded-lg border px-3 py-2.5 ${c.published ? 'border-gray-100 bg-white' : c.manager_feedback && !c.feedback_resolved ? 'border-amber-300 bg-amber-50/50' : 'border-green-200 bg-green-50/60'}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">{placementLabel(c.placement)}{c.published ? ' · published' : ''}</p>
                         <p className="mt-0.5 text-sm text-neutral-dark">{c.requirement || c.section_title || 'Change'}</p>
                         <p className="mt-0.5 text-xs text-neutral-mid">{c.applied_by || 'Admin'} · {new Date(c.applied_at).toLocaleDateString('en-GB')}</p>
                       </div>
-                      {!c.published && (
-                        <button onClick={() => revert(c.id)} disabled={busy !== null} title="Revert"
-                          className="shrink-0 rounded p-1 text-neutral-mid hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50">
-                          {busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
-                        </button>
+                      {!c.published && status === 'draft' && editId !== c.id && (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <button onClick={() => startEdit(c)} disabled={busy !== null} title="Edit the wording"
+                            className="rounded p-1 text-neutral-mid hover:bg-teal/10 hover:text-teal disabled:opacity-50">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => revert(c.id)} disabled={busy !== null} title="Revert"
+                            className="rounded p-1 text-neutral-mid hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50">
+                            {busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {c.manager_feedback && (
-                      <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Care manager feedback</p>
-                        <p className="mt-0.5 whitespace-pre-line text-xs text-amber-900">{c.manager_feedback}</p>
+
+                    {/* Inline editor for this change's wording */}
+                    {editId === c.id ? (
+                      <div className="mt-2 space-y-2">
+                        {c.placement === 'new_section' && (
+                          <input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Section heading"
+                            className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                        )}
+                        <textarea value={editText} onChange={e => setEditText(e.target.value)} rows={6}
+                          className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                        <div className="flex items-center gap-2">
+                          <button onClick={saveEdit} disabled={busy !== null || !editText.trim()}
+                            className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                            {busy === c.id ? <><Loader2 size={13} className="animate-spin" /> Saving…</> : <><Check size={13} /> Save change</>}
+                          </button>
+                          <button onClick={() => setEditId(null)} disabled={busy !== null}
+                            className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">Cancel</button>
+                        </div>
                       </div>
+                    ) : (
+                      c.manager_feedback && (
+                        c.feedback_resolved ? (
+                          <div className="mt-2 rounded-md border border-green-200 bg-green-50 px-2.5 py-1.5">
+                            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-green-700"><Check size={11} /> Addressed</p>
+                            <p className="mt-0.5 whitespace-pre-line text-xs text-green-800/80 line-through">{c.manager_feedback}</p>
+                          </div>
+                        ) : (
+                          <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Care manager feedback</p>
+                              {!c.published && status === 'draft' && <button onClick={() => startEdit(c)} className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 hover:text-amber-900"><Pencil size={11} /> Edit section</button>}
+                            </div>
+                            <p className="mt-0.5 whitespace-pre-line text-xs text-amber-900">{c.manager_feedback}</p>
+                          </div>
+                        )
+                      )
                     )}
                   </li>
                 ))}
@@ -354,7 +411,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                     : externalRequired ? 'Approve to send this to your external reviewer for approval. '
                     : 'Approve to publish this to your staff. '}
                   {managerRequired || externalRequired ? 'It goes live to staff only after every required approval. ' : ''}
-                  You can revert any change before approving.
+                  You can edit the wording of any change (pencil), or revert it, before approving.
                 </p>
               )}
 

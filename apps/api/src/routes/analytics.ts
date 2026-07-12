@@ -12,7 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, publishDocument, summariseDocuments, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -623,6 +623,28 @@ analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async
     ok(res, r)
   } catch (e: any) {
     err(res, 'REVERT_FAILED', e.message ?? 'Could not revert the change.', 500)
+  }
+})
+
+// PATCH /analytics/gaps/policy-change/:changeId — edit an adopted change's wording (and
+// heading, for a new section). Resolves care manager feedback on that change.
+analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await requireTenantFlag(tenantId, 'has_policy_adoption')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  const newText = String(req.body?.new_text ?? '').trim()
+  if (!newText) { err(res, 'VALIDATION_ERROR', 'The wording cannot be empty'); return }
+  const sectionTitle = typeof req.body?.section_title === 'string' ? req.body.section_title : undefined
+  try {
+    const r = await editChange(tenantId, String(req.params.changeId), newText, sectionTitle)
+    if (!r) { err(res, 'NOT_FOUND', 'Change not found or already published', 404); return }
+    ok(res, r)
+  } catch (e: any) {
+    err(res, 'EDIT_FAILED', e.message ?? 'Could not save the change.', 500)
   }
 })
 

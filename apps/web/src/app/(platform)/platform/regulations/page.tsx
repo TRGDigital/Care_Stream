@@ -303,7 +303,7 @@ export default function RegulationsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                <span><strong>Per-change feedback.</strong> When a care manager reviews, every adopted change has its own feedback box, so they can pin a specific note to any section rather than leaving one overall reason. On a send-back those notes are stored against each change and rolled into the approval-trail comment, and the admin sees each note against the exact change to revise.</span>
+                <span><strong>Per-change feedback.</strong> When a care manager reviews, every adopted change has its own feedback box, so they can pin a specific note to any section rather than leaving one overall reason. On a send-back those notes are stored against each change and rolled into the approval-trail comment. Back on the admin&rsquo;s Review changes screen, each note shows against the exact change, and the admin edits that change&rsquo;s wording <strong>inline</strong> (a pencil on the change). Saving an edit marks the note <strong>addressed</strong>, and a soft warning flags any notes still unaddressed when they re-approve.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />

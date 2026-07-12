@@ -140,8 +140,9 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   await rebuildDraft(doc.id)
-  // Fresh approval round: clear any per-change care manager notes from a previous send-back.
-  await (prisma as any).policyDocumentChange.updateMany({ where: { document_id: doc.id, reverted: false }, data: { manager_feedback: '' } })
+  // Fresh approval round: clear any per-change care manager notes (and their resolved flag)
+  // from a previous send-back.
+  await (prisma as any).policyDocumentChange.updateMany({ where: { document_id: doc.id, reverted: false }, data: { manager_feedback: '', feedback_resolved: false } })
   await recordApproval(doc.id, tenantId, 'admin', 'approved', adminName)
   const { manager, external } = await approvalToggles(tenantId)
   if (manager) {
@@ -275,6 +276,21 @@ export async function revertChange(tenantId: string, changeId: string): Promise<
   const change = await (prisma as any).policyDocumentChange.findUnique({ where: { id: changeId } })
   if (!change || change.tenant_id !== tenantId) return null
   await (prisma as any).policyDocumentChange.update({ where: { id: changeId }, data: { reverted: true } })
+  await rebuildDraft(change.document_id)
+  const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: change.document_id, published: false, reverted: false } })
+  return { pending }
+}
+
+// Edit the wording (and heading, for a new section) of one adopted change, then recompose
+// the draft. If the change carried care manager feedback, mark it resolved so the admin can
+// see they have addressed it. Only allowed while the change is unpublished.
+export async function editChange(tenantId: string, changeId: string, newText: string, sectionTitle?: string): Promise<{ pending: number } | null> {
+  const change = await (prisma as any).policyDocumentChange.findUnique({ where: { id: changeId } })
+  if (!change || change.tenant_id !== tenantId || change.published) return null
+  const data: Record<string, unknown> = { new_text: String(newText) }
+  if (typeof sectionTitle === 'string') data.section_title = sectionTitle
+  if (change.manager_feedback) data.feedback_resolved = true
+  await (prisma as any).policyDocumentChange.update({ where: { id: changeId }, data })
   await rebuildDraft(change.document_id)
   const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: change.document_id, published: false, reverted: false } })
   return { pending }

@@ -408,16 +408,16 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
 
   // Ad-hoc training module generation.
   const [modLoad, setModLoad] = useState(false)
-  const [modDone, setModDone] = useState<{ name: string } | null>(null)
+  const [modDone, setModDone] = useState<{ name: string; already: boolean } | null>(null)
   const [modErr,  setModErr]  = useState('')
 
-  async function generateModule() {
+  async function generateOnboarding() {
     setModLoad(true); setModErr('')
     try {
-      const { module } = await createApiClient(token).analytics.gapTrainingModule(referenceKey)
-      setModDone({ name: module.name })
+      const { flow, already } = await createApiClient(token).analytics.gapOnboarding(referenceKey)
+      setModDone({ name: flow.name, already })
     } catch (e: any) {
-      setModErr(e.message ?? 'Could not generate the module.')
+      setModErr(e.message ?? 'Could not create the onboarding.')
     } finally {
       setModLoad(false)
     }
@@ -704,22 +704,22 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     </div>
                   )}
 
-                  {/* Turn the additions into staff training */}
+                  {/* Turn the policy update into onboarding so staff read and confirm it */}
                   {missing.length > 0 && (
                     modDone ? (
                       <div className="flex items-start gap-2 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm">
                         <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600" />
-                        <p className="text-green-800">Drafted <span className="font-semibold">{modDone.name}</span>. Review and publish it in <a href="/training" className="underline hover:no-underline">Training</a> before it reaches staff.</p>
+                        <p className="text-green-800">{modDone.already ? 'Onboarding already exists for' : 'Added to onboarding:'} <span className="font-semibold">{modDone.name}</span>. Assign it to staff in <a href="/onboarding" className="underline hover:no-underline">Onboarding</a> so they read and confirm the updated policy.</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-start gap-2">
                           <GraduationCap size={16} className="mt-0.5 shrink-0 text-indigo-600" />
-                          <p className="text-sm text-neutral-dark">Once you&rsquo;ve added this to your policy, turn it into a short training module so staff learn it.</p>
+                          <p className="text-sm text-neutral-dark">Once you&rsquo;ve added this to your policy, add it to your onboarding so staff read and confirm the updated policy.</p>
                         </div>
-                        <button onClick={generateModule} disabled={modLoad}
+                        <button onClick={generateOnboarding} disabled={modLoad}
                           className="inline-flex shrink-0 items-center gap-1.5 rounded-btn bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-                          {modLoad ? <><Loader2 size={14} className="animate-spin" /> Generating…</> : <><Sparkles size={14} /> Generate training module</>}
+                          {modLoad ? <><Loader2 size={14} className="animate-spin" /> Creating…</> : <><Sparkles size={14} /> Generate onboarding</>}
                         </button>
                       </div>
                     )

@@ -824,6 +824,48 @@ analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async
   }
 })
 
+// ─── POST /analytics/gaps/:reference_key/onboarding ──────────────────────────
+// Turn a gap fix into onboarding: a read-and-confirm flow for the policy the wording is
+// added to, so staff read (and acknowledge) the updated policy. No AI credit — it points at
+// the tenant's own policy. Reuses one flow per policy (deduped by source_policy_id).
+analyticsRouter.post('/gaps/:reference_key/onboarding', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const detail = await getGapDetail(tenantId, String(req.params.reference_key))
+    const target = detail.target_policy
+    if (!target) { err(res, 'NO_POLICY', 'This gap does not point to an existing policy yet. Add the policy first, then create onboarding for it.', 400); return }
+
+    const existing = await (prisma as any).onboardingFlow.findFirst({
+      where: { tenant_id: tenantId, source_policy_id: target.id },
+      select: { id: true, name: true },
+    })
+    if (existing) { ok(res, { flow: { id: existing.id, name: existing.name }, already: true }); return }
+
+    const flow = await (prisma as any).onboardingFlow.create({
+      data: {
+        tenant_id:        tenantId,
+        name:             target.name,
+        description:      'Read and confirm this updated policy as part of onboarding.',
+        job_roles:        [],
+        flow_kind:        'primary',
+        source_policy_id: target.id,
+        is_active:        true,
+        steps: { create: [{ order: 0, title: `Read the ${target.name} policy`, type: 'read_policy', policy_id: target.id }] },
+      },
+      select: { id: true, name: true },
+    })
+    ok(res, { flow: { id: flow.id, name: flow.name }, already: false })
+  } catch (e: any) {
+    err(res, 'ONBOARDING_FAILED', e.message ?? 'Could not create the onboarding.', 500)
+  }
+})
+
 // ─── POST /analytics/gaps/acknowledge-remediation ────────────────────────────
 // Record that an admin accepted the policy-remediation disclaimer (once per tenant).
 // Kept as durable evidence: who, when, which version.

@@ -584,9 +584,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
         </SectionBlock>
 
-        <SectionBlock title="Turn a change into staff training">
+        <SectionBlock title="Turn a change into staff onboarding">
           <p className="text-sm text-neutral-dark leading-relaxed">
-            Once you&rsquo;ve added the recommended wording — or from a &ldquo;regulation updated&rdquo; alert — click <strong>Generate training module</strong>. CareStream drafts a short lesson and assessment built from exactly that change, and it lands as an <strong>unapproved draft in Training</strong> for you to review and publish before it reaches staff. Diagnose the gap, close it, and make sure your team learns it, in one flow. (Uses one AI credit.)
+            Once you&rsquo;ve added the recommended wording to a policy, click <strong>Generate onboarding</strong>. CareStream creates a <strong>read-and-confirm onboarding flow</strong> for that policy, so staff read (and acknowledge) the updated version. It lands in <strong>Onboarding</strong> ready to assign, reading a policy is an onboarding activity, not a training module. Diagnose the gap, close it, and make sure your team has read the change, in one flow.
           </p>
         </SectionBlock>
 

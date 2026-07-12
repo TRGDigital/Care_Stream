@@ -72,7 +72,7 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
-  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null }>>([])
+  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
@@ -397,14 +397,21 @@ export default function PoliciesPage() {
             <ul className="mt-3 space-y-2">
               {toReview.map(d => {
                 const name = policies.find((p: any) => p.id === d.policy_id)?.name ?? 'Policy'
+                const st = d.approval_status
+                const chip = st === 'pending_manager' ? { label: 'With care manager for approval', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
+                  : st === 'pending_external' ? { label: 'Awaiting external approval', cls: 'border-sky-200 bg-sky-50 text-sky-700' }
+                  : null
                 return (
                   <li key={d.policy_id} className="flex items-center justify-between gap-3 rounded-lg border border-teal-100 bg-white px-3 py-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-neutral-dark">{name}</p>
-                      <p className="text-xs text-neutral-mid">{d.pending} change{d.pending === 1 ? '' : 's'} to review{d.version ? ` · current version ${d.version}` : ''}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-medium text-neutral-dark">{name}</p>
+                        {chip && <span className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${chip.cls}`}>{chip.label}</span>}
+                      </div>
+                      <p className="text-xs text-neutral-mid">{d.pending} change{d.pending === 1 ? '' : 's'}{d.version ? ` · current version ${d.version}` : ''}</p>
                     </div>
                     <button onClick={() => setReviewTarget({ id: d.policy_id, name })}
-                      className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark">Review changes</button>
+                      className={`shrink-0 rounded-btn px-3 py-1.5 text-sm font-medium text-white ${st === 'pending_external' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-teal hover:bg-teal-dark'}`}>{st === 'pending_external' ? 'Send to external approver' : st === 'pending_manager' ? 'View' : 'Review changes'}</button>
                   </li>
                 )
               })}

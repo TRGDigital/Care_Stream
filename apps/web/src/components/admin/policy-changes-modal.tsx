@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil, Send } from 'lucide-react'
 
 type Doc = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyDocument']>>
 type Change = Doc['changes'][number]
@@ -177,7 +177,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [approval, setApproval] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyApprovals']>> | null>(null)
   const [extName, setExtName]   = useState('')
   const [extEmail, setExtEmail] = useState('')
-  const [extSent, setExtSent]   = useState('')
+  const [showExtOverlay, setShowExtOverlay] = useState(false)
   const [editId, setEditId]     = useState<string | null>(null)   // change being edited
   const [editText, setEditText] = useState('')
   const [editTitle, setEditTitle] = useState('')
@@ -270,12 +270,16 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     finally { setBusy(null) }
   }
 
+  function openExtOverlay() {
+    setExtName(approval?.external_name || ''); setExtEmail(approval?.external_email || ''); setError(''); setShowExtOverlay(true)
+  }
   async function sendExternalReviewer() {
     if (!extEmail.trim()) { setError('Enter the reviewer’s email address.'); return }
-    setBusy('external'); setError(''); setExtSent('')
+    setBusy('external'); setError('')
     try {
       await createApiClient(token).analytics.setExternalReviewer(policyId, extName.trim(), extEmail.trim())
-      setExtSent(`Review link sent to ${extEmail.trim()}.`)
+      setPublishedMsg(`Review link sent to ${extName.trim() || extEmail.trim()}. It goes live once they approve.`)
+      setShowExtOverlay(false)
       load()
     } catch (e: any) { setError(e.message ?? 'Could not send the review link.') }
     finally { setBusy(null) }
@@ -283,9 +287,12 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
 
   const status = approval?.status ?? 'draft'
   const statusLabel = status === 'pending_manager' ? 'Awaiting care manager approval'
-    : status === 'pending_external' ? 'Awaiting external approval'
     : status === 'published' ? 'Published' : null
   const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External reviewer'
+  const externalSent = !!approval?.external_email
+  const externalWho  = approval?.external_name || approval?.external_email || 'the reviewer'
+  // Did the care manager approve (relevant to the pending_external stage message)?
+  const managerApproved = (approval?.approvals ?? []).some(a => a.stage === 'manager' && a.decision === 'approved')
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-5" onClick={onClose}>
@@ -310,7 +317,22 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
               <Download size={13} /> Download
             </button>
-            {statusLabel ? (
+            {status === 'pending_external' ? (
+              <div className="flex items-center gap-2">
+                {managerApproved && <span className="hidden items-center gap-1 rounded-btn border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-medium text-green-700 sm:inline-flex"><Check size={12} /> Care manager approved</span>}
+                {externalSent ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Sent to {externalWho} · awaiting approval</span>
+                    <button onClick={openExtOverlay} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">Resend</button>
+                  </>
+                ) : (
+                  <button onClick={openExtOverlay}
+                    className="inline-flex items-center gap-1.5 rounded-btn bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700">
+                    <Send size={14} /> Send to external approver
+                  </button>
+                )}
+              </div>
+            ) : statusLabel ? (
               <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">{statusLabel}</span>
             ) : (
               <button onClick={submit} disabled={busy !== null || pending.length === 0}
@@ -418,18 +440,11 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               {status === 'pending_external' && (
                 <div className="mt-5 rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-3">
                   <p className="text-xs font-bold uppercase tracking-wide text-sky-800">External approval</p>
-                  <p className="mt-1 text-xs text-neutral-mid">Send a one-off link to an external person to read this policy and approve it or send feedback. It only goes live once they approve.</p>
-                  <div className="mt-2 space-y-2">
-                    <input value={extName} onChange={e => setExtName(e.target.value)} placeholder="Reviewer name (optional)"
-                      className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-sky-400 focus:outline-none" />
-                    <input value={extEmail} onChange={e => setExtEmail(e.target.value)} type="email" placeholder="Reviewer email"
-                      className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-sky-400 focus:outline-none" />
-                    <button onClick={sendExternalReviewer} disabled={busy !== null || !extEmail.trim()}
-                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-btn bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">
-                      {busy === 'external' ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <>{approval?.external_email ? 'Resend review link' : 'Send review link'}</>}
-                    </button>
-                    {extSent && <p className="flex items-center gap-1.5 text-xs text-green-700"><Check size={13} /> {extSent}</p>}
-                  </div>
+                  {externalSent ? (
+                    <p className="mt-1 text-xs text-neutral-mid">Sent to <strong>{externalWho}</strong>. Waiting for them to approve. Use <strong>Resend</strong> at the top to send the link again.</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-neutral-mid">Approved internally and ready to send. Use <strong>Send to external approver</strong> at the top to enter the reviewer and email them the one-off link.</p>
+                  )}
                 </div>
               )}
 
@@ -454,6 +469,42 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
           </div>
         )}
       </div>
+
+      {/* Send-to-external overlay */}
+      {showExtOverlay && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowExtOverlay(false)}>
+          <div className="w-full max-w-md rounded-card bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700">External approval</p>
+                <h3 className="mt-0.5 text-base font-bold text-neutral-dark">Send to external approver</h3>
+              </div>
+              <button onClick={() => setShowExtOverlay(false)} aria-label="Close" className="rounded-full p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><X size={18} /></button>
+            </div>
+            <p className="mt-2 text-sm text-neutral-mid">Enter who should approve <strong>{policyName}</strong>. They get a one-off link to read it and approve it or send it back. It only goes live to your staff once they approve.</p>
+            <div className="mt-4 space-y-3">
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-neutral-mid">Approver name</span>
+                <input value={extName} onChange={e => setExtName(e.target.value)} placeholder="e.g. Jane Smith"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-neutral-mid">Approver email</span>
+                <input value={extEmail} onChange={e => setExtEmail(e.target.value)} type="email" placeholder="name@example.com"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none" />
+              </label>
+            </div>
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setShowExtOverlay(false)} className="rounded-btn border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:bg-gray-50">Cancel</button>
+              <button onClick={sendExternalReviewer} disabled={busy !== null || !extEmail.trim()}
+                className="inline-flex items-center gap-1.5 rounded-btn bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">
+                {busy === 'external' ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <><Send size={14} /> {externalSent ? 'Resend link' : 'Send link'}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -263,7 +263,19 @@ meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
     returned.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, returned_at: last.created_at, returned_by: last.approver_name })
   }
 
-  ok(res, { is_manager: true, policies, published, returned })
+  // Policies now with the external approver (or ready to be sent to one), so the care manager
+  // can follow the progress after they've approved. sent = a reviewer has been emailed the link.
+  const extDocs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId, approval_status: 'pending_external' },
+    select: { policy_id: true, version: true, external_email: true, external_name: true },
+  })
+  const awaiting_external = [] as any[]
+  for (const d of extDocs) {
+    const policy = await (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } })
+    awaiting_external.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, sent: !!d.external_email, reviewer_name: d.external_name || '' })
+  }
+
+  ok(res, { is_manager: true, policies, published, returned, awaiting_external })
 })
 
 meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) => {

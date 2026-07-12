@@ -51,6 +51,57 @@ function InfoAccordion({ title, borderClass, bgClass, titleClass, children }: {
   )
 }
 
+// The CQC Single Assessment Framework: 34 quality statements grouped by key question, each
+// with the regulation(s) it maps to (the "SAF link"). Verbatim names from CQC's published
+// "34 quality statements" appendix. This is the reference layer that drives SAF coverage +
+// wording alignment. Source: cqc.org.uk.
+const SAF_KEY_QUESTIONS: Array<{ q: string; accent: string; statements: Array<{ n: number; name: string; regs: string }> }> = [
+  { q: 'Safe', accent: 'text-teal-700', statements: [
+    { n: 1,  name: 'Learning culture', regs: 'Reg 12, 16, 17, 20' },
+    { n: 2,  name: 'Safe systems, pathways and transitions', regs: 'Reg 9, 12, 17' },
+    { n: 3,  name: 'Safeguarding', regs: 'Reg 13, 11 · Care Act s.42 · MCA/DoLS' },
+    { n: 4,  name: 'Involving people to manage risks', regs: 'Reg 12, 9, 11' },
+    { n: 5,  name: 'Safe environments', regs: 'Reg 15, 12 · H&S · Fire · LOLER' },
+    { n: 6,  name: 'Safe and effective staffing', regs: 'Reg 18, 19, 12(2)' },
+    { n: 7,  name: 'Infection prevention and control', regs: 'Reg 12, 15 · IPC Code · COSHH' },
+    { n: 8,  name: 'Medicines optimisation', regs: 'Reg 12, 9, 11 · NICE' },
+  ]},
+  { q: 'Effective', accent: 'text-blue-700', statements: [
+    { n: 9,  name: 'Assessing needs', regs: 'Reg 9, 12' },
+    { n: 10, name: 'Delivering evidence-based care and treatment', regs: 'Reg 9, 12, 14' },
+    { n: 11, name: 'How staff and teams work together', regs: 'Reg 12, 17' },
+    { n: 12, name: 'Supporting people to live healthier lives', regs: 'Reg 9, 12' },
+    { n: 13, name: 'Monitoring and improving outcomes', regs: 'Reg 17' },
+    { n: 14, name: 'Consent to care and treatment', regs: 'Reg 11 · MCA/DoLS' },
+  ]},
+  { q: 'Caring', accent: 'text-rose-700', statements: [
+    { n: 15, name: 'Kindness, compassion and dignity', regs: 'Reg 10' },
+    { n: 16, name: 'Treating people as individuals', regs: 'Reg 9, 10' },
+    { n: 17, name: 'Independence, choice and control', regs: 'Reg 9, 10' },
+    { n: 18, name: 'Responding to people’s immediate needs', regs: 'Reg 9, 12' },
+    { n: 19, name: 'Workforce wellbeing and enablement', regs: 'Reg 18' },
+  ]},
+  { q: 'Responsive', accent: 'text-amber-700', statements: [
+    { n: 20, name: 'Person-centred care', regs: 'Reg 9' },
+    { n: 21, name: 'Care provision, integration and continuity', regs: 'Reg 9, 12, 17' },
+    { n: 22, name: 'Providing information', regs: 'Reg 9, 12' },
+    { n: 23, name: 'Listening to and involving people', regs: 'Reg 16, 17' },
+    { n: 24, name: 'Equity in access', regs: 'Reg 9, 10 · Equality Act' },
+    { n: 25, name: 'Equity in experiences and outcomes', regs: 'Reg 9, 10 · Equality Act' },
+    { n: 26, name: 'Planning for the future', regs: 'Reg 9, 12' },
+  ]},
+  { q: 'Well-led', accent: 'text-violet-700', statements: [
+    { n: 27, name: 'Shared direction and culture', regs: 'Reg 17' },
+    { n: 28, name: 'Capable, compassionate and inclusive leaders', regs: 'Reg 17, 7' },
+    { n: 29, name: 'Freedom to speak up', regs: 'Reg 17, 20' },
+    { n: 30, name: 'Workforce equality, diversity and inclusion', regs: 'Reg 18 · Equality Act' },
+    { n: 31, name: 'Governance, management and sustainability', regs: 'Reg 17' },
+    { n: 32, name: 'Partnerships and communities', regs: 'Reg 17' },
+    { n: 33, name: 'Learning, improvement and innovation', regs: 'Reg 17, 20' },
+    { n: 34, name: 'Environmental sustainability, sustainable development', regs: 'Reg 17' },
+  ]},
+]
+
 export default function RegulationsPage() {
   const token                           = usePlatformAuth()
   const [regulations, setRegulations]   = useState<Regulation[]>([])
@@ -310,6 +361,38 @@ export default function RegulationsPage() {
               </li>
             </ul>
           </InfoAccordion>
+
+        <InfoAccordion title="CQC Single Assessment Framework (SAF) data layer" borderClass="border-slate-300" bgClass="bg-slate-50" titleClass="text-slate-800">
+          <p className="leading-relaxed text-slate-800/90">This is how policies connect to how CQC actually inspects. The SAF assesses providers against <strong>34 quality statements</strong> (&ldquo;we statements&rdquo;) grouped under the 5 key questions. A quality statement is not a policy requirement itself, it is the lens. Policies are the <strong>&ldquo;process&rdquo; evidence</strong> behind them.</p>
+          <div className="mt-2 rounded-lg border border-slate-200 bg-white/70 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-600">How the layer is driven</p>
+            <ul className="space-y-1.5 leading-relaxed text-slate-800/90">
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" /><span>Each quality statement carries curated <strong>expectation cues</strong> (the person-centred emphasis a policy should reflect) and a <strong>regulation crosswalk</strong> (the SAF link, below).</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" /><span><strong>Coverage is inherited, not re-guessed.</strong> Because we already verify which policies cover which regulations (the 3-check process above), a quality statement inherits that coverage through its crosswalk. Accurate, no new fuzzy matching.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" /><span><strong>Wording alignment.</strong> The gap engine also judges a policy&rsquo;s wording against the <em>expectation cues</em> (not just the regulation&rsquo;s required elements), and drafts person-centred rewording, e.g. a Consent policy that covers Reg 11 but reads procedurally is flagged against the &ldquo;Consent to care and treatment&rdquo; statement.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" /><span>Both surface inside the <strong>Coverage detail</strong> (regulation gaps + SAF missing cues + rewording, fixed in one adopt → approve flow) and roll up into a <strong>CQC readiness</strong> view.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" /><span>Always framed as <strong>policy / process evidence and gaps</strong>, never a compliance score, policies are one of several CQC evidence categories.</span></li>
+            </ul>
+          </div>
+
+          <p className="mt-3 text-xs font-bold uppercase tracking-wide text-slate-600">The 34 quality statements &amp; their regulation links</p>
+          <div className="mt-1 space-y-3">
+            {SAF_KEY_QUESTIONS.map(kq => (
+              <div key={kq.q} className="rounded-lg border border-slate-200 bg-white/70 px-4 py-3">
+                <p className={`text-sm font-bold ${kq.accent}`}>{kq.q} <span className="font-normal text-slate-400">· {kq.statements.length}</span></p>
+                <ul className="mt-1.5 space-y-1">
+                  {kq.statements.map(s => (
+                    <li key={s.n} className="flex items-baseline justify-between gap-3 border-t border-slate-100 pt-1 first:border-0 first:pt-0">
+                      <span className="text-slate-800"><span className="mr-1.5 text-xs font-semibold tabular-nums text-slate-400">{s.n}</span>{s.name}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-slate-500">{s.regs}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">We-statements and cues are curated on the platform and reviewed like the regulation library, CQC revises the framework, so verify at re-seed. Source: <a href="https://www.cqc.org.uk/guidance-regulation/providers/assessment/single-assessment-framework" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700">CQC Single Assessment Framework</a> · <a href="https://www.cqc.org.uk/publications/review-cqcs-single-assessment-framework-and-its-implementation/appendix-1-34-quality-statements" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700">the 34 quality statements</a>.</p>
+        </InfoAccordion>
 
         <GlossaryManager token={token} />
 

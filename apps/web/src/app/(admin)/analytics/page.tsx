@@ -401,7 +401,7 @@ export default function AnalyticsPage() {
       <div className="sticky -top-6 z-30 -mx-6 -mt-6 mb-6 bg-neutral-light px-6 pt-6 shadow-sm">
         <h1 className="mb-3 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
         <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-gray-200">
-          {TABS.filter(t => t.id !== 'policies' || (policiesOverview?.documents?.length ?? 0) > 0).map(t => {
+          {TABS.filter(t => t.id !== 'policies' || policiesOverview != null).map(t => {
             const locked = !!t.premium && features != null && !features[t.premium]
             return (
               <button

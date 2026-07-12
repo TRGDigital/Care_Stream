@@ -291,6 +291,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External reviewer'
   const externalSent = !!approval?.external_email
   const externalWho  = approval?.external_name || approval?.external_email || 'the reviewer'
+  const externalSentDate = approval?.external_sent_at ? new Date(approval.external_sent_at).toLocaleDateString('en-GB') : ''
   // Did the care manager approve (relevant to the pending_external stage message)?
   const managerApproved = (approval?.approvals ?? []).some(a => a.stage === 'manager' && a.decision === 'approved')
 
@@ -322,7 +323,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 {managerApproved && <span className="hidden items-center gap-1 rounded-btn border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-medium text-green-700 sm:inline-flex"><Check size={12} /> Care manager approved</span>}
                 {externalSent ? (
                   <>
-                    <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Sent to {externalWho} · awaiting approval</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Sent to {externalWho}{externalSentDate ? ` on ${externalSentDate}` : ''} · awaiting approval</span>
                     <button onClick={openExtOverlay} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">Resend</button>
                   </>
                 ) : (
@@ -441,7 +442,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 <div className="mt-5 rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-3">
                   <p className="text-xs font-bold uppercase tracking-wide text-sky-800">External approval</p>
                   {externalSent ? (
-                    <p className="mt-1 text-xs text-neutral-mid">Sent to <strong>{externalWho}</strong>. Waiting for them to approve. Use <strong>Resend</strong> at the top to send the link again.</p>
+                    <p className="mt-1 text-xs text-neutral-mid">Sent to <strong>{externalWho}</strong>{externalSentDate ? ` on ${externalSentDate}` : ''}. Waiting for them to approve. Use <strong>Resend</strong> at the top to send the link again.</p>
                   ) : (
                     <p className="mt-1 text-xs text-neutral-mid">Approved internally and ready to send. Use <strong>Send to external approver</strong> at the top to enter the reviewer and email them the one-off link.</p>
                   )}

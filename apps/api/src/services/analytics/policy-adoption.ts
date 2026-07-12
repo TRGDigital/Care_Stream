@@ -31,6 +31,7 @@ async function emailExternalReviewer(doc: any, token: string): Promise<void> {
       link: `${siteUrl()}/policy-review/${token}`,
       changes,
     })
+    if (doc.id) await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_sent_at: new Date() } })
   } catch (e: any) { console.error('[policy-external] email failed', e?.message) }
 }
 
@@ -242,11 +243,11 @@ export async function rejectPolicy(tenantId: string, policyId: string, stage: st
 }
 
 // The approval status + full history for a policy.
-export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; approvals: any[] } | null> {
+export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; external_sent_at: string | null; approvals: any[] } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   const approvals = await (prisma as any).policyApproval.findMany({ where: { document_id: doc.id }, orderBy: { created_at: 'asc' } })
-  return { status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email, external_token: doc.external_token, approvals }
+  return { status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email, external_token: doc.external_token, external_sent_at: doc.external_sent_at ? new Date(doc.external_sent_at).toISOString() : null, approvals }
 }
 
 // ── External (public, token-gated) review ──
@@ -357,14 +358,14 @@ export async function publishDocument(tenantId: string, policyId: string, publis
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.
-export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }>> {
+export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>> {
   const docs = await (prisma as any).policyDocument.findMany({
-    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true },
+    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true, external_name: true, external_email: true, external_sent_at: true },
   })
-  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }> = []
+  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }> = []
   for (const d of docs as any[]) {
     const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } })
-    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null, approval_status: d.approval_status ?? 'draft' })
+    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null, approval_status: d.approval_status ?? 'draft', external_name: d.external_name || d.external_email || '', external_sent_at: d.external_sent_at ? new Date(d.external_sent_at).toISOString() : null })
   }
   return out
 }

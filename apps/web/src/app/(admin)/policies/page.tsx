@@ -72,7 +72,7 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
-  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string }>>([])
+  const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
@@ -409,6 +409,9 @@ export default function PoliciesPage() {
                         {chip && <span className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${chip.cls}`}>{chip.label}</span>}
                       </div>
                       <p className="text-xs text-neutral-mid">{d.pending} change{d.pending === 1 ? '' : 's'}{d.version ? ` · current version ${d.version}` : ''}</p>
+                      {st === 'pending_external' && d.external_sent_at && (
+                        <p className="mt-0.5 text-xs text-sky-700">Sent to {d.external_name || 'the reviewer'} on {new Date(d.external_sent_at).toLocaleDateString('en-GB')}</p>
+                      )}
                     </div>
                     <button onClick={() => setReviewTarget({ id: d.policy_id, name })}
                       className={`shrink-0 rounded-btn px-3 py-1.5 text-sm font-medium text-white ${st === 'pending_external' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-teal hover:bg-teal-dark'}`}>{st === 'pending_external' ? 'Send to external approver' : st === 'pending_manager' ? 'View' : 'Review changes'}</button>

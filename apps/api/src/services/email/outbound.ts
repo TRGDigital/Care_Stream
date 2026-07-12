@@ -293,7 +293,8 @@ export async function sendPolicyExternalReviewEmail(opts: {
     console.warn('[email] SENDGRID_API_KEY not set — skipping policy external review email')
     return
   }
-  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const fromEmail = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const from      = { email: fromEmail, name: 'CareStream Policies' }
   const firstName = (opts.name || '').split(' ')[0] || 'there'
   const changeLine = opts.changes === 1 ? '1 change' : `${opts.changes} changes`
 

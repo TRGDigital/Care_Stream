@@ -169,9 +169,8 @@ export default function RegulationsPage() {
           </div>
         </div>
 
-        {/* How regulations work */}
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm space-y-4">
-          <p className="font-semibold text-blue-900">How regulations work in the AI pipeline</p>
+        {/* Explainers — collapsible cards, all closed by default */}
+        <InfoAccordion title="How regulations work in the AI pipeline" borderClass="border-blue-100" bgClass="bg-blue-50" titleClass="text-blue-900">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <p className="text-xs font-bold uppercase tracking-wide text-blue-700">1. Via policy chunk metadata (automatic)</p>
@@ -192,11 +191,9 @@ export default function RegulationsPage() {
               <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" /><span>The <strong>Also known as</strong> field is critical for detection — include every abbreviation, short name, and common variant (e.g. for GDPR: "Data Protection, UK GDPR, ICO").</span></li>
             </ul>
           </div>
-        </div>
+        </InfoAccordion>
 
-        {/* How Policy Gaps uses these regulations */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 text-sm space-y-4">
-          <p className="font-semibold text-amber-900">How Policy Gaps uses these regulations (tenant &ldquo;Regulation coverage&rdquo; + &ldquo;what to add&rdquo;)</p>
+        <InfoAccordion title={'How Policy Gaps uses these regulations (tenant "Regulation coverage" and "what to add")'} borderClass="border-amber-200" bgClass="bg-amber-50/70" titleClass="text-amber-900">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Coverage matching signals</p>
@@ -212,12 +209,13 @@ export default function RegulationsPage() {
               <p className="leading-relaxed text-amber-900">The authoritative list of what a compliant policy for this regulation must contain. It is the spine of the tenant-facing &ldquo;what to add&rdquo; deep-dive: a home&rsquo;s policy is checked against this list, and anything missing (and not already covered elsewhere in their library) is what we suggest they add.</p>
             </div>
           </div>
-          <div className="rounded-lg border border-indigo-200 bg-indigo-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Applicability — who each regulation is tested for</p>
+        </InfoAccordion>
+
+        <InfoAccordion title="Applicability: who each regulation is tested for" borderClass="border-indigo-200" bgClass="bg-indigo-50/70" titleClass="text-indigo-900">
             <p className="leading-relaxed text-indigo-900/90">A regulation is only checked against a tenant when its <strong>care-setting scope</strong> includes their setting AND all its <strong>required service triggers</strong> are true for them (the tenant confirms these in Settings, pre-filled from their facility type). Leave both empty for a <strong>universal</strong> regulation, tested for everyone. This is why we never flag, say, a Mental Health Act policy for a service that doesn&rsquo;t support people under the Act, or controlled-drug rules for a home that holds none. Set it per regulation in Edit; the row badge shows <strong>Universal</strong> or <strong>Scoped</strong>.</p>
-          </div>
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">How a match is confirmed, three checks before a policy counts</p>
+        </InfoAccordion>
+
+        <InfoAccordion title="How a match is confirmed, three checks before a policy counts" borderClass="border-emerald-200" bgClass="bg-emerald-50/70" titleClass="text-emerald-900">
             <div className="rounded-md border border-emerald-200 bg-white/70 px-3 py-2 space-y-1.5">
               <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Direction of the analysis: reads all policies, one regulation at a time</p>
               <p className="leading-relaxed text-emerald-900/90">The analysis is <strong>regulation-driven</strong>. It works through the tenant&rsquo;s <strong>in-scope regulations one at a time</strong>, and for each one it searches across the <strong>entire</strong> policy library. Every policy is indexed and is a candidate, so a home with 360 policies has all 360 considered for every regulation. It is not &ldquo;one policy against one regulation&rdquo;, it is &ldquo;this regulation against all your policies&rdquo;, repeated for each regulation.</p>
@@ -230,9 +228,9 @@ export default function RegulationsPage() {
               <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-emerald-700">3.</span><span><strong>Adversarial confirmation.</strong> Every &ldquo;covered&rdquo; or &ldquo;partial&rdquo; verdict must survive a strict second reviewer whose only job is to refute it. If the match cannot stand up, the regulation is recorded as a gap. It fails safe: a transient error keeps the first verdict, so a real match is never dropped by accident.</span></li>
             </ol>
             <p className="text-[11px] leading-relaxed text-emerald-800/80">Well-set <strong>Match terms</strong>, <strong>Distinguish from</strong> and <strong>Required elements</strong> make all three checks sharper. They are what the floor, the judge and the skeptic all lean on.</p>
-          </div>
-          <div className="rounded-lg border border-amber-300 bg-white px-4 py-3 space-y-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">What the checklist is generated against (important)</p>
+        </InfoAccordion>
+
+        <InfoAccordion title="What the checklist is generated against (important)" borderClass="border-amber-300" bgClass="bg-white" titleClass="text-amber-900">
             <ul className="space-y-2 leading-relaxed text-neutral-dark">
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
@@ -251,10 +249,9 @@ export default function RegulationsPage() {
                 <span><strong className="text-amber-900">Nothing is saved automatically.</strong> Every Generate returns a draft to review. It is only stored once you edit and click Save.</span>
               </li>
             </ul>
-          </div>
+        </InfoAccordion>
 
-          <div className="rounded-lg border border-violet-200 bg-violet-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-violet-700">How the suggested wording is generated (the tenant &ldquo;what to add&rdquo;)</p>
+        <InfoAccordion title={'How the suggested wording is generated (the tenant "what to add")'} borderClass="border-violet-200" bgClass="bg-violet-50/70" titleClass="text-violet-900">
             <p className="leading-relaxed text-violet-900/90">For each missing requirement, the deep-dive drafts wording the home can drop straight into their policy. It is built like this:</p>
             <ol className="mt-1 space-y-1 leading-relaxed text-violet-900">
               <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">1.</span><span><strong>Grounded, and checked against the whole library.</strong> Each suggestion is based on this regulation&rsquo;s <strong>Required elements</strong>, and is only offered after checking every policy the home holds. If they already cover it somewhere else, we say where instead of suggesting it. We never tell a home to add something it already has.</span></li>
@@ -264,8 +261,7 @@ export default function RegulationsPage() {
               <li className="flex items-start gap-2"><span className="mt-0.5 shrink-0 font-bold text-violet-700">5.</span><span><strong>Placed where it belongs.</strong> Every suggestion is given a destination and a number: <strong>amend</strong> a highlighted sentence, <strong>add a subsection</strong> under a heading, or a numbered <strong>new section</strong> at the end of the policy. The numbers run top to bottom so the tenant can follow them in order.</span></li>
             </ol>
             <p className="text-[11px] leading-relaxed text-violet-800/80">All of this runs when a tenant re-runs their analysis and is cached, so opening &ldquo;see what to add&rdquo; costs nothing extra. Re-running regenerates it with the current regulation fields and glossary.</p>
-          </div>
-        </div>
+        </InfoAccordion>
 
         <InfoAccordion title="Role-holder names in policies" borderClass="border-sky-200" bgClass="bg-sky-50/70" titleClass="text-sky-900">
             <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings, then Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>

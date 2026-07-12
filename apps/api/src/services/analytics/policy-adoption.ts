@@ -60,6 +60,21 @@ async function notifyAdminsExternalReviewReady(doc: any): Promise<void> {
   } catch (e: any) { console.error('[policy-external] admin notify failed', e?.message) }
 }
 
+// Build the admin notification for an external decision — exported so previews match prod.
+export function buildExternalDecisionEmail(decision: 'approved' | 'rejected', opts: { policyName: string; who: string; version: string; comment: string }): { subject: string; bodyHtml: string } {
+  const { policyName, who, version, comment } = opts
+  const link = `${siteUrl()}/gaps`
+  const subject = decision === 'approved' ? `Approved and published: ${policyName}` : `Sent back by your external reviewer: ${policyName}`
+  const bodyHtml = decision === 'approved'
+    ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${who}</strong> has approved <strong>${policyName}</strong>. It is now live for your staff${version ? ` as version ${version}` : ''}, and staff Q&amp;A answers from the new version.</p>
+       <div style="text-align:center;margin:16px 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+    : `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 12px"><strong>${who}</strong> has sent <strong>${policyName}</strong> back for changes.</p>
+       ${comment ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;padding:12px 14px;background:#fef3c7;border-radius:8px"><em>&ldquo;${comment}&rdquo;</em></p>` : ''}
+       <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">Open the policy, make the changes, and re-approve to send it back through.</p>
+       <div style="text-align:center;margin:0 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+  return { subject, bodyHtml }
+}
+
 // Tell the tenant's admins how the external approver decided: approved (now live) or sent back.
 async function notifyAdminsExternalDecision(doc: any, decision: 'approved' | 'rejected', reviewerName: string, comment: string, version: string): Promise<void> {
   try {
@@ -71,15 +86,7 @@ async function notifyAdminsExternalDecision(doc: any, decision: 'approved' | 're
     const orgName = tenant?.name ?? 'Your service'
     const policyName = policy?.name ?? 'A policy'
     const who = reviewerName || doc.external_name || 'Your external reviewer'
-    const link = `${siteUrl()}/gaps`
-    const subject = decision === 'approved' ? `Approved and published: ${policyName}` : `Sent back by your external reviewer: ${policyName}`
-    const bodyHtml = decision === 'approved'
-      ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${who}</strong> has approved <strong>${policyName}</strong>. It is now live for your staff${version ? ` as version ${version}` : ''}, and staff Q&amp;A answers from the new version.</p>
-         <div style="text-align:center;margin:16px 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
-      : `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 12px"><strong>${who}</strong> has sent <strong>${policyName}</strong> back for changes.</p>
-         ${comment ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;padding:12px 14px;background:#fef3c7;border-radius:8px"><em>&ldquo;${comment}&rdquo;</em></p>` : ''}
-         <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">Open the policy, make the changes, and re-approve to send it back through.</p>
-         <div style="text-align:center;margin:0 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+    const { subject, bodyHtml } = buildExternalDecisionEmail(decision, { policyName, who, version, comment })
     for (const a of (admins as any[])) {
       if (!a?.email) continue
       await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject, bodyHtml }).catch(() => {})

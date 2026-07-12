@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null); setPoliciesOverview((cached as any).policiesOverview ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -298,7 +298,7 @@ export default function AnalyticsPage() {
     ])
       .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv]) => {
         setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp })
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp, policiesOverview: polOv })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))

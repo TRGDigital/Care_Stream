@@ -32,6 +32,23 @@ const TRIGGER_OPTIONS: Array<{ key: string; label: string }> = [
 const triggerLabel = (k: string) => TRIGGER_OPTIONS.find(t => t.key === k)?.label ?? k
 const settingLabelOf = (s: string) => SETTING_OPTIONS.find(o => o.slug === s)?.label ?? s
 
+// Collapsible explainer box (defaults closed) — keeps this long page scannable.
+function InfoAccordion({ title, borderClass, bgClass, titleClass, children }: {
+  title: string; borderClass: string; bgClass: string; titleClass: string; children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`rounded-lg border ${borderClass} ${bgClass} px-4 py-3`}>
+      <button onClick={() => setOpen(o => !o)} aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 text-left">
+        <span className={`text-xs font-bold uppercase tracking-wide ${titleClass}`}>{title}</span>
+        {open ? <ChevronUp size={15} className="shrink-0 text-neutral-mid" /> : <ChevronDown size={15} className="shrink-0 text-neutral-mid" />}
+      </button>
+      {open && <div className="mt-2 space-y-1.5">{children}</div>}
+    </div>
+  )
+}
+
 export default function RegulationsPage() {
   const token                           = usePlatformAuth()
   const [regulations, setRegulations]   = useState<Regulation[]>([])
@@ -247,8 +264,7 @@ export default function RegulationsPage() {
             <p className="text-[11px] leading-relaxed text-violet-800/80">All of this runs when a tenant re-runs their analysis and is cached, so opening &ldquo;see what to add&rdquo; costs nothing extra. Re-running regenerates it with the current regulation fields and glossary.</p>
           </div>
 
-          <div className="rounded-lg border border-sky-200 bg-sky-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-sky-700">Role-holder names in policies</p>
+          <InfoAccordion title="Role-holder names in policies" borderClass="border-sky-200" bgClass="bg-sky-50/70" titleClass="text-sky-700">
             <p className="leading-relaxed text-sky-900/90">When a tenant turns on <strong>Show role-holder names in policies</strong> (Settings, then Organisation details), the <strong>first mention</strong> of a role in a policy is shown with the person&rsquo;s name in brackets, for example <strong>&ldquo;Care Manager (Lenny Burgess)&rdquo;</strong>. It personalises the policy and reinforces accountability.</p>
             <ul className="mt-1 space-y-1.5 leading-relaxed text-sky-900">
               <li className="flex items-start gap-2">
@@ -264,10 +280,9 @@ export default function RegulationsPage() {
                 <span><strong>First mention only</strong> (so it does not repeat on every line), and where a role is <strong>shared</strong> it lists all the names. If the policy already names the role in brackets, we leave it. It does not yet flow into staff Q&amp;A answers.</span>
               </li>
             </ul>
-          </div>
+          </InfoAccordion>
 
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3 space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Policy updates and approvals</p>
+          <InfoAccordion title="Policy updates and approvals" borderClass="border-emerald-200" bgClass="bg-emerald-50/70" titleClass="text-emerald-700">
             <p className="leading-relaxed text-emerald-900/90">Adopting a gap fix applies it to an <strong>editable copy</strong> of the policy as a tracked change (the uploaded original is never touched) and nothing goes live until it is approved. Approvals run in stages the tenant controls with two toggles under <strong>Settings, then Organisation details, in the &ldquo;Policy approvals&rdquo; panel</strong>.</p>
             <ul className="mt-1 space-y-1.5 leading-relaxed text-emerald-900">
               <li className="flex items-start gap-2">
@@ -284,10 +299,18 @@ export default function RegulationsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                <span>Once the <strong>final</strong> required approval is in, the new version is published: the version bumps, the content is swapped into staff <strong>Q&amp;A</strong> (S3 text, format cache and Pinecone re-indexed) and the old copy archived. A send-back at any stage returns it to <strong>draft</strong> with the reason kept in the <strong>approval trail</strong> on the policy.</span>
+                <span>Once the <strong>final</strong> required approval is in, the new version is published: the version bumps, the content is swapped into staff <strong>Q&amp;A</strong> (S3 text, format cache and Pinecone re-indexed) and the old copy archived.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span><strong>Per-change feedback.</strong> When a care manager reviews, every adopted change has its own feedback box, so they can pin a specific note to any section rather than leaving one overall reason. On a send-back those notes are stored against each change and rolled into the approval-trail comment, and the admin sees each note against the exact change to revise.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span><strong>Send-back is a full loop, not an auto-approve.</strong> A send-back at any stage returns the policy to <strong>draft</strong>. The admin makes the requested edits and <strong>re-approves</strong>, which sends it to the care manager (and then any external reviewer) <strong>again</strong> to approve the revised version. It is never marked approved on the admin&rsquo;s say-so: whoever asked for changes signs off on the final wording, so the approval trail always matches the version that actually went live. The care manager&rsquo;s notes clear on that re-submit so they get a clean review of the updated policy.</span>
               </li>
             </ul>
-          </div>
+          </InfoAccordion>
         </div>
 
         <GlossaryManager token={token} />

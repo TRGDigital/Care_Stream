@@ -383,6 +383,16 @@ export default function SettingsPage() {
     const next = { ...orgDetails, show_role_names: showRoleNames ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
+  const requireManagerApproval = orgDetails.require_manager_approval !== 'off'
+  function toggleManagerApproval() {
+    const next = { ...orgDetails, require_manager_approval: requireManagerApproval ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
+  const requireExternalApproval = orgDetails.require_external_approval === 'on'
+  function toggleExternalApproval() {
+    const next = { ...orgDetails, require_external_approval: requireExternalApproval ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
     if (!session?.accessToken) return
@@ -849,6 +859,36 @@ export default function SettingsPage() {
               className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showRoleNames ? 'bg-teal' : 'bg-gray-300'}`}>
               <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showRoleNames ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
+          </div>
+
+          {/* Policy approval workflow — who signs an updated policy off before it goes live */}
+          <div className="mb-5 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <p className="text-sm font-semibold text-neutral-dark">Policy approvals</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">Decide who signs an updated policy off before it goes live to your staff. Admin approval always happens first.</p>
+
+            <div className="mt-3 flex items-start justify-between gap-4 border-t border-gray-200 pt-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Require care manager approval</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">When on, once an admin approves the changes they go to your care manager&rsquo;s Policies hub for a second approval. When off, an admin&rsquo;s approval publishes the policy directly, and it still appears in the care manager&rsquo;s hub so they can see what changed.</p>
+              </div>
+              <button type="button" role="switch" aria-checked={requireManagerApproval} aria-label="Require care manager approval"
+                onClick={toggleManagerApproval}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireManagerApproval ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireManagerApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-start justify-between gap-4 border-t border-gray-200 pt-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Require external approval</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">When on, after the internal approvals are in, the policy is sent to an external person (for example a consultant or trustee) on a one-off link to read it and approve it or send feedback. You set who to send it to on the policy review screen. The policy only goes live once they approve.</p>
+              </div>
+              <button type="button" role="switch" aria-checked={requireExternalApproval} aria-label="Require external approval"
+                onClick={toggleExternalApproval}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireExternalApproval ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireExternalApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">

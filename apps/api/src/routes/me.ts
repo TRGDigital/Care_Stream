@@ -222,7 +222,7 @@ meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   if (!(await tenantHasFlag(tenantId, 'has_policy_adoption')) || !(await isCareManager(userId))) {
-    ok(res, { is_manager: false, policies: [] }); return
+    ok(res, { is_manager: false, policies: [], published: [] }); return
   }
   const docs = await (prisma as any).policyDocument.findMany({
     where: { tenant_id: tenantId, approval_status: 'pending_manager' },
@@ -236,7 +236,19 @@ meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
     ])
     policies.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, changes, submitted_at: d.updated_at })
   }
-  ok(res, { is_manager: true, policies })
+  // Recently published policies, shown to the care manager for visibility even when their
+  // approval is not required (the "admin approves directly" path). Most recent first.
+  const pubDocs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId, approval_status: 'published', published_at: { not: null } },
+    select: { policy_id: true, version: true, published_at: true, published_by: true },
+    orderBy: { published_at: 'desc' }, take: 20,
+  })
+  const published = [] as any[]
+  for (const d of pubDocs) {
+    const policy = await (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } })
+    published.push({ policy_id: d.policy_id, name: policy?.name ?? 'Policy', version: d.version, published_at: d.published_at, published_by: d.published_by })
+  }
+  ok(res, { is_manager: true, policies, published })
 })
 
 meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) => {

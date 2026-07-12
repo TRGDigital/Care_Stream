@@ -4,15 +4,18 @@ import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyChanges } from '@/lib/policy-render'
 import { applyRoleNames } from '@/lib/policy-names'
-import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText } from 'lucide-react'
+import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History } from 'lucide-react'
 
 type Item = { policy_id: string; name: string; version: string; changes: number; submitted_at: string }
+type Pub  = { policy_id: string; name: string; version: string; published_at: string; published_by: string }
+type Selected = { policy_id: string; name: string; version: string; changes: number; readOnly: boolean }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['policyApprovalDetail']>>
 
 export function PoliciesView({ token }: { token: string }) {
   const [list, setList]       = useState<Item[]>([])
+  const [published, setPublished] = useState<Pub[]>([])
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<Item | null>(null)
+  const [selected, setSelected] = useState<Selected | null>(null)
   const [detail, setDetail]   = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [tracked, setTracked] = useState(true)
@@ -24,7 +27,7 @@ export function PoliciesView({ token }: { token: string }) {
   function load() {
     setLoading(true)
     createApiClient(token).me.policyApprovals()
-      .then(r => setList(r.policies)).catch(() => {}).finally(() => setLoading(false))
+      .then(r => { setList(r.policies); setPublished(r.published ?? []) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [token])
 
@@ -66,24 +69,31 @@ export function PoliciesView({ token }: { token: string }) {
 
   if (loading) return <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={18} className="animate-spin text-teal" /> Loading…</div>
 
-  // ── Review a single policy ──
+  // ── Review / read a single policy ──
   if (selected) {
+    const ro = selected.readOnly
     return (
       <div className="mx-auto max-w-5xl">
         <button onClick={() => setSelected(null)} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-neutral-mid hover:text-teal"><ChevronLeft size={15} /> Back to policies</button>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-neutral-dark">{selected.name}</h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">{detail?.version ? <>New version {detail.version} · </> : null}{selected.changes} change{selected.changes === 1 ? '' : 's'} to approve</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">
+              {detail?.version ? <>Version {detail.version} · </> : null}
+              {ro ? 'Published and live for staff' : <>{selected.changes} change{selected.changes === 1 ? '' : 's'} to approve</>}
+            </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button onClick={() => setTracked(t => !t)} className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50"><GitCompare size={13} /> {tracked ? 'Tracked' : 'Clean'}</button>
-            <button onClick={reject} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Send back</button>
-            <button onClick={approve} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <><Loader2 size={14} className="animate-spin" /> …</> : <><FileCheck2 size={14} /> Approve</>}</button>
+            {!ro && <button onClick={reject} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Send back</button>}
+            {!ro && <button onClick={approve} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <><Loader2 size={14} className="animate-spin" /> …</> : <><FileCheck2 size={14} /> Approve</>}</button>}
           </div>
         </div>
         {error && <div className="mt-3 rounded-md border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
-        <p className="mt-3 text-xs text-neutral-mid">{tracked ? 'Highlighted passages are the changes to approve. Toggle Clean to preview the finished policy.' : 'This is how the finished policy reads.'}</p>
+        <p className="mt-3 text-xs text-neutral-mid">
+          {ro ? (tracked ? 'Highlighted passages are the most recent changes. Toggle Clean to read the finished policy.' : 'This is the current, live policy.')
+              : (tracked ? 'Highlighted passages are the changes to approve. Toggle Clean to preview the finished policy.' : 'This is how the finished policy reads.')}
+        </p>
         {detailLoading ? (
           <div className="flex items-center gap-2 py-12 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
         ) : (
@@ -109,7 +119,7 @@ export function PoliciesView({ token }: { token: string }) {
         <ul className="mt-5 space-y-2">
           {list.map(p => (
             <li key={p.policy_id}>
-              <button onClick={() => setSelected(p)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-teal-200 bg-teal-50/40 px-4 py-3 text-left hover:bg-teal-50">
+              <button onClick={() => setSelected({ ...p, readOnly: false })} className="flex w-full items-center justify-between gap-3 rounded-lg border border-teal-200 bg-teal-50/40 px-4 py-3 text-left hover:bg-teal-50">
                 <div className="flex min-w-0 items-center gap-3">
                   <FileText size={16} className="shrink-0 text-teal" />
                   <div className="min-w-0">
@@ -122,6 +132,31 @@ export function PoliciesView({ token }: { token: string }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Recently updated — visibility of policies that went live (e.g. when the admin
+          approves directly and your approval is not required). Read only. */}
+      {published.length > 0 && (
+        <div className="mt-9">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-neutral-dark"><History size={15} className="text-neutral-mid" /> Recently updated</h3>
+          <p className="mt-1 text-sm text-neutral-mid">Policies that have gone live. Open one to read what changed.</p>
+          <ul className="mt-4 space-y-2">
+            {published.map(p => (
+              <li key={p.policy_id}>
+                <button onClick={() => setSelected({ policy_id: p.policy_id, name: p.name, version: p.version, changes: 0, readOnly: true })} className="flex w-full items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left hover:bg-gray-50">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <FileText size={16} className="shrink-0 text-neutral-mid" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{p.name}</p>
+                      <p className="text-xs text-neutral-mid">Version {p.version} · updated {new Date(p.published_at).toLocaleDateString('en-GB')}{p.published_by ? ` · ${p.published_by}` : ''}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark">Read</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )

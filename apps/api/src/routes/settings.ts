@@ -252,7 +252,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
-    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_external_approval'])
+    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
     const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion'])

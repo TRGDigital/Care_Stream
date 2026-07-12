@@ -175,12 +175,15 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [publishedMsg, setPublishedMsg] = useState('')
   const [org, setOrg] = useState<OrgCtx | null>(null)
   const [approval, setApproval] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyApprovals']>> | null>(null)
+  const [extName, setExtName]   = useState('')
+  const [extEmail, setExtEmail] = useState('')
+  const [extSent, setExtSent]   = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
     setLoading(true)
     const api = createApiClient(token)
-    api.analytics.policyApprovals(policyId).then(setApproval).catch(() => {})
+    api.analytics.policyApprovals(policyId).then(a => { setApproval(a); if (a?.external_name) setExtName(a.external_name); if (a?.external_email) setExtEmail(a.external_email) }).catch(() => {})
     Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId).catch(() => ({ html: '' }))])
       .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
       .catch(e => setError(e.message ?? 'Could not load the document.'))
@@ -222,15 +225,39 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     finally { setBusy(null) }
   }
 
+  // What happens when the admin approves depends on the two org toggles.
+  const managerRequired  = org?.require_manager_approval !== false
+  const externalRequired = org?.require_external_approval === true
+  const approveVerb = managerRequired ? 'Approve & send to care manager'
+    : externalRequired ? 'Approve & send for external approval'
+    : 'Approve & publish'
+
   async function submit() {
-    if (!confirm(`Approve ${policyName} and send it to your care manager for their approval?`)) return
+    const q = managerRequired ? `Approve ${policyName} and send it to your care manager for their approval?`
+      : externalRequired ? `Approve ${policyName} and send it to your external reviewer for approval?`
+      : `Approve ${policyName} and publish it to your staff now?`
+    if (!confirm(q)) return
     setBusy('publish'); setError('')
     try {
-      await createApiClient(token).analytics.submitPolicyForApproval(policyId)
-      setPublishedMsg('Approved and sent to your care manager for their approval. It goes live to staff once they (and any external reviewer) approve it.')
+      const r = await createApiClient(token).analytics.submitPolicyForApproval(policyId)
+      const msg = r.status === 'pending_manager' ? 'Approved and sent to your care manager for their approval. It goes live to staff once they (and any external reviewer) approve it.'
+        : r.status === 'pending_external' ? 'Approved and sent to your external reviewer. Set or confirm who it goes to below. It goes live to staff once they approve.'
+        : `Approved and published${r.version ? ` as version ${r.version}` : ''}. It is now live for your staff.`
+      setPublishedMsg(msg)
       onPublished(0)
       load()
     } catch (e: any) { setError(e.message ?? 'Could not submit for approval.') }
+    finally { setBusy(null) }
+  }
+
+  async function sendExternalReviewer() {
+    if (!extEmail.trim()) { setError('Enter the reviewer’s email address.'); return }
+    setBusy('external'); setError(''); setExtSent('')
+    try {
+      await createApiClient(token).analytics.setExternalReviewer(policyId, extName.trim(), extEmail.trim())
+      setExtSent(`Review link sent to ${extEmail.trim()}.`)
+      load()
+    } catch (e: any) { setError(e.message ?? 'Could not send the review link.') }
     finally { setBusy(null) }
   }
 
@@ -268,7 +295,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
             ) : (
               <button onClick={submit} disabled={busy !== null || pending.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
-                {busy === 'publish' ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <><FileCheck2 size={14} /> Approve &amp; send for approval</>}
+                {busy === 'publish' ? <><Loader2 size={14} className="animate-spin" /> Working…</> : <><FileCheck2 size={14} /> {approveVerb}</>}
               </button>
             )}
             <button onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><X size={18} /></button>
@@ -315,8 +342,32 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                   </li>
                 ))}
               </ul>
-              {(doc.changes ?? []).length > 0 && (
-                <p className="mt-4 text-xs text-neutral-mid">Approve to send this to your care manager. It goes live to staff only after every required approval. You can revert any change before approving.</p>
+              {(doc.changes ?? []).length > 0 && status === 'draft' && (
+                <p className="mt-4 text-xs text-neutral-mid">
+                  {managerRequired ? 'Approve to send this to your care manager for their approval. '
+                    : externalRequired ? 'Approve to send this to your external reviewer for approval. '
+                    : 'Approve to publish this to your staff. '}
+                  {managerRequired || externalRequired ? 'It goes live to staff only after every required approval. ' : ''}
+                  You can revert any change before approving.
+                </p>
+              )}
+
+              {status === 'pending_external' && (
+                <div className="mt-5 rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-sky-800">External approval</p>
+                  <p className="mt-1 text-xs text-neutral-mid">Send a one-off link to an external person to read this policy and approve it or send feedback. It only goes live once they approve.</p>
+                  <div className="mt-2 space-y-2">
+                    <input value={extName} onChange={e => setExtName(e.target.value)} placeholder="Reviewer name (optional)"
+                      className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-sky-400 focus:outline-none" />
+                    <input value={extEmail} onChange={e => setExtEmail(e.target.value)} type="email" placeholder="Reviewer email"
+                      className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-sky-400 focus:outline-none" />
+                    <button onClick={sendExternalReviewer} disabled={busy !== null || !extEmail.trim()}
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-btn bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">
+                      {busy === 'external' ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <>{approval?.external_email ? 'Resend review link' : 'Send review link'}</>}
+                    </button>
+                    {extSent && <p className="flex items-center gap-1.5 text-xs text-green-700"><Check size={13} /> {extSent}</p>}
+                  </div>
+                </div>
               )}
 
               {(approval?.approvals?.length ?? 0) > 0 && (

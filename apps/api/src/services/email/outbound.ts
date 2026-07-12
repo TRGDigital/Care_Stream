@@ -281,6 +281,57 @@ export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; 
   await sgMail.send({ to: opts.to, from, subject: 'Your CareStream sign-in link', html })
 }
 
+// ─── External policy review invitation ─────────────────────────────────────────
+// One-off link to an external person (e.g. a consultant or trustee) to read the
+// updated policy and approve it or send feedback. The token gates access.
+
+export async function sendPolicyExternalReviewEmail(opts: {
+  to: string; name: string; policyName: string; orgName: string; link: string; changes: number
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping policy external review email')
+    return
+  }
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const changeLine = opts.changes === 1 ? '1 change' : `${opts.changes} changes`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      <strong>${opts.orgName}</strong> would like your approval on an updated policy before it goes live to their team.
+    </p>
+
+    <div style="background:#f8f6fb;border:1px solid #ece6f4;border-radius:8px;padding:16px 20px;margin:0 0 24px">
+      <p style="color:${NEUTRAL_MID};font-size:12px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 4px">Policy for review</p>
+      <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:600;margin:0 0 2px">${opts.policyName}</p>
+      <p style="color:#6b7280;font-size:13px;margin:0">${changeLine} to review</p>
+    </div>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Open the link below to read the policy, then approve it or send your feedback. Nothing goes live until you have had your say.
+    </p>
+
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${opts.link}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        Review the policy
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;margin:0">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <span style="color:${PURPLE}">${opts.link}</span>
+    </p>
+
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `Please review: ${opts.policyName}`, html })
+}
+
 // ─── Training licence renewal reminder (training-only tier) ─────────────────────
 
 export async function sendTrainingRenewalEmail(opts: {

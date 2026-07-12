@@ -9,6 +9,30 @@ import { randomBytes } from 'crypto'
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
 import { republishPolicyContent } from '../rag/ingestion'
+import { sendPolicyExternalReviewEmail } from '../email/outbound'
+import { siteUrl } from '../../lib/urls'
+import { formatPolicyHtml } from '../../lib/translate'
+
+// Email the external reviewer their one-off review link, if one is set on the document.
+// Best-effort: a send failure never blocks the approval transition (it is logged).
+async function emailExternalReviewer(doc: any, token: string): Promise<void> {
+  if (!doc?.external_email) return
+  try {
+    const [policy, tenant, changes] = await Promise.all([
+      (prisma as any).policy.findUnique({ where: { id: doc.policy_id }, select: { name: true } }),
+      (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
+      (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, reverted: false } }),
+    ])
+    await sendPolicyExternalReviewEmail({
+      to: doc.external_email,
+      name: doc.external_name || '',
+      policyName: policy?.name ?? 'Policy',
+      orgName: tenant?.name ?? '',
+      link: `${siteUrl()}/policy-review/${token}`,
+      changes,
+    })
+  } catch (e: any) { console.error('[policy-external] email failed', e?.message) }
+}
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
 const END_MATTER_RE = /\b(review date|policy review|next review|reviewed|dated?|signed|signature|version|approved by|authorised by|policy owner|source url|declaration|registered (office|number|charity)|company (number|registration)|telephone|\bltd\b|limited|©|copyright)\b/i
@@ -103,19 +127,34 @@ async function recordApproval(documentId: string, tenantId: string, stage: strin
   }).catch(() => {})
 }
 
-async function externalRequired(tenantId: string): Promise<boolean> {
+// Which approval stages are required. Manager approval defaults ON, external defaults OFF.
+async function approvalToggles(tenantId: string): Promise<{ manager: boolean; external: boolean }> {
   const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } })
-  return ((t?.organisation_details ?? {}) as Record<string, string>).require_external_approval === 'on'
+  const od = (t?.organisation_details ?? {}) as Record<string, string>
+  return { manager: od.require_manager_approval !== 'off', external: od.require_external_approval === 'on' }
 }
 
-// Admin approves the adopted changes and sends them to the care manager.
-export async function submitForApproval(tenantId: string, policyId: string, adminName: string): Promise<{ status: string } | null> {
+// Admin approves the adopted changes. Routes to the next required stage: care manager,
+// then external; if neither is required, it publishes straight away.
+export async function submitForApproval(tenantId: string, policyId: string, adminName: string): Promise<{ status: string; version?: string; token?: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   await rebuildDraft(doc.id)
   await recordApproval(doc.id, tenantId, 'admin', 'approved', adminName)
-  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager' } })
-  return { status: 'pending_manager' }
+  const { manager, external } = await approvalToggles(tenantId)
+  if (manager) {
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager' } })
+    return { status: 'pending_manager' }
+  }
+  if (external) {
+    const token = doc.external_token || randomBytes(18).toString('hex')
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
+    await emailExternalReviewer({ ...doc, external_token: token }, token)
+    return { status: 'pending_external', token }
+  }
+  const r = await publishDocument(tenantId, policyId, adminName)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published' } })
+  return { status: 'published', version: r?.version }
 }
 
 // Care manager approves. If external approval is required, generate a review token and hold
@@ -124,9 +163,10 @@ export async function managerApprove(tenantId: string, policyId: string, manager
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   await recordApproval(doc.id, tenantId, 'manager', 'approved', managerName)
-  if (await externalRequired(tenantId)) {
+  if ((await approvalToggles(tenantId)).external) {
     const token = doc.external_token || randomBytes(18).toString('hex')
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
+    await emailExternalReviewer({ ...doc, external_token: token }, token)
     return { status: 'pending_external', token }
   }
   const r = await publishDocument(tenantId, policyId, managerName)
@@ -140,6 +180,10 @@ export async function setExternalRecipient(tenantId: string, policyId: string, n
   if (!doc || doc.tenant_id !== tenantId) return null
   const token = doc.external_token || randomBytes(18).toString('hex')
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_token: token, external_name: name.slice(0, 120), external_email: email.slice(0, 160) } })
+  // If the policy is already waiting on external approval, send (or resend) the link now.
+  if (doc.approval_status === 'pending_external') {
+    await emailExternalReviewer({ ...doc, external_email: email, external_name: name, external_token: token }, token)
+  }
   return { token }
 }
 
@@ -161,7 +205,7 @@ export async function getApprovalState(tenantId: string, policyId: string): Prom
 }
 
 // ── External (public, token-gated) review ──
-export async function getExternalReview(token: string): Promise<{ policy_id: string; policy_name: string; version: string; changes: any[]; home_name: string } | null> {
+export async function getExternalReview(token: string): Promise<{ policy_id: string; policy_name: string; version: string; changes: any[]; home_name: string; html: string; show_role_names: boolean; role_names: Record<string, string[]> } | null> {
   const doc = await (prisma as any).policyDocument.findFirst({ where: { external_token: token } })
   if (!doc || doc.approval_status !== 'pending_external') return null
   const [policy, tenant, changes] = await Promise.all([
@@ -169,7 +213,16 @@ export async function getExternalReview(token: string): Promise<{ policy_id: str
     (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
     (prisma as any).policyDocumentChange.findMany({ where: { document_id: doc.id, reverted: false }, orderBy: { applied_at: 'asc' } }),
   ])
-  return { policy_id: doc.policy_id, policy_name: policy?.name ?? 'Policy', version: doc.version ?? '', changes, home_name: tenant?.name ?? '' }
+  // Rendered policy body, from the format cache if we have it, else format + cache it.
+  let html = ''
+  const cached = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: doc.policy_id, lang: 'eng' } }, select: { content: true } }).catch(() => null)
+  if (cached?.content) html = cached.content
+  else {
+    const raw = await downloadExtractedText(doc.tenant_id, doc.policy_id).catch(() => null)
+    if (raw) { const h = await formatPolicyHtml(raw, 'eng'); if (h) { html = h; await (prisma as any).policyTranslation.create({ data: { tenant_id: doc.tenant_id, policy_id: doc.policy_id, lang: 'eng', content: h } }).catch(() => {}) } }
+  }
+  const ctx = await getAdoptionContext(doc.tenant_id)
+  return { policy_id: doc.policy_id, policy_name: policy?.name ?? 'Policy', version: doc.version ?? '', changes, home_name: tenant?.name ?? '', html, show_role_names: ctx.show_role_names, role_names: ctx.role_names }
 }
 
 export async function externalDecision(token: string, name: string, comment: string, decision: 'approved' | 'rejected'): Promise<{ status: string } | null> {
@@ -279,6 +332,8 @@ export async function getAdoptionContext(tenantId: string): Promise<{
   default_approver: string
   review_cycle_months: string
   version_scheme: string
+  require_manager_approval: boolean
+  require_external_approval: boolean
 }> {
   const tenant = await (prisma as any).tenant.findUnique({
     where: { id: tenantId }, select: { name: true, organisation_details: true, feature_flags: true, logo_url: true },
@@ -325,5 +380,7 @@ export async function getAdoptionContext(tenantId: string): Promise<{
     default_approver: od.default_approver ?? '',
     review_cycle_months: od.review_cycle_months ?? '',
     version_scheme: od.version_scheme ?? '',
+    require_manager_approval: od.require_manager_approval !== 'off',
+    require_external_approval: od.require_external_approval === 'on',
   }
 }

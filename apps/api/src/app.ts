@@ -32,6 +32,7 @@ import { featureRequestsRouter } from './routes/feature-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
+import { publicPolicyReviewRouter } from './routes/policy-review-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
@@ -127,6 +128,9 @@ app.use('/public/training', publicTrainingRouter)
 
 // Public external review/sign-off of standard modules (password-gated), no auth. BEFORE requireAuth.
 app.use('/public/training-review', publicTrainingReviewRouter)
+
+// Public external review of an updated policy via one-off token link, no auth. BEFORE requireAuth.
+app.use('/public/policy-review', publicPolicyReviewRouter)
 
 // Public marketing page SEO metadata — published pages only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/site-pages', publicPagesRouter)

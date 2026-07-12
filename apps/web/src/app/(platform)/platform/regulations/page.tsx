@@ -265,6 +265,29 @@ export default function RegulationsPage() {
               </li>
             </ul>
           </div>
+
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Policy updates and approvals</p>
+            <p className="leading-relaxed text-emerald-900/90">Adopting a gap fix applies it to an <strong>editable copy</strong> of the policy as a tracked change (the uploaded original is never touched) and nothing goes live until it is approved. Approvals run in stages the tenant controls with two toggles under <strong>Settings, then Organisation details, in the &ldquo;Policy approvals&rdquo; panel</strong>.</p>
+            <ul className="mt-1 space-y-1.5 leading-relaxed text-emerald-900">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span><strong>Admin approval always comes first.</strong> On the Review changes screen the admin&rsquo;s button reflects what happens next, either send to care manager, send for external approval, or publish directly, depending on the toggles.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span><strong>Require care manager approval</strong> (default on). When on, the update goes to the care manager&rsquo;s <strong>Policies hub</strong> for a second approval. When off, the admin&rsquo;s approval publishes directly and the policy still shows in the hub under &ldquo;Recently updated&rdquo; for visibility. Care managers are anyone with the <strong>Care Manager</strong> or <strong>Registered Manager</strong> position; any of them can approve.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span><strong>Require external approval</strong> (default off). When on, once the internal approvals are in, a <strong>one-off link</strong> is emailed to an external person (consultant, trustee) to read the policy and approve or send it back. Same pattern as the training review links. The policy only goes live once they approve.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span>Once the <strong>final</strong> required approval is in, the new version is published: the version bumps, the content is swapped into staff <strong>Q&amp;A</strong> (S3 text, format cache and Pinecone re-indexed) and the old copy archived. A send-back at any stage returns it to <strong>draft</strong> with the reason kept in the <strong>approval trail</strong> on the policy.</span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <GlossaryManager token={token} />

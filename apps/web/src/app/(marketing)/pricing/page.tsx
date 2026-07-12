@@ -123,6 +123,19 @@ const MATRIX: Group[] = [
     ],
   },
   {
+    section: 'Policy Updates and Approvals',
+    rows: [
+      { label: 'Adopt a gap fix into your policy (tracked changes)',        values: [false, true, true] },
+      { label: 'Role-holder names merged into policies',                   values: [false, true, true] },
+      { label: 'Download a print-ready policy (letterhead + sign-off)',     values: [false, true, true] },
+      { label: 'Admin approval with full version history',                 values: [false, true, true] },
+      { label: 'Care manager approval step (optional)',                    values: [false, true, true] },
+      { label: 'Care manager Policies hub (approve + see what changed)',    values: [false, true, true] },
+      { label: 'External approval by one-off link (consultant, trustee)',  values: [false, true, true] },
+      { label: 'Approval trail + auto re-publish to staff Q&A',            values: [false, true, true] },
+    ],
+  },
+  {
     section: 'Training and audit intelligence',
     rows: [
       { label: 'Face-to-face training and matrix', values: [false, true, true] },
@@ -178,6 +191,10 @@ const FAQS = [
   {
     q: 'What is Policy Gap Detection?',
     a: 'Available on Professional and Enterprise, it reads inside your uploaded policies and tells you which regulations you cover and where the gaps are. For each gap it shows exactly what to add, with example wording, the legal basis (legally required vs advised) and the source, and which policy to add it to. It only assesses the regulations that apply to your service, tracks changes to the standards and alerts you when one changes, and can turn any change into a short staff training module. There is a dedicated overview at /policy-gap-detection.',
+  },
+  {
+    q: 'How do policy updates and approvals work?',
+    a: 'When you adopt a gap fix, the change is applied to an editable copy of your policy as a tracked change, so your original upload is never touched. Nothing goes live until it is approved. An admin approves first, then, if you choose, it goes to your care manager for a second approval in their Policies hub, and optionally to an external person (for example a consultant or trustee) on a one-off link to approve or send feedback. You control the care manager and external steps with two toggles in your organisation details, so a smaller home can let an admin approve directly. Every approval is logged, and once the final approval is in, the new version is published to your staff Q&A automatically. Available on Professional and Enterprise.',
   },
   {
     q: 'Do you offer discounts for group operators?',

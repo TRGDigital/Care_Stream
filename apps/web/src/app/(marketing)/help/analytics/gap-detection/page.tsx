@@ -42,6 +42,24 @@ export default function Page() {
         { type: 'p', text: 'You can personalise your policies with the names of the people who hold each role. Turn on "Show role-holder names in policies" under Settings, then Organisation details. When it is on, the first time a role is mentioned in a policy it shows the person in brackets, for example "Care Manager (Lenny Burgess)". If a role is shared, all the names are shown.' },
         { type: 'p', text: 'The names come from your role-holders, which fill in automatically from your staff. Give a staff member the Care Manager position and they become your registered manager; assign the matching specialist role and they become your safeguarding lead, infection prevention and control lead, dignity champion, Caldicott Guardian or fire safety officer. You can add extra names by hand too.' },
         { type: 'p', text: 'This is applied when a policy is shown or downloaded and never changes the saved policy, so it stays up to date on its own. If someone leaves and you update the role-holder, the name updates everywhere without a re-run.' },
+
+        { type: 'subheading', text: 'Approving and publishing policy updates' },
+        { type: 'p', text: 'When you adopt a gap fix, it is applied to an editable copy of your policy as a tracked change. Your original upload is never touched, and nothing goes live to your staff until it has been approved. You can see every adopted change, preview the finished policy, download a print-ready copy with your letterhead and sign-off, and revert anything before you approve.' },
+        { type: 'p', text: 'Approvals run in stages, and you decide how many stages you want. An admin always approves first. From there the update can go to your care manager for a second approval, and then to an external person for a final approval, before it is published.' },
+        { type: 'steps', items: [
+          'An admin opens the policy, reviews the adopted changes, and approves.',
+          'If care manager approval is on, the update appears in your care manager’s Policies hub for a second approval. Any of your care managers can approve it.',
+          'If external approval is on, a one-off link is emailed to the person you choose. They read the policy and approve it or send it back with feedback.',
+          'Once every required approval is in, the new version is published to your staff and their Q&A answers from it straight away.',
+        ] },
+        { type: 'subheading', text: 'The two approval toggles' },
+        { type: 'p', text: 'You control the workflow with two switches under Settings, then Organisation details, in the "Policy approvals" panel.' },
+        { type: 'bullets', items: [
+          'Require care manager approval. When on, an admin’s approval sends the update to your care manager’s Policies hub for a second approval. When off, an admin’s approval publishes the policy directly, and it still appears in the care manager’s hub under "Recently updated" so they can see what changed. Turning this off suits smaller homes where an admin is trusted to approve on their own.',
+          'Require external approval. When on, once the internal approvals are in, the policy is sent to an external person, such as a consultant or trustee, on a one-off link to approve or send feedback. The policy only goes live once they approve. You set who to send it to on the policy review screen.',
+        ] },
+        { type: 'p', text: 'Care managers are recognised automatically. Give a staff member the Care Manager or Registered Manager position and the Policies hub appears in their side menu, with a badge showing anything waiting for them. Every approval, and every send-back with its reason, is kept in an approval trail on the policy so you always have a record of who signed off and when.' },
+
         { type: 'note', text: 'Regulation coverage, and the step by step "what to add" guidance for each gap, are available on the Professional and Enterprise plans. Acting on gaps means your library keeps improving based on what your team actually needs.' },
       ]}
       related={[

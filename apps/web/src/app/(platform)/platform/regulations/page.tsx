@@ -294,7 +294,7 @@ export default function RegulationsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                <span><strong>Require external approval</strong> (default off). When on, once the internal approvals are in, a <strong>one-off link</strong> is emailed to an external person (consultant, trustee) to read the policy and approve or send it back. Same pattern as the training review links. The policy only goes live once they approve.</span>
+                <span><strong>Require external approval</strong> (default off). When on, once the internal approvals are in, the policy moves to &ldquo;awaiting external approval&rdquo; and the <strong>admins are emailed</strong> that it is ready to send out. An admin opens it, enters the external reviewer&rsquo;s name and email, and sends them a <strong>one-off link</strong> (same pattern as the training review links) to read the policy and approve or send it back. The policy only goes live once they approve. If a reviewer was already set, the link sends automatically and no admin nudge is needed.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />

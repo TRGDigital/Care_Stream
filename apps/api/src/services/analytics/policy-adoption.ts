@@ -9,7 +9,7 @@ import { randomBytes } from 'crypto'
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
 import { republishPolicyContent } from '../rag/ingestion'
-import { sendPolicyExternalReviewEmail } from '../email/outbound'
+import { sendPolicyExternalReviewEmail, sendTrainingUpdateEmail } from '../email/outbound'
 import { siteUrl } from '../../lib/urls'
 import { formatPolicyHtml } from '../../lib/translate'
 
@@ -32,6 +32,31 @@ async function emailExternalReviewer(doc: any, token: string): Promise<void> {
       changes,
     })
   } catch (e: any) { console.error('[policy-external] email failed', e?.message) }
+}
+
+// When a policy reaches "awaiting external approval" but no external reviewer is set yet,
+// email the tenant's admins so they know to open it, enter the reviewer, and send the link.
+// (If a reviewer is already set, the link auto-sends and admins don't need nudging.)
+async function notifyAdminsExternalReviewReady(doc: any): Promise<void> {
+  if (doc?.external_email) return
+  try {
+    const [tenant, admins, policy] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
+      (prisma as any).user.findMany({ where: { tenant_id: doc.tenant_id, role: 'admin', is_active: true }, select: { email: true, name: true } }),
+      (prisma as any).policy.findUnique({ where: { id: doc.policy_id }, select: { name: true } }),
+    ])
+    const orgName = tenant?.name ?? 'Your service'
+    const policyName = policy?.name ?? 'A policy'
+    const link = `${siteUrl()}/gaps`
+    const bodyHtml = `
+      <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${policyName}</strong> has passed its internal approvals and is ready to send to your external reviewer for the final sign-off.</p>
+      <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">Open the policy, enter the reviewer's name and email, and send them the one-off review link. It only goes live to your staff once they approve.</p>
+      <div style="text-align:center;margin:0 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+    for (const a of (admins as any[])) {
+      if (!a?.email) continue
+      await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject: `Ready to send for external approval: ${policyName}`, bodyHtml }).catch(() => {})
+    }
+  } catch (e: any) { console.error('[policy-external] admin notify failed', e?.message) }
 }
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
@@ -153,6 +178,7 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
     const token = doc.external_token || randomBytes(18).toString('hex')
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
     await emailExternalReviewer({ ...doc, external_token: token }, token)
+    await notifyAdminsExternalReviewReady({ ...doc, external_token: token })
     return { status: 'pending_external', token }
   }
   const r = await publishDocument(tenantId, policyId, adminName)
@@ -170,6 +196,7 @@ export async function managerApprove(tenantId: string, policyId: string, manager
     const token = doc.external_token || randomBytes(18).toString('hex')
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
     await emailExternalReviewer({ ...doc, external_token: token }, token)
+    await notifyAdminsExternalReviewReady({ ...doc, external_token: token })
     return { status: 'pending_external', token }
   }
   const r = await publishDocument(tenantId, policyId, managerName)

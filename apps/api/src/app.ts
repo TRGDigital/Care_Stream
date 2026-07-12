@@ -132,23 +132,6 @@ app.use('/public/training-review', publicTrainingReviewRouter)
 // Public external review of an updated policy via one-off token link, no auth. BEFORE requireAuth.
 app.use('/public/policy-review', publicPolicyReviewRouter)
 
-// TEMPORARY: one-off preview send of the external-decision admin emails to a fixed inbox,
-// secret-gated. Remove after use. Sends to a hardcoded address only (cannot be used to spam).
-app.get('/public/__pol-email-preview', async (req, res) => {
-  if (req.query.k !== 'cs-emailpreview-a91f4c7d2e8b46f0b1553c9d') { res.status(404).end(); return }
-  try {
-    const { buildExternalDecisionEmail } = await import('./services/analytics/policy-adoption')
-    const { sendTrainingUpdateEmail } = await import('./services/email/outbound')
-    const to = 'len@crosswayscarehome.co.uk'
-    const orgName = 'Ferndale Nursing Home'
-    const a = buildExternalDecisionEmail('approved', { policyName: 'Consent To Care And Treatment Policy', who: 'Dr Sarah Whitfield', version: '2.0', comment: '' })
-    const r = buildExternalDecisionEmail('rejected', { policyName: 'Consent To Care And Treatment Policy', who: 'Dr Sarah Whitfield', version: '', comment: 'Please add a clear reference to the Mental Capacity Act 2005 in section 3, and name the responsible person for obtaining consent.' })
-    await sendTrainingUpdateEmail({ to, name: 'Len', orgName, subject: a.subject, bodyHtml: a.bodyHtml })
-    await sendTrainingUpdateEmail({ to, name: 'Len', orgName, subject: r.subject, bodyHtml: r.bodyHtml })
-    res.json({ ok: true, sent: 2 })
-  } catch (e: any) { res.status(500).json({ ok: false, error: e?.message }) }
-})
-
 // Public marketing page SEO metadata — published pages only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/site-pages', publicPagesRouter)
 

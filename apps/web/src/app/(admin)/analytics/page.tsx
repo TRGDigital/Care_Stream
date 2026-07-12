@@ -225,7 +225,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness' | 'impact'
+type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness' | 'impact' | 'policies'
 
 const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_training_impact' }[] = [
   { id: 'overview',   label: 'Overview' },
@@ -237,6 +237,7 @@ const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_tra
   { id: 'cqc',        label: 'CQC Staff Prep' },
   { id: 'effectiveness', label: 'Effectiveness of Training', premium: 'has_effectiveness' },
   { id: 'impact',        label: 'Training Impact',           premium: 'has_training_impact' },
+  { id: 'policies',      label: 'Updated Policies' },
 ]
 
 export default function AnalyticsPage() {
@@ -258,6 +259,7 @@ export default function AnalyticsPage() {
   const [f2f,          setF2f]      = useState<any>(null)
   const [effectiveness, setEffectiveness] = useState<any>(null)
   const [impact,       setImpact]   = useState<any>(null)
+  const [policiesOverview, setPoliciesOverview] = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -292,9 +294,10 @@ export default function AnalyticsPage() {
       api.faceToFace.analytics().catch(() => null),
       api.analytics.effectiveness().catch(() => null),
       api.analytics.trainingImpact().catch(() => null),
+      api.analytics.policyApprovalsOverview().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp)
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv)
         persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp })
       })
       .catch(() => setError(true))
@@ -346,7 +349,7 @@ export default function AnalyticsPage() {
       <div className="sticky -top-6 z-30 -mx-6 -mt-6 mb-6 bg-neutral-light px-6 pt-6 shadow-sm">
         <h1 className="mb-3 text-2xl font-bold text-neutral-dark">Analytics — {monthName}</h1>
         <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-gray-200">
-          {TABS.map(t => {
+          {TABS.filter(t => t.id !== 'policies' || (policiesOverview?.documents?.length ?? 0) > 0).map(t => {
             const locked = !!t.premium && features != null && !features[t.premium]
             return (
               <button
@@ -1432,6 +1435,61 @@ export default function AnalyticsPage() {
           <p className="mb-6 rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-3 text-xs text-neutral-mid">
             It needs several monthly audit runs to show a meaningful trend. One run is just a point. The view shows whether training and audited practice move together over time, useful evidence of a continuous-improvement loop for CQC, but it&apos;s a correlation, not proof that the training alone caused the change.
           </p>
+        </>
+      ))}
+
+      {tab === 'policies' && (!policiesOverview || policiesOverview.documents.length === 0 ? (
+        <EmptyTab>When you adopt a policy gap fix and take it through approval, the policy and its full sign-off timeline appear here, evidence that every policy change follows the same controlled process.</EmptyTab>
+      ) : (
+        <>
+          <SectionDivider
+            title="Updated Policies"
+            subtitle="Every policy you've updated through Policy Gaps, with its full approval timeline. Evidence for CQC that policy changes follow one consistent, signed-off process."
+          />
+          <div className="mb-6 grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-neutral-dark">{policiesOverview.summary.total}</p><p className="text-xs text-neutral-mid">Policies updated</p></div>
+            <div className="rounded-xl border border-green-100 bg-green-50/40 p-3"><p className="text-2xl font-bold text-green-600">{policiesOverview.summary.published}</p><p className="text-xs text-neutral-mid">Approved &amp; live</p></div>
+            <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3"><p className="text-2xl font-bold text-amber-600">{policiesOverview.summary.in_progress}</p><p className="text-xs text-neutral-mid">In approval</p></div>
+          </div>
+          {policiesOverview.documents.map((d: any) => {
+            const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External approver'
+            const chip = d.approval_status === 'published' ? { label: 'Approved & live', cls: 'border-green-200 bg-green-50 text-green-700' }
+              : d.approval_status === 'pending_manager' ? { label: 'With care manager', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
+              : d.approval_status === 'pending_external' ? { label: 'Awaiting external approval', cls: 'border-sky-200 bg-sky-50 text-sky-700' }
+              : { label: 'Draft', cls: 'border-gray-200 bg-gray-50 text-neutral-mid' }
+            return (
+              <div key={d.policy_id} className="mb-6">
+                <Card title={d.name} info="The approval trail for this policy: who approved or sent it back, and when. A consistent, auditable sign-off process across every updated policy.">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${chip.cls}`}>{chip.label}</span>
+                    {d.version && <span className="text-xs text-neutral-mid">Version {d.version}</span>}
+                    {d.published_at && <span className="text-xs text-neutral-mid">· Published {new Date(d.published_at).toLocaleDateString('en-GB')}</span>}
+                  </div>
+                  {d.trail.length === 0 ? (
+                    <p className="text-sm text-neutral-mid">Changes adopted, not yet submitted for approval.</p>
+                  ) : (
+                    <ol className="relative space-y-3 border-l border-gray-200 pl-4">
+                      {d.trail.map((s: any, i: number) => (
+                        <li key={i} className="relative">
+                          <span className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${s.decision === 'rejected' ? 'bg-rose-400' : 'bg-green-500'}`} />
+                          <p className="text-sm text-neutral-dark"><span className="font-medium">{stageLabel(s.stage)}</span> {s.decision === 'rejected' ? 'sent back' : 'approved'}{s.approver_name ? ` · ${s.approver_name}` : ''}</p>
+                          <p className="text-xs text-neutral-mid">{new Date(s.created_at).toLocaleString('en-GB')}</p>
+                          {s.comment && <p className="mt-0.5 text-xs italic text-neutral-mid">&ldquo;{s.comment}&rdquo;</p>}
+                        </li>
+                      ))}
+                      {d.approval_status === 'published' && d.published_at && (
+                        <li className="relative">
+                          <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-teal ring-2 ring-white" />
+                          <p className="text-sm font-medium text-teal">Published to staff{d.version ? ` · version ${d.version}` : ''}</p>
+                          <p className="text-xs text-neutral-mid">{new Date(d.published_at).toLocaleString('en-GB')}</p>
+                        </li>
+                      )}
+                    </ol>
+                  )}
+                </Card>
+              </div>
+            )
+          })}
         </>
       ))}
 

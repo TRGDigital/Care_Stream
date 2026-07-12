@@ -60,6 +60,33 @@ async function notifyAdminsExternalReviewReady(doc: any): Promise<void> {
   } catch (e: any) { console.error('[policy-external] admin notify failed', e?.message) }
 }
 
+// Tell the tenant's admins how the external approver decided: approved (now live) or sent back.
+async function notifyAdminsExternalDecision(doc: any, decision: 'approved' | 'rejected', reviewerName: string, comment: string, version: string): Promise<void> {
+  try {
+    const [tenant, admins, policy] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
+      (prisma as any).user.findMany({ where: { tenant_id: doc.tenant_id, role: 'admin', is_active: true }, select: { email: true, name: true } }),
+      (prisma as any).policy.findUnique({ where: { id: doc.policy_id }, select: { name: true } }),
+    ])
+    const orgName = tenant?.name ?? 'Your service'
+    const policyName = policy?.name ?? 'A policy'
+    const who = reviewerName || doc.external_name || 'Your external reviewer'
+    const link = `${siteUrl()}/gaps`
+    const subject = decision === 'approved' ? `Approved and published: ${policyName}` : `Sent back by your external reviewer: ${policyName}`
+    const bodyHtml = decision === 'approved'
+      ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${who}</strong> has approved <strong>${policyName}</strong>. It is now live for your staff${version ? ` as version ${version}` : ''}, and staff Q&amp;A answers from the new version.</p>
+         <div style="text-align:center;margin:16px 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+      : `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 12px"><strong>${who}</strong> has sent <strong>${policyName}</strong> back for changes.</p>
+         ${comment ? `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;padding:12px 14px;background:#fef3c7;border-radius:8px"><em>&ldquo;${comment}&rdquo;</em></p>` : ''}
+         <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">Open the policy, make the changes, and re-approve to send it back through.</p>
+         <div style="text-align:center;margin:0 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policy Gaps</a></div>`
+    for (const a of (admins as any[])) {
+      if (!a?.email) continue
+      await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject, bodyHtml }).catch(() => {})
+    }
+  } catch (e: any) { console.error('[policy-external] decision notify failed', e?.message) }
+}
+
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
 const END_MATTER_RE = /\b(review date|policy review|next review|reviewed|dated?|signed|signature|version|approved by|authorised by|policy owner|source url|declaration|registered (office|number|charity)|company (number|registration)|telephone|\bltd\b|limited|©|copyright)\b/i
 
@@ -277,10 +304,12 @@ export async function externalDecision(token: string, name: string, comment: str
   await recordApproval(doc.id, doc.tenant_id, 'external', decision, name || doc.external_name, doc.external_email, comment)
   if (decision === 'rejected') {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft', external_token: null } })
+    await notifyAdminsExternalDecision(doc, 'rejected', name, comment, '')
     return { status: 'draft' }
   }
-  await publishDocument(doc.tenant_id, doc.policy_id, name || doc.external_name || 'External approver')
+  const r = await publishDocument(doc.tenant_id, doc.policy_id, name || doc.external_name || 'External approver')
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published', external_token: null } })
+  await notifyAdminsExternalDecision(doc, 'approved', name, comment, r?.version ?? '')
   return { status: 'published' }
 }
 
@@ -355,6 +384,44 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   try { await republishPolicyContent(tenantId, policyId, publishedContent); reindexed = true }
   catch (e: any) { console.error('[publish] republish failed', e?.message) }
   return { version: nextVersion, published: res.count ?? 0, reindexed }
+}
+
+// Every updated policy with its full approval timeline — CQC evidence that policy changes
+// follow one consistent, signed-off process. Most recently active first.
+export async function approvalsOverview(tenantId: string): Promise<{
+  documents: Array<{ policy_id: string; name: string; version: string; approval_status: string; published_at: string | null; updated_at: string | null; pending: number; external_name: string; trail: Array<{ stage: string; decision: string; approver_name: string; created_at: string; comment: string }> }>
+  summary: { total: number; published: number; in_progress: number }
+}> {
+  const docs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId },
+    select: { id: true, policy_id: true, version: true, approval_status: true, published_at: true, updated_at: true, external_name: true },
+  })
+  const documents = [] as any[]
+  for (const d of docs as any[]) {
+    const [policy, approvals, pending] = await Promise.all([
+      (prisma as any).policy.findUnique({ where: { id: d.policy_id }, select: { name: true } }),
+      (prisma as any).policyApproval.findMany({ where: { document_id: d.id }, orderBy: { created_at: 'asc' }, select: { stage: true, decision: true, approver_name: true, created_at: true, comment: true } }),
+      (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } }),
+    ])
+    documents.push({
+      policy_id: d.policy_id,
+      name: policy?.name ?? 'Policy',
+      version: d.version ?? '',
+      approval_status: d.approval_status ?? 'draft',
+      published_at: d.published_at ? new Date(d.published_at).toISOString() : null,
+      updated_at: d.updated_at ? new Date(d.updated_at).toISOString() : null,
+      pending,
+      external_name: d.external_name || '',
+      trail: (approvals as any[]).map(a => ({ stage: a.stage, decision: a.decision, approver_name: a.approver_name || '', created_at: new Date(a.created_at).toISOString(), comment: a.comment || '' })),
+    })
+  }
+  documents.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))
+  const summary = {
+    total: documents.length,
+    published: documents.filter(d => d.approval_status === 'published').length,
+    in_progress: documents.filter(d => d.approval_status === 'pending_manager' || d.approval_status === 'pending_external').length,
+  }
+  return { documents, summary }
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.

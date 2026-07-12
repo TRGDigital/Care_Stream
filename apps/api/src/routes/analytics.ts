@@ -12,7 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -594,6 +594,17 @@ analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req:
     ok(res, doc ?? { document: null, changes: [] })
   } catch (e: any) {
     err(res, 'DOC_FAILED', e.message ?? 'Could not load the policy document.', 500)
+  }
+})
+
+// GET every updated policy with its approval timeline (Analytics → Updated Policies).
+analyticsRouter.get('/gaps/approvals-overview', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try {
+    ok(res, await approvalsOverview(tenantId))
+  } catch (e: any) {
+    err(res, 'OVERVIEW_FAILED', e.message ?? 'Could not load the approvals overview.', 500)
   }
 })
 

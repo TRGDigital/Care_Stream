@@ -398,6 +398,7 @@ export async function publishDocument(tenantId: string, policyId: string, publis
 export async function approvalsOverview(tenantId: string): Promise<{
   documents: Array<{ policy_id: string; name: string; version: string; approval_status: string; published_at: string | null; updated_at: string | null; pending: number; external_name: string; trail: Array<{ stage: string; decision: string; approver_name: string; created_at: string; comment: string }> }>
   summary: { total: number; published: number; in_progress: number }
+  health: { policies_total: number; coverage_score: number | null; regs_total: number; regs_covered: number; regs_partial: number; regs_gap: number; review_tracked: number; review_due: number }
 }> {
   const docs = await (prisma as any).policyDocument.findMany({
     where: { tenant_id: tenantId },
@@ -428,7 +429,35 @@ export async function approvalsOverview(tenantId: string): Promise<{
     published: documents.filter(d => d.approval_status === 'published').length,
     in_progress: documents.filter(d => d.approval_status === 'pending_manager' || d.approval_status === 'pending_external').length,
   }
-  return { documents, summary }
+
+  // Library health — regulation coverage + policies due for review, for the cockpit.
+  const [policiesTotal, covRows, reviewRows] = await Promise.all([
+    (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } }),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { status: true } }),
+    (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active', review_interval_days: { not: null } }, select: { last_reviewed_at: true, review_interval_days: true } }),
+  ])
+  const regsTotal   = (covRows as any[]).length
+  const regsCovered = (covRows as any[]).filter(c => c.status === 'covered').length
+  const regsPartial = (covRows as any[]).filter(c => c.status === 'partial').length
+  const regsGap     = (covRows as any[]).filter(c => c.status === 'gap').length
+  const coverageScore = regsTotal > 0 ? Math.round(((regsCovered + regsPartial * 0.5) / regsTotal) * 100) : null
+  const now = Date.now()
+  let reviewDue = 0
+  for (const p of reviewRows as any[]) {
+    const interval = Number(p.review_interval_days)
+    if (!interval) continue
+    if (!p.last_reviewed_at) { reviewDue++; continue }
+    if (new Date(p.last_reviewed_at).getTime() + interval * 86400000 < now) reviewDue++
+  }
+  const health = {
+    policies_total: policiesTotal as number,
+    coverage_score: coverageScore,
+    regs_total: regsTotal, regs_covered: regsCovered, regs_partial: regsPartial, regs_gap: regsGap,
+    review_tracked: (reviewRows as any[]).length,
+    review_due: reviewDue,
+  }
+
+  return { documents, summary, health }
 }
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.

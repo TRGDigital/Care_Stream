@@ -1490,10 +1490,37 @@ export default function AnalyticsPage() {
         </>
       ))}
 
-      {tab === 'policies' && (!policiesOverview || policiesOverview.documents.length === 0 ? (
+      {tab === 'policies' && (!policiesOverview ? (
         <EmptyTab>When you adopt a policy gap fix and take it through approval, the policy and its full sign-off timeline appear here, evidence that every policy change follows the same controlled process.</EmptyTab>
-      ) : (
+      ) : (() => {
+        const h = policiesOverview.health ?? { policies_total: 0, coverage_score: null, regs_total: 0, regs_covered: 0, regs_partial: 0, regs_gap: 0, review_tracked: 0, review_due: 0 }
+        const pct = (n: number) => h.regs_total > 0 ? (n / h.regs_total) * 100 : 0
+        return (
         <>
+          {/* Compliance cockpit */}
+          <SectionDivider title="Policy library health" subtitle="A live snapshot of your policy compliance: regulation coverage, open gaps, reviews due, and updates in flight." />
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-neutral-dark">{h.coverage_score == null ? '—' : `${h.coverage_score}%`}</p><p className="text-xs text-neutral-mid">Regulation coverage{h.regs_total ? ` · ${h.regs_total} assessed` : ''}</p></div>
+            <div className={`rounded-xl border p-3 ${h.regs_gap > 0 ? 'border-rose-100 bg-rose-50/40' : 'border-green-100 bg-green-50/40'}`}><p className={`text-2xl font-bold ${h.regs_gap > 0 ? 'text-rose-600' : 'text-green-600'}`}>{h.regs_gap}</p><p className="text-xs text-neutral-mid">Open gaps</p></div>
+            <div className={`rounded-xl border p-3 ${h.review_due > 0 ? 'border-amber-100 bg-amber-50/40' : 'border-gray-100'}`}><p className={`text-2xl font-bold ${h.review_due > 0 ? 'text-amber-600' : 'text-neutral-dark'}`}>{h.review_due}</p><p className="text-xs text-neutral-mid">Due for review{h.review_tracked ? ` · of ${h.review_tracked}` : ''}</p></div>
+            <div className="rounded-xl border border-gray-100 p-3"><p className="text-2xl font-bold text-neutral-dark">{h.policies_total}</p><p className="text-xs text-neutral-mid">Policies in library</p></div>
+          </div>
+          {h.regs_total > 0 && (
+            <div className="mb-6">
+              <div className="flex h-2.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="bg-green-500" style={{ width: `${pct(h.regs_covered)}%` }} />
+                <div className="bg-amber-400" style={{ width: `${pct(h.regs_partial)}%` }} />
+                <div className="bg-rose-400" style={{ width: `${pct(h.regs_gap)}%` }} />
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-mid">
+                <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500 align-middle" />{h.regs_covered} covered</span>
+                <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-400 align-middle" />{h.regs_partial} partial</span>
+                <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400 align-middle" />{h.regs_gap} gap</span>
+              </div>
+            </div>
+          )}
+
+          {/* Updated policies + approval timelines */}
           <SectionDivider
             title="Updated Policies"
             subtitle="Every policy you've updated through Policy Gaps, with its full approval timeline. Evidence for CQC that policy changes follow one consistent, signed-off process."
@@ -1503,11 +1530,16 @@ export default function AnalyticsPage() {
             <div className="rounded-xl border border-green-100 bg-green-50/40 p-3"><p className="text-2xl font-bold text-green-600">{policiesOverview.summary.published}</p><p className="text-xs text-neutral-mid">Approved &amp; live</p></div>
             <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3"><p className="text-2xl font-bold text-amber-600">{policiesOverview.summary.in_progress}</p><p className="text-xs text-neutral-mid">In approval</p></div>
           </div>
-          {policiesOverview.documents.map((d: any) => (
-            <PolicyTrailAccordion key={d.policy_id} d={d} />
-          ))}
+          {policiesOverview.documents.length === 0 ? (
+            <p className="rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-6 text-center text-sm text-neutral-mid">No policy updates yet. When you adopt a gap fix and take it through approval, it appears here with its full sign-off timeline.</p>
+          ) : (
+            policiesOverview.documents.map((d: any) => (
+              <PolicyTrailAccordion key={d.policy_id} d={d} />
+            ))
+          )}
         </>
-      ))}
+        )
+      })())}
 
       {tab === 'advanced' && (!advanced ? (
         <div className="rounded-card border-2 border-dashed border-gray-200 p-8 text-center">

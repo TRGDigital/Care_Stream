@@ -391,6 +391,12 @@ export default function RegulationsPage() {
               </div>
             ))}
           </div>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white/70 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Full expectation-cue reference (the anchors)</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-700">The person-centred cues each statement is checked against, drafted for review: <a href="https://claude.ai/code/artifact/17fd80dc-17c0-4ce5-9018-5cea73cdfb1c" target="_blank" rel="noopener noreferrer" className="font-medium underline hover:text-slate-900">Safe library</a> · <a href="https://claude.ai/code/artifact/8a87abab-6410-4b07-8470-eab704bebc1f" target="_blank" rel="noopener noreferrer" className="font-medium underline hover:text-slate-900">Effective, Caring, Responsive &amp; Well-led library</a>.</p>
+            <p className="mt-1 text-[11px] text-slate-400">These are private Claude artifacts, they open for the account that created them; share the artifact to give another admin access.</p>
+          </div>
+
           <p className="mt-3 text-xs leading-relaxed text-slate-500">We-statements and cues are curated on the platform and reviewed like the regulation library, CQC revises the framework, so verify at re-seed. Source: <a href="https://www.cqc.org.uk/guidance-regulation/providers/assessment/single-assessment-framework" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700">CQC Single Assessment Framework</a> · <a href="https://www.cqc.org.uk/publications/review-cqcs-single-assessment-framework-and-its-implementation/appendix-1-34-quality-statements" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700">the 34 quality statements</a>.</p>
         </InfoAccordion>
 

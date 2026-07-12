@@ -140,6 +140,8 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   await rebuildDraft(doc.id)
+  // Fresh approval round: clear any per-change care manager notes from a previous send-back.
+  await (prisma as any).policyDocumentChange.updateMany({ where: { document_id: doc.id, reverted: false }, data: { manager_feedback: '' } })
   await recordApproval(doc.id, tenantId, 'admin', 'approved', adminName)
   const { manager, external } = await approvalToggles(tenantId)
   if (manager) {
@@ -188,10 +190,25 @@ export async function setExternalRecipient(tenantId: string, policyId: string, n
 }
 
 // Reject at a stage (admin, manager or external) — returns to draft for amendment.
-export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string): Promise<{ status: string } | null> {
+export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []): Promise<{ status: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
-  await recordApproval(doc.id, tenantId, stage, 'rejected', name, '', comment)
+  // Per-section notes: save each on its change so the admin sees exactly what to fix,
+  // and roll them into a labelled summary for the approval trail comment.
+  const notes = (feedback || []).filter(f => f?.change_id && String(f?.note ?? '').trim())
+  const lines: string[] = []
+  if (notes.length) {
+    const changes = await (prisma as any).policyDocumentChange.findMany({ where: { document_id: doc.id }, select: { id: true, section_title: true, requirement: true } })
+    const byId = new Map<string, any>((changes as any[]).map(c => [c.id, c]))
+    for (const f of notes) {
+      const note = String(f.note).trim().slice(0, 2000)
+      await (prisma as any).policyDocumentChange.updateMany({ where: { id: f.change_id, document_id: doc.id }, data: { manager_feedback: note } })
+      const c = byId.get(f.change_id)
+      lines.push(`${c?.section_title || c?.requirement || 'Change'}: ${note}`)
+    }
+  }
+  const fullComment = [String(comment ?? '').trim(), ...lines].filter(Boolean).join('\n')
+  await recordApproval(doc.id, tenantId, stage, 'rejected', name, '', fullComment)
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft', external_token: null } })
   return { status: 'draft' }
 }

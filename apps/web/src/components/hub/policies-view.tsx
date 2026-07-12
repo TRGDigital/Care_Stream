@@ -6,6 +6,8 @@ import { applyChanges } from '@/lib/policy-render'
 import { applyRoleNames } from '@/lib/policy-names'
 import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History } from 'lucide-react'
 
+const placementLabel = (p: string) => p === 'amend' ? 'Amended paragraph' : p === 'add_under_heading' ? 'Added subsection' : 'New section'
+
 type Item = { policy_id: string; name: string; version: string; changes: number; submitted_at: string }
 type Pub  = { policy_id: string; name: string; version: string; published_at: string; published_by: string }
 type Selected = { policy_id: string; name: string; version: string; changes: number; readOnly: boolean }
@@ -22,6 +24,8 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
   const [busy, setBusy]       = useState(false)
   const [msg, setMsg]         = useState('')
   const [error, setError]     = useState('')
+  const [notes, setNotes]     = useState<Record<string, string>>({})   // per-change feedback
+  const [general, setGeneral] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
@@ -46,6 +50,14 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
     if (detail.show_role_names) applyRoleNames(root, detail.role_names)
   }, [detail, tracked])
 
+  // Seed the feedback boxes from any notes carried on the changes; reset the general note.
+  useEffect(() => {
+    if (!detail) { setNotes({}); setGeneral(''); return }
+    const seed: Record<string, string> = {}
+    for (const c of detail.changes ?? []) if ((c as any).manager_feedback) seed[c.id] = (c as any).manager_feedback
+    setNotes(seed); setGeneral('')
+  }, [detail])
+
   async function approve() {
     if (!selected) return
     if (!confirm(`Approve "${selected.name}"? It goes live to staff once every required approval is in.`)) return
@@ -58,11 +70,13 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
   }
   async function reject() {
     if (!selected) return
-    const comment = prompt('Send back to the admin. Add a reason (optional):') ?? ''
+    const fb = Object.entries(notes).filter(([, v]) => v.trim()).map(([change_id, note]) => ({ change_id, note: note.trim() }))
+    if (!fb.length && !general.trim()) { setError('Add a note on at least one section, or a general note, so the admin knows what to change.'); return }
+    if (!confirm(`Send "${selected.name}" back to the admin with your feedback?`)) return
     setBusy(true); setError('')
     try {
-      await createApiClient(token).me.rejectPolicyAsManager(selected.policy_id, comment)
-      setMsg(`Sent "${selected.name}" back to the admin.`)
+      await createApiClient(token).me.rejectPolicyAsManager(selected.policy_id, general.trim(), fb)
+      setMsg(`Sent "${selected.name}" back to the admin with your feedback.`)
       setSelected(null); load(); onChange?.()
     } catch (e: any) { setError(e.message ?? 'Could not send back.') } finally { setBusy(false) }
   }
@@ -99,6 +113,36 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
           <div className="flex items-center gap-2 py-12 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
         ) : (
           <div ref={previewRef} className="policy-content prose prose-sm mt-2 max-w-none rounded-lg border border-gray-100 bg-white p-4" />
+        )}
+
+        {/* Per-change feedback — the care manager can pin a specific note to each change,
+            so a send-back tells the admin exactly what to revise. */}
+        {!ro && !detailLoading && (detail?.changes?.length ?? 0) > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-bold text-neutral-dark">Feedback on the changes</h3>
+            <p className="mt-1 text-xs text-neutral-mid">Add a note to any change you want revised. Leave a change blank if you&rsquo;re happy with it. Your notes are sent to the admin when you send the policy back.</p>
+            <ul className="mt-3 space-y-3">
+              {(detail?.changes ?? []).map((c, i) => (
+                <li key={c.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal/10 text-[11px] font-bold text-teal">{i + 1}</span>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">{placementLabel(c.placement)}</p>
+                  </div>
+                  <p className="mt-1 text-sm font-medium text-neutral-dark">{c.section_title || c.requirement || 'Change'}</p>
+                  {c.new_text && <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs text-neutral-mid">{c.new_text}</p>}
+                  <textarea value={notes[c.id] ?? ''} onChange={e => setNotes(n => ({ ...n, [c.id]: e.target.value }))} rows={2}
+                    placeholder="Add a note for this section (optional)"
+                    className="mt-2 w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-medium text-neutral-mid">General note (optional)</label>
+              <textarea value={general} onChange={e => setGeneral(e.target.value)} rows={2}
+                placeholder="Any overall comments for the admin…"
+                className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+            </div>
+          </div>
         )}
       </div>
       </div>

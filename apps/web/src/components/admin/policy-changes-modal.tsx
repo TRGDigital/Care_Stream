@@ -339,6 +339,12 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                         </button>
                       )}
                     </div>
+                    {c.manager_feedback && (
+                      <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Care manager feedback</p>
+                        <p className="mt-0.5 whitespace-pre-line text-xs text-amber-900">{c.manager_feedback}</p>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

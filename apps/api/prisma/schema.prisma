@@ -550,6 +550,7 @@ model PolicyDocumentChange {
   applied_at    DateTime @default(now())
   published     Boolean  @default(false)
   reverted      Boolean  @default(false)
+  manager_feedback String @default("")   // care manager's note for this change when sent back
   document      PolicyDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
 
   @@index([document_id])

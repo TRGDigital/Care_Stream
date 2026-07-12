@@ -286,7 +286,10 @@ meRouter.post('/policy-approvals/:policyId/reject', async (req: Request, res: Re
   const userId   = (req as any).user.sub
   if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
-  const r = await rejectPolicy(tenantId, String(req.params.policyId), 'manager', me?.name || me?.email || 'Care manager', String(req.body?.comment ?? ''))
+  const feedback = Array.isArray(req.body?.feedback)
+    ? req.body.feedback.filter((f: any) => f && typeof f.change_id === 'string').map((f: any) => ({ change_id: String(f.change_id), note: String(f.note ?? '') }))
+    : []
+  const r = await rejectPolicy(tenantId, String(req.params.policyId), 'manager', me?.name || me?.email || 'Care manager', String(req.body?.comment ?? ''), feedback)
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   ok(res, r)
 })

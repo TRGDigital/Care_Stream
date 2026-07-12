@@ -345,12 +345,16 @@ function ChatPageInner() {
 
   const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
+  // Remembered from the last load so the Supervisions item shows immediately on
+  // reload instead of popping in once /billing/summary resolves. Revalidated below.
+  const [superCached, setSuperCached]                  = useState(false)
   const isAdmin                                        = (session?.user as any)?.role === 'admin'
   const { features: planFeatures }                     = usePlanFeatures()
   // F2F is a Professional/Enterprise feature — hide the hub admin tab otherwise.
   const canF2F                                         = isAdmin && (planFeatures == null || planFeatures.has_face_to_face)
   // Supervisions & appraisals is an Enterprise feature — staff see their own.
-  const canSupervisions                                = planFeatures?.has_workforce_compliance === true
+  // Until the plan loads, fall back to the cached flag so the nav item is stable.
+  const canSupervisions                                = planFeatures ? planFeatures.has_workforce_compliance === true : superCached
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
@@ -429,11 +433,22 @@ function ChatPageInner() {
   }, [searchParams])
 
   // Care manager: policies awaiting their approval (drives the Policies sidebar item).
-  useEffect(() => {
+  // Fetched once per session load (not on every view switch) and cached, so the
+  // Policies item stays put instead of disappearing and reloading as you navigate.
+  // Re-run explicitly (via onChange) after an approval so the badge stays accurate.
+  const refreshPolicyApprovals = useCallback(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.policyApprovals()
-      .then(r => setPolicyApprovals({ is_manager: r.is_manager, count: r.policies.length })).catch(() => {})
-  }, [session?.accessToken, view])
+      .then(r => { const v = { is_manager: r.is_manager, count: r.policies.length }; setPolicyApprovals(v); try { localStorage.setItem(`cs_polappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
+  }, [session?.accessToken, userId])
+  useEffect(() => { refreshPolicyApprovals() }, [refreshPolicyApprovals])
+
+  // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
+  useEffect(() => {
+    if (!planFeatures) return
+    setSuperCached(planFeatures.has_workforce_compliance === true)
+    try { localStorage.setItem(`cs_super_${userId}`, JSON.stringify(planFeatures.has_workforce_compliance === true)) } catch { /* ignore */ }
+  }, [planFeatures, userId])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the
   // badges, saved policies and language picker all appear together on the first
@@ -444,6 +459,8 @@ function ChatPageInner() {
     try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
+    try { const p = JSON.parse(localStorage.getItem(`cs_polappr_${userId}`) || 'null'); if (p && typeof p === 'object') setPolicyApprovals(p) } catch { /* ignore */ }
+    try { const w = JSON.parse(localStorage.getItem(`cs_super_${userId}`)   || 'null'); if (typeof w === 'boolean') setSuperCached(w) } catch { /* ignore */ }
     try { const dc = JSON.parse(localStorage.getItem(`cs_doccats_${userId}`) || 'null'); if (Array.isArray(dc)) setAvailableCats(dc) } catch { /* ignore */ }
   }, [userId])
 
@@ -1104,7 +1121,7 @@ function ChatPageInner() {
 
         {/* Policies to approve (care manager) */}
         {view === 'policies' && session?.accessToken && (
-          <PoliciesView token={session.accessToken} />
+          <PoliciesView token={session.accessToken} onChange={refreshPolicyApprovals} />
         )}
 
         {/* My Progress view */}

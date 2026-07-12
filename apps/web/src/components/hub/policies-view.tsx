@@ -11,7 +11,7 @@ type Pub  = { policy_id: string; name: string; version: string; published_at: st
 type Selected = { policy_id: string; name: string; version: string; changes: number; readOnly: boolean }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['policyApprovalDetail']>>
 
-export function PoliciesView({ token }: { token: string }) {
+export function PoliciesView({ token, onChange }: { token: string; onChange?: () => void }) {
   const [list, setList]       = useState<Item[]>([])
   const [published, setPublished] = useState<Pub[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +53,7 @@ export function PoliciesView({ token }: { token: string }) {
     try {
       const r = await createApiClient(token).me.approvePolicyAsManager(selected.policy_id)
       setMsg(r.status === 'published' ? `Approved. "${selected.name}" is now live for staff.` : `Approved. Sent on for external approval.`)
-      setSelected(null); load()
+      setSelected(null); load(); onChange?.()
     } catch (e: any) { setError(e.message ?? 'Could not approve.') } finally { setBusy(false) }
   }
   async function reject() {
@@ -63,7 +63,7 @@ export function PoliciesView({ token }: { token: string }) {
     try {
       await createApiClient(token).me.rejectPolicyAsManager(selected.policy_id, comment)
       setMsg(`Sent "${selected.name}" back to the admin.`)
-      setSelected(null); load()
+      setSelected(null); load(); onChange?.()
     } catch (e: any) { setError(e.message ?? 'Could not send back.') } finally { setBusy(false) }
   }
 

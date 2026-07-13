@@ -13,6 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
+import { qualityStatementCoverage } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -594,6 +595,18 @@ analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req:
     ok(res, doc ?? { document: null, changes: [] })
   } catch (e: any) {
     err(res, 'DOC_FAILED', e.message ?? 'Could not load the policy document.', 500)
+  }
+})
+
+// GET CQC Single Assessment Framework readiness: quality-statement coverage inherited from
+// the tenant's regulation coverage (Analytics → CQC readiness).
+analyticsRouter.get('/gaps/saf-coverage', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try {
+    ok(res, await qualityStatementCoverage(tenantId))
+  } catch (e: any) {
+    err(res, 'SAF_FAILED', e.message ?? 'Could not load CQC readiness.', 500)
   }
 })
 

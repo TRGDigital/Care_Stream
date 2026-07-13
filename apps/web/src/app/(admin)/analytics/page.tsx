@@ -227,6 +227,68 @@ function PolicyTrailAccordion({ d }: { d: any }) {
   )
 }
 
+const SAF_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
+  covered:      { label: 'Covered',       cls: 'border-green-200 bg-green-50 text-green-700', dot: 'bg-green-500' },
+  partial:      { label: 'Partial',       cls: 'border-amber-200 bg-amber-50 text-amber-700', dot: 'bg-amber-400' },
+  gap:          { label: 'Gap',           cls: 'border-rose-200 bg-rose-50 text-rose-700',    dot: 'bg-rose-400' },
+  not_assessed: { label: 'Not assessed',  cls: 'border-gray-200 bg-gray-50 text-neutral-mid', dot: 'bg-gray-300' },
+}
+
+// One CQC quality statement: header shows inherited coverage status; opening reveals the
+// we-statement, the regulation crosswalk with each reg's coverage, and the expected policies.
+function SafStatementAccordion({ s }: { s: any }) {
+  const [open, setOpen] = useState(false)
+  const st = SAF_STATUS[s.status] ?? SAF_STATUS.not_assessed
+  return (
+    <div className="mb-2.5 overflow-hidden rounded-card border border-gray-200 bg-white">
+      <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-neutral-light/40">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${st.dot}`} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-neutral-dark"><span className="mr-1.5 text-xs font-bold tabular-nums text-neutral-mid">{s.number}</span>{s.name}</p>
+            <p className="text-xs text-neutral-mid">{s.covered} covered · {s.partial} partial · {s.gap} gap{s.not_assessed ? ` · ${s.not_assessed} not assessed` : ''} of {s.regulations.length} linked</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>
+          {open ? <ChevronUp size={16} className="text-neutral-mid" /> : <ChevronDown size={16} className="text-neutral-mid" />}
+        </div>
+      </button>
+      {open && (
+        <div className="space-y-4 border-t border-gray-100 px-4 py-4">
+          {s.we_statement && <p className="rounded-lg border-l-2 border-slate-300 bg-slate-50/50 px-3 py-2 text-xs italic leading-relaxed text-neutral-dark">&ldquo;{s.we_statement}&rdquo;</p>}
+          <div>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Regulation coverage (inherited)</p>
+            <ul className="space-y-1">
+              {s.regulations.map((r: any) => {
+                const rs = SAF_STATUS[r.status] ?? SAF_STATUS.not_assessed
+                return (
+                  <li key={r.reference_key} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="flex min-w-0 items-center gap-2 text-neutral-dark"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${rs.dot}`} />{r.official_name}</span>
+                    <span className="shrink-0 text-neutral-mid">{rs.label}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+          {s.expected_policies?.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Expected policy evidence</p>
+              <div className="flex flex-wrap gap-1.5">{s.expected_policies.map((p: string) => <span key={p} className="rounded-md border border-gray-200 bg-neutral-light/50 px-2 py-0.5 text-xs text-neutral-dark">{p}</span>)}</div>
+            </div>
+          )}
+          {s.expectation_cues?.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Wording CQC looks for <span className="font-normal normal-case text-gray-400">· auto-check coming next</span></p>
+              <ul className="space-y-1">{s.expectation_cues.map((c: string, i: number) => <li key={i} className="flex items-start gap-2 text-xs text-neutral-mid"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />{c}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Lightweight area chart for the open-gap trend over time.
 function GapTrendChart({ points }: { points: Array<{ date: string; open_gaps: number }> }) {
   const W = 560, H = 120, P = 8
@@ -312,6 +374,7 @@ export default function AnalyticsPage() {
   const [effectiveness, setEffectiveness] = useState<any>(null)
   const [impact,       setImpact]   = useState<any>(null)
   const [policiesOverview, setPoliciesOverview] = useState<any>(null)
+  const [safCoverage, setSafCoverage] = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -322,7 +385,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null); setPoliciesOverview((cached as any).policiesOverview ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null); setPoliciesOverview((cached as any).policiesOverview ?? null); setSafCoverage((cached as any).safCoverage ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -347,10 +410,11 @@ export default function AnalyticsPage() {
       api.analytics.effectiveness().catch(() => null),
       api.analytics.trainingImpact().catch(() => null),
       api.analytics.policyApprovalsOverview().catch(() => null),
+      api.analytics.safCoverage().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp, policiesOverview: polOv })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv, saf]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv); setSafCoverage(saf)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp, policiesOverview: polOv, safCoverage: saf })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -1518,6 +1582,28 @@ export default function AnalyticsPage() {
                 <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400 align-middle" />{h.regs_gap} gap</span>
               </div>
             </div>
+          )}
+
+          {/* CQC readiness — Single Assessment Framework quality statements */}
+          {safCoverage && safCoverage.key_questions.length > 0 && (
+            <>
+              <SectionDivider
+                title="CQC readiness — Single Assessment Framework"
+                subtitle="How your policies evidence each CQC quality statement, inherited from your regulation coverage. Pilot: the Safe key question."
+              />
+              {safCoverage.key_questions.map((kq: any) => (
+                <div key={kq.q} className="mb-6">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <h3 className="text-base font-bold text-neutral-dark">{kq.label} {kq.score != null && <span className="ml-1 text-sm font-semibold text-teal">{kq.score}%</span>}</h3>
+                    <span className="text-xs text-neutral-mid">{kq.covered} covered · {kq.partial} partial · {kq.gap} gap</span>
+                  </div>
+                  {kq.statements.map((s: any) => <SafStatementAccordion key={s.reference_key} s={s} />)}
+                </div>
+              ))}
+              <p className="mb-6 rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-3 text-xs text-neutral-mid">
+                Each quality statement inherits its status from the coverage of the regulations behind it, the same verified coverage above, never re-matched. This shows your <strong>policy / process evidence</strong> for each statement; it is one of several evidence types CQC uses, not a compliance score. Wording alignment (does each policy read the way CQC expects) is the next layer.
+              </p>
+            </>
           )}
 
           {/* Updated policies + approval timelines */}

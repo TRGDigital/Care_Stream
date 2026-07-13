@@ -85,7 +85,7 @@ const STEPS = [
     Icon: Sparkles,
     label: 'CQC wording alignment',
     title: 'Whether your policy reads the way CQC expects, not just whether it covers the rule.',
-    body: 'The CQC Single Assessment Framework looks for policies that are person-centred and outcomes-focused, not just procedurally correct. CareStream checks your wording against the framework, and where a policy covers the requirement but reads too procedurally, it flags it and suggests person-centred alternative wording in your policy&rsquo;s own voice, that you can adopt in a click.',
+    body: 'The CQC Single Assessment Framework looks for policies that are person-centred and outcomes-focused, not just procedurally correct. CareStream checks your wording against the framework, and where a policy covers the requirement but reads too procedurally, it flags it and suggests person-centred alternative wording in your policy’s own voice, that you can adopt in a click.',
     points: ['Checked against the CQC Single Assessment Framework quality statements', 'Suggested person-centred wording, numbered and highlighted in the policy', 'Adopt it straight into your policy, through the same review and approval'],
   },
   {

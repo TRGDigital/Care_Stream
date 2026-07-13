@@ -127,8 +127,8 @@ const MATRIX: Group[] = [
     rows: [
       { label: 'Wording alignment to the CQC quality statements',          values: [false, true, true] },
       { label: 'Person-centred rewording suggestions (in your policy voice)', values: [false, true, true] },
-      { label: 'Suggestions numbered &amp; highlighted in the policy',      values: [false, true, true] },
-      { label: 'Adopt into your policy through review &amp; approval',      values: [false, true, true] },
+      { label: 'Suggestions numbered & highlighted in the policy',         values: [false, true, true] },
+      { label: 'Adopt into your policy through review & approval',          values: [false, true, true] },
     ],
   },
   {

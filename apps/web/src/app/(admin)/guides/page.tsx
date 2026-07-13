@@ -560,6 +560,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <Tip>The example wording is guidance for you to review, adapt and approve — not legal advice. Prefer it done for you? Use &ldquo;Request this policy&rdquo; and our team can write and supply it.</Tip>
         </SectionBlock>
 
+        <SectionBlock title="CQC wording alignment (Single Assessment Framework)">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Covering the rules is one thing; reading the way CQC expects is another. Alongside what&rsquo;s missing, CareStream checks whether a policy is written the <strong>person-centred, outcomes-focused</strong> way the CQC <strong>Single Assessment Framework</strong> looks for, not just whether it is procedurally correct. In the Coverage detail for a regulation, a <strong>CQC wording alignment</strong> section runs automatically for the policy shown.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>What it flags</strong>: where a policy covers the requirement but reads too procedurally, it suggests a <strong>person-centred alternative in your policy&rsquo;s own voice</strong>.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Where it goes</strong>: each suggestion is numbered (W1, W2&hellip;) and highlighted on the policy on the right, so you can see exactly where it belongs.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Adopt it</strong>: accept a suggestion and it becomes a tracked change, going through the same review and approval as any other policy update.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>In CQC&rsquo;s language</strong>: it names the quality statement the policy supports, so you can speak to it directly at inspection.</span></li>
+          </ul>
+          <Tip>Because it is about how the policy <em>reads</em>, the check only runs where a policy already exists for the regulation. The suggestions are yours to review, adapt and approve.</Tip>
+        </SectionBlock>
+
         <SectionBlock title="A one-time disclaimer before you use the guidance">
           <p className="text-sm text-neutral-dark leading-relaxed">
             The first time anyone at your service opens the &ldquo;what to add&rdquo; guidance, CareStream shows a short <strong>legal disclaimer</strong> that must be accepted before the recommendations are shown. It makes clear that the gaps and example wording are <strong>guidance, not legal or compliance advice</strong>, that you remain responsible for reviewing and approving any changes, and that we <strong>strongly recommend any changes you make are checked by a suitably qualified external specialist before they are adopted</strong>.

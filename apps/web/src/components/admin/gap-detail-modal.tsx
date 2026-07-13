@@ -81,6 +81,7 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   if (!target) return false
   target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
   target.dataset.csMarked = '1'
+  target.dataset.csGap = '1'   // a "what to add" fix owns this block — SAF wording here is moot
   target.insertBefore(makeBadge(String(i + 1), 'bg-neutral-900 text-white'), target.firstChild)
   return true
 }
@@ -143,6 +144,7 @@ function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText:
   if (!target) return false
   target.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
   target.dataset.csMarked = '1'
+  target.dataset.csGap = '1'
   target.textContent = ''
   target.appendChild(makeBadge(String(i + 1), 'bg-green-600 text-white'))
   target.appendChild(document.createTextNode(newText))
@@ -472,6 +474,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [safAdopted, setSafAdopted]   = useState<Set<number>>(new Set())
   const [safBusy, setSafBusy]         = useState<number | null>(null)
   const [safLocated, setSafLocated]   = useState<Set<number>>(new Set())   // alignments placed on the preview
+  const [safSuppressed, setSafSuppressed] = useState<Set<number>>(new Set())  // alignments hidden: a gap fix owns that block
 
   async function checkSaf(force = false) {
     if (!detail?.target_policy) return
@@ -561,11 +564,22 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [], adopted)
     if (adoption?.show_role_names) applyRoleNames(root, adoption.role_names)
     // SAF wording-alignment markers (indigo, W-numbered), when the check is for this policy.
+    // If a "what to add" fix already owns the same block (csGap), the SAF wording rewrite of
+    // that block is moot — adopting one voids the other — so we suppress it rather than show
+    // two competing suggestions on one paragraph. Runs AFTER highlightQuotes has flagged the
+    // gap blocks above.
     const located = new Set<number>()
+    const suppressed = new Set<number>()
     if (safResult?.alignments?.length && safResult.target_policy?.id === detail.target_policy?.id) {
-      safResult.alignments.forEach((a, i) => { if (a.anchor && markSafBlock(root, a.anchor, i + 1)) located.add(i) })
+      safResult.alignments.forEach((a, i) => {
+        if (!a.anchor) return
+        const block = findBlock(root, a.anchor)
+        if (block?.dataset.csGap) { suppressed.add(i); return }   // gap fix already covers this block
+        if (markSafBlock(root, a.anchor, i + 1)) located.add(i)
+      })
     }
     setSafLocated(located)
+    setSafSuppressed(suppressed)
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -782,7 +796,10 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         <div className="mt-2 space-y-3">
                           {safResult.statements.length > 0 && <p className="text-xs text-neutral-mid">Supports CQC quality statement{safResult.statements.length === 1 ? '' : 's'}: <span className="font-medium text-neutral-dark">{safResult.statements.map(s => s.name).join(', ')}</span></p>}
                           <p className="text-sm text-neutral-dark">{safResult.message}</p>
-                          {safResult.alignments.map((a, i) => (
+                          {safResult.alignments.length > 0 && safSuppressed.size === safResult.alignments.length && (
+                            <p className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5 text-xs text-neutral-mid">The wording CQC looks for here is already handled by the &ldquo;What to add&rdquo; suggestions above, adopt those and this policy will read the way the quality statement expects.</p>
+                          )}
+                          {safResult.alignments.map((a, i) => safSuppressed.has(i) ? null : (
                             <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
                               <div className="flex items-start gap-2">
                                 <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">W{i + 1}</span>

@@ -277,67 +277,55 @@ export default function GapsPage() {
                   <CheckCircle2 size={18} className="text-green-500" />
                   <p className="text-sm text-neutral-mid">Every regulation is addressed by your policies — well done.</p>
                 </div>
-              ) : [...gapRegs, ...partialRegs].map(reg => {
-                // Phase 1b: show where this regulation's fixes are routed (from the cached
-                // drill-in). 2+ policies → list them all ("spans N policies"); a single target
-                // → a one-line hint. For a gap the target is usually a new policy; for a
-                // partial we only add a line when the fix goes somewhere OTHER than the policy
-                // already named as "partially covered by", to avoid repeating it. Only appears
-                // once the detail has been generated (open a drill-in, or re-run the analysis).
+              ) : [...gapRegs, ...partialRegs].flatMap(reg => {
+                // Phase 1b: name the relevant policy beneath the regulation, like we do for
+                // partials. When a regulation's coverage detail routes its fixes to more than
+                // one policy, we list the regulation once PER policy (each row names its own
+                // policy) — a clearer index than a nested box. Rows only carry a policy once
+                // the drill-in detail has been generated (open one, or re-run the analysis);
+                // until then the regulation shows as a single plain row.
                 const targets = (reg.target_policies ?? []).filter(t => t.count > 0)
-                const single = targets.length === 1 ? targets[0] : null
-                const showSingle = !!single && (reg.status === 'gap' || single.id !== reg.evidence_policy_id)
-                return (
-                <div key={reg.reference_key} className="px-6 py-3.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
-                      {reg.status === 'partial' && reg.evidence_policy_name && (
-                        <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
-                      )}
-                      {showSingle && single && (
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs">
-                          <FileQuestion size={11} className={`shrink-0 ${single.id ? 'text-teal' : 'text-amber-500'}`} />
-                          <span className="truncate text-neutral-mid">
-                            {single.id
-                              ? <>Fix belongs in <span className="font-medium text-neutral-dark">{single.name}</span></>
-                              : <>New policy needed: <span className="font-medium text-neutral-dark">{single.name}</span></>}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                        {reg.status === 'gap' ? 'Gap' : 'Partial'}
-                      </span>
-                      <button
-                        onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
-                        className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
-                      >
-                        <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
-                      </button>
-                    </div>
-                  </div>
-                  {targets.length >= 2 && (
-                    <div className="mt-2.5 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2">
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Spans {targets.length} policies</p>
-                      <ul className="space-y-1">
-                        {targets.map((t, i) => (
-                          <li key={t.id ?? `new-${i}`} className="flex items-center justify-between gap-2 text-xs">
-                            <span className="flex min-w-0 items-center gap-1.5">
-                              <FileQuestion size={11} className={`shrink-0 ${t.id ? 'text-teal' : 'text-amber-500'}`} />
-                              <span className="truncate text-neutral-dark">{t.id ? t.name : `New policy needed: ${t.name}`}</span>
+                // One entry per row. No resolved targets yet → a single policy-less row.
+                const rows: Array<{ policy: { id: string | null; name: string; count: number } | null }> =
+                  targets.length > 0 ? targets.map(t => ({ policy: t })) : [{ policy: null }]
+
+                return rows.map((row, ri) => {
+                  const policy = row.policy
+                  // For a partial, "Partially covered by X" already names the covering policy;
+                  // only add the routing line when the fix goes somewhere different (or it's a gap).
+                  const showRouting = !!policy && (reg.status === 'gap' || policy.id !== reg.evidence_policy_id)
+                  return (
+                    <div key={`${reg.reference_key}::${policy?.id ?? (policy ? `new-${ri}` : 'only')}`} className="flex items-center justify-between gap-3 px-6 py-3.5">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
+                        {reg.status === 'partial' && reg.evidence_policy_name && (!policy || policy.id === reg.evidence_policy_id) && (
+                          <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
+                        )}
+                        {showRouting && policy && (
+                          <p className="mt-0.5 flex items-center gap-1.5 text-xs">
+                            <FileQuestion size={11} className={`shrink-0 ${policy.id ? 'text-teal' : 'text-amber-500'}`} />
+                            <span className="truncate text-neutral-mid">
+                              {policy.id
+                                ? <>Relevant policy: <span className="font-medium text-neutral-dark">{policy.name}</span></>
+                                : <>New policy needed: <span className="font-medium text-neutral-dark">{policy.name}</span></>}
                             </span>
-                            <span className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid ring-1 ring-gray-200">
-                              {t.count} {t.count === 1 ? 'item' : 'items'}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+                          {reg.status === 'gap' ? 'Gap' : 'Partial'}
+                        </span>
+                        <button
+                          onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
+                          className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
+                        >
+                          <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-                )
+                  )
+                })
               })}
             </div>
 

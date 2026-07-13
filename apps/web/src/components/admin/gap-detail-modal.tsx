@@ -16,24 +16,50 @@ type HighlightItem = { i: number; quote: string; placement: string; label?: stri
 
 const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
 
+// Tolerant normalisation for anchor matching: unify curly quotes and dashes (the extracted
+// text the AI quotes from and the rendered HTML often differ on these), then collapse space.
+const normMatch = (s: string) => (s || '')
+  .toLowerCase()
+  .replace(/[‘’‚‛′`]/g, "'")
+  .replace(/[“”„″]/g, '"')
+  .replace(/[‐-―−]/g, '-')
+  .replace(/\s+/g, ' ')
+  .trim()
+// The distinctive words (>= 4 chars) of a string, for overlap scoring.
+const sigWords = (s: string): string[] => [...new Set(normMatch(s).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4))]
+
 // Highlight the WHOLE block (paragraph or bullet) the anchor phrase sits in, and badge it
 // with its number. We deliberately tint the entire block, not just the matched phrase: the
 // suggested wording replaces the whole paragraph, so highlighting only a fragment would
-// invite the tenant to swap part of a sentence and end up with a garbled hybrid. We locate
-// via the short anchor (reliable) but always highlight the full block it belongs to, and
-// pick the smallest block that contains the anchor.
-// The smallest block (paragraph/bullet/cell) whose text contains the anchor phrase.
+// invite the tenant to swap part of a sentence and end up with a garbled hybrid.
+// Tier 1: the smallest block whose text contains the anchor (tolerant of quotes/dashes).
+// Tier 2 (fallback): the block sharing the most of the anchor's distinctive words, so an
+// anchor that isn't a verbatim substring (formatting/extraction differences, spans blocks)
+// still lands on the right paragraph instead of dropping to the "find it yourself" list.
 function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
-  const needle = normText(anchor)
+  const needle = normMatch(anchor)
   if (needle.length < 6) return null
   const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote')) as HTMLElement[]
   let target: HTMLElement | null = null
   for (const b of blocks) {
-    if (normText(b.textContent || '').includes(needle)) {
+    if (normMatch(b.textContent || '').includes(needle)) {
       if (!target || (b.textContent?.length ?? 0) < (target.textContent?.length ?? 0)) target = b
     }
   }
-  return target
+  if (target) return target
+
+  const aw = sigWords(anchor)
+  if (aw.length < 3) return null
+  let best: HTMLElement | null = null; let bestScore = 0
+  for (const b of blocks) {
+    const bw = new Set(sigWords(b.textContent || ''))
+    if (!bw.size) continue
+    let hits = 0
+    for (const w of aw) if (bw.has(w)) hits++
+    const score = hits / aw.length
+    if (score > bestScore) { bestScore = score; best = b }
+  }
+  return bestScore >= 0.6 ? best : null
 }
 
 // Highlight the whole containing block (tint + number) for a "where to add" amend anchor.

@@ -48,6 +48,25 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   return true
 }
 
+// Highlight the block/heading a SAF wording suggestion belongs to, in indigo with its number
+// (distinct from the amber "what to add" markers). Returns whether it could be placed.
+function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
+  if (!anchor || normText(anchor).length < 6) return false
+  let target = findBlock(root, anchor)
+  if (!target) {
+    const q = normText(anchor)
+    const heads = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
+    target = heads.find(h => { const t = normText(h.textContent || ''); return t === q || (t.length >= 6 && (t.includes(q) || q.includes(t))) }) ?? null
+  }
+  if (!target) return false
+  target.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
+  const badge = document.createElement('sup')
+  badge.textContent = 'W' + num
+  badge.className = 'mr-0.5 font-bold text-indigo-700'
+  target.insertBefore(badge, target.firstChild)
+  return true
+}
+
 function greenBadge(i: number): HTMLElement {
   const b = document.createElement('span')
   b.textContent = String(i + 1)
@@ -417,6 +436,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [safErr, setSafErr]       = useState('')
   const [safAdopted, setSafAdopted]   = useState<Set<number>>(new Set())
   const [safBusy, setSafBusy]         = useState<number | null>(null)
+  const [safLocated, setSafLocated]   = useState<Set<number>>(new Set())   // alignments placed on the preview
 
   async function checkSaf(force = false) {
     if (!detail?.target_policy) return
@@ -505,13 +525,19 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     root.innerHTML = html
     highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [], adopted)
     if (adoption?.show_role_names) applyRoleNames(root, adoption.role_names)
+    // SAF wording-alignment markers (indigo, W-numbered), when the check is for this policy.
+    const located = new Set<number>()
+    if (safResult?.alignments?.length && safResult.target_policy?.id === detail.target_policy?.id) {
+      safResult.alignments.forEach((a, i) => { if (a.anchor && markSafBlock(root, a.anchor, i + 1)) located.add(i) })
+    }
+    setSafLocated(located)
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     } else {
       setMatchCount(null)
     }
-  }, [html, detail, policySearch, adoptedReqs, adoptedContent, adoption])
+  }, [html, detail, policySearch, adoptedReqs, adoptedContent, adoption, safResult])
 
   async function markCompleted() {
     setCompleting(true)
@@ -723,9 +749,18 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                           <p className="text-sm text-neutral-dark">{safResult.message}</p>
                           {safResult.alignments.map((a, i) => (
                             <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
-                              <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
-                              <p className="mt-1 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
-                              <p className="mt-1 text-[11px] text-neutral-mid">{a.placement === 'add_under_heading' ? `Add under: ${a.anchor || 'a relevant heading'}` : `New section: ${a.section_title || 'untitled'}`}</p>
+                              <div className="flex items-start gap-2">
+                                <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">W{i + 1}</span>
+                                <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
+                              </div>
+                              <p className="mt-1.5 text-[11px] text-neutral-mid">
+                                {safLocated.has(i)
+                                  ? <>Highlighted <span className="font-semibold text-indigo-700">W{i + 1}</span> in your {detail.target_policy?.name ?? 'policy'} (right), add the wording there.</>
+                                  : a.placement === 'new_section'
+                                    ? <>Add as a <span className="font-semibold">new section</span>{a.section_title ? <> &ldquo;{a.section_title}&rdquo;</> : null} at the end.</>
+                                    : <>Add near: &ldquo;{a.anchor}&rdquo;</>}
+                              </p>
+                              <p className="mt-1.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
                               <div className="mt-2">
                                 {safAdopted.has(i) ? (
                                   <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>

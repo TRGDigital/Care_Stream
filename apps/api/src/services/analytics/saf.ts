@@ -144,10 +144,12 @@ The policy as written:
 ${policyText}
 """
 
-Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect (it may cover the procedure but read too procedurally, or omit the person-centred framing). For each genuine gap, write a short addition (2 to 4 sentences) in THIS policy's own voice and style that adds the missing person-centred wording, grounded in the policy, inventing no facts. Choose placement: "add_under_heading" (give the exact existing heading text to add it under) or "new_section" (give a short section title). Only include genuine gaps; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
+Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect (it may cover the procedure but read too procedurally, or omit the person-centred framing). For each genuine gap, write a short addition (2 to 4 sentences) in THIS policy's own voice and style that adds the missing person-centred wording, grounded in the policy, inventing no facts. Only include genuine gaps; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
+
+For each addition decide WHERE it goes and set "anchor" to a short VERBATIM quote copied exactly from the policy above (a heading or a sentence) that the addition should sit under or next to, so it can be located in the document. Use placement "add_under_heading" when the anchor is an existing heading or nearby text; use "new_section" only when there is genuinely no relevant place and it must be a brand-new section (then give a "section_title" and leave "anchor" empty). Prefer a real anchor over a new section wherever possible.
 
 Respond with JSON only:
-{"alignments":[{"focus":"<short label of the person-centred quality being added>","placement":"add_under_heading|new_section","anchor":"<exact existing heading, or empty>","section_title":"<title for a new section, or empty>","wording":"<the addition>"}]}`
+{"alignments":[{"focus":"<short label of the person-centred quality being added>","placement":"add_under_heading|new_section","anchor":"<a short verbatim quote copied from the policy, or empty for a new section>","section_title":"<title for a new section, or empty>","wording":"<the addition>"}]}`
 
   let alignments: SafAlignment[] = []
   try {

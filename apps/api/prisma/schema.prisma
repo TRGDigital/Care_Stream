@@ -533,6 +533,8 @@ model PolicyLintSignal {
   acronyms      String[] @default([])             // matched case-sensitively as whole uppercase words
   superseded_by String?                           // current term/framework to replace it with
   is_active     Boolean  @default(true)
+  approved      Boolean  @default(false)           // only APPROVED signals are used by tenant scans
+  approved_at   DateTime?
   sort_order    Int      @default(0)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt

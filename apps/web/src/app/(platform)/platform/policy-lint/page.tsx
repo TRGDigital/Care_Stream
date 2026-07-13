@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type PolicyLintSignal } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp, ShieldCheck, Clock, FlaskConical } from 'lucide-react'
 
 const CATEGORIES = [
   { value: 'superseded_framework',   label: 'Superseded framework / standard' },
@@ -52,7 +52,14 @@ export default function PolicyLintSignalsPage() {
     catch (e: any) { setError(e.message ?? 'Could not delete.') }
   }
 
+  async function approve(s: PolicyLintSignal) {
+    if (!token) return
+    try { await createPlatformClient(token).policyLintSignals.approve(s.id); load() }
+    catch (e: any) { setError(e.message ?? 'Could not approve.') }
+  }
+
   const active = signals.filter(s => s.is_active).length
+  const pending = signals.filter(s => !s.approved).length
 
   return (
     <PlatformShell>
@@ -61,6 +68,7 @@ export default function PolicyLintSignalsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-neutral-dark">Policy Stale Signals</h1>
             <p className="mt-1 text-sm text-neutral-mid">{active} active of {signals.length} · the deterministic (no-AI) catalogue that flags out-of-date policy content on tenants&rsquo; Policy Gap Detection page</p>
+            {pending > 0 && <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700"><Clock size={12} /> {pending} pending approval · not used by tenant scans until approved</p>}
           </div>
           <button onClick={() => setEditing('new')} className="flex items-center gap-2 rounded-lg bg-teal px-3 py-2 text-sm font-medium text-white hover:bg-teal-dark">
             <Plus size={14} /> Add signal
@@ -81,7 +89,7 @@ export default function PolicyLintSignalsPage() {
               <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-neutral-mid">{CAT_LABEL[g.c] ?? g.c} <span className="font-normal text-gray-400">· {g.items.length}</span></h2>
               <div className="space-y-2">
                 {g.items.map(s => (
-                  <SignalRow key={s.id} s={s} onEdit={() => setEditing(s)} onDelete={() => remove(s)} />
+                  <SignalRow key={s.id} s={s} onEdit={() => setEditing(s)} onDelete={() => remove(s)} onApprove={() => approve(s)} />
                 ))}
               </div>
             </section>
@@ -100,18 +108,21 @@ export default function PolicyLintSignalsPage() {
   )
 }
 
-function SignalRow({ s, onEdit, onDelete }: { s: PolicyLintSignal; onEdit: () => void; onDelete: () => void }) {
+function SignalRow({ s, onEdit, onDelete, onApprove }: { s: PolicyLintSignal; onEdit: () => void; onDelete: () => void; onApprove: () => void }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div className={`overflow-hidden rounded-xl border bg-white ${s.approved ? 'border-gray-200' : 'border-amber-300'}`}>
       <div className="flex items-start gap-2 px-4 py-3">
         <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="mt-0.5 shrink-0 rounded p-0.5 text-neutral-mid hover:text-teal" title={open ? 'Collapse' : 'Expand'}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         <button onClick={() => setOpen(o => !o)} className="min-w-0 flex-1 text-left">
-          <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark">
+          <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-neutral-dark">
             <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase ${SEV_STYLE[s.severity] ?? SEV_STYLE.low}`}>{s.severity}</span>
             {s.label}
+            {s.approved
+              ? <span className="inline-flex items-center gap-1 rounded bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700"><ShieldCheck size={11} /> Approved</span>
+              : <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800"><Clock size={11} /> Pending</span>}
             {!s.is_active && <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Inactive</span>}
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-neutral-mid">
@@ -120,6 +131,7 @@ function SignalRow({ s, onEdit, onDelete }: { s: PolicyLintSignal; onEdit: () =>
           </div>
         </button>
         <div className="flex shrink-0 items-center gap-1">
+          {!s.approved && <button onClick={onApprove} title="Approve" className="inline-flex items-center gap-1 rounded-btn bg-green-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-green-700"><ShieldCheck size={13} /> Approve</button>}
           <button onClick={onEdit} title="Edit" className="rounded p-1.5 text-neutral-mid hover:bg-teal/10 hover:text-teal"><Pencil size={15} /></button>
           <button onClick={onDelete} title="Delete" className="rounded p-1.5 text-neutral-mid hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>
         </div>
@@ -151,8 +163,20 @@ function EditModal({ signal, token, onClose, onSaved }: {
   const [active, setActive]       = useState(s?.is_active ?? true)
   const [busy, setBusy]           = useState(false)
   const [err, setErr]             = useState('')
+  const [auditing, setAuditing]   = useState(false)
+  const [audit, setAudit]         = useState<Awaited<ReturnType<ReturnType<typeof createPlatformClient>['policyLintSignals']['audit']>> | null>(null)
+  const [auditErr, setAuditErr]   = useState('')
 
   const acronymList = acronyms.split(/[,\n]/).map(x => x.trim()).filter(Boolean)
+
+  async function runAudit() {
+    if (phrase.trim() && phraseValid === false) { setAuditErr('Fix the phrase pattern first.'); return }
+    if (!phrase.trim() && acronymList.length === 0) { setAuditErr('Enter a phrase or acronyms to test.'); return }
+    setAuditing(true); setAuditErr(''); setAudit(null)
+    try { setAudit(await createPlatformClient(token).policyLintSignals.audit({ phrase_source: phrase.trim() || null, acronyms: acronymList })) }
+    catch (e: any) { setAuditErr(e.message ?? 'Could not run the audit.') }
+    finally { setAuditing(false) }
+  }
 
   // Live regex validity feedback.
   const phraseValid = useMemo(() => {
@@ -220,6 +244,38 @@ function EditModal({ signal, token, onClose, onSaved }: {
             <input value={acronyms} onChange={e => setAcronyms(e.target.value)} className={`${INPUT} font-mono`} placeholder="e.g. KLOE, KLOEs" />
             <span className="mt-1 block text-xs text-neutral-mid">Use exact capitalisation. &ldquo;CCG&rdquo; matches, &ldquo;ccg&rdquo; does not.</span>
           </label>
+
+          {/* Accuracy audit — test against the real anonymised policy corpus for cross-over. */}
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-neutral-dark">Test against the policy library</span>
+              <button type="button" onClick={runAudit} disabled={auditing}
+                className="inline-flex items-center gap-1.5 rounded-btn border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-dark hover:bg-slate-100 disabled:opacity-50">
+                {auditing ? <><Loader2 size={12} className="animate-spin" /> Testing…</> : <><FlaskConical size={12} /> Audit matches</>}
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-neutral-mid">Runs this pattern against the real (anonymised) policy corpus so you can catch cross-over (e.g. an &ldquo;ISA&rdquo; savings reference) before approving.</p>
+            {auditErr && <p className="mt-2 text-xs text-red-600">{auditErr}</p>}
+            {audit && (
+              <div className="mt-2">
+                <p className={`text-xs font-semibold ${audit.policies_matched === 0 ? 'text-green-700' : 'text-neutral-dark'}`}>
+                  {audit.policies_matched === 0
+                    ? `No matches in ${audit.corpus} policies — clean.`
+                    : `Matches ${audit.policies_matched} of ${audit.corpus} policies (${audit.occurrences} occurrence${audit.occurrences === 1 ? '' : 's'}). Check each is genuinely stale:`}
+                </p>
+                {audit.matches.length > 0 && (
+                  <ul className="mt-1.5 max-h-56 space-y-1.5 overflow-y-auto">
+                    {audit.matches.map((m, i) => (
+                      <li key={i} className="rounded border border-slate-200 bg-white px-2.5 py-1.5">
+                        <p className="text-xs font-medium text-neutral-dark">{m.policy} <span className="font-normal text-neutral-mid">· {m.count}×</span></p>
+                        {m.snippets.map((sn, j) => <p key={j} className="mt-0.5 font-mono text-[11px] text-neutral-mid">{sn}</p>)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
 
           <label className="mt-4 block"><span className={LABEL}>Replace with <span className="font-normal normal-case text-gray-400">· the current term (pre-fills the one-click fix)</span></span>
             <input value={supersededBy} onChange={e => setSupersededBy(e.target.value)} className={INPUT} placeholder="e.g. CQC Single Assessment Framework (quality statements)" />

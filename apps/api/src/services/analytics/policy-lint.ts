@@ -54,8 +54,10 @@ async function loadActiveSignals(): Promise<TextSignal[]> {
   if (total === 0) {
     await (prisma as any).policyLintSignal.createMany({ data: defaultSignalSeeds(), skipDuplicates: true }).catch(() => {})
   }
+  // Only ACTIVE and APPROVED signals affect tenants. A new or newly-edited signal stays
+  // Pending until a platform admin has reviewed and approved it.
   const rows = await (prisma as any).policyLintSignal.findMany({
-    where: { is_active: true },
+    where: { is_active: true, approved: true },
     orderBy: [{ sort_order: 'asc' }, { created_at: 'asc' }],
   })
   // Compile once, dropping any row whose stored pattern won't compile (bad manual edit) so one

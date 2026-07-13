@@ -37,7 +37,7 @@ import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
-import { defaultSignalSeeds } from '../services/analytics/policy-lint-signals'
+import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/analytics/policy-lint-signals'
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
@@ -1771,6 +1771,7 @@ adminRouter.post('/policy-lint-signals', async (req: Request, res: Response) => 
       detail: String(b.detail ?? ''), phrase_source, acronyms,
       superseded_by: b.superseded_by ? String(b.superseded_by) : null,
       is_active: b.is_active !== false, sort_order: Number(b.sort_order) || 0,
+      approved: false, approved_at: null,   // new signals are Pending until reviewed
     } })
     ok(res, { signal: created })
   } catch (e: any) {
@@ -1787,15 +1788,19 @@ adminRouter.patch('/policy-lint-signals/:id', async (req: Request, res: Response
   if (typeof b.category === 'string') data.category = b.category.trim()
   if (typeof b.severity === 'string') data.severity = b.severity.trim()
   if (typeof b.detail === 'string') data.detail = b.detail
+  // Changing the MATCHING behaviour (phrase or acronyms) drops the signal back to Pending so
+  // it must be re-reviewed before it affects tenants again. Cosmetic edits don't.
+  let matchingChanged = false
   if (b.phrase_source !== undefined) {
     const p = b.phrase_source ? String(b.phrase_source) : null
     if (p) { try { new RegExp(p, 'i') } catch { err(res, 'VALIDATION_ERROR', 'phrase pattern is not a valid regular expression'); return } }
-    data.phrase_source = p
+    data.phrase_source = p; matchingChanged = true
   }
-  if (b.acronyms !== undefined) data.acronyms = qsStrArray(b.acronyms)
+  if (b.acronyms !== undefined) { data.acronyms = qsStrArray(b.acronyms); matchingChanged = true }
   if (b.superseded_by !== undefined) data.superseded_by = b.superseded_by ? String(b.superseded_by) : null
   if (typeof b.is_active === 'boolean') data.is_active = b.is_active
   if (b.sort_order !== undefined) data.sort_order = Number(b.sort_order) || 0
+  if (matchingChanged) { data.approved = false; data.approved_at = null }
   data.updated_at = new Date()
   try {
     const updated = await (prisma as any).policyLintSignal.update({ where: { id: String(req.params.id) }, data })
@@ -1810,6 +1815,51 @@ adminRouter.patch('/policy-lint-signals/:id', async (req: Request, res: Response
 adminRouter.delete('/policy-lint-signals/:id', async (req: Request, res: Response) => {
   await (prisma as any).policyLintSignal.delete({ where: { id: String(req.params.id) } }).catch(() => {})
   ok(res, { deleted: true })
+})
+
+// Approve a Pending signal so tenant scans start using it.
+adminRouter.post('/policy-lint-signals/:id/approve', async (req: Request, res: Response) => {
+  try {
+    const signal = await (prisma as any).policyLintSignal.update({
+      where: { id: String(req.params.id) },
+      data: { approved: true, approved_at: new Date() },
+    })
+    ok(res, { signal })
+  } catch (e: any) {
+    if (e?.code === 'P2025') { err(res, 'NOT_FOUND', 'Signal not found', 404); return }
+    throw e
+  }
+})
+
+// Dry-run: test a signal definition against the real (anonymised) policy corpus and return
+// which policies it matches, with snippets — so an admin can catch cross-over/ambiguity (e.g.
+// an "ISA" savings reference) BEFORE approving. Accepts phrase_source + acronyms in the body,
+// so it works for a saved signal or a candidate being edited.
+adminRouter.post('/policy-lint-signals/audit', async (req: Request, res: Response) => {
+  const b = req.body ?? {}
+  const phrase_source = b.phrase_source ? String(b.phrase_source) : null
+  if (phrase_source) { try { new RegExp(phrase_source, 'i') } catch { err(res, 'VALIDATION_ERROR', 'phrase pattern is not a valid regular expression'); return } }
+  const acronyms = qsStrArray(b.acronyms)
+  if (!phrase_source && acronyms.length === 0) { err(res, 'VALIDATION_ERROR', 'give a phrase pattern, one or more acronyms, or both'); return }
+  const signal: TextSignal = {
+    id: 'audit', category: 'placeholder', severity: 'low', label: '', detail: '',
+    phrases: phrase_source ? new RegExp(phrase_source, 'i') : undefined, acronyms,
+  }
+  const seeds = await (prisma as any).policySeed.findMany({ select: { title: true, content: true } })
+  const snippet = (text: string, index: number, len: number) => {
+    const start = Math.max(0, index - 40), end = Math.min(text.length, index + len + 40)
+    return (start > 0 ? '…' : '') + text.slice(start, end).replace(/\s+/g, ' ').trim() + (end < text.length ? '…' : '')
+  }
+  const matches: Array<{ policy: string; count: number; snippets: string[] }> = []
+  let totalOccurrences = 0
+  for (const s of (seeds as any[])) {
+    const hits = signalMatches(String(s.content ?? ''), signal)
+    if (!hits.length) continue
+    totalOccurrences += hits.length
+    matches.push({ policy: s.title ?? '(untitled)', count: hits.length, snippets: hits.slice(0, 3).map(h => snippet(String(s.content), h.index, h.match.length)) })
+    if (matches.length >= 60) break
+  }
+  ok(res, { corpus: (seeds as any[]).length, policies_matched: matches.length, occurrences: totalOccurrences, matches })
 })
 
 // ─── POST /admin/regulations ──────────────────────────────────────────────────

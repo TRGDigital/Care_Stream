@@ -371,6 +371,8 @@ export function defaultSignalSeeds() {
     phrase_source: s.phrases ? s.phrases.source : null,
     acronyms:      s.acronyms ?? [],
     superseded_by: s.supersededBy ?? null,
+    approved:      true,   // the curated defaults are validated — live on first seed
+    approved_at:   null,
     sort_order:    i,
   }))
 }

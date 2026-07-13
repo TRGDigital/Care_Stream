@@ -331,6 +331,8 @@ export interface PolicyLintSignal {
   acronyms:      string[]         // matched case-sensitively as whole uppercase words
   superseded_by: string | null
   is_active:     boolean
+  approved:      boolean          // only approved signals are used by tenant scans
+  approved_at:   string | null
   sort_order:    number
 }
 
@@ -744,6 +746,10 @@ export function createPlatformClient(token: string) {
         adminFetch<{ signal: PolicyLintSignal }>(`/policy-lint-signals/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/policy-lint-signals/${id}`, token, { method: 'DELETE' }),
+      approve: (id: string) =>
+        adminFetch<{ signal: PolicyLintSignal }>(`/policy-lint-signals/${id}/approve`, token, { method: 'POST' }),
+      audit: (data: { phrase_source?: string | null; acronyms?: string[] }) =>
+        adminFetch<{ corpus: number; policies_matched: number; occurrences: number; matches: Array<{ policy: string; count: number; snippets: string[] }> }>('/policy-lint-signals/audit', token, { method: 'POST', body: JSON.stringify(data) }),
     },
 
     glossary: {

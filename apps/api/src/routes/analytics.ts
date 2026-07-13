@@ -13,7 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
-import { qualityStatementCoverage } from '../services/analytics/saf'
+import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -595,6 +595,21 @@ analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req:
     ok(res, doc ?? { document: null, changes: [] })
   } catch (e: any) {
     err(res, 'DOC_FAILED', e.message ?? 'Could not load the policy document.', 500)
+  }
+})
+
+// POST wording alignment: does the policy evidencing this regulation read the way CQC's SAF
+// quality statement(s) expect? Drafts person-centred additions. Consumes an AI credit.
+analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try {
+    try { await checkAiCreditLimit(tenantId) } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+    const result = await safAlignment(tenantId, String(req.params.reference_key))
+    if (result.alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', String(req.params.reference_key))
+    ok(res, result)
+  } catch (e: any) {
+    err(res, 'SAF_ALIGN_FAILED', e.message ?? 'Could not check the wording alignment.', 500)
   }
 })
 

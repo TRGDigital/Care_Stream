@@ -277,27 +277,55 @@ export default function GapsPage() {
                   <CheckCircle2 size={18} className="text-green-500" />
                   <p className="text-sm text-neutral-mid">Every regulation is addressed by your policies — well done.</p>
                 </div>
-              ) : [...gapRegs, ...partialRegs].map(reg => (
-                <div key={reg.reference_key} className="flex items-center justify-between gap-3 px-6 py-3.5">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
-                    {reg.status === 'partial' && reg.evidence_policy_name && (
-                      <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
-                    )}
+              ) : [...gapRegs, ...partialRegs].map(reg => {
+                // Phase 1b: when this regulation's fixes route to 2+ different policies (from
+                // the cached drill-in), list those policies beneath the row so it's clear the
+                // remediation spans more than one policy — rather than flipping policies inside
+                // the modal. Only shows once the detail has been generated.
+                const multi = (reg.target_policies ?? []).filter(t => t.count > 0)
+                const showMulti = multi.length >= 2
+                return (
+                <div key={reg.reference_key} className="px-6 py-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
+                      {reg.status === 'partial' && reg.evidence_policy_name && (
+                        <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+                        {reg.status === 'gap' ? 'Gap' : 'Partial'}
+                      </span>
+                      <button
+                        onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
+                        className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
+                      >
+                        <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                      {reg.status === 'gap' ? 'Gap' : 'Partial'}
-                    </span>
-                    <button
-                      onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
-                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
-                    >
-                      <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
-                    </button>
-                  </div>
+                  {showMulti && (
+                    <div className="mt-2.5 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2">
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Spans {multi.length} policies</p>
+                      <ul className="space-y-1">
+                        {multi.map((t, i) => (
+                          <li key={t.id ?? `new-${i}`} className="flex items-center justify-between gap-2 text-xs">
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <FileQuestion size={11} className={`shrink-0 ${t.id ? 'text-teal' : 'text-amber-500'}`} />
+                              <span className="truncate text-neutral-dark">{t.id ? t.name : `New policy needed: ${t.name}`}</span>
+                            </span>
+                            <span className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid ring-1 ring-gray-200">
+                              {t.count} {t.count === 1 ? 'item' : 'items'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
 
             {coveredRegs.length > 0 && (

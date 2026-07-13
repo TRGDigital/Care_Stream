@@ -307,7 +307,7 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000)
 
-  const [noMatchQueries, allRegulations, coverage, tenant] = await Promise.all([
+  const [noMatchQueries, allRegulations, coverage, tenant, gapDetailCaches] = await Promise.all([
     (prisma as any).queryRecord.findMany({
       where:   { tenant_id: tenantId, no_match: true, created_at: { gte: ninetyDaysAgo } },
       select:  { id: true, query_text: true, created_at: true },
@@ -319,7 +319,18 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     }),
     (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true, service_profile: true } }),
+    // Phase 1b: cached drill-in detail carries target_policies (which policies each
+    // regulation's fixes route to). We only surface what's already been computed — the
+    // detail itself is generated lazily on first open, never here.
+    (prisma as any).gapDetailCache.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true, payload: true } }),
   ])
+
+  // reference_key → the distinct target policies its missing requirements route to.
+  const targetPoliciesByKey = new Map<string, Array<{ id: string | null; name: string; count: number }>>()
+  for (const c of (gapDetailCaches as any[])) {
+    const tp = (c?.payload as any)?.target_policies
+    if (Array.isArray(tp) && tp.length) targetPoliciesByKey.set(c.reference_key, tp)
+  }
 
   // Scope regulations to this service (setting + service profile) so out-of-scope
   // regulations never surface as gaps — mirrors the analysis in regulation-coverage.ts.
@@ -408,6 +419,10 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
       evidence_policy_id:   c?.evidence_policy_id ?? null,
       evidence_policy_name: c?.evidence_policy_name ?? null,
       reason:               c?.reason ?? null,
+      // Phase 1b: policies this regulation's fixes route to (only present once the
+      // drill-in detail has been generated and cached). Frontend shows these nested
+      // under the row when there are 2+ distinct targets.
+      target_policies:      targetPoliciesByKey.get(reg.reference_key) ?? [],
     }
   })
 

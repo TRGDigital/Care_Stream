@@ -119,7 +119,16 @@ const MATRIX: Group[] = [
       { label: 'Where-to-add (target policy) guidance',                     values: [false, true, true] },
       { label: 'Applicability by care setting + service profile',           values: [false, true, true] },
       { label: 'Regulation change tracking + update alerts',                values: [false, true, true] },
-      { label: 'Generate staff training from a policy change',              values: [false, true, true] },
+      { label: 'Generate onboarding from a policy update',                  values: [false, true, true] },
+    ],
+  },
+  {
+    section: 'CQC Single Assessment Framework',
+    rows: [
+      { label: 'Wording alignment to the CQC quality statements',          values: [false, true, true] },
+      { label: 'Person-centred rewording suggestions (in your policy voice)', values: [false, true, true] },
+      { label: 'Suggestions numbered &amp; highlighted in the policy',      values: [false, true, true] },
+      { label: 'Adopt into your policy through review &amp; approval',      values: [false, true, true] },
     ],
   },
   {
@@ -190,7 +199,7 @@ const FAQS = [
   },
   {
     q: 'What is Policy Gap Detection?',
-    a: 'Available on Professional and Enterprise, it reads inside your uploaded policies and tells you which regulations you cover and where the gaps are. For each gap it shows exactly what to add, with example wording, the legal basis (legally required vs advised) and the source, and which policy to add it to. It only assesses the regulations that apply to your service, tracks changes to the standards and alerts you when one changes, and can turn any change into a short staff training module. There is a dedicated overview at /policy-gap-detection.',
+    a: 'Available on Professional and Enterprise, it reads inside your uploaded policies and tells you which regulations you cover and where the gaps are. For each gap it shows exactly what to add, with example wording, the legal basis (legally required vs advised) and the source, and which policy to add it to. It also checks your wording against the CQC Single Assessment Framework and, where a policy reads too procedurally, suggests person-centred alternatives you can adopt. It only assesses the regulations that apply to your service, tracks changes to the standards and alerts you when one changes. There is a dedicated overview at /policy-gap-detection.',
   },
   {
     q: 'How do policy updates and approvals work?',

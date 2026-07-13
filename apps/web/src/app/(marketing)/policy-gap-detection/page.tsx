@@ -1,16 +1,16 @@
 import Link from 'next/link'
 import {
   ShieldAlert, ScanSearch, ListChecks, Scale, FileText, GraduationCap,
-  History, SlidersHorizontal, Check, ArrowRight,
+  History, SlidersHorizontal, Check, ArrowRight, Sparkles,
 } from 'lucide-react'
 import { SectionLabel, PageCta } from '@/components/marketing/ui'
 
 export const metadata = {
   title: 'Policy Gap Detection',
-  description: 'CareStream reads inside your policies, tells you exactly which regulations you cover and where the gaps are, shows what to add with the legal basis, tracks changes to the standards, and turns each change into staff training. A Professional and Enterprise feature.',
+  description: 'CareStream reads inside your policies, tells you exactly which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add with the legal basis, and tracks changes to the standards. A Professional and Enterprise feature.',
   openGraph: {
     title: 'Policy Gap Detection | CareStreamAI',
-    description: 'Know exactly where your policies fall short of the regulations, and close the gap — with the legal basis, the wording, and the training.',
+    description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects — with the legal basis, the wording, and person-centred alternatives.',
     url: 'https://www.carestreamai.com/policy-gap-detection',
   },
 }
@@ -82,6 +82,13 @@ const STEPS = [
     points: ['Requirement-by-requirement checklist per regulation', 'Example wording to review, adapt and approve', 'Highlights exactly where an existing policy already covers part of it'],
   },
   {
+    Icon: Sparkles,
+    label: 'CQC wording alignment',
+    title: 'Whether your policy reads the way CQC expects, not just whether it covers the rule.',
+    body: 'The CQC Single Assessment Framework looks for policies that are person-centred and outcomes-focused, not just procedurally correct. CareStream checks your wording against the framework, and where a policy covers the requirement but reads too procedurally, it flags it and suggests person-centred alternative wording in your policy&rsquo;s own voice, that you can adopt in a click.',
+    points: ['Checked against the CQC Single Assessment Framework quality statements', 'Suggested person-centred wording, numbered and highlighted in the policy', 'Adopt it straight into your policy, through the same review and approval'],
+  },
+  {
     Icon: Scale,
     label: 'The legal basis',
     title: 'Every recommendation shows why it matters.',
@@ -135,7 +142,7 @@ export default function PolicyGapDetectionPage() {
                 Know exactly where your policies fall short. Then close the gap.
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CareStream reads inside your policies, tells you which regulations you cover and where the gaps are, shows what to add and why it is required, tracks changes to the standards, and turns each change into staff training.
+                CareStream reads inside your policies, tells you which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add and why it is required, and tracks changes to the standards.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>

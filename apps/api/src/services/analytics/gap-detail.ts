@@ -92,6 +92,9 @@ export type GapRequirement = {
   match_index?:        number | null    // 1-based, in DOCUMENT order (top to bottom); links to the highlight
   placement?:          Placement | null // amend a sentence, add under a heading, or a brand-new section
   section_title?:      string | null    // for a NEW section: a short H2 heading to add above the wording
+  // Phase 1: the policy THIS requirement should be added to (may differ per requirement).
+  target_policy_id?:   string | null
+  target_policy_name?: string | null
 }
 
 export type GapDetail = {
@@ -102,7 +105,8 @@ export type GapDetail = {
   authority_basis:   'statutory' | 'advisory'   // legally required vs advised good practice
   source_urls:       string[]
   evidence_policy:   { id: string; name: string } | null
-  target_policy:     { id: string; name: string } | null   // where to add the missing text (existing policy)
+  target_policy:     { id: string; name: string } | null   // primary policy to add to (back-compat / main preview)
+  target_policies:   Array<{ id: string | null; name: string; count: number }>  // all policies the missing requirements route to
   suggested_new_policy_title: string | null                // when there's no existing policy to add to
   highlight_quotes:  string[]                               // policy passages to highlight = where to add/amend (document order)
   highlight_placements: Placement[]                          // aligned to highlight_quotes: 'amend' | 'add_under_heading'
@@ -326,7 +330,7 @@ async function verifyAndSuggest(
   nameById: Map<string, string>,
   glossary: GlossaryTerm[],
   voiceSample: string,
-): Promise<{ requirement: string; already_covered: boolean; covered_in: string | null; suggested_addition: string | null }[]> {
+): Promise<{ requirement: string; already_covered: boolean; covered_in: string | null; suggested_addition: string | null; target_policy: string | null }[]> {
   if (!candidates.length) return []
 
   // Corpus-wide semantic search — one query per requirement, across ALL policies.
@@ -351,14 +355,14 @@ async function verifyAndSuggest(
 
   const user = `Regulation: ${reg.official_name} — ${reg.summary}
 
-For each requirement below, the excerpts are the most relevant passages found across ALL of this home's uploaded policies. For each one:
+For each requirement below, the excerpts are the most relevant passages found across ALL of this home's uploaded policies, each prefixed with its policy name in brackets, e.g. (Safeguarding Adults Policy). For each one:
 - If the excerpts show the requirement is ALREADY substantively addressed in one of the home's policies, set already_covered=true and name that policy in covered_in. Do NOT then suggest wording.
-- Otherwise set already_covered=false and write concise example wording (2 to 4 sentences) the home could add to a policy to meet the requirement. Ground it in the requirement; keep it practical and care-home specific.
+- Otherwise set already_covered=false and write concise example wording (2 to 4 sentences) the home could add to a policy to meet the requirement. Ground it in the requirement; keep it practical and care-home specific. Also set target_policy to the name of the home's policy — copied EXACTLY as shown in brackets in the excerpts — that this requirement most naturally belongs in. If none of the home's policies is a suitable home for it, leave target_policy empty (a new policy is needed). Different requirements may belong in different policies.
 
 ${payload}${glossaryBlock(glossary)}${voiceBlock(voiceSample)}
 
 Respond with ONLY minified JSON — an array in the same order:
-{"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>"}]}`
+{"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>","target_policy":"<the home's policy name this belongs in, or empty>"}]}`
 
   const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2500, temperature: 0 })
   const p = parseJson(text)
@@ -371,6 +375,7 @@ Respond with ONLY minified JSON — an array in the same order:
       already_covered: already,
       covered_in: already ? (String(r.covered_in ?? '').trim() || null) : null,
       suggested_addition: already ? null : (String(r.suggested_addition ?? '').trim() || null),
+      target_policy: already ? null : (String(r.target_policy ?? '').trim() || null),
     }
   })
 }
@@ -456,9 +461,65 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   const candidates = ident.requirements.filter(r => !r.in_policy).map(r => r.requirement)
   const verified = await verifyAndSuggest(reg, candidates, namespace, nameById, glossary, voiceSample)
 
-  const verifiedReqs: GapRequirement[] = verified.map(v => v.already_covered
-    ? { requirement: v.requirement, status: 'already_covered', already_covered_in: v.covered_in, suggested_addition: null }
-    : { requirement: v.requirement, status: 'missing', already_covered_in: null, suggested_addition: v.suggested_addition })
+  // Phase 1: resolve each MISSING requirement to its own best target policy. The AI returns
+  // the bracketed policy name it belongs in (from the corpus excerpts); we match that name back
+  // to a real policy id. Fall back to the regulation's primary target policy, else "new policy
+  // needed" (id null). This lets one regulation route its fixes to several different policies.
+  const resolveTargetPolicy = (name: string | null): { id: string | null; name: string } | null => {
+    const raw = String(name ?? '').trim()
+    if (!raw) return null
+    const nt = titleTokens(raw)
+    // exact (case/space-insensitive) name match first
+    for (const p of policyRows as any[]) {
+      if (String(p.name).trim().toLowerCase() === raw.toLowerCase()) return { id: p.id, name: p.name }
+    }
+    // strong distinctive-token overlap otherwise (same rule as the primary target above)
+    let best: { id: string; name: string; score: number } | null = null
+    for (const p of policyRows as any[]) {
+      const pt = titleTokens(p.name)
+      if (!pt.size || !nt.size) continue
+      const shared = [...nt].filter(x => pt.has(x))
+      if (!shared.length) continue
+      if (shared.length === 1 && WEAK_MATCH.has(shared[0])) continue
+      const score = shared.length / Math.max(nt.size, pt.size)
+      if (score >= 0.5 && (!best || score > best.score)) best = { id: p.id, name: p.name, score }
+    }
+    return best ? { id: best.id, name: best.name } : null
+  }
+
+  const verifiedReqs: GapRequirement[] = verified.map(v => {
+    if (v.already_covered) {
+      return { requirement: v.requirement, status: 'already_covered', already_covered_in: v.covered_in, suggested_addition: null }
+    }
+    // AI name → id, else the regulation's primary target policy, else a new policy is needed.
+    const t = resolveTargetPolicy(v.target_policy)
+      ?? (targetPolicy ? { id: targetPolicy.id, name: targetPolicy.name } : null)
+    return {
+      requirement:        v.requirement,
+      status:             'missing' as const,
+      already_covered_in: null,
+      suggested_addition: v.suggested_addition,
+      target_policy_id:   t?.id ?? null,
+      target_policy_name: t?.name ?? (suggestedNewPolicyTitle ?? null),
+    }
+  })
+
+  // Distinct list of every policy the missing requirements route to, with a count each, most
+  // work first. A null id means "no policy evidences this yet — a new one is needed". Phase 1b's
+  // /gaps list renders these beneath the regulation when there are 2+.
+  const targetPolicies: Array<{ id: string | null; name: string; count: number }> = (() => {
+    const map = new Map<string, { id: string | null; name: string; count: number }>()
+    for (const r of verifiedReqs) {
+      if (r.status !== 'missing') continue
+      const name = r.target_policy_name ?? (suggestedNewPolicyTitle ?? 'New policy needed')
+      const id = r.target_policy_id ?? null
+      const key = id ?? `new:${name.toLowerCase()}`
+      const cur = map.get(key)
+      if (cur) cur.count++
+      else map.set(key, { id, name, count: 1 })
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count)
+  })()
 
   const requirements = [...inPolicy, ...verifiedReqs]
   const missingReqs = requirements.filter(r => r.status === 'missing')
@@ -575,6 +636,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     source_urls:      (reg.source_urls ?? []).filter(Boolean),
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
+    target_policies:  targetPolicies,
     suggested_new_policy_title: suggestedNewPolicyTitle,
     highlight_quotes: highlightQuotes,
     highlight_placements: highlightPlacements,

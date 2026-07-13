@@ -325,11 +325,16 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     (prisma as any).gapDetailCache.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true, payload: true } }),
   ])
 
-  // reference_key → the distinct target policies its missing requirements route to.
+  // reference_key → the distinct target policies its missing requirements route to, plus the
+  // primary target policy the drill-in leads with (used as a fallback so a row is never empty
+  // when a detail exists but nothing routed into the array).
   const targetPoliciesByKey = new Map<string, Array<{ id: string | null; name: string; count: number }>>()
+  const primaryTargetByKey  = new Map<string, { id: string | null; name: string }>()
   for (const c of (gapDetailCaches as any[])) {
     const tp = (c?.payload as any)?.target_policies
     if (Array.isArray(tp) && tp.length) targetPoliciesByKey.set(c.reference_key, tp)
+    const pt = (c?.payload as any)?.target_policy
+    if (pt?.name) primaryTargetByKey.set(c.reference_key, { id: pt.id ?? null, name: pt.name })
   }
 
   // Scope regulations to this service (setting + service profile) so out-of-scope
@@ -420,9 +425,10 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
       evidence_policy_name: c?.evidence_policy_name ?? null,
       reason:               c?.reason ?? null,
       // Phase 1b: policies this regulation's fixes route to (only present once the
-      // drill-in detail has been generated and cached). Frontend shows these nested
-      // under the row when there are 2+ distinct targets.
+      // drill-in detail has been generated and cached). Frontend lists the regulation
+      // once per policy; target_policy is the drill-in's primary/fallback policy.
       target_policies:      targetPoliciesByKey.get(reg.reference_key) ?? [],
+      target_policy:        primaryTargetByKey.get(reg.reference_key) ?? null,
     }
   })
 

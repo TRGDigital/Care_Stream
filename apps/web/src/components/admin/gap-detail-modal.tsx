@@ -12,6 +12,11 @@ type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']
 const QUOTE_PALETTE = ['bg-yellow-200', 'bg-sky-200', 'bg-green-200', 'bg-purple-200', 'bg-pink-200', 'bg-orange-200', 'bg-lime-200', 'bg-fuchsia-200']
 const quoteColour = (i: number) => QUOTE_PALETTE[i % QUOTE_PALETTE.length]
 
+// Many policy names already end in "Policy" (e.g. "Staff Training & Development Policy"), so
+// only append the word " policy" when the name doesn't already carry it — never "... Policy policy".
+const endsWithPolicy = (name: string) => /polic(y|ies)\s*$/i.test((name || '').trim())
+const policySuffix = (name: string) => (endsWithPolicy(name) ? '' : ' policy')
+
 type HighlightItem = { i: number; quote: string; placement: string; label?: string }
 
 // Paid "we'll write the policy for you" CTA in the Coverage detail — hidden for now.
@@ -683,7 +688,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         {detail.target_policy ? <FileText size={15} className="mt-0.5 shrink-0 text-teal" /> : <FilePlus2 size={15} className="mt-0.5 shrink-0 text-teal" />}
                         <p className="text-neutral-dark">
                           {detail.target_policy
-                            ? <>Add the wording below to your <span className="font-semibold">{detail.target_policy.name}</span> policy.</>
+                            ? <>Add the wording below to your <span className="font-semibold">{detail.target_policy.name}</span>{policySuffix(detail.target_policy.name)}.</>
                             : <>You don&rsquo;t have a matching policy yet — you&rsquo;ll need a new <span className="font-semibold">{detail.suggested_new_policy_title}</span>.</>}
                         </p>
                       </div>
@@ -838,7 +843,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                           <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-500" />
                           <div className="min-w-0">
                             <p className="text-sm text-neutral-dark">{r.requirement}</p>
-                            {r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span> policy</p>}
+                            {r.already_covered_in && <p className="text-xs text-green-700">In your <span className="font-medium">{r.already_covered_in}</span>{policySuffix(r.already_covered_in)}</p>}
                           </div>
                         </div>
                       ))}

@@ -932,7 +932,7 @@ export function createApiClient(token: string) {
         analysed:          boolean
         analysed_at:       string | null
         unanswered_themes: Array<{ theme: string; count: number; sample_questions: string[] }>
-        regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; status: 'covered' | 'partial' | 'gap' | 'unknown'; covered: boolean; confidence: number | null; evidence_policy_id: string | null; evidence_policy_name: string | null; reason: string | null; target_policies?: Array<{ id: string | null; name: string; count: number }> }>
+        regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; status: 'covered' | 'partial' | 'gap' | 'unknown'; covered: boolean; confidence: number | null; evidence_policy_id: string | null; evidence_policy_name: string | null; reason: string | null; target_policies?: Array<{ id: string | null; name: string; count: number }>; target_policy?: { id: string | null; name: string } | null }>
         regulation_alerts: Array<{ id: string; reference_key: string; official_name: string; changed_fields: string[]; created_at: string }>
         remediation_acknowledged: boolean
         remediation_disclaimer: string

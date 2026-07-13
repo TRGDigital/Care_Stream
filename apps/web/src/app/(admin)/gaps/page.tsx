@@ -285,9 +285,16 @@ export default function GapsPage() {
                 // the drill-in detail has been generated (open one, or re-run the analysis);
                 // until then the regulation shows as a single plain row.
                 const targets = (reg.target_policies ?? []).filter(t => t.count > 0)
-                // One entry per row. No resolved targets yet → a single policy-less row.
-                const rows: Array<{ policy: { id: string | null; name: string; count: number } | null }> =
-                  targets.length > 0 ? targets.map(t => ({ policy: t })) : [{ policy: null }]
+                // One entry per row. Prefer the per-requirement routing (a row per policy);
+                // if that's empty but the drill-in resolved a primary policy, show that one;
+                // otherwise a single plain row until the detail is generated.
+                const primary = reg.target_policy
+                const rows: Array<{ policy: { id: string | null; name: string } | null }> =
+                  targets.length > 0
+                    ? targets.map(t => ({ policy: { id: t.id, name: t.name } }))
+                    : primary
+                      ? [{ policy: primary }]
+                      : [{ policy: null }]
 
                 return rows.map((row, ri) => {
                   const policy = row.policy
@@ -446,7 +453,9 @@ export default function GapsPage() {
           acknowledged={data.remediation_acknowledged || ackOverride}
           disclaimer={data.remediation_disclaimer}
           onAcknowledged={() => setAckOverride(true)}
-          onClose={() => setDetailReg(null)}
+          // Opening a drill-in generates & caches its policy routing; refresh the list on
+          // close so the newly-identified policies appear under the regulation immediately.
+          onClose={() => { setDetailReg(null); load() }}
           onVerdictCovered={key => setCorrectedToCovered(prev => new Set(prev).add(key))}
           onCompleted={key => setCompletedOverride(prev => new Set(prev).add(key))}
         />

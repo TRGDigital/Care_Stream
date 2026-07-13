@@ -278,12 +278,15 @@ export default function GapsPage() {
                   <p className="text-sm text-neutral-mid">Every regulation is addressed by your policies — well done.</p>
                 </div>
               ) : [...gapRegs, ...partialRegs].map(reg => {
-                // Phase 1b: when this regulation's fixes route to 2+ different policies (from
-                // the cached drill-in), list those policies beneath the row so it's clear the
-                // remediation spans more than one policy — rather than flipping policies inside
-                // the modal. Only shows once the detail has been generated.
-                const multi = (reg.target_policies ?? []).filter(t => t.count > 0)
-                const showMulti = multi.length >= 2
+                // Phase 1b: show where this regulation's fixes are routed (from the cached
+                // drill-in). 2+ policies → list them all ("spans N policies"); a single target
+                // → a one-line hint. For a gap the target is usually a new policy; for a
+                // partial we only add a line when the fix goes somewhere OTHER than the policy
+                // already named as "partially covered by", to avoid repeating it. Only appears
+                // once the detail has been generated (open a drill-in, or re-run the analysis).
+                const targets = (reg.target_policies ?? []).filter(t => t.count > 0)
+                const single = targets.length === 1 ? targets[0] : null
+                const showSingle = !!single && (reg.status === 'gap' || single.id !== reg.evidence_policy_id)
                 return (
                 <div key={reg.reference_key} className="px-6 py-3.5">
                   <div className="flex items-center justify-between gap-3">
@@ -291,6 +294,16 @@ export default function GapsPage() {
                       <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
                       {reg.status === 'partial' && reg.evidence_policy_name && (
                         <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
+                      )}
+                      {showSingle && single && (
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs">
+                          <FileQuestion size={11} className={`shrink-0 ${single.id ? 'text-teal' : 'text-amber-500'}`} />
+                          <span className="truncate text-neutral-mid">
+                            {single.id
+                              ? <>Fix belongs in <span className="font-medium text-neutral-dark">{single.name}</span></>
+                              : <>New policy needed: <span className="font-medium text-neutral-dark">{single.name}</span></>}
+                          </span>
+                        </p>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
@@ -305,11 +318,11 @@ export default function GapsPage() {
                       </button>
                     </div>
                   </div>
-                  {showMulti && (
+                  {targets.length >= 2 && (
                     <div className="mt-2.5 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2">
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Spans {multi.length} policies</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Spans {targets.length} policies</p>
                       <ul className="space-y-1">
-                        {multi.map((t, i) => (
+                        {targets.map((t, i) => (
                           <li key={t.id ?? `new-${i}`} className="flex items-center justify-between gap-2 text-xs">
                             <span className="flex min-w-0 items-center gap-1.5">
                               <FileQuestion size={11} className={`shrink-0 ${t.id ? 'text-teal' : 'text-amber-500'}`} />

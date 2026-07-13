@@ -66,14 +66,22 @@ function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
 }
 
 // Highlight the whole containing block (tint + number) for a "where to add" amend anchor.
+// A badge is a self-contained pill (solid background + padding + right margin) so that two
+// markers on the SAME block — e.g. a gap fix "2" and a SAF suggestion "W3" — read as two
+// distinct chips instead of mashing into a single "W32". Legible on any block tint.
+function makeBadge(text: string, colour: string): HTMLElement {
+  const badge = document.createElement('sup')
+  badge.textContent = text
+  badge.className = `mr-1 inline-block rounded px-1 text-[10px] font-bold leading-none ${colour}`
+  return badge
+}
+
 function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   const target = findBlock(root, anchor)
   if (!target) return false
   target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
-  const badge = document.createElement('sup')
-  badge.textContent = String(i + 1)
-  badge.className = 'mr-0.5 font-bold'
-  target.insertBefore(badge, target.firstChild)
+  target.dataset.csMarked = '1'
+  target.insertBefore(makeBadge(String(i + 1), 'bg-neutral-900 text-white'), target.firstChild)
   return true
 }
 
@@ -88,11 +96,11 @@ function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
     target = heads.find(h => { const t = normText(h.textContent || ''); return t === q || (t.length >= 6 && (t.includes(q) || q.includes(t))) }) ?? null
   }
   if (!target) return false
-  target.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
-  const badge = document.createElement('sup')
-  badge.textContent = 'W' + num
-  badge.className = 'mr-0.5 font-bold text-indigo-700'
-  target.insertBefore(badge, target.firstChild)
+  // Don't stack a second background tint on a block a gap marker already tinted — that muddies
+  // the colour. Keep the gap tint; the indigo chip is enough to signal the SAF suggestion.
+  if (!target.dataset.csMarked) target.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
+  target.dataset.csMarked = '1'
+  target.insertBefore(makeBadge('W' + num, 'bg-indigo-600 text-white'), target.firstChild)
   return true
 }
 
@@ -134,11 +142,9 @@ function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText:
   const target = findBlock(root, anchor)
   if (!target) return false
   target.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+  target.dataset.csMarked = '1'
   target.textContent = ''
-  const badge = document.createElement('sup')
-  badge.textContent = String(i + 1)
-  badge.className = 'mr-0.5 font-bold text-green-700'
-  target.appendChild(badge)
+  target.appendChild(makeBadge(String(i + 1), 'bg-green-600 text-white'))
   target.appendChild(document.createTextNode(newText))
   return true
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { markStalePhrase, highlightSearch, quoteColour } from '@/lib/policy-preview'
+import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
 import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
@@ -26,16 +26,26 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [matchCount, setMatchCount] = useState<number | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
-  const [adopted, setAdopted] = useState<Set<number>>(new Set())   // indices of replaceable findings adopted
+  const [adopted, setAdopted] = useState<Set<number>>(new Set())   // original finding indices adopted
   const [busy, setBusy] = useState<number | null>(null)
   const [adoptErr, setAdoptErr] = useState('')
   const [pending, setPending] = useState(0)
+  const [numbering, setNumbering] = useState<number[]>([])          // replaceable position → document-order number
+
+  // The distinct stale terms of a finding (phrase + acronyms). Falls back to samples for results
+  // cached before terms existed.
+  const termsOf = (f: Finding): string[] => (f.terms?.length ? f.terms : [...new Set((f.samples ?? []).map(s => s.match))])
 
   // A finding is one-click replaceable when it's a text match with a known replacement.
   const replaceable = findings
     .map((f, i) => ({ f, i }))
-    .filter(({ f }) => f.kind === 'text' && !!f.superseded_by && f.samples.length > 0)
-  const advisory = findings.filter(f => !(f.kind === 'text' && f.superseded_by && f.samples.length > 0))
+    .filter(({ f }) => f.kind === 'text' && !!f.superseded_by && termsOf(f).length > 0)
+  const advisory = findings.filter(f => !(f.kind === 'text' && f.superseded_by && termsOf(f).length > 0))
+
+  // Order the left-hand list to match the document order of the highlights (numbering).
+  const ordered = replaceable
+    .map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 }))
+    .sort((a, b) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n))
 
   // Load the policy preview (right pane).
   useEffect(() => {
@@ -52,10 +62,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const root = previewRef.current
     if (!root || html == null) return
     root.innerHTML = html
-    replaceable.forEach(({ f }, n) => {
-      const anchor = f.samples[0]?.match
-      if (anchor) markStalePhrase(root, anchor, n)
-    })
+    setNumbering(highlightStaleTerms(root, replaceable.map(({ f }) => termsOf(f))))
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -65,18 +72,26 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   }, [html, policySearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function replace(f: Finding, idx: number) {
-    if (!f.superseded_by || !f.samples[0]) return
+    const terms = termsOf(f)
+    if (!f.superseded_by || !terms.length) return
     setBusy(idx); setAdoptErr('')
     try {
-      const res = await createApiClient(token).analytics.adoptSuggestion({
-        policy_id: policyId, reference_key: `policy-lint:${f.signal_key}`,
-        requirement: f.label, placement: 'amend',
-        old_text: f.samples[0].match, new_text: f.superseded_by,
-      })
+      // Replace EVERY distinct stale term (phrase + acronyms) with the current wording; each
+      // amend does a global replace in the draft, so all occurrences are corrected at once.
+      let anyApplied = false, last = 0
+      for (const t of terms) {
+        const res = await createApiClient(token).analytics.adoptSuggestion({
+          policy_id: policyId, reference_key: `policy-lint:${f.signal_key}`,
+          requirement: f.label, placement: 'amend',
+          old_text: t, new_text: f.superseded_by,
+        })
+        anyApplied = anyApplied || res.applied
+        last = res.pending
+      }
       setAdopted(s => new Set(s).add(idx))
-      setPending(res.pending)
+      setPending(last)
       onAdopted?.()
-      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      if (!anyApplied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not apply this replacement.')
     } finally {
@@ -110,19 +125,19 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             {replaceable.length > 0 && (
               <div className="space-y-3">
                 <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><FilePenLine size={15} className="text-amber-600" /> Replace out-of-date wording ({replaceable.length})</p>
-                {replaceable.map(({ f, i }, n) => (
+                {ordered.map(({ f, i, n }) => (
                   <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
                     <div className="flex items-start gap-2">
-                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(n)}`}>{n + 1}</span>
+                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${n >= 0 ? quoteColour(n) : 'bg-gray-200 text-neutral-mid'}`}>{n >= 0 ? n + 1 : '–'}</span>
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
                           {f.label}
                           {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
                         </p>
                         {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
-                        <p className="mt-2 text-sm">
-                          <span className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{f.samples[0].match}</span>
-                          <span className="mx-1.5 text-neutral-mid">→</span>
+                        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+                          {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
+                          <span className="text-neutral-mid">→</span>
                           <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
                         </p>
                         <div className="mt-2.5">
@@ -211,10 +226,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <div className="mt-5 border-t border-gray-100 pt-4">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Highlight key</p>
                 <ul className="space-y-1.5">
-                  {replaceable.map(({ f }, n) => (
+                  {ordered.filter(o => o.n >= 0).map(({ f, n }) => (
                     <li key={n} className="flex gap-2 text-xs text-neutral-dark">
                       <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(n)}`}>{n + 1}</span>
-                      <span className="min-w-0"><span className={`rounded px-1.5 py-0.5 ${quoteColour(n)}`}>{f.samples[0].match}</span> <span className="ml-1 text-neutral-mid">replace with {f.superseded_by}</span></span>
+                      <span className="min-w-0"><span className={`rounded px-1.5 py-0.5 ${quoteColour(n)}`}>{termsOf(f).join(', ')}</span> <span className="ml-1 text-neutral-mid">replace with {f.superseded_by}</span></span>
                     </li>
                   ))}
                 </ul>

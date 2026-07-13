@@ -93,36 +93,65 @@ export function highlightSearch(root: HTMLElement, term: string): number {
   return count
 }
 
-// Highlight ONLY the stale words (not the whole paragraph), with a numbered badge just before
-// them, so it's obvious exactly what changes. Wraps the first occurrence of the verbatim phrase
-// (case-sensitive; falls back to case-insensitive). Returns whether it was placed.
-export function markStalePhrase(root: HTMLElement, phrase: string, i: number): boolean {
-  const needle = (phrase || '').trim()
-  if (needle.length < 2) return false
+// Highlight EVERY occurrence of EVERY stale term (phrase + acronyms), numbered in DOCUMENT
+// order so the badges read 1, 2, 3… down the page. Highlights only the words themselves (not the
+// paragraph), so it's obvious exactly what changes. `termsPerFinding[k]` is finding k's distinct
+// matched strings. Returns, per finding, its display number (document order), or -1 if it isn't
+// found in the rendered policy — so the caller can number and order the left-hand list to match.
+export function highlightStaleTerms(root: HTMLElement, termsPerFinding: string[][]): number[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
   const nodes: Text[] = []
-  let n: Node | null
-  while ((n = walker.nextNode())) nodes.push(n as Text)
+  let nd: Node | null
+  while ((nd = walker.nextNode())) nodes.push(nd as Text)
+
+  // All non-overlapping matches within one text node, resolving overlaps (e.g. "PCTs" over "PCT")
+  // by preferring the longer, earlier match. Case-sensitive: terms are the verbatim matched text.
+  const matchesIn = (raw: string): Array<{ fi: number; idx: number; len: number }> => {
+    const all: Array<{ fi: number; idx: number; len: number }> = []
+    termsPerFinding.forEach((terms, fi) => {
+      for (const t of terms) {
+        if (!t || t.length < 2) continue
+        let from = 0, idx: number
+        while ((idx = raw.indexOf(t, from)) >= 0) { all.push({ fi, idx, len: t.length }); from = idx + t.length }
+      }
+    })
+    all.sort((a, b) => a.idx - b.idx || b.len - a.len)
+    const kept: typeof all = []
+    let lastEnd = -1
+    for (const m of all) if (m.idx >= lastEnd) { kept.push(m); lastEnd = m.idx + m.len }
+    return kept
+  }
+
+  // Pass 1: work out each finding's display number from the order it first appears.
+  const displayNum = new Array(termsPerFinding.length).fill(-1)
+  let next = 0
+  for (const node of nodes) {
+    for (const m of matchesIn(node.nodeValue ?? '')) {
+      if (displayNum[m.fi] < 0) displayNum[m.fi] = next++
+    }
+  }
+
+  // Pass 2: wrap every occurrence, coloured + badged by its finding's display number.
   for (const node of nodes) {
     const raw = node.nodeValue ?? ''
-    let idx = raw.indexOf(needle)
-    let matched = needle
-    if (idx < 0) {   // fallback: case-insensitive, in case the rendered casing differs
-      const m = new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').exec(raw)
-      if (m) { idx = m.index; matched = m[0] }
-    }
-    if (idx < 0) continue
+    const matches = matchesIn(raw)
+    if (!matches.length) continue
     const frag = document.createDocumentFragment()
-    if (idx > 0) frag.appendChild(document.createTextNode(raw.slice(0, idx)))
-    frag.appendChild(makeBadge(String(i + 1), 'bg-neutral-900 text-white'))
-    const mark = document.createElement('mark')
-    mark.className = `${quoteColour(i)} rounded px-0.5`
-    mark.textContent = matched
-    frag.appendChild(mark)
-    const after = idx + matched.length
-    if (after < raw.length) frag.appendChild(document.createTextNode(raw.slice(after)))
+    let last = 0
+    for (const m of matches) {
+      const num = displayNum[m.fi]
+      if (num < 0) continue
+      if (m.idx > last) frag.appendChild(document.createTextNode(raw.slice(last, m.idx)))
+      frag.appendChild(makeBadge(String(num + 1), 'bg-neutral-900 text-white'))
+      const mark = document.createElement('mark')
+      mark.className = `${quoteColour(num)} rounded px-0.5`
+      mark.textContent = raw.slice(m.idx, m.idx + m.len)
+      frag.appendChild(mark)
+      last = m.idx + m.len
+    }
+    if (last < raw.length) frag.appendChild(document.createTextNode(raw.slice(last)))
     node.parentNode?.replaceChild(frag, node)
-    return true
   }
-  return false
+
+  return displayNum
 }

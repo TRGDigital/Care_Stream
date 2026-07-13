@@ -138,9 +138,10 @@ function insertBeforeEndMatter(content: string, block: string): string {
 // not be located verbatim (the caller surfaces this rather than silently doing nothing).
 function applyChange(content: string, placement: string, oldText: string, newText: string, sectionTitle?: string): { content: string; applied: boolean } {
   if (placement === 'amend' && oldText) {
-    const i = content.indexOf(oldText)
-    if (i >= 0) return { content: content.slice(0, i) + newText + content.slice(i + oldText.length), applied: true }
-    return { content, applied: false }
+    if (!content.includes(oldText)) return { content, applied: false }
+    // Replace EVERY occurrence. For a gap amend the old text is a unique whole paragraph (one
+    // occurrence), so this is unchanged; for a lint term fix it corrects all instances at once.
+    return { content: content.split(oldText).join(newText), applied: true }
   }
   if (placement === 'add_under_heading' && oldText) {
     const i = content.indexOf(oldText)

@@ -21,8 +21,9 @@ export interface LintFinding {
   detail:        string
   superseded_by: string | null
   kind:          'text' | 'structure' | 'review_currency'
-  count:         number                                 // occurrences (text signals)
-  samples:       Array<{ match: string; index: number }> // up to a few, for highlighting / replace
+  count:         number                                 // total occurrences (text signals)
+  terms:         string[]                               // DISTINCT matched strings (phrase + acronyms) — highlight/replace every one
+  samples:       Array<{ match: string; index: number }> // kept for back-compat
 }
 
 export interface PolicyLintResult {
@@ -88,10 +89,13 @@ export function lintPolicyText(
   for (const s of signals) {
     const hits = signalMatches(body, s)
     if (!hits.length) continue
+    // Distinct verbatim matched strings (e.g. "Primary Care Trusts", "PCTs", "PCT") so the UI
+    // can highlight and replace EVERY occurrence of EACH, not just the first.
+    const terms = [...new Set(hits.map(h => h.match))].slice(0, 25)
     findings.push({
       signal_key: s.id, category: s.category, severity: s.severity,
       label: s.label, detail: s.detail, superseded_by: s.supersededBy ?? null,
-      kind: 'text', count: hits.length, samples: hits.slice(0, 5),
+      kind: 'text', count: hits.length, terms, samples: hits.slice(0, 5),
     })
   }
 
@@ -101,14 +105,14 @@ export function lintPolicyText(
       signal_key: 'thin-content', category: 'structure', severity: 'medium',
       label: 'Very little content',
       detail: 'The extracted policy text is under ~600 characters, which usually means a stub, a cover sheet, or a failed text extraction rather than a complete policy.',
-      superseded_by: null, kind: 'structure', count: 1, samples: [],
+      superseded_by: null, kind: 'structure', count: 1, terms: [], samples: [],
     })
   } else if (!/policy statement|purpose|scope|\baim\b/i.test(body)) {
     findings.push({
       signal_key: 'missing-purpose-scope', category: 'structure', severity: 'medium',
       label: 'No policy statement, purpose or scope',
       detail: 'The document does not contain a policy statement, purpose, aim or scope. A compliant policy should state what it is for and who it applies to.',
-      superseded_by: null, kind: 'structure', count: 1, samples: [],
+      superseded_by: null, kind: 'structure', count: 1, terms: [], samples: [],
     })
   }
 
@@ -122,7 +126,7 @@ export function lintPolicyText(
       detail: reviewed == null
         ? 'The policy has never recorded a review date. Set a last-reviewed date and review interval so its currency can be tracked.'
         : 'The policy has passed its review interval (last reviewed date + review interval). Review it and record the new date.',
-      superseded_by: null, kind: 'review_currency', count: 1, samples: [],
+      superseded_by: null, kind: 'review_currency', count: 1, terms: [], samples: [],
     })
   }
 

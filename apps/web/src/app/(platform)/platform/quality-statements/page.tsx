@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type QualityStatement, type Regulation } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Pencil, Trash2, X, Check, Search } from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, X, Check, Search, ChevronDown, ChevronUp } from 'lucide-react'
 
 const KEY_QUESTIONS = [
   { value: 'safe',       label: 'Safe' },
@@ -72,23 +72,7 @@ export default function QualityStatementsPage() {
               <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-neutral-mid">{KQ_LABEL[g.q]} <span className="font-normal text-gray-400">· {g.items.length}</span></h2>
               <div className="space-y-2">
                 {g.items.map(s => (
-                  <div key={s.id} className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-neutral-dark"><span className="mr-1.5 text-xs font-bold tabular-nums text-neutral-mid">{s.number}</span>{s.name}{!s.is_active && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Inactive</span>}</p>
-                        {s.we_statement && <p className="mt-0.5 line-clamp-2 text-xs italic text-neutral-mid">&ldquo;{s.we_statement}&rdquo;</p>}
-                        <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-neutral-mid">
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5">{s.expectation_cues.length} cues</span>
-                          <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">{s.linked_regulations.length} regulations</span>
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5">{s.expected_policies.length} policies</span>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button onClick={() => setEditing(s)} title="Edit" className="rounded p-1.5 text-neutral-mid hover:bg-teal/10 hover:text-teal"><Pencil size={15} /></button>
-                        <button onClick={() => remove(s)} title="Delete" className="rounded p-1.5 text-neutral-mid hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>
-                      </div>
-                    </div>
-                  </div>
+                  <StatementRow key={s.id} s={s} regName={regName} onEdit={() => setEditing(s)} onDelete={() => remove(s)} />
                 ))}
               </div>
             </section>
@@ -104,6 +88,70 @@ export default function QualityStatementsPage() {
         )}
       </div>
     </PlatformShell>
+  )
+}
+
+function StatementRow({ s, regName, onEdit, onDelete }: {
+  s: QualityStatement; regName: Record<string, string>; onEdit: () => void; onDelete: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="flex items-start gap-2 px-4 py-3">
+        <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="mt-0.5 shrink-0 rounded p-0.5 text-neutral-mid hover:text-teal" title={open ? 'Collapse' : 'Expand'}>
+          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        <button onClick={() => setOpen(o => !o)} className="min-w-0 flex-1 text-left">
+          <p className="text-sm font-semibold text-neutral-dark"><span className="mr-1.5 text-xs font-bold tabular-nums text-neutral-mid">{s.number}</span>{s.name}{!s.is_active && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Inactive</span>}</p>
+          {!open && s.we_statement && <p className="mt-0.5 line-clamp-1 text-xs italic text-neutral-mid">&ldquo;{s.we_statement}&rdquo;</p>}
+          <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-neutral-mid">
+            <span className="rounded bg-slate-100 px-1.5 py-0.5">{s.expectation_cues.length} cues</span>
+            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">{s.linked_regulations.length} regulations</span>
+            <span className="rounded bg-slate-100 px-1.5 py-0.5">{s.expected_policies.length} policies</span>
+          </div>
+        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button onClick={onEdit} title="Edit" className="rounded p-1.5 text-neutral-mid hover:bg-teal/10 hover:text-teal"><Pencil size={15} /></button>
+          <button onClick={onDelete} title="Delete" className="rounded p-1.5 text-neutral-mid hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="space-y-4 border-t border-gray-100 bg-neutral-light/20 px-4 py-4">
+          {s.we_statement && (
+            <div>
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">We-statement (CQC wording)</p>
+              <p className="rounded-lg border-l-2 border-slate-300 bg-white px-3 py-2 text-sm italic leading-relaxed text-neutral-dark">&ldquo;{s.we_statement}&rdquo;</p>
+            </div>
+          )}
+          {s.expectation_cues.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Expectation cues</p>
+              <ul className="space-y-1">{s.expectation_cues.map((c, i) => <li key={i} className="flex items-start gap-2 text-sm text-neutral-dark"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded bg-slate-300" />{c}</li>)}</ul>
+            </div>
+          )}
+          {s.linked_regulations.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Linked regulations (crosswalk)</p>
+              <ul className="space-y-1">{s.linked_regulations.map(k => <li key={k} className="flex items-start gap-2 text-sm text-neutral-dark"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />{regName[k] ?? k}</li>)}</ul>
+            </div>
+          )}
+          {s.expected_policies.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Expected policy evidence</p>
+              <div className="flex flex-wrap gap-1.5">{s.expected_policies.map(p => <span key={p} className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs text-neutral-dark">{p}</span>)}</div>
+            </div>
+          )}
+          {s.applies_to_settings.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Applies to settings</p>
+              <div className="flex flex-wrap gap-1.5">{s.applies_to_settings.map(x => <span key={x} className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs text-neutral-mid">{x}</span>)}</div>
+            </div>
+          )}
+          <div className="pt-1"><button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10"><Pencil size={13} /> Edit this statement</button></div>
+        </div>
+      )}
+    </div>
   )
 }
 

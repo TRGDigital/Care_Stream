@@ -418,12 +418,18 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [safAdopted, setSafAdopted]   = useState<Set<number>>(new Set())
   const [safBusy, setSafBusy]         = useState<number | null>(null)
 
-  async function checkSaf() {
+  async function checkSaf(force = false) {
     setSafLoad(true); setSafErr('')
-    try { setSafResult(await createApiClient(token).analytics.safAlignment(referenceKey)) }
+    if (force) { setSafResult(null); setSafAdopted(new Set()) }
+    try { setSafResult(await createApiClient(token).analytics.safAlignment(referenceKey, force)) }
     catch (e: any) { setSafErr(e.message ?? 'Could not check the wording.') }
     finally { setSafLoad(false) }
   }
+  // Auto-run once the policy that evidences this regulation is known (cached server-side).
+  useEffect(() => {
+    if (!detail?.target_policy || safResult || safLoad) return
+    checkSaf()
+  }, [detail?.target_policy]) // eslint-disable-line react-hooks/exhaustive-deps
   async function adoptSaf(a: { focus: string; placement: 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }, idx: number) {
     if (!safResult?.target_policy) return
     setSafBusy(idx); setSafErr('')
@@ -698,6 +704,43 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     </div>
                   )}
 
+                  {/* CQC wording alignment (SAF) — runs automatically when a policy evidences this */}
+                  {detail?.target_policy && (
+                    <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Sparkles size={15} className="text-indigo-600" /> CQC wording alignment</p>
+                        {safResult && !safLoad && (
+                          <button onClick={() => checkSaf(true)} className="text-xs font-medium text-indigo-700 hover:text-indigo-900">Re-check</button>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-neutral-mid">Whether <strong>{detail.target_policy.name}</strong> reads the way CQC&rsquo;s quality statement expects, not just whether it covers the rule.</p>
+                      {safLoad && <p className="mt-2 flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={13} className="animate-spin" /> Checking the wording…</p>}
+                      {safErr && !safLoad && <p className="mt-2 text-xs text-red-600">{safErr}</p>}
+                      {safResult && !safLoad && (
+                        <div className="mt-2 space-y-3">
+                          {safResult.statements.length > 0 && <p className="text-xs text-neutral-mid">Supports CQC quality statement{safResult.statements.length === 1 ? '' : 's'}: <span className="font-medium text-neutral-dark">{safResult.statements.map(s => s.name).join(', ')}</span></p>}
+                          <p className="text-sm text-neutral-dark">{safResult.message}</p>
+                          {safResult.alignments.map((a, i) => (
+                            <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
+                              <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
+                              <p className="mt-1 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
+                              <p className="mt-1 text-[11px] text-neutral-mid">{a.placement === 'add_under_heading' ? `Add under: ${a.anchor || 'a relevant heading'}` : `New section: ${a.section_title || 'untitled'}`}</p>
+                              <div className="mt-2">
+                                {safAdopted.has(i) ? (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>
+                                ) : (
+                                  <button onClick={() => adoptSaf(a, i)} disabled={safBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50">
+                                    {safBusy === i ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : 'Adopt this wording'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Already covered (quiet footnote — not the focus) */}
                   {covered.length > 0 && (
                     <div className="space-y-2">
@@ -728,49 +771,6 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       <a href={mailto} className="inline-flex shrink-0 items-center gap-1.5 rounded-btn bg-teal px-3 py-2 text-sm font-medium text-white hover:bg-teal-dark">
                         <Mail size={14} /> Request this policy
                       </a>
-                    </div>
-                  )}
-
-                  {/* CQC quality-statement wording alignment (SAF) */}
-                  {detail?.target_policy && (
-                    <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
-                      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-start gap-2">
-                          <Sparkles size={16} className="mt-0.5 shrink-0 text-indigo-600" />
-                          <div>
-                            <p className="text-sm font-semibold text-neutral-dark">CQC wording alignment</p>
-                            <p className="mt-0.5 text-xs text-neutral-mid">Check whether <strong>{detail.target_policy.name}</strong> reads the way CQC expects, not just whether it covers the rule.</p>
-                          </div>
-                        </div>
-                        {!safResult && (
-                          <button onClick={checkSaf} disabled={safLoad} className="inline-flex shrink-0 items-center gap-1.5 rounded-btn bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-                            {safLoad ? <><Loader2 size={14} className="animate-spin" /> Checking…</> : <><Sparkles size={14} /> Check wording</>}
-                          </button>
-                        )}
-                      </div>
-                      {safErr && <p className="mt-2 text-xs text-red-600">{safErr}</p>}
-                      {safResult && (
-                        <div className="mt-3 space-y-3">
-                          {safResult.statements.length > 0 && <p className="text-xs text-neutral-mid">Supports CQC quality statement{safResult.statements.length === 1 ? '' : 's'}: <span className="font-medium text-neutral-dark">{safResult.statements.map(s => s.name).join(', ')}</span></p>}
-                          <p className="text-sm text-neutral-dark">{safResult.message}</p>
-                          {safResult.alignments.map((a, i) => (
-                            <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
-                              <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
-                              <p className="mt-1 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
-                              <p className="mt-1 text-[11px] text-neutral-mid">{a.placement === 'add_under_heading' ? `Add under: ${a.anchor || 'a relevant heading'}` : `New section: ${a.section_title || 'untitled'}`}</p>
-                              <div className="mt-2">
-                                {safAdopted.has(i) ? (
-                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>
-                                ) : (
-                                  <button onClick={() => adoptSaf(a, i)} disabled={safBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50">
-                                    {safBusy === i ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : 'Adopt this wording'}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   )}
 

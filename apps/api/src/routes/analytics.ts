@@ -604,11 +604,10 @@ analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (
   const tenantId = getTenantId()
   try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
-    try { await checkAiCreditLimit(tenantId) } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
-    const result = await safAlignment(tenantId, String(req.params.reference_key))
-    if (result.alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', String(req.params.reference_key))
+    const result = await safAlignment(tenantId, String(req.params.reference_key), req.body?.force === true)
     ok(res, result)
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'SAF_ALIGN_FAILED', e.message ?? 'Could not check the wording alignment.', 500)
   }
 })

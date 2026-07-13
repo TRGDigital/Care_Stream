@@ -736,6 +736,8 @@ model RegulationCoverage {
   evidence_policy_name String?
   reason               String?
   analysed_at          DateTime @default(now())
+  saf_alignment        Json?                             // cached SAF wording-alignment result
+  saf_analysed_at      DateTime?                         // when the alignment was last computed
 
   @@unique([tenant_id, reference_key])
   @@index([tenant_id])

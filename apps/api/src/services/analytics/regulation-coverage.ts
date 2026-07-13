@@ -376,6 +376,7 @@ export async function analyseCoverageBatch(tenantId: string, batchSize = COVERAG
       update: {
         status: r.status, confidence: r.confidence,
         evidence_policy_id: r.evidence_policy_id, evidence_policy_name: r.evidence_policy_name, reason: r.reason, analysed_at: now,
+        saf_alignment: null, saf_analysed_at: null,   // coverage changed → invalidate cached SAF wording alignment
       },
     })))
 

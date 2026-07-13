@@ -419,9 +419,10 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [safBusy, setSafBusy]         = useState<number | null>(null)
 
   async function checkSaf(force = false) {
+    if (!detail?.target_policy) return
     setSafLoad(true); setSafErr('')
     if (force) { setSafResult(null); setSafAdopted(new Set()) }
-    try { setSafResult(await createApiClient(token).analytics.safAlignment(referenceKey, force)) }
+    try { setSafResult(await createApiClient(token).analytics.safAlignment(referenceKey, detail.target_policy.id, force)) }
     catch (e: any) { setSafErr(e.message ?? 'Could not check the wording.') }
     finally { setSafLoad(false) }
   }

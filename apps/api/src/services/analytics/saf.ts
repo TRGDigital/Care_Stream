@@ -103,7 +103,7 @@ function parseJson(text: string): any {
   try { return JSON.parse(text.slice(a, b + 1)) } catch { return {} }
 }
 
-export async function safAlignment(tenantId: string, referenceKey: string, force = false): Promise<SafAlignmentResult> {
+export async function safAlignment(tenantId: string, referenceKey: string, policyId: string, force = false): Promise<SafAlignmentResult> {
   const statements = await (prisma as any).qualityStatement.findMany({
     where: { is_active: true, linked_regulations: { has: referenceKey } },
     select: { reference_key: true, name: true, we_statement: true, expectation_cues: true },
@@ -112,17 +112,16 @@ export async function safAlignment(tenantId: string, referenceKey: string, force
   const stmtOut = (statements as any[]).map(s => ({ reference_key: s.reference_key, name: s.name, we_statement: s.we_statement }))
   if (!statements.length) return { statements: [], target_policy: null, alignments: [], message: 'This regulation is not linked to any CQC quality statement.' }
 
-  // The policy that evidences this regulation for the tenant (partial/covered). A pure gap has
-  // no policy to align — the whole policy is missing, so there is nothing to reword.
-  const coverage = await (prisma as any).regulationCoverage.findFirst({ where: { tenant_id: tenantId, reference_key: referenceKey }, select: { id: true, evidence_policy_id: true, saf_alignment: true } })
-  if (!coverage?.evidence_policy_id) return { statements: stmtOut, target_policy: null, alignments: [], message: 'No policy yet evidences this. Add the policy first, then its wording can be checked against the quality statement.' }
+  // Assess the policy shown in the Coverage detail (the target policy: the one that evidences
+  // this regulation for a partial/covered, or the best place to build it up for a gap).
+  const policy = policyId ? await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true, name: true } }) : null
+  if (!policy) return { statements: stmtOut, target_policy: null, alignments: [], message: 'There is no policy to check for this regulation yet.' }
 
-  // Return the cached result (computed once per coverage analysis) unless a refresh is forced.
-  if (!force && coverage.saf_alignment && typeof coverage.saf_alignment === 'object') {
+  // Cache keyed on the coverage row (per regulation), cleared when coverage is re-analysed.
+  const coverage = await (prisma as any).regulationCoverage.findFirst({ where: { tenant_id: tenantId, reference_key: referenceKey }, select: { id: true, saf_alignment: true } })
+  if (!force && coverage?.saf_alignment && typeof coverage.saf_alignment === 'object' && (coverage.saf_alignment as any)?.target_policy?.id === policy.id) {
     return coverage.saf_alignment as SafAlignmentResult
   }
-  const policy = await (prisma as any).policy.findUnique({ where: { id: coverage.evidence_policy_id }, select: { id: true, name: true } })
-  if (!policy) return { statements: stmtOut, target_policy: null, alignments: [], message: 'The evidencing policy could not be found.' }
 
   const raw = await downloadExtractedText(tenantId, policy.id).catch(() => null)
   const policyText = (raw ?? '').slice(0, 12000)
@@ -176,7 +175,7 @@ Respond with JSON only:
 
   // Cache on the coverage row (cleared when coverage is re-analysed) and charge a credit only
   // when the AI actually produced suggestions.
-  await (prisma as any).regulationCoverage.update({ where: { id: coverage.id }, data: { saf_alignment: result, saf_analysed_at: new Date() } }).catch(() => {})
+  if (coverage?.id) await (prisma as any).regulationCoverage.update({ where: { id: coverage.id }, data: { saf_alignment: result, saf_analysed_at: new Date() } }).catch(() => {})
   if (alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', referenceKey)
   return result
 }

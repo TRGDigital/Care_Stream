@@ -604,7 +604,7 @@ analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (
   const tenantId = getTenantId()
   try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
-    const result = await safAlignment(tenantId, String(req.params.reference_key), req.body?.force === true)
+    const result = await safAlignment(tenantId, String(req.params.reference_key), String(req.body?.policy_id ?? ''), req.body?.force === true)
     ok(res, result)
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }

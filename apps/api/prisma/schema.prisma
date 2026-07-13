@@ -520,6 +520,41 @@ model QualityStatement {
   @@map("quality_statements")
 }
 
+// Phase 2a/2b: editable catalogue of DETERMINISTIC "this policy is stale" signals (no AI).
+// Seeded from services/analytics/policy-lint-signals.ts; edited in the platform admin.
+model PolicyLintSignal {
+  id            String   @id @default(uuid())
+  signal_key    String   @unique                 // slug, e.g. 'cqc-kloe'
+  category      String                            // superseded_legislation | superseded_body | superseded_framework | time_bound | placeholder
+  severity      String   @default("medium")       // high | medium | low
+  label         String
+  detail        String   @default("")
+  phrase_source String?                           // regex source, compiled case-insensitive
+  acronyms      String[] @default([])             // matched case-sensitively as whole uppercase words
+  superseded_by String?                           // current term/framework to replace it with
+  is_active     Boolean  @default(true)
+  sort_order    Int      @default(0)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("policy_lint_signals")
+}
+
+// Cached per-policy lint result (zero-AI scan; cached to avoid re-reading every policy from S3).
+model PolicyLintResult {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  policy_id   String
+  policy_name String   @default("")
+  score       Int      @default(100)
+  findings    Json     @default("[]")
+  scanned_at  DateTime @default(now())
+
+  @@unique([tenant_id, policy_id])
+  @@index([tenant_id])
+  @@map("policy_lint_results")
+}
+
 // Global key-terminology glossary for the Policy Gap suggestion engine. A curated list
 // of important care-sector terms/phrases that must be retained (when present in a policy)
 // and used in their correct form, never genericised or dropped, when the AI drafts or

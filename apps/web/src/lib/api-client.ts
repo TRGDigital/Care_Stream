@@ -948,6 +948,20 @@ export function createApiClient(token: string) {
       analyseGapsStart: () => apiFetch<{ total: number }>('/analytics/gaps/analyse/start', token, { method: 'POST' }),
       analyseGapsBatch: () => apiFetch<{ done: number; analysed: number; total: number; remaining: number }>('/analytics/gaps/analyse/batch', token, { method: 'POST' }),
       pregenerateGaps: () => apiFetch<{ generated: number; remaining: number }>('/analytics/gaps/pregenerate', token, { method: 'POST' }),
+      // Policy lint (out-of-date content) — deterministic, zero-AI.
+      policyLint: () => apiFetch<{
+        scanned: boolean
+        scanned_at: string | null
+        policies_scanned: number
+        policies_with_issues: number
+        high_findings: number
+        medium_findings: number
+        policies: Array<{
+          policy_id: string; policy_name: string; score: number; scanned_at: string
+          findings: Array<{ signal_key: string; category: string; severity: 'high' | 'medium' | 'low'; label: string; detail: string; superseded_by: string | null; kind: 'text' | 'structure' | 'review_currency'; count: number; samples: Array<{ match: string; index: number }> }>
+        }>
+      }>('/analytics/policy-lint', token),
+      policyLintScan: () => apiFetch<{ scanned: number; with_issues: number }>('/analytics/policy-lint/scan', token, { method: 'POST' }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

@@ -15,6 +15,7 @@ const NAV = [
   { href: '/platform/analytics',       label: 'AI Analytics',     Icon: LineChart       },
   { href: '/platform/regulations',     label: 'Regulations',      Icon: BookOpen        },
   { href: '/platform/quality-statements', label: 'CQC Quality Statements', Icon: ListChecks },
+  { href: '/platform/policy-lint',     label: 'Policy Stale Signals', Icon: SearchCheck   },
   { href: '/platform/training-seeds',  label: 'Training Seeds',   Icon: ShieldCheck     },
   { href: '/platform/cqc-seeds',       label: 'CQC Seeds',        Icon: ClipboardCheck  },
   { href: '/platform/audit-seeds',     label: 'Audit Seeds',      Icon: ClipboardCheck  },

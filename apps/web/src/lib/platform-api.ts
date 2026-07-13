@@ -320,6 +320,20 @@ export interface QualityStatement {
   is_active:           boolean
 }
 
+export interface PolicyLintSignal {
+  id:            string
+  signal_key:    string
+  category:      string   // superseded_legislation | superseded_body | superseded_framework | time_bound | placeholder
+  severity:      string   // high | medium | low
+  label:         string
+  detail:        string
+  phrase_source: string | null   // regex source, compiled case-insensitive
+  acronyms:      string[]         // matched case-sensitively as whole uppercase words
+  superseded_by: string | null
+  is_active:     boolean
+  sort_order:    number
+}
+
 export interface Regulation {
   id:                       string
   reference_key:            string
@@ -719,6 +733,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ statement: QualityStatement }>(`/quality-statements/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/quality-statements/${id}`, token, { method: 'DELETE' }),
+    },
+
+    policyLintSignals: {
+      list: () =>
+        adminFetch<{ signals: PolicyLintSignal[]; total: number }>('/policy-lint-signals', token),
+      create: (data: Partial<PolicyLintSignal>) =>
+        adminFetch<{ signal: PolicyLintSignal }>('/policy-lint-signals', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<PolicyLintSignal>) =>
+        adminFetch<{ signal: PolicyLintSignal }>(`/policy-lint-signals/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      delete: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/policy-lint-signals/${id}`, token, { method: 'DELETE' }),
     },
 
     glossary: {

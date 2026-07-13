@@ -358,3 +358,19 @@ export const METADATA_SIGNALS = [
 
 // A stable weight per severity, for a headline policy quality score (Phase 2c).
 export const SEVERITY_WEIGHT: Record<LintSeverity, number> = { high: 3, medium: 2, low: 1 }
+
+// Rows to seed the editable policy_lint_signals table from this code catalogue (first run /
+// "reset to defaults"). Regexes are stored as their source string, compiled case-insensitive.
+export function defaultSignalSeeds() {
+  return TEXT_SIGNALS.map((s, i) => ({
+    signal_key:    s.id,
+    category:      s.category,
+    severity:      s.severity,
+    label:         s.label,
+    detail:        s.detail,
+    phrase_source: s.phrases ? s.phrases.source : null,
+    acronyms:      s.acronyms ?? [],
+    superseded_by: s.supersededBy ?? null,
+    sort_order:    i,
+  }))
+}

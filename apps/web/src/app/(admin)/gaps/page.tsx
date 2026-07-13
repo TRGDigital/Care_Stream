@@ -7,7 +7,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
-import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2 } from 'lucide-react'
+import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, AlertTriangle, FileClock } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -355,6 +355,9 @@ export default function GapsPage() {
         )}
       </div>
 
+      {/* ── Out-of-date content (policy lint) — under Regulation coverage ─── */}
+      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} />}
+
       {/* ── Completed / archived remediations ────────────────────────────── */}
       {archived.length > 0 && (
         <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
@@ -469,6 +472,133 @@ export default function GapsPage() {
             <p className="text-sm text-green-700">Every staff question was matched to a policy. Keep your library up to date and check back regularly.</p>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// ── Out-of-date content (policy lint) ────────────────────────────────────────────
+// Deterministic, zero-AI scan of the whole policy library against the stale-signal catalogue.
+// Reads the cached result instantly; "Scan policies" re-runs it. Sits under Regulation coverage.
+type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
+
+const SEV_BADGE: Record<string, string> = {
+  high:   'bg-rose-50 text-rose-700',
+  medium: 'bg-amber-50 text-amber-700',
+  low:    'bg-slate-100 text-slate-600',
+}
+const lintScoreColour = (n: number) => (n >= 85 ? 'text-green-600' : n >= 60 ? 'text-amber-600' : 'text-red-600')
+
+function PolicyHealthSection({ token, userId }: { token: string; userId: string }) {
+  const [data, setData] = useState<LintData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [scanning, setScanning] = useState(false)
+  const [openPolicy, setOpenPolicy] = useState<string | null>(null)
+
+  useEffect(() => {
+    const cached = persistentCache.get<LintData>(`admin-policy-lint-${userId}`)
+    if (cached) { setData(cached); setLoading(false) }
+  }, [userId])
+
+  const load = useCallback(() => {
+    createApiClient(token).analytics.policyLint()
+      .then(d => { setData(d); persistentCache.set(`admin-policy-lint-${userId}`, d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [token, userId])
+
+  useEffect(() => { load() }, [load])
+
+  async function scan() {
+    setScanning(true)
+    try { await createApiClient(token).analytics.policyLintScan(); load() }
+    catch { /* surfaced as no change */ }
+    finally { setScanning(false) }
+  }
+
+  const when = data?.scanned_at ? new Date(data.scanned_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
+
+  return (
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <FileClock size={16} className="text-amber-600" />
+          <h2 className="text-sm font-semibold text-neutral-dark">Out-of-date content</h2>
+          {data?.scanned && (
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">
+              {data.policies_with_issues} {data.policies_with_issues === 1 ? 'policy' : 'policies'}
+            </span>
+          )}
+        </div>
+        <button onClick={scan} disabled={scanning}
+          className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
+          {scanning ? <><Loader2 size={13} className="animate-spin" /> Scanning…</> : <><RefreshCw size={13} /> {data?.scanned ? 'Re-scan policies' : 'Scan policies'}</>}
+        </button>
+      </div>
+
+      {loading && !data ? (
+        <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
+      ) : !data?.scanned ? (
+        <div className="flex items-center gap-3 px-6 py-6">
+          <Sparkles size={18} className="shrink-0 text-teal" />
+          <p className="text-sm text-neutral-mid">Scan your policy library for out-of-date content, superseded law and regulators, pandemic-era wording and unfilled template placeholders. This runs instantly and uses no AI credits.</p>
+        </div>
+      ) : data.policies.length === 0 ? (
+        <div className="flex items-center gap-3 px-6 py-5">
+          <CheckCircle2 size={18} className="text-green-500" />
+          <p className="text-sm text-neutral-mid">No out-of-date content found across your policies.{when ? ` Last scanned ${when}.` : ''}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-gray-50 px-6 py-2.5 text-xs text-neutral-mid">
+            <span><strong className="text-neutral-dark">{data.policies_with_issues}</strong> of {data.policies_scanned} policies flagged</span>
+            {data.high_findings > 0 && <span className="text-rose-600">{data.high_findings} high-severity</span>}
+            {data.medium_findings > 0 && <span className="text-amber-600">{data.medium_findings} medium</span>}
+            {when && <span className="ml-auto text-gray-400">Scanned {when}</span>}
+          </div>
+          <div className="divide-y divide-gray-50">
+            {data.policies.map(p => {
+              const open = openPolicy === p.policy_id
+              return (
+                <div key={p.policy_id} className="px-6 py-3">
+                  <button onClick={() => setOpenPolicy(open ? null : p.policy_id)} className="flex w-full items-center gap-3 text-left">
+                    <ChevronDown size={15} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-neutral-dark">{p.policy_name}</span>
+                      <span className="text-xs text-neutral-mid">{p.findings.length} {p.findings.length === 1 ? 'issue' : 'issues'}</span>
+                    </span>
+                    <span className={`shrink-0 text-lg font-extrabold tabular-nums ${lintScoreColour(p.score)}`}>{p.score}</span>
+                  </button>
+                  {open && (
+                    <ul className="mt-2 space-y-2 pl-8">
+                      {p.findings.map((f, i) => (
+                        <li key={i} className="rounded-lg border border-gray-100 bg-neutral-light/30 px-3 py-2.5">
+                          <div className="flex items-start gap-2">
+                            {f.severity === 'high' ? <AlertTriangle size={13} className="mt-0.5 shrink-0 text-rose-500" /> : <Info size={13} className="mt-0.5 shrink-0 text-amber-500" />}
+                            <div className="min-w-0">
+                              <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
+                                <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${SEV_BADGE[f.severity] ?? SEV_BADGE.low}`}>{f.severity}</span>
+                                {f.label}
+                                {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
+                              </p>
+                              {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
+                              {f.samples.length > 0 && (
+                                <p className="mt-1 flex flex-wrap gap-1 text-[11px]">
+                                  {f.samples.map((s, j) => <span key={j} className="rounded bg-white px-1.5 py-0.5 font-mono text-neutral-dark ring-1 ring-gray-200">&ldquo;{s.match}&rdquo;</span>)}
+                                </p>
+                              )}
+                              {f.superseded_by && <p className="mt-1 text-xs text-neutral-mid">Replace with <span className="font-medium text-neutral-dark">{f.superseded_by}</span></p>}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
     </div>
   )

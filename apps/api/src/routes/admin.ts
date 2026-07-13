@@ -37,6 +37,7 @@ import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
+import { defaultSignalSeeds } from '../services/analytics/policy-lint-signals'
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
@@ -1736,6 +1737,78 @@ adminRouter.patch('/quality-statements/:id', async (req: Request, res: Response)
 
 adminRouter.delete('/quality-statements/:id', async (req: Request, res: Response) => {
   await (prisma as any).qualityStatement.delete({ where: { id: String(req.params.id) } }).catch(() => {})
+  ok(res, { deleted: true })
+})
+
+// ─── Policy lint signal catalogue (editable stale-signal reference) ──────────────
+// Deterministic, zero-AI catalogue of "this policy is out of date" signals. Seeded from the
+// code default on first read, then edited here. The lint engine reads the ACTIVE rows.
+const LINT_SORT = [{ sort_order: 'asc' as const }, { created_at: 'asc' as const }]
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
+
+adminRouter.get('/policy-lint-signals', async (_req: Request, res: Response) => {
+  let rows = await (prisma as any).policyLintSignal.findMany({ orderBy: LINT_SORT })
+  if (rows.length === 0) {
+    await (prisma as any).policyLintSignal.createMany({ data: defaultSignalSeeds(), skipDuplicates: true })
+    rows = await (prisma as any).policyLintSignal.findMany({ orderBy: LINT_SORT })
+  }
+  ok(res, { signals: rows, total: rows.length })
+})
+
+adminRouter.post('/policy-lint-signals', async (req: Request, res: Response) => {
+  const b = req.body ?? {}
+  const label = String(b.label ?? '').trim()
+  const category = String(b.category ?? '').trim()
+  if (!label || !category) { err(res, 'VALIDATION_ERROR', 'label and category are required'); return }
+  const phrase_source = b.phrase_source ? String(b.phrase_source) : null
+  if (phrase_source) { try { new RegExp(phrase_source, 'i') } catch { err(res, 'VALIDATION_ERROR', 'phrase pattern is not a valid regular expression'); return } }
+  const acronyms = qsStrArray(b.acronyms)
+  if (!phrase_source && acronyms.length === 0) { err(res, 'VALIDATION_ERROR', 'give a phrase pattern, one or more acronyms, or both'); return }
+  const signal_key = (String(b.signal_key ?? '').trim() || slugify(label)) || 'signal'
+  try {
+    const created = await (prisma as any).policyLintSignal.create({ data: {
+      signal_key, category, severity: String(b.severity ?? 'medium'), label,
+      detail: String(b.detail ?? ''), phrase_source, acronyms,
+      superseded_by: b.superseded_by ? String(b.superseded_by) : null,
+      is_active: b.is_active !== false, sort_order: Number(b.sort_order) || 0,
+    } })
+    ok(res, { signal: created })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That signal key already exists', 409); return }
+    throw e
+  }
+})
+
+adminRouter.patch('/policy-lint-signals/:id', async (req: Request, res: Response) => {
+  const b = req.body ?? {}
+  const data: any = {}
+  if (typeof b.signal_key === 'string') { const t = b.signal_key.trim(); if (t) data.signal_key = t }
+  if (typeof b.label === 'string') data.label = b.label.trim()
+  if (typeof b.category === 'string') data.category = b.category.trim()
+  if (typeof b.severity === 'string') data.severity = b.severity.trim()
+  if (typeof b.detail === 'string') data.detail = b.detail
+  if (b.phrase_source !== undefined) {
+    const p = b.phrase_source ? String(b.phrase_source) : null
+    if (p) { try { new RegExp(p, 'i') } catch { err(res, 'VALIDATION_ERROR', 'phrase pattern is not a valid regular expression'); return } }
+    data.phrase_source = p
+  }
+  if (b.acronyms !== undefined) data.acronyms = qsStrArray(b.acronyms)
+  if (b.superseded_by !== undefined) data.superseded_by = b.superseded_by ? String(b.superseded_by) : null
+  if (typeof b.is_active === 'boolean') data.is_active = b.is_active
+  if (b.sort_order !== undefined) data.sort_order = Number(b.sort_order) || 0
+  data.updated_at = new Date()
+  try {
+    const updated = await (prisma as any).policyLintSignal.update({ where: { id: String(req.params.id) }, data })
+    ok(res, { signal: updated })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That signal key already exists', 409); return }
+    if (e?.code === 'P2025') { err(res, 'NOT_FOUND', 'Signal not found', 404); return }
+    throw e
+  }
+})
+
+adminRouter.delete('/policy-lint-signals/:id', async (req: Request, res: Response) => {
+  await (prisma as any).policyLintSignal.delete({ where: { id: String(req.params.id) } }).catch(() => {})
   ok(res, { deleted: true })
 })
 

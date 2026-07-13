@@ -12,6 +12,7 @@ import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
+import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -561,6 +562,40 @@ analyticsRouter.post('/gaps/pregenerate', requireAdmin, async (_req: Request, re
     ok(res, { generated: batch.length, remaining: Math.max(0, todo.length - batch.length) })
   } catch (e: any) {
     err(res, 'PREGEN_FAILED', e.message ?? 'Could not prepare recommendations.', 500)
+  }
+})
+
+// ─── Policy lint (out-of-date content) — deterministic, zero-AI ──────────────────
+// GET reads the cached per-policy findings; POST /scan re-scans the whole library against the
+// editable stale-signal catalogue. Feature-gated with the rest of gap detection.
+analyticsRouter.get('/policy-lint', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    ok(res, await getTenantLint(tenantId))
+  } catch (e: any) {
+    err(res, 'LINT_READ_FAILED', e.message ?? 'Could not load policy health.', 500)
+  }
+})
+
+analyticsRouter.post('/policy-lint/scan', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const results = await scanTenantPolicies(tenantId)
+    ok(res, { scanned: results.length, with_issues: results.filter(r => r.findings.length > 0).length })
+  } catch (e: any) {
+    err(res, 'LINT_SCAN_FAILED', e.message ?? 'Could not scan policies.', 500)
   }
 })
 

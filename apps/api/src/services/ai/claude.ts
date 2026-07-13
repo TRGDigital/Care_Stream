@@ -10,6 +10,11 @@ const client = new Anthropic()
 
 const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-5'
 
+// Applied to every system prompt: this is a UK care product, so all generated content must
+// use British English. Translations use a separate client and are unaffected.
+const BRITISH_ENGLISH = 'Always write in British English. Use British spelling and terminology throughout (e.g. authorise, organise, recognise, prioritise, minimise, colour, behaviour, centre, licence, enrolment, fulfil, programme, practising, whilst). Never use American spellings such as authorize, organize, color, behavior, center, license, enrollment.'
+const withBritishEnglish = (systemPrompt: string) => `${BRITISH_ENGLISH}\n\n${systemPrompt}`
+
 export interface ClaudeOptions {
   maxTokens?:  number
   temperature?: number
@@ -26,7 +31,7 @@ export async function callClaude(
     model,
     max_tokens: options?.maxTokens  ?? 4096,
     ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:     systemPrompt,
+    system:     withBritishEnglish(systemPrompt),
     messages:   [{ role: 'user', content: userMessage }],
   })
 
@@ -53,7 +58,7 @@ export async function callClaudeStream(
     model,
     max_tokens: options?.maxTokens ?? 4096,
     ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:   systemPrompt,
+    system:   withBritishEnglish(systemPrompt),
     messages,
   })
   stream.on('text', (delta) => onText(delta))
@@ -75,7 +80,7 @@ export async function callClaudeWithHistory(
     model:      MODEL,
     max_tokens: options?.maxTokens  ?? 4096,
     ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:     systemPrompt,
+    system:     withBritishEnglish(systemPrompt),
     messages,
   })
 

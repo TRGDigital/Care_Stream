@@ -14,6 +14,9 @@ const quoteColour = (i: number) => QUOTE_PALETTE[i % QUOTE_PALETTE.length]
 
 type HighlightItem = { i: number; quote: string; placement: string; label?: string }
 
+// Paid "we'll write the policy for you" CTA in the Coverage detail — hidden for now.
+const SHOW_PAID_CTA = false
+
 const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
 
 // Tolerant normalisation for anchor matching: unify curly quotes and dashes (the extracted
@@ -823,8 +826,8 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     <p className="text-sm text-neutral-mid">No specific requirements could be extracted for this regulation.</p>
                   )}
 
-                  {/* Paid-authoring CTA */}
-                  {missing.length > 0 && (
+                  {/* Paid-authoring CTA — hidden for now (flip SHOW_PAID_CTA to restore) */}
+                  {SHOW_PAID_CTA && missing.length > 0 && (
                     <div className="flex flex-col items-start gap-2 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-2">
                         <Sparkles size={16} className="mt-0.5 shrink-0 text-teal" />

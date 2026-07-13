@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { markStaleBlock, highlightSearch, quoteColour } from '@/lib/policy-preview'
+import { markStalePhrase, highlightSearch, quoteColour } from '@/lib/policy-preview'
 import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
@@ -54,7 +54,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     root.innerHTML = html
     replaceable.forEach(({ f }, n) => {
       const anchor = f.samples[0]?.match
-      if (anchor) markStaleBlock(root, anchor, n)
+      if (anchor) markStalePhrase(root, anchor, n)
     })
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))

@@ -93,12 +93,36 @@ export function highlightSearch(root: HTMLElement, term: string): number {
   return count
 }
 
-// Highlight the block a stale phrase sits in, tint it, and prefix a numbered badge. Mirrors the
-// Regulation-coverage "markBlock" look so both drill-ins read the same. Returns whether placed.
-export function markStaleBlock(root: HTMLElement, anchor: string, i: number): boolean {
-  const target = findBlock(root, anchor)
-  if (!target) return false
-  target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
-  target.insertBefore(makeBadge(String(i + 1), 'bg-neutral-900 text-white'), target.firstChild)
-  return true
+// Highlight ONLY the stale words (not the whole paragraph), with a numbered badge just before
+// them, so it's obvious exactly what changes. Wraps the first occurrence of the verbatim phrase
+// (case-sensitive; falls back to case-insensitive). Returns whether it was placed.
+export function markStalePhrase(root: HTMLElement, phrase: string, i: number): boolean {
+  const needle = (phrase || '').trim()
+  if (needle.length < 2) return false
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const nodes: Text[] = []
+  let n: Node | null
+  while ((n = walker.nextNode())) nodes.push(n as Text)
+  for (const node of nodes) {
+    const raw = node.nodeValue ?? ''
+    let idx = raw.indexOf(needle)
+    let matched = needle
+    if (idx < 0) {   // fallback: case-insensitive, in case the rendered casing differs
+      const m = new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').exec(raw)
+      if (m) { idx = m.index; matched = m[0] }
+    }
+    if (idx < 0) continue
+    const frag = document.createDocumentFragment()
+    if (idx > 0) frag.appendChild(document.createTextNode(raw.slice(0, idx)))
+    frag.appendChild(makeBadge(String(i + 1), 'bg-neutral-900 text-white'))
+    const mark = document.createElement('mark')
+    mark.className = `${quoteColour(i)} rounded px-0.5`
+    mark.textContent = matched
+    frag.appendChild(mark)
+    const after = idx + matched.length
+    if (after < raw.length) frag.appendChild(document.createTextNode(raw.slice(after)))
+    node.parentNode?.replaceChild(frag, node)
+    return true
+  }
+  return false
 }

@@ -7,7 +7,8 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
-import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, AlertTriangle, FileClock } from 'lucide-react'
+import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
+import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -482,18 +483,13 @@ export default function GapsPage() {
 // Reads the cached result instantly; "Scan policies" re-runs it. Sits under Regulation coverage.
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 
-const SEV_BADGE: Record<string, string> = {
-  high:   'bg-rose-50 text-rose-700',
-  medium: 'bg-amber-50 text-amber-700',
-  low:    'bg-slate-100 text-slate-600',
-}
 const lintScoreColour = (n: number) => (n >= 85 ? 'text-green-600' : n >= 60 ? 'text-amber-600' : 'text-red-600')
 
 function PolicyHealthSection({ token, userId }: { token: string; userId: string }) {
   const [data, setData] = useState<LintData | null>(null)
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
-  const [openPolicy, setOpenPolicy] = useState<string | null>(null)
+  const [selected, setSelected] = useState<LintData['policies'][number] | null>(null)
 
   useEffect(() => {
     const cached = persistentCache.get<LintData>(`admin-policy-lint-${userId}`)
@@ -558,47 +554,41 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
           </div>
           <div className="divide-y divide-gray-50">
             {data.policies.map(p => {
-              const open = openPolicy === p.policy_id
+              const highs = p.findings.filter(f => f.severity === 'high').length
               return (
-                <div key={p.policy_id} className="px-6 py-3">
-                  <button onClick={() => setOpenPolicy(open ? null : p.policy_id)} className="flex w-full items-center gap-3 text-left">
-                    <ChevronDown size={15} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium text-neutral-dark">{p.policy_name}</span>
-                      <span className="text-xs text-neutral-mid">{p.findings.length} {p.findings.length === 1 ? 'issue' : 'issues'}</span>
-                    </span>
-                    <span className={`shrink-0 text-lg font-extrabold tabular-nums ${lintScoreColour(p.score)}`}>{p.score}</span>
-                  </button>
-                  {open && (
-                    <ul className="mt-2 space-y-2 pl-8">
-                      {p.findings.map((f, i) => (
-                        <li key={i} className="rounded-lg border border-gray-100 bg-neutral-light/30 px-3 py-2.5">
-                          <div className="flex items-start gap-2">
-                            {f.severity === 'high' ? <AlertTriangle size={13} className="mt-0.5 shrink-0 text-rose-500" /> : <Info size={13} className="mt-0.5 shrink-0 text-amber-500" />}
-                            <div className="min-w-0">
-                              <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
-                                <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${SEV_BADGE[f.severity] ?? SEV_BADGE.low}`}>{f.severity}</span>
-                                {f.label}
-                                {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
-                              </p>
-                              {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
-                              {f.samples.length > 0 && (
-                                <p className="mt-1 flex flex-wrap gap-1 text-[11px]">
-                                  {f.samples.map((s, j) => <span key={j} className="rounded bg-white px-1.5 py-0.5 font-mono text-neutral-dark ring-1 ring-gray-200">&ldquo;{s.match}&rdquo;</span>)}
-                                </p>
-                              )}
-                              {f.superseded_by && <p className="mt-1 text-xs text-neutral-mid">Replace with <span className="font-medium text-neutral-dark">{f.superseded_by}</span></p>}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <div key={p.policy_id} className="flex items-center justify-between gap-3 px-6 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-neutral-dark">{p.policy_name}</p>
+                    <p className="text-xs text-neutral-mid">
+                      {p.findings.length} {p.findings.length === 1 ? 'issue' : 'issues'}
+                      {highs > 0 && <span className="text-rose-600"> · {highs} high-severity</span>}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className={`text-lg font-extrabold tabular-nums ${lintScoreColour(p.score)}`}>{p.score}</span>
+                    <button
+                      onClick={() => setSelected(p)}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
+                    >
+                      <Wand2 size={12} /> Review &amp; fix
+                    </button>
+                  </div>
                 </div>
               )
             })}
           </div>
         </>
+      )}
+
+      {selected && (
+        <PolicyLintModal
+          token={token}
+          policyId={selected.policy_id}
+          policyName={selected.policy_name}
+          findings={selected.findings}
+          onClose={() => setSelected(null)}
+          onAdopted={load}
+        />
       )}
     </div>
   )

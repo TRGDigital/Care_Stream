@@ -1676,6 +1676,69 @@ adminRouter.delete('/glossary/:id', async (req: Request, res: Response) => {
   ok(res, { deleted: true })
 })
 
+// ─── CQC quality statements (Single Assessment Framework library) ──────────────
+// The 34 quality statements: curated cues + regulation crosswalk that drive the SAF
+// coverage inheritance and (next) wording alignment. Platform-stewarded, shared.
+const qsStrArray = (v: unknown): string[] => Array.isArray(v) ? v.map(x => String(x).trim()).filter(Boolean) : []
+
+adminRouter.get('/quality-statements', async (_req: Request, res: Response) => {
+  const statements = await (prisma as any).qualityStatement.findMany({ orderBy: { number: 'asc' } })
+  ok(res, { statements, total: statements.length })
+})
+
+adminRouter.post('/quality-statements', async (req: Request, res: Response) => {
+  const b = req.body ?? {}
+  const reference_key = String(b.reference_key ?? '').trim()
+  const name = String(b.name ?? '').trim()
+  const key_question = String(b.key_question ?? '').trim()
+  if (!reference_key || !name || !key_question) { err(res, 'VALIDATION_ERROR', 'reference_key, name and key_question are required'); return }
+  try {
+    const created = await (prisma as any).qualityStatement.create({ data: {
+      reference_key, name, key_question,
+      number: Number(b.number) || 0,
+      we_statement: String(b.we_statement ?? ''),
+      expectation_cues: qsStrArray(b.expectation_cues),
+      linked_regulations: qsStrArray(b.linked_regulations),
+      expected_policies: qsStrArray(b.expected_policies),
+      applies_to_settings: qsStrArray(b.applies_to_settings),
+      is_active: b.is_active !== false,
+    } })
+    ok(res, { statement: created })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That reference key already exists', 409); return }
+    throw e
+  }
+})
+
+adminRouter.patch('/quality-statements/:id', async (req: Request, res: Response) => {
+  const b = req.body ?? {}
+  const data: any = {}
+  if (typeof b.reference_key === 'string') { const t = b.reference_key.trim(); if (!t) { err(res, 'VALIDATION_ERROR', 'reference_key cannot be empty'); return } data.reference_key = t }
+  if (typeof b.name === 'string') data.name = b.name.trim()
+  if (typeof b.key_question === 'string') data.key_question = b.key_question.trim()
+  if (b.number !== undefined) data.number = Number(b.number) || 0
+  if (typeof b.we_statement === 'string') data.we_statement = b.we_statement
+  if (b.expectation_cues !== undefined) data.expectation_cues = qsStrArray(b.expectation_cues)
+  if (b.linked_regulations !== undefined) data.linked_regulations = qsStrArray(b.linked_regulations)
+  if (b.expected_policies !== undefined) data.expected_policies = qsStrArray(b.expected_policies)
+  if (b.applies_to_settings !== undefined) data.applies_to_settings = qsStrArray(b.applies_to_settings)
+  if (typeof b.is_active === 'boolean') data.is_active = b.is_active
+  data.updated_at = new Date()
+  try {
+    const updated = await (prisma as any).qualityStatement.update({ where: { id: String(req.params.id) }, data })
+    ok(res, { statement: updated })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'That reference key already exists', 409); return }
+    if (e?.code === 'P2025') { err(res, 'NOT_FOUND', 'Quality statement not found', 404); return }
+    throw e
+  }
+})
+
+adminRouter.delete('/quality-statements/:id', async (req: Request, res: Response) => {
+  await (prisma as any).qualityStatement.delete({ where: { id: String(req.params.id) } }).catch(() => {})
+  ok(res, { deleted: true })
+})
+
 // ─── POST /admin/regulations ──────────────────────────────────────────────────
 // Create a new external regulation + embed to Pinecone.
 

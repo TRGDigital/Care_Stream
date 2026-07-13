@@ -306,6 +306,20 @@ export interface GlossaryTerm {
   created_at: string
 }
 
+export interface QualityStatement {
+  id:                  string
+  reference_key:       string
+  key_question:        string   // safe | effective | caring | responsive | well-led
+  number:              number
+  name:                string
+  we_statement:        string
+  expectation_cues:    string[]
+  linked_regulations:  string[] // external_regulations.reference_key[]
+  expected_policies:   string[]
+  applies_to_settings: string[]
+  is_active:           boolean
+}
+
 export interface Regulation {
   id:                       string
   reference_key:            string
@@ -694,6 +708,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ versions: Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> }>(`/regulations/${id}/versions`, token),
       checkSources: () =>
         adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
+    },
+
+    qualityStatements: {
+      list: () =>
+        adminFetch<{ statements: QualityStatement[]; total: number }>('/quality-statements', token),
+      create: (data: Partial<QualityStatement>) =>
+        adminFetch<{ statement: QualityStatement }>('/quality-statements', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<QualityStatement>) =>
+        adminFetch<{ statement: QualityStatement }>(`/quality-statements/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      delete: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/quality-statements/${id}`, token, { method: 'DELETE' }),
     },
 
     glossary: {

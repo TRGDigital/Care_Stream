@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, HelpCircle } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -48,8 +48,18 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     .sort((a, b) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n))
   // Located = we could highlight it in the preview (numbered). Unlocatable = detected in the text
   // but not pinpointable here (extraction differs by more than casing) → shown as alternatives.
+  // Only findings we can pinpoint in the clean policy are shown. Anything unlocatable (rare now
+  // that truncation is fixed — essentially stripped letterhead/footer) is not surfaced.
   const located = ordered.filter(o => o.n >= 0)
-  const alternatives = ordered.filter(o => o.n < 0)
+
+  // Scroll the preview to a finding's first highlight and flash it.
+  function scrollToHighlight(n: number) {
+    const el = previewRef.current?.querySelector<HTMLElement>(`mark[data-lint="${n}"]`)
+    if (!el) return
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    el.classList.add('ring-2', 'ring-neutral-900', 'ring-offset-1')
+    setTimeout(() => el.classList.remove('ring-2', 'ring-neutral-900', 'ring-offset-1'), 1400)
+  }
 
   // Load the policy preview (right pane).
   useEffect(() => {
@@ -144,7 +154,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           <span className="text-neutral-mid">→</span>
                           <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
                         </p>
-                        <div className="mt-2.5">
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
                           {adopted.has(i) ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
                           ) : (
@@ -153,6 +163,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                               {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace in {policyName}</>}
                             </button>
                           )}
+                          <button onClick={() => scrollToHighlight(n)}
+                            className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
+                            <Locate size={13} /> Show in policy
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -162,41 +176,6 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             )}
 
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
-
-            {alternatives.length > 0 && (
-              <div className="space-y-3">
-                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><HelpCircle size={15} className="text-neutral-mid" /> Alternative suggestions ({alternatives.length})</p>
-                <p className="-mt-1 text-xs text-neutral-mid">These appear in the full policy but not in this cleaned view — most likely in a header, footer or contact block that was removed for readability. You can still replace them in your draft; review it before publishing.</p>
-                {alternatives.map(({ f, i }) => (
-                  <div key={i} className="rounded-lg border border-dashed border-gray-300 bg-neutral-light/20 px-4 py-3">
-                    <div className="flex items-start gap-2">
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300" />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
-                          {f.label}
-                          {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
-                        </p>
-                        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
-                          {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
-                          <span className="text-neutral-mid">→</span>
-                          <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
-                        </p>
-                        <div className="mt-2.5">
-                          {adopted.has(i) ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
-                          ) : (
-                            <button onClick={() => replace(f, i)} disabled={busy !== null}
-                              className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
-                              {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace anyway</>}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {advisory.length > 0 && (
               <div className="space-y-2">

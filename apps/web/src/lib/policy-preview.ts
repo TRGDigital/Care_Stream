@@ -195,6 +195,7 @@ export function highlightStaleTerms(root: HTMLElement, termsPerFinding: string[]
       if (seg.badge) frag.appendChild(makeBadge(String(seg.num + 1), 'bg-neutral-900 text-white'))
       const mark = document.createElement('mark')
       mark.className = `${quoteColour(seg.num)} rounded px-0.5`
+      mark.dataset.lint = String(seg.num)   // scroll anchor: querySelector returns the first in document order
       mark.textContent = raw.slice(seg.a, seg.b)
       frag.appendChild(mark)
       last = seg.b

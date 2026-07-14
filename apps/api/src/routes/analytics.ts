@@ -14,7 +14,7 @@ import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch 
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -945,6 +945,16 @@ analyticsRouter.post('/gaps/policy-document/:policyId/external-reissue', require
     if (!r) { err(res, 'NOT_FOUND', 'No reviewer set, or the policy is not awaiting external approval.', 404); return }
     ok(res, r)
   } catch (e: any) { err(res, 'REISSUE_FAILED', e.message ?? 'Could not reissue the link.', 500) }
+})
+
+// #5 — manually nudge whoever a stalled policy is waiting on (care manager or external reviewer).
+analyticsRouter.post('/gaps/policy-document/:policyId/remind', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const sent = await remindApproval(tenantId, String(req.params.policyId))
+    if (!sent) { err(res, 'NOT_PENDING', 'This policy is not waiting on anyone to remind.', 400); return }
+    ok(res, { reminded: true })
+  } catch (e: any) { err(res, 'REMIND_FAILED', e.message ?? 'Could not send the reminder.', 500) }
 })
 
 // ─── POST /analytics/gaps/:reference_key/detail ──────────────────────────────

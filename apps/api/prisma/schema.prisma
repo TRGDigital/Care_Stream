@@ -614,6 +614,7 @@ model PolicyDocument {
   external_email   String   @default("")
   external_name    String   @default("")
   external_sent_at DateTime?                    // when the external review link was last sent
+  stage_since      DateTime?                    // when the doc entered its current pending stage (#5)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
   changes          PolicyDocumentChange[]

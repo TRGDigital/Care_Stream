@@ -266,13 +266,13 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
   await recordApproval(doc.id, tenantId, 'admin', 'approved', adminName)
   const { manager, external } = await approvalToggles(tenantId)
   if (manager) {
-    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager' } })
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager', stage_since: new Date() } })
     await notifyCareManagerPending(tenantId, policyId)
     return { status: 'pending_manager' }
   }
   if (external) {
     const token = doc.external_token || randomBytes(18).toString('hex')
-    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token, stage_since: new Date() } })
     await emailExternalReviewer({ ...doc, external_token: token }, token)
     await notifyAdminsExternalReviewReady({ ...doc, external_token: token })
     return { status: 'pending_external', token }
@@ -291,7 +291,7 @@ export async function managerApprove(tenantId: string, policyId: string, manager
   await recordApproval(doc.id, tenantId, 'manager', 'approved', managerName)
   if ((await approvalToggles(tenantId)).external) {
     const token = doc.external_token || randomBytes(18).toString('hex')
-    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token } })
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_external', external_token: token, stage_since: new Date() } })
     await emailExternalReviewer({ ...doc, external_token: token }, token)
     await notifyAdminsExternalReviewReady({ ...doc, external_token: token })
     return { status: 'pending_external', token }
@@ -348,6 +348,32 @@ export async function reissueExternalLink(tenantId: string, policyId: string): P
   return { token }
 }
 
+// #5 — nudge whoever a policy is waiting on. Used by the manual "Send reminder" button and the
+// (scheduled) stale-approval sweep. Returns false if it isn't in a stage we can nudge.
+const REMIND_AFTER_DAYS = 4
+export async function remindApproval(tenantId: string, policyId: string): Promise<boolean> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return false
+  if (doc.approval_status === 'pending_manager') { await notifyCareManagerPending(tenantId, policyId); return true }
+  if (doc.approval_status === 'pending_external' && doc.external_email && doc.external_token && !linkExpired(doc.external_sent_at)) {
+    await emailExternalReviewer(doc, doc.external_token); return true
+  }
+  return false
+}
+
+// Sweep all policies that have been waiting longer than REMIND_AFTER_DAYS and nudge them. Wire to
+// a scheduled job when crons are restored; also callable per-tenant on demand.
+export async function sendStaleApprovalReminders(tenantId?: string): Promise<{ reminded: number }> {
+  const cutoff = new Date(Date.now() - REMIND_AFTER_DAYS * 86_400_000)
+  const docs = await (prisma as any).policyDocument.findMany({
+    where: { approval_status: { in: ['pending_manager', 'pending_external'] }, stage_since: { lt: cutoff }, ...(tenantId ? { tenant_id: tenantId } : {}) },
+    select: { tenant_id: true, policy_id: true },
+  })
+  let reminded = 0
+  for (const d of docs as any[]) if (await remindApproval(d.tenant_id, d.policy_id).catch(() => false)) reminded++
+  return { reminded }
+}
+
 // Reject at a stage (admin, manager or external) — returns to draft for amendment.
 export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []): Promise<{ status: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
@@ -373,7 +399,7 @@ export async function rejectPolicy(tenantId: string, policyId: string, stage: st
 }
 
 // The approval status + full history for a policy.
-export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; external_sent_at: string | null; link_expired: boolean; default_external_name: string; default_external_email: string; approvals: any[] } | null> {
+export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; external_sent_at: string | null; stage_since: string | null; link_expired: boolean; default_external_name: string; default_external_email: string; approvals: any[] } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   const [approvals, def] = await Promise.all([
@@ -384,6 +410,7 @@ export async function getApprovalState(tenantId: string, policyId: string): Prom
     status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email,
     external_token: doc.external_token,
     external_sent_at: doc.external_sent_at ? new Date(doc.external_sent_at).toISOString() : null,
+    stage_since: doc.stage_since ? new Date(doc.stage_since).toISOString() : null,
     link_expired: linkExpired(doc.external_sent_at),
     default_external_name: def.name, default_external_email: def.email,
     approvals,

@@ -288,6 +288,12 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     catch (e: any) { setError(e.message ?? 'Could not reissue the link.') }
     finally { setBusy(null) }
   }
+  async function sendReminder() {
+    setBusy('remind'); setError('')
+    try { await createApiClient(token).analytics.remindApproval(policyId); setPublishedMsg('A reminder has been sent.') }
+    catch (e: any) { setError(e.message ?? 'Could not send the reminder.') }
+    finally { setBusy(null) }
+  }
   async function sendExternalReviewer() {
     if (!extEmail.trim()) { setError('Enter the reviewer’s email address.'); return }
     setBusy('external'); setError('')
@@ -306,7 +312,8 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External reviewer'
   const externalSent = !!approval?.external_email
   const externalWho  = approval?.external_name || approval?.external_email || 'the reviewer'
-  const waitingDays = approval?.external_sent_at ? Math.floor((Date.now() - new Date(approval.external_sent_at).getTime()) / 86_400_000) : null
+  const waitingFrom = approval?.stage_since ?? approval?.external_sent_at ?? null
+  const waitingDays = waitingFrom ? Math.floor((Date.now() - new Date(waitingFrom).getTime()) / 86_400_000) : null
   const linkExpired = approval?.link_expired ?? false
   const externalSentDate = approval?.external_sent_at ? new Date(approval.external_sent_at).toLocaleDateString('en-GB') : ''
   // Did the care manager approve (relevant to the pending_external stage message)?
@@ -344,6 +351,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                       Sent to {externalWho}{externalSentDate ? ` on ${externalSentDate}` : ''}
                       {linkExpired ? ' · link expired' : waitingDays != null && waitingDays >= 1 ? ` · waiting ${waitingDays} day${waitingDays === 1 ? '' : 's'}` : ' · awaiting approval'}
                     </span>
+                    <button onClick={sendReminder} disabled={busy === 'remind' || linkExpired} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50" title="Resend the review link as a reminder">Send reminder</button>
                     <button onClick={reissueLink} disabled={busy === 'external'} className="rounded-btn border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50" title="Send a fresh link (resets the 30-day expiry)">Reissue link</button>
                     <button onClick={openExtOverlay} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50" title="Send to a different reviewer">Change reviewer</button>
                     <button onClick={revokeLink} disabled={busy === 'external'} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50" title="Invalidate the current link">Revoke</button>
@@ -354,6 +362,11 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                     <Send size={14} /> Send to external approver
                   </button>
                 )}
+              </div>
+            ) : status === 'pending_manager' ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">{statusLabel}{waitingDays != null && waitingDays >= 1 ? ` · waiting ${waitingDays} day${waitingDays === 1 ? '' : 's'}` : ''}</span>
+                <button onClick={sendReminder} disabled={busy === 'remind'} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50" title="Remind the care manager (push + email)">Send reminder</button>
               </div>
             ) : statusLabel ? (
               <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">{statusLabel}</span>

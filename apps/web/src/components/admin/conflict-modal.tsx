@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { highlightStaleTerms } from '@/lib/policy-preview'
+import { highlightStaleTerms, findBlock } from '@/lib/policy-preview'
 import { X, Loader2, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Ban } from 'lucide-react'
 
 type Conflict = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['consistency']>>['conflicts'][number]
@@ -56,8 +56,15 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
     if (!root || html == null) return
     root.innerHTML = html
     const quote = positions[selected]?.quote
-    highlightStaleTerms(root, quote ? [[quote]] : [])
-    const el = root.querySelector<HTMLElement>('mark[data-lint="0"]')
+    if (!quote) return
+    highlightStaleTerms(root, [[quote]])
+    let el = root.querySelector<HTMLElement>('mark[data-lint="0"]')
+    // The extracted quote isn't always verbatim in the formatted policy — fall back to the
+    // sentence/paragraph with the most word overlap so the passage still highlights.
+    if (!el) {
+      const block = findBlock(root, quote)
+      if (block) { block.classList.add('bg-yellow-200', 'rounded', 'px-1', 'py-0.5'); el = block }
+    }
     el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }, [selected, htmlBy]) // eslint-disable-line react-hooks/exhaustive-deps
 

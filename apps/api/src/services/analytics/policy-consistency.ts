@@ -138,6 +138,7 @@ function extractPrompt(name: string, text: string): string {
     '',
     'For each claim return: topic (a SHORT canonical phrase describing what the claim is about, worded so the SAME topic in another policy would match — e.g. "storing full sharps boxes awaiting collection"), statement (the claim, a few words), quote (a short VERBATIM excerpt copied exactly from the policy), kind (one of the above).',
     'If a value is an unfilled template placeholder (e.g. [designated storage location]), still include it and note in statement that it is unfilled.',
+    'Do NOT extract the policy’s own review date, review cycle/frequency, version date or version number — that is tracked separately and is never a cross-policy conflict.',
     'Ignore general aims, principles and boilerplate. Return at most 25 of the most comparison-worthy claims.',
     '',
     'Return ONLY JSON: {"claims":[{"topic":"...","statement":"...","quote":"...","kind":"..."}]}',
@@ -148,6 +149,33 @@ function extractPrompt(name: string, text: string): string {
 }
 
 const KINDS = new Set<ClaimKind>(['timeframe', 'role', 'location', 'frequency', 'threshold', 'escalation', 'definition', 'other'])
+
+// A POLICY's own review date / review cycle / version date is per-policy metadata (CareStream
+// tracks it separately), so it's never a genuine cross-policy conflict — exclude it.
+const REVIEW_META = /\breview\s*(date|cycle|frequenc|schedule|interval|period|due)\b|\bnext review\b|\breviewed\s+(annually|every|monthly|yearly|biennially|each)\b|\bdate of (issue|review|next)\b|\bversion\s+(date|number|control)\b/i
+const isReviewMetaClaim = (c: { topic: string; statement: string }) => REVIEW_META.test(`${c.topic} ${c.statement}`)
+
+// The model is asked for verbatim quotes but sometimes paraphrases. Ground a quote to a REAL
+// sentence from the policy (highest word overlap) so it can be highlighted and replaced exactly.
+const normQ = (s: string) => (s || '').toLowerCase().replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim()
+function groundQuote(quote: string, text: string): string {
+  const q = normQ(quote)
+  if (q.length < 8) return quote
+  if (normQ(text).includes(q)) return quote   // already verbatim (modulo whitespace/quotes)
+  const qWords = new Set(q.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4))
+  if (qWords.size < 2) return quote
+  let best = quote, bestScore = 0
+  for (const s of text.split(/(?<=[.!?])\s+|\n+/)) {
+    const st = s.trim()
+    if (st.length < 20) continue
+    const sw = new Set(normQ(st).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4))
+    let hits = 0
+    for (const w of qWords) if (sw.has(w)) hits++
+    const score = hits / qWords.size
+    if (score > bestScore) { bestScore = score; best = st }
+  }
+  return bestScore >= 0.6 ? best.slice(0, 300) : quote
+}
 
 // Extract (and cache) the claims for one policy. ALWAYS writes a cache row — even when there is
 // no usable text or the AI call fails — so the policy leaves the pending queue and the scan
@@ -173,8 +201,8 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
     const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, text), { model: HAIKU, maxTokens: 2000, temperature: 0 })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     claims = (Array.isArray(parsed.claims) ? parsed.claims : [])
-      .map((c: any) => ({ topic: String(c.topic ?? '').trim(), statement: String(c.statement ?? '').trim(), quote: String(c.quote ?? '').trim(), kind: (KINDS.has(c.kind) ? c.kind : 'other') as ClaimKind }))
-      .filter((c: PolicyClaim) => c.topic && c.statement)
+      .map((c: any) => ({ topic: String(c.topic ?? '').trim(), statement: String(c.statement ?? '').trim(), quote: groundQuote(String(c.quote ?? '').trim(), text), kind: (KINDS.has(c.kind) ? c.kind : 'other') as ClaimKind }))
+      .filter((c: PolicyClaim) => c.topic && c.statement && !isReviewMetaClaim(c))
       .slice(0, 25)
   } catch (e: any) {
     console.error('[consistency] claim extraction failed', policy.id, e?.message)
@@ -267,7 +295,7 @@ function detectPrompt(members: Array<{ name: string; claims: PolicyClaim[] }>): 
 
 async function detectSetConflicts(set: ComparisonSet, claimsByPolicy: Map<string, PolicyClaim[]>): Promise<PolicyConflict[]> {
   const members = set.policies
-    .map(p => ({ id: p.id, name: p.name, claims: claimsByPolicy.get(p.id) ?? [] }))
+    .map(p => ({ id: p.id, name: p.name, claims: (claimsByPolicy.get(p.id) ?? []).filter(c => !isReviewMetaClaim(c)) }))
     .filter(m => m.claims.length > 0)
   if (members.length < 2) return []
   const idByName = new Map(members.map(m => [normName(m.name), m.id]))

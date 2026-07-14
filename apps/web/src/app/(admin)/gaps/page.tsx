@@ -55,7 +55,7 @@ export default function GapsPage() {
   const [ackOverride, setAckOverride] = useState(false)   // set true once the disclaimer is accepted this session
   const [completedOverride, setCompletedOverride] = useState<Set<string>>(new Set())  // marked completed this session
   const [showArchive, setShowArchive] = useState(false)
-  const [showCoverage, setShowCoverage] = useState(true)
+  const [showCoverage, setShowCoverage] = useState(false)
 
   async function reopenGap(referenceKey: string) {
     setCompletedOverride(prev => { const n = new Set(prev); n.delete(referenceKey); return n })
@@ -492,7 +492,7 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
   const [selected, setSelected] = useState<LintData['policies'][number] | null>(null)
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const cached = persistentCache.get<LintData>(`admin-policy-lint-${userId}`)
@@ -519,24 +519,24 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
 
   return (
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-        <button onClick={() => setOpen(v => !v)} className="flex flex-1 items-center gap-2 text-left">
-          <FileClock size={16} className="shrink-0 text-amber-600" />
-          <h2 className="text-sm font-semibold text-neutral-dark">Out-of-date content</h2>
-          {data?.scanned && (
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">
-              {data.policies_with_issues} {data.policies_with_issues === 1 ? 'policy' : 'policies'}
-            </span>
-          )}
-          <ChevronDown size={15} className={`ml-1 shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
+      <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+        <FileClock size={16} className="shrink-0 text-amber-600" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Out-of-date content</h2>
+        {data?.scanned && (
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">
+            {data.policies_with_issues} {data.policies_with_issues === 1 ? 'policy' : 'policies'}
+          </span>
+        )}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (<div className="border-t border-gray-100">
+      <div className="flex items-center justify-end px-6 pt-4">
         <button onClick={scan} disabled={scanning}
           className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
           {scanning ? <><Loader2 size={13} className="animate-spin" /> Scanning…</> : <><RefreshCw size={13} /> {data?.scanned ? 'Re-scan policies' : 'Scan policies'}</>}
         </button>
       </div>
-
-      {open && (<div className="border-t border-gray-100">
       {loading && !data ? (
         <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
       ) : !data?.scanned ? (

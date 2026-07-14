@@ -104,15 +104,21 @@ export function highlightStaleTerms(root: HTMLElement, termsPerFinding: string[]
   let nd: Node | null
   while ((nd = walker.nextNode())) nodes.push(nd as Text)
 
-  // All non-overlapping matches within one text node, resolving overlaps (e.g. "PCTs" over "PCT")
-  // by preferring the longer, earlier match. Case-sensitive: terms are the verbatim matched text.
+  // Multi-word phrases are matched case-INsensitively (the scan's verbatim casing often differs
+  // from how the policy renders it, e.g. "…Care inspection" vs "…Care Inspection"); single
+  // tokens/acronyms stay case-SENSITIVE so "PCT" never matches the word "pct". All non-overlapping
+  // matches within one text node, resolving overlaps (e.g. "PCTs" over "PCT") by longest-first.
   const matchesIn = (raw: string): Array<{ fi: number; idx: number; len: number }> => {
+    const lower = raw.toLowerCase()
     const all: Array<{ fi: number; idx: number; len: number }> = []
     termsPerFinding.forEach((terms, fi) => {
       for (const t of terms) {
         if (!t || t.length < 2) continue
+        const ci = /\s/.test(t)                      // phrase → case-insensitive; token → exact
+        const hay = ci ? lower : raw
+        const needle = ci ? t.toLowerCase() : t
         let from = 0, idx: number
-        while ((idx = raw.indexOf(t, from)) >= 0) { all.push({ fi, idx, len: t.length }); from = idx + t.length }
+        while ((idx = hay.indexOf(needle, from)) >= 0) { all.push({ fi, idx, len: t.length }); from = idx + t.length }
       }
     })
     all.sort((a, b) => a.idx - b.idx || b.len - a.len)

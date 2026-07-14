@@ -485,8 +485,6 @@ export default function GapsPage() {
 // Reads the cached result instantly; "Scan policies" re-runs it. Sits under Regulation coverage.
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 
-const lintScoreColour = (n: number) => (n >= 85 ? 'text-green-600' : n >= 60 ? 'text-amber-600' : 'text-red-600')
-
 function PolicyHealthSection({ token, userId }: { token: string; userId: string }) {
   const [data, setData] = useState<LintData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -570,7 +568,6 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <span className={`text-lg font-extrabold tabular-nums ${lintScoreColour(p.score)}`}>{p.score}</span>
                     <button
                       onClick={() => setSelected(p)}
                       className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"

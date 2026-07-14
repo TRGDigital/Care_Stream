@@ -12,6 +12,13 @@ import { republishPolicyContent } from '../rag/ingestion'
 import { sendPolicyExternalReviewEmail, sendTrainingUpdateEmail } from '../email/outbound'
 import { siteUrl } from '../../lib/urls'
 import { formatPolicyHtml } from '../../lib/translate'
+import { isEmailEnabled } from '../../lib/notify'
+
+// External review links expire after this many days (security hygiene + wrong-recipient recovery).
+export const EXTERNAL_LINK_TTL_DAYS = 30
+const linkExpired = (sentAt: any): boolean => !!sentAt && (Date.now() - new Date(sentAt).getTime() > EXTERNAL_LINK_TTL_DAYS * 86_400_000)
+// All policy-approval admin emails are gated by this Settings → Email preferences key.
+const APPROVAL_PREF = 'policy_approvals'
 
 // Email the external reviewer their one-off review link, if one is set on the document.
 // Best-effort: a send failure never blocks the approval transition (it is logged).
@@ -40,6 +47,7 @@ async function emailExternalReviewer(doc: any, token: string): Promise<void> {
 // (If a reviewer is already set, the link auto-sends and admins don't need nudging.)
 async function notifyAdminsExternalReviewReady(doc: any): Promise<void> {
   if (doc?.external_email) return
+  if (!(await isEmailEnabled(doc.tenant_id, APPROVAL_PREF))) return
   try {
     const [tenant, admins, policy] = await Promise.all([
       (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
@@ -77,6 +85,7 @@ export function buildExternalDecisionEmail(decision: 'approved' | 'rejected', op
 
 // Tell the tenant's admins how the external approver decided: approved (now live) or sent back.
 async function notifyAdminsExternalDecision(doc: any, decision: 'approved' | 'rejected', reviewerName: string, comment: string, version: string): Promise<void> {
+  if (!(await isEmailEnabled(doc.tenant_id, APPROVAL_PREF))) return
   try {
     const [tenant, admins, policy] = await Promise.all([
       (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
@@ -92,6 +101,29 @@ async function notifyAdminsExternalDecision(doc: any, decision: 'approved' | 're
       await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject, bodyHtml }).catch(() => {})
     }
   } catch (e: any) { console.error('[policy-external] decision notify failed', e?.message) }
+}
+
+// When a policy publishes on the internal-only path (care-manager approval with external off, or
+// admin approving directly), admins otherwise hear nothing — send a short "now live" confirmation.
+async function notifyAdminsNowLive(tenantId: string, policyId: string, version: string): Promise<void> {
+  if (!(await isEmailEnabled(tenantId, APPROVAL_PREF))) return
+  try {
+    const [tenant, admins, policy] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, role: 'admin', is_active: true }, select: { email: true, name: true } }),
+      (prisma as any).policy.findUnique({ where: { id: policyId }, select: { name: true } }),
+    ])
+    const orgName = tenant?.name ?? 'Your service'
+    const policyName = policy?.name ?? 'A policy'
+    const link = `${siteUrl()}/policies`
+    const bodyHtml = `
+      <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${policyName}</strong> has been approved and is now live for your staff${version ? ` as version ${version}` : ''}, including in staff Q&amp;A.</p>
+      <div style="text-align:center;margin:16px 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open Policies</a></div>`
+    for (const a of (admins as any[])) {
+      if (!a?.email) continue
+      await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject: `Now live: ${policyName}`, bodyHtml }).catch(() => {})
+    }
+  } catch (e: any) { console.error('[policy] now-live notify failed', e?.message) }
 }
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
@@ -219,6 +251,7 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
   }
   const r = await publishDocument(tenantId, policyId, adminName)
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published' } })
+  await notifyAdminsNowLive(tenantId, policyId, r?.version ?? '')
   return { status: 'published', version: r?.version }
 }
 
@@ -237,6 +270,7 @@ export async function managerApprove(tenantId: string, policyId: string, manager
   }
   const r = await publishDocument(tenantId, policyId, managerName)
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'published' } })
+  await notifyAdminsNowLive(tenantId, policyId, r?.version ?? '')
   return { status: 'published', version: r?.version }
 }
 
@@ -288,7 +322,7 @@ export async function getApprovalState(tenantId: string, policyId: string): Prom
 // ── External (public, token-gated) review ──
 export async function getExternalReview(token: string): Promise<{ policy_id: string; policy_name: string; version: string; changes: any[]; home_name: string; html: string; show_role_names: boolean; role_names: Record<string, string[]> } | null> {
   const doc = await (prisma as any).policyDocument.findFirst({ where: { external_token: token } })
-  if (!doc || doc.approval_status !== 'pending_external') return null
+  if (!doc || doc.approval_status !== 'pending_external' || linkExpired(doc.external_sent_at)) return null
   const [policy, tenant, changes] = await Promise.all([
     (prisma as any).policy.findUnique({ where: { id: doc.policy_id }, select: { name: true } }),
     (prisma as any).tenant.findUnique({ where: { id: doc.tenant_id }, select: { name: true } }),
@@ -308,7 +342,7 @@ export async function getExternalReview(token: string): Promise<{ policy_id: str
 
 export async function externalDecision(token: string, name: string, comment: string, decision: 'approved' | 'rejected'): Promise<{ status: string } | null> {
   const doc = await (prisma as any).policyDocument.findFirst({ where: { external_token: token } })
-  if (!doc || doc.approval_status !== 'pending_external') return null
+  if (!doc || doc.approval_status !== 'pending_external' || linkExpired(doc.external_sent_at)) return null
   await recordApproval(doc.id, doc.tenant_id, 'external', decision, name || doc.external_name, doc.external_email, comment)
   if (decision === 'rejected') {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft', external_token: null } })

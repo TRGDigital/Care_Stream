@@ -523,7 +523,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'Regulation coverage, what to add, out-of-date content, cross-policy consistency, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
+    summary: 'Regulation coverage, what to add, out-of-date content, cross-policy consistency, the policy update matrix, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -598,6 +598,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Dismiss false alarms</strong>: if two statements are actually compatible in context, dismiss the conflict and it won&rsquo;t return on the next check.</span></li>
           </ul>
           <Tip>Because it reads your policies with AI, it runs only when you press <strong>Run consistency check</strong> (not automatically). Re-run it after you&rsquo;ve made significant changes to your library.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Policy update matrix — what changed, and when it's next due">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Every time you adopt and publish a change, the policy is recorded in the <strong>Policy update matrix</strong> at the bottom of the Gaps page. It is your at-a-glance record of what has been kept up to date and what is coming up for review — useful for your own tracking and to show an inspector a maintained library.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>What drove the update</strong>: each policy is tagged with where the change came from &mdash; <strong>Regulation coverage</strong>, <strong>Out-of-date content</strong>, or <strong>Cross-policy consistency</strong>.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Completed date</strong>: when the updated version went live to your staff.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Next review date, set automatically</strong>: publishing counts as a review, so the policy&rsquo;s next review is set to <strong>12 months</strong> from that date. Anything past due is flagged.</span></li>
+          </ul>
+          <Tip>The matrix fills in as you publish updates, so the more you keep on top of gaps and out-of-date content, the fuller your maintained-library record becomes.</Tip>
         </SectionBlock>
 
         <SectionBlock title="A one-time disclaimer before you use the guidance">

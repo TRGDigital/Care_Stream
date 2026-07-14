@@ -523,7 +523,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'Regulation coverage, what to add, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
+    summary: 'Regulation coverage, what to add, out-of-date content, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -571,6 +571,19 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>In CQC&rsquo;s language</strong>: it names the quality statement the policy supports, so you can speak to it directly at inspection.</span></li>
           </ul>
           <Tip>Because it is about how the policy <em>reads</em>, the check only runs where a policy already exists for the regulation. The suggestions are yours to review, adapt and approve.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Out-of-date content — superseded law, regulators and placeholders">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Policies drift out of date. On the Gaps page, under <strong>Regulation coverage</strong>, the <strong>Out-of-date content</strong> section scans every policy for wording that has been <strong>superseded</strong> — old legislation and regulators (for example the Data Protection Act 1998, CRB checks, CSCI, or Primary Care Trusts), pandemic-era guidance, and unfilled template placeholders. Click <strong>Scan policies</strong> to run it; it&rsquo;s instant.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>A score per policy</strong>: each flagged policy gets a 0&ndash;100 score, so you can see at a glance which ones need attention.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Review &amp; fix</strong>: open a policy and the out-of-date wording is highlighted in place. <strong>Show in policy</strong> jumps you to each occurrence, one click at a time.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>One-click replace</strong>: swap the outdated wording for the current term (for example CRB &rarr; DBS, or KLOEs &rarr; Single Assessment Framework) everywhere it appears in the policy.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Same approval as any update</strong>: a replacement becomes a tracked change on your policy draft and goes through the same review and approval before it&rsquo;s published — nothing changes automatically.</span></li>
+          </ul>
+          <Tip>Re-scan whenever you upload or update policies. The suggestions are yours to review and approve; replacements are applied to your draft, not published for you.</Tip>
         </SectionBlock>
 
         <SectionBlock title="A one-time disclaimer before you use the guidance">

@@ -157,8 +157,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                   const shown = navPos[n]
                   return (
                   <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
-                    <div className="flex items-start gap-2">
-                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(n)}`}>{n + 1}</span>
+                    <div className="flex items-start gap-2.5">
+                      <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${quoteColour(n)}`} />
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
                           {f.label}
@@ -222,7 +222,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                 <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{policyName}</span>
               </p>
               {located.length > 0
-                ? <p className="mt-0.5 text-xs text-neutral-mid">Each numbered highlight is the out-of-date wording for the same-numbered item on the left.</p>
+                ? <p className="mt-0.5 text-xs text-neutral-mid">The out-of-date wording is highlighted below. Use <span className="font-medium">Show in policy</span> on the left to jump to each one.</p>
                 : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to find wording in this policy.</p>}
             </div>
 
@@ -257,19 +257,6 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
             )}
 
-            {located.length > 0 && (
-              <div className="mt-5 border-t border-gray-100 pt-4">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Highlight key</p>
-                <ul className="space-y-1.5">
-                  {ordered.filter(o => o.n >= 0).map(({ f, n }) => (
-                    <li key={n} className="flex gap-2 text-xs text-neutral-dark">
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(n)}`}>{n + 1}</span>
-                      <span className="min-w-0"><span className={`rounded px-1.5 py-0.5 ${quoteColour(n)}`}>{termsOf(f).join(', ')}</span> <span className="ml-1 text-neutral-mid">replace with {f.superseded_by}</span></span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       </div>

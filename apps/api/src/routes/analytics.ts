@@ -13,6 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
+import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch } from '../services/analytics/policy-consistency'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -597,6 +598,58 @@ analyticsRouter.post('/policy-lint/scan', requireAdmin, async (_req: Request, re
   } catch (e: any) {
     err(res, 'LINT_SCAN_FAILED', e.message ?? 'Could not scan policies.', 500)
   }
+})
+
+// ─── Cross-policy consistency (Phase 4b: clustering + claim extraction) ───────────
+// start builds the comparison sets (cheap) and reports how many policies need claims;
+// batch extracts a chunk of claims (AI, cached). 4c will add detection on top.
+const CLAIM_BATCH = 6
+analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const sets = await buildAndCacheSets(tenantId)
+    const pending = await pendingClaimPolicies(tenantId)
+    ok(res, { sets: sets.length, duplicate_sets: sets.filter(s => s.type === 'duplicate').length, topic_sets: sets.filter(s => s.type === 'topic').length, to_extract: pending.length })
+  } catch (e: any) {
+    err(res, 'CONSISTENCY_START_FAILED', e.message ?? 'Could not build comparison sets.', 500)
+  }
+})
+
+analyticsRouter.post('/consistency/scan/batch', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    const pending = await pendingClaimPolicies(tenantId)
+    const batch = pending.slice(0, CLAIM_BATCH)
+    await extractClaimsBatch(tenantId, batch)
+    ok(res, { extracted: batch.length, remaining: Math.max(0, pending.length - batch.length) })
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'CONSISTENCY_BATCH_FAILED', e.message ?? 'Could not extract claims.', 500)
+  }
+})
+
+// Inspect the comparison sets (for building the 4c/4d UI).
+analyticsRouter.get('/consistency/sets', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  ok(res, { sets: await getCachedSets(tenantId) })
 })
 
 // ─── Policy Change Adoption (beta; per-tenant flag) ──────────────────────────

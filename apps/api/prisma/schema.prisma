@@ -542,6 +542,32 @@ model PolicyLintSignal {
   @@map("policy_lint_signals")
 }
 
+// Phase 4b: cached per-policy structured claims (timeframes, roles, locations, definitions…)
+// used to detect cross-policy contradictions. Re-extracted only when the policy text changes.
+model PolicyClaim {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  policy_id    String
+  policy_name  String   @default("")
+  content_hash String?
+  claims       Json     @default("[]")
+  extracted_at DateTime @default(now())
+
+  @@unique([tenant_id, policy_id])
+  @@index([tenant_id])
+  @@map("policy_claims")
+}
+
+// Phase 4b/4c: per-tenant cross-policy consistency run state (comparison sets + conflicts).
+model PolicyConsistency {
+  tenant_id   String   @id
+  sets        Json     @default("[]")
+  conflicts   Json     @default("[]")
+  built_at    DateTime?
+  analysed_at DateTime?
+  @@map("policy_consistency")
+}
+
 // Cached per-policy lint result (zero-AI scan; cached to avoid re-reading every policy from S3).
 model PolicyLintResult {
   id          String   @id @default(uuid())

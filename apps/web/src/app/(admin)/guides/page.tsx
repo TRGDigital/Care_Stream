@@ -523,7 +523,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'Regulation coverage, what to add, out-of-date content, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
+    summary: 'Regulation coverage, what to add, out-of-date content, cross-policy consistency, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -584,6 +584,20 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Same approval as any update</strong>: a replacement becomes a tracked change on your policy draft and goes through the same review and approval before it&rsquo;s published — nothing changes automatically.</span></li>
           </ul>
           <Tip>Re-scan whenever you upload or update policies. The suggestions are yours to review and approve; replacements are applied to your draft, not published for you.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Cross-policy consistency — policies that contradict each other">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Coverage and out-of-date checks look at one policy at a time. <strong>Cross-policy consistency</strong> looks <em>between</em> policies — it finds where two of your policies say different, incompatible things about the <strong>same point</strong>: conflicting timeframes, escalation routes, named responsibilities or definitions, and <strong>drift between near-duplicate policies</strong> (two versions of the same policy that have quietly grown apart). Find it on the Gaps page under <strong>Cross-policy consistency</strong>, and press <strong>Run consistency check</strong>.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>It compares the right policies</strong>: it groups policies that cover the same subject, and policies that are near-duplicates of each other, so it only compares ones that could genuinely conflict — not every policy against every other.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>It only flags real contradictions</strong>: a genuine clash on the same point, not a difference of wording or a policy simply saying more than another.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Review side by side</strong>: open a conflict to see each policy&rsquo;s wording, switch between the policies with the disputed passage highlighted, and <strong>pick which one is correct</strong>.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Align in one click</strong>: once you&rsquo;ve chosen the correct value, align the other policies to it — each change goes through the same review and approval as any other policy update.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Dismiss false alarms</strong>: if two statements are actually compatible in context, dismiss the conflict and it won&rsquo;t return on the next check.</span></li>
+          </ul>
+          <Tip>Because it reads your policies with AI, it runs only when you press <strong>Run consistency check</strong> (not automatically). Re-run it after you&rsquo;ve made significant changes to your library.</Tip>
         </SectionBlock>
 
         <SectionBlock title="A one-time disclaimer before you use the guidance">

@@ -50,7 +50,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/analytics',            label: 'Analytics',    Icon: TrendingUp     },
       { href: '/analytics/cqc-report', label: 'CQC Reports',  Icon: ClipboardCheck },
-      { href: '/gaps',                 label: 'Gap Analysis', Icon: ShieldAlert    },
+      { href: '/gaps',                 label: 'Policy Gaps Analysis', Icon: ShieldAlert    },
     ],
   },
   {

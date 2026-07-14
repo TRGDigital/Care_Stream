@@ -612,6 +612,7 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const [runErr, setRunErr] = useState('')
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<Conflict | null>(null)
 
@@ -630,20 +631,24 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
   useEffect(() => { load() }, [load])
 
   async function run() {
-    setRunning(true); setProgress('Grouping related policies…')
+    setRunning(true); setProgress('Grouping related policies…'); setRunErr('')
     const api = createApiClient(token)
     try {
       const { to_extract } = await api.analytics.consistencyStart()
+      let last = to_extract
       for (let i = 0; i < 300; i++) {
         const p = await api.analytics.consistencyBatch()
         setProgress(`Reading policies… ${Math.max(0, to_extract - p.remaining)}/${to_extract}`)
         if (p.remaining <= 0) break
+        if (p.remaining >= last) { /* no progress — stop rather than spin */ break }
+        last = p.remaining
       }
       setProgress('Comparing for contradictions…')
       await api.analytics.consistencyDetect()
       load()
-    } catch { /* surfaced as no change */ }
-    finally { setRunning(false); setProgress(null) }
+    } catch (e: any) {
+      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+    } finally { setRunning(false); setProgress(null) }
   }
 
   const when = data?.analysed_at ? new Date(data.analysed_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
@@ -668,6 +673,7 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
             {running ? <><Loader2 size={13} className="animate-spin" /> {progress ?? 'Running…'}</> : <><RefreshCw size={13} /> {data?.analysed ? 'Re-run check' : 'Run consistency check'}</>}
           </button>
         </div>
+        {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
 
         {loading && !data ? (
           <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>

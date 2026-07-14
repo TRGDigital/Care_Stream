@@ -149,16 +149,25 @@ function extractPrompt(name: string, text: string): string {
 
 const KINDS = new Set<ClaimKind>(['timeframe', 'role', 'location', 'frequency', 'threshold', 'escalation', 'definition', 'other'])
 
-// Extract (and cache) the claims for one policy. Returns the claims, or [] if no text / on failure.
+// Extract (and cache) the claims for one policy. ALWAYS writes a cache row — even when there is
+// no usable text or the AI call fails — so the policy leaves the pending queue and the scan
+// terminates (otherwise a policy that can't be read would be retried forever). Credit limiting is
+// enforced at the batch route, so a hit limit stops the run cleanly instead of looping.
 export async function extractPolicyClaims(tenantId: string, policy: { id: string; name: string }): Promise<PolicyClaim[]> {
+  const writeRow = (content_hash: string, claims: PolicyClaim[]) =>
+    (prisma as any).policyClaim.upsert({
+      where:  { tenant_id_policy_id: { tenant_id: tenantId, policy_id: policy.id } },
+      update: { policy_name: policy.name, content_hash, claims, extracted_at: new Date() },
+      create: { tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, content_hash, claims },
+    }).catch(() => {})
+
   const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
-  if (!text || text.trim().length < 200) return []
+  if (!text || text.trim().length < 200) { await writeRow('no-text', []); return [] }
   const hash = createHash('sha256').update(text).digest('hex')
 
   const cached = await (prisma as any).policyClaim.findUnique({ where: { tenant_id_policy_id: { tenant_id: tenantId, policy_id: policy.id } } }).catch(() => null)
   if (cached && cached.content_hash === hash) return (cached.claims as PolicyClaim[]) ?? []
 
-  await checkAiCreditLimit(tenantId)   // throws PlanLimitError → 402 in the route
   let claims: PolicyClaim[] = []
   try {
     const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, text), { model: HAIKU, maxTokens: 2000, temperature: 0 })
@@ -169,14 +178,11 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
       .slice(0, 25)
   } catch (e: any) {
     console.error('[consistency] claim extraction failed', policy.id, e?.message)
-    return (cached?.claims as PolicyClaim[]) ?? []
+    await writeRow(hash, [])   // mark attempted so the run terminates; a later re-scan can retry
+    return []
   }
 
-  await (prisma as any).policyClaim.upsert({
-    where:  { tenant_id_policy_id: { tenant_id: tenantId, policy_id: policy.id } },
-    update: { policy_name: policy.name, content_hash: hash, claims, extracted_at: new Date() },
-    create: { tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, content_hash: hash, claims },
-  }).catch(() => {})
+  await writeRow(hash, claims)
   await logAiCredit(tenantId, 'policy_claims', policy.id)
   return claims
 }

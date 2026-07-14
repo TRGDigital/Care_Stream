@@ -630,10 +630,13 @@ analyticsRouter.post('/consistency/scan/batch', requireAdmin, async (_req: Reque
     throw e
   }
   try {
+    await checkAiCreditLimit(tenantId)   // stop the run cleanly (402) if the AI credit is spent
     const pending = await pendingClaimPolicies(tenantId)
     const batch = pending.slice(0, CLAIM_BATCH)
     await extractClaimsBatch(tenantId, batch)
-    ok(res, { extracted: batch.length, remaining: Math.max(0, pending.length - batch.length) })
+    // Every processed policy now writes a cache row, so re-reading gives the true remaining.
+    const stillPending = await pendingClaimPolicies(tenantId)
+    ok(res, { extracted: batch.length, remaining: stillPending.length })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'CONSISTENCY_BATCH_FAILED', e.message ?? 'Could not extract claims.', 500)

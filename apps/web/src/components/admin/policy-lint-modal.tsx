@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, HelpCircle } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -46,6 +46,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const ordered = replaceable
     .map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 }))
     .sort((a, b) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n))
+  // Located = we could highlight it in the preview (numbered). Unlocatable = detected in the text
+  // but not pinpointable here (extraction differs by more than casing) → shown as alternatives.
+  const located = ordered.filter(o => o.n >= 0)
+  const alternatives = ordered.filter(o => o.n < 0)
+
+  // A distinctive word to jump to for "Find in policy" (single words match even when the full
+  // phrase doesn't, e.g. it wraps across a line break).
+  const anchorWord = (f: Finding): string => {
+    const words = termsOf(f).flatMap(t => t.split(/\s+/)).filter(w => w.replace(/[^A-Za-z0-9]/g, '').length >= 4)
+    return words.sort((a, b) => b.length - a.length)[0] ?? (termsOf(f)[0] ?? '')
+  }
 
   // Load the policy preview (right pane).
   useEffect(() => {
@@ -122,10 +133,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               </p>
             )}
 
-            {replaceable.length > 0 && (
+            {located.length > 0 && (
               <div className="space-y-3">
-                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><FilePenLine size={15} className="text-amber-600" /> Replace out-of-date wording ({replaceable.length})</p>
-                {ordered.map(({ f, i, n }) => (
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><FilePenLine size={15} className="text-amber-600" /> Replace out-of-date wording ({located.length})</p>
+                {located.map(({ f, i, n }) => (
                   <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
                     <div className="flex items-start gap-2">
                       <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${n >= 0 ? quoteColour(n) : 'bg-gray-200 text-neutral-mid'}`}>{n >= 0 ? n + 1 : '–'}</span>
@@ -159,6 +170,45 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
 
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
 
+            {alternatives.length > 0 && (
+              <div className="space-y-3">
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><HelpCircle size={15} className="text-neutral-mid" /> Alternative suggestions ({alternatives.length})</p>
+                <p className="-mt-1 text-xs text-neutral-mid">We found these in the policy text but couldn&rsquo;t pinpoint them in this preview — they may be worded slightly differently. Review the draft after replacing.</p>
+                {alternatives.map(({ f, i }) => (
+                  <div key={i} className="rounded-lg border border-dashed border-gray-300 bg-neutral-light/20 px-4 py-3">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300" />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
+                          {f.label}
+                          {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
+                        </p>
+                        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+                          {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
+                          <span className="text-neutral-mid">→</span>
+                          <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
+                        </p>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                          {adopted.has(i) ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
+                          ) : (
+                            <button onClick={() => replace(f, i)} disabled={busy !== null}
+                              className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
+                              {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace anyway</>}
+                            </button>
+                          )}
+                          <button onClick={() => setPolicySearch(anchorWord(f))}
+                            className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
+                            <Search size={13} /> Find in policy
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {advisory.length > 0 && (
               <div className="space-y-2">
                 <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Info size={15} className="text-neutral-mid" /> Also flagged</p>
@@ -186,7 +236,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                 <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{policyName}</span>
               </p>
-              {replaceable.length > 0
+              {located.length > 0
                 ? <p className="mt-0.5 text-xs text-neutral-mid">Each numbered highlight is the out-of-date wording for the same-numbered item on the left.</p>
                 : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to find wording in this policy.</p>}
             </div>
@@ -222,7 +272,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
             )}
 
-            {replaceable.length > 0 && (
+            {located.length > 0 && (
               <div className="mt-5 border-t border-gray-100 pt-4">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">Highlight key</p>
                 <ul className="space-y-1.5">

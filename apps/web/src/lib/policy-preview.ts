@@ -93,6 +93,35 @@ export function highlightSearch(root: HTMLElement, term: string): number {
   return count
 }
 
+// Unify curly quotes/apostrophes and dash variants so a term matches regardless of typography.
+const unifyChars = (s: string) => s
+  .replace(/[‘’‚‛′`]/g, "'")
+  .replace(/[“”„″]/g, '"')
+  .replace(/[‐‑‒–—―−]/g, '-')
+
+// A tolerant normalised phrase: unified typography, lower-cased, whitespace collapsed, trimmed.
+const normPhrase = (t: string) => unifyChars(t).toLowerCase().replace(/\s+/g, ' ').trim()
+
+// Build a normalised copy of a text-node string (unified, lower-cased, whitespace-collapsed) with
+// a map from each normalised-char index back to its ORIGINAL index — so a tolerant match can be
+// mapped back to the real span to highlight. Handles casing, extra/odd whitespace and typography.
+function buildNorm(raw: string): { norm: string; map: number[] } {
+  let norm = ''
+  const map: number[] = []
+  let inSpace = false
+  const unified = unifyChars(raw)
+  for (let i = 0; i < unified.length; i++) {
+    const c = unified[i]
+    if (/\s/.test(c)) {
+      if (inSpace) continue          // collapse a whitespace run to one space
+      norm += ' '; map.push(i); inSpace = true
+    } else {
+      norm += c.toLowerCase(); map.push(i); inSpace = false
+    }
+  }
+  return { norm, map }
+}
+
 // Highlight EVERY occurrence of EVERY stale term (phrase + acronyms), numbered in DOCUMENT
 // order so the badges read 1, 2, 3… down the page. Highlights only the words themselves (not the
 // paragraph), so it's obvious exactly what changes. `termsPerFinding[k]` is finding k's distinct
@@ -104,21 +133,29 @@ export function highlightStaleTerms(root: HTMLElement, termsPerFinding: string[]
   let nd: Node | null
   while ((nd = walker.nextNode())) nodes.push(nd as Text)
 
-  // Multi-word phrases are matched case-INsensitively (the scan's verbatim casing often differs
-  // from how the policy renders it, e.g. "…Care inspection" vs "…Care Inspection"); single
-  // tokens/acronyms stay case-SENSITIVE so "PCT" never matches the word "pct". All non-overlapping
+  // Multi-word phrases are matched TOLERANTLY (casing, extra/odd whitespace incl. line breaks,
+  // and curly quotes/dashes are all ignored) and mapped back to the real span; single
+  // tokens/acronyms stay case-SENSITIVE so "PCT" never matches the word "pct". Non-overlapping
   // matches within one text node, resolving overlaps (e.g. "PCTs" over "PCT") by longest-first.
   const matchesIn = (raw: string): Array<{ fi: number; idx: number; len: number }> => {
-    const lower = raw.toLowerCase()
+    const { norm, map } = buildNorm(raw)
     const all: Array<{ fi: number; idx: number; len: number }> = []
     termsPerFinding.forEach((terms, fi) => {
       for (const t of terms) {
         if (!t || t.length < 2) continue
-        const ci = /\s/.test(t)                      // phrase → case-insensitive; token → exact
-        const hay = ci ? lower : raw
-        const needle = ci ? t.toLowerCase() : t
-        let from = 0, idx: number
-        while ((idx = hay.indexOf(needle, from)) >= 0) { all.push({ fi, idx, len: t.length }); from = idx + t.length }
+        if (/\s/.test(t)) {                          // phrase → tolerant, mapped back to original
+          const nn = normPhrase(t)
+          if (nn.length < 2) continue
+          let from = 0, idx: number
+          while ((idx = norm.indexOf(nn, from)) >= 0) {
+            const oStart = map[idx], oEnd = map[idx + nn.length - 1] + 1
+            all.push({ fi, idx: oStart, len: oEnd - oStart })
+            from = idx + nn.length
+          }
+        } else {                                     // token/acronym → exact, case-sensitive
+          let from = 0, idx: number
+          while ((idx = raw.indexOf(t, from)) >= 0) { all.push({ fi, idx, len: t.length }); from = idx + t.length }
+        }
       }
     })
     all.sort((a, b) => a.idx - b.idx || b.len - a.len)

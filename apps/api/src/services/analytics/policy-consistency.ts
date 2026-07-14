@@ -152,7 +152,7 @@ const KINDS = new Set<ClaimKind>(['timeframe', 'role', 'location', 'frequency', 
 
 // A POLICY's own review date / review cycle / version date is per-policy metadata (CareStream
 // tracks it separately), so it's never a genuine cross-policy conflict — exclude it.
-const REVIEW_META = /\breview\s*(date|cycle|frequenc|schedule|interval|period|due)\b|\bnext review\b|\breviewed\s+(annually|every|monthly|yearly|biennially|each)\b|\bdate of (issue|review|next)\b|\bversion\s+(date|number|control)\b/i
+const REVIEW_META = /\bre(view|newal)\s*(date|cycle|frequenc|schedule|interval|period|due)\b|\bnext (review|renewal)\b|\bpolicy renewal\b|\bre(view|new)ed\s+(annually|every|monthly|yearly|biennially|each)\b|\bdate of (issue|review|renewal|next)\b|\bversion\s+(date|number|control)\b/i
 const isReviewMetaClaim = (c: { topic: string; statement: string }) => REVIEW_META.test(`${c.topic} ${c.statement}`)
 
 // The model is asked for verbatim quotes but sometimes paraphrases. Ground a quote to a REAL
@@ -345,7 +345,11 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
     return cs
   })
   const rank = { high: 0, medium: 1, low: 2 } as const
-  const conflicts = results.flat().sort((a, b) => rank[a.severity] - rank[b.severity])
+  const conflicts = results.flat()
+    // Belt-and-braces: drop any conflict that is really about a policy's own review date/cycle
+    // or version, even if a review-date claim slipped past the claim-level filter.
+    .filter(c => !REVIEW_META.test(`${c.topic} ${c.summary}`))
+    .sort((a, b) => rank[a.severity] - rank[b.severity])
 
   await (prisma as any).policyConsistency.upsert({
     where:  { tenant_id: tenantId },

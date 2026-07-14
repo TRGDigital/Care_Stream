@@ -374,6 +374,20 @@ export async function sendStaleApprovalReminders(tenantId?: string): Promise<{ r
   return { reminded }
 }
 
+// #9 — read-only published-version history for a policy.
+export async function getPolicyVersions(tenantId: string, policyId: string): Promise<Array<{ id: string; version: string; change_count: number; published_by: string; published_at: string }>> {
+  const rows = await (prisma as any).policyDocumentVersion.findMany({
+    where: { tenant_id: tenantId, policy_id: policyId }, orderBy: { published_at: 'desc' },
+    select: { id: true, version: true, change_count: true, published_by: true, published_at: true },
+  })
+  return (rows as any[]).map(r => ({ ...r, published_at: new Date(r.published_at).toISOString() }))
+}
+export async function getPolicyVersionContent(tenantId: string, versionId: string): Promise<{ version: string; content: string; published_by: string; published_at: string } | null> {
+  const r = await (prisma as any).policyDocumentVersion.findUnique({ where: { id: versionId } })
+  if (!r || r.tenant_id !== tenantId) return null
+  return { version: r.version, content: r.content, published_by: r.published_by, published_at: new Date(r.published_at).toISOString() }
+}
+
 // Reject at a stage (admin, manager or external) — returns to draft for amendment.
 export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []): Promise<{ status: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
@@ -517,6 +531,10 @@ export async function publishDocument(tenantId: string, policyId: string, publis
     where: { id: doc.id },
     data: { published_content: publishedContent, published_at: new Date(), published_by: publishedBy, version: nextVersion },
   })
+  // #9 — snapshot this published version for the read-only history.
+  await (prisma as any).policyDocumentVersion.create({
+    data: { tenant_id: tenantId, policy_id: policyId, version: nextVersion, content: publishedContent, change_count: res.count ?? 0, published_by: publishedBy },
+  }).catch(() => {})
   // Swap the new content into the live policy (S3 text, format cache, Pinecone) so staff
   // Q&A and previews use it, and the old version is archived. Best-effort — a re-index
   // failure does not undo the publish (it is logged and can be retried).

@@ -181,12 +181,15 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [editId, setEditId]     = useState<string | null>(null)   // change being edited
   const [editText, setEditText] = useState('')
   const [editTitle, setEditTitle] = useState('')
+  const [versions, setVersions] = useState<Array<{ id: string; version: string; change_count: number; published_by: string; published_at: string }>>([])
+  const [viewing, setViewing]   = useState<{ version: string; content: string } | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
     setLoading(true)
     const api = createApiClient(token)
     api.analytics.policyApprovals(policyId).then(a => { setApproval(a); if (a?.external_name) setExtName(a.external_name); if (a?.external_email) setExtEmail(a.external_email) }).catch(() => {})
+    api.analytics.policyVersions(policyId).then(v => setVersions(v.versions)).catch(() => {})
     Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId).catch(() => ({ html: '' }))])
       .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
       .catch(e => setError(e.message ?? 'Could not load the document.'))
@@ -501,6 +504,36 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                   </ul>
                 </div>
               )}
+
+              {versions.length > 0 && (
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Previous versions ({versions.length})</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {versions.map(v => (
+                      <li key={v.id} className="flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                          <p className="text-neutral-dark"><span className="font-medium">Version {v.version}</span> · {v.change_count} change{v.change_count === 1 ? '' : 's'}</p>
+                          <p className="text-neutral-mid">{new Date(v.published_at).toLocaleString('en-GB')}{v.published_by ? ` · ${v.published_by}` : ''}</p>
+                        </div>
+                        <button onClick={() => createApiClient(token).analytics.policyVersion(v.id).then(d => setViewing({ version: d.version, content: d.content })).catch(() => {})}
+                          className="shrink-0 rounded-btn border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:bg-gray-50">View</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {viewing && (
+          <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/40 p-4" onClick={() => setViewing(null)}>
+            <div className="my-8 w-full max-w-3xl rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <h3 className="text-sm font-bold text-neutral-dark">Version {viewing.version} <span className="font-normal text-neutral-mid">(read-only snapshot)</span></h3>
+                <button onClick={() => setViewing(null)} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
+              </div>
+              <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap px-6 py-5 text-sm leading-relaxed text-neutral-dark">{viewing.content}</pre>
             </div>
           </div>
         )}

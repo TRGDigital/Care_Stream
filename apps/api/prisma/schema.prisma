@@ -558,6 +558,20 @@ model PolicyClaim {
   @@map("policy_claims")
 }
 
+// #9: a snapshot of each published policy version (written on publish) for a read-only history.
+model PolicyDocumentVersion {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  policy_id    String
+  version      String
+  content      String   @default("")
+  change_count Int      @default(0)
+  published_by String   @default("")
+  published_at DateTime @default(now())
+  @@index([tenant_id, policy_id, published_at])
+  @@map("policy_document_versions")
+}
+
 // Phase 4b/4c: per-tenant cross-policy consistency run state (comparison sets + conflicts).
 model PolicyConsistency {
   tenant_id   String   @id

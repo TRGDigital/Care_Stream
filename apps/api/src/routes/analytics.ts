@@ -14,7 +14,7 @@ import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch 
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -945,6 +945,21 @@ analyticsRouter.post('/gaps/policy-document/:policyId/external-reissue', require
     if (!r) { err(res, 'NOT_FOUND', 'No reviewer set, or the policy is not awaiting external approval.', 404); return }
     ok(res, r)
   } catch (e: any) { err(res, 'REISSUE_FAILED', e.message ?? 'Could not reissue the link.', 500) }
+})
+
+// #9 — read-only published-version history.
+analyticsRouter.get('/gaps/policy-document/:policyId/versions', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { ok(res, { versions: await getPolicyVersions(tenantId, String(req.params.policyId)) }) }
+  catch (e: any) { err(res, 'VERSIONS_FAILED', e.message ?? 'Could not load versions.', 500) }
+})
+analyticsRouter.get('/gaps/policy-version/:versionId', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const v = await getPolicyVersionContent(tenantId, String(req.params.versionId))
+    if (!v) { err(res, 'NOT_FOUND', 'Version not found', 404); return }
+    ok(res, v)
+  } catch (e: any) { err(res, 'VERSION_FAILED', e.message ?? 'Could not load the version.', 500) }
 })
 
 // #5 — manually nudge whoever a stalled policy is waiting on (care manager or external reviewer).

@@ -13,6 +13,7 @@ import { sendPolicyExternalReviewEmail, sendTrainingUpdateEmail } from '../email
 import { siteUrl } from '../../lib/urls'
 import { formatPolicyHtml } from '../../lib/translate'
 import { isEmailEnabled } from '../../lib/notify'
+import { sendPushToUsers } from '../../lib/push'
 
 // External review links expire after this many days (security hygiene + wrong-recipient recovery).
 export const EXTERNAL_LINK_TTL_DAYS = 30
@@ -124,6 +125,32 @@ async function notifyAdminsNowLive(tenantId: string, policyId: string, version: 
       await sendTrainingUpdateEmail({ to: a.email, name: a.name || 'there', orgName, subject: `Now live: ${policyName}`, bodyHtml }).catch(() => {})
     }
   } catch (e: any) { console.error('[policy] now-live notify failed', e?.message) }
+}
+
+// #10 — when a policy lands for the care manager's approval, notify them (PWA push always, email
+// governed by the policy_approvals preference) instead of relying on the hub badge alone.
+async function notifyCareManagerPending(tenantId: string, policyId: string): Promise<void> {
+  try {
+    const [tenant, users, policy] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, email: true, name: true, job_role: true } }),
+      (prisma as any).policy.findUnique({ where: { id: policyId }, select: { name: true } }),
+    ])
+    const managers = (users as any[]).filter(u => /care manager|registered manager/i.test(String(u.job_role ?? '')))
+    if (!managers.length) return
+    const orgName = tenant?.name ?? 'Your service'
+    const policyName = policy?.name ?? 'A policy'
+    await sendPushToUsers(managers.map(m => m.id), { title: `Policy to review: ${policyName}`, body: `${orgName} has sent you a policy to approve.`, url: '/chat', tag: 'policy-approval' }).catch(() => {})
+    if (!(await isEmailEnabled(tenantId, APPROVAL_PREF))) return
+    const link = `${siteUrl()}/chat`
+    const bodyHtml = `
+      <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${policyName}</strong> has been sent to you for approval. Open your hub to review the change and approve it, or send it back with feedback.</p>
+      <div style="text-align:center;margin:16px 0 8px"><a href="${link}" style="display:inline-block;padding:12px 28px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open your hub</a></div>`
+    for (const m of managers) {
+      if (!m.email) continue
+      await sendTrainingUpdateEmail({ to: m.email, name: m.name || 'there', orgName, subject: `For your approval: ${policyName}`, bodyHtml }).catch(() => {})
+    }
+  } catch (e: any) { console.error('[policy] care manager notify failed', e?.message) }
 }
 
 // Trailing "end matter" a new section must sit ABOVE (dates, signatures, version, company).
@@ -240,6 +267,7 @@ export async function submitForApproval(tenantId: string, policyId: string, admi
   const { manager, external } = await approvalToggles(tenantId)
   if (manager) {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'pending_manager' } })
+    await notifyCareManagerPending(tenantId, policyId)
     return { status: 'pending_manager' }
   }
   if (external) {

@@ -388,6 +388,60 @@ export async function getPolicyVersionContent(tenantId: string, versionId: strin
   return { version: r.version, content: r.content, published_by: r.published_by, published_at: new Date(r.published_at).toISOString() }
 }
 
+// The reference_key on an adopted change tells us which feature drove the update.
+function sourceOfRef(refKey: string): 'out_of_date' | 'consistency' | 'coverage' {
+  if (refKey.startsWith('policy-lint:')) return 'out_of_date'
+  if (refKey.startsWith('consistency:')) return 'consistency'
+  return 'coverage'   // a regulation reference key (coverage + SAF wording alignment)
+}
+
+export interface MatrixRow {
+  policy_id: string; name: string; version: string
+  updated_at: string | null
+  sources: Array<'coverage' | 'out_of_date' | 'consistency'>
+  last_reviewed_at: string | null
+  next_review_due: string | null
+  review_overdue: boolean
+}
+
+// The policy update matrix: every policy that has been published, what drove the update(s), when
+// it went live, and when it is next due for review.
+export async function getPolicyMatrix(tenantId: string): Promise<{ policies: MatrixRow[] }> {
+  const docs = await (prisma as any).policyDocument.findMany({
+    where: { tenant_id: tenantId, published_at: { not: null } },
+    select: { id: true, policy_id: true, version: true, published_at: true },
+  })
+  if (!docs.length) return { policies: [] }
+
+  const [policies, changes] = await Promise.all([
+    (prisma as any).policy.findMany({ where: { id: { in: (docs as any[]).map(d => d.policy_id) } }, select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true } }),
+    (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, published: true }, select: { document_id: true, reference_key: true } }),
+  ])
+  const polById = new Map((policies as any[]).map(p => [p.id, p]))
+  const sourcesByDoc = new Map<string, Set<string>>()
+  for (const c of changes as any[]) {
+    if (!sourcesByDoc.has(c.document_id)) sourcesByDoc.set(c.document_id, new Set())
+    sourcesByDoc.get(c.document_id)!.add(sourceOfRef(String(c.reference_key ?? '')))
+  }
+
+  const rows: MatrixRow[] = (docs as any[]).map(d => {
+    const p = polById.get(d.policy_id)
+    const publishedAt = d.published_at ? new Date(d.published_at) : null
+    const reviewed = p?.last_reviewed_at ? new Date(p.last_reviewed_at) : publishedAt
+    const interval = p?.review_interval_days ?? 365
+    const nextDue = reviewed ? new Date(reviewed.getTime() + interval * 86_400_000) : null
+    return {
+      policy_id: d.policy_id, name: p?.name ?? 'Policy', version: d.version,
+      updated_at: publishedAt?.toISOString() ?? null,
+      sources: [...(sourcesByDoc.get(d.id) ?? [])] as MatrixRow['sources'],
+      last_reviewed_at: reviewed?.toISOString() ?? null,
+      next_review_due: nextDue?.toISOString() ?? null,
+      review_overdue: nextDue ? Date.now() > nextDue.getTime() : false,
+    }
+  }).sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+  return { policies: rows }
+}
+
 // Reject at a stage (admin, manager or external) — returns to draft for amendment.
 export async function rejectPolicy(tenantId: string, policyId: string, stage: string, name: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []): Promise<{ status: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
@@ -518,7 +572,7 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   const fresh = await (prisma as any).policyDocument.findUnique({ where: { id: doc.id } })
   // Publishing bumps the MAJOR version. The uploaded original is version 1, so the first
   // published set of changes is version 2, then 3, and so on.
-  const policy = await (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true } })
+  const policy = await (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true, review_interval_days: true } })
   const base = Number(policy?.version) || 1
   const curMajor = parseInt(String(doc.version || '').split('.')[0], 10)
   const nextMajor = (Number.isFinite(curMajor) ? curMajor : base) + 1
@@ -534,6 +588,11 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   // #9 — snapshot this published version for the read-only history.
   await (prisma as any).policyDocumentVersion.create({
     data: { tenant_id: tenantId, policy_id: policyId, version: nextVersion, content: publishedContent, change_count: res.count ?? 0, published_by: publishedBy },
+  }).catch(() => {})
+  // Publishing an update counts as a review — stamp it and default the next review to 12 months.
+  await (prisma as any).policy.update({
+    where: { id: policyId },
+    data: { last_reviewed_at: new Date(), ...(policy?.review_interval_days ? {} : { review_interval_days: 365 }) },
   }).catch(() => {})
   // Swap the new content into the live policy (S3 text, format cache, Pinecone) so staff
   // Q&A and previews use it, and the old version is archived. Best-effort — a re-index

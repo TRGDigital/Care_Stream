@@ -365,6 +365,9 @@ export default function GapsPage() {
       {/* ── Cross-policy consistency ──────────────────────────────────────── */}
       {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} />}
 
+      {/* ── Policy update matrix ──────────────────────────────────────────── */}
+      {session?.accessToken && <PolicyMatrixSection token={session.accessToken} userId={userId} />}
+
       {/* ── Completed / archived remediations ────────────────────────────── */}
       {archived.length > 0 && (
         <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
@@ -597,6 +600,87 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
           onAdopted={load}
         />
       )}
+    </div>
+  )
+}
+
+// ── Policy update matrix ─────────────────────────────────────────────────────────
+type MatrixData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyMatrix']>>
+
+const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency' }
+const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600' }
+
+function PolicyMatrixSection({ token, userId }: { token: string; userId: string }) {
+  const [data, setData] = useState<MatrixData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const cached = persistentCache.get<MatrixData>(`admin-matrix-${userId}`)
+    if (cached) { setData(cached); setLoading(false) }
+    createApiClient(token).analytics.policyMatrix()
+      .then(d => { setData(d); persistentCache.set(`admin-matrix-${userId}`, d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [token, userId])
+
+  const rows = data?.policies ?? []
+  const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')
+
+  return (
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+        <FileClock size={16} className="shrink-0 text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Policy update matrix</h2>
+        {rows.length > 0 && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{rows.length} updated</span>}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (<div className="border-t border-gray-100">
+        {loading && !data ? (
+          <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
+        ) : rows.length === 0 ? (
+          <div className="flex items-center gap-3 px-6 py-5">
+            <Info size={18} className="shrink-0 text-neutral-mid" />
+            <p className="text-sm text-neutral-mid">No policies have been updated and published yet. Adopt and publish a change from any of the sections above and it will appear here with its next review date.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
+                  <th className="px-6 py-2.5">Policy</th>
+                  <th className="px-3 py-2.5">Updated from</th>
+                  <th className="px-3 py-2.5">Completed</th>
+                  <th className="px-6 py-2.5">Next review due</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {rows.map(r => (
+                  <tr key={r.policy_id}>
+                    <td className="px-6 py-3">
+                      <p className="font-medium text-neutral-dark">{r.name}</p>
+                      <p className="text-xs text-neutral-mid">v{r.version}</p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {r.sources.length === 0 ? <span className="text-xs text-neutral-mid">—</span> : r.sources.map(s => (
+                          <span key={s} className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${SOURCE_STYLE[s] ?? 'bg-gray-100 text-neutral-mid'}`}>{SOURCE_LABEL[s] ?? s}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-neutral-dark tabular-nums">{fmt(r.updated_at)}</td>
+                    <td className="px-6 py-3 whitespace-nowrap tabular-nums">
+                      <span className={r.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(r.next_review_due)}</span>
+                      {r.review_overdue && <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>)}
     </div>
   )
 }

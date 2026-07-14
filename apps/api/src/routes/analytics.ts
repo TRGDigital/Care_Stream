@@ -14,7 +14,7 @@ import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch 
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -945,6 +945,20 @@ analyticsRouter.post('/gaps/policy-document/:policyId/external-reissue', require
     if (!r) { err(res, 'NOT_FOUND', 'No reviewer set, or the policy is not awaiting external approval.', 404); return }
     ok(res, r)
   } catch (e: any) { err(res, 'REISSUE_FAILED', e.message ?? 'Could not reissue the link.', 500) }
+})
+
+// Policy update matrix: what was updated (coverage / out-of-date / consistency), when, and when
+// it is next due for review.
+analyticsRouter.get('/gaps/matrix', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try { ok(res, await getPolicyMatrix(tenantId)) }
+  catch (e: any) { err(res, 'MATRIX_FAILED', e.message ?? 'Could not load the matrix.', 500) }
 })
 
 // #9 — read-only published-version history.

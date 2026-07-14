@@ -120,6 +120,8 @@ const MATRIX: Group[] = [
       { label: 'Applicability by care setting + service profile',           values: [false, true, true] },
       { label: 'Regulation change tracking + update alerts',                values: [false, true, true] },
       { label: 'Generate onboarding from a policy update',                  values: [false, true, true] },
+      { label: 'Out-of-date content detection (superseded law, placeholders)', values: [false, true, true] },
+      { label: 'Cross-policy consistency (contradictions between policies)', values: [false, true, true] },
     ],
   },
   {

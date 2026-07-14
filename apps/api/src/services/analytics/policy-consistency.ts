@@ -376,6 +376,9 @@ export async function getConsistency(tenantId: string) {
   const row = await (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId } }).catch(() => null)
   const dismissed = new Set<string>(Array.isArray(row?.dismissed) ? row.dismissed : [])
   const conflicts = ((row?.conflicts as PolicyConflict[]) ?? [])
+    // Also filter review/renewal-date conflicts on READ, so a stored result from before this
+    // exclusion existed still hides them without needing a re-run.
+    .filter(c => !REVIEW_META.test(`${c.topic} ${c.summary}`))
     .map(c => ({ ...c, key: conflictKey(c) }))
     .filter(c => !dismissed.has(c.key))
   return {

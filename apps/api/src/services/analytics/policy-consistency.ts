@@ -214,3 +214,121 @@ export async function pendingClaimPolicies(tenantId: string): Promise<Array<{ id
 export async function extractClaimsBatch(tenantId: string, batch: Array<{ id: string; name: string }>): Promise<void> {
   await mapLimit(batch, 3, (p) => extractPolicyClaims(tenantId, p).catch(() => []))
 }
+
+// ── Conflict detection (Phase 4c) ────────────────────────────────────────────────
+
+export interface ConflictPosition { policy_id: string; policy_name: string; statement: string; quote: string }
+export interface PolicyConflict {
+  id:        string
+  set_type:  'duplicate' | 'topic'
+  set_label: string
+  topic:     string
+  summary:   string
+  severity:  'high' | 'medium' | 'low'
+  positions: ConflictPosition[]
+}
+
+const DETECT_SYSTEM =
+  'You compare policies from the SAME UK care service to find GENUINE contradictions — where two or more policies give DIFFERENT, INCOMPATIBLE instructions about the SAME specific point. You are strict: report only real conflicts, never a difference of wording, scope, or level of detail. A false conflict is worse than a missed one.'
+
+const normName = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+
+function detectPrompt(members: Array<{ name: string; claims: PolicyClaim[] }>): string {
+  const blocks = members.map(m => [
+    `POLICY: ${m.name}`,
+    ...m.claims.slice(0, 18).map(c => `- (${c.kind}) ${c.topic} — ${c.statement} | "${c.quote}"`),
+  ].join('\n')).join('\n\n')
+  return [
+    `Below are ${members.length} policies from ONE care home and the specific claims extracted from each. Find every GENUINE contradiction between them.`,
+    '',
+    'A contradiction = the SAME specific point (same duty, timeframe, location, role, definition, threshold) is given DIFFERENT, incompatible values in two or more of these policies. For example: one says report within 24 hours, another within 72; one stores sharps boxes in the clinic, another leaves the location as an unfilled placeholder; one names the Registered Manager, another the Deputy.',
+    '',
+    'DO NOT report:',
+    '- Wording or terminology differences ("residents" vs "people receiving care"; "reduce the incidence" vs "reduce the frequency").',
+    '- Compatible or overlapping statements ("supervisor or manager" vs "duty manager" — both are managers).',
+    '- One policy simply saying more, less, or nothing on a point (silence is not a contradiction).',
+    '- Different points that merely share words.',
+    'When in any doubt, DO NOT report it.',
+    '',
+    'For each genuine contradiction return: topic (the point in dispute), summary (one sentence), severity (high|medium|low), and positions — for EACH conflicting policy, its exact name from the list, its claim (statement), and a short VERBATIM quote copied from that policy.',
+    '',
+    'POLICIES AND CLAIMS:',
+    blocks,
+    '',
+    'Return ONLY JSON: {"conflicts":[{"topic":"...","summary":"...","severity":"...","positions":[{"policy_name":"...","statement":"...","quote":"..."}]}]}',
+  ].join('\n')
+}
+
+async function detectSetConflicts(set: ComparisonSet, claimsByPolicy: Map<string, PolicyClaim[]>): Promise<PolicyConflict[]> {
+  const members = set.policies
+    .map(p => ({ id: p.id, name: p.name, claims: claimsByPolicy.get(p.id) ?? [] }))
+    .filter(m => m.claims.length > 0)
+  if (members.length < 2) return []
+  const idByName = new Map(members.map(m => [normName(m.name), m.id]))
+
+  let parsed: any
+  try {
+    const out = await callClaude(DETECT_SYSTEM, detectPrompt(members), { maxTokens: 2600, temperature: 0 })
+    parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
+  } catch (e: any) {
+    console.error('[consistency] detection failed for set', set.id, e?.message)
+    return []
+  }
+
+  const out: PolicyConflict[] = []
+  ;(Array.isArray(parsed?.conflicts) ? parsed.conflicts : []).forEach((c: any, i: number) => {
+    const positions: ConflictPosition[] = (Array.isArray(c?.positions) ? c.positions : [])
+      .map((p: any) => {
+        const pid = idByName.get(normName(String(p?.policy_name ?? '')))
+        if (!pid) return null
+        return { policy_id: pid, policy_name: members.find(m => m.id === pid)!.name, statement: String(p?.statement ?? '').trim(), quote: String(p?.quote ?? '').trim() }
+      })
+      .filter(Boolean) as ConflictPosition[]
+    // Need at least two DISTINCT policies genuinely in conflict.
+    const distinct = new Set(positions.map(p => p.policy_id))
+    if (distinct.size < 2) return
+    const severity = ['high', 'medium', 'low'].includes(c?.severity) ? c.severity : 'medium'
+    out.push({
+      id: `${set.id}-${i}`, set_type: set.type, set_label: set.label,
+      topic: String(c?.topic ?? '').trim() || 'Inconsistency', summary: String(c?.summary ?? '').trim(),
+      severity, positions,
+    })
+  })
+  return out
+}
+
+// Run detection across all cached comparison sets and store the conflicts.
+export async function runDetection(tenantId: string): Promise<{ conflicts: number; sets: number }> {
+  await checkAiCreditLimit(tenantId)
+  const sets = await getCachedSets(tenantId)
+  const allIds = [...new Set(sets.flatMap(s => s.policies.map(p => p.id)))]
+  const rows = await (prisma as any).policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: allIds } }, select: { policy_id: true, claims: true } })
+  const claimsByPolicy = new Map<string, PolicyClaim[]>((rows as any[]).map(r => [r.policy_id, (r.claims as PolicyClaim[]) ?? []]))
+
+  const results = await mapLimit(sets, 3, async (set) => {
+    const cs = await detectSetConflicts(set, claimsByPolicy).catch(() => [])
+    if (cs.length) await logAiCredit(tenantId, 'policy_consistency', set.id)
+    return cs
+  })
+  const rank = { high: 0, medium: 1, low: 2 } as const
+  const conflicts = results.flat().sort((a, b) => rank[a.severity] - rank[b.severity])
+
+  await (prisma as any).policyConsistency.upsert({
+    where:  { tenant_id: tenantId },
+    update: { conflicts, analysed_at: new Date() },
+    create: { tenant_id: tenantId, conflicts, analysed_at: new Date() },
+  }).catch(() => {})
+  return { conflicts: conflicts.length, sets: sets.length }
+}
+
+export async function getConsistency(tenantId: string) {
+  const row = await (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId } }).catch(() => null)
+  const conflicts = (row?.conflicts as PolicyConflict[]) ?? []
+  return {
+    analysed:    !!row?.analysed_at,
+    analysed_at: row?.analysed_at ? new Date(row.analysed_at).toISOString() : null,
+    sets:        Array.isArray(row?.sets) ? row.sets.length : 0,
+    high:        conflicts.filter(c => c.severity === 'high').length,
+    conflicts,
+  }
+}

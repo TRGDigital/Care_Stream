@@ -13,7 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
-import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency } from '../services/analytics/policy-consistency'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -650,6 +650,39 @@ analyticsRouter.get('/consistency/sets', requireAdmin, async (_req: Request, res
     throw e
   }
   ok(res, { sets: await getCachedSets(tenantId) })
+})
+
+// Phase 4c: run precision-tuned detection over the cached sets + claims, store the conflicts.
+analyticsRouter.post('/consistency/detect', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    ok(res, await runDetection(tenantId))
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'CONSISTENCY_DETECT_FAILED', e.message ?? 'Could not run consistency detection.', 500)
+  }
+})
+
+// Read the stored conflicts (the /gaps accordion + drill-in consume this).
+analyticsRouter.get('/consistency', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    ok(res, await getConsistency(tenantId))
+  } catch (e: any) {
+    err(res, 'CONSISTENCY_READ_FAILED', e.message ?? 'Could not load consistency.', 500)
+  }
 })
 
 // ─── Policy Change Adoption (beta; per-tenant flag) ──────────────────────────

@@ -321,9 +321,25 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
   return { conflicts: conflicts.length, sets: sets.length }
 }
 
+// A stable key for a conflict (topic + the policies involved) so a dismissal survives re-runs,
+// even though the volatile per-run id changes.
+export function conflictKey(c: PolicyConflict): string {
+  return `${normName(c.topic)}::${[...new Set(c.positions.map(p => p.policy_id))].sort().join(',')}`
+}
+
+export async function dismissConflict(tenantId: string, key: string): Promise<void> {
+  const row = await (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { dismissed: true } }).catch(() => null)
+  const dismissed = new Set<string>(Array.isArray(row?.dismissed) ? row.dismissed : [])
+  dismissed.add(key)
+  await (prisma as any).policyConsistency.update({ where: { tenant_id: tenantId }, data: { dismissed: [...dismissed] } }).catch(() => {})
+}
+
 export async function getConsistency(tenantId: string) {
   const row = await (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId } }).catch(() => null)
-  const conflicts = (row?.conflicts as PolicyConflict[]) ?? []
+  const dismissed = new Set<string>(Array.isArray(row?.dismissed) ? row.dismissed : [])
+  const conflicts = ((row?.conflicts as PolicyConflict[]) ?? [])
+    .map(c => ({ ...c, key: conflictKey(c) }))
+    .filter(c => !dismissed.has(c.key))
   return {
     analysed:    !!row?.analysed_at,
     analysed_at: row?.analysed_at ? new Date(row.analysed_at).toISOString() : null,

@@ -13,7 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
-import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -682,6 +682,19 @@ analyticsRouter.get('/consistency', requireAdmin, async (_req: Request, res: Res
     ok(res, await getConsistency(tenantId))
   } catch (e: any) {
     err(res, 'CONSISTENCY_READ_FAILED', e.message ?? 'Could not load consistency.', 500)
+  }
+})
+
+// Dismiss a conflict (false alarm) — persists by stable key so it doesn't return on re-run.
+analyticsRouter.post('/consistency/dismiss', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const key = String((req.body ?? {}).key ?? '').trim()
+  if (!key) { err(res, 'VALIDATION_ERROR', 'key is required'); return }
+  try {
+    await dismissConflict(tenantId, key)
+    ok(res, { dismissed: true })
+  } catch (e: any) {
+    err(res, 'CONSISTENCY_DISMISS_FAILED', e.message ?? 'Could not dismiss.', 500)
   }
 })
 

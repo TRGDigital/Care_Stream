@@ -8,6 +8,7 @@ import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
+import { ConflictModal } from '@/components/admin/conflict-modal'
 import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
@@ -361,6 +362,9 @@ export default function GapsPage() {
       {/* ── Out-of-date content (policy lint) — under Regulation coverage ─── */}
       {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} />}
 
+      {/* ── Cross-policy consistency ──────────────────────────────────────── */}
+      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} />}
+
       {/* ── Completed / archived remediations ────────────────────────────── */}
       {archived.length > 0 && (
         <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
@@ -591,6 +595,127 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
           findings={selected.findings}
           onClose={() => setSelected(null)}
           onAdopted={load}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Cross-policy consistency ─────────────────────────────────────────────────────
+type ConsistencyData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['consistency']>>
+type Conflict = ConsistencyData['conflicts'][number]
+
+const CSEV: Record<string, string> = { high: 'bg-rose-50 text-rose-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-100 text-slate-600' }
+
+function PolicyConsistencySection({ token, userId }: { token: string; userId: string }) {
+  const [data, setData] = useState<ConsistencyData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [running, setRunning] = useState(false)
+  const [progress, setProgress] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState<Conflict | null>(null)
+
+  useEffect(() => {
+    const cached = persistentCache.get<ConsistencyData>(`admin-consistency-${userId}`)
+    if (cached) { setData(cached); setLoading(false) }
+  }, [userId])
+
+  const load = useCallback(() => {
+    createApiClient(token).analytics.consistency()
+      .then(d => { setData(d); persistentCache.set(`admin-consistency-${userId}`, d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [token, userId])
+
+  useEffect(() => { load() }, [load])
+
+  async function run() {
+    setRunning(true); setProgress('Grouping related policies…')
+    const api = createApiClient(token)
+    try {
+      const { to_extract } = await api.analytics.consistencyStart()
+      for (let i = 0; i < 300; i++) {
+        const p = await api.analytics.consistencyBatch()
+        setProgress(`Reading policies… ${Math.max(0, to_extract - p.remaining)}/${to_extract}`)
+        if (p.remaining <= 0) break
+      }
+      setProgress('Comparing for contradictions…')
+      await api.analytics.consistencyDetect()
+      load()
+    } catch { /* surfaced as no change */ }
+    finally { setRunning(false); setProgress(null) }
+  }
+
+  const when = data?.analysed_at ? new Date(data.analysed_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
+  const conflicts = data?.conflicts ?? []
+
+  return (
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+        <ShieldAlert size={16} className="shrink-0 text-indigo-500" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Cross-policy consistency</h2>
+        {data?.analysed && conflicts.length > 0 && (
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{conflicts.length} conflict{conflicts.length === 1 ? '' : 's'}</span>
+        )}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (<div className="border-t border-gray-100">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
+          <p className="text-xs text-neutral-mid">Finds where two policies contradict each other on the same point — conflicting timeframes, routes, roles or definitions, and drift between near-duplicate policies.</p>
+          <button onClick={run} disabled={running}
+            className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
+            {running ? <><Loader2 size={13} className="animate-spin" /> {progress ?? 'Running…'}</> : <><RefreshCw size={13} /> {data?.analysed ? 'Re-run check' : 'Run consistency check'}</>}
+          </button>
+        </div>
+
+        {loading && !data ? (
+          <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
+        ) : !data?.analysed ? (
+          <div className="flex items-center gap-3 px-6 py-6">
+            <Sparkles size={18} className="shrink-0 text-teal" />
+            <p className="text-sm text-neutral-mid">Run the check to compare related and near-duplicate policies for contradictions. It reads policies and uses AI credits, so it runs only when you ask.</p>
+          </div>
+        ) : conflicts.length === 0 ? (
+          <div className="flex items-center gap-3 px-6 py-5">
+            <CheckCircle2 size={18} className="text-green-500" />
+            <p className="text-sm text-neutral-mid">No contradictions found across your policies.{when ? ` Last checked ${when}.` : ''}</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-gray-50 px-6 py-2.5 text-xs text-neutral-mid">
+              <span><strong className="text-neutral-dark">{conflicts.length}</strong> conflict{conflicts.length === 1 ? '' : 's'} across {data.sets} comparison groups</span>
+              {data.high > 0 && <span className="text-rose-600">{data.high} high-severity</span>}
+              {when && <span className="ml-auto text-gray-400">Checked {when}</span>}
+            </div>
+            <div className="divide-y divide-gray-50">
+              {conflicts.map(c => (
+                <div key={c.id} className="flex items-center justify-between gap-3 px-6 py-3.5">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-1.5 font-medium text-neutral-dark">
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${CSEV[c.severity] ?? CSEV.low}`}>{c.severity}</span>
+                      {c.topic}
+                    </p>
+                    <p className="truncate text-xs text-neutral-mid">{c.positions.map(p => p.policy_name).join(' vs ')}</p>
+                  </div>
+                  <button onClick={() => setSelected(c)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">
+                    <Wand2 size={12} /> Review &amp; resolve
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>)}
+
+      {selected && (
+        <ConflictModal
+          token={token}
+          conflict={selected}
+          onClose={() => setSelected(null)}
+          onResolved={load}
+          onDismissed={() => { setSelected(null); load() }}
         />
       )}
     </div>

@@ -962,6 +962,22 @@ export function createApiClient(token: string) {
         }>
       }>('/analytics/policy-lint', token),
       policyLintScan: () => apiFetch<{ scanned: number; with_issues: number }>('/analytics/policy-lint/scan', token, { method: 'POST' }),
+      // Cross-policy consistency (Phase 4).
+      consistency: () => apiFetch<{
+        analysed: boolean
+        analysed_at: string | null
+        sets: number
+        high: number
+        conflicts: Array<{
+          id: string; key: string; set_type: 'duplicate' | 'topic'; set_label: string
+          topic: string; summary: string; severity: 'high' | 'medium' | 'low'
+          positions: Array<{ policy_id: string; policy_name: string; statement: string; quote: string }>
+        }>
+      }>('/analytics/consistency', token),
+      consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
+      consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
+      consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
+      consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

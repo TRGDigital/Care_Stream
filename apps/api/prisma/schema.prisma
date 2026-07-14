@@ -563,6 +563,7 @@ model PolicyConsistency {
   tenant_id   String   @id
   sets        Json     @default("[]")
   conflicts   Json     @default("[]")
+  dismissed   Json     @default("[]")
   built_at    DateTime?
   analysed_at DateTime?
   @@map("policy_consistency")

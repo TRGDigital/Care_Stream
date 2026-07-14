@@ -274,16 +274,49 @@ export async function managerApprove(tenantId: string, policyId: string, manager
   return { status: 'published', version: r?.version }
 }
 
+// #7 — the tenant's saved default external reviewer (pre-fills the per-policy form).
+async function saveDefaultReviewer(tenantId: string, name: string, email: string): Promise<void> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } })
+  const od = (t?.organisation_details ?? {}) as Record<string, unknown>
+  await (prisma as any).tenant.update({ where: { id: tenantId }, data: { organisation_details: { ...od, default_external_name: name.slice(0, 120), default_external_email: email.slice(0, 160) } } }).catch(() => {})
+}
+async function getDefaultReviewer(tenantId: string): Promise<{ name: string; email: string }> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } })
+  const od = (t?.organisation_details ?? {}) as Record<string, string>
+  return { name: od.default_external_name ?? '', email: od.default_external_email ?? '' }
+}
+
 // Set / update who the external review link is addressed to.
 export async function setExternalRecipient(tenantId: string, policyId: string, name: string, email: string): Promise<{ token: string } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
   const token = doc.external_token || randomBytes(18).toString('hex')
   await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_token: token, external_name: name.slice(0, 120), external_email: email.slice(0, 160) } })
+  if (email) await saveDefaultReviewer(tenantId, name, email)   // remember for next time (#7)
   // If the policy is already waiting on external approval, send (or resend) the link now.
   if (doc.approval_status === 'pending_external') {
     await emailExternalReviewer({ ...doc, external_email: email, external_name: name, external_token: token }, token)
   }
+  return { token }
+}
+
+// #4 — revoke the current external link (e.g. sent to the wrong person). The reviewer can no
+// longer open it; a new one must be issued.
+export async function revokeExternalLink(tenantId: string, policyId: string): Promise<boolean> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return false
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_token: null } })
+  return true
+}
+
+// #4 — issue a fresh link and resend it (resets the 30-day clock). Requires a reviewer + the
+// policy to be awaiting external approval.
+export async function reissueExternalLink(tenantId: string, policyId: string): Promise<{ token: string } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId || !doc.external_email || doc.approval_status !== 'pending_external') return null
+  const token = randomBytes(18).toString('hex')
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { external_token: token, external_sent_at: null } })
+  await emailExternalReviewer({ ...doc, external_token: token }, token)   // sets external_sent_at
   return { token }
 }
 
@@ -312,11 +345,21 @@ export async function rejectPolicy(tenantId: string, policyId: string, stage: st
 }
 
 // The approval status + full history for a policy.
-export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; external_sent_at: string | null; approvals: any[] } | null> {
+export async function getApprovalState(tenantId: string, policyId: string): Promise<{ status: string; external_name: string; external_email: string; external_token: string | null; external_sent_at: string | null; link_expired: boolean; default_external_name: string; default_external_email: string; approvals: any[] } | null> {
   const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
   if (!doc || doc.tenant_id !== tenantId) return null
-  const approvals = await (prisma as any).policyApproval.findMany({ where: { document_id: doc.id }, orderBy: { created_at: 'asc' } })
-  return { status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email, external_token: doc.external_token, external_sent_at: doc.external_sent_at ? new Date(doc.external_sent_at).toISOString() : null, approvals }
+  const [approvals, def] = await Promise.all([
+    (prisma as any).policyApproval.findMany({ where: { document_id: doc.id }, orderBy: { created_at: 'asc' } }),
+    getDefaultReviewer(tenantId),
+  ])
+  return {
+    status: doc.approval_status, external_name: doc.external_name, external_email: doc.external_email,
+    external_token: doc.external_token,
+    external_sent_at: doc.external_sent_at ? new Date(doc.external_sent_at).toISOString() : null,
+    link_expired: linkExpired(doc.external_sent_at),
+    default_external_name: def.name, default_external_email: def.email,
+    approvals,
+  }
 }
 
 // ── External (public, token-gated) review ──

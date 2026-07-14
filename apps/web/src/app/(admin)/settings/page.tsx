@@ -19,6 +19,7 @@ const SettingsSearchCtx = createContext('')
 
 const EMAIL_PREFS = [
   { key: 'policy_updates',         label: 'Policy updates',            description: 'Receive an email when a new policy version is uploaded or an existing policy is updated.',                                                          category: 'service'   },
+  { key: 'policy_approvals',       label: 'Policy approvals',          description: 'Emails about the policy approval workflow: when a policy is ready to send for external sign-off, when your external reviewer approves or sends it back, and when a policy goes live.', category: 'service' },
   { key: 'monthly_usage_report',   label: 'Monthly usage report',      description: 'A monthly summary of query activity, most-cited policies, no-match rate, and staff engagement.',                                                       category: 'service'   },
   { key: 'knowledge_gap_digest',   label: 'Knowledge gap digest',      description: 'A weekly digest of staff queries that could not be matched to any policy — helps you identify gaps in your library.',                                  category: 'service'   },
   { key: 'plan_usage_warnings',    label: 'Plan usage warnings',       description: 'An alert when your monthly query usage reaches 80% and again at 95% of your plan limit.',                                                              category: 'service'   },

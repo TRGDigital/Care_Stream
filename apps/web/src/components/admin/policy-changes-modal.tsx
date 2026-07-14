@@ -271,7 +271,22 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   }
 
   function openExtOverlay() {
-    setExtName(approval?.external_name || ''); setExtEmail(approval?.external_email || ''); setError(''); setShowExtOverlay(true)
+    // Pre-fill from this policy's reviewer, else the tenant's saved default (#7).
+    setExtName(approval?.external_name || approval?.default_external_name || '')
+    setExtEmail(approval?.external_email || approval?.default_external_email || '')
+    setError(''); setShowExtOverlay(true)
+  }
+  async function revokeLink() {
+    setBusy('external'); setError('')
+    try { await createApiClient(token).analytics.revokeExternalLink(policyId); setPublishedMsg('The review link has been revoked. Send a new one when ready.'); load() }
+    catch (e: any) { setError(e.message ?? 'Could not revoke the link.') }
+    finally { setBusy(null) }
+  }
+  async function reissueLink() {
+    setBusy('external'); setError('')
+    try { await createApiClient(token).analytics.reissueExternalLink(policyId); setPublishedMsg('A fresh review link has been sent.'); load() }
+    catch (e: any) { setError(e.message ?? 'Could not reissue the link.') }
+    finally { setBusy(null) }
   }
   async function sendExternalReviewer() {
     if (!extEmail.trim()) { setError('Enter the reviewer’s email address.'); return }
@@ -291,6 +306,8 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External reviewer'
   const externalSent = !!approval?.external_email
   const externalWho  = approval?.external_name || approval?.external_email || 'the reviewer'
+  const waitingDays = approval?.external_sent_at ? Math.floor((Date.now() - new Date(approval.external_sent_at).getTime()) / 86_400_000) : null
+  const linkExpired = approval?.link_expired ?? false
   const externalSentDate = approval?.external_sent_at ? new Date(approval.external_sent_at).toLocaleDateString('en-GB') : ''
   // Did the care manager approve (relevant to the pending_external stage message)?
   const managerApproved = (approval?.approvals ?? []).some(a => a.stage === 'manager' && a.decision === 'approved')
@@ -323,8 +340,13 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 {managerApproved && <span className="hidden items-center gap-1 rounded-btn border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-medium text-green-700 sm:inline-flex"><Check size={12} /> Care manager approved</span>}
                 {externalSent ? (
                   <>
-                    <span className="inline-flex items-center gap-1.5 rounded-btn border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Sent to {externalWho}{externalSentDate ? ` on ${externalSentDate}` : ''} · awaiting approval</span>
-                    <button onClick={openExtOverlay} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">Resend</button>
+                    <span className={`inline-flex items-center gap-1.5 rounded-btn border px-3 py-1.5 text-xs font-medium ${linkExpired ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+                      Sent to {externalWho}{externalSentDate ? ` on ${externalSentDate}` : ''}
+                      {linkExpired ? ' · link expired' : waitingDays != null && waitingDays >= 1 ? ` · waiting ${waitingDays} day${waitingDays === 1 ? '' : 's'}` : ' · awaiting approval'}
+                    </span>
+                    <button onClick={reissueLink} disabled={busy === 'external'} className="rounded-btn border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50" title="Send a fresh link (resets the 30-day expiry)">Reissue link</button>
+                    <button onClick={openExtOverlay} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50" title="Send to a different reviewer">Change reviewer</button>
+                    <button onClick={revokeLink} disabled={busy === 'external'} className="rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50" title="Invalidate the current link">Revoke</button>
                   </>
                 ) : (
                   <button onClick={openExtOverlay}

@@ -14,7 +14,7 @@ import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch 
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -926,6 +926,25 @@ analyticsRouter.post('/gaps/policy-document/:policyId/external-recipient', requi
     if (!r) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
     ok(res, r)
   } catch (e: any) { err(res, 'RECIPIENT_FAILED', e.message ?? 'Could not set the reviewer.', 500) }
+})
+
+// #4 — revoke / reissue the external review link.
+analyticsRouter.post('/gaps/policy-document/:policyId/external-revoke', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const okd = await revokeExternalLink(tenantId, String(req.params.policyId))
+    if (!okd) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
+    ok(res, { revoked: true })
+  } catch (e: any) { err(res, 'REVOKE_FAILED', e.message ?? 'Could not revoke the link.', 500) }
+})
+
+analyticsRouter.post('/gaps/policy-document/:policyId/external-reissue', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const r = await reissueExternalLink(tenantId, String(req.params.policyId))
+    if (!r) { err(res, 'NOT_FOUND', 'No reviewer set, or the policy is not awaiting external approval.', 404); return }
+    ok(res, r)
+  } catch (e: any) { err(res, 'REISSUE_FAILED', e.message ?? 'Could not reissue the link.', 500) }
 })
 
 // ─── POST /analytics/gaps/:reference_key/detail ──────────────────────────────

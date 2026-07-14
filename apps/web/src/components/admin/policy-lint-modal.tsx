@@ -31,6 +31,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [adoptErr, setAdoptErr] = useState('')
   const [pending, setPending] = useState(0)
   const [numbering, setNumbering] = useState<number[]>([])          // replaceable position → document-order number
+  const [markCounts, setMarkCounts] = useState<Record<number, number>>({})  // highlighted occurrences per number
+  const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
+  const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
 
   // The distinct stale terms of a finding (phrase + acronyms). Falls back to samples for results
   // cached before terms existed.
@@ -52,13 +55,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // that truncation is fixed — essentially stripped letterhead/footer) is not surfaced.
   const located = ordered.filter(o => o.n >= 0)
 
-  // Scroll the preview to a finding's first highlight and flash it.
+  // Scroll to the NEXT occurrence of a finding each click (1st, 2nd, … then wraps), flashing it.
   function scrollToHighlight(n: number) {
-    const el = previewRef.current?.querySelector<HTMLElement>(`mark[data-lint="${n}"]`)
-    if (!el) return
+    const marks = previewRef.current?.querySelectorAll<HTMLElement>(`mark[data-lint="${n}"]`)
+    if (!marks || !marks.length) return
+    const idx = (cycleRef.current[n] ?? 0) % marks.length
+    cycleRef.current[n] = idx + 1
+    const el = marks[idx]
     el.scrollIntoView({ block: 'center', behavior: 'smooth' })
     el.classList.add('ring-2', 'ring-neutral-900', 'ring-offset-1')
     setTimeout(() => el.classList.remove('ring-2', 'ring-neutral-900', 'ring-offset-1'), 1400)
+    setNavPos(s => ({ ...s, [n]: idx + 1 }))
   }
 
   // Load the policy preview (right pane).
@@ -77,6 +84,12 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     if (!root || html == null) return
     root.innerHTML = html
     setNumbering(highlightStaleTerms(root, replaceable.map(({ f }) => termsOf(f))))
+    // Count highlighted occurrences per number and reset the "Show in policy" cycle.
+    const counts: Record<number, number> = {}
+    root.querySelectorAll<HTMLElement>('mark[data-lint]').forEach(m => { const k = Number(m.dataset.lint); counts[k] = (counts[k] ?? 0) + 1 })
+    setMarkCounts(counts)
+    cycleRef.current = {}
+    setNavPos({})
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -139,14 +152,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             {located.length > 0 && (
               <div className="space-y-3">
                 <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><FilePenLine size={15} className="text-amber-600" /> Replace out-of-date wording ({located.length})</p>
-                {located.map(({ f, i, n }) => (
+                {located.map(({ f, i, n }) => {
+                  const total = markCounts[n] ?? f.count      // highlighted occurrences you can step through
+                  const shown = navPos[n]
+                  return (
                   <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
                     <div className="flex items-start gap-2">
-                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${n >= 0 ? quoteColour(n) : 'bg-gray-200 text-neutral-mid'}`}>{n >= 0 ? n + 1 : '–'}</span>
+                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(n)}`}>{n + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
                           {f.label}
-                          {f.count > 1 && <span className="text-xs font-normal text-neutral-mid">×{f.count}</span>}
+                          {total > 1 && <span className="text-xs font-normal text-neutral-mid">×{total}</span>}
                         </p>
                         {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
                         <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
@@ -165,13 +181,14 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           )}
                           <button onClick={() => scrollToHighlight(n)}
                             className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
-                            <Locate size={13} /> Show in policy
+                            <Locate size={13} /> {total > 1 ? (shown ? `Show ${shown} of ${total}` : `Show in policy (${total})`) : 'Show in policy'}
                           </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 

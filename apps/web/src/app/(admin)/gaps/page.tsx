@@ -609,6 +609,12 @@ type MatrixData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analyti
 
 const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency' }
 const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600' }
+const MSTATUS: Record<string, { label: string; cls: string }> = {
+  published:        { label: 'Live',              cls: 'bg-green-50 text-green-700' },
+  draft:            { label: 'Draft',             cls: 'bg-gray-100 text-neutral-mid' },
+  pending_manager:  { label: 'With care manager', cls: 'bg-amber-50 text-amber-700' },
+  pending_external: { label: 'Awaiting external', cls: 'bg-sky-50 text-sky-700' },
+}
 
 function PolicyMatrixSection({ token, userId }: { token: string; userId: string }) {
   const [data, setData] = useState<MatrixData | null>(null)
@@ -651,7 +657,8 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
                 <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
                   <th className="px-6 py-2.5">Policy</th>
                   <th className="px-3 py-2.5">Updated from</th>
-                  <th className="px-3 py-2.5">Completed</th>
+                  <th className="px-3 py-2.5">Status</th>
+                  <th className="px-3 py-2.5">Last change</th>
                   <th className="px-6 py-2.5">Next review due</th>
                 </tr>
               </thead>
@@ -669,10 +676,15 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
                         ))}
                       </div>
                     </td>
+                    <td className="px-3 py-3"><span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${MSTATUS[r.status]?.cls ?? 'bg-gray-100 text-neutral-mid'}`}>{MSTATUS[r.status]?.label ?? r.status}</span></td>
                     <td className="px-3 py-3 whitespace-nowrap text-neutral-dark tabular-nums">{fmt(r.updated_at)}</td>
                     <td className="px-6 py-3 whitespace-nowrap tabular-nums">
-                      <span className={r.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(r.next_review_due)}</span>
-                      {r.review_overdue && <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
+                      {r.status !== 'published' ? <span className="text-xs text-neutral-mid">once published</span> : (
+                        <>
+                          <span className={r.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(r.next_review_due)}</span>
+                          {r.review_overdue && <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -397,6 +397,7 @@ function sourceOfRef(refKey: string): 'out_of_date' | 'consistency' | 'coverage'
 
 export interface MatrixRow {
   policy_id: string; name: string; version: string
+  status: 'published' | 'draft' | 'pending_manager' | 'pending_external'
   updated_at: string | null
   sources: Array<'coverage' | 'out_of_date' | 'consistency'>
   last_reviewed_at: string | null
@@ -404,41 +405,51 @@ export interface MatrixRow {
   review_overdue: boolean
 }
 
-// The policy update matrix: every policy that has been published, what drove the update(s), when
-// it went live, and when it is next due for review.
+// The policy update matrix: every policy with adopted changes (published or in progress), what
+// drove the update(s), when it last changed, and — once published — when it is next due for review.
 export async function getPolicyMatrix(tenantId: string): Promise<{ policies: MatrixRow[] }> {
   const docs = await (prisma as any).policyDocument.findMany({
-    where: { tenant_id: tenantId, published_at: { not: null } },
-    select: { id: true, policy_id: true, version: true, published_at: true },
+    where: { tenant_id: tenantId },
+    select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true },
   })
   if (!docs.length) return { policies: [] }
 
   const [policies, changes] = await Promise.all([
     (prisma as any).policy.findMany({ where: { id: { in: (docs as any[]).map(d => d.policy_id) } }, select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true } }),
-    (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, published: true }, select: { document_id: true, reference_key: true } }),
+    (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true } }),
   ])
   const polById = new Map((policies as any[]).map(p => [p.id, p]))
   const sourcesByDoc = new Map<string, Set<string>>()
+  const lastChangeByDoc = new Map<string, number>()
   for (const c of changes as any[]) {
     if (!sourcesByDoc.has(c.document_id)) sourcesByDoc.set(c.document_id, new Set())
     sourcesByDoc.get(c.document_id)!.add(sourceOfRef(String(c.reference_key ?? '')))
+    const t = c.applied_at ? new Date(c.applied_at).getTime() : 0
+    lastChangeByDoc.set(c.document_id, Math.max(lastChangeByDoc.get(c.document_id) ?? 0, t))
   }
 
-  const rows: MatrixRow[] = (docs as any[]).map(d => {
-    const p = polById.get(d.policy_id)
-    const publishedAt = d.published_at ? new Date(d.published_at) : null
-    const reviewed = p?.last_reviewed_at ? new Date(p.last_reviewed_at) : publishedAt
-    const interval = p?.review_interval_days ?? 365
-    const nextDue = reviewed ? new Date(reviewed.getTime() + interval * 86_400_000) : null
-    return {
-      policy_id: d.policy_id, name: p?.name ?? 'Policy', version: d.version,
-      updated_at: publishedAt?.toISOString() ?? null,
-      sources: [...(sourcesByDoc.get(d.id) ?? [])] as MatrixRow['sources'],
-      last_reviewed_at: reviewed?.toISOString() ?? null,
-      next_review_due: nextDue?.toISOString() ?? null,
-      review_overdue: nextDue ? Date.now() > nextDue.getTime() : false,
-    }
-  }).sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+  const rows: MatrixRow[] = (docs as any[])
+    .filter(d => sourcesByDoc.has(d.id))   // only policies that actually have adopted changes
+    .map(d => {
+      const p = polById.get(d.policy_id)
+      const status = d.approval_status as MatrixRow['status']
+      const publishedAt = d.published_at ? new Date(d.published_at) : null
+      const lastChange = lastChangeByDoc.get(d.id) ? new Date(lastChangeByDoc.get(d.id)!) : null
+      const updatedAt = publishedAt ?? lastChange
+      // A review date only makes sense once it's live.
+      const reviewed = status === 'published' ? (p?.last_reviewed_at ? new Date(p.last_reviewed_at) : publishedAt) : null
+      const interval = p?.review_interval_days ?? 365
+      const nextDue = reviewed ? new Date(reviewed.getTime() + interval * 86_400_000) : null
+      return {
+        policy_id: d.policy_id, name: p?.name ?? 'Policy', version: d.version, status,
+        updated_at: updatedAt?.toISOString() ?? null,
+        sources: [...(sourcesByDoc.get(d.id) ?? [])] as MatrixRow['sources'],
+        last_reviewed_at: reviewed?.toISOString() ?? null,
+        next_review_due: nextDue?.toISOString() ?? null,
+        review_overdue: nextDue ? Date.now() > nextDue.getTime() : false,
+      }
+    })
+    .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
   return { policies: rows }
 }
 

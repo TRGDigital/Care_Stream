@@ -979,7 +979,7 @@ export function createApiClient(token: string) {
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
       consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
       // Policy update matrix.
-      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
+      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

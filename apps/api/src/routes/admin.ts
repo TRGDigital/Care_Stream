@@ -10,7 +10,7 @@ import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText } from '../services/storage/s3'
-import { formatPolicyHtml, mapLimit } from '../lib/translate'
+import { formatPolicyHtml, getEnglishPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { TRAINING_TOPICS } from '../data/training-topics'
 import { SETTING_LABELS, facilityTypeToSetting, settingLabel } from '../lib/care-setting'
@@ -795,21 +795,10 @@ adminRouter.get('/tenants/:id/policies/:policyId/preview', async (req: Request, 
 
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
 
-    // Prefer the cached English formatted HTML — this is exactly what staff receive.
-    const cachedEng = await (prisma as any).policyTranslation.findUnique({
-      where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
-    }).catch(() => null)
-
-    let html: string | null = cachedEng?.content ?? null
-    let cached = !!html
-
-    if (!html && raw) {
-      html = await formatPolicyHtml(raw, 'eng')
-      if (html) {
-        await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: html } }).catch(() => {})
-        trackAiAction(tenantId, 'policy_format', policyId)
-      }
-    }
+    // Prefer the cached English formatted HTML — this is exactly what staff receive. Self-heals
+    // if the cache is missing or truncated (rebuilds with the chunked formatter).
+    const { html, cached } = await getEnglishPolicyHtml(tenantId, policyId, raw)
+    if (html && !cached) trackAiAction(tenantId, 'policy_format', policyId)
 
     ok(res, {
       policy_id: policyId,

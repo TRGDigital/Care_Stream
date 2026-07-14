@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
-import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget, hubContentLang } from '../lib/translate'
+import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, getEnglishPolicyHtml, policyHtmlEndsCleanly, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { overrideHash } from '../lib/overrides'
 import { languageNameForCode } from '../data/languages'
 import { downloadExtractedText } from '../services/storage/s3'
@@ -286,11 +286,12 @@ meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) 
   if (!docRes?.document) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { name: true } })
   let html = ''
-  const cached = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true } }).catch(() => null)
-  if (cached?.content) html = cached.content
+  const existingEng = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true } }).catch(() => null)
+  if (existingEng?.content && policyHtmlEndsCleanly(existingEng.content)) html = existingEng.content
   else {
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
-    if (raw) { const h = await formatPolicyHtml(raw, 'eng'); if (h) { html = h; await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: h } }).catch(() => {}) } }
+    const { html: h } = await getEnglishPolicyHtml(tenantId, policyId, raw)
+    if (h) html = h
   }
   const ctx = await getAdoptionContext(tenantId)
   ok(res, { policy_name: policy?.name ?? 'Policy', version: docRes.document.version, html, changes: docRes.changes, show_role_names: ctx.show_role_names, role_names: ctx.role_names })
@@ -849,20 +850,30 @@ meRouter.get('/policy/:policyId', async (req: Request, res: Response) => {
   // ── Stage 1: clean + format English HTML (cached) ───────────────────────────
   const cachedEng = await (prisma as any).policyTranslation.findUnique({ where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } } }).catch(() => null)
   let englishHtml: string | null = cachedEng?.content ?? null
-  const engWasCached = !!englishHtml
+  // A cached copy that ends mid-content is a truncated render from the old formatter — rebuild it.
+  const engWasCached = !!englishHtml && policyHtmlEndsCleanly(englishHtml)
 
-  if (!englishHtml) {
+  if (!engWasCached) {
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
-    if (!raw) { ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return }
-    englishHtml = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 90_000, null)
-    if (englishHtml) {
-      await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: englishHtml } }).catch(() => {})
-      trackAiAction(tenantId, 'policy_format', policyId)
-    } else {
-      console.error(`[me/policy] format failed for ${policyId} — serving raw text`)
-      ok(res, { policy_id: policyId, title, content: raw, lang: 'eng', html: false }); return
+    if (raw) {
+      const fresh = await withTranslationBudget(formatPolicyHtml(raw, 'eng'), 90_000, null)
+      if (fresh) {
+        englishHtml = fresh
+        await (prisma as any).policyTranslation.upsert({
+          where:  { policy_id_lang: { policy_id: policyId, lang: 'eng' } },
+          update: { content: fresh },
+          create: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: fresh },
+        }).catch(() => {})
+        trackAiAction(tenantId, 'policy_format', policyId)
+      } else if (!englishHtml) {
+        console.error(`[me/policy] format failed for ${policyId} — serving raw text`)
+        ok(res, { policy_id: policyId, title, content: raw, lang: 'eng', html: false }); return
+      }
+    } else if (!englishHtml) {
+      ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return
     }
   }
+  if (!englishHtml) { ok(res, { policy_id: policyId, title, content: '', lang: 'eng', html: false, processing: policy.status === 'processing' }); return }
 
   if (lang === 'eng') { ok(res, { policy_id: policyId, title, content: englishHtml, lang: 'eng', html: true }); return }
 

@@ -461,22 +461,38 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
     .filter(l => !/description automatically generated/i.test(l))
     .join('\n')
     .trim()
+  if (!pre) return null
+
+  // Chunk by paragraphs so a long policy is NOT truncated at the model's output limit — the
+  // whole policy is formatted section by section and the HTML is concatenated in order.
+  const chunks: string[] = []
+  let cur = ''
+  for (const para of pre.split(/\n\n+/)) {
+    if (cur && (cur.length + para.length + 2) > 5000) { chunks.push(cur); cur = para }
+    else cur = cur ? `${cur}\n\n${para}` : para
+  }
+  if (cur) chunks.push(cur)
 
   const translateLine = name ? `Translate every piece of text into ${name}.` : ''
-  const prompt = [
-    'You are formatting a UK care-home policy so staff can read it easily on screen.',
-    'First, REMOVE any letterhead or contact details: the organisation-name banner, "Registered Office", postal address, telephone number, website URL, email address, and any image descriptions (e.g. "A green house with a fence", "Description automatically generated").',
-    'Then format the remaining content as clean HTML: the policy title as a single <h2>; section/sub-section headings as <h3>; lists of items or steps as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels.',
-    'Preserve ALL policy content, meaning, headings and wording exactly — do NOT summarise, shorten, reword, or omit anything substantive. Only restructure and tidy.',
-    translateLine,
-    gloss?.instruction ? gloss.instruction.trim() : '',
-    'Return ONLY the HTML body — no <html>, <head> or <body> tags, and no markdown code fences.',
-    '',
-    'POLICY TEXT:',
-    pre,
-  ].filter(Boolean).join('\n')
 
-  try {
+  const formatChunk = async (chunk: string, first: boolean): Promise<string> => {
+    const prompt = [
+      'You are formatting a UK care-home policy so staff can read it easily on screen.',
+      first
+        ? 'First, REMOVE any letterhead or contact details: the organisation-name banner, "Registered Office", postal address, telephone number, website URL, email address, and any image descriptions (e.g. "A green house with a fence", "Description automatically generated").'
+        : 'This is a CONTINUATION of the same policy — do NOT add a document title. REMOVE any footer, letterhead or contact details (registered office, postal address, telephone, website, email, image descriptions).',
+      first
+        ? 'Then format the remaining content as clean HTML: the policy title as a single <h2>; section/sub-section headings as <h3>; lists of items or steps as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels.'
+        : 'Format this section as clean HTML: section/sub-section headings as <h3>; lists as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels. Do NOT add an <h2> title.',
+      'Preserve ALL policy content, meaning, headings and wording exactly — do NOT summarise, shorten, reword, or omit anything substantive. Only restructure and tidy.',
+      translateLine,
+      gloss?.instruction ? gloss.instruction.trim() : '',
+      'Return ONLY the HTML body — no <html>, <head> or <body> tags, and no markdown code fences.',
+      '',
+      'POLICY TEXT:',
+      chunk,
+    ].filter(Boolean).join('\n')
+
     const msg = await anthropic.messages.create({
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 8000,
@@ -487,11 +503,45 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
     html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
     // Safety: strip script/style blocks and inline event handlers.
     html = html.replace(/<\/?(script|style)[^>]*>/gi, '').replace(/\son\w+\s*=\s*"[^"]*"/gi, '').replace(/\son\w+\s*=\s*'[^']*'/gi, '')
-    return html || null
+    return html
+  }
+
+  try {
+    // Concurrency-limited but order-preserving, so sections stay in order.
+    const parts = await mapLimit(chunks, 3, (chunk: string, i: number) => formatChunk(chunk, i === 0).catch(() => ''))
+    const full = parts.filter(Boolean).join('\n').trim()
+    return full || null
   } catch (e) {
     console.error('[policy] format failed:', e)
     return null
   }
+}
+
+// A formatted-HTML copy that ends mid-content is a truncated render from the old single-call
+// formatter (which capped long policies at the model's output limit).
+export const policyHtmlEndsCleanly = (h: string) =>
+  /(<\/(p|li|ul|ol|h[1-6]|table|blockquote|div)>|<hr\s*\/?>)\s*$/i.test((h || '').trim())
+
+// Single source of truth for a policy's English formatted HTML: returns the cached copy if it's
+// complete, otherwise (missing OR truncated) rebuilds it with the chunked formatter and re-caches
+// via upsert. Self-heals the large policies that the old formatter truncated, everywhere it's read.
+export async function getEnglishPolicyHtml(
+  tenantId: string, policyId: string, raw: string | null,
+): Promise<{ html: string | null; cached: boolean }> {
+  const existing = await (prisma as any).policyTranslation.findUnique({
+    where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
+  }).catch(() => null)
+  const current: string | null = existing?.content ?? null
+  if (current && policyHtmlEndsCleanly(current)) return { html: current, cached: true }
+  if (!raw) return { html: current, cached: !!current }   // can't rebuild without the source text
+  const fresh = await formatPolicyHtml(raw, 'eng')
+  if (!fresh) return { html: current, cached: !!current }
+  await (prisma as any).policyTranslation.upsert({
+    where:  { policy_id_lang: { policy_id: policyId, lang: 'eng' } },
+    update: { content: fresh },
+    create: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: fresh },
+  }).catch(() => {})
+  return { html: fresh, cached: false }
 }
 
 // Translate a full policy document into the target language, chunk by chunk so

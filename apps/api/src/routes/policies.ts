@@ -14,7 +14,7 @@ import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
-import { formatPolicyHtml } from '../lib/translate'
+import { getEnglishPolicyHtml } from '../lib/translate'
 
 export const policiesRouter = Router()
 
@@ -610,19 +610,9 @@ policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Respo
 
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
 
-    const cachedEng = await (prisma as any).policyTranslation.findUnique({
-      where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
-    }).catch(() => null)
-
-    let html: string | null = cachedEng?.content ?? null
-    const cached = !!html
-    if (!html && raw) {
-      html = await formatPolicyHtml(raw, 'eng')
-      if (html) {
-        await (prisma as any).policyTranslation.create({ data: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: html } }).catch(() => {})
-        trackAiAction(tenantId, 'policy_format', policyId)
-      }
-    }
+    // Self-healing formatted HTML: rebuilds (chunked) if the cache is missing or truncated.
+    const { html, cached } = await getEnglishPolicyHtml(tenantId, policyId, raw)
+    if (html && !cached) trackAiAction(tenantId, 'policy_format', policyId)
 
     ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached, html: html ?? '', raw: raw ?? '', has_raw: !!raw })
   } catch (e: any) {

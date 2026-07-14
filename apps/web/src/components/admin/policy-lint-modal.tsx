@@ -51,13 +51,6 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const located = ordered.filter(o => o.n >= 0)
   const alternatives = ordered.filter(o => o.n < 0)
 
-  // A distinctive word to jump to for "Find in policy" (single words match even when the full
-  // phrase doesn't, e.g. it wraps across a line break).
-  const anchorWord = (f: Finding): string => {
-    const words = termsOf(f).flatMap(t => t.split(/\s+/)).filter(w => w.replace(/[^A-Za-z0-9]/g, '').length >= 4)
-    return words.sort((a, b) => b.length - a.length)[0] ?? (termsOf(f)[0] ?? '')
-  }
-
   // Load the policy preview (right pane).
   useEffect(() => {
     setPreviewLoad(true)
@@ -173,7 +166,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             {alternatives.length > 0 && (
               <div className="space-y-3">
                 <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><HelpCircle size={15} className="text-neutral-mid" /> Alternative suggestions ({alternatives.length})</p>
-                <p className="-mt-1 text-xs text-neutral-mid">We found these in the policy text but couldn&rsquo;t pinpoint them in this preview — they may be worded slightly differently. Review the draft after replacing.</p>
+                <p className="-mt-1 text-xs text-neutral-mid">These appear in the full policy but not in this cleaned view — most likely in a header, footer or contact block that was removed for readability. You can still replace them in your draft; review it before publishing.</p>
                 {alternatives.map(({ f, i }) => (
                   <div key={i} className="rounded-lg border border-dashed border-gray-300 bg-neutral-light/20 px-4 py-3">
                     <div className="flex items-start gap-2">
@@ -188,7 +181,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           <span className="text-neutral-mid">→</span>
                           <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
                         </p>
-                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <div className="mt-2.5">
                           {adopted.has(i) ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
                           ) : (
@@ -197,10 +190,6 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                               {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace anyway</>}
                             </button>
                           )}
-                          <button onClick={() => setPolicySearch(anchorWord(f))}
-                            className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
-                            <Search size={13} /> Find in policy
-                          </button>
                         </div>
                       </div>
                     </div>

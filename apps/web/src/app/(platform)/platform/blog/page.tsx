@@ -686,6 +686,10 @@ function PostForm({
 
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 
+// Primary marketing pages surfaced under the "Main site pages" tab (and excluded
+// from the generic "Pages" tab so nothing is duplicated across tabs).
+const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
+
 const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string; footer_label?: string }> = [
   { path: '/',                      title: 'Home' },
   { path: '/how-it-works',          title: 'How It Works',              footer_group: 'Product',      footer_label: 'How It Works' },
@@ -1840,9 +1844,18 @@ export default function BlogPage() {
   )
   const effectiveImage = (p: SitePage): string | null => p.og_image_url || heroByPath[p.path] || null
 
+  // Which pages live under the dedicated Main site / Training tabs.
+  const isTrainingPath = (p: SitePage) => p.path.startsWith('/staff-training/')
+  const isMainSitePath = (p: SitePage) => MAIN_SITE_PATHS_SET.has(p.path)
+  const trainingPagesList = allPages.filter(isTrainingPath)
+  const mainSitePagesList = allPages.filter(isMainSitePath)
+
+  // The generic "Pages" tab shows everything that ISN'T already surfaced under the
+  // dedicated Main site pages / Training pages tabs, so there are no duplicates.
+  const otherPages = allPages.filter(p => !isTrainingPath(p) && !isMainSitePath(p))
   const filteredPages = pageSearch
-    ? allPages.filter(p => p.path.includes(pageSearch.toLowerCase()) || p.title.toLowerCase().includes(pageSearch.toLowerCase()))
-    : allPages
+    ? otherPages.filter(p => p.path.includes(pageSearch.toLowerCase()) || p.title.toLowerCase().includes(pageSearch.toLowerCase()))
+    : otherPages
 
   // Footer grouped view
   const footerPages = allPages.filter(p => p.is_footer_page && p.footer_group)
@@ -1853,11 +1866,6 @@ export default function BlogPage() {
 
   const publishedCount = posts.filter(p => p.status === 'published').length
   const featuredCount  = posts.filter(p => p.is_featured).length
-
-  // Curated set of primary marketing pages surfaced under the "Main site pages" tab.
-  const MAIN_SITE_PATHS = ['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/about', '/contact', '/demo', '/faq', '/trust', '/case-studies']
-  const trainingPagesList = allPages.filter(p => p.path.startsWith('/staff-training/'))
-  const mainSitePagesList = allPages.filter(p => MAIN_SITE_PATHS.includes(p.path))
 
   // One page row (with its inline editor) — shared by the Pages, Training pages
   // and Main site pages tabs so they all get the same content + FAQ editor.

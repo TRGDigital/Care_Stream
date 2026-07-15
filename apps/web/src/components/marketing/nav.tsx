@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { SiteImage } from '@/components/site-image'
 import {
   Menu, X, ChevronDown,
   GraduationCap, Users, ClipboardList, Shield, HelpCircle, RefreshCw, MessageSquare, FileText,
@@ -127,9 +126,11 @@ export function MarketingNav() {
       }`}
     >
       <div className="mx-auto flex h-[72px] max-w-content items-center justify-between px-6">
-        {/* Logo */}
+        {/* Logo — the SVG is ~14KB and needs no image optimizer, and is NOT marked
+            high-priority, so it doesn't compete with the hero image for the LCP fetch. */}
         <Link href="/" className="flex flex-shrink-0 items-center gap-2">
-          <SiteImage src="/logo-color.png" alt="CareStreamAI" width={4336} height={1301} priority sizes="190px" className="h-14 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-color.svg" alt="CareStreamAI" width={187} height={56} className="h-14 w-auto" />
         </Link>
 
         {/* Desktop nav */}

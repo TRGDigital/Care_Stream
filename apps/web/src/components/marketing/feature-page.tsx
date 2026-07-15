@@ -65,17 +65,17 @@ function Hero({ content, showImage }: { content: FeatureContent; showImage: bool
       <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
       <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }} />
       <div className="relative mx-auto max-w-content px-6 pb-24 pt-20 md:pb-28 md:pt-24">
-        <div className={showImage ? 'grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]' : 'mx-auto max-w-3xl text-center'}>
+        <div className={showImage ? 'grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]' : 'mx-auto max-w-content text-center'}>
           <div>
             <div className={`mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-white/60 ${showImage ? '' : 'justify-center'}`}>
               <Link href="/pricing" className="hover:text-white">Features</Link>
               <span>/</span>
               <span className="text-white/80">{content.eyebrow}</span>
             </div>
-            <h1 className={`mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl ${showImage ? 'max-w-xl' : 'mx-auto max-w-2xl'}`}>
+            <h1 className={`mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl ${showImage ? 'max-w-xl' : 'mx-auto max-w-4xl'}`}>
               {content.title}
             </h1>
-            <p className={`mb-8 text-lg leading-relaxed text-white/75 ${showImage ? 'max-w-xl' : 'mx-auto max-w-2xl'}`}>
+            <p className={`mb-8 text-lg leading-relaxed text-white/75 ${showImage ? 'max-w-xl' : 'mx-auto max-w-3xl'}`}>
               {content.intro}
             </p>
             <div className={`mb-8 flex flex-wrap gap-2 ${showImage ? '' : 'justify-center'}`}>
@@ -118,10 +118,10 @@ function Hero({ content, showImage }: { content: FeatureContent; showImage: bool
 function WhatItIs({ content }: { content: FeatureContent }) {
   return (
     <section className="bg-white py-24">
-      <div className="mx-auto max-w-3xl px-6">
+      <div className="mx-auto max-w-content px-6">
         <SectionLabel>What It Is</SectionLabel>
-        <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">{content.whatItIs.heading}</h2>
-        <p className="text-lg leading-relaxed text-neutral-mid">{content.whatItIs.body}</p>
+        <h2 className="mb-6 max-w-4xl text-4xl font-extrabold leading-tight text-neutral-dark">{content.whatItIs.heading}</h2>
+        <p className="max-w-4xl text-lg leading-relaxed text-neutral-mid">{content.whatItIs.body}</p>
       </div>
     </section>
   )

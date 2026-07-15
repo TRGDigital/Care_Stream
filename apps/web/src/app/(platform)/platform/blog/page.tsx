@@ -1136,6 +1136,54 @@ function LinksEditor({ links, onChange }: {
   )
 }
 
+// ─── Single social-image field (upload or paste URL) ────────────────────────────
+
+function SingleImageField({ value, token, onChange }: {
+  value: string
+  token: string
+  onChange: (url: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  async function handleFile(file: File) {
+    if (!token) return
+    setUploading(true); setError('')
+    try {
+      const prepared = await resizeImageForUpload(file)
+      if (prepared.size > 4_400_000) { setError('Image is too large even after compression.'); return }
+      const url = await uploadBlogImage(token, prepared)
+      onChange(url)
+    } catch (e: any) {
+      setError(e?.message ?? 'Upload failed.')
+    } finally {
+      setUploading(false)
+    }
+  }
+  return (
+    <div>
+      <div className="flex items-start gap-3">
+        <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50">
+          {value ? <img src={value} alt="Social preview" className="h-full w-full object-cover" /> : <span className="text-xs text-gray-400">No image</span>}
+        </div>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer rounded-md border border-teal px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal-light/40">
+              {uploading ? 'Uploading…' : value ? 'Replace image' : 'Upload image'}
+              <input type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
+            </label>
+            {value && <button type="button" onClick={() => onChange('')} className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>}
+          </div>
+          <input value={value} onChange={e => onChange(e.target.value)} placeholder="or paste an image URL…"
+            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          <p className="text-[11px] text-neutral-mid">Recommended 1200×630px. Shown when the page is shared on social media.</p>
+        </div>
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  )
+}
+
 // ─── Collection form ────────────────────────────────────────────────────────────
 
 const EMPTY_COLLECTION = {
@@ -1238,8 +1286,8 @@ function CollectionForm({
               placeholder="A one or two sentence summary for search results." className={`${input} resize-none`} />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Social image URL</label>
-            <input value={form.og_image_url} onChange={e => set('og_image_url', e.target.value)} placeholder="Paste an image URL for social sharing…" className={input} />
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Social sharing image</label>
+            <SingleImageField value={form.og_image_url} token={token} onChange={v => set('og_image_url', v)} />
           </div>
         </div>
       </AccordionSection>
@@ -1335,9 +1383,10 @@ function PairListEditor({ items, onChange, keyA, keyB, phA, phB }: {
 // ─── Feature page form ───────────────────────────────────────────────────────────
 
 function FeaturePageForm({
-  initial, onSave, onCancel, saving, saveError,
+  initial, token, onSave, onCancel, saving, saveError,
 }: {
   initial?: Partial<FeaturePage> | null
+  token: string
   onSave: (data: any) => void
   onCancel: () => void
   saving: boolean
@@ -1461,7 +1510,10 @@ function FeaturePageForm({
         <div className="space-y-3">
           <input value={form.meta_title} onChange={e => set('meta_title', e.target.value)} placeholder="Meta title (defaults to the feature title)" className={input} />
           <textarea value={form.meta_description} onChange={e => set('meta_description', e.target.value)} rows={2} placeholder="Meta description" className={`${input} resize-none`} />
-          <input value={form.og_image_url} onChange={e => set('og_image_url', e.target.value)} placeholder="Social image URL" className={input} />
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-neutral-mid">Social sharing image</label>
+            <SingleImageField value={form.og_image_url} token={token} onChange={v => set('og_image_url', v)} />
+          </div>
         </div>
       </AccordionSection>
 
@@ -2182,6 +2234,7 @@ export default function BlogPage() {
 
             {showFeaturePage && (
               <FeaturePageForm
+                token={token}
                 onSave={saveFeaturePage}
                 onCancel={() => setShowFeaturePage(false)}
                 saving={savingFeaturePage}
@@ -2219,6 +2272,7 @@ export default function BlogPage() {
                       <div className="border-b border-gray-100 bg-neutral-light/40 px-5 py-4">
                         <FeaturePageForm
                           initial={editFeaturePage}
+                          token={token}
                           onSave={saveFeaturePage}
                           onCancel={() => setEditFeaturePage(null)}
                           saving={savingFeaturePage}

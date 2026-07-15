@@ -1,0 +1,110 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   BLUE THEME — throwaway preview override, scoped to `.theme-blue`.
+   Swaps the brand PURPLE (Tailwind token confusingly named `teal`) for BRIGHT
+   BLUE, so the homepage can be eyeballed in blue WITHOUT touching the real site,
+   tailwind.config.ts or globals.css.
+
+   Palette map:
+     purple #9B52B5 (blue DEFAULT)  -> #2563EB   rgb(37 99 235)
+     purple #F5EEFA (blue light)    -> #EAF1FF   rgb(234 241 255)
+     purple #7A3D9A (blue dark)     -> #1E40AF   rgb(30 64 175)
+     hero-gradient  -> linear-gradient(135deg, #0A1E5C 0%, #123FA8 40%, #2F6BFF 100%)
+     teal-gradient  -> linear-gradient(135deg, #2563EB 0%, #22B8E6 100%)
+     teal-glow      -> 0 4px 24px rgba(37,99,235,0.38)
+
+   Every rule is !important because it is fighting compiled Tailwind utilities.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── TEXT ─────────────────────────────────────────────────────────────────── */
+.theme-blue .text-teal       { color: #2563EB !important; }
+.theme-blue .text-teal-dark  { color: #1E40AF !important; }
+.theme-blue .text-teal\/80   { color: rgb(37 99 235 / 0.8) !important; }
+.theme-blue .text-teal\/60   { color: rgb(37 99 235 / 0.6) !important; }
+.theme-blue .text-teal\/20   { color: rgb(37 99 235 / 0.2) !important; }
+
+/* ── BACKGROUND (solid) ───────────────────────────────────────────────────── */
+.theme-blue .bg-teal          { background-color: #2563EB !important; }
+.theme-blue .bg-teal-light    { background-color: #EAF1FF !important; }
+.theme-blue .bg-teal-dark     { background-color: #1E40AF !important; }
+
+/* ── BACKGROUND (opacity variants) ────────────────────────────────────────── */
+.theme-blue .bg-teal\/5       { background-color: rgb(37 99 235 / 0.05) !important; }
+.theme-blue .bg-teal\/8       { background-color: rgb(37 99 235 / 0.08) !important; }
+.theme-blue .bg-teal\/10      { background-color: rgb(37 99 235 / 0.10) !important; }
+.theme-blue .bg-teal\/12      { background-color: rgb(37 99 235 / 0.12) !important; }
+.theme-blue .bg-teal\/18      { background-color: rgb(37 99 235 / 0.18) !important; }
+.theme-blue .bg-teal\/30      { background-color: rgb(37 99 235 / 0.30) !important; }
+.theme-blue .bg-teal\/60      { background-color: rgb(37 99 235 / 0.60) !important; }
+.theme-blue .bg-teal-light\/30 { background-color: rgb(234 241 255 / 0.30) !important; }
+
+/* ── BORDER ───────────────────────────────────────────────────────────────── */
+.theme-blue .border-teal      { border-color: #2563EB !important; }
+.theme-blue .border-teal\/15  { border-color: rgb(37 99 235 / 0.15) !important; }
+.theme-blue .border-teal\/20  { border-color: rgb(37 99 235 / 0.20) !important; }
+.theme-blue .border-teal\/30  { border-color: rgb(37 99 235 / 0.30) !important; }
+
+/* ── RING (defensive — not used on the homepage today) ────────────────────── */
+.theme-blue .ring-teal        { --tw-ring-color: #2563EB !important; }
+.theme-blue .ring-teal\/20    { --tw-ring-color: rgb(37 99 235 / 0.20) !important; }
+
+/* ── GRADIENT IMAGES (bg-*-gradient utilities) ────────────────────────────── */
+.theme-blue .bg-hero-gradient { background-image: linear-gradient(135deg, #0A1E5C 0%, #123FA8 40%, #2F6BFF 100%) !important; }
+.theme-blue .bg-teal-gradient { background-image: linear-gradient(135deg, #2563EB 0%, #22B8E6 100%) !important; }
+
+/* ── GRADIENT STOPS (from-/to-/via- utilities) ────────────────────────────── */
+.theme-blue .from-teal {
+  --tw-gradient-from: #2563EB var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.theme-blue .from-teal-light {
+  --tw-gradient-from: #EAF1FF var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(234 241 255 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.theme-blue .from-teal-dark {
+  --tw-gradient-from: #1E40AF var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(30 64 175 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.theme-blue .to-teal        { --tw-gradient-to: #2563EB var(--tw-gradient-to-position) !important; }
+.theme-blue .to-teal-light  { --tw-gradient-to: #EAF1FF var(--tw-gradient-to-position) !important; }
+.theme-blue .to-teal-dark   { --tw-gradient-to: #1E40AF var(--tw-gradient-to-position) !important; }
+.theme-blue .via-teal {
+  --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #2563EB var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+/* Arbitrary-value purple stop used in the DiverseWorkforce blur glow:
+   `bg-gradient-to-tr from-[#9B52B5] via-[#5eead4] to-[#E8850A]` */
+.theme-blue .from-\[\#9B52B5\] {
+  --tw-gradient-from: #2563EB var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+/* ── SHADOW (glow) ────────────────────────────────────────────────────────── */
+.theme-blue .shadow-teal-glow {
+  --tw-shadow: 0 4px 24px rgba(37,99,235,0.38) !important;
+  --tw-shadow-colored: 0 4px 24px var(--tw-shadow-color) !important;
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), 0 4px 24px rgba(37,99,235,0.38) !important;
+}
+
+/* ── CUSTOM globals.css CLASS (gradient text uses the teal-gradient) ───────── */
+/* Override background-image only, so -webkit-background-clip:text stays intact. */
+.theme-blue .gradient-text-teal {
+  background-image: linear-gradient(135deg, #2563EB, #22B8E6) !important;
+}
+
+/* ── INTERACTIVE STATES: hover / group-hover ──────────────────────────────── */
+.theme-blue .hover\:text-teal:hover        { color: #2563EB !important; }
+.theme-blue .hover\:text-teal-dark:hover   { color: #1E40AF !important; }
+.theme-blue .hover\:bg-teal:hover          { background-color: #2563EB !important; }
+.theme-blue .hover\:bg-teal-light:hover    { background-color: #EAF1FF !important; }
+.theme-blue .hover\:bg-teal-dark:hover     { background-color: #1E40AF !important; }
+.theme-blue .hover\:border-teal:hover      { border-color: #2563EB !important; }
+.theme-blue .hover\:border-teal\/30:hover  { border-color: rgb(37 99 235 / 0.30) !important; }
+
+.theme-blue .group:hover .group-hover\:text-teal       { color: #2563EB !important; }
+.theme-blue .group:hover .group-hover\:text-teal-dark  { color: #1E40AF !important; }
+.theme-blue .group:hover .group-hover\:bg-teal         { background-color: #2563EB !important; }

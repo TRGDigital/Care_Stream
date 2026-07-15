@@ -78,12 +78,31 @@ async function blogPages(): Promise<Entry[]> {
   return []
 }
 
+// Collections are DB-driven (published in the platform admin), so pull their slugs
+// from the public API rather than hard-coding them. Falls back to none on error.
+async function collectionPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/collections`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const collections = (await res.json())?.data?.collections ?? []
+      const items = (collections as Array<{ slug?: string }>)
+        .filter((c) => c.slug)
+        .map((c) => ({ url: `/collections/${c.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+      // Include the index when there is at least one collection.
+      return items.length > 0 ? [{ url: '/collections', changeFrequency: 'weekly', priority: 0.7 }, ...items] : []
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, blog] = await Promise.all([trainingPages(), blogPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog].filter((e) => {
+  const [training, blog, collections] = await Promise.all([trainingPages(), blogPages(), collectionPages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog, ...collections].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

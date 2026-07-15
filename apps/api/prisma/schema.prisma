@@ -1136,6 +1136,29 @@ model SitePage {
   @@map("site_pages")
 }
 
+// SEO "collection" landing pages (ecommerce-style): intro paragraph, image grid,
+// body content, a set of internal links, and an FAQ. Managed in the platform
+// Blog & Pages → Collections tab; rendered publicly at /collections/[slug].
+model Collection {
+  id               String   @id @default(uuid())
+  slug             String   @unique                          // e.g. junior-cricket-bats
+  title            String   @default("")
+  status           String   @default("draft")                // 'draft' | 'published'
+  meta_title       String?
+  meta_description String?
+  og_image_url     String?
+  intro            String   @default("")                      // HTML paragraph shown under the H1
+  images           Json     @default("[]")                    // [{ url, alt }] — grid of ~3 images
+  body             String   @default("")                      // HTML, the main content section
+  links            Json     @default("[]")                    // [{ label, url }] — internal page links
+  faqs             Json     @default("[]")                    // [{ question, answer }]
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@map("collections")
+}
+
 // Central alt-text store for static site images (managed in the platform console
 // → Blog → Alt Tags, surfaced on the marketing pages via the SiteImage component).
 model SiteImageAlt {

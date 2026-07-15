@@ -299,6 +299,26 @@ export interface SitePage {
   updated_at:     string
 }
 
+export interface CollectionImage { url: string; alt: string }
+export interface CollectionLink  { label: string; url: string }
+
+export interface Collection {
+  id:               string
+  slug:             string
+  title:            string
+  status:           string
+  meta_title:       string | null
+  meta_description: string | null
+  og_image_url:     string | null
+  intro:            string
+  images:           CollectionImage[]
+  body:             string
+  links:            CollectionLink[]
+  faqs:             Array<{ question: string; answer: string }>
+  created_at:       string
+  updated_at:       string
+}
+
 export interface GlossaryTerm {
   id:         string
   term:       string
@@ -827,6 +847,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ page: SitePage }>(`/site-pages/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/site-pages/${id}`, token, { method: 'DELETE' }),
+    },
+
+    collections: {
+      list: () =>
+        adminFetch<{ collections: Collection[] }>('/collections', token),
+      create: (data: Partial<Collection>) =>
+        adminFetch<{ collection: Collection }>('/collections', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<Collection>) =>
+        adminFetch<{ collection: Collection }>(`/collections/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      delete: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/collections/${id}`, token, { method: 'DELETE' }),
     },
 
     prompts: {

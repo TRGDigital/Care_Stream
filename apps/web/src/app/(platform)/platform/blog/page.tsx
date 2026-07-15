@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
-import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
@@ -1031,11 +1031,236 @@ function PageForm({
   )
 }
 
+// ─── Collection image grid editor ──────────────────────────────────────────────
+
+function ImageGridEditor({ images, token, onChange }: {
+  images: Array<{ url: string; alt: string }>
+  token: string
+  onChange: (imgs: Array<{ url: string; alt: string }>) => void
+}) {
+  const items = Array.isArray(images) ? images : []
+  const [uploading, setUploading] = useState<number | null>(null)
+  const [error, setError] = useState('')
+  const update = (i: number, key: 'url' | 'alt', val: string) =>
+    onChange(items.map((im, idx) => (idx === i ? { ...im, [key]: val } : im)))
+  const add = () => onChange([...items, { url: '', alt: '' }])
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+
+  async function handleFile(i: number, file: File) {
+    if (!token) return
+    setUploading(i); setError('')
+    try {
+      const prepared = await resizeImageForUpload(file)
+      if (prepared.size > 4_400_000) { setError('Image is too large even after compression.'); return }
+      const url = await uploadBlogImage(token, prepared)
+      update(i, 'url', url)
+    } catch (e: any) {
+      setError(e?.message ?? 'Upload failed.')
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.length === 0 && (
+        <p className="text-xs text-neutral-mid">No images yet. Add up to a few images to show in the grid (3 works well).</p>
+      )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {items.map((im, i) => (
+          <div key={i} className="rounded-lg border border-gray-200 bg-white p-3">
+            <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50">
+              {im.url
+                ? <img src={im.url} alt={im.alt || 'Preview'} className="h-full w-full object-cover" />
+                : <span className="text-xs text-gray-400">No image</span>}
+            </div>
+            <div className="mb-2 flex items-center gap-2">
+              <label className="cursor-pointer rounded-md border border-teal px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal-light/40">
+                {uploading === i ? 'Uploading…' : im.url ? 'Replace' : 'Upload'}
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(i, f); e.target.value = '' }} />
+              </label>
+              <button type="button" onClick={() => remove(i)} className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>
+            </div>
+            <input value={im.url} onChange={e => update(i, 'url', e.target.value)} placeholder="or paste image URL…"
+              className="mb-1.5 w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <input value={im.alt} onChange={e => update(i, 'alt', e.target.value)} placeholder="Alt text (for SEO & accessibility)"
+              className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          </div>
+        ))}
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add image</button>
+    </div>
+  )
+}
+
+// ─── Collection links editor ────────────────────────────────────────────────────
+
+function LinksEditor({ links, onChange }: {
+  links: Array<{ label: string; url: string }>
+  onChange: (links: Array<{ label: string; url: string }>) => void
+}) {
+  const items = Array.isArray(links) ? links : []
+  const update = (i: number, key: 'label' | 'url', val: string) =>
+    onChange(items.map((l, idx) => (idx === i ? { ...l, [key]: val } : l)))
+  const add = () => onChange([...items, { label: '', url: '' }])
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir
+    if (j < 0 || j >= items.length) return
+    const next = items.slice(); const t = next[i]; next[i] = next[j]; next[j] = t
+    onChange(next)
+  }
+  return (
+    <div className="space-y-2">
+      {items.length === 0 && <p className="text-xs text-neutral-mid">No links yet. Add links to related pages to help visitors and search engines.</p>}
+      {items.map((l, i) => (
+        <div key={i} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-2">
+          <div className="flex flex-1 flex-col gap-1.5 sm:flex-row">
+            <input value={l.label} onChange={e => update(i, 'label', e.target.value)} placeholder="Link text (e.g. Junior Cricket Pads)"
+              className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <input value={l.url} onChange={e => update(i, 'url', e.target.value)} placeholder="/collections/... or https://…"
+              className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          </div>
+          <div className="flex items-center gap-0.5 text-xs">
+            <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↑</button>
+            <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↓</button>
+            <button type="button" onClick={() => remove(i)} className="rounded px-2 py-0.5 font-medium text-red-600 hover:bg-red-50">✕</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add link</button>
+    </div>
+  )
+}
+
+// ─── Collection form ────────────────────────────────────────────────────────────
+
+const EMPTY_COLLECTION = {
+  title: '', slug: '', status: 'draft',
+  meta_title: '', meta_description: '', og_image_url: '',
+  intro: '', images: [] as Array<{ url: string; alt: string }>,
+  body: '', links: [] as Array<{ label: string; url: string }>,
+  faqs: [] as Array<{ question: string; answer: string }>,
+}
+
+function CollectionForm({
+  initial, token, onSave, onCancel, saving, saveError,
+}: {
+  initial?: Partial<Collection> | null
+  token: string
+  onSave: (data: any) => void
+  onCancel: () => void
+  saving: boolean
+  saveError: string
+}) {
+  const isEdit = !!initial?.id
+  const [form, setForm] = useState<any>(() => {
+    const merged: any = { ...EMPTY_COLLECTION, ...(initial ?? {}) }
+    for (const k of Object.keys(EMPTY_COLLECTION)) {
+      if (typeof (EMPTY_COLLECTION as any)[k] === 'string' && merged[k] == null) merged[k] = ''
+    }
+    merged.images = Array.isArray(initial?.images) ? initial!.images : []
+    merged.links  = Array.isArray(initial?.links)  ? initial!.links  : []
+    merged.faqs   = Array.isArray(initial?.faqs)   ? initial!.faqs   : []
+    return merged
+  })
+  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
+  // Auto-fill slug from the title until the user has typed a custom slug (create only).
+  const setTitle = (v: string) => setForm((f: any) => ({
+    ...f, title: v,
+    slug: (!isEdit && (f.slug === '' || f.slug === slugify(f.title))) ? slugify(v) : f.slug,
+  }))
+
+  const input = 'w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal'
+
+  return (
+    <div className="space-y-4 rounded-xl border border-gray-200 bg-neutral-light p-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Collection title *</label>
+          <input value={form.title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Junior Cricket Bats" className={input} />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Slug *</label>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-neutral-mid">/collections/</span>
+            <input value={form.slug} onChange={e => set('slug', slugify(e.target.value))} placeholder="junior-cricket-bats" className={input} />
+          </div>
+        </div>
+      </div>
+
+      <div className="w-40">
+        <label className="mb-1 block text-xs font-semibold text-neutral-mid">Status</label>
+        <select value={form.status} onChange={e => set('status', e.target.value)} className={input}>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+      </div>
+
+      <AccordionSection title="Intro paragraph" description="Shown directly under the page heading." defaultOpen>
+        <RichEditor value={form.intro} onChange={v => set('intro', v)} rows={4} placeholder="A short intro paragraph that sets up the collection…" />
+      </AccordionSection>
+
+      <AccordionSection title="Image grid" description="A grid of images below the intro. Three images works well.">
+        <ImageGridEditor images={form.images} token={token} onChange={v => set('images', v)} />
+      </AccordionSection>
+
+      <AccordionSection title="Main content" description="The body content below the images — 3 to 4 paragraphs.">
+        <RichEditor value={form.body} onChange={v => set('body', v)} rows={10} placeholder="Write the main content here. Headings, links and lists are all supported…" />
+      </AccordionSection>
+
+      <AccordionSection title="Page links" description="A set of links to related pages, shown below the content.">
+        <LinksEditor links={form.links} onChange={v => set('links', v)} />
+      </AccordionSection>
+
+      <AccordionSection title="FAQs" description="Frequently asked questions, shown at the bottom (and emitted as FAQ schema for SEO).">
+        <FaqEditor faqs={form.faqs} onChange={v => set('faqs', v)} />
+      </AccordionSection>
+
+      <AccordionSection title="SEO & social" description="Meta title, description and social sharing image.">
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs font-semibold text-neutral-mid">Meta title</label>
+              <span className={`text-[11px] ${(form.meta_title?.length ?? 0) > 60 ? 'text-red-500' : 'text-neutral-mid'}`}>{form.meta_title?.length ?? 0}/60</span>
+            </div>
+            <input value={form.meta_title} onChange={e => set('meta_title', e.target.value)} placeholder="Defaults to the collection title" className={input} />
+          </div>
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs font-semibold text-neutral-mid">Meta description</label>
+              <span className={`text-[11px] ${(form.meta_description?.length ?? 0) > 160 ? 'text-red-500' : 'text-neutral-mid'}`}>{form.meta_description?.length ?? 0}/160</span>
+            </div>
+            <textarea value={form.meta_description} onChange={e => set('meta_description', e.target.value)} rows={2}
+              placeholder="A one or two sentence summary for search results." className={`${input} resize-none`} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Social image URL</label>
+            <input value={form.og_image_url} onChange={e => set('og_image_url', e.target.value)} placeholder="Paste an image URL for social sharing…" className={input} />
+          </div>
+        </div>
+      </AccordionSection>
+
+      {saveError && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{saveError}</p>}
+
+      <div className="flex gap-2 pt-1">
+        <Button onClick={() => onSave(form)} disabled={saving || !form.title.trim() || !form.slug.trim()}>
+          {saving ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Check size={14} className="mr-1" />}
+          {saving ? 'Saving…' : 'Save Collection'}
+        </Button>
+        <Button variant="secondary" onClick={onCancel} disabled={saving}><X size={14} className="mr-1" />Cancel</Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'altTags'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'collections' | 'altTags'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -1063,6 +1288,13 @@ export default function BlogPage() {
   const [trainingPages, setTrainingPages] = useState<Array<{ path: string; title: string; description: string; image: string | null }>>([])
   const pageEditRef = useRef<HTMLDivElement>(null)
 
+  // Collections state
+  const [collections,      setCollections]      = useState<Collection[]>([])
+  const [showCollection,   setShowCollection]   = useState(false)
+  const [editCollection,   setEditCollection]   = useState<Collection | null>(null)
+  const [savingCollection, setSavingCollection] = useState(false)
+  const [collectionError,  setCollectionError]  = useState('')
+
   // When a page is opened for editing (including from the Footer Links tab),
   // The editor opens inline under the clicked row, so only nudge it into view if it is
   // off-screen ('nearest' never jumps the page to the top).
@@ -1076,8 +1308,8 @@ export default function BlogPage() {
   useEffect(() => {
     if (!token) return
     const api = createPlatformClient(token)
-    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex()])
-      .then(([p, a, pg, seo]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages) })
+    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex(), api.collections.list().catch(() => ({ collections: [] }))])
+      .then(([p, a, pg, seo, col]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages); setCollections(col.collections) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
@@ -1190,6 +1422,39 @@ export default function BlogPage() {
     }
   }
 
+  // ── Collection handlers ────────────────────────────────────────────────────────
+
+  async function saveCollection(form: any) {
+    if (!token) return
+    setSavingCollection(true); setCollectionError('')
+    try {
+      const api = createPlatformClient(token)
+      if (editCollection) {
+        const res = await api.collections.update(editCollection.id, form)
+        setCollections(prev => prev.map(c => c.id === editCollection.id ? res.collection : c))
+        setEditCollection(null)
+      } else {
+        const res = await api.collections.create(form)
+        setCollections(prev => [res.collection, ...prev])
+        setShowCollection(false)
+      }
+    } catch (e: any) {
+      setCollectionError(e.message ?? 'Failed to save collection.')
+    } finally {
+      setSavingCollection(false)
+    }
+  }
+
+  async function deleteCollection(id: string, title: string) {
+    if (!token || !confirm(`Delete the "${title}" collection?`)) return
+    try {
+      await createPlatformClient(token).collections.delete(id)
+      setCollections(prev => prev.filter(c => c.id !== id))
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
   // Merge DEFAULT_PAGES with DB pages — DB record wins if it exists
   const mergedPages = DEFAULT_PAGES.map(def => {
     const db = pages.find(p => p.path === def.path)
@@ -1263,7 +1528,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6">
-            {(['posts', 'authors', 'pages', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'collections', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -1273,7 +1538,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'collections' ? `Collections (${collections.length})` : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -1632,6 +1897,75 @@ export default function BlogPage() {
                         <Plus size={12} /> Add link to {group}
                       </button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Collections tab ─────────────────────────────────────────────── */}
+        {tab === 'collections' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-neutral-mid">
+                Ecommerce-style SEO landing pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/collections/&hellip;</code> — intro, image grid, content, links and FAQs.
+              </p>
+              {!showCollection && !editCollection && (
+                <Button onClick={() => setShowCollection(true)}>
+                  <Plus size={14} className="mr-1" /> New Collection
+                </Button>
+              )}
+            </div>
+
+            {showCollection && (
+              <CollectionForm
+                token={token}
+                onSave={saveCollection}
+                onCancel={() => setShowCollection(false)}
+                saving={savingCollection}
+                saveError={collectionError}
+              />
+            )}
+
+            {collections.length === 0 && !showCollection ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-neutral-light/40 px-6 py-10 text-center">
+                <p className="text-sm text-neutral-mid">No collections yet. Create your first one to build an SEO landing page.</p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                {collections.map(c => (
+                  <div key={c.id}>
+                    <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-3 last:border-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-neutral-dark">{c.title || '(untitled)'}</p>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLOURS[c.status] ?? STATUS_COLOURS.draft}`}>{c.status}</span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-neutral-mid">
+                          /collections/{c.slug}
+                          {c.status === 'published' && (
+                            <a href={`https://carestreamai.com/collections/${c.slug}`} target="_blank" rel="noreferrer" className="ml-2 text-teal hover:underline">View ↗</a>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button onClick={() => { setEditCollection(c); setShowCollection(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
+                        <button onClick={() => deleteCollection(c.id, c.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
+                      </div>
+                    </div>
+                    {editCollection?.id === c.id && (
+                      <div className="border-b border-gray-100 bg-neutral-light/40 px-5 py-4">
+                        <CollectionForm
+                          initial={editCollection}
+                          token={token}
+                          onSave={saveCollection}
+                          onCancel={() => setEditCollection(null)}
+                          saving={savingCollection}
+                          saveError={collectionError}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

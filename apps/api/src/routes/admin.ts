@@ -2872,6 +2872,87 @@ adminRouter.delete('/site-pages/:id', async (req: Request, res: Response) => {
   ok(res, { deleted: true })
 })
 
+// ─── Collections (ecommerce-style SEO landing pages) ──────────────────────────
+
+adminRouter.get('/collections', async (_req: Request, res: Response) => {
+  const collections = await (prisma as any).collection.findMany({ orderBy: { updated_at: 'desc' } })
+  ok(res, { collections, total: collections.length })
+})
+
+adminRouter.post('/collections', async (req: Request, res: Response) => {
+  const { title, slug } = req.body ?? {}
+  if (!title?.trim()) { err(res, 'VALIDATION_ERROR', 'Title is required.'); return }
+  if (!slug?.trim())  { err(res, 'VALIDATION_ERROR', 'Slug is required.');  return }
+
+  const existing = await (prisma as any).collection.findUnique({ where: { slug: slug.trim() } })
+  if (existing) { err(res, 'CONFLICT', `A collection with slug "${slug}" already exists.`, 409); return }
+
+  const collection = await (prisma as any).collection.create({ data: buildCollectionData(req.body) })
+  if (collection.status === 'published' && collection.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/collections/${collection.slug}`], { source: 'page' })
+  }
+  ok(res, { collection })
+})
+
+adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
+  const { slug } = req.body ?? {}
+  if (slug) {
+    const clash = await (prisma as any).collection.findFirst({ where: { slug: slug.trim(), NOT: { id: req.params.id } } })
+    if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
+  }
+  const collection = await (prisma as any).collection.update({
+    where: { id: req.params.id },
+    data:  buildCollectionData(req.body),
+  })
+  if (collection.status === 'published' && collection.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/collections/${collection.slug}`], { source: 'page' })
+  }
+  ok(res, { collection })
+})
+
+adminRouter.delete('/collections/:id', async (req: Request, res: Response) => {
+  await (prisma as any).collection.delete({ where: { id: req.params.id } })
+  ok(res, { deleted: true })
+})
+
+function buildCollectionData(body: any) {
+  const {
+    title, slug, status, meta_title, meta_description, og_image_url,
+    intro, images, body: content, links, faqs,
+  } = body ?? {}
+  return {
+    ...(title            !== undefined && { title:            title?.trim() ?? ''            }),
+    ...(slug             !== undefined && { slug:             slug?.trim()                   }),
+    ...(status           !== undefined && { status:           status || 'draft'              }),
+    ...(meta_title       !== undefined && { meta_title:       meta_title?.trim() || null     }),
+    ...(meta_description !== undefined && { meta_description: meta_description?.trim() || null }),
+    ...(og_image_url     !== undefined && { og_image_url:     og_image_url?.trim() || null   }),
+    ...(intro            !== undefined && { intro:            typeof intro === 'string' ? intro : '' }),
+    ...(images           !== undefined && { images:           normaliseImages(images)        }),
+    ...(content          !== undefined && { body:             typeof content === 'string' ? content : '' }),
+    ...(links            !== undefined && { links:            normaliseLinks(links)          }),
+    ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
+  }
+}
+
+// Keep only image entries with a URL; cap and trim alt text.
+function normaliseImages(images: any): Array<{ url: string; alt: string }> {
+  if (!Array.isArray(images)) return []
+  return images
+    .map((i: any) => ({ url: String(i?.url ?? '').trim(), alt: String(i?.alt ?? '').trim().slice(0, 200) }))
+    .filter((i: { url: string }) => i.url)
+    .slice(0, 12)
+}
+
+// Keep only links with both a label and a URL.
+function normaliseLinks(links: any): Array<{ label: string; url: string }> {
+  if (!Array.isArray(links)) return []
+  return links
+    .map((l: any) => ({ label: String(l?.label ?? '').trim().slice(0, 160), url: String(l?.url ?? '').trim() }))
+    .filter((l: { label: string; url: string }) => l.label && l.url)
+    .slice(0, 40)
+}
+
 function buildPageData(body: any) {
   const {
     title, description, og_title, og_description, og_image_url,

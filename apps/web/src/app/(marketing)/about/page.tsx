@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { ArrowRight, Check, FileText, GraduationCap, ClipboardCheck, ShieldCheck, Smartphone, Users } from 'lucide-react'
 import { pageMetadata } from '@/lib/page-meta'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/about', {
@@ -281,6 +282,10 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
+
+      {/* CMS-editable content + FAQs (platform Blog → Main site pages). Renders
+          nothing until content is added there. */}
+      <EditableContentBlock path="/about" />
 
       <PageCta
         heading="Want to learn more or talk to the team?"

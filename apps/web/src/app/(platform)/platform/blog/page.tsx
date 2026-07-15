@@ -1537,7 +1537,7 @@ function FeaturePageForm({
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'features' | 'collections' | 'altTags'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'altTags'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -1854,6 +1854,103 @@ export default function BlogPage() {
   const publishedCount = posts.filter(p => p.status === 'published').length
   const featuredCount  = posts.filter(p => p.is_featured).length
 
+  // Curated set of primary marketing pages surfaced under the "Main site pages" tab.
+  const MAIN_SITE_PATHS = ['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/about', '/contact', '/demo', '/faq', '/trust', '/case-studies']
+  const trainingPagesList = allPages.filter(p => p.path.startsWith('/staff-training/'))
+  const mainSitePagesList = allPages.filter(p => MAIN_SITE_PATHS.includes(p.path))
+
+  // One page row (with its inline editor) — shared by the Pages, Training pages
+  // and Main site pages tabs so they all get the same content + FAQ editor.
+  const renderPageRow = (page: SitePage) => (
+    <div key={page.path}>
+      <div className={`flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-light/50 ${editPage?.path === page.path ? 'bg-teal-light/30' : ''}`}>
+        {(() => {
+          const img = effectiveImage(page)
+          return img
+            ? <img src={img} alt="" title="Social sharing image" className="h-9 w-14 shrink-0 rounded border border-gray-200 object-cover" />
+            : <div className="flex h-9 w-14 shrink-0 items-center justify-center rounded border border-dashed border-gray-200 text-[9px] text-neutral-mid" title="No social sharing image">none</div>
+        })()}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Globe size={12} className="shrink-0 text-neutral-mid" />
+            <span className="font-mono text-xs text-neutral-mid">{page.path}</span>
+            {page.title && <span className="text-sm font-medium text-neutral-dark">{page.title}</span>}
+            {page.is_footer_page && page.footer_group && (
+              <span className="rounded-full bg-teal-light px-2 py-0.5 text-xs font-medium text-teal">{page.footer_group}</span>
+            )}
+            {!page.id && (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">not in CMS</span>
+            )}
+          </div>
+          {page.description ? (
+            <p className="mt-0.5 max-w-xl truncate text-xs text-neutral-mid">{page.description}</p>
+          ) : (
+            <p className="mt-0.5 text-xs text-amber-500">No meta description — click Edit to add one</p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => toggleContentUpdated(page)}
+            disabled={togglingPath === page.path}
+            title={page.content_updated ? 'Marked as updated — click to unmark. This is just your tracker; it does not change the live page.' : "Mark as updated. Just your own tracker; it doesn't change the live page."}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${page.content_updated ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
+          >
+            {togglingPath === page.path ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <span className={`relative h-3.5 w-6 rounded-full transition-colors ${page.content_updated ? 'bg-green-500' : 'bg-gray-300'}`}>
+                <span className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-white shadow transition-all ${page.content_updated ? 'left-3' : 'left-0.5'}`} />
+              </span>
+            )}
+            {page.content_updated ? 'Updated' : 'Mark updated'}
+          </button>
+          {page.id && (
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+              {page.status}
+            </span>
+          )}
+          <button
+            onClick={() => { setShowPage(false); setEditPage(page.id ? page : { ...page }) }}
+            className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <Pencil size={14} />
+          </button>
+          {page.id && (
+            <button
+              onClick={() => deletePage(page.id, page.path)}
+              className="rounded-md border border-red-200 p-1.5 text-red-500 hover:bg-red-50"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+      {editPage?.path === page.path && (
+        <div ref={pageEditRef} className="scroll-mt-4 border-t border-teal/30 bg-teal-light/10 px-5 py-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-neutral-dark">
+              Editing <span className="font-mono text-teal">{editPage.path}</span>
+            </p>
+            <a href={editPage.path} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal transition hover:bg-teal hover:text-white">
+              Open page in new window <span aria-hidden>↗</span>
+            </a>
+          </div>
+          <PageForm
+            initial={editPage}
+            onSave={savePage}
+            onCancel={() => setEditPage(null)}
+            saving={savingPage}
+            saveError={pageError}
+            token={token}
+            inheritedImage={editPage ? heroByPath[editPage.path] ?? null : null}
+          />
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <PlatformShell>
       <div className="space-y-6">
@@ -1867,18 +1964,18 @@ export default function BlogPage() {
 
         {/* Tabs */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex gap-6">
-            {(['posts', 'authors', 'pages', 'features', 'collections', 'altTags'] as const).map(t => (
+          <nav className="-mb-px flex gap-6 overflow-x-auto">
+            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`pb-3 text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap pb-3 text-sm font-medium transition-colors ${
                   tab === t
                     ? 'border-b-2 border-teal text-teal'
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -2120,103 +2217,7 @@ export default function BlogPage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-100">
-                      {filteredPages.map(page => (
-                        <div key={page.path}>
-                          <div className={`flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-light/50 ${editPage?.path === page.path ? 'bg-teal-light/30' : ''}`}>
-                              {(() => {
-                                const img = effectiveImage(page)
-                                return img
-                                  ? <img src={img} alt="" title="Social sharing image" className="h-9 w-14 shrink-0 rounded border border-gray-200 object-cover" />
-                                  : <div className="flex h-9 w-14 shrink-0 items-center justify-center rounded border border-dashed border-gray-200 text-[9px] text-neutral-mid" title="No social sharing image">none</div>
-                              })()}
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <Globe size={12} className="shrink-0 text-neutral-mid" />
-                                  <span className="font-mono text-xs text-neutral-mid">{page.path}</span>
-                                  {page.title && <span className="text-sm font-medium text-neutral-dark">{page.title}</span>}
-                                  {page.is_footer_page && page.footer_group && (
-                                    <span className="rounded-full bg-teal-light px-2 py-0.5 text-xs font-medium text-teal">{page.footer_group}</span>
-                                  )}
-                                  {!page.id && (
-                                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">not in CMS</span>
-                                  )}
-                                </div>
-                                {page.description ? (
-                                  <p className="mt-0.5 max-w-xl truncate text-xs text-neutral-mid">{page.description}</p>
-                                ) : (
-                                  <p className="mt-0.5 text-xs text-amber-500">No meta description — click Edit to add one</p>
-                                )}
-                              </div>
-                              <div className="flex shrink-0 items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleContentUpdated(page)}
-                                  disabled={togglingPath === page.path}
-                                  title={page.content_updated ? 'Marked as updated — click to unmark. This is just your tracker; it does not change the live page.' : "Mark as updated. Just your own tracker; it doesn't change the live page."}
-                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${page.content_updated ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
-                                >
-                                  {togglingPath === page.path ? (
-                                    <Loader2 size={12} className="animate-spin" />
-                                  ) : (
-                                    <span className={`relative h-3.5 w-6 rounded-full transition-colors ${page.content_updated ? 'bg-green-500' : 'bg-gray-300'}`}>
-                                      <span className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-white shadow transition-all ${page.content_updated ? 'left-3' : 'left-0.5'}`} />
-                                    </span>
-                                  )}
-                                  {page.content_updated ? 'Updated' : 'Mark updated'}
-                                </button>
-                                {page.id && (
-                                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                    {page.status}
-                                  </span>
-                                )}
-                                <button
-                                  onClick={() => {
-                                    setShowPage(false)
-                                    setEditPage(page.id ? page : { ...page })
-                                  }}
-                                  className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
-                                >
-                                  <Pencil size={14} />
-                                </button>
-                                {page.id && (
-                                  <button
-                                    onClick={() => deletePage(page.id, page.path)}
-                                    className="rounded-md border border-red-200 p-1.5 text-red-500 hover:bg-red-50"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          {editPage?.path === page.path && (
-                            <div ref={pageEditRef} className="scroll-mt-4 border-t border-teal/30 bg-teal-light/10 px-5 py-4">
-                              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                <p className="text-sm font-semibold text-neutral-dark">
-                                  Editing <span className="font-mono text-teal">{editPage.path}</span>
-                                </p>
-                                <a
-                                  href={editPage.path}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal transition hover:bg-teal hover:text-white"
-                                >
-                                  Open page in new window
-                                  <span aria-hidden>↗</span>
-                                </a>
-                              </div>
-                              <PageForm
-                                initial={editPage}
-                                onSave={savePage}
-                                onCancel={() => setEditPage(null)}
-                                saving={savingPage}
-                                saveError={pageError}
-                                token={token}
-                                inheritedImage={editPage ? heroByPath[editPage.path] ?? null : null}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      {filteredPages.map(renderPageRow)}
                     </div>
                   )}
                 </div>
@@ -2265,6 +2266,42 @@ export default function BlogPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Main site pages tab ─────────────────────────────────────────── */}
+        {tab === 'mainsite' && (
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-mid">
+              Your primary marketing pages (<code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/about</code>, <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/how-it-works</code> and more). Click Edit to change the SEO, add an editable content section and FAQs — these appear on the live page. Use <strong>Mark updated</strong> to track your progress.
+            </p>
+            {loading ? (
+              <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+                {mainSitePagesList.map(renderPageRow)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Training pages tab ───────────────────────────────────────────── */}
+        {tab === 'training' && (
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-mid">
+              The per-module training pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/staff-training/&hellip;</code>. Click Edit to change the SEO, add an editable content section and FAQs — these appear on the live page below the module content.
+            </p>
+            {loading ? (
+              <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
+            ) : trainingPagesList.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-neutral-light/40 px-6 py-10 text-center text-sm text-neutral-mid">
+                No training pages found yet.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+                {trainingPagesList.map(renderPageRow)}
               </div>
             )}
           </div>

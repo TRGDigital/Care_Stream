@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { pageMetadata } from '@/lib/page-meta'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/how-it-works', {
@@ -799,6 +800,9 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+
+      {/* CMS-editable content + FAQs (platform Blog → Main site pages). */}
+      <EditableContentBlock path="/how-it-works" />
 
       <PageCta
         heading="See it working with your own policies."

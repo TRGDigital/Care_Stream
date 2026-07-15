@@ -9,6 +9,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 export const revalidate = 60
 
@@ -357,6 +358,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
       </section>
 
       <HomeFaq faqs={faqs} />
+
+      {/* CMS-editable content + FAQs (platform Blog → Training pages). */}
+      <EditableContentBlock path={`/staff-training/${slug}`} />
 
       <PageCta
         heading={`Give your team ${m.title.toLowerCase()} training that actually sticks.`}

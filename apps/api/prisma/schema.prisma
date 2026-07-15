@@ -1130,6 +1130,7 @@ model SitePage {
   status         String   @default("published")
   faqs           Json     @default("[]")                    // [{ question, answer }] — currently used on the home page only
   content        String   @default("")                      // HTML body, rendered on content pages (e.g. legal pages)
+  content_updated Boolean @default(false)                    // admin's own "I've updated this page" marker — no effect on the page
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 

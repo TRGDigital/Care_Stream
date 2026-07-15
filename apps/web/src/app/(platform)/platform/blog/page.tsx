@@ -1706,6 +1706,26 @@ export default function BlogPage() {
     }
   }
 
+  // Personal "I've updated this page" marker — persists but has NO effect on the
+  // live page. Upserts by path for pages that don't yet have a CMS record.
+  const [togglingPath, setTogglingPath] = useState<string | null>(null)
+  async function toggleContentUpdated(page: SitePage) {
+    if (!token) return
+    const next = !page.content_updated
+    setTogglingPath(page.path)
+    try {
+      const api = createPlatformClient(token)
+      const saved = page.id
+        ? (await api.sitePages.update(page.id, { content_updated: next } as any)).page
+        : (await api.sitePages.upsert({ path: page.path, title: page.title, content_updated: next } as any)).page
+      setPages(prev => prev.some(p => p.id === saved.id) ? prev.map(p => p.id === saved.id ? saved : p) : [...prev, saved])
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setTogglingPath(null)
+    }
+  }
+
   // ── Collection handlers ────────────────────────────────────────────────────────
 
   async function saveCollection(form: any) {
@@ -1789,6 +1809,7 @@ export default function BlogPage() {
       footer_sort:    0,
       page_type:      'marketing',
       status:         'published',
+      content_updated: false,
       created_at:     '',
       updated_at:     '',
     } as SitePage
@@ -1806,7 +1827,7 @@ export default function BlogPage() {
       id: '', path: tp.path, title: tp.title, description: tp.description,
       og_title: null, og_description: null, og_image_url: null,
       is_footer_page: false, footer_group: null, footer_label: null, footer_sort: 0,
-      page_type: 'marketing', status: 'published', created_at: '', updated_at: '',
+      page_type: 'marketing', status: 'published', content_updated: false, created_at: '', updated_at: '',
     } as SitePage))
   const allPages = [...codedAndDbPages, ...trainingVirtual]
 
@@ -2061,13 +2082,23 @@ export default function BlogPage() {
             {/* ── Marketing Pages sub-tab ── */}
             {pageSubTab === 'marketing' && (
               <div className="space-y-4">
-                {/* Search */}
-                <input
-                  value={pageSearch}
-                  onChange={e => setPageSearch(e.target.value)}
-                  placeholder="Search pages by path or title…"
-                  className="w-full max-w-sm rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
-                />
+                {/* Search + your update-tracker progress */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <input
+                    value={pageSearch}
+                    onChange={e => setPageSearch(e.target.value)}
+                    placeholder="Search pages by path or title…"
+                    className="w-full max-w-sm rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+                  />
+                  {(() => {
+                    const done = allPages.filter(p => p.content_updated).length
+                    return (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                        <Check size={13} /> {done} of {allPages.length} marked updated
+                      </span>
+                    )
+                  })()}
+                </div>
 
                 {showPage && (
                   <PageForm
@@ -2115,6 +2146,22 @@ export default function BlogPage() {
                                 )}
                               </div>
                               <div className="flex shrink-0 items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleContentUpdated(page)}
+                                  disabled={togglingPath === page.path}
+                                  title={page.content_updated ? 'Marked as updated — click to unmark. This is just your tracker; it does not change the live page.' : "Mark as updated. Just your own tracker; it doesn't change the live page."}
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${page.content_updated ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
+                                >
+                                  {togglingPath === page.path ? (
+                                    <Loader2 size={12} className="animate-spin" />
+                                  ) : (
+                                    <span className={`relative h-3.5 w-6 rounded-full transition-colors ${page.content_updated ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                      <span className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-white shadow transition-all ${page.content_updated ? 'left-3' : 'left-0.5'}`} />
+                                    </span>
+                                  )}
+                                  {page.content_updated ? 'Updated' : 'Mark updated'}
+                                </button>
                                 {page.id && (
                                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                     {page.status}

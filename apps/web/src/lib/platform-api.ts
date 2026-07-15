@@ -295,6 +295,7 @@ export interface SitePage {
   status:         string
   faqs:           Array<{ question: string; answer: string }>
   content:        string
+  content_updated: boolean
   created_at:     string
   updated_at:     string
 }

@@ -369,14 +369,27 @@ export default function StaffPage() {
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2.5">
                         <InitialAvatar name={u.name} role={u.role} />
-                        <div>
+                        <div className="min-w-0">
                           <button
                             onClick={() => setDetailUserId(u.id)}
-                            className="font-medium text-neutral-dark hover:text-teal hover:underline"
+                            className="block truncate text-left font-medium text-neutral-dark hover:text-teal hover:underline"
                             title="Quick view"
                           >
                             {u.name}
                           </button>
+                          {Array.isArray(u.specialisms) && u.specialisms.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {u.specialisms.map((s: string) => (
+                                <span
+                                  key={s}
+                                  className="inline-flex items-center rounded-full bg-teal/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-teal"
+                                  title="Specialist role"
+                                >
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

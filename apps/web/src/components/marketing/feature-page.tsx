@@ -8,6 +8,9 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { SiteImage } from '@/components/site-image'
+import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
+
+export { EMPTY_FEATURE_CONTENT, type FeaturePageContent }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared content shape for every /features/* page. Two templates render it:
@@ -338,31 +341,6 @@ export function FeatureSimplePage({ content }: { content: FeatureContent }) {
 // FeatureContent, assigning icons deterministically from curated sets so the page
 // looks varied without anyone having to pick icons. Editors only edit words + FAQs.
 // ─────────────────────────────────────────────────────────────────────────────
-
-export type FeaturePageContent = {
-  eyebrow: string
-  intro: string
-  chips: string[]
-  whatItIs: { heading: string; body: string }
-  outcomes: string[]
-  howItWorks: { heading: string; intro: string; sections: Array<{ heading: string; body: string }> }
-  keyPoints: string[]
-  sidebar: Array<{ title: string; body: string }>
-  whyItWorks: { heading: string; intro: string; tiles: Array<{ title: string; body: string }> }
-  cta: { heading: string; sub: string }
-}
-
-// A blank content object — the shape the platform editor starts from.
-export const EMPTY_FEATURE_CONTENT: FeaturePageContent = {
-  eyebrow: '', intro: '', chips: [],
-  whatItIs: { heading: '', body: '' },
-  outcomes: [],
-  howItWorks: { heading: '', intro: '', sections: [] },
-  keyPoints: [],
-  sidebar: [],
-  whyItWorks: { heading: '', intro: '', tiles: [] },
-  cta: { heading: '', sub: '' },
-}
 
 const CHIP_ICONS: LucideIcon[] = [Sparkles, Globe, Clock, Users, ShieldCheck]
 const SECTION_ICONS: LucideIcon[] = [Zap, MessageSquare, GraduationCap, FileText, HeartHandshake, Settings2, BookOpen, Search]

@@ -320,7 +320,7 @@ export interface Collection {
   updated_at:       string
 }
 
-import type { FeaturePageContent } from '@/components/marketing/feature-page'
+import type { FeaturePageContent } from '@/lib/feature-content'
 
 export interface FeaturePage {
   id:               string

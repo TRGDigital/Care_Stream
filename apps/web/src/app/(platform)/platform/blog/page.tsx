@@ -5,7 +5,7 @@ import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage } from '@/lib/platform-api'
-import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/components/marketing/feature-page'
+import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
@@ -1579,6 +1579,9 @@ export default function BlogPage() {
   const [savingFeaturePage,  setSavingFeaturePage]  = useState(false)
   const [featurePageError,   setFeaturePageError]   = useState('')
 
+  // Per-page "content updated" tracker (Pages tab) — which row is mid-save.
+  const [togglingPath, setTogglingPath] = useState<string | null>(null)
+
   // When a page is opened for editing (including from the Footer Links tab),
   // The editor opens inline under the clicked row, so only nudge it into view if it is
   // off-screen ('nearest' never jumps the page to the top).
@@ -1708,7 +1711,6 @@ export default function BlogPage() {
 
   // Personal "I've updated this page" marker — persists but has NO effect on the
   // live page. Upserts by path for pages that don't yet have a CMS record.
-  const [togglingPath, setTogglingPath] = useState<string | null>(null)
   async function toggleContentUpdated(page: SitePage) {
     if (!token) return
     const next = !page.content_updated

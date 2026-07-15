@@ -3015,10 +3015,11 @@ function buildPageData(body: any) {
   const {
     title, description, og_title, og_description, og_image_url,
     is_footer_page, footer_group, footer_label, footer_sort,
-    page_type, status, faqs, content, content_updated,
+    page_type, status, faqs, content, content_updated, content_slots,
   } = body ?? {}
   return {
     ...(content_updated !== undefined && { content_updated: Boolean(content_updated) }),
+    ...(content_slots   !== undefined && { content_slots: (content_slots && typeof content_slots === 'object') ? content_slots : {} }),
     ...(title          !== undefined && { title:          title?.trim() ?? ''          }),
     ...(description    !== undefined && { description:    description?.trim() || null  }),
     ...(og_title       !== undefined && { og_title:       og_title?.trim() || null     }),

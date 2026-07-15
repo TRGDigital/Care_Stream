@@ -34,6 +34,7 @@ publicPagesRouter.get('/', async (req: Request, res: Response) => {
       og_image_url:   true,
       faqs:           true,
       content:        true,
+      content_slots:  true,
     },
   })
   if (!page) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }

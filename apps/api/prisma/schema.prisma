@@ -1131,6 +1131,7 @@ model SitePage {
   faqs           Json     @default("[]")                    // [{ question, answer }] — currently used on the home page only
   content        String   @default("")                      // HTML body, rendered on content pages (e.g. legal pages)
   content_updated Boolean @default(false)                    // admin's own "I've updated this page" marker — no effect on the page
+  content_slots  Json     @default("{}")                      // per-slot copy overrides { slotKey: text/html } for design-preserving page editing
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 

@@ -296,6 +296,7 @@ export interface SitePage {
   faqs:           Array<{ question: string; answer: string }>
   content:        string
   content_updated: boolean
+  content_slots:  Record<string, string>
   created_at:     string
   updated_at:     string
 }

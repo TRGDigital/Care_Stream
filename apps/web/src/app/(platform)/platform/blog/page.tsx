@@ -6,6 +6,7 @@ import { usePlatformAuth } from '@/hooks/use-platform-auth'
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
+import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
@@ -1537,6 +1538,98 @@ function FeaturePageForm({
   )
 }
 
+// ─── Design-preserving slot editor ─────────────────────────────────────────────
+// Edits a page's per-slot copy overrides (content_slots) — every headline/paragraph
+// on the live page, grouped by section, without changing the design.
+
+function SlotEditor({ page, defs, token, onSaved }: {
+  page: SitePage
+  defs: SlotDef[]
+  token: string
+  onSaved: (page: SitePage) => void
+}) {
+  const [overrides, setOverrides] = useState<Record<string, string>>(() => ({ ...(page.content_slots ?? {}) }))
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved]   = useState(false)
+  const [error, setError]   = useState('')
+  const val = (d: SlotDef) => (typeof overrides[d.key] === 'string' ? overrides[d.key] : d.default)
+  const set = (k: string, v: string) => { setOverrides(o => ({ ...o, [k]: v })); setSaved(false) }
+  const reset = (k: string) => { setOverrides(o => { const n = { ...o }; delete n[k]; return n }); setSaved(false) }
+
+  const groups: Array<{ name: string; items: SlotDef[] }> = []
+  for (const d of defs) {
+    const g = d.group ?? 'Content'
+    let grp = groups.find(x => x.name === g)
+    if (!grp) { grp = { name: g, items: [] }; groups.push(grp) }
+    grp.items.push(d)
+  }
+
+  async function save() {
+    if (!token) return
+    setSaving(true); setError('')
+    try {
+      const api = createPlatformClient(token)
+      // Persist only real overrides (differ from the original copy) to stay lean.
+      const clean: Record<string, string> = {}
+      for (const d of defs) {
+        const v = overrides[d.key]
+        if (typeof v === 'string' && v.trim() !== '' && v !== d.default) clean[d.key] = v
+      }
+      const res = page.id
+        ? await api.sitePages.update(page.id, { content_slots: clean } as any)
+        : await api.sitePages.upsert({ path: page.path, title: page.title, content_slots: clean } as any)
+      onSaved(res.page)
+      setSaved(true)
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to save content.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const input = 'w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal'
+  return (
+    <div className="mb-4 rounded-xl border border-teal/30 bg-white p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-neutral-dark">Page content (design-preserving)</p>
+          <p className="text-xs text-neutral-mid">Edit any text on the live page. Leave a field as-is to keep the original wording; use “Reset to original” to revert.</p>
+        </div>
+        <Button onClick={save} disabled={saving}>
+          {saving ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Check size={14} className="mr-1" />}
+          {saving ? 'Saving…' : 'Save content'}
+        </Button>
+      </div>
+      {error && <p className="mb-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <div className="space-y-3">
+        {groups.map(g => (
+          <AccordionSection key={g.name} title={g.name} description={`${g.items.length} fields`}>
+            <div className="space-y-3">
+              {g.items.map(d => {
+                const overridden = typeof overrides[d.key] === 'string' && overrides[d.key] !== d.default && overrides[d.key].trim() !== ''
+                return (
+                  <div key={d.key}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <label className="text-xs font-semibold text-neutral-mid">{d.label}</label>
+                      {overridden && <button type="button" onClick={() => reset(d.key)} className="text-[11px] font-medium text-teal hover:underline">Reset to original</button>}
+                    </div>
+                    {d.rich
+                      ? <RichEditor value={val(d)} onChange={v => set(d.key, v)} rows={3} />
+                      : d.multiline
+                        ? <textarea value={val(d)} onChange={e => set(d.key, e.target.value)} rows={3} className={`${input} resize-none`} />
+                        : <input value={val(d)} onChange={e => set(d.key, e.target.value)} className={input} />}
+                  </div>
+                )
+              })}
+            </div>
+          </AccordionSection>
+        ))}
+      </div>
+      {saved && <p className="mt-3 flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</p>}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BlogPage() {
@@ -1816,6 +1909,7 @@ export default function BlogPage() {
       page_type:      'marketing',
       status:         'published',
       content_updated: false,
+      content_slots:  {},
       created_at:     '',
       updated_at:     '',
     } as SitePage
@@ -1833,7 +1927,7 @@ export default function BlogPage() {
       id: '', path: tp.path, title: tp.title, description: tp.description,
       og_title: null, og_description: null, og_image_url: null,
       is_footer_page: false, footer_group: null, footer_label: null, footer_sort: 0,
-      page_type: 'marketing', status: 'published', content_updated: false, created_at: '', updated_at: '',
+      page_type: 'marketing', status: 'published', content_updated: false, content_slots: {}, created_at: '', updated_at: '',
     } as SitePage))
   const allPages = [...codedAndDbPages, ...trainingVirtual]
 
@@ -1945,6 +2039,20 @@ export default function BlogPage() {
               Open page in new window <span aria-hidden>↗</span>
             </a>
           </div>
+          {(() => {
+            const defs = slotsForPath(editPage.path)
+            return defs ? (
+              <SlotEditor
+                page={editPage}
+                defs={defs}
+                token={token}
+                onSaved={(p) => {
+                  setPages(prev => prev.some(x => x.id === p.id) ? prev.map(x => x.id === p.id ? p : x) : [...prev, p])
+                  setEditPage(p)
+                }}
+              />
+            ) : null
+          })()}
           <PageForm
             initial={editPage}
             onSave={savePage}

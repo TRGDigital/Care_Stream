@@ -1,0 +1,32 @@
+import type { SlotDef } from './types'
+import { ABOUT_SLOTS } from './about'
+
+export type { SlotDef } from './types'
+export { makeSlot } from './types'
+
+// Registry of which marketing paths have editable content slots (design-preserving
+// copy editing). Add a page here + a manifest to make its copy editable.
+export const PAGE_SLOTS: Record<string, SlotDef[]> = {
+  '/about': ABOUT_SLOTS,
+}
+
+export function slotsForPath(path: string): SlotDef[] | null {
+  return PAGE_SLOTS[path] ?? null
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// Server-side fetch of a page's saved slot overrides. Empty on any error so the
+// page always falls back to the in-code defaults (the current copy).
+export async function getContentSlots(path: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${API_URL}/public/site-pages?path=${encodeURIComponent(path)}`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const slots = (await res.json())?.data?.page?.content_slots
+      if (slots && typeof slots === 'object') return slots as Record<string, string>
+    }
+  } catch {
+    // fall through
+  }
+  return {}
+}

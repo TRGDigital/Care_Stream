@@ -1344,10 +1344,11 @@ function StringListEditor({ items, onChange, placeholder, textarea = false }: {
 
 // ─── Heading/body pair-list editor (how-it-works sections, sidebar, tiles) ───────
 
-function PairListEditor({ items, onChange, keyA, keyB, phA, phB }: {
+function PairListEditor({ items, onChange, keyA, keyB, phA, phB, richBody = false }: {
   items: Array<Record<string, string>>
   onChange: (items: Array<Record<string, string>>) => void
   keyA: string; keyB: string; phA: string; phB: string
+  richBody?: boolean
 }) {
   const list = Array.isArray(items) ? items : []
   const update = (i: number, k: string, v: string) => onChange(list.map((x, idx) => (idx === i ? { ...x, [k]: v } : x)))
@@ -1371,8 +1372,10 @@ function PairListEditor({ items, onChange, keyA, keyB, phA, phB }: {
           </div>
           <input value={x[keyA] ?? ''} onChange={e => update(i, keyA, e.target.value)} placeholder={phA}
             className="mb-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm font-medium focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
-          <textarea value={x[keyB] ?? ''} onChange={e => update(i, keyB, e.target.value)} rows={2} placeholder={phB}
-            className="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          {richBody
+            ? <RichEditor value={x[keyB] ?? ''} onChange={v => update(i, keyB, v)} rows={3} placeholder={phB} />
+            : <textarea value={x[keyB] ?? ''} onChange={e => update(i, keyB, e.target.value)} rows={2} placeholder={phB}
+                className="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />}
         </div>
       ))}
       <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add item</button>
@@ -1449,7 +1452,7 @@ function FeaturePageForm({
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Intro paragraph</label>
-            <textarea value={content.intro} onChange={e => setC('intro', e.target.value)} rows={3} placeholder="One or two sentences under the heading." className={`${input} resize-none`} />
+            <RichEditor value={content.intro} onChange={v => setC('intro', v)} rows={3} placeholder="One or two sentences under the heading. You can add links." />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Chips (short labels, up to 4)</label>
@@ -1461,7 +1464,7 @@ function FeaturePageForm({
       <AccordionSection title="What it is" description="The opening explanation block.">
         <div className="space-y-3">
           <input value={content.whatItIs.heading} onChange={e => setC('whatItIs', { ...content.whatItIs, heading: e.target.value })} placeholder="Heading" className={input} />
-          <textarea value={content.whatItIs.body} onChange={e => setC('whatItIs', { ...content.whatItIs, body: e.target.value })} rows={4} placeholder="The paragraph explaining what the feature is." className={`${input} resize-none`} />
+          <RichEditor value={content.whatItIs.body} onChange={v => setC('whatItIs', { ...content.whatItIs, body: v })} rows={5} placeholder="The paragraph explaining what the feature is. You can add links." />
         </div>
       </AccordionSection>
 
@@ -1472,9 +1475,9 @@ function FeaturePageForm({
       <AccordionSection title="How it works" description="Heading, intro, and the numbered steps.">
         <div className="space-y-3">
           <input value={content.howItWorks.heading} onChange={e => setC('howItWorks', { ...content.howItWorks, heading: e.target.value })} placeholder="Section heading" className={input} />
-          <textarea value={content.howItWorks.intro} onChange={e => setC('howItWorks', { ...content.howItWorks, intro: e.target.value })} rows={2} placeholder="Short intro under the heading." className={`${input} resize-none`} />
+          <RichEditor value={content.howItWorks.intro} onChange={v => setC('howItWorks', { ...content.howItWorks, intro: v })} rows={2} placeholder="Short intro under the heading. You can add links." />
           <p className="text-xs font-semibold text-neutral-mid">Steps</p>
-          <PairListEditor items={content.howItWorks.sections} onChange={v => setC('howItWorks', { ...content.howItWorks, sections: v as any })} keyA="heading" keyB="body" phA="Step heading" phB="Step description" />
+          <PairListEditor items={content.howItWorks.sections} onChange={v => setC('howItWorks', { ...content.howItWorks, sections: v as any })} keyA="heading" keyB="body" phA="Step heading" phB="Step description" richBody />
         </div>
       </AccordionSection>
 
@@ -1483,15 +1486,15 @@ function FeaturePageForm({
       </AccordionSection>
 
       <AccordionSection title="Sidebar cards" description="The small cards beside the key points (e.g. Who it's for).">
-        <PairListEditor items={content.sidebar} onChange={v => setC('sidebar', v as any)} keyA="title" keyB="body" phA="Card title" phB="Card text" />
+        <PairListEditor items={content.sidebar} onChange={v => setC('sidebar', v as any)} keyA="title" keyB="body" phA="Card title" phB="Card text" richBody />
       </AccordionSection>
 
       <AccordionSection title="Why it works" description="The teal band — heading, intro and four tiles.">
         <div className="space-y-3">
           <input value={content.whyItWorks.heading} onChange={e => setC('whyItWorks', { ...content.whyItWorks, heading: e.target.value })} placeholder="Section heading" className={input} />
-          <textarea value={content.whyItWorks.intro} onChange={e => setC('whyItWorks', { ...content.whyItWorks, intro: e.target.value })} rows={2} placeholder="Short intro under the heading." className={`${input} resize-none`} />
+          <RichEditor value={content.whyItWorks.intro} onChange={v => setC('whyItWorks', { ...content.whyItWorks, intro: v })} rows={2} placeholder="Short intro under the heading. You can add links." />
           <p className="text-xs font-semibold text-neutral-mid">Tiles</p>
-          <PairListEditor items={content.whyItWorks.tiles} onChange={v => setC('whyItWorks', { ...content.whyItWorks, tiles: v as any })} keyA="title" keyB="body" phA="Tile title" phB="Tile text" />
+          <PairListEditor items={content.whyItWorks.tiles} onChange={v => setC('whyItWorks', { ...content.whyItWorks, tiles: v as any })} keyA="title" keyB="body" phA="Tile title" phB="Tile text" richBody />
         </div>
       </AccordionSection>
 

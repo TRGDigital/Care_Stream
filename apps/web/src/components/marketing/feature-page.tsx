@@ -53,6 +53,16 @@ export type FeatureContent = {
   cta: { heading: string; sub: string }
 }
 
+// Prose fields (intro, bodies) are rich text (HTML) so links can be added in the
+// editor. Rendered as HTML; plain strings render unchanged. Link colours differ by
+// background: teal on light sections, white on the dark/teal bands.
+const LINK_DARK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-teal-dark'
+const LINK_LIGHT = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
+
+function Prose({ html, className = '' }: { html: string; className?: string }) {
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html || '' }} />
+}
+
 // ─── Shared building blocks ──────────────────────────────────────────────────
 
 function Hero({ content, showImage }: { content: FeatureContent; showImage: boolean }) {
@@ -75,9 +85,7 @@ function Hero({ content, showImage }: { content: FeatureContent; showImage: bool
             <h1 className={`mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl ${showImage ? 'max-w-xl' : ''}`}>
               {content.title}
             </h1>
-            <p className={`mb-8 text-lg leading-relaxed text-white/75 ${showImage ? 'max-w-xl' : ''}`}>
-              {content.intro}
-            </p>
+            <Prose html={content.intro} className={`mb-8 text-lg leading-relaxed text-white/75 ${LINK_LIGHT} ${showImage ? 'max-w-xl' : ''}`} />
             <div className={`mb-8 flex flex-wrap gap-2 ${showImage ? '' : 'justify-center'}`}>
               {content.chips.map(({ Icon, label }) => (
                 <span key={label} className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white">
@@ -121,7 +129,7 @@ function WhatItIs({ content }: { content: FeatureContent }) {
       <div className="mx-auto max-w-content px-6">
         <SectionLabel>What It Is</SectionLabel>
         <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">{content.whatItIs.heading}</h2>
-        <p className="text-lg leading-relaxed text-neutral-mid">{content.whatItIs.body}</p>
+        <Prose html={content.whatItIs.body} className={`text-lg leading-relaxed text-neutral-mid ${LINK_DARK}`} />
       </div>
     </section>
   )
@@ -167,7 +175,7 @@ function KeyPointsAndSidebar({ content }: { content: FeatureContent }) {
             {content.sidebar.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className="mb-3 flex items-center gap-2"><Icon size={18} className="text-teal" /><p className="font-bold text-neutral-dark">{title}</p></div>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <Prose html={body} className={`text-sm leading-relaxed text-neutral-mid ${LINK_DARK}`} />
               </div>
             ))}
           </div>
@@ -183,13 +191,13 @@ function WhyItWorks({ content }: { content: FeatureContent }) {
       <div className="mx-auto max-w-content px-6">
         <SectionLabel light>Why It Works</SectionLabel>
         <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">{content.whyItWorks.heading}</h2>
-        <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">{content.whyItWorks.intro}</p>
+        <Prose html={content.whyItWorks.intro} className={`mb-14 text-lg leading-relaxed text-white/80 ${LINK_LIGHT}`} />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {content.whyItWorks.tiles.map(({ Icon, title, body }) => (
             <div key={title} className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20"><Icon size={18} className="text-white" /></div>
               <h3 className="mb-2 font-bold text-white">{title}</h3>
-              <p className="text-sm leading-relaxed text-white/75">{body}</p>
+              <Prose html={body} className={`text-sm leading-relaxed text-white/75 ${LINK_LIGHT}`} />
             </div>
           ))}
         </div>
@@ -220,7 +228,7 @@ export function FeatureShowcasePage({ content }: { content: FeatureContent }) {
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>How It Works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">{content.howItWorks.heading}</h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">{content.howItWorks.intro}</p>
+          <Prose html={content.howItWorks.intro} className={`mb-14 text-lg leading-relaxed text-neutral-mid ${LINK_DARK}`} />
           <div className="space-y-14 lg:space-y-20">
             {content.howItWorks.sections.map((s, i) => {
               const flip = i % 2 === 1
@@ -234,7 +242,7 @@ export function FeatureShowcasePage({ content }: { content: FeatureContent }) {
                       </span>
                       <h3 className="text-2xl font-bold text-neutral-dark">{s.heading}</h3>
                     </div>
-                    <p className="text-lg leading-relaxed text-neutral-mid">{s.body}</p>
+                    <Prose html={s.body} className={`text-lg leading-relaxed text-neutral-mid ${LINK_DARK}`} />
                   </div>
                   <div className={flip ? 'lg:order-1' : ''}>
                     {s.image ? (
@@ -288,7 +296,7 @@ export function FeatureSimplePage({ content }: { content: FeatureContent }) {
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>How It Works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">{content.howItWorks.heading}</h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">{content.howItWorks.intro}</p>
+          <Prose html={content.howItWorks.intro} className={`mb-14 text-lg leading-relaxed text-neutral-mid ${LINK_DARK}`} />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {content.howItWorks.sections.map((s, i) => {
               const SectionIcon = s.Icon
@@ -301,7 +309,7 @@ export function FeatureSimplePage({ content }: { content: FeatureContent }) {
                     {SectionIcon && <SectionIcon size={20} className="text-teal" />}
                   </div>
                   <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s.heading}</h3>
-                  <p className="leading-relaxed text-neutral-mid">{s.body}</p>
+                  <Prose html={s.body} className={`leading-relaxed text-neutral-mid ${LINK_DARK}`} />
                 </div>
               )
             })}

@@ -17,13 +17,15 @@ type SiteImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'alt' | 'w
   priority?: boolean
   /** Responsive sizes hint for next/image (e.g. "(max-width:1024px) 100vw, 50vw"). */
   sizes?: string
+  /** JPEG/WebP/AVIF quality (default 75). Lower it for decorative/grayscale images. */
+  quality?: number
 }
 
 // Pulls alt text from the central store (managed in the platform console → Blog →
 // Alt Tags). When width+height are supplied it renders an optimised next/image
 // (AVIF/WebP + responsive srcset + lazy below the fold); otherwise it falls back
 // to a plain <img>, lazy-loaded by default so off-screen images don't block load.
-export function SiteImage({ src, alt = '', width, height, fill, priority, sizes, className, ...rest }: SiteImageProps) {
+export function SiteImage({ src, alt = '', width, height, fill, priority, sizes, quality, className, ...rest }: SiteImageProps) {
   const resolved = useImageAlt(src, alt)
 
   if (fill) {
@@ -34,6 +36,7 @@ export function SiteImage({ src, alt = '', width, height, fill, priority, sizes,
         fill
         priority={priority}
         sizes={sizes ?? '100vw'}
+        quality={quality}
         className={className}
       />
     )
@@ -48,6 +51,7 @@ export function SiteImage({ src, alt = '', width, height, fill, priority, sizes,
         height={height}
         priority={priority}
         sizes={sizes ?? '100vw'}
+        quality={quality}
         className={className}
       />
     )

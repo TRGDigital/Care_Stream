@@ -22,6 +22,7 @@ export function LogoMarquee() {
                   alt={logo.name}
                   fill
                   sizes="190px"
+                  quality={45}
                   className="object-contain opacity-70 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
                 />
               </div>

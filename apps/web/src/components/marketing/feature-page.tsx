@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
-import { CheckCircle2, Users, ShieldCheck, ArrowRight, FileText } from 'lucide-react'
+import {
+  CheckCircle2, Users, ShieldCheck, ArrowRight, FileText,
+  Sparkles, Zap, Globe, Clock, Search, MessageSquare, Layers, Gauge,
+  BookOpen, Star, Lock, Bell, HeartHandshake, GraduationCap, Settings2, Wand2,
+} from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { SiteImage } from '@/components/site-image'
@@ -316,4 +320,76 @@ export function FeatureSimplePage({ content }: { content: FeatureContent }) {
       />
     </>
   )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DB-driven feature pages
+//
+// The platform "Features pages" tab stores a serializable copy object (no icon
+// components — those aren't JSON). featureContentFromData() rehydrates it into a
+// FeatureContent, assigning icons deterministically from curated sets so the page
+// looks varied without anyone having to pick icons. Editors only edit words + FAQs.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type FeaturePageContent = {
+  eyebrow: string
+  intro: string
+  chips: string[]
+  whatItIs: { heading: string; body: string }
+  outcomes: string[]
+  howItWorks: { heading: string; intro: string; sections: Array<{ heading: string; body: string }> }
+  keyPoints: string[]
+  sidebar: Array<{ title: string; body: string }>
+  whyItWorks: { heading: string; intro: string; tiles: Array<{ title: string; body: string }> }
+  cta: { heading: string; sub: string }
+}
+
+// A blank content object — the shape the platform editor starts from.
+export const EMPTY_FEATURE_CONTENT: FeaturePageContent = {
+  eyebrow: '', intro: '', chips: [],
+  whatItIs: { heading: '', body: '' },
+  outcomes: [],
+  howItWorks: { heading: '', intro: '', sections: [] },
+  keyPoints: [],
+  sidebar: [],
+  whyItWorks: { heading: '', intro: '', tiles: [] },
+  cta: { heading: '', sub: '' },
+}
+
+const CHIP_ICONS: LucideIcon[] = [Sparkles, Globe, Clock, Users, ShieldCheck]
+const SECTION_ICONS: LucideIcon[] = [Zap, MessageSquare, GraduationCap, FileText, HeartHandshake, Settings2, BookOpen, Search]
+const SIDEBAR_ICONS: LucideIcon[] = [Users, ShieldCheck, Lock, Bell]
+const TILE_ICONS: LucideIcon[] = [Sparkles, Gauge, Globe, Star, Wand2, Zap]
+const at = <T,>(arr: T[], i: number): T => arr[i % arr.length]
+
+// Rehydrate stored content (+ title + faqs) into a render-ready FeatureContent.
+export function featureContentFromData(
+  title: string,
+  raw: Partial<FeaturePageContent> | null | undefined,
+  faqs: Array<{ question: string; answer: string }>,
+): FeatureContent {
+  const c = { ...EMPTY_FEATURE_CONTENT, ...(raw ?? {}) }
+  return {
+    eyebrow: c.eyebrow || 'Feature',
+    title,
+    intro: c.intro,
+    chips: (c.chips ?? []).slice(0, 4).map((label, i) => ({ Icon: at(CHIP_ICONS, i), label })),
+    hero: { Icon: Layers },
+    whatItIs: c.whatItIs ?? { heading: '', body: '' },
+    outcomes: c.outcomes ?? [],
+    howItWorks: {
+      heading: c.howItWorks?.heading ?? '',
+      intro: c.howItWorks?.intro ?? '',
+      sections: (c.howItWorks?.sections ?? []).map((s, i) => ({ heading: s.heading, body: s.body, Icon: at(SECTION_ICONS, i) })),
+    },
+    keyPoints: c.keyPoints ?? [],
+    sidebar: (c.sidebar ?? []).map((s, i) => ({ Icon: at(SIDEBAR_ICONS, i), title: s.title, body: s.body })),
+    whyItWorks: {
+      heading: c.whyItWorks?.heading ?? '',
+      intro: c.whyItWorks?.intro ?? '',
+      tiles: (c.whyItWorks?.tiles ?? []).map((t, i) => ({ Icon: at(TILE_ICONS, i), title: t.title, body: t.body })),
+    },
+    faqs: faqs ?? [],
+    cta: c.cta ?? { heading: '', sub: '' },
+  }
 }

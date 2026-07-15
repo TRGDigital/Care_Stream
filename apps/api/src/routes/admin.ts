@@ -2953,6 +2953,64 @@ function normaliseLinks(links: any): Array<{ label: string; url: string }> {
     .slice(0, 40)
 }
 
+// ─── Feature pages (DB-driven /pricing feature pages) ─────────────────────────
+
+adminRouter.get('/feature-pages', async (_req: Request, res: Response) => {
+  const featurePages = await (prisma as any).featurePage.findMany({ orderBy: [{ sort: 'asc' }, { title: 'asc' }] })
+  ok(res, { featurePages, total: featurePages.length })
+})
+
+adminRouter.post('/feature-pages', async (req: Request, res: Response) => {
+  const { title, slug } = req.body ?? {}
+  if (!title?.trim()) { err(res, 'VALIDATION_ERROR', 'Title is required.'); return }
+  if (!slug?.trim())  { err(res, 'VALIDATION_ERROR', 'Slug is required.');  return }
+
+  const existing = await (prisma as any).featurePage.findUnique({ where: { slug: slug.trim() } })
+  if (existing) { err(res, 'CONFLICT', `A feature page with slug "${slug}" already exists.`, 409); return }
+
+  const featurePage = await (prisma as any).featurePage.create({ data: buildFeaturePageData(req.body) })
+  if (featurePage.status === 'published' && featurePage.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/features/${featurePage.slug}`], { source: 'page' })
+  }
+  ok(res, { featurePage })
+})
+
+adminRouter.patch('/feature-pages/:id', async (req: Request, res: Response) => {
+  const { slug } = req.body ?? {}
+  if (slug) {
+    const clash = await (prisma as any).featurePage.findFirst({ where: { slug: slug.trim(), NOT: { id: req.params.id } } })
+    if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
+  }
+  const featurePage = await (prisma as any).featurePage.update({
+    where: { id: req.params.id },
+    data:  buildFeaturePageData(req.body),
+  })
+  if (featurePage.status === 'published' && featurePage.slug) {
+    await submitUrlsForIndexing([`${siteUrl()}/features/${featurePage.slug}`], { source: 'page' })
+  }
+  ok(res, { featurePage })
+})
+
+adminRouter.delete('/feature-pages/:id', async (req: Request, res: Response) => {
+  await (prisma as any).featurePage.delete({ where: { id: req.params.id } })
+  ok(res, { deleted: true })
+})
+
+function buildFeaturePageData(body: any) {
+  const { title, slug, status, meta_title, meta_description, og_image_url, content, faqs, sort } = body ?? {}
+  return {
+    ...(title            !== undefined && { title:            title?.trim() ?? ''            }),
+    ...(slug             !== undefined && { slug:             slug?.trim()                   }),
+    ...(status           !== undefined && { status:           status || 'draft'              }),
+    ...(meta_title       !== undefined && { meta_title:       meta_title?.trim() || null     }),
+    ...(meta_description !== undefined && { meta_description: meta_description?.trim() || null }),
+    ...(og_image_url     !== undefined && { og_image_url:     og_image_url?.trim() || null   }),
+    ...(content          !== undefined && { content:          (content && typeof content === 'object') ? content : {} }),
+    ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
+    ...(sort             !== undefined && { sort:             Number(sort) || 0             }),
+  }
+}
+
 function buildPageData(body: any) {
   const {
     title, description, og_title, og_description, og_image_url,

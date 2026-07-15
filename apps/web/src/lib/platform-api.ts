@@ -319,6 +319,23 @@ export interface Collection {
   updated_at:       string
 }
 
+import type { FeaturePageContent } from '@/components/marketing/feature-page'
+
+export interface FeaturePage {
+  id:               string
+  slug:             string
+  title:            string
+  status:           string
+  meta_title:       string | null
+  meta_description: string | null
+  og_image_url:     string | null
+  content:          FeaturePageContent
+  faqs:             Array<{ question: string; answer: string }>
+  sort:             number
+  created_at:       string
+  updated_at:       string
+}
+
 export interface GlossaryTerm {
   id:         string
   term:       string
@@ -858,6 +875,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ collection: Collection }>(`/collections/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/collections/${id}`, token, { method: 'DELETE' }),
+    },
+
+    featurePages: {
+      list: () =>
+        adminFetch<{ featurePages: FeaturePage[] }>('/feature-pages', token),
+      create: (data: Partial<FeaturePage>) =>
+        adminFetch<{ featurePage: FeaturePage }>('/feature-pages', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<FeaturePage>) =>
+        adminFetch<{ featurePage: FeaturePage }>(`/feature-pages/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      delete: (id: string) =>
+        adminFetch<{ deleted: boolean }>(`/feature-pages/${id}`, token, { method: 'DELETE' }),
     },
 
     prompts: {

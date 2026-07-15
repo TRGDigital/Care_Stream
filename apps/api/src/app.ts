@@ -35,6 +35,7 @@ import { publicTrainingReviewRouter } from './routes/training-review-public'
 import { publicPolicyReviewRouter } from './routes/policy-review-public'
 import { publicPagesRouter } from './routes/pages-public'
 import { publicCollectionsRouter } from './routes/collections-public'
+import { publicFeaturePagesRouter } from './routes/feature-pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
 import { onboardingPublicRouter } from './routes/onboarding-public'
@@ -138,6 +139,9 @@ app.use('/public/site-pages', publicPagesRouter)
 
 // Public marketing collections (ecommerce-style SEO pages) — published only, no auth. BEFORE requireAuth.
 app.use('/public/collections', publicCollectionsRouter)
+
+// Public DB-driven feature pages (the /pricing feature list) — published only, no auth. BEFORE requireAuth.
+app.use('/public/feature-pages', publicFeaturePagesRouter)
 
 // Public alt-text map for static site images, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/image-alts', publicImageAltsRouter)

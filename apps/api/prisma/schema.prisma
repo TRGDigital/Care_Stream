@@ -1159,6 +1159,28 @@ model Collection {
   @@map("collections")
 }
 
+// DB-driven marketing "feature" pages for the /pricing feature list, rendered with
+// the FeatureSimplePage (multi-language-support) layout at /features/[slug].
+// Managed in the platform Blog & Pages → Features pages tab. `content` holds the
+// serializable page copy (no icons — those are assigned by the renderer).
+model FeaturePage {
+  id               String   @id @default(uuid())
+  slug             String   @unique                          // e.g. multi-language-support
+  title            String   @default("")
+  status           String   @default("draft")                // 'draft' | 'published'
+  meta_title       String?
+  meta_description String?
+  og_image_url     String?
+  content          Json     @default("{}")                    // FeaturePageContent (eyebrow, intro, whatItIs, outcomes, howItWorks, keyPoints, sidebar, whyItWorks, cta)
+  faqs             Json     @default("[]")                    // [{ question, answer }]
+  sort             Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@map("feature_pages")
+}
+
 // Central alt-text store for static site images (managed in the platform console
 // → Blog → Alt Tags, surfaced on the marketing pages via the SiteImage component).
 model SiteImageAlt {

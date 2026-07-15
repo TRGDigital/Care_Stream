@@ -19,6 +19,7 @@ const MARKETING: Entry[] = [
   { url: '/care-policies',                         changeFrequency: 'monthly', priority: 0.9 },
   { url: '/policy-gap-detection',                  changeFrequency: 'monthly', priority: 0.9 },
   { url: '/pricing',                               changeFrequency: 'weekly',  priority: 0.9 },
+  { url: '/features/web-chat-interface',           changeFrequency: 'monthly', priority: 0.7 },
   { url: '/who-its-for',                           changeFrequency: 'monthly', priority: 0.8 },
   { url: '/staff-training',                        changeFrequency: 'monthly', priority: 0.9 },
   { url: '/hr-policies',                           changeFrequency: 'monthly', priority: 0.9 },
@@ -97,12 +98,29 @@ async function collectionPages(): Promise<Entry[]> {
   return []
 }
 
+// Feature pages are DB-driven (published in the platform admin), so pull their
+// slugs from the public API rather than hard-coding them. Falls back to none.
+async function featurePages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/feature-pages`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const items = (await res.json())?.data?.featurePages ?? []
+      return (items as Array<{ slug?: string }>)
+        .filter((f) => f.slug)
+        .map((f) => ({ url: `/features/${f.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, blog, collections] = await Promise.all([trainingPages(), blogPages(), collectionPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog, ...collections].filter((e) => {
+  const [training, blog, collections, features] = await Promise.all([trainingPages(), blogPages(), collectionPages(), featurePages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog, ...collections, ...features].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

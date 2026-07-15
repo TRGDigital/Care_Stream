@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
-import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage } from '@/lib/platform-api'
+import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/components/marketing/feature-page'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { Button } from '@/components/ui/button'
@@ -1256,11 +1257,232 @@ function CollectionForm({
   )
 }
 
+// ─── Simple string-list editor (bullets, chips) ─────────────────────────────────
+
+function StringListEditor({ items, onChange, placeholder, textarea = false }: {
+  items: string[]
+  onChange: (items: string[]) => void
+  placeholder: string
+  textarea?: boolean
+}) {
+  const list = Array.isArray(items) ? items : []
+  const update = (i: number, v: string) => onChange(list.map((x, idx) => (idx === i ? v : x)))
+  const add = () => onChange([...list, ''])
+  const remove = (i: number) => onChange(list.filter((_, idx) => idx !== i))
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir; if (j < 0 || j >= list.length) return
+    const next = list.slice(); const t = next[i]; next[i] = next[j]; next[j] = t; onChange(next)
+  }
+  return (
+    <div className="space-y-2">
+      {list.map((x, i) => (
+        <div key={i} className="flex items-start gap-2">
+          {textarea
+            ? <textarea value={x} onChange={e => update(i, e.target.value)} rows={2} placeholder={placeholder}
+                className="flex-1 resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            : <input value={x} onChange={e => update(i, e.target.value)} placeholder={placeholder}
+                className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />}
+          <div className="flex shrink-0 items-center gap-0.5 pt-1 text-xs">
+            <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↑</button>
+            <button type="button" onClick={() => move(i, 1)} disabled={i === list.length - 1} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↓</button>
+            <button type="button" onClick={() => remove(i)} className="rounded px-2 py-0.5 font-medium text-red-600 hover:bg-red-50">✕</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add</button>
+    </div>
+  )
+}
+
+// ─── Heading/body pair-list editor (how-it-works sections, sidebar, tiles) ───────
+
+function PairListEditor({ items, onChange, keyA, keyB, phA, phB }: {
+  items: Array<Record<string, string>>
+  onChange: (items: Array<Record<string, string>>) => void
+  keyA: string; keyB: string; phA: string; phB: string
+}) {
+  const list = Array.isArray(items) ? items : []
+  const update = (i: number, k: string, v: string) => onChange(list.map((x, idx) => (idx === i ? { ...x, [k]: v } : x)))
+  const add = () => onChange([...list, { [keyA]: '', [keyB]: '' }])
+  const remove = (i: number) => onChange(list.filter((_, idx) => idx !== i))
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir; if (j < 0 || j >= list.length) return
+    const next = list.slice(); const t = next[i]; next[i] = next[j]; next[j] = t; onChange(next)
+  }
+  return (
+    <div className="space-y-3">
+      {list.map((x, i) => (
+        <div key={i} className="rounded-lg border border-gray-200 bg-white p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-neutral-mid">Item {i + 1}</span>
+            <div className="flex items-center gap-0.5 text-xs">
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↑</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === list.length - 1} className="rounded px-1.5 py-0.5 text-neutral-mid hover:bg-gray-100 disabled:opacity-30">↓</button>
+              <button type="button" onClick={() => remove(i)} className="rounded px-2 py-0.5 font-medium text-red-600 hover:bg-red-50">Remove</button>
+            </div>
+          </div>
+          <input value={x[keyA] ?? ''} onChange={e => update(i, keyA, e.target.value)} placeholder={phA}
+            className="mb-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm font-medium focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          <textarea value={x[keyB] ?? ''} onChange={e => update(i, keyB, e.target.value)} rows={2} placeholder={phB}
+            className="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+        </div>
+      ))}
+      <button type="button" onClick={add} className="rounded-md border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40">+ Add item</button>
+    </div>
+  )
+}
+
+// ─── Feature page form ───────────────────────────────────────────────────────────
+
+function FeaturePageForm({
+  initial, onSave, onCancel, saving, saveError,
+}: {
+  initial?: Partial<FeaturePage> | null
+  onSave: (data: any) => void
+  onCancel: () => void
+  saving: boolean
+  saveError: string
+}) {
+  const isEdit = !!initial?.id
+  const [form, setForm] = useState(() => ({
+    title:  initial?.title ?? '',
+    slug:   initial?.slug ?? '',
+    status: initial?.status ?? 'draft',
+    meta_title: initial?.meta_title ?? '',
+    meta_description: initial?.meta_description ?? '',
+    og_image_url: initial?.og_image_url ?? '',
+    faqs:   Array.isArray(initial?.faqs) ? initial!.faqs : [],
+  }))
+  const [content, setContent] = useState<FeaturePageContent>(() => ({
+    ...EMPTY_FEATURE_CONTENT,
+    ...(initial?.content ?? {}),
+    whatItIs:   { ...EMPTY_FEATURE_CONTENT.whatItIs,   ...(initial?.content?.whatItIs ?? {}) },
+    howItWorks: { ...EMPTY_FEATURE_CONTENT.howItWorks, ...(initial?.content?.howItWorks ?? {}) },
+    whyItWorks: { ...EMPTY_FEATURE_CONTENT.whyItWorks, ...(initial?.content?.whyItWorks ?? {}) },
+    cta:        { ...EMPTY_FEATURE_CONTENT.cta,        ...(initial?.content?.cta ?? {}) },
+  }))
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
+  const setC = (k: keyof FeaturePageContent, v: any) => setContent(c => ({ ...c, [k]: v }))
+  const setTitle = (v: string) => setForm(f => ({ ...f, title: v, slug: (!isEdit && (f.slug === '' || f.slug === slugify(f.title))) ? slugify(v) : f.slug }))
+
+  const input = 'w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal'
+
+  return (
+    <div className="space-y-4 rounded-xl border border-gray-200 bg-neutral-light p-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Feature title *</label>
+          <input value={form.title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Voice input" className={input} />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Slug *</label>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-neutral-mid">/features/</span>
+            <input value={form.slug} onChange={e => set('slug', slugify(e.target.value))} placeholder="voice-input" className={input} />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="w-40">
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Status</label>
+          <select value={form.status} onChange={e => set('status', e.target.value)} className={input}>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Eyebrow (breadcrumb)</label>
+          <input value={content.eyebrow} onChange={e => setC('eyebrow', e.target.value)} placeholder="e.g. For a diverse workforce" className={input} />
+        </div>
+      </div>
+
+      <AccordionSection title="Hero" description="The intro paragraph and the small pill chips." defaultOpen>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Intro paragraph</label>
+            <textarea value={content.intro} onChange={e => setC('intro', e.target.value)} rows={3} placeholder="One or two sentences under the heading." className={`${input} resize-none`} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Chips (short labels, up to 4)</label>
+            <StringListEditor items={content.chips} onChange={v => setC('chips', v)} placeholder="e.g. 60+ languages" />
+          </div>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="What it is" description="The opening explanation block.">
+        <div className="space-y-3">
+          <input value={content.whatItIs.heading} onChange={e => setC('whatItIs', { ...content.whatItIs, heading: e.target.value })} placeholder="Heading" className={input} />
+          <textarea value={content.whatItIs.body} onChange={e => setC('whatItIs', { ...content.whatItIs, body: e.target.value })} rows={4} placeholder="The paragraph explaining what the feature is." className={`${input} resize-none`} />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="Benefits" description="Outcome statements shown as a grid.">
+        <StringListEditor items={content.outcomes} onChange={v => setC('outcomes', v)} placeholder="A benefit for the service…" textarea />
+      </AccordionSection>
+
+      <AccordionSection title="How it works" description="Heading, intro, and the numbered steps.">
+        <div className="space-y-3">
+          <input value={content.howItWorks.heading} onChange={e => setC('howItWorks', { ...content.howItWorks, heading: e.target.value })} placeholder="Section heading" className={input} />
+          <textarea value={content.howItWorks.intro} onChange={e => setC('howItWorks', { ...content.howItWorks, intro: e.target.value })} rows={2} placeholder="Short intro under the heading." className={`${input} resize-none`} />
+          <p className="text-xs font-semibold text-neutral-mid">Steps</p>
+          <PairListEditor items={content.howItWorks.sections} onChange={v => setC('howItWorks', { ...content.howItWorks, sections: v as any })} keyA="heading" keyB="body" phA="Step heading" phB="Step description" />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="At a glance" description="The bullet list of essentials.">
+        <StringListEditor items={content.keyPoints} onChange={v => setC('keyPoints', v)} placeholder="A key point…" />
+      </AccordionSection>
+
+      <AccordionSection title="Sidebar cards" description="The small cards beside the key points (e.g. Who it's for).">
+        <PairListEditor items={content.sidebar} onChange={v => setC('sidebar', v as any)} keyA="title" keyB="body" phA="Card title" phB="Card text" />
+      </AccordionSection>
+
+      <AccordionSection title="Why it works" description="The teal band — heading, intro and four tiles.">
+        <div className="space-y-3">
+          <input value={content.whyItWorks.heading} onChange={e => setC('whyItWorks', { ...content.whyItWorks, heading: e.target.value })} placeholder="Section heading" className={input} />
+          <textarea value={content.whyItWorks.intro} onChange={e => setC('whyItWorks', { ...content.whyItWorks, intro: e.target.value })} rows={2} placeholder="Short intro under the heading." className={`${input} resize-none`} />
+          <p className="text-xs font-semibold text-neutral-mid">Tiles</p>
+          <PairListEditor items={content.whyItWorks.tiles} onChange={v => setC('whyItWorks', { ...content.whyItWorks, tiles: v as any })} keyA="title" keyB="body" phA="Tile title" phB="Tile text" />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="FAQs" description="Shown at the bottom and emitted as FAQ schema for SEO.">
+        <FaqEditor faqs={form.faqs} onChange={v => set('faqs', v)} />
+      </AccordionSection>
+
+      <AccordionSection title="Closing call to action" description="The final banner.">
+        <div className="space-y-3">
+          <input value={content.cta.heading} onChange={e => setC('cta', { ...content.cta, heading: e.target.value })} placeholder="CTA heading" className={input} />
+          <textarea value={content.cta.sub} onChange={e => setC('cta', { ...content.cta, sub: e.target.value })} rows={2} placeholder="CTA sub-text." className={`${input} resize-none`} />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="SEO & social" description="Meta title, description and social sharing image.">
+        <div className="space-y-3">
+          <input value={form.meta_title} onChange={e => set('meta_title', e.target.value)} placeholder="Meta title (defaults to the feature title)" className={input} />
+          <textarea value={form.meta_description} onChange={e => set('meta_description', e.target.value)} rows={2} placeholder="Meta description" className={`${input} resize-none`} />
+          <input value={form.og_image_url} onChange={e => set('og_image_url', e.target.value)} placeholder="Social image URL" className={input} />
+        </div>
+      </AccordionSection>
+
+      {saveError && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{saveError}</p>}
+
+      <div className="flex gap-2 pt-1">
+        <Button onClick={() => onSave({ ...form, content })} disabled={saving || !form.title.trim() || !form.slug.trim()}>
+          {saving ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Check size={14} className="mr-1" />}
+          {saving ? 'Saving…' : 'Save Feature Page'}
+        </Button>
+        <Button variant="secondary" onClick={onCancel} disabled={saving}><X size={14} className="mr-1" />Cancel</Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'collections' | 'altTags'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'features' | 'collections' | 'altTags'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -1295,6 +1517,13 @@ export default function BlogPage() {
   const [savingCollection, setSavingCollection] = useState(false)
   const [collectionError,  setCollectionError]  = useState('')
 
+  // Feature pages state
+  const [featurePages,       setFeaturePages]       = useState<FeaturePage[]>([])
+  const [showFeaturePage,    setShowFeaturePage]    = useState(false)
+  const [editFeaturePage,    setEditFeaturePage]    = useState<FeaturePage | null>(null)
+  const [savingFeaturePage,  setSavingFeaturePage]  = useState(false)
+  const [featurePageError,   setFeaturePageError]   = useState('')
+
   // When a page is opened for editing (including from the Footer Links tab),
   // The editor opens inline under the clicked row, so only nudge it into view if it is
   // off-screen ('nearest' never jumps the page to the top).
@@ -1308,8 +1537,8 @@ export default function BlogPage() {
   useEffect(() => {
     if (!token) return
     const api = createPlatformClient(token)
-    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex(), api.collections.list().catch(() => ({ collections: [] }))])
-      .then(([p, a, pg, seo, col]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages); setCollections(col.collections) })
+    Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex(), api.collections.list().catch(() => ({ collections: [] })), api.featurePages.list().catch(() => ({ featurePages: [] }))])
+      .then(([p, a, pg, seo, col, fp]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages); setCollections(col.collections); setFeaturePages(fp.featurePages) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
@@ -1455,6 +1684,39 @@ export default function BlogPage() {
     }
   }
 
+  // ── Feature page handlers ──────────────────────────────────────────────────────
+
+  async function saveFeaturePage(form: any) {
+    if (!token) return
+    setSavingFeaturePage(true); setFeaturePageError('')
+    try {
+      const api = createPlatformClient(token)
+      if (editFeaturePage) {
+        const res = await api.featurePages.update(editFeaturePage.id, form)
+        setFeaturePages(prev => prev.map(f => f.id === editFeaturePage.id ? res.featurePage : f))
+        setEditFeaturePage(null)
+      } else {
+        const res = await api.featurePages.create(form)
+        setFeaturePages(prev => [...prev, res.featurePage])
+        setShowFeaturePage(false)
+      }
+    } catch (e: any) {
+      setFeaturePageError(e.message ?? 'Failed to save feature page.')
+    } finally {
+      setSavingFeaturePage(false)
+    }
+  }
+
+  async function deleteFeaturePage(id: string, title: string) {
+    if (!token || !confirm(`Delete the "${title}" feature page?`)) return
+    try {
+      await createPlatformClient(token).featurePages.delete(id)
+      setFeaturePages(prev => prev.filter(f => f.id !== id))
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
   // Merge DEFAULT_PAGES with DB pages — DB record wins if it exists
   const mergedPages = DEFAULT_PAGES.map(def => {
     const db = pages.find(p => p.path === def.path)
@@ -1528,7 +1790,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6">
-            {(['posts', 'authors', 'pages', 'collections', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'features', 'collections', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -1538,7 +1800,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'collections' ? `Collections (${collections.length})` : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -1897,6 +2159,73 @@ export default function BlogPage() {
                         <Plus size={12} /> Add link to {group}
                       </button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Features pages tab ──────────────────────────────────────────── */}
+        {tab === 'features' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-neutral-mid">
+                The <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/features/&hellip;</code> pages linked from the pricing list. Edit the content and FAQs; publishing submits the page for indexing and adds it to the sitemap.
+              </p>
+              {!showFeaturePage && !editFeaturePage && (
+                <Button onClick={() => setShowFeaturePage(true)}>
+                  <Plus size={14} className="mr-1" /> New Feature Page
+                </Button>
+              )}
+            </div>
+
+            {showFeaturePage && (
+              <FeaturePageForm
+                onSave={saveFeaturePage}
+                onCancel={() => setShowFeaturePage(false)}
+                saving={savingFeaturePage}
+                saveError={featurePageError}
+              />
+            )}
+
+            {featurePages.length === 0 && !showFeaturePage ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-neutral-light/40 px-6 py-10 text-center">
+                <p className="text-sm text-neutral-mid">No feature pages yet. Create one to add an editable <code className="rounded bg-white px-1 py-0.5 text-xs">/features/&hellip;</code> page.</p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                {featurePages.map(f => (
+                  <div key={f.id}>
+                    <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-3 last:border-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-neutral-dark">{f.title || '(untitled)'}</p>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLOURS[f.status] ?? STATUS_COLOURS.draft}`}>{f.status}</span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-neutral-mid">
+                          /features/{f.slug}
+                          {f.status === 'published' && (
+                            <a href={`https://carestreamai.com/features/${f.slug}`} target="_blank" rel="noreferrer" className="ml-2 text-teal hover:underline">View ↗</a>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button onClick={() => { setEditFeaturePage(f); setShowFeaturePage(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
+                        <button onClick={() => deleteFeaturePage(f.id, f.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
+                      </div>
+                    </div>
+                    {editFeaturePage?.id === f.id && (
+                      <div className="border-b border-gray-100 bg-neutral-light/40 px-5 py-4">
+                        <FeaturePageForm
+                          initial={editFeaturePage}
+                          onSave={saveFeaturePage}
+                          onCancel={() => setEditFeaturePage(null)}
+                          saving={savingFeaturePage}
+                          saveError={featurePageError}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

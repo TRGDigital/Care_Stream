@@ -1,7 +1,34 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
-import { Check, Minus, ChevronDown, GraduationCap } from 'lucide-react'
+import { Check, Minus, ChevronDown, GraduationCap, ArrowUpRight } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+
+export const revalidate = 300
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+function toSlug(label: string): string {
+  return label.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+// Static feature pages that aren't in the DB but still have a page to link to.
+const STATIC_FEATURE_SLUGS = ['web-chat-interface']
+
+// The set of feature slugs that have a live /features/ page (DB-published + static),
+// so the matrix can show a link icon next to those feature names.
+async function getLinkedFeatureSlugs(): Promise<Set<string>> {
+  const slugs = new Set<string>(STATIC_FEATURE_SLUGS)
+  try {
+    const res = await fetch(`${API_URL}/public/feature-pages`, { next: { revalidate: 300 } })
+    if (res.ok) {
+      const items = (await res.json())?.data?.featurePages ?? []
+      for (const f of items as Array<{ slug?: string }>) if (f.slug) slugs.add(f.slug)
+    }
+  } catch {
+    // fall through — no links rather than a broken page
+  }
+  return slugs
+}
 
 export const metadata = {
   title: 'Pricing',
@@ -223,7 +250,8 @@ function FeatureValue({ val, light = false }: { val: Cell; light?: boolean }) {
   return <span className={`text-sm font-medium ${light ? 'text-white' : 'text-neutral-dark'}`}>{val}</span>
 }
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const linkedFeatures = await getLinkedFeatureSlugs()
   return (
     <>
       <PageHero
@@ -336,14 +364,25 @@ export default function PricingPage() {
                         {group.section}
                       </td>
                     </tr>
-                    {group.rows.map(row => (
+                    {group.rows.map(row => {
+                      const slug = toSlug(row.label)
+                      const hasPage = linkedFeatures.has(slug)
+                      return (
                       <tr key={row.label} className="border-b border-gray-100 last:border-0">
-                        <td className="px-5 py-3 text-neutral-mid">{row.label}</td>
+                        <td className="px-5 py-3 text-neutral-mid">
+                          {hasPage ? (
+                            <Link href={`/features/${slug}`} className="group inline-flex items-center gap-1.5 text-neutral-dark hover:text-teal">
+                              {row.label}
+                              <ArrowUpRight size={13} className="text-teal opacity-70 transition-opacity group-hover:opacity-100" aria-label={`Learn more about ${row.label}`} />
+                            </Link>
+                          ) : row.label}
+                        </td>
                         <td className="px-5 py-3 text-center"><FeatureValue val={row.values[0]} /></td>
                         <td className="bg-teal-light/20 px-5 py-3 text-center"><FeatureValue val={row.values[1]} /></td>
                         <td className="px-5 py-3 text-center"><FeatureValue val={row.values[2]} /></td>
                       </tr>
-                    ))}
+                      )
+                    })}
                   </Fragment>
                 ))}
               </tbody>

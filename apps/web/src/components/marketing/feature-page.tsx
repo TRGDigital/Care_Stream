@@ -72,10 +72,10 @@ function Hero({ content, showImage }: { content: FeatureContent; showImage: bool
               <span>/</span>
               <span className="text-white/80">{content.eyebrow}</span>
             </div>
-            <h1 className={`mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl ${showImage ? 'max-w-xl' : 'mx-auto max-w-4xl'}`}>
+            <h1 className={`mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl ${showImage ? 'max-w-xl' : ''}`}>
               {content.title}
             </h1>
-            <p className={`mb-8 text-lg leading-relaxed text-white/75 ${showImage ? 'max-w-xl' : 'mx-auto max-w-3xl'}`}>
+            <p className={`mb-8 text-lg leading-relaxed text-white/75 ${showImage ? 'max-w-xl' : ''}`}>
               {content.intro}
             </p>
             <div className={`mb-8 flex flex-wrap gap-2 ${showImage ? '' : 'justify-center'}`}>
@@ -120,8 +120,8 @@ function WhatItIs({ content }: { content: FeatureContent }) {
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
         <SectionLabel>What It Is</SectionLabel>
-        <h2 className="mb-6 max-w-4xl text-4xl font-extrabold leading-tight text-neutral-dark">{content.whatItIs.heading}</h2>
-        <p className="max-w-4xl text-lg leading-relaxed text-neutral-mid">{content.whatItIs.body}</p>
+        <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">{content.whatItIs.heading}</h2>
+        <p className="text-lg leading-relaxed text-neutral-mid">{content.whatItIs.body}</p>
       </div>
     </section>
   )

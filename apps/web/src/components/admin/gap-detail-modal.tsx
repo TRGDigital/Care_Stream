@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -377,6 +377,8 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   // Legal disclaimer gate — the detail is only fetched once accepted.
   const [accepted, setAccepted] = useState(acknowledged)
   const [accepting, setAccepting] = useState(false)
+  const [synopsisOpen, setSynopsisOpen] = useState(false)          // "What this regulation covers" Read more
+  const [whyOpen, setWhyOpen] = useState<Set<string>>(new Set())   // per-suggestion "why adopt this" toggles
 
   async function acceptDisclaimer() {
     setAccepting(true)
@@ -650,6 +652,44 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
           <div className="m-6 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         ) : detail ? (
           <>
+            {/* What this regulation covers — synopsis + Read more */}
+            {detail.summary && (() => {
+              const more = [detail.care_home_context, detail.practical_meaning].map(t => (t ?? '').trim()).filter(Boolean)
+              return (
+                <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
+                  <div className="flex items-start gap-2.5 px-4 py-3">
+                    <BookOpen size={15} className="mt-0.5 shrink-0 text-teal" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold uppercase tracking-wide text-teal">What this regulation covers</p>
+                      <p className="mt-1 text-sm leading-relaxed text-neutral-dark">{detail.summary}</p>
+                      {synopsisOpen && more.length > 0 && (
+                        <div className="mt-2 space-y-2 border-t border-teal/10 pt-2">
+                          {detail.care_home_context && (
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal/80">In a care setting</p>
+                              <p className="text-sm leading-relaxed text-neutral-mid">{detail.care_home_context}</p>
+                            </div>
+                          )}
+                          {detail.practical_meaning && (
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal/80">What your policy should cover</p>
+                              <p className="text-sm leading-relaxed text-neutral-mid">{detail.practical_meaning}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {more.length > 0 && (
+                        <button onClick={() => setSynopsisOpen(o => !o)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-teal hover:underline">
+                          {synopsisOpen ? 'Show less' : 'Read more'}
+                          <ChevronDown size={12} className={`transition-transform ${synopsisOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Verdict correction banner */}
             {detail.effective_status === 'covered' && (
               <div className="mx-6 mt-5 flex items-start gap-3 rounded-lg border border-green-100 bg-green-50 px-4 py-3">
@@ -718,6 +758,23 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                                 ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right), above the dates and sign-off</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}. Add it with the heading below.</>
                                 : <><span className="font-semibold">Replace the whole highlighted paragraph {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the wording below. It keeps everything already in that paragraph and adds what&rsquo;s missing, so swap the paragraph in full rather than part of it.</>}
                           </p>
+                          {/* Why this matters / why adopt it */}
+                          <div className="mt-1.5">
+                            <button
+                              onClick={() => setWhyOpen(s => { const n = new Set(s); n.has(r.requirement) ? n.delete(r.requirement) : n.add(r.requirement); return n })}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-teal hover:underline"
+                            >
+                              <HelpCircle size={12} /> Why adopt this?
+                              <ChevronDown size={11} className={`transition-transform ${whyOpen.has(r.requirement) ? 'rotate-180' : ''}`} />
+                            </button>
+                            {whyOpen.has(r.requirement) && (
+                              <p className="mt-1 rounded-md border border-teal/15 bg-teal-light/20 px-3 py-2 text-xs leading-relaxed text-neutral-mid">
+                                {detail.authority_basis === 'statutory'
+                                  ? <>This is a <span className="font-semibold text-neutral-dark">legally required</span> element of {detail.official_name}. If your policies don&rsquo;t address it, it&rsquo;s a compliance gap a CQC inspector can raise. Adopting the suggested wording brings your policy in line and gives you documented evidence that you cover it.</>
+                                  : <>This is <span className="font-semibold text-neutral-dark">recommended good practice</span> under {detail.official_name}. Adopting it strengthens your policy and shows you follow current best-practice guidance, which supports a stronger inspection outcome.</>}
+                              </p>
+                            )}
+                          </div>
                           {r.suggested_addition && (
                             <div className="mt-2 rounded-md border border-amber-100 bg-white px-3 py-2.5">
                               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">{r.placement === 'amend' ? 'Suggested replacement (keeps your wording, adds the rest)' : r.placement === 'new_section' ? 'New section (add with this heading)' : 'Example wording'}</p>

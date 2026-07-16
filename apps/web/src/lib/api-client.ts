@@ -987,6 +987,9 @@ export function createApiClient(token: string) {
         effective_status: 'partial' | 'gap' | 'covered'
         authority_basis:  'statutory' | 'advisory'
         source_urls:      string[]
+        summary?:         string
+        care_home_context?: string
+        practical_meaning?: string
         evidence_policy:  { id: string; name: string } | null
         target_policy:    { id: string; name: string } | null
         target_policies?: Array<{ id: string | null; name: string; count: number }>

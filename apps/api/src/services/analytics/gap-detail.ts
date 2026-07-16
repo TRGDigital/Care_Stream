@@ -104,6 +104,9 @@ export type GapDetail = {
   effective_status:  'partial' | 'gap' | 'covered'
   authority_basis:   'statutory' | 'advisory'   // legally required vs advised good practice
   source_urls:       string[]
+  summary:           string                       // short synopsis of what the regulation is (for the overlay)
+  care_home_context: string                       // what it means / should be covered in a care setting (Read more)
+  practical_meaning: string                       // plain-English "what to do about it" (Read more)
   evidence_policy:   { id: string; name: string } | null
   target_policy:     { id: string; name: string } | null   // primary policy to add to (back-compat / main preview)
   target_policies:   Array<{ id: string | null; name: string; count: number }>  // all policies the missing requirements route to
@@ -386,7 +389,21 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     const cached = await (prisma as any).gapDetailCache.findUnique({
       where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
     }).catch((e: any) => { console.error('[gap-detail] cache read failed', referenceKey, e?.message); return null })
-    if (cached?.payload) return cached.payload as GapDetail
+    if (cached?.payload) {
+      const payload = cached.payload as GapDetail
+      // Backfill synopsis fields for payloads cached before they existed — cheap
+      // regulation lookup, no re-analysis.
+      if (payload.summary === undefined) {
+        const r = await (prisma as any).externalRegulation.findUnique({
+          where:  { reference_key: referenceKey },
+          select: { summary: true, care_home_context: true, practical_meaning: true },
+        }).catch(() => null)
+        payload.summary = (r?.summary ?? '').trim()
+        payload.care_home_context = (r?.care_home_context ?? '').trim()
+        payload.practical_meaning = (r?.practical_meaning ?? '').trim()
+      }
+      return payload
+    }
   }
 
   const reg = await (prisma as any).externalRegulation.findUnique({
@@ -634,6 +651,9 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     effective_status: effectiveStatus,
     authority_basis:  reg.authority_basis === 'advisory' ? 'advisory' : 'statutory',
     source_urls:      (reg.source_urls ?? []).filter(Boolean),
+    summary:          (reg.summary ?? '').trim(),
+    care_home_context: (reg.care_home_context ?? '').trim(),
+    practical_meaning: (reg.practical_meaning ?? '').trim(),
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
     target_policies:  targetPolicies,

@@ -663,7 +663,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                   <div className="flex items-start gap-2.5 px-4 py-3">
                     <BookOpen size={15} className="mt-0.5 shrink-0 text-teal" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold uppercase tracking-wide text-teal">What this regulation covers</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-neutral-dark">What this regulation covers</p>
                       <p className={`mt-1 text-sm leading-relaxed text-neutral-dark ${synopsisOpen ? '' : 'line-clamp-2'}`}>{detail.summary}</p>
                       {synopsisOpen && more.length > 0 && (
                         <div className="mt-2 space-y-2 border-t border-teal/10 pt-2">
@@ -682,7 +682,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         </div>
                       )}
                       {hasMore && (
-                        <button onClick={() => setSynopsisOpen(o => !o)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-teal hover:underline">
+                        <button onClick={() => setSynopsisOpen(o => !o)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-neutral-dark underline underline-offset-2 hover:no-underline">
                           {synopsisOpen ? 'Show less' : 'Read more'}
                           <ChevronDown size={12} className={`transition-transform ${synopsisOpen ? 'rotate-180' : ''}`} />
                         </button>

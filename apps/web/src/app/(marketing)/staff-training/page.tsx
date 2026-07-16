@@ -6,6 +6,10 @@ import {
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const revalidate = 60
 
@@ -118,6 +122,52 @@ function TrainingDashboardMockup() {
 
 export default async function StaffTrainingPage() {
   const catalogue = await getCatalogue()
+  const s = makeSlot(STAFF_TRAINING_SLOTS, await getContentSlots('/staff-training'))
+
+  const PROBLEM_CARDS = [
+    { icon: '📅', key: 'problem.card1', dim: true },
+    { icon: '💬', key: 'problem.card2', dim: false },
+  ]
+  const HOW_STEPS = [
+    { step: '01', Icon: CheckCircle2,   key: 'how.step1' },
+    { step: '02', Icon: MessageSquare,  key: 'how.step2' },
+    { step: '03', Icon: BarChart2,      key: 'how.step3' },
+  ]
+  const POLICY_FEATURES = [
+    { Icon: Sparkles,      key: 'policies.item1' },
+    { Icon: GraduationCap, key: 'policies.item2' },
+    { Icon: BadgeCheck,    key: 'policies.item3' },
+  ]
+  const LOOP_FEATURES = [
+    { Icon: BadgeCheck,   key: 'loop.item1' },
+    { Icon: RefreshCw,    key: 'loop.item2' },
+    { Icon: CheckCircle2, key: 'loop.item3' },
+  ]
+  const BEYOND_CARDS = [
+    { Icon: Brain,          key: 'beyond.card1' },
+    { Icon: MessageSquare,  key: 'beyond.card2' },
+    { Icon: GraduationCap,  key: 'beyond.card3' },
+    { Icon: RefreshCw,      key: 'beyond.card4' },
+    { Icon: Zap,            key: 'beyond.card5' },
+    { Icon: Users,          key: 'beyond.card6' },
+  ]
+  const F2F_STEPS = [
+    { step: '01', Icon: CalendarDays,  key: 'f2f.step1' },
+    { step: '02', Icon: CheckCircle2,  key: 'f2f.step2' },
+    { step: '03', Icon: GraduationCap, key: 'f2f.step3' },
+  ]
+  const CQC_ROWS = ['cqc.row1', 'cqc.row2', 'cqc.row3', 'cqc.row4', 'cqc.row5', 'cqc.row6']
+  const EVERYTHING_CARDS = [
+    { icon: ShieldCheck,   key: 'everything.card1', iconBg: 'bg-blue-100',    iconColor: 'text-blue-600' },
+    { icon: Sparkles,      key: 'everything.card2', iconBg: 'bg-purple-100',  iconColor: 'text-purple-600' },
+    { icon: Brain,         key: 'everything.card3', iconBg: 'bg-green-100',   iconColor: 'text-green-600' },
+    { icon: GraduationCap, key: 'everything.card4', iconBg: 'bg-orange-100',  iconColor: 'text-orange-600' },
+    { icon: BadgeCheck,    key: 'everything.card5', iconBg: 'bg-teal-light',  iconColor: 'text-teal' },
+    { icon: Bell,          key: 'everything.card6', iconBg: 'bg-amber-100',   iconColor: 'text-amber-600' },
+    { icon: BarChart2,     key: 'everything.card7', iconBg: 'bg-indigo-100',  iconColor: 'text-indigo-600' },
+    { icon: Users,         key: 'everything.card8', iconBg: 'bg-cyan-100',    iconColor: 'text-cyan-600' },
+  ]
+
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -132,12 +182,12 @@ export default async function StaffTrainingPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>Staff Training and Compliance</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Once a year is not enough. CareStream keeps training front of mind all year round.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                Annual compliance training is a legal obligation, but a single renewal date does nothing for day-to-day knowledge retention. CareStream builds training modules from your own policies and keeps your whole team engaged with them in the hub throughout the year.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
@@ -160,40 +210,19 @@ export default async function StaffTrainingPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>The Problem With Annual Training</SectionLabel>
+              <SectionLabel>{s('problem.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                Staff forget most of what they learn within days.
+                {s('problem.h2')}
               </h2>
-              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
-                <p>
-                  Research consistently shows that people forget up to 70% of new information within 24 hours
-                  without reinforcement. Yet the care sector still treats annual compliance training as the
-                  gold standard. One renewal date. One completion record. Job done.
-                </p>
-                <p>
-                  CQC expects your staff to actually apply their training in daily care delivery, not just
-                  complete it once a year. The gap between a completion certificate and genuine working
-                  knowledge is where risk lives.
-                </p>
+              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
               </div>
             </div>
             <div className="grid gap-4">
-              {[
-                {
-                  icon: '📅',
-                  label: 'Traditional annual training',
-                  text: 'Staff complete a module once per year. A record is made. The knowledge fades within weeks and no one knows.',
-                  dim: true,
-                },
-                {
-                  icon: '💬',
-                  label: 'CareStream training',
-                  text: 'Modules built from your own policies, knowledge checks, and renewal reminders are delivered in the hub throughout the year, so knowledge is reinforced rather than left to fade.',
-                  dim: false,
-                },
-              ].map(({ icon, label, text, dim }) => (
+              {PROBLEM_CARDS.map(({ icon, key, dim }) => (
                 <div
-                  key={label}
+                  key={key}
                   className={`card-lift rounded-2xl p-6 ${
                     dim
                       ? 'border border-gray-100 bg-white shadow-card'
@@ -203,10 +232,10 @@ export default async function StaffTrainingPage() {
                   <div className="mb-3 flex items-center gap-3">
                     <span className="text-2xl">{icon}</span>
                     <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>
-                      {label}
+                      {s(`${key}.label`)}
                     </p>
                   </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{text}</p>
+                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.text`)}</p>
                 </div>
               ))}
             </div>
@@ -217,37 +246,16 @@ export default async function StaffTrainingPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How CareStream Training Works</SectionLabel>
+          <SectionLabel>{s('how.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Choose or build a module, assign it, and track every answer.
+            {s('how.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Use the ready-made standard library for common mandatory topics, or have CareStream
-            generate a module from your own policies. Either way, staff complete it in the hub and
-            you see exactly where everyone stands.
+            {s('how.intro')}
           </p>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                step: '01',
-                Icon: CheckCircle2,
-                title: 'Choose or generate a module',
-                body: 'Assign a ready-made module from the standard library covering safeguarding, fire safety, manual handling, infection control, and more, or have CareStream generate a tailored module from your own policy documents. Assign to individuals or whole teams from the dashboard.',
-              },
-              {
-                step: '02',
-                Icon: MessageSquare,
-                title: 'Questions delivered in the hub',
-                body: 'Each module contains multiple-choice questions with four options. CareStream nudges staff in the hub the moment a module is assigned, or waits for the staff member to start when it suits them. You choose which mode suits your team.',
-              },
-              {
-                step: '03',
-                Icon: BarChart2,
-                title: 'Progress tracked in real time',
-                body: 'Every answer is recorded. The compliance dashboard shows exactly who has completed what, who is in progress, and whose renewal is coming up, giving you a live picture of training compliance across your whole team.',
-              },
-            ].map(({ step, Icon, title, body }) => (
+            {HOW_STEPS.map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -257,8 +265,8 @@ export default async function StaffTrainingPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -268,28 +276,24 @@ export default async function StaffTrainingPage() {
       {/* ── Two kinds of training ─────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Two Kinds of Training</SectionLabel>
+          <SectionLabel>{s('two.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Ask anything any time, and cover every mandatory subject.
+            {s('two.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            CareStream covers both sides of training in one hub: quick, ad-hoc questions you send
-            whenever you need them, and full annual modules for every mandatory subject.
+            {s('two.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
                 <MessageSquare size={22} className="text-teal" />
               </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">Ad-hoc questions and knowledge checks</h3>
+              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card1.title')}</h3>
               <p className="mb-4 leading-relaxed text-neutral-mid">
-                Raise a question or a knowledge check and send it to any staff member whenever you want.
-                They answer in their own words in the hub, the AI marks it with feedback, and you see
-                exactly who knows what. Ideal for a quick refresher after an incident, an audit finding,
-                or a policy change.
+                {s('two.card1.body')}
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
-                {['Sent and answered in the hub', 'Marked instantly with feedback', 'Perfect for spot-checks and refreshers'].map((p) => (
+                {[s('two.card1.li1'), s('two.card1.li2'), s('two.card1.li3')].map((p) => (
                   <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
                 ))}
               </ul>
@@ -298,15 +302,12 @@ export default async function StaffTrainingPage() {
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-teal-glow">
                 <GraduationCap size={22} />
               </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">Annual mandatory training modules</h3>
+              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card2.title')}</h3>
               <p className="mb-4 leading-relaxed text-neutral-mid">
-                A full library of teach-then-assess modules covering every mandatory subject, ready to
-                assign and included as standard. Each module teaches the topic, applies it to a real care
-                scenario, and finishes with an assessment, with automatic renewal reminders so nobody
-                falls out of date.
+                {s('two.card2.body')}
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
-                {['Every mandatory subject, ready to assign', 'Teach, scenario and assessment in each module', 'Renewal reminders at 90, 30 and 7 days'].map((p) => (
+                {[s('two.card2.li1'), s('two.card2.li2'), s('two.card2.li3')].map((p) => (
                   <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
                 ))}
               </ul>
@@ -319,19 +320,16 @@ export default async function StaffTrainingPage() {
       {catalogue.topics.length > 0 && (
         <section className="bg-neutral-light py-24">
           <div className="mx-auto max-w-content px-6">
-            <SectionLabel>Annual Mandatory Training Library</SectionLabel>
+            <SectionLabel>{s('library.label')}</SectionLabel>
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-              Every mandatory subject, ready to assign.
+              {s('library.h2')}
             </h2>
             <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-              The standard library covers the mandatory training every care service needs, grounded in
-              best practice for UK adult social care. Each one becomes a complete teach-then-assess
-              module with its own cover, learning sections, a real care scenario, and an assessment.
+              {s('library.intro')}
             </p>
             <TrainingLibraryTabs groups={catalogue.groups} settings={catalogue.settings} topics={catalogue.topics} />
             <p className="mt-12 text-sm text-neutral-mid">
-              Every subject is part of your standard library. You can also generate tailored modules
-              from your own policies.
+              {s('library.footnote')}
             </p>
           </div>
         </section>
@@ -340,37 +338,30 @@ export default async function StaffTrainingPage() {
       {/* ── Built from your policies ──────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Built From Your Own Policies</SectionLabel>
+          <SectionLabel>{s('policies.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Training modules generated from your policies, not generic content.
+            {s('policies.h2')}
           </h2>
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                A complete module that teaches, applies, and assesses.
+                {s('policies.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                CareStream can generate a full training module from your own policy documents. It reads
-                the relevant policies, then writes a module that teaches the topic in short sections,
-                walks staff through a real care setting scenario, and checks understanding as it goes,
-                finishing with a full assessment.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Every generated module is a draft until you approve it. You review it, edit anything you
-                want, and only then does it reach your staff. The standard library of ready-made modules
-                is included, and tailored modules generated from your own policies use one AI credit each.
-              </p>
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('policies.p1') }}
+              />
+              <div
+                className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('policies.p2') }}
+              />
               <div className="space-y-3">
-                {[
-                  { Icon: Sparkles,      label: 'Teach then assess',  text: 'Each module teaches a topic in short sections, applies it to a real scenario, and finishes with a full assessment of four-option questions.' },
-                  { Icon: GraduationCap, label: 'Learn and retry',    text: 'A staff member who gets a question wrong gets a short re-teach on that point and tries again, so the gap is closed, not just recorded.' },
-                  { Icon: BadgeCheck,    label: 'External sign-off',  text: 'Send a module to an external specialist through a secure link so they can review and sign it off, giving you independent assurance for inspectors.' },
-                ].map(({ Icon, label, text }) => (
-                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                {POLICY_FEATURES.map(({ Icon, key }) => (
+                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
                     <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
                     </div>
                   </div>
                 ))}
@@ -416,9 +407,9 @@ export default async function StaffTrainingPage() {
       {/* ── Channel mockups ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>See It In Action</SectionLabel>
+          <SectionLabel>{s('action.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Training answered in the hub, in seconds, in any language.
+            {s('action.h2')}
           </h2>
 
           {/* ── The hub ── */}
@@ -428,24 +419,23 @@ export default async function StaffTrainingPage() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-light">
                   <Smartphone size={18} className="text-teal" />
                 </div>
-                <span className="text-xl font-bold text-neutral-dark">The hub</span>
+                <span className="text-xl font-bold text-neutral-dark">{s('action.hub.label')}</span>
               </div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Policy questions and training questions, together in one place.
+                {s('action.hub.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                The hub is where your staff already ask policy questions. Training questions appear in
-                the same place. A staff member opens the hub on their phone, answers the question waiting
-                for them, and the record updates the moment they reply.
-              </p>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                Staff can also ask about any training topic at any time, by typing or speaking, and get
-                an accurate answer drawn from the module and your source materials.
-              </p>
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.hub.p1') }}
+              />
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.hub.p2') }}
+              />
               <div className="rounded-xl border border-teal/20 bg-teal/5 px-4 py-3">
                 <div className="mb-2.5 flex items-center gap-2">
                   <Globe size={15} className="flex-shrink-0 text-teal" />
-                  <p className="text-sm font-medium text-neutral-dark">Answered in over 60 languages.</p>
+                  <p className="text-sm font-medium text-neutral-dark">{s('action.hub.lang')}</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
@@ -569,24 +559,23 @@ export default async function StaffTrainingPage() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
                   <Mail size={18} className="text-blue-600" />
                 </div>
-                <span className="text-xl font-bold text-neutral-dark">Email</span>
+                <span className="text-xl font-bold text-neutral-dark">{s('action.email.label')}</span>
               </div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Prefer email? Training arrives in the inbox. The reply takes one keystroke.
+                {s('action.email.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                Staff who would rather use email get their training questions there automatically, and
-                the thread is preserved so replies are handled in the same conversation with no separate
-                system needed.
-              </p>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                The correct answer is highlighted in the feedback reply, and the compliance record is
-                updated the moment the response lands.
-              </p>
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.email.p1') }}
+              />
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.email.p2') }}
+              />
               <div className="rounded-xl border border-teal/20 bg-teal/5 px-4 py-3">
                 <div className="mb-2.5 flex items-center gap-2">
                   <Globe size={15} className="flex-shrink-0 text-teal" />
-                  <p className="text-sm font-medium text-neutral-dark">Answered in over 60 languages.</p>
+                  <p className="text-sm font-medium text-neutral-dark">{s('action.email.lang')}</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
@@ -612,36 +601,30 @@ export default async function StaffTrainingPage() {
       {/* ── Close the loop (learn and retry) ──────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Close the Loop</SectionLabel>
+          <SectionLabel>{s('loop.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            A wrong answer becomes a lesson, not just a mark.
+            {s('loop.h2')}
           </h2>
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                When a staff member gets it wrong, CareStream teaches the point and checks it again.
+                {s('loop.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                The moment a question is answered incorrectly, CareStream turns it into a short,
-                policy-grounded micro-lesson: a warm explanation of the right answer and why it matters,
-                the key points to remember, and a real care scenario.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Then it asks a brand new question on the same point, never a repeat of the one they
-                missed, to make sure it has landed. The whole loop takes a couple of minutes, in the
-                staff member's own language.
-              </p>
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('loop.p1') }}
+              />
+              <div
+                className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('loop.p2') }}
+              />
               <div className="space-y-3">
-                {[
-                  { Icon: BadgeCheck,   label: 'Taught from your own policy', text: 'The micro-lesson is grounded in your policy, so the correction matches your home and not generic advice.' },
-                  { Icon: RefreshCw,    label: 'A fresh question, not a repeat', text: 'Understanding is checked with a new, scenario-based question, so staff cannot simply remember the answer.' },
-                  { Icon: CheckCircle2, label: 'Logged as closed, for CQC', text: 'Every learn-and-retry is recorded, giving you evidence that the gap was closed, not just flagged.' },
-                ].map(({ Icon, label, text }) => (
-                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                {LOOP_FEATURES.map(({ Icon, key }) => (
+                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
                     <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
                     </div>
                   </div>
                 ))}
@@ -696,54 +679,22 @@ export default async function StaffTrainingPage() {
       {/* ── The ongoing engagement angle ──────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel light>Beyond the Renewal Date</SectionLabel>
+          <SectionLabel light>{s('beyond.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
-            Training that works throughout the year, not only when it is due.
+            {s('beyond.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
-            The most powerful part of CareStream training is not the renewal certificate.
-            It is what happens between renewals.
+            {s('beyond.intro')}
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                Icon: Brain,
-                title: 'Ad-hoc knowledge checks',
-                body: 'CareStream can send training module questions to staff at any point in the year, not only at renewal. Spaced repetition keeps critical knowledge like safeguarding, medication management, and infection control fresh.',
-              },
-              {
-                Icon: MessageSquare,
-                title: 'Staff can ask training questions any time',
-                body: 'A staff member who wants to refresh their knowledge on a training topic can ask CareStream directly in the hub or by email. They get an accurate answer drawn from the training module and source materials, instantly.',
-              },
-              {
-                Icon: GraduationCap,
-                title: 'Learn and retry',
-                body: 'When a staff member gets a question wrong, they get a short re-teach on that exact point and try again. The gap in knowledge is closed at the moment it shows up, not just logged.',
-              },
-              {
-                Icon: RefreshCw,
-                title: 'Renewal reminders at 90, 30, and 7 days',
-                body: 'Automatic reminders go to each staff member as their renewal date approaches, and managers receive a renewal digest listing what is coming up. No spreadsheets and no manual chasing.',
-              },
-              {
-                Icon: Zap,
-                title: 'Immediate delivery on assignment',
-                body: 'With auto-send mode enabled, the moment a manager assigns a module the first question is delivered to the hub. Staff can make a start on their phone during a break.',
-              },
-              {
-                Icon: Users,
-                title: 'Individual tracking at scale',
-                body: 'Whether you have 10 staff or 200, the compliance dashboard shows every individual status across every module. See who is current, in progress, and overdue at a glance.',
-              },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl bg-white/10 p-6 backdrop-blur-sm border border-white/20">
+            {BEYOND_CARDS.map(({ Icon, key }) => (
+              <div key={key} className="card-lift rounded-2xl bg-white/10 p-6 backdrop-blur-sm border border-white/20">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
                   <Icon size={18} className="text-white" />
                 </div>
-                <h3 className="mb-2 font-bold text-white">{title}</h3>
-                <p className="text-sm leading-relaxed text-white/75">{body}</p>
+                <h3 className="mb-2 font-bold text-white">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -753,37 +704,16 @@ export default async function StaffTrainingPage() {
       {/* ── Face-to-face training tracking ────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Face-to-face Training</SectionLabel>
+          <SectionLabel>{s('f2f.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Track your in-person training too, in the same place.
+            {s('f2f.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Most homes still run group sessions in the room every month. CareStream gives you a simple
-            calendar to log those sessions, mark who attended, and keep the evidence, so your digital and
-            face-to-face training live in one record.
+            {s('f2f.intro')}
           </p>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                step: '01',
-                Icon: CalendarDays,
-                title: 'Log the session on a calendar',
-                body: 'Record each in-person session: the topic, the date, and who delivered it (a staff member or an external trainer). Allocate who should attend, and backfill the last twelve months so your history is complete.',
-              },
-              {
-                step: '02',
-                Icon: CheckCircle2,
-                title: 'Mark who attended',
-                body: 'After the session, mark who came and who missed it in a couple of taps. That gives you clear evidence of attendance at every formal training session you run.',
-              },
-              {
-                step: '03',
-                Icon: GraduationCap,
-                title: 'Send a digital catch-up',
-                body: 'Anyone who missed can be sent the matching digital module to complete in the hub, so a missed session never becomes a training gap. You choose exactly who receives it.',
-              },
-            ].map(({ step, Icon, title, body }) => (
+            {F2F_STEPS.map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -793,16 +723,14 @@ export default async function StaffTrainingPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
 
           <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
-            Managers see it all in the analytics and in the hub: who missed which sessions, who was sent the
-            catch-up module, and whether they have completed it. From October each year, CareStream nudges you
-            to start planning the following year&apos;s sessions.
+            {s('f2f.footnote')}
           </p>
         </div>
       </section>
@@ -812,34 +740,19 @@ export default async function StaffTrainingPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>Training Matrix</SectionLabel>
+              <SectionLabel>{s('matrix.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                A complete training matrix that builds itself.
+                {s('matrix.h2')}
               </h2>
-              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
-                <p>
-                  A training matrix, the grid of who has done what and when it is next due, is one of the first
-                  things an inspector or commissioner asks to see. Most services keep it in a spreadsheet that is
-                  out of date the moment it is printed.
-                </p>
-                <p>
-                  CareStream builds it for you, live. Every <strong className="text-neutral-dark">digital module</strong> a
-                  staff member completes and every <strong className="text-neutral-dark">face-to-face session</strong> you log
-                  flow into one record, so the matrix is always current and always complete, in person and online,
-                  with nothing to keep updated by hand.
-                </p>
+              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+                <div dangerouslySetInnerHTML={{ __html: s('matrix.p1') }} />
+                <div dangerouslySetInnerHTML={{ __html: s('matrix.p2') }} />
               </div>
             </div>
             <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">What the matrix captures</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">{s('matrix.listLabel')}</p>
               <ul className="space-y-3">
-                {[
-                  'Digital training completed, with scores and renewal dates',
-                  'Face-to-face sessions, who attended and who missed, with the trainer and the date',
-                  'Up to twelve months of history backfilled, so it is complete from day one',
-                  'Gaps at a glance: who is overdue, and who was sent a catch-up after missing a session',
-                  'CQC-ready evidence for every staff member, ready to show at inspection',
-                ].map((t) => (
+                {[s('matrix.li1'), s('matrix.li2'), s('matrix.li3'), s('matrix.li4'), s('matrix.li5')].map((t) => (
                   <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-neutral-dark">
                     <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-teal" />
                     {t}
@@ -854,54 +767,27 @@ export default async function StaffTrainingPage() {
       {/* ── CQC evidence angle ────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>CQC Evidence</SectionLabel>
+          <SectionLabel>{s('cqc.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-            An audit trail that goes far beyond a completion date.
+            {s('cqc.h2')}
           </h2>
-          <div className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            <p>
-              When a CQC inspector asks how you ensure staff knowledge is current, a completion
-              date from 11 months ago is a weak answer. CareStream gives you something far stronger.
-            </p>
-          </div>
+          <div
+            className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+            dangerouslySetInnerHTML={{ __html: s('cqc.intro') }}
+          />
 
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
-              <span>What CareStream records</span>
-              <span>What this shows an inspector</span>
+              <span>{s('cqc.col1')}</span>
+              <span>{s('cqc.col2')}</span>
             </div>
-            {[
-              [
-                'Training completion per staff member',
-                'Every module completed, with the exact date and the result on each question. Not a bulk export from a third-party LMS.',
-              ],
-              [
-                'Individual question answers',
-                'The specific question asked, the answer given, and whether it was correct. Evidence that knowledge was tested, not just time was logged.',
-              ],
-              [
-                'Ongoing knowledge checks between renewals',
-                'Proof that training knowledge is actively reinforced throughout the year, directly addressing the question of how you maintain competence.',
-              ],
-              [
-                'External specialist sign-off',
-                'Where a module was reviewed and signed off by an external specialist through a secure link, that approval is on record as independent assurance.',
-              ],
-              [
-                'Renewal reminder delivery',
-                'Evidence that reminders were sent 90, 30, and 7 days before each renewal, showing a structured, proactive renewal management process.',
-              ],
-              [
-                'Manager compliance overview',
-                'The compliance dashboard shows the state of training across the whole team at any point in time. The evidence an inspector wants, of a manager actively monitoring.',
-              ],
-            ].map(([what, why], i) => (
-              <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 5 ? 'border-b border-gray-100' : ''}`}>
+            {CQC_ROWS.map((key, i) => (
+              <div key={key} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 5 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-start gap-2 pr-4">
                   <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-teal" />
-                  <span className="font-semibold text-neutral-dark">{what}</span>
+                  <span className="font-semibold text-neutral-dark">{s(`${key}.what`)}</span>
                 </div>
-                <span className="text-sm leading-relaxed text-neutral-mid">{why}</span>
+                <span className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.why`)}</span>
               </div>
             ))}
           </div>
@@ -911,27 +797,18 @@ export default async function StaffTrainingPage() {
       {/* ── Feature summary ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Everything Included</SectionLabel>
+          <SectionLabel>{s('everything.label')}</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">
-            The complete training compliance toolkit.
+            {s('everything.h2')}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: ShieldCheck,   label: 'Standard module library',    desc: 'Ready-made modules for safeguarding, fire safety, manual handling, infection control, and more. Assign immediately, included as standard.', iconBg: 'bg-blue-100',    iconColor: 'text-blue-600' },
-              { icon: Sparkles,      label: 'Built from your policies',    desc: 'Generate a tailored module from your own policy documents. Teach, scenario, knowledge check, and a full assessment. Uses one AI credit.',  iconBg: 'bg-purple-100',  iconColor: 'text-purple-600' },
-              { icon: Brain,         label: 'Teach then assess',          desc: 'Short teaching sections and a real scenario, then four-option multiple-choice questions. Every answer tracked and logged.',               iconBg: 'bg-green-100',   iconColor: 'text-green-600' },
-              { icon: GraduationCap, label: 'Learn and retry',            desc: 'A wrong answer triggers a short re-teach and another go, so knowledge gaps are closed at the moment they appear.',                        iconBg: 'bg-orange-100',  iconColor: 'text-orange-600' },
-              { icon: BadgeCheck,    label: 'External specialist sign-off', desc: 'Send a module to an external specialist through a secure link for independent review and sign-off.',                                       iconBg: 'bg-teal-light',  iconColor: 'text-teal' },
-              { icon: Bell,          label: 'Renewal reminders',          desc: 'Automatic reminders to staff at 90, 30, and 7 days before renewal, plus a renewal digest for managers.',                                  iconBg: 'bg-amber-100',   iconColor: 'text-amber-600' },
-              { icon: BarChart2,     label: 'Live compliance dashboard',  desc: 'Real-time view of every staff member status across every module, with who is current, in progress, and overdue.',                          iconBg: 'bg-indigo-100',  iconColor: 'text-indigo-600' },
-              { icon: Users,         label: 'Delivered in the hub',       desc: 'Staff answer in the hub on their phone, in over 60 languages, by typing or speaking. Email is there for anyone who prefers it.',         iconBg: 'bg-cyan-100',    iconColor: 'text-cyan-600' },
-            ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
-              <div key={label} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+            {EVERYTHING_CARDS.map(({ icon: Icon, key, iconBg, iconColor }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-lg ${iconBg}`}>
                   <Icon size={16} className={iconColor} />
                 </div>
-                <p className="mb-1.5 font-semibold text-neutral-dark">{label}</p>
-                <p className="text-sm leading-relaxed text-neutral-mid">{desc}</p>
+                <p className="mb-1.5 font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.desc`)}</p>
               </div>
             ))}
           </div>
@@ -943,21 +820,21 @@ export default async function StaffTrainingPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="grid gap-16 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
             <div className="md:px-12">
-              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">70%</p>
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">{s('stats.col1.figure')}</p>
               <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
-                of information is forgotten within 24 hours without reinforcement.
+                {s('stats.col1.title')}
               </p>
               <p className="text-base leading-loose text-neutral-mid">
-                Research consistently shows that a single annual session cannot sustain working knowledge through the year.
+                {s('stats.col1.body')}
               </p>
             </div>
             <div className="md:px-12">
-              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">All year</p>
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">{s('stats.col2.figure')}</p>
               <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
-                knowledge checks and reminders, not a single date in the calendar.
+                {s('stats.col2.title')}
               </p>
               <p className="text-base leading-loose text-neutral-mid">
-                One question at a time, in the hub, whenever it suits. No session to attend and no rigid structure.
+                {s('stats.col2.body')}
               </p>
             </div>
           </div>

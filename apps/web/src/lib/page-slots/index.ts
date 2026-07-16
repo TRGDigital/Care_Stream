@@ -13,6 +13,7 @@ import { CASE_STUDIES_SLOTS } from './case-studies'
 import { FAQ_SLOTS } from './faq'
 import { WHO_ITS_FOR_SLOTS } from './who-its-for'
 import { PRICING_SLOTS } from './pricing'
+import { STAFF_TRAINING_SLOTS } from './staff-training'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -34,6 +35,7 @@ export const PAGE_SLOTS: Record<string, SlotDef[]> = {
   '/faq': FAQ_SLOTS,
   '/who-its-for': WHO_ITS_FOR_SLOTS,
   '/pricing': PRICING_SLOTS,
+  '/staff-training': STAFF_TRAINING_SLOTS,
 }
 
 export function slotsForPath(path: string): SlotDef[] | null {

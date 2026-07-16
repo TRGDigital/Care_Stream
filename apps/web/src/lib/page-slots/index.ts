@@ -11,6 +11,7 @@ import { CQC_REPORT_CHAT_SLOTS } from './cqc-report-chat'
 import { TRUST_SLOTS } from './trust'
 import { CASE_STUDIES_SLOTS } from './case-studies'
 import { FAQ_SLOTS } from './faq'
+import { WHO_ITS_FOR_SLOTS } from './who-its-for'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -30,6 +31,7 @@ export const PAGE_SLOTS: Record<string, SlotDef[]> = {
   '/trust': TRUST_SLOTS,
   '/case-studies': CASE_STUDIES_SLOTS,
   '/faq': FAQ_SLOTS,
+  '/who-its-for': WHO_ITS_FOR_SLOTS,
 }
 
 export function slotsForPath(path: string): SlotDef[] | null {

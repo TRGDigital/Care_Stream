@@ -655,13 +655,16 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
             {/* What this regulation covers — synopsis + Read more */}
             {detail.summary && (() => {
               const more = [detail.care_home_context, detail.practical_meaning].map(t => (t ?? '').trim()).filter(Boolean)
+              // Collapsed shows ~2 lines of the synopsis; Read more reveals the rest
+              // plus the care-setting context and what the policy should cover.
+              const hasMore = more.length > 0 || detail.summary.length > 140
               return (
                 <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
                   <div className="flex items-start gap-2.5 px-4 py-3">
                     <BookOpen size={15} className="mt-0.5 shrink-0 text-teal" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold uppercase tracking-wide text-teal">What this regulation covers</p>
-                      <p className="mt-1 text-sm leading-relaxed text-neutral-dark">{detail.summary}</p>
+                      <p className={`mt-1 text-sm leading-relaxed text-neutral-dark ${synopsisOpen ? '' : 'line-clamp-2'}`}>{detail.summary}</p>
                       {synopsisOpen && more.length > 0 && (
                         <div className="mt-2 space-y-2 border-t border-teal/10 pt-2">
                           {detail.care_home_context && (
@@ -678,7 +681,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                           )}
                         </div>
                       )}
-                      {more.length > 0 && (
+                      {hasMore && (
                         <button onClick={() => setSynopsisOpen(o => !o)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-teal hover:underline">
                           {synopsisOpen ? 'Show less' : 'Read more'}
                           <ChevronDown size={12} className={`transition-transform ${synopsisOpen ? 'rotate-180' : ''}`} />

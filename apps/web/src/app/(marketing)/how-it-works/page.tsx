@@ -333,35 +333,33 @@ export default async function HowItWorksPage() {
       {/* ── 3b. Staff training ─────────────────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel light>Staff Training</SectionLabel>
+          <SectionLabel light>{s('training.label')}</SectionLabel>
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-            Training that lives in the same hub.
+            {s('training.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
-            CareStream is not only about answering questions. It delivers your mandatory training and
-            modules built from your own policies, in the hub your team already uses, in 60+ languages,
-            with renewals tracked for you.
+            {s('training.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
-              { Icon: GraduationCap, title: 'Mandatory library', body: 'Every annual mandatory subject, ready to assign, from safeguarding to moving and handling.' },
-              { Icon: FileText,      title: 'Built from your policies', body: 'Generate a module from your own policy documents, so it teaches your procedures, not generic content.' },
-              { Icon: ClipboardCheck,title: 'Teach, then assess', body: 'Each module teaches in short sections, applies a real care scenario, and finishes with an assessment.' },
-              { Icon: RefreshCw,     title: 'Learn and retry', body: 'A wrong answer triggers a short follow-up lesson and a fresh question, so the gap is closed.' },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+              { Icon: GraduationCap, key: 'training.card1' },
+              { Icon: FileText,      key: 'training.card2' },
+              { Icon: ClipboardCheck,key: 'training.card3' },
+              { Icon: RefreshCw,     key: 'training.card4' },
+            ].map(({ Icon, key }) => (
+              <div key={key} className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20"><Icon size={18} className="text-white" /></div>
-                <h3 className="mb-2 font-bold text-white">{title}</h3>
-                <p className="text-sm leading-relaxed text-white/75">{body}</p>
+                <h3 className="mb-2 font-bold text-white">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
             <Link href="/staff-training" className="inline-flex items-center gap-2 font-semibold text-white hover:underline">
-              See how training works <ArrowRight size={16} />
+              {s('training.cta')} <ArrowRight size={16} />
             </Link>
-            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Calendar size={15} /> Renewal reminders at 90, 30 and 7 days</span>
-            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Bell size={15} /> New training arrives as a hub notification</span>
+            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Calendar size={15} /> {s('training.note1')}</span>
+            <span className="inline-flex items-center gap-2 text-sm text-white/70"><Bell size={15} /> {s('training.note2')}</span>
           </div>
         </div>
       </section>
@@ -371,32 +369,23 @@ export default async function HowItWorksPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-center gap-16 lg:grid-cols-2">
             <div>
-              <SectionLabel>Multilingual Engine</SectionLabel>
+              <SectionLabel>{s('lang.label')}</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-                60+ languages. Zero configuration.
+                {s('lang.h2')}
               </h2>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Language detection is automatic and happens on every query. Staff do not select a language, toggle a setting, or use a special command. They simply ask their question, in the language they think in, and the answer comes back in the same language.
-              </p>
-              <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-                Responses are always generated from your English-language policies. The translation happens at the point of response, not at the point of upload. This means you maintain one authoritative English policy library and every language version is derived from it consistently.
-              </p>
+              <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('lang.p1') }} />
+              <div className={`mb-8 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('lang.p2') }} />
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Languages detected', value: '60+' },
-                  { label: 'Source policy language', value: 'English' },
-                  { label: 'Setup required', value: 'None' },
-                  { label: 'Extra cost per language', value: '£0' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="rounded-2xl bg-white p-5 shadow-card">
-                    <p className="mb-1 text-2xl font-extrabold text-teal">{value}</p>
-                    <p className="text-sm text-neutral-mid">{label}</p>
+                {['lang.stat1', 'lang.stat2', 'lang.stat3', 'lang.stat4'].map((key) => (
+                  <div key={key} className="rounded-2xl bg-white p-5 shadow-card">
+                    <p className="mb-1 text-2xl font-extrabold text-teal">{s(`${key}.value`)}</p>
+                    <p className="text-sm text-neutral-mid">{s(`${key}.label`)}</p>
                   </div>
                 ))}
               </div>
             </div>
             <div className="space-y-3">
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">The same question, six languages, one policy</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">{s('lang.demo.heading')}</p>
               {[
                 { flag: '🇵🇭', lang: 'Tagalog',  q: 'Ano ang gagawin ko pagkatapos ng pagbagsak ng residente?', detected: true },
                 { flag: '🇵🇱', lang: 'Polish',   q: 'Co powinienem zrobić po upadku mieszkańca?',               detected: true },
@@ -413,7 +402,7 @@ export default async function HowItWorksPage() {
                   <span className="shrink-0 rounded-full bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal">{lang} detected</span>
                 </div>
               ))}
-              <p className="pt-1 text-center text-xs text-neutral-mid">All answered from the same Falls Policy, each in the language asked</p>
+              <p className="pt-1 text-center text-xs text-neutral-mid">{s('lang.demo.footer')}</p>
             </div>
           </div>
         </div>
@@ -422,46 +411,31 @@ export default async function HowItWorksPage() {
       {/* ── 5. Regulatory intelligence ────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Regulatory Intelligence</SectionLabel>
+          <SectionLabel>{s('reg.label')}</SectionLabel>
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Over 50 UK regulatory frameworks, pre-loaded.
+            {s('reg.h2')}
           </h2>
           <p className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Your internal policies don&rsquo;t exist in isolation. They&rsquo;re built on a foundation of UK law and regulation. CareStreamAI has over 50 regulatory frameworks pre-loaded so that when a staff member asks something that touches both your policy and an external requirement, the response explains how the two interact.
+            {s('reg.intro')}
           </p>
 
           <div className="grid gap-8 lg:grid-cols-2">
             {/* How it works */}
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
               <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-mid">How it works</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-mid">{s('reg.how.label')}</p>
               </div>
               <div className="divide-y divide-gray-100">
                 {[
-                  {
-                    icon: <FileText size={16} className="text-teal" />,
-                    bg: 'bg-teal-light',
-                    title: 'Your internal policy is retrieved',
-                    body: 'The most relevant section of your own policy is found and used as the primary source for the response.',
-                  },
-                  {
-                    icon: <Layers size={16} className="text-amber-brand" />,
-                    bg: 'bg-amber-50',
-                    title: 'Relevant regulations are overlaid',
-                    body: 'CareStreamAI identifies which of the 50+ pre-loaded frameworks apply to the question, including CQC, RIDDOR, MCA and GDPR, and adds that context.',
-                  },
-                  {
-                    icon: <MessageSquare size={16} className="text-purple-600" />,
-                    bg: 'bg-purple-50',
-                    title: 'The interaction is explained',
-                    body: 'The response explains both what your policy requires and what the law requires, including where they align, where they differ, and where your policy goes further.',
-                  },
-                ].map(({ icon, bg, title, body }) => (
-                  <div key={title} className="flex gap-4 px-6 py-5">
+                  { icon: <FileText size={16} className="text-teal" />,       bg: 'bg-teal-light',  key: 'reg.how1' },
+                  { icon: <Layers size={16} className="text-amber-brand" />,  bg: 'bg-amber-50',    key: 'reg.how2' },
+                  { icon: <MessageSquare size={16} className="text-purple-600" />, bg: 'bg-purple-50', key: 'reg.how3' },
+                ].map(({ icon, bg, key }) => (
+                  <div key={key} className="flex gap-4 px-6 py-5">
                     <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${bg}`}>{icon}</div>
                     <div>
-                      <p className="mb-1 font-semibold text-neutral-dark">{title}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                      <p className="mb-1 font-semibold text-neutral-dark">{s(`${key}.title`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
                     </div>
                   </div>
                 ))}
@@ -470,25 +444,16 @@ export default async function HowItWorksPage() {
 
             {/* Frameworks included */}
             <div>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-neutral-mid">A selection of included frameworks</p>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-neutral-mid">{s('reg.frameworks.label')}</p>
               <div className="space-y-2.5">
-                {[
-                  { name: 'CQC Fundamental Standards',              reg: 'Reg 9 to 20'   },
-                  { name: 'Health and Safety at Work Act 1974',      reg: 'HSWA 1974'     },
-                  { name: 'GDPR and Data Protection Act 2018',       reg: 'UK GDPR'       },
-                  { name: 'Mental Capacity Act 2005',                reg: 'MCA 2005'      },
-                  { name: 'Care Act 2014 Safeguarding',              reg: 'Care Act 2014' },
-                  { name: 'RIDDOR 2013',                             reg: 'RIDDOR 2013'   },
-                  { name: 'Equality Act 2010',                       reg: 'EA 2010'       },
-                  { name: 'Control of Substances Hazardous to Health', reg: 'COSHH 2002'  },
-                ].map(({ name, reg }) => (
-                  <div key={name} className="flex items-center justify-between rounded-xl border border-gray-100 bg-neutral-light px-4 py-3">
-                    <span className="text-sm font-medium text-neutral-dark">{name}</span>
-                    <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-brand">{reg}</span>
+                {['reg.fw1', 'reg.fw2', 'reg.fw3', 'reg.fw4', 'reg.fw5', 'reg.fw6', 'reg.fw7', 'reg.fw8'].map((key) => (
+                  <div key={key} className="flex items-center justify-between rounded-xl border border-gray-100 bg-neutral-light px-4 py-3">
+                    <span className="text-sm font-medium text-neutral-dark">{s(`${key}.name`)}</span>
+                    <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-brand">{s(`${key}.reg`)}</span>
                   </div>
                 ))}
                 <div className="rounded-xl bg-teal/10 px-4 py-3 text-center">
-                  <span className="text-sm font-semibold text-teal">+ 42 additional frameworks included</span>
+                  <span className="text-sm font-semibold text-teal">{s('reg.frameworks.more')}</span>
                 </div>
               </div>
             </div>
@@ -501,26 +466,22 @@ export default async function HowItWorksPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-center gap-16 lg:grid-cols-2">
             <div>
-              <SectionLabel light>The Knowledge Base</SectionLabel>
+              <SectionLabel light>{s('kb.label')}</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Not just your policies. Your care setting, in detail.
+                {s('kb.h2')}
               </h2>
-              <p className="mb-6 text-lg leading-relaxed text-gray-300">
-                CareStreamAI doesn&rsquo;t just answer generic questions about policies. Because it reads your actual documents, it extracts the specific facts that make your service unique: named individuals, direct-dial numbers, shift arrangements and local procedures.
-              </p>
-              <p className="mb-8 text-lg leading-relaxed text-gray-300">
-                Upload your staff handbook, on-call rota, local infection control guidance, or any supporting document and it becomes immediately queryable. Staff get answers that reflect how your service actually operates, not how a generic care setting might.
-              </p>
+              <div className={`mb-6 text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('kb.p1') }} />
+              <div className={`mb-8 text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('kb.p2') }} />
               <div className="space-y-3">
                 {[
-                  { icon: Users,     label: 'Named individuals and contact numbers from your rota and handbook' },
-                  { icon: FileText,  label: 'Local procedures and site-specific instructions' },
-                  { icon: BookOpen,  label: 'Staff handbook: HR policies, leave, disciplinary and onboarding' },
-                  { icon: Lock,      label: 'Seeded knowledge never mixed with other tenants\' data' },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  { icon: Users,     key: 'kb.f1' },
+                  { icon: FileText,  key: 'kb.f2' },
+                  { icon: BookOpen,  key: 'kb.f3' },
+                  { icon: Lock,      key: 'kb.f4' },
+                ].map(({ icon: Icon, key }) => (
+                  <div key={key} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
                     <Icon size={16} className="mt-0.5 shrink-0 text-teal" />
-                    <span className="text-sm leading-relaxed text-white/80">{label}</span>
+                    <span className="text-sm leading-relaxed text-white/80">{s(key)}</span>
                   </div>
                 ))}
               </div>
@@ -571,30 +532,21 @@ export default async function HowItWorksPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-center gap-16 lg:grid-cols-2">
             <div>
-              <SectionLabel>Policy Gap Detection</SectionLabel>
+              <SectionLabel>{s('gap.label')}</SectionLabel>
               <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-                Find your gaps before CQC does.
+                {s('gap.h2')}
               </h2>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Every time CareStreamAI cannot find an answer in your documents, it flags the query as a gap. Over time, patterns emerge: the same questions appearing repeatedly without policy coverage.
-              </p>
-              <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-                Your Policy Gap Report shows exactly which questions your staff are asking that your current policies don&rsquo;t address, ranked by frequency. This is actionable evidence of where your policy library needs strengthening, surfaced before an inspection identifies it first.
-              </p>
+              <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('gap.p1') }} />
+              <div className={`mb-8 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('gap.p2') }} />
               <div className="space-y-4">
-                {[
-                  { title: 'Real-time flagging', body: 'Every unanswered query is flagged immediately, not batched monthly.' },
-                  { title: 'Ranked by frequency', body: 'The most commonly asked unanswered questions are shown first, so you fix the most impactful gaps.' },
-                  { title: 'Monthly summary report', body: 'A summary is compiled automatically and available for your manager review.' },
-                  { title: 'Included in CQC Readiness Report', body: 'Gap resolution evidence is included as proof of continuous improvement.' },
-                ].map(({ title, body }) => (
-                  <div key={title} className="flex gap-4">
+                {['gap.f1', 'gap.f2', 'gap.f3', 'gap.f4'].map((key) => (
+                  <div key={key} className="flex gap-4">
                     <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-brand">
                       <ShieldAlert size={12} className="text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-neutral-dark">{title}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                      <p className="font-semibold text-neutral-dark">{s(`${key}.title`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
                     </div>
                   </div>
                 ))}
@@ -644,65 +596,29 @@ export default async function HowItWorksPage() {
       {/* ── 8. Analytics & CQC Readiness ──────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Analytics &amp; Compliance</SectionLabel>
+          <SectionLabel>{s('analytics.label')}</SectionLabel>
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Your compliance evidence builds automatically.
+            {s('analytics.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Every interaction with CareStreamAI is logged and structured. Your analytics dashboard and CQC Readiness Report are generated from this data continuously. There is nothing to compile manually.
+            {s('analytics.intro')}
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
-              {
-                Icon: BarChart2,
-                iconBg: 'bg-teal-light',
-                iconColor: 'text-teal',
-                title: 'Usage analytics dashboard',
-                body: 'See total queries, active staff, top policies accessed, busiest times, and channel breakdown (hub, email, voice), updated in real time.',
-              },
-              {
-                Icon: Globe,
-                iconBg: 'bg-blue-50',
-                iconColor: 'text-blue-600',
-                title: 'Language activity report',
-                body: 'Which languages your staff are asking in, how frequently, and which policies are being accessed across languages. CQC evidence of equitable access.',
-              },
-              {
-                Icon: Users,
-                iconBg: 'bg-purple-50',
-                iconColor: 'text-purple-600',
-                title: 'Staff engagement tracking',
-                body: 'Which individuals are using the system, how often, and whether engagement changes after policy updates or training events.',
-              },
-              {
-                Icon: FileText,
-                iconBg: 'bg-amber-50',
-                iconColor: 'text-amber-brand',
-                title: 'Query history and audit log',
-                body: 'Every query is stored: who asked, what they asked, which policy was cited, the full response, and the timestamp. Searchable and exportable.',
-              },
-              {
-                Icon: ClipboardCheck,
-                iconBg: 'bg-green-50',
-                iconColor: 'text-green-700',
-                title: 'CQC Readiness Report',
-                body: 'A structured PDF covering policy access frequency, multilingual activity, staff engagement, gap identification and resolution, and version history. Ready for inspection.',
-              },
-              {
-                Icon: ShieldAlert,
-                iconBg: 'bg-red-50',
-                iconColor: 'text-red-600',
-                title: 'Policy version history',
-                body: 'Every version of every uploaded policy is retained. You can see which version was in use when any query was answered, which is important for post-incident review.',
-              },
-            ].map(({ Icon, iconBg, iconColor, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+              { Icon: BarChart2,      iconBg: 'bg-teal-light', iconColor: 'text-teal',        key: 'analytics.card1' },
+              { Icon: Globe,          iconBg: 'bg-blue-50',    iconColor: 'text-blue-600',    key: 'analytics.card2' },
+              { Icon: Users,          iconBg: 'bg-purple-50',  iconColor: 'text-purple-600',  key: 'analytics.card3' },
+              { Icon: FileText,       iconBg: 'bg-amber-50',   iconColor: 'text-amber-brand', key: 'analytics.card4' },
+              { Icon: ClipboardCheck, iconBg: 'bg-green-50',   iconColor: 'text-green-700',   key: 'analytics.card5' },
+              { Icon: ShieldAlert,    iconBg: 'bg-red-50',     iconColor: 'text-red-600',     key: 'analytics.card6' },
+            ].map(({ Icon, iconBg, iconColor, key }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${iconBg}`}>
                   <Icon size={22} className={iconColor} />
                 </div>
-                <h3 className="mb-3 font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -715,24 +631,17 @@ export default async function HowItWorksPage() {
           <div className="rounded-2xl bg-neutral-dark px-10 py-12">
             <div className="grid items-center gap-10 lg:grid-cols-2">
               <div>
-                <SectionLabel light>Data &amp; Security</SectionLabel>
+                <SectionLabel light>{s('security.label')}</SectionLabel>
                 <h2 className="mb-5 text-3xl font-extrabold text-white md:text-4xl">
-                  Your data stays yours.
+                  {s('security.h2')}
                 </h2>
-                <p className="text-lg leading-relaxed text-gray-300">
-                  Every tenant&rsquo;s policy library is stored in a completely isolated environment. Your policies are never used to train any model, never shared with other organisations, and never accessible to anyone outside your account. Data is encrypted at rest and in transit. UK data residency is available on Professional and Enterprise plans.
-                </p>
+                <div className={`text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('security.body') }} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Tenant isolation', detail: 'Complete data separation between all organisations' },
-                  { label: 'Encrypted at rest', detail: 'AES-256 encryption for all stored documents and logs' },
-                  { label: 'Never used for training', detail: 'Your documents are never used to train AI models' },
-                  { label: 'UK data residency', detail: 'Available on Professional and Enterprise plans' },
-                ].map(({ label, detail }) => (
-                  <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p className="mb-1 font-semibold text-white">{label}</p>
-                    <p className="text-xs leading-relaxed text-white/50">{detail}</p>
+                {['security.f1', 'security.f2', 'security.f3', 'security.f4'].map((key) => (
+                  <div key={key} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="mb-1 font-semibold text-white">{s(`${key}.label`)}</p>
+                    <p className="text-xs leading-relaxed text-white/50">{s(`${key}.detail`)}</p>
                   </div>
                 ))}
               </div>

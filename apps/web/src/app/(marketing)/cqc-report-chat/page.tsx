@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { FileText, MessageSquare, Search, Shield, Zap } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { CQC_REPORT_CHAT_SLOTS } from '@/lib/page-slots/cqc-report-chat'
 
 export const metadata = {
   title: 'CQC Report Chat | CareStreamAI',
@@ -134,7 +136,8 @@ function ChallengeMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CqcReportChatPage() {
+export default async function CqcReportChatPage() {
+  const s = makeSlot(CQC_REPORT_CHAT_SLOTS, await getContentSlots('/cqc-report-chat'))
   return (
     <>
       {/* ── Split hero ─────────────────────────────────────────────────────── */}
@@ -149,14 +152,12 @@ export default function CqcReportChatPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>CQC Report Chat</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Your CQC inspection report. Now you can talk to it.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                Upload your latest CQC inspection report and ask it anything in plain English. CareStream
-                cross-references it against your own policies and the CQC framework to find action points,
-                explain findings, and help you plan your response, in seconds, not hours.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
@@ -177,40 +178,22 @@ export default function CqcReportChatPage() {
       {/* ── What you can ask ───────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Built For Care Managers</SectionLabel>
+          <SectionLabel>{s('ask.label')}</SectionLabel>
           <h2 className="mb-14 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Stop hunting through 17 pages. Just ask the question.
+            {s('ask.h2')}
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              {
-                Icon: Search,
-                iconBg: 'bg-blue-100',
-                iconColor: 'text-blue-600',
-                title: 'Find action points instantly',
-                body: 'Ask "What action points did the inspector raise?" and get a structured, numbered list drawn directly from your report, with section references where the report provides them.',
-              },
-              {
-                Icon: MessageSquare,
-                iconBg: 'bg-purple-100',
-                iconColor: 'text-purple-600',
-                title: 'Understand any finding',
-                body: 'Ask about any CQC finding and get a plain English explanation. CareStream draws on the CQC framework to tell you what the inspector meant and what evidence you would need to address it.',
-              },
-              {
-                Icon: Shield,
-                iconBg: 'bg-green-100',
-                iconColor: 'text-green-600',
-                title: 'Plan your response',
-                body: 'Ask "What do I need to do to address the Safe domain findings?" and get a clear action list, cross-referenced with the policies you already have in place.',
-              },
-            ].map(({ Icon, iconBg, iconColor, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+              { Icon: Search,         iconBg: 'bg-blue-100',   iconColor: 'text-blue-600',   key: 'ask.card1' },
+              { Icon: MessageSquare,  iconBg: 'bg-purple-100', iconColor: 'text-purple-600', key: 'ask.card2' },
+              { Icon: Shield,         iconBg: 'bg-green-100',  iconColor: 'text-green-600',  key: 'ask.card3' },
+            ].map(({ Icon, iconBg, iconColor, key }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className={`mb-5 flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}>
                   <Icon size={20} className={iconColor} />
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -220,37 +203,16 @@ export default function CqcReportChatPage() {
       {/* ── How it works ───────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How It Works</SectionLabel>
+          <SectionLabel>{s('how.label')}</SectionLabel>
           <h2 className="mb-14 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Three steps from report to clarity.
+            {s('how.h2')}
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              {
-                step: '01',
-                Icon: FileText,
-                iconBg: 'bg-blue-100',
-                iconColor: 'text-blue-600',
-                title: 'Upload your CQC report',
-                body: 'Drag and drop your latest CQC inspection report PDF. CareStream reads and indexes the full document in moments. No CQC login required.',
-              },
-              {
-                step: '02',
-                Icon: MessageSquare,
-                iconBg: 'bg-purple-100',
-                iconColor: 'text-purple-600',
-                title: 'Ask in plain English',
-                body: 'Type any question about your report, action points, specific domain findings, inspector language, what evidence is needed. No keyword searching, no page numbers.',
-              },
-              {
-                step: '03',
-                Icon: Zap,
-                iconBg: 'bg-teal-light',
-                iconColor: 'text-teal',
-                title: 'Get specific answers',
-                body: 'Every answer is grounded in your report and cross-referenced with your policies and the CQC framework, with section references where the report provides them. Precise answers about your inspection, your home.',
-              },
-            ].map(({ step, Icon, iconBg, iconColor, title, body }) => (
+              { step: '01', Icon: FileText,       iconBg: 'bg-blue-100',   iconColor: 'text-blue-600',   key: 'how.step1' },
+              { step: '02', Icon: MessageSquare,  iconBg: 'bg-purple-100', iconColor: 'text-purple-600', key: 'how.step2' },
+              { step: '03', Icon: Zap,            iconBg: 'bg-teal-light', iconColor: 'text-teal',       key: 'how.step3' },
+            ].map(({ step, Icon, iconBg, iconColor, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -260,8 +222,8 @@ export default function CqcReportChatPage() {
                     <Icon size={18} className={iconColor} />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -271,37 +233,34 @@ export default function CqcReportChatPage() {
       {/* ── More than a search tool ────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>More Than A Search Tool</SectionLabel>
+          <SectionLabel>{s('more.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            It reads your report against your whole compliance picture.
+            {s('more.h2')}
           </h2>
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Not the report in isolation. The report against your policies and the CQC framework.
+                {s('more.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                CQC Report Chat does not read your inspection report on its own. It cross-references the
-                report against your own policies and the CQC assessment framework, so it can tell you not
-                just what the inspector said, but whether your policies already answer it and what evidence
-                would support your case.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                It can also help you draft a factual-accuracy challenge, the formal response you can send to
-                CQC to correct factual errors in a draft report. CareStream drafts it from your report and
-                your policies. You review it, and you decide whether to send it.
-              </p>
+              <div
+                className="mb-4 text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2"
+                dangerouslySetInnerHTML={{ __html: s('more.p1') }}
+              />
+              <div
+                className="mb-6 text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2"
+                dangerouslySetInnerHTML={{ __html: s('more.p2') }}
+              />
               <div className="space-y-3">
                 {[
-                  { Icon: Search,   label: 'Cross-references your policies', text: 'Sees where your existing policies already address a finding, so you can evidence it.' },
-                  { Icon: Shield,   label: 'Maps to the CQC framework',     text: 'Explains what the inspector means and what evidence is expected, using the CQC assessment framework.' },
-                  { Icon: FileText, label: 'Drafts your challenge',         text: 'Helps you draft a factual-accuracy challenge grounded in your report and policies, for you to review and send.' },
-                ].map(({ Icon, label, text }) => (
-                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  { Icon: Search,   key: 'more.item1' },
+                  { Icon: Shield,   key: 'more.item2' },
+                  { Icon: FileText, key: 'more.item3' },
+                ].map(({ Icon, key }) => (
+                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
                     <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
                     </div>
                   </div>
                 ))}
@@ -317,27 +276,27 @@ export default function CqcReportChatPage() {
       {/* ── Sample questions ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Questions You Can Ask</SectionLabel>
+          <SectionLabel>{s('questions.label')}</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">
-            The questions care managers actually ask.
+            {s('questions.h2')}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              'What action points did the inspector raise?',
-              'What did the inspector say about medication management?',
-              'Which CQC key questions were rated Requires Improvement?',
-              'What evidence did the inspector say was missing?',
-              'Do my policies already cover the handover finding?',
-              'What does the inspector mean by "embedding"?',
-              'Help me draft a factual-accuracy challenge for the staffing finding.',
-              'Show me everything the inspector said about staffing.',
-              'What does section 5.3 mean in plain English?',
-            ].map((q) => (
-              <div key={q} className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-card">
+              'questions.q1',
+              'questions.q2',
+              'questions.q3',
+              'questions.q4',
+              'questions.q5',
+              'questions.q6',
+              'questions.q7',
+              'questions.q8',
+              'questions.q9',
+            ].map((key) => (
+              <div key={key} className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-card">
                 <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-teal/10">
                   <MessageSquare size={10} className="text-teal" />
                 </div>
-                <p className="text-sm font-medium text-neutral-dark">{q}</p>
+                <p className="text-sm font-medium text-neutral-dark">{s(key)}</p>
               </div>
             ))}
           </div>
@@ -348,23 +307,10 @@ export default function CqcReportChatPage() {
       <section className="bg-teal-gradient py-16">
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-8 text-center md:grid-cols-3">
-            {[
-              {
-                stat: 'No CQC login',
-                label: 'Just upload your PDF, the report stays private to your account',
-              },
-              {
-                stat: 'Secure',
-                label: 'Reports are encrypted at rest and never used to train AI models',
-              },
-              {
-                stat: 'Ready in moments',
-                label: 'Your report is indexed and ready to query before the kettle boils',
-              },
-            ].map(({ stat, label }) => (
-              <div key={stat}>
-                <p className="mb-2 text-2xl font-extrabold text-white">{stat}</p>
-                <p className="text-sm leading-relaxed text-white/75">{label}</p>
+            {['trust.item1', 'trust.item2', 'trust.item3'].map((key) => (
+              <div key={key}>
+                <p className="mb-2 text-2xl font-extrabold text-white">{s(`${key}.stat`)}</p>
+                <p className="text-sm leading-relaxed text-white/75">{s(`${key}.label`)}</p>
               </div>
             ))}
           </div>
@@ -377,12 +323,9 @@ export default function CqcReportChatPage() {
           <div className="flex gap-4">
             <div className="mt-1 text-2xl text-amber-600">⚠</div>
             <div>
-              <p className="mb-1 font-bold text-amber-900">For information and planning purposes</p>
+              <p className="mb-1 font-bold text-amber-900">{s('legal.title')}</p>
               <p className="text-sm leading-relaxed text-amber-800">
-                CQC Report Chat helps you understand and navigate your inspection report. It does not provide
-                regulatory advice and does not guarantee any particular outcome at future inspections. Any
-                factual-accuracy challenge it drafts is a starting point for you to review. Always verify
-                important decisions with your regulatory lead or legal adviser.
+                {s('legal.body')}
               </p>
             </div>
           </div>

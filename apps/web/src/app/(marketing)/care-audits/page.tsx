@@ -270,26 +270,17 @@ export default async function CareAuditsPage() {
       {/* ── See it in action ──────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>See It In Action</SectionLabel>
+          <SectionLabel>{s('action.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Every question is consistent, and every answer is captured in the same structure.
+            {s('action.h2')}
           </h2>
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                A clear answer and a note for every question, formatted identically every time.
+                {s('action.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                The guided audit walks you through every required question in the right order.
-                Each question takes a Yes, No or Not Applicable, with space for what you found and
-                the action to take, so every audit is formatted the same way regardless of who
-                completes it.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                It can be completed on any device, at any time. Answers save as you go, so a manager
-                finishing a medicines audit at the end of a shift takes the same structured path as
-                one completing it at the start of the day.
-              </p>
+              <div className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('action.p1') }} />
+              <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('action.p2') }} />
               <div className="space-y-3">
                 {[
                   { domain: 'Medicines',      q: 'Are all controlled drugs stored in a locked cabinet with access restricted to authorised staff only?' },
@@ -366,14 +357,12 @@ export default async function CareAuditsPage() {
       {/* ── Completed audit report ───────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>The Finished Report</SectionLabel>
+          <SectionLabel>{s('report.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            A formatted report with every response, every section score, and your summary. Generated instantly.
+            {s('report.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            The moment the last question is answered, the report is ready. No formatting, no copying
-            responses into a template. The completed audit is stored in CareStream and can be printed,
-            saved as a PDF, shared with the management team, or presented directly to a CQC inspector.
+            {s('report.intro')}
           </p>
 
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
@@ -497,43 +486,28 @@ export default async function CareAuditsPage() {
       {/* ── AI recommendations ───────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>AI-Generated Recommendations</SectionLabel>
+          <SectionLabel>{s('rec.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Every completed audit generates a prioritised improvement plan. Automatically.
+            {s('rec.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            CareStream reads the responses from each completed audit and generates specific,
-            prioritised recommendations based on what your findings actually show. Not generic
-            advice from a template. Every recommendation is drawn from the answers you gave and
-            the actions you recorded in that audit.
+            {s('rec.intro')}
           </p>
 
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Recommendations tied directly to the findings that generated them.
+                {s('rec.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                Each recommendation references the specific finding it is based on, the risk it
-                addresses, a suggested action, and a priority level, so managers can act immediately
-                without having to interpret the audit data themselves.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Each completed audit is stored alongside its recommendations and an overall AI rating
-                of Outstanding, Good, Requires Improvement, or Inadequate, giving you a clear,
-                consistent picture of where the service stands at the end of every audit.
-              </p>
+              <div className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('rec.p1') }} />
+              <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('rec.p2') }} />
               <div className="space-y-3">
-                {[
-                  { label: 'Specific to your findings',  text: 'Recommendations reference the exact questions that returned a No, not the audit as a whole.' },
-                  { label: 'Prioritised for you',        text: 'Each recommendation carries a clear priority so the management team knows what to deal with first.' },
-                  { label: 'An overall rating',          text: 'Every completed audit is given an Outstanding, Good, Requires Improvement, or Inadequate rating based on the responses.' },
-                ].map(({ label, text }) => (
-                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                {REC_ITEMS.map((key) => (
+                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-teal" />
                     <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
                     </div>
                   </div>
                 ))}
@@ -602,53 +576,21 @@ export default async function CareAuditsPage() {
       {/* ── Audit programme features ──────────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel light>A Complete Audit Toolkit</SectionLabel>
+          <SectionLabel light>{s('toolkit.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
-            From guided completion to section scoring to AI recommendations. One place for the whole audit.
+            {s('toolkit.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
-            CareStream gives every audit the same structure, scores it as you go, and turns your
-            answers into a formatted, inspection-ready report.
+            {s('toolkit.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                Icon: ClipboardCheck,
-                title: 'Ten pre-built templates',
-                body: 'Medicines management, infection control, health and safety, fire safety, resident bedrooms, the kitchen, accident and incident records, and data protection. All ready to use, and you can build your own.',
-              },
-              {
-                Icon: BarChart2,
-                title: 'Section-by-section scoring',
-                body: 'Every Yes, No or Not Applicable is scored as you go, so you can see exactly which sections are strong and which need attention before you finish.',
-              },
-              {
-                Icon: Save,
-                title: 'Auto-save and resume',
-                body: 'Answers save automatically as you work. Pause an audit and pick it up later on any device, exactly where you left off.',
-              },
-              {
-                Icon: Layers,
-                title: 'Shift and room-by-room audits',
-                body: 'Run audits by day or night shift, or room by room for resident bedroom checks, so the record matches how the audit is actually carried out.',
-              },
-              {
-                Icon: Printer,
-                title: 'Inspection-ready reports',
-                body: 'Each completed audit is locked and formatted, ready to print, save as a PDF, or present directly to a CQC inspector.',
-              },
-              {
-                Icon: Brain,
-                title: 'AI recommendations and rating',
-                body: 'Every completed audit generates prioritised recommendations from your findings, plus an overall rating of Outstanding, Good, Requires Improvement, or Inadequate.',
-              },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+            {TOOLKIT_CARDS.map(({ Icon, key }) => (
+              <div key={key} className="card-lift rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
                   <Icon size={18} className="text-white" />
                 </div>
-                <h3 className="mb-2 font-bold text-white">{title}</h3>
-                <p className="text-sm leading-relaxed text-white/75">{body}</p>
+                <h3 className="mb-2 font-bold text-white">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -658,35 +600,23 @@ export default async function CareAuditsPage() {
       {/* ── CQC evidence ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>CQC Evidence</SectionLabel>
+          <SectionLabel>{s('cqc.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-            An audit record that shows inspectors a consistent, structured approach to quality.
+            {s('cqc.h2')}
           </h2>
-          <div className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            <p>
-              CQC inspectors assess whether internal audits are consistent, whether they produce
-              clear findings, and whether those findings come with sensible actions. CareStream
-              generates the evidence for all three.
-            </p>
-          </div>
+          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('cqc.intro') }} />
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
-              <span>What CareStream records</span>
-              <span>What this shows an inspector</span>
+              <span>{s('cqc.th1')}</span>
+              <span>{s('cqc.th2')}</span>
             </div>
-            {[
-              ['Structured report for every audit', 'A formatted report for every completed audit, with section scores, your findings, and the actions recorded. The same format regardless of who completed it.'],
-              ['Section scores', 'A clear score for each section of the audit, showing which areas were met in full and which were flagged for action on the day.'],
-              ['Findings and actions on every question', 'Each question carries the outcome of the audit and the action to be taken, so inspectors can see findings are noted and followed with a clear next step.'],
-              ['AI recommendations and overall rating', 'Each completed audit is stored with prioritised recommendations and an Outstanding, Good, Requires Improvement, or Inadequate rating, showing a structured approach to quality improvement.'],
-              ['A timestamped completion record', 'Every audit shows who completed it and when, demonstrating that audits are carried out and recorded as part of the routine of the service.'],
-            ].map(([what, why], i) => (
-              <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 4 ? 'border-b border-gray-100' : ''}`}>
+            {CQC_ROWS.map((key, i) => (
+              <div key={key} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 4 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-start gap-2 pr-4">
                   <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-teal" />
-                  <span className="font-semibold text-neutral-dark">{what}</span>
+                  <span className="font-semibold text-neutral-dark">{s(`${key}.what`)}</span>
                 </div>
-                <span className="text-sm leading-relaxed text-neutral-mid">{why}</span>
+                <span className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.why`)}</span>
               </div>
             ))}
           </div>
@@ -696,27 +626,18 @@ export default async function CareAuditsPage() {
       {/* ── Feature summary ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Everything Included</SectionLabel>
+          <SectionLabel>{s('summary.label')}</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">
-            The complete care audit toolkit.
+            {s('summary.h2')}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: ClipboardCheck, label: 'Ten pre-built templates',        desc: 'Medicines, infection control, health and safety, fire, resident bedrooms, kitchen, accident and incident, and data protection. All ready to use, and you can build your own.', iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
-              { icon: ClipboardCheck, label: 'Guided, structured completion',  desc: 'Work through each audit section by section with a clear Yes, No or Not Applicable and notes on every question. Consistent regardless of who completes it.',                  iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
-              { icon: FileText,       label: 'Automatic report generation',    desc: 'A formatted report with section scores, your findings, your summary, and AI recommendations is generated the moment the audit is complete.',                               iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
-              { icon: BarChart2,      label: 'Section-by-section scoring',      desc: 'Every answer is scored as you go, so you can see which sections are strong and which need attention before you finish.',                                                  iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-              { icon: Save,           label: 'Auto-save and resume',           desc: 'Answers save automatically as you work. Pause and pick the audit up later on any device, exactly where you left off.',                                                 iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
-              { icon: Layers,         label: 'Shift and room-by-room audits',  desc: 'Run audits by day or night shift, or room by room for resident bedroom checks, so the record matches how the audit was carried out.',                                  iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-              { icon: Printer,        label: 'Inspection-ready reports',       desc: 'Each completed audit is locked and formatted, ready to print, save as a PDF, or present directly to a CQC inspector.',                                                 iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
-              { icon: Brain,          label: 'AI recommendations and rating',  desc: 'Every completed audit generates prioritised recommendations from your findings, plus an overall Outstanding to Inadequate rating.',                                     iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
-            ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
-              <div key={label} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+            {SUMMARY_CARDS.map(({ icon: Icon, key, iconBg, iconColor }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-lg ${iconBg}`}>
                   <Icon size={16} className={iconColor} />
                 </div>
-                <p className="mb-1.5 font-semibold text-neutral-dark">{label}</p>
-                <p className="text-sm leading-relaxed text-neutral-mid">{desc}</p>
+                <p className="mb-1.5 font-semibold text-neutral-dark">{s(`${key}.title`)}</p>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -728,23 +649,21 @@ export default async function CareAuditsPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="grid gap-16 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
             <div className="md:px-12">
-              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">Under an hour</p>
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">{s('stats.stat1.figure')}</p>
               <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
-                to complete a structured audit in the hub instead of an afternoon on a spreadsheet.
+                {s('stats.stat1.title')}
               </p>
               <p className="text-base leading-loose text-neutral-mid">
-                A guided, structured audit with answers that save as you go is far quicker than a
-                blank form, and produces a better formatted report at the end of it.
+                {s('stats.stat1.body')}
               </p>
             </div>
             <div className="md:px-12">
-              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">10</p>
+              <p className="mb-6 text-5xl font-extrabold leading-none text-teal">{s('stats.stat2.figure')}</p>
               <p className="mb-5 text-xl font-bold leading-snug text-neutral-dark">
-                pre-built audit templates covering the areas CQC inspects, ready to use out of the box.
+                {s('stats.stat2.title')}
               </p>
               <p className="text-base leading-loose text-neutral-mid">
-                Medicines, infection control, health and safety, fire, resident bedrooms, the kitchen,
-                accident and incident records, and data protection. Use them as they are or build your own.
+                {s('stats.stat2.body')}
               </p>
             </div>
           </div>

@@ -6,6 +6,11 @@ import { HR_POLICIES_SLOTS } from './hr-policies'
 import { CARE_AUDITS_SLOTS } from './care-audits'
 import { CQC_COMPLIANCE_SLOTS } from './cqc-compliance'
 import { POLICY_GAP_DETECTION_SLOTS } from './policy-gap-detection'
+import { BUSINESS_CONTINUITY_SLOTS } from './business-continuity'
+import { CQC_REPORT_CHAT_SLOTS } from './cqc-report-chat'
+import { TRUST_SLOTS } from './trust'
+import { CASE_STUDIES_SLOTS } from './case-studies'
+import { FAQ_SLOTS } from './faq'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -20,6 +25,11 @@ export const PAGE_SLOTS: Record<string, SlotDef[]> = {
   '/care-audits': CARE_AUDITS_SLOTS,
   '/cqc-compliance': CQC_COMPLIANCE_SLOTS,
   '/policy-gap-detection': POLICY_GAP_DETECTION_SLOTS,
+  '/business-continuity': BUSINESS_CONTINUITY_SLOTS,
+  '/cqc-report-chat': CQC_REPORT_CHAT_SLOTS,
+  '/trust': TRUST_SLOTS,
+  '/case-studies': CASE_STUDIES_SLOTS,
+  '/faq': FAQ_SLOTS,
 }
 
 export function slotsForPath(path: string): SlotDef[] | null {

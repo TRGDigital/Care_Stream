@@ -5,6 +5,10 @@ import {
   RefreshCw, BookOpen, ShieldAlert,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { BUSINESS_CONTINUITY_SLOTS } from '@/lib/page-slots/business-continuity'
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
   title:       'Business Continuity Planning | CareStreamAI',
@@ -82,7 +86,43 @@ function BCPlanMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function BusinessContinuityPage() {
+export default async function BusinessContinuityPage() {
+  const s = makeSlot(BUSINESS_CONTINUITY_SLOTS, await getContentSlots('/business-continuity'))
+
+  const COMPARE = [
+    { icon: '📁', dim: true,  key: 'problem.compare1' },
+    { icon: '💬', dim: false, key: 'problem.compare2' },
+  ]
+  const STEPS = [
+    { step: '01', Icon: BookOpen,       key: 'how.step1' },
+    { step: '02', Icon: MessageSquare,  key: 'how.step2' },
+    { step: '03', Icon: ShieldAlert,    key: 'how.step3' },
+  ]
+  const SCENARIOS = [
+    { key: 'action.scenario1' },
+    { key: 'action.scenario2' },
+    { key: 'action.scenario3' },
+  ]
+  const RESILIENCE = [
+    { Icon: Zap,         key: 'resilience.card1' },
+    { Icon: ShieldAlert, key: 'resilience.card2' },
+    { Icon: RefreshCw,   key: 'resilience.card3' },
+    { Icon: Users,       key: 'resilience.card4' },
+    { Icon: Brain,       key: 'resilience.card5' },
+    { Icon: ShieldCheck, key: 'resilience.card6' },
+  ]
+  const CQC_ROWS = ['cqc.row1', 'cqc.row2', 'cqc.row3', 'cqc.row4', 'cqc.row5', 'cqc.row6']
+  const FEATURES = [
+    { icon: BookOpen,      key: 'features.card1', iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
+    { icon: MessageSquare, key: 'features.card2', iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
+    { icon: Zap,           key: 'features.card3', iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
+    { icon: ShieldAlert,   key: 'features.card4', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { icon: Brain,         key: 'features.card5', iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
+    { icon: RefreshCw,     key: 'features.card6', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+    { icon: BarChart2,     key: 'features.card7', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+    { icon: FileText,      key: 'features.card8', iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
+  ]
+
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -97,15 +137,12 @@ export default function BusinessContinuityPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>Business Continuity</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                When things go wrong, your staff need answers fast. Not a folder they have never read.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CQC requires every registered care service to have a business continuity plan. But
-                a plan that sits in a filing cabinet and has never been accessed by frontline staff
-                is not a plan your service can actually use. CareStreamAI makes every procedure in
-                your plan instantly queryable by any member of your team, on any channel, at any time.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
@@ -124,48 +161,26 @@ export default function BusinessContinuityPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>The Problem With Business Continuity Plans</SectionLabel>
+              <SectionLabel>{s('problem.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                Most BC plans are written for inspectors. Not for staff who need them at 2am.
+                {s('problem.h2')}
               </h2>
-              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
-                <p>
-                  Care setting managers spend hours writing business continuity plans that cover power
-                  failures, staff shortages, IT outages, severe weather, and supply disruptions.
-                  Those plans are filed, reviewed at the annual inspection, and rarely opened again.
-                </p>
-                <p>
-                  When a real disruption happens, the care worker on a night shift does not know
-                  where the plan is, what it says about their specific scenario, or who to contact.
-                  CareStreamAI makes the plan accessible to everyone, in the moment they need it,
-                  on the phone already in their pocket.
-                </p>
+              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
               </div>
             </div>
             <div className="grid gap-4">
-              {[
-                {
-                  icon: '📁',
-                  label: 'Traditional BC plan',
-                  text: 'A detailed document that satisfies inspectors during a visit, but which frontline staff have never read and cannot access during an actual disruption.',
-                  dim: true,
-                },
-                {
-                  icon: '💬',
-                  label: 'CareStreamAI BC plan',
-                  text: 'Your business continuity procedures are uploaded as knowledge and instantly queryable by any staff member via the hub, email, or voice, even when other systems are unavailable.',
-                  dim: false,
-                },
-              ].map(({ icon, label, text, dim }) => (
+              {COMPARE.map(({ icon, dim, key }) => (
                 <div
-                  key={label}
+                  key={key}
                   className={`card-lift rounded-2xl p-6 ${dim ? 'border border-gray-100 bg-white shadow-card' : 'bg-teal-gradient shadow-teal-glow'}`}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <span className="text-2xl">{icon}</span>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>{label}</p>
+                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>{s(`${key}.label`)}</p>
                   </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{text}</p>
+                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.text`)}</p>
                 </div>
               ))}
             </div>
@@ -176,36 +191,15 @@ export default function BusinessContinuityPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How CareStreamAI Business Continuity Works</SectionLabel>
+          <SectionLabel>{s('how.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Upload your plan once. Your whole team can query it instantly.
+            {s('how.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            No new system. No login. No session to attend. Your business continuity plan becomes
-            a live, queryable resource that any staff member can access via the hub or email,
-            even when your care management system or internet connection is unavailable.
+            {s('how.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                step: '01',
-                Icon: BookOpen,
-                title: 'Upload your business continuity plan',
-                body: 'Add your business continuity plan to the CareStreamAI knowledge base. It joins your policies, procedures, and other documents as a source the AI can draw from when staff ask questions. Updates to the plan are reflected immediately.',
-              },
-              {
-                step: '02',
-                Icon: MessageSquare,
-                title: 'Staff ask what to do in any scenario',
-                body: 'During a disruption, any staff member can ask CareStreamAI exactly what the procedure is for their specific situation. Via the hub, email, or voice, they get an answer drawn from your actual plan, not a generic response.',
-              },
-              {
-                step: '03',
-                Icon: ShieldAlert,
-                title: 'Gaps in your plan are surfaced automatically',
-                body: 'CareStreamAI identifies questions your staff ask that your current plan does not cover. The policy gaps report shows you which scenarios are undocumented, so you can update the plan before a real disruption exposes the weakness.',
-              },
-            ].map(({ step, Icon, title, body }) => (
+            {STEPS.map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
@@ -213,8 +207,8 @@ export default function BusinessContinuityPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -224,34 +218,28 @@ export default function BusinessContinuityPage() {
       {/* ── See it in action ──────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>See It In Action</SectionLabel>
+          <SectionLabel>{s('action.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            A staff member gets the right answer in under 30 seconds during a live incident.
+            {s('action.h2')}
           </h2>
           <div className="grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                The answer comes from your plan. Not from memory.
+                {s('action.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                When a care worker asks what to do during a specific disruption, CareStreamAI
-                retrieves the relevant section of your business continuity plan and delivers a
-                clear, step-by-step response. The answer is specific to your service and your
-                procedures, not a generic guide.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Because the response comes via the hub or email, staff can access it on any
-                device, even when your care management system or internet connection is down.
-              </p>
+              <div
+                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.p1') }}
+              />
+              <div
+                className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+                dangerouslySetInnerHTML={{ __html: s('action.p2') }}
+              />
               <div className="space-y-3">
-                {[
-                  { scenario: 'Staff shortage',  q: 'We have three call-outs this morning and cannot safely cover the floor. What is the procedure?' },
-                  { scenario: 'IT outage',       q: 'The care management system is down on a night shift and we cannot access care records. What do we do?' },
-                  { scenario: 'Severe weather',  q: 'Two members of staff cannot get in due to snow. What are the steps for managing a weather-related staff shortage?' },
-                ].map(({ scenario, q }) => (
-                  <div key={scenario} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <span className="mb-1.5 inline-block rounded-full bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-teal">{scenario}</span>
-                    <p className="text-sm font-medium leading-snug text-neutral-dark">{q}</p>
+                {SCENARIOS.map(({ key }) => (
+                  <div key={key} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <span className="mb-1.5 inline-block rounded-full bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-teal">{s(`${key}.tag`)}</span>
+                    <p className="text-sm font-medium leading-snug text-neutral-dark">{s(`${key}.q`)}</p>
                   </div>
                 ))}
               </div>
@@ -307,53 +295,21 @@ export default function BusinessContinuityPage() {
       {/* ── Resilience features ───────────────────────────────────────────── */}
       <section className="bg-teal-gradient py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel light>Built for Real Disruptions</SectionLabel>
+          <SectionLabel light>{s('resilience.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
-            A business continuity resource that actually works when things go wrong.
+            {s('resilience.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
-            The true test of a business continuity plan is not whether it satisfies an inspector.
-            It is whether a care worker on a night shift can use it.
+            {s('resilience.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                Icon: Zap,
-                title: 'Accessible on any device when other systems are down',
-                body: 'The hub runs on any phone or browser, independently of your care management system, your local network, and your building infrastructure. Staff can access your BC plan procedures even when everything else is unavailable.',
-              },
-              {
-                Icon: ShieldAlert,
-                title: 'Automatic gap detection',
-                body: 'When staff ask questions that your current plan does not cover, CareStreamAI flags the gap in the policy gaps report. You find weaknesses before an incident exposes them.',
-              },
-              {
-                Icon: RefreshCw,
-                title: 'Instant plan updates',
-                body: 'When you revise your business continuity plan, the updated version is available to all staff immediately. No printing, no distribution, no waiting for the next staff meeting.',
-              },
-              {
-                Icon: Users,
-                title: 'Accessible to every staff member',
-                body: 'Every member of your team can query the plan, not only managers. A care worker, a kitchen assistant, or a new starter can ask what to do in a specific scenario and get the right answer.',
-              },
-              {
-                Icon: Brain,
-                title: 'Staff familiarisation testing',
-                body: 'Use CareStreamAI to send scenario-based questions about your business continuity procedures to staff as part of their onboarding or annual refresher. Build genuine familiarity, not just a signed acknowledgement.',
-              },
-              {
-                Icon: ShieldCheck,
-                title: 'CQC-ready evidence at all times',
-                body: 'Every staff query to the BC plan is logged. When an inspector asks how your staff access continuity procedures in a real emergency, you have a timestamped record of exactly how the plan is used.',
-              },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+            {RESILIENCE.map(({ Icon, key }) => (
+              <div key={key} className="card-lift rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
                   <Icon size={18} className="text-white" />
                 </div>
-                <h3 className="mb-2 font-bold text-white">{title}</h3>
-                <p className="text-sm leading-relaxed text-white/75">{body}</p>
+                <h3 className="mb-2 font-bold text-white">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -363,36 +319,25 @@ export default function BusinessContinuityPage() {
       {/* ── CQC evidence ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>CQC Evidence</SectionLabel>
+          <SectionLabel>{s('cqc.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Evidence that your business continuity plan is genuinely embedded in practice.
+            {s('cqc.h2')}
           </h2>
-          <div className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            <p>
-              CQC inspectors assess whether your business continuity arrangements are robust and
-              whether staff know what to do in an emergency. A written plan is necessary but not
-              sufficient. CareStreamAI gives you the evidence that the plan is actually used.
-            </p>
+          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+            <div dangerouslySetInnerHTML={{ __html: s('cqc.intro') }} />
           </div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
-              <span>What CareStreamAI records</span>
-              <span>What this shows an inspector</span>
+              <span>{s('cqc.col1')}</span>
+              <span>{s('cqc.col2')}</span>
             </div>
-            {[
-              ['Staff queries to the BC plan', 'A log of every time a staff member accessed the business continuity plan via a question, showing it is a working resource rather than a document filed away for inspection purposes.'],
-              ['Specific scenarios queried', 'The exact scenarios staff have asked about, demonstrating which parts of the plan are actively known and where gaps in staff awareness exist.'],
-              ['Gap detection and remediation', 'When the system identifies a scenario not covered by the current plan, and the manager updates the plan in response, that sequence is recorded as evidence of active plan management.'],
-              ['Staff familiarisation testing', 'Records of scenario-based questions sent to staff about BC procedures, showing that familiarisation with the plan is a formal, tracked activity and not just a one-off briefing.'],
-              ['After-hours and out-of-hours access', 'Queries made outside normal working hours demonstrate that the plan is accessible to night staff and weekend workers, not only to managers during the working day.'],
-              ['Plan review dates and update history', 'The knowledge base records when each version of the plan was uploaded, providing a clear audit trail of review activity that satisfies the requirement for regular plan maintenance.'],
-            ].map(([what, why], i) => (
-              <div key={what} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 5 ? 'border-b border-gray-100' : ''}`}>
+            {CQC_ROWS.map((row, i) => (
+              <div key={row} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 5 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-start gap-2 pr-4">
                   <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-teal" />
-                  <span className="font-semibold text-neutral-dark">{what}</span>
+                  <span className="font-semibold text-neutral-dark">{s(`${row}.what`)}</span>
                 </div>
-                <span className="text-sm leading-relaxed text-neutral-mid">{why}</span>
+                <span className="text-sm leading-relaxed text-neutral-mid">{s(`${row}.why`)}</span>
               </div>
             ))}
           </div>
@@ -402,27 +347,18 @@ export default function BusinessContinuityPage() {
       {/* ── Feature summary ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Everything Included</SectionLabel>
+          <SectionLabel>{s('features.label')}</SectionLabel>
           <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">
-            A business continuity plan your whole team can actually use.
+            {s('features.h2')}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: BookOpen,    label: 'Queryable BC plan',               desc: 'Upload your business continuity plan to the knowledge base and make every procedure instantly accessible to any staff member on any channel.',               iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
-              { icon: MessageSquare, label: 'Hub, email and voice access',     desc: 'Staff query the plan on the same channels they use for policy questions. No new system and no separate login.',                                              iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
-              { icon: Zap,         label: 'Offline-resilient delivery',       desc: 'The hub runs on any internet-connected device, independently of your care management system. The plan remains accessible even when other systems are unavailable.', iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
-              { icon: ShieldAlert, label: 'Automatic gap detection',          desc: 'Questions staff ask that the plan cannot answer are surfaced in the policy gaps report, helping you identify and fix weaknesses proactively.',                iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-              { icon: Brain,       label: 'Staff familiarisation testing',    desc: 'Send scenario-based questions about BC procedures to staff as part of onboarding or annual review. Build genuine familiarity.',                               iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
-              { icon: RefreshCw,   label: 'Instant plan updates',             desc: 'When you revise the plan, the updated version is available immediately to all staff. No printing and no distribution required.',                               iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-              { icon: BarChart2,   label: 'Query analytics',                  desc: 'See which scenarios staff ask about most frequently, which sections of the plan are accessed in real incidents, and where knowledge gaps are concentrated.',   iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
-              { icon: FileText,    label: 'CQC-ready audit log',              desc: 'A full log of all staff interactions with the BC plan, providing timestamped evidence that the plan is a genuinely embedded operational resource.',            iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
-            ].map(({ icon: Icon, label, desc, iconBg, iconColor }) => (
-              <div key={label} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+            {FEATURES.map(({ icon: Icon, key, iconBg, iconColor }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-lg ${iconBg}`}>
                   <Icon size={16} className={iconColor} />
                 </div>
-                <p className="mb-1.5 font-semibold text-neutral-dark">{label}</p>
-                <p className="text-sm leading-relaxed text-neutral-mid">{desc}</p>
+                <p className="mb-1.5 font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.desc`)}</p>
               </div>
             ))}
           </div>
@@ -434,22 +370,21 @@ export default function BusinessContinuityPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="grid gap-12 text-center md:gap-0 md:grid-cols-2 md:divide-x md:divide-gray-100">
             <div className="md:pr-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">30 sec</p>
+              <p className="mb-4 text-5xl font-extrabold text-teal">{s('stats.stat1.value')}</p>
               <p className="mb-3 text-xl font-bold text-neutral-dark">
-                average time for a staff member to get a specific BC procedure in the hub.
+                {s('stats.stat1.title')}
               </p>
               <p className="text-base leading-relaxed text-neutral-mid">
-                The same time it takes to find the right person to call, your staff already have
-                the answer and can act.
+                {s('stats.stat1.body')}
               </p>
             </div>
             <div className="md:pl-12">
-              <p className="mb-4 text-5xl font-extrabold text-teal">24/7</p>
+              <p className="mb-4 text-5xl font-extrabold text-teal">{s('stats.stat2.value')}</p>
               <p className="mb-3 text-xl font-bold text-neutral-dark">
-                your business continuity plan is accessible to every shift, including nights and weekends.
+                {s('stats.stat2.title')}
               </p>
               <p className="text-base leading-relaxed text-neutral-mid">
-                Disruptions do not only happen during office hours. CareStreamAI is available at all times on all channels.
+                {s('stats.stat2.body')}
               </p>
             </div>
           </div>

@@ -37,7 +37,7 @@ function FaqItem({ q, a }: FaqItem) {
       </button>
       {open && (
         <div className="border-t border-teal/15 px-6 pb-6 pt-4">
-          <p className="leading-relaxed text-neutral-mid">{a}</p>
+          <p className="leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: a }} />
         </div>
       )}
     </div>

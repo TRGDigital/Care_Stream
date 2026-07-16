@@ -377,7 +377,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   // Legal disclaimer gate — the detail is only fetched once accepted.
   const [accepted, setAccepted] = useState(acknowledged)
   const [accepting, setAccepting] = useState(false)
-  const [synopsisOpen, setSynopsisOpen] = useState(false)          // "What this regulation covers" Read more
+  const [synopsisOpen, setSynopsisOpen] = useState(false)          // expand the rest of the synopsis
+  const [careOpen, setCareOpen] = useState(false)                  // "…in a care setting" section
+  const [policyOpen, setPolicyOpen] = useState(false)              // "…what your policy should cover" section
   const [whyOpen, setWhyOpen] = useState<Set<string>>(new Set())   // per-suggestion "why adopt this" toggles
 
   async function acceptDisclaimer() {
@@ -652,40 +654,63 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
           <div className="m-6 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         ) : detail ? (
           <>
-            {/* What this regulation covers — synopsis + Read more */}
+            {/* What this regulation covers — progressive disclosure, one section per button */}
             {detail.summary && (() => {
-              const more = [detail.care_home_context, detail.practical_meaning].map(t => (t ?? '').trim()).filter(Boolean)
-              // Collapsed shows ~2 lines of the synopsis; Read more reveals the rest
-              // plus the care-setting context and what the policy should cover.
-              const hasMore = more.length > 0 || detail.summary.length > 140
+              // Collapsed shows ~2 lines of the synopsis. "Read more" reveals the rest of
+              // the synopsis; then a button opens the care-setting context; then another
+              // opens what the policy should cover — so the tenant reads as much as they want.
+              const summaryLong = detail.summary.length > 140
+              const summaryShown = synopsisOpen || !summaryLong
+              const anyOpen = synopsisOpen || careOpen || policyOpen
+              const linkBtn = 'inline-flex items-center gap-1 text-xs font-semibold text-neutral-dark underline underline-offset-2 hover:no-underline'
               return (
                 <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
                   <div className="flex items-start gap-2.5 px-4 py-3">
                     <BookOpen size={15} className="mt-0.5 shrink-0 text-teal" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold uppercase tracking-wide text-neutral-dark">What this regulation covers</p>
-                      <p className={`mt-1 text-sm leading-relaxed text-neutral-dark ${synopsisOpen ? '' : 'line-clamp-2'}`}>{detail.summary}</p>
-                      {synopsisOpen && more.length > 0 && (
-                        <div className="mt-2 space-y-2 border-t border-teal/10 pt-2">
-                          {detail.care_home_context && (
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">In a care setting</p>
-                              <p className="text-sm leading-relaxed text-neutral-dark">{detail.care_home_context}</p>
-                            </div>
-                          )}
-                          {detail.practical_meaning && (
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">What your policy should cover</p>
-                              <p className="text-sm leading-relaxed text-neutral-dark">{detail.practical_meaning}</p>
-                            </div>
-                          )}
+                      <p className={`mt-1 text-sm leading-relaxed text-neutral-dark ${summaryShown ? '' : 'line-clamp-2'}`}>{detail.summary}</p>
+
+                      {/* Step 1 — reveal the rest of the synopsis */}
+                      {summaryLong && !synopsisOpen && (
+                        <div className="mt-2">
+                          <button onClick={() => setSynopsisOpen(true)} className={linkBtn}>Read more <ChevronDown size={11} /></button>
                         </div>
                       )}
-                      {hasMore && (
-                        <button onClick={() => setSynopsisOpen(o => !o)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-neutral-dark underline underline-offset-2 hover:no-underline">
-                          {synopsisOpen ? 'Show less' : 'Read more'}
-                          <ChevronDown size={12} className={`transition-transform ${synopsisOpen ? 'rotate-180' : ''}`} />
-                        </button>
+
+                      {/* Step 2 — care-setting context, on its own button */}
+                      {summaryShown && detail.care_home_context && (
+                        careOpen ? (
+                          <div className="mt-3 border-t border-teal/10 pt-2">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">In a care setting</p>
+                            <p className="mt-0.5 text-sm leading-relaxed text-neutral-dark">{detail.care_home_context}</p>
+
+                            {/* Step 3 — what your policy should cover, on its own button */}
+                            {detail.practical_meaning && (
+                              policyOpen ? (
+                                <div className="mt-3 border-t border-teal/10 pt-2">
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">What your policy should cover</p>
+                                  <p className="mt-0.5 text-sm leading-relaxed text-neutral-dark">{detail.practical_meaning}</p>
+                                </div>
+                              ) : (
+                                <div className="mt-2">
+                                  <button onClick={() => setPolicyOpen(true)} className={linkBtn}>Read what your policy should cover <ChevronDown size={11} /></button>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            <button onClick={() => setCareOpen(true)} className={linkBtn}>Read about this legislation in a care setting <ChevronDown size={11} /></button>
+                          </div>
+                        )
+                      )}
+
+                      {/* Collapse it all back */}
+                      {anyOpen && (
+                        <div className="mt-3">
+                          <button onClick={() => { setSynopsisOpen(false); setCareOpen(false); setPolicyOpen(false) }} className={linkBtn}>Show less <ChevronDown size={11} className="rotate-180" /></button>
+                        </div>
                       )}
                     </div>
                   </div>

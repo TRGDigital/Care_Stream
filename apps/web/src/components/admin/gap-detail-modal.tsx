@@ -669,14 +669,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         <div className="mt-2 space-y-2 border-t border-teal/10 pt-2">
                           {detail.care_home_context && (
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal/80">In a care setting</p>
-                              <p className="text-sm leading-relaxed text-neutral-mid">{detail.care_home_context}</p>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">In a care setting</p>
+                              <p className="text-sm leading-relaxed text-neutral-dark">{detail.care_home_context}</p>
                             </div>
                           )}
                           {detail.practical_meaning && (
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal/80">What your policy should cover</p>
-                              <p className="text-sm leading-relaxed text-neutral-mid">{detail.practical_meaning}</p>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">What your policy should cover</p>
+                              <p className="text-sm leading-relaxed text-neutral-dark">{detail.practical_meaning}</p>
                             </div>
                           )}
                         </div>

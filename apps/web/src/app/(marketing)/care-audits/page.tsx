@@ -5,6 +5,10 @@ import {
   ClipboardCheck, Printer, Layers, Save, Wrench, Users, GraduationCap,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { CARE_AUDITS_SLOTS } from '@/lib/page-slots/care-audits'
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
   title:       'Care Audits | CareStreamAI',
@@ -78,7 +82,51 @@ function AuditResultsMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CareAuditsPage() {
+export default async function CareAuditsPage() {
+  const s = makeSlot(CARE_AUDITS_SLOTS, await getContentSlots('/care-audits'))
+
+  const PROBLEM_CARDS = [
+    { icon: '📝', key: 'problem.card1', dim: true },
+    { icon: '✅', key: 'problem.card2', dim: false },
+  ]
+  const HOW_STEPS = [
+    { step: '01', Icon: ClipboardCheck, key: 'how.card1' },
+    { step: '02', Icon: ClipboardCheck, key: 'how.card2' },
+    { step: '03', Icon: FileText,       key: 'how.card3' },
+  ]
+  const BUILD_CARDS = [
+    { Icon: Wrench,         key: 'build.card1' },
+    { Icon: ClipboardCheck, key: 'build.card2' },
+    { Icon: Users,          key: 'build.card3' },
+    { Icon: Brain,          key: 'build.card4' },
+  ]
+  const LOOP_STEPS = [
+    { step: '01', Icon: FileText,      key: 'loop.card1' },
+    { step: '02', Icon: GraduationCap, key: 'loop.card2' },
+    { step: '03', Icon: ClipboardCheck, key: 'loop.card3' },
+    { step: '04', Icon: BarChart2,     key: 'loop.card4' },
+  ]
+  const REC_ITEMS = ['rec.item1', 'rec.item2', 'rec.item3']
+  const TOOLKIT_CARDS = [
+    { Icon: ClipboardCheck, key: 'toolkit.card1' },
+    { Icon: BarChart2,      key: 'toolkit.card2' },
+    { Icon: Save,           key: 'toolkit.card3' },
+    { Icon: Layers,         key: 'toolkit.card4' },
+    { Icon: Printer,        key: 'toolkit.card5' },
+    { Icon: Brain,          key: 'toolkit.card6' },
+  ]
+  const CQC_ROWS = ['cqc.row1', 'cqc.row2', 'cqc.row3', 'cqc.row4', 'cqc.row5']
+  const SUMMARY_CARDS = [
+    { icon: ClipboardCheck, key: 'summary.card1', iconBg: 'bg-blue-100',   iconColor: 'text-blue-600'   },
+    { icon: ClipboardCheck, key: 'summary.card2', iconBg: 'bg-green-100',  iconColor: 'text-green-600'  },
+    { icon: FileText,       key: 'summary.card3', iconBg: 'bg-teal-light', iconColor: 'text-teal'       },
+    { icon: BarChart2,      key: 'summary.card4', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { icon: Save,           key: 'summary.card5', iconBg: 'bg-amber-100',  iconColor: 'text-amber-600'  },
+    { icon: Layers,         key: 'summary.card6', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+    { icon: Printer,        key: 'summary.card7', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+    { icon: Brain,          key: 'summary.card8', iconBg: 'bg-cyan-100',   iconColor: 'text-cyan-600'   },
+  ]
+
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -93,19 +141,16 @@ export default function CareAuditsPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>Care Audits</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Structured audits that take minutes to complete and produce a report you can actually use.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                Regular audits are a CQC expectation, but completing them manually is slow,
-                inconsistently formatted, and rarely produces findings that lead to clear action.
-                CareStream guides your team through structured audits in the hub, scores every
-                section, and generates a formatted report with AI recommendations the moment you finish.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
-                <Link href="/demo"     className="btn-ghost-white rounded-btn px-8 py-4 text-sm">Book a Demo</Link>
+                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">{s('hero.cta1')}</Link>
+                <Link href="/demo"     className="btn-ghost-white rounded-btn px-8 py-4 text-sm">{s('hero.cta2')}</Link>
               </div>
             </div>
             <div className="flex justify-center lg:justify-end">
@@ -120,49 +165,26 @@ export default function CareAuditsPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>The Problem With Manual Audits</SectionLabel>
+              <SectionLabel>{s('problem.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                Most care setting audits take too long, read differently every time, and rarely lead to action.
+                {s('problem.h2')}
               </h2>
-              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
-                <p>
-                  A care manager filling in a paper audit form or a spreadsheet can spend two to
-                  three hours on a single audit. The questions vary from month to month depending
-                  on who does it. The resulting report is filed, a few actions are noted, and the
-                  cycle repeats with the same weaknesses.
-                </p>
-                <p>
-                  CQC inspectors want to see that internal audits are consistent, that they produce
-                  clear findings, and that those findings come with sensible actions. CareStream gives
-                  every audit the same structure, scores each section as you go, and turns your
-                  answers into a formatted report with prioritised recommendations.
-                </p>
+              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
+                <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
               </div>
             </div>
             <div className="grid gap-4">
-              {[
-                {
-                  icon: '📝',
-                  label: 'Traditional manual audit',
-                  text: 'A manager spends two hours on a spreadsheet. The format changes each time. Findings are noted but inconsistently. The audit exists on paper but rarely reads the same way twice.',
-                  dim: true,
-                },
-                {
-                  icon: '✅',
-                  label: 'CareStream audit',
-                  text: 'A structured audit is completed in the hub in well under an hour. Every section is scored, findings and actions are captured against each question, and a formatted report with AI recommendations is generated the moment you finish.',
-                  dim: false,
-                },
-              ].map(({ icon, label, text, dim }) => (
+              {PROBLEM_CARDS.map(({ icon, key, dim }) => (
                 <div
-                  key={label}
+                  key={key}
                   className={`card-lift rounded-2xl p-6 ${dim ? 'border border-gray-100 bg-white shadow-card' : 'bg-teal-gradient shadow-teal-glow'}`}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <span className="text-2xl">{icon}</span>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>{label}</p>
+                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>{s(`${key}.label`)}</p>
                   </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{text}</p>
+                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.body`)}</p>
                 </div>
               ))}
             </div>
@@ -173,36 +195,15 @@ export default function CareAuditsPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How CareStream Audits Work</SectionLabel>
+          <SectionLabel>{s('how.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Choose it, work through it, receive your report. No formatting, no spreadsheets.
+            {s('how.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Pre-built audit templates cover the areas CQC inspects. You work through each one
-            section by section in the hub, and the report is generated automatically the moment
-            the audit is complete.
+            {s('how.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                step: '01',
-                Icon: ClipboardCheck,
-                title: 'Choose the audit and start',
-                body: 'CareStream ships with pre-built templates for medicines management, infection control, health and safety, fire safety, resident bedrooms, the kitchen, accident and incident records, and more. Choose a template, add your own, and start the audit yourself or have any manager or senior complete it.',
-              },
-              {
-                step: '02',
-                Icon: ClipboardCheck,
-                title: 'Guided, structured completion in the hub',
-                body: 'You work through the audit section by section. Each question takes a clear Yes, No or Not Applicable, with space to record what you found and the action required. Your answers save as you go, so you can pause and pick up later on any device.',
-              },
-              {
-                step: '03',
-                Icon: FileText,
-                title: 'Formatted report generated automatically',
-                body: 'When the audit is complete, CareStream produces a formatted report showing each section score, your findings, the actions you recorded, your summary, and AI recommendations. The report is locked and ready to print, save as a PDF, or present to a CQC inspector.',
-              },
-            ].map(({ step, Icon, title, body }) => (
+            {HOW_STEPS.map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
@@ -210,8 +211,8 @@ export default function CareAuditsPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -221,42 +222,19 @@ export default function CareAuditsPage() {
       {/* ── Build your own audits ─────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Build Your Own Audits</SectionLabel>
+          <SectionLabel>{s('build.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Not just our templates, your audits too.
+            {s('build.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Every service audits things the standard templates do not cover. With CareStream you build your
-            own audit in minutes, name it, add your questions, choose how often it runs, and it works
-            exactly like the built-in ones. No spreadsheets, no setup, no formatting.
+            {s('build.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                Icon: Wrench,
-                title: 'Audit anything, your way',
-                body: 'Build an audit for whatever matters to your service: kitchen hygiene, a maintenance walk-round, a supervision checklist, medication spot-checks. Add as many questions as you need, each with Yes, No, N/A and notes, or free-text findings.',
-              },
-              {
-                Icon: ClipboardCheck,
-                title: 'The same structured experience',
-                body: 'Custom audits behave exactly like the ready-made ones: clear response buttons and a notes field on every question, answers that save as you go, section-by-section scoring, and a formatted report on completion.',
-              },
-              {
-                Icon: Users,
-                title: 'Allocate to the right people',
-                body: 'Assign each audit to the staff who should carry it out. It appears in their hub on any device, ready to complete while they walk the home, so the right people own the right checks.',
-              },
-              {
-                Icon: Brain,
-                title: 'Inspection-ready, automatically',
-                body: 'Every audit, custom or built-in, generates AI recommendations mapped to the CQC Key Questions and is stored, formatted and ready to show an inspector. One consistent process instead of scattered paper and spreadsheets.',
-              },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="card-lift rounded-2xl border border-gray-100 bg-neutral-light/40 p-7 shadow-card">
+            {BUILD_CARDS.map(({ Icon, key }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-neutral-light/40 p-7 shadow-card">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light"><Icon size={18} className="text-teal" /></div>
-                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -266,56 +244,26 @@ export default function CareAuditsPage() {
       {/* ── Link audits to training: the closed loop ───────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Link Audits to Training</SectionLabel>
+          <SectionLabel>{s('loop.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Close the loop, from policy to proven impact.
+            {s('loop.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Build your own audit, link it to the training it measures, and CareStream shows you whether that
-            training is actually improving practice. It joins up the whole cycle, in one place.
+            {s('loop.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                step: '01',
-                Icon: FileText,
-                title: 'Upload your policies',
-                body: 'Add your own policy documents. They become the single source of truth everything else is built from.',
-              },
-              {
-                step: '02',
-                Icon: GraduationCap,
-                title: 'Training generated from them',
-                body: 'CareStream creates training modules grounded in your policies, so staff learn your way of working, not a generic course.',
-              },
-              {
-                step: '03',
-                Icon: ClipboardCheck,
-                title: 'Build an audit, linked to the training',
-                body: 'Create an audit for the practice that training should improve, and link it to the module. The audit becomes your real-world measure of whether it worked.',
-              },
-              {
-                step: '04',
-                Icon: BarChart2,
-                title: 'See the training impact',
-                body: 'CareStream tracks the audit\'s compliance score against training completion over time, so you can see whether the training is landing in practice.',
-              },
-            ].map(({ step, Icon, title, body }) => (
+            {LOOP_STEPS.map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light"><Icon size={18} className="text-teal" /></div>
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
-          <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
-            It needs a few monthly audit runs to show a meaningful trend, and it shows a correlation rather than
-            proof of cause. Even so, it is exactly the train, audit, improve and re-audit cycle that CQC&apos;s
-            well-led question looks for.
-          </p>
+          <div className={`mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('loop.note') }} />
         </div>
       </section>
 

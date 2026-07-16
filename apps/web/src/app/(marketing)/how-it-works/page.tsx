@@ -7,6 +7,11 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { HOW_IT_WORKS_SLOTS } from '@/lib/page-slots/how-it-works'
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
+const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/how-it-works', {
@@ -134,7 +139,8 @@ function HubMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function HowItWorksPage() {
+export default async function HowItWorksPage() {
+  const s = makeSlot(HOW_IT_WORKS_SLOTS, await getContentSlots('/how-it-works'))
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -149,12 +155,12 @@ export default function HowItWorksPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>How It Works</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Everything you need to know about how CareStreamAI works.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                From uploading your first policy to your CQC inspection, a complete walkthrough of every feature, how it works, and why it matters for your care setting.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
@@ -175,39 +181,20 @@ export default function HowItWorksPage() {
       {/* ── 1. Getting started ─────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Getting Started</SectionLabel>
+          <SectionLabel>{s('start.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Up and running in under an hour.
+            {s('start.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            There is no integration project, no IT department involvement, and no lengthy rollout.
-            Three steps and your whole team has access.
+            {s('start.intro')}
           </p>
 
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              {
-                step: '01',
-                Icon: Upload,
-                title: 'Upload your documents',
-                body: 'Upload your policy library, staff handbook, and any supporting documents from the admin dashboard. PDF, Word, and plain text are all accepted. There is no limit on file size or number of policies.',
-                detail: 'Most care settings upload between 20 and 80 policy documents. The upload takes minutes.',
-              },
-              {
-                step: '02',
-                Icon: Search,
-                title: 'CareStreamAI processes them',
-                body: 'Each document is read, chunked into meaningful sections, and indexed for semantic search. Key facts such as named individuals, contact numbers and local procedures are extracted and made searchable.',
-                detail: 'Processing typically completes in under five minutes per document, automatically.',
-              },
-              {
-                step: '03',
-                Icon: Zap,
-                title: 'Your team goes live',
-                body: 'Add your staff and they get the hub on their phone, with email as a backup. They can immediately ask questions, read policies and start their training, in the language they think in, with voice input when typing is harder.',
-                detail: 'Most care settings are fully live within 45 minutes of starting the setup process.',
-              },
-            ].map(({ step, Icon, title, body, detail }) => (
+              { step: '01', Icon: Upload, key: 'start.step1' },
+              { step: '02', Icon: Search, key: 'start.step2' },
+              { step: '03', Icon: Zap,    key: 'start.step3' },
+            ].map(({ step, Icon, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">{step}</span>
@@ -215,10 +202,10 @@ export default function HowItWorksPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
                 <p className="rounded-xl bg-neutral-light px-4 py-3 text-xs leading-relaxed text-neutral-mid">
-                  {detail}
+                  {s(`${key}.detail`)}
                 </p>
               </div>
             ))}
@@ -229,65 +216,35 @@ export default function HowItWorksPage() {
       {/* ── 2. The AI engine ───────────────────────────────────────────────── */}
       <section className="bg-neutral-dark py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel light>The AI Engine</SectionLabel>
+          <SectionLabel light>{s('ai.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-            How the AI generates answers.
+            {s('ai.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-gray-300">
-            CareStreamAI uses a technique called Retrieval-Augmented Generation (RAG). In plain English: it finds the right part of your policy, reads it, and writes the answer from that content only.
+            {s('ai.intro')}
           </p>
 
           <div className="grid gap-4 md:grid-cols-4">
             {[
-              {
-                num: '1',
-                Icon: Search,
-                title: 'Semantic search',
-                body: 'The question is converted into a mathematical representation and matched against your indexed policies. The most relevant sections are retrieved, even when the exact wording of the question differs from the policy.',
-                color: 'bg-teal-light',
-                textColor: 'text-teal',
-              },
-              {
-                num: '2',
-                Icon: FileText,
-                title: 'Context assembly',
-                body: 'The retrieved policy sections are assembled into a context window, along with any conversation history from the current session and the relevant regulatory framework.',
-                color: 'bg-white/10',
-                textColor: 'text-white',
-              },
-              {
-                num: '3',
-                Icon: Zap,
-                title: 'Answer generation',
-                body: 'The AI is instructed to answer using only the provided context. It cannot draw on general knowledge or training data. If the answer is not in your documents, it says so.',
-                color: 'bg-white/10',
-                textColor: 'text-white',
-              },
-              {
-                num: '4',
-                Icon: ClipboardCheck,
-                title: 'Citation and logging',
-                body: 'Every response cites the exact policy and section used. The full interaction, including question, answer, policy cited, language, channel and timestamp, is logged to the audit trail.',
-                color: 'bg-white/10',
-                textColor: 'text-white',
-              },
-            ].map(({ num, Icon, title, body, color, textColor }) => (
+              { num: '1', Icon: Search,         key: 'ai.step1', color: 'bg-teal-light', textColor: 'text-teal' },
+              { num: '2', Icon: FileText,       key: 'ai.step2', color: 'bg-white/10',   textColor: 'text-white' },
+              { num: '3', Icon: Zap,            key: 'ai.step3', color: 'bg-white/10',   textColor: 'text-white' },
+              { num: '4', Icon: ClipboardCheck, key: 'ai.step4', color: 'bg-white/10',   textColor: 'text-white' },
+            ].map(({ num, Icon, key, color, textColor }) => (
               <div key={num} className={`card-lift rounded-2xl border border-white/10 p-6 ${color}`}>
                 <div className="mb-4 flex items-center gap-2">
                   <span className={`text-xs font-extrabold ${textColor === 'text-teal' ? 'text-teal' : 'text-white/40'}`}>STEP {num}</span>
                 </div>
                 <Icon size={22} className={`mb-4 ${textColor}`} />
-                <h3 className={`mb-2 font-bold ${textColor === 'text-teal' ? 'text-teal' : 'text-white'}`}>{title}</h3>
-                <p className="text-sm leading-relaxed text-gray-400">{body}</p>
+                <h3 className={`mb-2 font-bold ${textColor === 'text-teal' ? 'text-teal' : 'text-white'}`}>{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-gray-400">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-8 py-6">
-            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/40">Why it cannot make things up</p>
-            <p className="text-lg leading-relaxed text-white/80">
-              The AI is given your policy content and told: answer from this, and only this. It has no access to the internet, no access to other organisations&rsquo; policies, and no access to its general training data when answering. If a question cannot be answered from your documents, it tells the staff member and flags the gap for your review.
-            </p>
+            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/40">{s('ai.callout.label')}</p>
+            <div className={`text-lg leading-relaxed text-white/80 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('ai.callout.body') }} />
           </div>
         </div>
       </section>
@@ -295,12 +252,12 @@ export default function HowItWorksPage() {
       {/* ── 3. The channels (hub, email, voice) ────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>The Hub</SectionLabel>
+          <SectionLabel>{s('hub.label')}</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            One hub on their phone. Email and voice when it suits.
+            {s('hub.h2')}
           </h2>
           <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            The hub is where your team lives day to day: their policies, their training and instant answers, in one place. Email and voice give the same quality of response, drawn from the same library, with the same audit trail.
+            {s('hub.intro')}
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -314,22 +271,15 @@ export default function HowItWorksPage() {
                       <Smartphone size={22} className="text-teal" />
                     </div>
                     <div>
-                      <p className="font-bold text-neutral-dark">The hub app</p>
-                      <p className="text-xs text-neutral-mid">On any smartphone, plus desktop browser</p>
+                      <p className="font-bold text-neutral-dark">{s('hub.app.name')}</p>
+                      <p className="text-xs text-neutral-mid">{s('hub.app.sub')}</p>
                     </div>
                   </div>
                   <p className="mb-5 leading-relaxed text-neutral-mid">
-                    The hub is the one place for your whole team. Staff open it to ask a policy question, read a procedure, or complete a piece of training, all in the language they think in. The chat is conversational, so they can ask follow-ups within the same session and the system keeps full context. Reminders and new training arrive as notifications, so nothing gets missed.
+                    {s('hub.app.body')}
                   </p>
                   <ul className="space-y-2 text-sm text-neutral-mid">
-                    {[
-                      'Policies, training and answers in one place',
-                      'Push notifications for reminders and new training',
-                      'Conversational follow-ups with full session context',
-                      'Voice input for hands-free questions mid-task',
-                      'Suggested follow-up questions after each response',
-                      'Works on any smartphone or desktop browser',
-                    ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />{p}</li>)}
+                    {['hub.app.b1', 'hub.app.b2', 'hub.app.b3', 'hub.app.b4', 'hub.app.b5', 'hub.app.b6'].map(k => <li key={k} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-teal" />{s(k)}</li>)}
                   </ul>
                 </div>
                 <div>
@@ -345,20 +295,15 @@ export default function HowItWorksPage() {
                   <Mail size={22} className="text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-neutral-dark">Email</p>
-                  <p className="text-xs text-neutral-mid">Any email client, any device</p>
+                  <p className="font-bold text-neutral-dark">{s('hub.email.name')}</p>
+                  <p className="text-xs text-neutral-mid">{s('hub.email.sub')}</p>
                 </div>
               </div>
               <p className="mb-4 leading-relaxed text-neutral-mid">
-                Staff email your dedicated CareStreamAI address from any device. The system replies within 30 seconds. Replying to the response continues the conversation. The system reads the full thread and maintains context across multiple exchanges.
+                {s('hub.email.body')}
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
-                {[
-                  'No login and no app required, works from any email client',
-                  'Response arrives in the same email thread within 30 seconds',
-                  'Thread context maintained, reply to continue the conversation',
-                  'Useful for staff who prefer email or are on shift handover',
-                ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-blue-500" />{p}</li>)}
+                {['hub.email.b1', 'hub.email.b2', 'hub.email.b3', 'hub.email.b4'].map(k => <li key={k} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-blue-500" />{s(k)}</li>)}
               </ul>
             </div>
 
@@ -369,20 +314,15 @@ export default function HowItWorksPage() {
                   <Mic size={22} className="text-purple-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-neutral-dark">Voice input</p>
-                  <p className="text-xs text-neutral-mid">In the hub, hands-free</p>
+                  <p className="font-bold text-neutral-dark">{s('hub.voice.name')}</p>
+                  <p className="text-xs text-neutral-mid">{s('hub.voice.sub')}</p>
                 </div>
               </div>
               <p className="mb-4 leading-relaxed text-neutral-mid">
-                Not everyone types quickly in their second language. Voice input lets staff speak their question naturally, mid-task and hands-free, in any language. The audio is transcribed, language-detected, and answered from your policies in the same language it was spoken.
+                {s('hub.voice.body')}
               </p>
               <ul className="space-y-2 text-sm text-neutral-mid">
-                {[
-                  '60+ languages supported for voice input',
-                  'Transcription shown alongside the answer for transparency',
-                  'Same response quality as typed queries',
-                  'Logged identically, voice queries appear in the audit trail',
-                ].map(p => <li key={p} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-purple-500" />{p}</li>)}
+                {['hub.voice.b1', 'hub.voice.b2', 'hub.voice.b3', 'hub.voice.b4'].map(k => <li key={k} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-purple-500" />{s(k)}</li>)}
               </ul>
             </div>
 

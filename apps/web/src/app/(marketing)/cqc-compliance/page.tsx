@@ -4,6 +4,10 @@ import {
   ShieldCheck, AlertTriangle, HelpCircle,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { CQC_COMPLIANCE_SLOTS } from '@/lib/page-slots/cqc-compliance'
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
   title: 'CQC & Compliance',
@@ -127,7 +131,8 @@ function CoverageMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CqcCompliancePage() {
+export default async function CqcCompliancePage() {
+  const s = makeSlot(CQC_COMPLIANCE_SLOTS, await getContentSlots('/cqc-compliance'))
   return (
     <>
       {/* ── Split hero ─────────────────────────────────────────────────────── */}
@@ -142,14 +147,12 @@ export default function CqcCompliancePage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>CQC & Compliance</SectionLabel>
+              <SectionLabel light>{s('hero.label')}</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Stop preparing for CQC. Start being ready for CQC.
+                {s('hero.h1')}
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CareStream builds your compliance evidence in real time, one policy interaction at a time,
-                and checks which regulations your policies actually cover. When the inspector arrives, your
-                evidence is already prepared.
+                {s('hero.intro')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
@@ -172,39 +175,30 @@ export default function CqcCompliancePage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>The Gap Most Care Settings Have</SectionLabel>
+              <SectionLabel>{s('gap.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                Policies exist. Evidence of use does not.
+                {s('gap.h2')}
               </h2>
-              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
-                <p>
-                  CQC inspectors look for evidence that staff actively use and understand your policies, not
-                  just that the policies exist. Most care organisations can show the policy folder. Very few
-                  can show the inspector that their team actually reads and applies it.
-                </p>
-                <p>
-                  CareStream closes that gap by logging every policy interaction in a structured, auditable
-                  format, and generating a CQC Readiness Report that makes that evidence immediately presentable.
-                </p>
+              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+                <div dangerouslySetInnerHTML={{ __html: s('gap.p1') }} />
+                <div dangerouslySetInnerHTML={{ __html: s('gap.p2') }} />
               </div>
             </div>
             <div className="grid gap-4">
               {[
                 {
                   icon: '📁',
-                  label: 'What most homes can show',
-                  text: 'A policy folder. Documents in place. Dated and versioned.',
+                  key: 'gap.card1',
                   dim: true,
                 },
                 {
                   icon: '📊',
-                  label: 'What CQC wants to see',
-                  text: 'Evidence that staff read, query, and act on your policies, by role, over time, across languages.',
+                  key: 'gap.card2',
                   dim: false,
                 },
-              ].map(({ icon, label, text, dim }) => (
+              ].map(({ icon, key, dim }) => (
                 <div
-                  key={label}
+                  key={key}
                   className={`card-lift rounded-2xl p-6 ${
                     dim
                       ? 'border-2 border-red-100 bg-red-50/70'
@@ -216,10 +210,10 @@ export default function CqcCompliancePage() {
                     <p className={`text-xs font-bold uppercase tracking-widest ${
                       dim ? 'text-red-400' : 'text-white/60'
                     }`}>
-                      {label}
+                      {s(`${key}.label`)}
                     </p>
                   </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{text}</p>
+                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.text`)}</p>
                 </div>
               ))}
             </div>
@@ -230,9 +224,9 @@ export default function CqcCompliancePage() {
       {/* ── How it works ───────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How It Works</SectionLabel>
+          <SectionLabel>{s('how.label')}</SectionLabel>
           <h2 className="mb-14 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Evidence that builds itself, every day.
+            {s('how.h2')}
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {[
@@ -241,26 +235,23 @@ export default function CqcCompliancePage() {
                 Icon: MessageSquare,
                 iconBg: 'bg-blue-100',
                 iconColor: 'text-blue-600',
-                title: 'Staff ask policy questions',
-                body: 'Every time a staff member queries a policy in the hub or by email, CareStream logs the interaction, the policy accessed, the role, the language, and the date.',
+                key: 'how.step1',
               },
               {
                 step: '02',
                 Icon: FileText,
                 iconBg: 'bg-purple-100',
                 iconColor: 'text-purple-600',
-                title: 'Every interaction is recorded',
-                body: 'CareStream structures each interaction into an auditable record, who accessed which policy, when, in what language, building a live evidence base that grows automatically with every query.',
+                key: 'how.step2',
               },
               {
                 step: '03',
                 Icon: BarChart2,
                 iconBg: 'bg-teal-light',
                 iconColor: 'text-teal',
-                title: 'Generate your Readiness Report',
-                body: 'With one click, generate a CQC Readiness Report that presents your evidence clearly, policy access summaries, staff engagement data, knowledge gap logs, and more, ready to download as a PDF.',
+                key: 'how.step3',
               },
-            ].map(({ step, Icon, iconBg, iconColor, title, body }) => (
+            ].map(({ step, Icon, iconBg, iconColor, key }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -270,8 +261,8 @@ export default function CqcCompliancePage() {
                     <Icon size={18} className={iconColor} />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
               </div>
             ))}
           </div>
@@ -281,37 +272,28 @@ export default function CqcCompliancePage() {
       {/* ── Regulation coverage ────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Regulation Coverage</SectionLabel>
+          <SectionLabel>{s('coverage.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            See which regulations your policies cover, and where the gaps are.
+            {s('coverage.h2')}
           </h2>
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                Your policies, checked against the regulations that apply to a care service.
+                {s('coverage.h3')}
               </h3>
-              <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-                CareStream reads the actual content of your policies, not just the titles, and checks them
-                against each regulation that applies to a care service. For every regulation it decides
-                whether your policies cover it, partly cover it, or leave a gap, and points to the policy
-                that best evidences the decision.
-              </p>
-              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Gaps are listed first, so you know what to write or update before an inspector finds it.
-                Every judgement comes with a short reason and a confidence level, and the picture refreshes
-                as your policies change.
-              </p>
+              <div className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('coverage.p1') }} />
+              <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('coverage.p2') }} />
               <div className="space-y-3">
                 {[
-                  { Icon: CheckCircle2,  label: 'Covered', text: 'A policy clearly and substantively addresses the regulation.' },
-                  { Icon: ShieldCheck,   label: 'Partial', text: 'The topic is touched on, but is incomplete for what the regulation requires.' },
-                  { Icon: AlertTriangle, label: 'Gap',     text: 'The regulation is not addressed in your current policies.' },
-                ].map(({ Icon, label, text }) => (
-                  <div key={label} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  { Icon: CheckCircle2,  key: 'coverage.item1' },
+                  { Icon: ShieldCheck,   key: 'coverage.item2' },
+                  { Icon: AlertTriangle, key: 'coverage.item3' },
+                ].map(({ Icon, key }) => (
+                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
                     <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{label}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{text}</p>
+                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
+                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
                     </div>
                   </div>
                 ))}
@@ -328,27 +310,27 @@ export default function CqcCompliancePage() {
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
           <div className="mb-6 flex flex-wrap items-center gap-3">
-            <SectionLabel>What the Report Covers</SectionLabel>
-            <span className="rounded-pill bg-teal px-3 py-1 text-xs font-bold text-white">Professional plan</span>
+            <SectionLabel>{s('report.label')}</SectionLabel>
+            <span className="rounded-pill bg-teal px-3 py-1 text-xs font-bold text-white">{s('report.badge')}</span>
           </div>
-          <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">The CQC Readiness Report.</h2>
+          <h2 className="mb-12 text-4xl font-extrabold text-neutral-dark">{s('report.h2')}</h2>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
-              <span>Report section</span>
-              <span>Why it matters at inspection</span>
+              <span>{s('report.col1')}</span>
+              <span>{s('report.col2')}</span>
             </div>
             {[
-              ['Policy Access Summary', 'Every active policy with total queries, number of staff who accessed it, and date of most recent access. Proof that policies are live and in use.'],
-              ['Policies Not Accessed', 'Policies that received zero queries in the period, an honest self-assessment that shows CQC you identify and address gaps proactively.'],
-              ['Policy Version History', 'When each policy was updated and whether staff accessed it after the update, evidence that new guidance reached the team.'],
-              ['Staff Engagement by Role', 'Query activity by care staff, seniors, and management, showing policies are accessed at the point of care delivery, not just by management.'],
-              ['Regulatory Framework Activity', 'Queries referencing RIDDOR, safeguarding, CQC Fundamental Standards, showing staff engage with the regulatory framework.'],
-              ['Multilingual Access', 'Languages used to access policies, direct evidence supporting CQC Equality and Diversity considerations for a multilingual workforce.'],
-              ['Knowledge Gap Log', 'Unanswered queries captured as they happen, evidence of ongoing quality improvement and proactive gap identification.'],
-            ].map(([section, why], i) => (
-              <div key={section} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 6 ? 'border-b border-gray-100' : ''}`}>
-                <span className="pr-4 font-semibold text-neutral-dark">{section}</span>
-                <span className="text-sm leading-relaxed text-neutral-mid">{why}</span>
+              'report.row1',
+              'report.row2',
+              'report.row3',
+              'report.row4',
+              'report.row5',
+              'report.row6',
+              'report.row7',
+            ].map((key, i) => (
+              <div key={key} className={`grid grid-cols-[1fr_2fr] px-6 py-5 ${i < 6 ? 'border-b border-gray-100' : ''}`}>
+                <span className="pr-4 font-semibold text-neutral-dark">{s(`${key}.section`)}</span>
+                <span className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.why`)}</span>
               </div>
             ))}
           </div>
@@ -358,44 +340,39 @@ export default function CqcCompliancePage() {
       {/* ── CQC key questions ──────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>CQC Key Questions</SectionLabel>
+          <SectionLabel>{s('keyq.label')}</SectionLabel>
           <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark">
-            How CareStream contributes to each key question.
+            {s('keyq.h2')}
           </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                q: 'Well-Led', icon: '🏆',
+                key: 'keyq.q1', icon: '🏆',
                 badgeBg: 'bg-teal', badgeText: 'text-white',
-                evidence: 'An inclusive culture where all staff, regardless of language, have equal access to policy guidance. Leadership demonstrated through the audit trail.',
               },
               {
-                q: 'Responsive', icon: '⚡',
+                key: 'keyq.q2', icon: '⚡',
                 badgeBg: 'bg-amber-500', badgeText: 'text-white',
-                evidence: 'Services organised to meet the diverse needs of the workforce delivering them. Multilingual access and language analytics demonstrate responsiveness.',
               },
               {
-                q: 'Safe', icon: '🛡️',
+                key: 'keyq.q3', icon: '🛡️',
                 badgeBg: 'bg-blue-600', badgeText: 'text-white',
-                evidence: 'Staff acting on correct, approved procedures, with a full log of every policy query and the guidance given.',
               },
               {
-                q: 'Effective', icon: '📈',
+                key: 'keyq.q4', icon: '📈',
                 badgeBg: 'bg-green-600', badgeText: 'text-white',
-                evidence: 'Staff knowledge and competence evidenced through policy access frequency, version adoption, and knowledge gap resolution.',
               },
               {
-                q: 'Caring', icon: '❤️',
+                key: 'keyq.q5', icon: '❤️',
                 badgeBg: 'bg-purple-600', badgeText: 'text-white',
-                evidence: 'Equitable support for all staff, including those whose first language is not English, enabling confident, informed care delivery.',
               },
-            ].map(({ q, icon, badgeBg, badgeText, evidence }) => (
-              <div key={q} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+            ].map(({ key, icon, badgeBg, badgeText }) => (
+              <div key={key} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="text-2xl">{icon}</span>
-                  <span className={`rounded-pill ${badgeBg} px-3 py-1.5 text-xs font-bold ${badgeText}`}>{q}</span>
+                  <span className={`rounded-pill ${badgeBg} px-3 py-1.5 text-xs font-bold ${badgeText}`}>{s(`${key}.title`)}</span>
                 </div>
-                <p className="text-sm leading-relaxed text-neutral-mid">{evidence}</p>
+                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.evidence`)}</p>
               </div>
             ))}
           </div>
@@ -405,34 +382,30 @@ export default function CqcCompliancePage() {
       {/* ── Works alongside ────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Part of Your CQC Toolkit</SectionLabel>
+          <SectionLabel>{s('toolkit.label')}</SectionLabel>
           <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Readiness is more than a report.
+            {s('toolkit.h2')}
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             {[
               {
                 Icon: MessageSquare,
-                title: 'CQC Report Chat',
-                body: 'Upload your inspection report and chat with it. CareStream cross-references it against your policies and the CQC framework to help you understand findings and draft a factual-accuracy challenge.',
+                key: 'toolkit.card1',
                 href: '/cqc-report-chat',
-                cta: 'Explore CQC Report Chat',
               },
               {
                 Icon: HelpCircle,
-                title: 'CQC Staff Questions',
-                body: 'Prepare your team for the conversations inspectors have on the floor. Open-ended, inspector-style questions across the five key questions, scored by AI, with review and retry.',
+                key: 'toolkit.card2',
                 href: '/cqc-staff-questions',
-                cta: 'Explore CQC Staff Questions',
               },
-            ].map(({ Icon, title, body, href, cta }) => (
-              <div key={title} className="card-lift flex flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+            ].map(({ Icon, key, href }) => (
+              <div key={key} className="card-lift flex flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-light">
                   <Icon size={20} className="text-teal" />
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{title}</h3>
-                <p className="mb-4 flex-1 text-sm leading-relaxed text-neutral-mid">{body}</p>
-                <Link href={href} className="text-sm font-semibold text-teal hover:underline">{cta} →</Link>
+                <h3 className="mb-2 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="mb-4 flex-1 text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
+                <Link href={href} className="text-sm font-semibold text-teal hover:underline">{s(`${key}.cta`)} →</Link>
               </div>
             ))}
           </div>
@@ -445,12 +418,8 @@ export default function CqcCompliancePage() {
           <div className="flex gap-4">
             <div className="mt-1 text-2xl text-amber-600">⚠</div>
             <div>
-              <p className="mb-1 font-bold text-amber-900">Inspection evidence, not a rating guarantee</p>
-              <p className="text-sm leading-relaxed text-amber-800">
-                The CareStream CQC Readiness Report provides factual audit data, evidence of policy access and
-                staff engagement. It does not make any assessment of, or claim to influence, CQC inspection ratings.
-                CQC assessments involve many factors. CareStream provides one part of the evidence base.
-              </p>
+              <p className="mb-1 font-bold text-amber-900">{s('legal.title')}</p>
+              <div className={`text-sm leading-relaxed text-amber-800 ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('legal.body') }} />
             </div>
           </div>
         </div>

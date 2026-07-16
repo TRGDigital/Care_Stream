@@ -1,5 +1,11 @@
 import type { SlotDef } from './types'
 import { ABOUT_SLOTS } from './about'
+import { HOW_IT_WORKS_SLOTS } from './how-it-works'
+import { CARE_POLICIES_SLOTS } from './care-policies'
+import { HR_POLICIES_SLOTS } from './hr-policies'
+import { CARE_AUDITS_SLOTS } from './care-audits'
+import { CQC_COMPLIANCE_SLOTS } from './cqc-compliance'
+import { POLICY_GAP_DETECTION_SLOTS } from './policy-gap-detection'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -8,6 +14,12 @@ export { makeSlot } from './types'
 // copy editing). Add a page here + a manifest to make its copy editable.
 export const PAGE_SLOTS: Record<string, SlotDef[]> = {
   '/about': ABOUT_SLOTS,
+  '/how-it-works': HOW_IT_WORKS_SLOTS,
+  '/care-policies': CARE_POLICIES_SLOTS,
+  '/hr-policies': HR_POLICIES_SLOTS,
+  '/care-audits': CARE_AUDITS_SLOTS,
+  '/cqc-compliance': CQC_COMPLIANCE_SLOTS,
+  '/policy-gap-detection': POLICY_GAP_DETECTION_SLOTS,
 }
 
 export function slotsForPath(path: string): SlotDef[] | null {

@@ -4,6 +4,8 @@ import {
   History, SlidersHorizontal, Check, ArrowRight, Sparkles,
 } from 'lucide-react'
 import { SectionLabel, PageCta } from '@/components/marketing/ui'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { POLICY_GAP_DETECTION_SLOTS } from '@/lib/page-slots/policy-gap-detection'
 
 export const metadata = {
   title: 'Policy Gap Detection',
@@ -15,10 +17,10 @@ export const metadata = {
   },
 }
 
-function PlanBadge() {
+function PlanBadge({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-pill bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white ring-1 ring-white/25">
-      <ShieldAlert size={13} /> Professional &amp; Enterprise
+      <ShieldAlert size={13} /> {label}
     </span>
   )
 }
@@ -67,65 +69,18 @@ function CoverageMockup() {
 }
 
 const STEPS = [
-  {
-    Icon: ScanSearch,
-    label: 'Regulation coverage',
-    title: 'It reads inside your policies, not just the titles.',
-    body: 'For every regulation that applies to your service, CareStream searches the actual content of your whole policy library and an AI auditor judges whether you substantively cover it: covered, partial, or a gap. A policy is only ever flagged when your documents genuinely do not address it, never because nothing happens to be named after it.',
-    points: ['A coverage score mapped to the CQC framework', 'Covered, partial and gap verdicts with the evidencing policy named', 'Checked against every uploaded policy, so nothing held elsewhere is missed'],
-  },
-  {
-    Icon: ListChecks,
-    label: 'What to add',
-    title: 'Not just where you fall short — exactly what to add.',
-    body: 'Drill into any partial or gap and CareStream shows the specific requirements you are missing, with example wording you can adapt, verified against your whole library first so it never tells you to add something you already hold in another policy.',
-    points: ['Requirement-by-requirement checklist per regulation', 'Example wording to review, adapt and approve', 'Highlights exactly where an existing policy already covers part of it'],
-  },
-  {
-    Icon: Sparkles,
-    label: 'CQC wording alignment',
-    title: 'Whether your policy reads the way CQC expects, not just whether it covers the rule.',
-    body: 'The CQC Single Assessment Framework looks for policies that are person-centred and outcomes-focused, not just procedurally correct. CareStream checks your wording against the framework, and where a policy covers the requirement but reads too procedurally, it flags it and suggests person-centred alternative wording in your policy’s own voice, that you can adopt in a click.',
-    points: ['Checked against the CQC Single Assessment Framework quality statements', 'Suggested person-centred wording, numbered and highlighted in the policy', 'Adopt it straight into your policy, through the same review and approval'],
-  },
-  {
-    Icon: Scale,
-    label: 'The legal basis',
-    title: 'Every recommendation shows why it matters.',
-    body: 'Each item is marked Legally required or Advised good practice, and names the regulation or guidance behind it with a link to the source. So a recommendation is never a black-box suggestion, it is a defensible, cited requirement your inspectors would recognise.',
-    points: ['Legally required vs advised, at a glance', 'The citing legislation, regulation or guidance named', 'Direct links to the source for evidence'],
-  },
-  {
-    Icon: FileText,
-    label: 'Where it goes',
-    title: 'It tells you which policy to put it in.',
-    body: 'For a partial, CareStream opens the policy that partly covers the regulation and highlights the passages that already address it. For a gap, it points to the existing policy the wording belongs in, or tells you a new policy is needed.',
-    points: ['Matched to the right policy in your library', 'Covered passages highlighted in the document', 'Flags when a brand-new policy is required'],
-  },
-  {
-    Icon: SlidersHorizontal,
-    label: 'Right for your service',
-    title: 'Only tested against what actually applies to you.',
-    body: 'A short service profile, pre-filled from your setting type, tells CareStream what your service actually does. So a home that holds no controlled drugs is never assessed against controlled-drug rules, and a service that does not support people under the Mental Health Act is never flagged for it.',
-    points: ['Scoped by care setting and what your service does', 'The CQC Fundamental Standards apply to everyone', 'No irrelevant gaps, no noise'],
-  },
-  {
-    Icon: History,
-    label: 'Track legal changes',
-    title: 'When the standards change, you know.',
-    body: 'CareStream tracks changes to the regulations and standards you are assessed against. When one changes, the homes affected are alerted on their gaps page so they can review and re-check their policies, before it becomes an inspection finding.',
-    points: ['Change history for every standard', 'Homes assessed against a changed standard are alerted', 'Re-check coverage in a click'],
-  },
-  {
-    Icon: GraduationCap,
-    label: 'Turn changes into training',
-    title: 'Every policy change becomes staff training.',
-    body: 'Once you add the recommended wording, or when a standard updates, generate a short, ready-to-assign training module built from exactly that change. Diagnose the gap, close it, and make sure your staff learn it — in one flow.',
-    points: ['A micro-lesson and assessment from the change', 'Lands as a draft for you to review and publish', 'Reuses your existing training and certificate flow'],
-  },
+  { Icon: ScanSearch,        key: 'step1' },
+  { Icon: ListChecks,        key: 'step2' },
+  { Icon: Sparkles,          key: 'step3' },
+  { Icon: Scale,             key: 'step4' },
+  { Icon: FileText,          key: 'step5' },
+  { Icon: SlidersHorizontal, key: 'step6' },
+  { Icon: History,           key: 'step7' },
+  { Icon: GraduationCap,     key: 'step8' },
 ]
 
-export default function PolicyGapDetectionPage() {
+export default async function PolicyGapDetectionPage() {
+  const s = makeSlot(POLICY_GAP_DETECTION_SLOTS, await getContentSlots('/policy-gap-detection'))
   return (
     <>
       {/* Hero */}
@@ -137,16 +92,14 @@ export default function PolicyGapDetectionPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="mb-4"><PlanBadge /></div>
+              <div className="mb-4"><PlanBadge label={s('hero.badge')} /></div>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                Know exactly where your policies fall short. Then close the gap.
+                {s('hero.h1')}
               </h1>
-              <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                CareStream reads inside your policies, tells you which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add and why it is required, and tracks changes to the standards.
-              </p>
+              <div className="mb-8 max-w-xl text-lg leading-relaxed text-white/75 [&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('hero.intro') }} />
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
-                <Link href="/demo" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">Book a Demo</Link>
+                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">{s('hero.cta.primary')}</Link>
+                <Link href="/demo" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">{s('hero.cta.secondary')}</Link>
               </div>
             </div>
             <div className="flex justify-center lg:justify-end">
@@ -159,30 +112,28 @@ export default function PolicyGapDetectionPage() {
       {/* Steps */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>How it works</SectionLabel>
+          <SectionLabel>{s('steps.label')}</SectionLabel>
           <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            From &ldquo;are we compliant?&rdquo; to exactly what to do about it.
+            {s('steps.h2')}
           </h2>
-          <p className="mb-16 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-            Most homes assume coverage rather than verify it. This turns policy compliance from a guess into a measured, defensible, actionable picture — and keeps it current as the rules change.
-          </p>
+          <div className="mb-16 max-w-2xl text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('steps.intro') }} />
 
           <div className="space-y-6">
-            {STEPS.map(({ Icon, label, title, body, points }, i) => (
-              <div key={label} className="grid items-start gap-6 rounded-2xl border border-gray-100 bg-white p-8 shadow-card lg:grid-cols-[1.1fr_1fr]">
+            {STEPS.map(({ Icon, key }, i) => (
+              <div key={key} className="grid items-start gap-6 rounded-2xl border border-gray-100 bg-white p-8 shadow-card lg:grid-cols-[1.1fr_1fr]">
                 <div>
                   <div className="mb-4 flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-light text-teal">
                       <Icon size={20} />
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-teal">{String(i + 1).padStart(2, '0')} · {label}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-teal">{String(i + 1).padStart(2, '0')} · {s(`${key}.label`)}</span>
                   </div>
-                  <h3 className="mb-3 text-2xl font-extrabold leading-tight text-neutral-dark">{title}</h3>
-                  <p className="leading-relaxed text-neutral-mid">{body}</p>
+                  <h3 className="mb-3 text-2xl font-extrabold leading-tight text-neutral-dark">{s(`${key}.title`)}</h3>
+                  <p className="leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
                 </div>
                 <ul className="space-y-2.5 rounded-xl bg-neutral-light/60 p-6 text-sm text-neutral-mid lg:mt-2">
-                  {points.map(p => (
-                    <li key={p} className="flex items-start gap-2.5"><Check size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
+                  {[1, 2, 3].map(n => (
+                    <li key={n} className="flex items-start gap-2.5"><Check size={14} className="mt-0.5 shrink-0 text-teal" />{s(`${key}.point${n}`)}</li>
                   ))}
                 </ul>
               </div>
@@ -196,12 +147,12 @@ export default function PolicyGapDetectionPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-teal/20 bg-white px-8 py-10 text-center shadow-card">
             <span className="inline-flex items-center gap-1.5 rounded-pill bg-teal-light px-3 py-1 text-xs font-bold text-teal">
-              <ShieldAlert size={14} /> Professional &amp; Enterprise
+              <ShieldAlert size={14} /> {s('availability.badge')}
             </span>
-            <h2 className="max-w-2xl text-2xl font-extrabold text-neutral-dark md:text-3xl">Policy Gap Detection is included on the Professional and Enterprise plans.</h2>
-            <p className="max-w-2xl leading-relaxed text-neutral-mid">Regulation coverage, remediation guidance with the legal basis, change tracking and gap-driven training are all part of Professional and Enterprise. Starter customers can upgrade in a click.</p>
+            <h2 className="max-w-2xl text-2xl font-extrabold text-neutral-dark md:text-3xl">{s('availability.h2')}</h2>
+            <div className="max-w-2xl leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('availability.body') }} />
             <Link href="/pricing" className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-dark">
-              See plans &amp; pricing <ArrowRight size={15} />
+              {s('availability.cta')} <ArrowRight size={15} />
             </Link>
           </div>
         </div>

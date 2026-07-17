@@ -72,9 +72,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-MZ4DJVLH');`}
         </Script>
         {/* NB: GA4 (G-KGFBN80R3W) is fired by the GTM container above via its own
-            GA4 tag, so we deliberately do NOT load gtag.js directly here — doing
-            both double-loaded ~160KB and double-counted every pageview. Manage GA
-            in GTM, not in code. */}
+            GA4 tag — that property is managed in GTM, not in code.
+            The SEPARATE GA4 property G-0CD7WMQF8B below is loaded directly (it is
+            not in the GTM container). Loaded afterInteractive (not the render-
+            blocking async <script> Google's snippet uses) so it doesn't add to
+            mobile load. If you later move it into GTM, delete these two Scripts. */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-0CD7WMQF8B" strategy="afterInteractive" />
+        <Script id="gtag-ga4" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-0CD7WMQF8B');`}
+        </Script>
       </head>
       <body className={inter.className}>
         {/* Google Tag Manager (noscript) */}

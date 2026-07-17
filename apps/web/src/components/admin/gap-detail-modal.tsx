@@ -662,13 +662,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
               const summaryLong = detail.summary.length > 140
               const summaryShown = synopsisOpen || !summaryLong
               const anyOpen = synopsisOpen || careOpen || policyOpen
-              const linkBtn = 'inline-flex items-center gap-1 text-xs font-semibold text-neutral-dark underline underline-offset-2 hover:no-underline'
+              const linkBtn = 'inline-flex items-center gap-1 text-xs font-semibold text-teal underline underline-offset-2 hover:no-underline'
               return (
                 <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-teal/20 bg-teal-light/20">
                   <div className="flex items-start gap-2.5 px-4 py-3">
                     <BookOpen size={15} className="mt-0.5 shrink-0 text-teal" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold uppercase tracking-wide text-neutral-dark">What this regulation covers</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-teal">What this regulation covers</p>
                       <p className={`mt-1 text-sm leading-relaxed text-neutral-dark ${summaryShown ? '' : 'line-clamp-2'}`}>{detail.summary}</p>
 
                       {/* Step 1 — reveal the rest of the synopsis */}
@@ -682,14 +682,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       {summaryShown && detail.care_home_context && (
                         careOpen ? (
                           <div className="mt-3 border-t border-teal/10 pt-2">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">In a care setting</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-teal">In a care setting</p>
                             <p className="mt-0.5 text-sm leading-relaxed text-neutral-dark">{detail.care_home_context}</p>
 
                             {/* Step 3 — what your policy should cover, on its own button */}
                             {detail.practical_meaning && (
                               policyOpen ? (
                                 <div className="mt-3 border-t border-teal/10 pt-2">
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-dark">What your policy should cover</p>
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-teal">What your policy should cover</p>
                                   <p className="mt-0.5 text-sm leading-relaxed text-neutral-dark">{detail.practical_meaning}</p>
                                 </div>
                               ) : (

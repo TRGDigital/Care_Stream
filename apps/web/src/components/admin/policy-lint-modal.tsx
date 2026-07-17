@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -164,7 +164,15 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           {f.label}
                           {total > 1 && <span className="text-xs font-normal text-neutral-mid">×{total}</span>}
                         </p>
-                        {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
+                        {f.detail && (
+                          <div className="mt-1.5 flex items-start gap-2 rounded-md border border-amber-100 bg-amber-50/60 px-2.5 py-2">
+                            <History size={13} className="mt-0.5 shrink-0 text-amber-600" />
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">When this changed</p>
+                              <p className="mt-0.5 text-xs leading-relaxed text-neutral-dark">{f.detail}</p>
+                            </div>
+                          </div>
+                        )}
                         <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
                           {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
                           <span className="text-neutral-mid">→</span>
@@ -202,7 +210,12 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                     {f.severity === 'high' ? <AlertTriangle size={14} className="mt-0.5 shrink-0 text-rose-500" /> : <Info size={14} className="mt-0.5 shrink-0 text-amber-500" />}
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-neutral-dark">{f.label}</p>
-                      {f.detail && <p className="text-xs text-neutral-mid">{f.detail}</p>}
+                      {f.detail && (
+                        <div className="mt-1 flex items-start gap-1.5">
+                          <History size={12} className="mt-0.5 shrink-0 text-amber-600" />
+                          <p className="text-xs leading-relaxed text-neutral-dark"><span className="font-semibold text-amber-700">When this changed: </span>{f.detail}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

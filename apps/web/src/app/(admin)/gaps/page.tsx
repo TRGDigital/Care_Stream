@@ -183,7 +183,17 @@ export default function GapsPage() {
   const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial' && !hidden(r.reference_key))
   const coveredRegs = data.regulation_gaps.filter(r => r.status === 'covered')
   const archived    = data.completed_gaps.filter(g => completedKeys.has(g.reference_key))
-  const score       = data.coverage_score
+
+  // Live metrics that reflect what the tenant sees below: partials/gaps they've
+  // completed or corrected-to-covered now count as handled, so the score, the
+  // "fully" count and the gaps block all move together as they close gaps —
+  // rather than the percentage staying frozen at the last analysis run.
+  const totalRegs    = data.meta.regulations_total
+  const handledExtra = Math.max(0, (data.meta.regulations_partial + data.meta.regulations_gap) - (partialRegs.length + gapRegs.length))
+  const fullyCovered = coveredRegs.length + handledExtra
+  const score = data.analysed && totalRegs > 0
+    ? Math.round(((fullyCovered + partialRegs.length * 0.5) / totalRegs) * 100)
+    : null
 
   const scoreColour =
     score == null  ? 'text-neutral-mid' :
@@ -223,7 +233,7 @@ export default function GapsPage() {
         <p><strong className="text-neutral-dark">The three results</strong> — <strong className="text-green-600">Covered</strong>: a policy clearly addresses it (the evidence policy is named). <strong className="text-amber-700">Partial</strong>: it&apos;s touched on but incomplete — the policy that partly covers it is named. <strong className="text-red-600">Gap</strong>: nothing in your policies addresses it.</p>
         <p><strong className="text-neutral-dark">Running it</strong> — click <strong className="text-neutral-dark">Run coverage analysis</strong> to check all regulations. It reads through your policies (about a minute), then quietly prepares each &ldquo;what to add&rdquo; recommendation in the background so drill-ins open instantly. You can start reviewing gaps straight away. <strong className="text-neutral-dark">Re-run it whenever you upload or update policies</strong> to refresh the picture.</p>
         <p><strong className="text-neutral-dark">Unanswered questions</strong> — separately, this page clusters questions staff asked (in chat, email or by voice) that the assistant couldn&apos;t answer from your policies over the last 90 days. Recurring themes are real-world evidence of a missing or unclear policy.</p>
-        <p><strong className="text-neutral-dark">Coverage score</strong> — the headline percentage counts fully-covered regulations, plus partials at half weight, out of the total. It only appears once you&apos;ve run the analysis.</p>
+        <p><strong className="text-neutral-dark">Coverage score</strong> — the headline percentage counts fully-covered regulations, plus partials at half weight, out of the total. It appears once you&apos;ve run the analysis and <strong className="text-neutral-dark">updates as you close gaps</strong>: as soon as you adopt a fix or mark a regulation complete, the score, the &ldquo;fully&rdquo; count and the gaps figure all move to match.</p>
       </HelpAccordion>
 
       {/* Prompt to run the (content-based) analysis if it's never been run */}
@@ -243,7 +253,7 @@ export default function GapsPage() {
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Coverage score</p>
           <p className={`text-4xl font-extrabold ${scoreColour}`}>{score == null ? '—' : `${score}%`}</p>
           <p className="mt-1 text-xs text-neutral-mid">
-            {data.analysed ? `${coveredRegs.length} fully · ${partialRegs.length} partial · ${gapRegs.length} gaps of ${data.meta.regulations_total}` : 'Not yet analysed'}
+            {data.analysed ? `${fullyCovered} fully · ${partialRegs.length} partial · ${gapRegs.length} gaps of ${totalRegs}` : 'Not yet analysed'}
           </p>
         </div>
 

@@ -105,8 +105,9 @@ export type GapDetail = {
   authority_basis:   'statutory' | 'advisory'   // legally required vs advised good practice
   source_urls:       string[]
   summary:           string                       // short synopsis of what the regulation is (for the overlay)
-  care_home_context: string                       // what it means / should be covered in a care setting (Read more)
-  practical_meaning: string                       // plain-English "what to do about it" (Read more)
+  care_home_context: string                       // SHORT display summary — what it means in a care setting (Read more)
+  practical_meaning: string                       // SHORT display summary — what the policy should cover (Read more)
+  ctx_summarised?:   boolean                       // internal: display summaries generated (else fields are raw)
   evidence_policy:   { id: string; name: string } | null
   target_policy:     { id: string; name: string } | null   // primary policy to add to (back-compat / main preview)
   target_policies:   Array<{ id: string | null; name: string; count: number }>  // all policies the missing requirements route to
@@ -305,6 +306,42 @@ Respond with ONLY minified JSON, an array in the same order:
 // A brand-new section needs its own H2 heading so it reads as a self-contained section.
 // Generate a short, plain title for each new-section requirement (deterministic).
 const HAIKU = 'claude-haiku-4-5-20251001'
+
+// Short, specific DISPLAY summaries of the regulation's care-setting context and
+// what a policy should cover, for the coverage overlay. Deliberately concise and
+// NON-advisory (no legal advice / "you must"). The full source text in
+// /platform/regulations is left untouched (it still feeds the coverage AI).
+async function summariseRegContext(officialName: string, careContext: string, practicalMeaning: string): Promise<{ care: string; policy: string; ok: boolean }> {
+  const care = (careContext ?? '').trim()
+  const policy = (practicalMeaning ?? '').trim()
+  if (!care && !policy) return { care, policy, ok: true }
+  try {
+    const system = `You summarise UK care-sector regulation notes for a compliance dashboard read by care providers. Write plain, factual, specific British English. Be concise. IMPORTANT: do not give legal advice — never write "you must", "legally required", "you are obliged to", or phrase anything as a legal instruction. Describe what the regulation is about and what a policy typically addresses; do not direct the reader.`
+    const user = `Regulation: ${officialName}
+
+Summarise each note below into ONE short sentence (about 15 to 25 words), specific to this regulation, not generic.
+
+NOTE A — what this regulation means in a care setting:
+${care || '(none)'}
+
+NOTE B — what a provider's policy should cover for it:
+${policy || '(none)'}
+
+Return ONLY compact JSON: {"care_setting":"...","policy_should_cover":"..."}. Use an empty string for any note marked "(none)".`
+    const raw = await callClaude(system, user, { model: HAIKU, maxTokens: 400, temperature: 0.2 })
+    const m = raw.match(/\{[\s\S]*\}/)
+    if (m) {
+      const j = JSON.parse(m[0])
+      return {
+        care:   typeof j.care_setting === 'string' && j.care_setting.trim() ? j.care_setting.trim() : care,
+        policy: typeof j.policy_should_cover === 'string' && j.policy_should_cover.trim() ? j.policy_should_cover.trim() : policy,
+        ok: true,
+      }
+    }
+  } catch { /* fall back to the originals on any failure */ }
+  return { care, policy, ok: false }
+}
+
 async function titleNewSections(requirements: string[]): Promise<string[]> {
   const fallback = (r: string) => r.replace(/[.:;].*$/, '').split(/\s+/).slice(0, 6).join(' ')
   if (!requirements.length) return []
@@ -391,16 +428,26 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }).catch((e: any) => { console.error('[gap-detail] cache read failed', referenceKey, e?.message); return null })
     if (cached?.payload) {
       const payload = cached.payload as GapDetail
-      // Backfill synopsis fields for payloads cached before they existed — cheap
-      // regulation lookup, no re-analysis.
-      if (payload.summary === undefined) {
+      // Backfill the overlay synopsis for payloads cached before it existed, and
+      // generate the short display summaries once (persisted back to cache), so we
+      // never re-summarise on subsequent reads. No re-analysis of coverage.
+      if (payload.summary === undefined || payload.ctx_summarised !== true) {
         const r = await (prisma as any).externalRegulation.findUnique({
           where:  { reference_key: referenceKey },
           select: { summary: true, care_home_context: true, practical_meaning: true },
         }).catch(() => null)
+        const ctx = await summariseRegContext(payload.official_name ?? '', r?.care_home_context ?? '', r?.practical_meaning ?? '')
         payload.summary = (r?.summary ?? '').trim()
-        payload.care_home_context = (r?.care_home_context ?? '').trim()
-        payload.practical_meaning = (r?.practical_meaning ?? '').trim()
+        payload.care_home_context = ctx.care
+        payload.practical_meaning = ctx.policy
+        payload.ctx_summarised = ctx.ok
+        // Persist only a successful summary, so a transient AI failure is retried next read.
+        if (ctx.ok) {
+          await (prisma as any).gapDetailCache.update({
+            where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
+            data:  { payload },
+          }).catch(() => {})
+        }
       }
       return payload
     }
@@ -644,6 +691,8 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }).catch(() => {})
   }
 
+  const ctx = await summariseRegContext(reg.official_name, reg.care_home_context ?? '', reg.practical_meaning ?? '')
+
   const detail: GapDetail = {
     reference_key:    referenceKey,
     official_name:    reg.official_name,
@@ -652,8 +701,9 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     authority_basis:  reg.authority_basis === 'advisory' ? 'advisory' : 'statutory',
     source_urls:      (reg.source_urls ?? []).filter(Boolean),
     summary:          (reg.summary ?? '').trim(),
-    care_home_context: (reg.care_home_context ?? '').trim(),
-    practical_meaning: (reg.practical_meaning ?? '').trim(),
+    care_home_context: ctx.care,
+    practical_meaning: ctx.policy,
+    ctx_summarised:   ctx.ok,
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
     target_policies:  targetPolicies,

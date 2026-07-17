@@ -17,6 +17,7 @@ import { STAFF_TRAINING_SLOTS } from './staff-training'
 import { WHO_WE_SERVE_SLOTS } from './who-we-serve'
 import { CONTACT_SLOTS } from './contact'
 import { DEMO_SLOTS } from './demo'
+import { HOME_SLOTS } from './home'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -24,6 +25,7 @@ export { makeSlot } from './types'
 // Registry of which marketing paths have editable content slots (design-preserving
 // copy editing). Add a page here + a manifest to make its copy editable.
 export const PAGE_SLOTS: Record<string, SlotDef[]> = {
+  '/': HOME_SLOTS,
   '/about': ABOUT_SLOTS,
   '/how-it-works': HOW_IT_WORKS_SLOTS,
   '/care-policies': CARE_POLICIES_SLOTS,

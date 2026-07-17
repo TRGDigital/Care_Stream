@@ -18,11 +18,18 @@ import { LogoMarquee } from '@/components/marketing/logo-marquee'
 import { SiteImage } from '@/components/site-image'
 import { JsonLd } from '@/components/json-ld'
 import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { HOME_SLOTS } from '@/lib/page-slots/home'
 import {
   Globe, Zap, ClipboardCheck, Upload, MessageSquare, Mail, Mic,
   BarChart2, BookOpen, Shield, AlertTriangle, Users, ArrowRight, Check, ShieldAlert,
   GraduationCap, HelpCircle, FileText, Smartphone, LayoutGrid, Headset, ShieldCheck,
 } from 'lucide-react'
+
+type Slot = (key: string) => string
+
+const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
+const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
 
 function SectionLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
   return (
@@ -41,7 +48,7 @@ function MockupPlaceholder({ label, aspect = 'aspect-video' }: { label: string; 
   )
 }
 
-function Hero() {
+function Hero({ s }: { s: Slot }) {
   const langPills = [
     { flag: '🇵🇱', label: 'Polski' },
     { flag: '🇷🇴', label: 'Română' },
@@ -88,34 +95,32 @@ function Hero() {
                 Your Risk Assessments are written in English. Your workforce isn&apos;t.
               </span>
               <span className="absolute inset-x-0 bottom-0">
-                Your <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} rounds={2} /> are written in English.{' '}
-                <span style={{ color: '#E8850A' }}>Your workforce isn&apos;t.</span>
+                {s('hero.h1.lead')} <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} rounds={2} /> {s('hero.h1.mid')}{' '}
+                <span style={{ color: '#E8850A' }}>{s('hero.h1.emphasis')}</span>
               </span>
             </h1>
 
             <p className="mb-10 max-w-xl text-lg leading-relaxed text-white/75">
-              CareStream gives every member of your team instant, accurate answers from your own
-              policies, training, audits and CQC tools, in the language they think in. Powered by
-              your documents. Never the internet.
+              {s('hero.sub')}
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/demo" className="btn-amber rounded-btn px-8 py-4 text-sm text-center">
-                Book a Free Demo
+                {s('hero.cta.primary')}
               </Link>
               <Link
                 href="/how-it-works"
                 className="btn-ghost-white rounded-btn flex items-center justify-center gap-2 px-8 py-4 text-sm"
               >
-                See how it works <ArrowRight size={16} />
+                {s('hero.cta.secondary')} <ArrowRight size={16} />
               </Link>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50 md:flex-nowrap md:whitespace-nowrap">
-              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> 14-day free trial</span>
-              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> No charge until day 14</span>
-              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> Set up in under an hour</span>
-              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> GDPR Compliant</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> {s('hero.trust1')}</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> {s('hero.trust2')}</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> {s('hero.trust3')}</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-white/40" /> {s('hero.trust4')}</span>
             </div>
           </div>
 
@@ -196,12 +201,12 @@ function Hero() {
   )
 }
 
-function StatsStrip() {
+function StatsStrip({ s }: { s: Slot }) {
   const stats = [
-    { num: '30%+', label: 'UK care workers born outside the UK' },
-    { num: '150+', label: 'Languages spoken in UK care settings' },
-    { num: '1 in 3', label: 'Night-shift policy questions go unanswered' },
-    { num: '£49', label: 'per month, less than one agency shift hour' },
+    { num: s('stats.s1.num'), label: s('stats.s1.label') },
+    { num: s('stats.s2.num'), label: s('stats.s2.label') },
+    { num: s('stats.s3.num'), label: s('stats.s3.label') },
+    { num: s('stats.s4.num'), label: s('stats.s4.label') },
   ]
   return (
     <section className="border-b border-gray-100 bg-white py-14">
@@ -219,7 +224,7 @@ function StatsStrip() {
   )
 }
 
-function TheProblem() {
+function TheProblem({ s }: { s: Slot }) {
   return (
     <section className="relative overflow-hidden bg-neutral-dark py-24">
       {/* Decorative circle */}
@@ -229,33 +234,23 @@ function TheProblem() {
       <div className="relative mx-auto max-w-content px-6">
         <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
           <div>
-            <SectionLabel light>The Challenge in Care</SectionLabel>
+            <SectionLabel light>{s('problem.label')}</SectionLabel>
             <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white md:text-5xl">
-              The language gap in care is a{' '}
-              <span style={{ color: '#E8850A' }}>safety gap.</span>
+              {s('problem.h2.pre')}{' '}
+              <span style={{ color: '#E8850A' }}>{s('problem.h2.emphasis')}</span>
             </h2>
-            <div className="space-y-5 text-lg leading-relaxed text-gray-300">
-              <p>
-                Over 30% of the UK care workforce was born outside the United Kingdom. In many homes,
-                the majority of the care team speaks English as a second language.
-              </p>
-              <p>
-                Yet every policy system operates entirely in English, creating a persistent gap between
-                what the policy says and what staff can confidently act on.
-              </p>
-              <p className="text-gray-400">
-                At 3am, during an incident, in the first weeks of a new job, that gap leads to
-                hesitation, misinterpretation, and decisions made without the guidance that should
-                have been available.
-              </p>
+            <div className={`space-y-5 text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`}>
+              <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
+              <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
+              <div className="text-gray-400" dangerouslySetInnerHTML={{ __html: s('problem.p3') }} />
             </div>
           </div>
 
           <div className="grid gap-4">
             {[
-              { icon: '🌍', title: 'Policies in English only', body: 'Your carefully written procedures are inaccessible to a large portion of the people they are designed to protect.' },
-              { icon: '🕐', title: 'No support at 3am', body: 'Night staff face clinical uncertainty without a manager present, and no reliable way to find the right answer fast.' },
-              { icon: '📋', title: 'Compliance gaps at inspection', body: "CQC expects evidence that staff actively use and understand your policies. A folder on a shelf isn't evidence." },
+              { icon: '🌍', title: s('problem.card1.title'), body: s('problem.card1.body') },
+              { icon: '🕐', title: s('problem.card2.title'), body: s('problem.card2.body') },
+              { icon: '📋', title: s('problem.card3.title'), body: s('problem.card3.body') },
             ].map(({ icon, title, body }) => (
               <div key={title} className="card-lift flex gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
                 <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl">{icon}</div>
@@ -272,14 +267,14 @@ function TheProblem() {
   )
 }
 
-function CareSettings() {
+function CareSettings({ s }: { s: Slot }) {
   return (
     <section className="bg-white py-20">
       <div className="mx-auto max-w-content px-6">
         <div className="mb-12 text-center">
-          <SectionLabel>Who We Serve</SectionLabel>
+          <SectionLabel>{s('settings.label')}</SectionLabel>
           <h2 className="text-3xl font-extrabold text-neutral-dark md:text-4xl">
-            Built for every care setting
+            {s('settings.h2')}
           </h2>
         </div>
 
@@ -287,7 +282,7 @@ function CareSettings() {
 
         <div className="mt-10 text-center">
           <Link href="/who-we-serve" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
-            View all settings we serve <ArrowRight size={16} />
+            {s('settings.cta')} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -296,7 +291,7 @@ function CareSettings() {
 }
 
 // Yellow band echoing the Free Trial band, highlighting the policy burden.
-function PolicyBurdenBand() {
+function PolicyBurdenBand({ s }: { s: Slot }) {
   return (
     <section className="bg-[#fce4a3]">
       <div className="mx-auto grid max-w-content items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-20">
@@ -338,20 +333,20 @@ function PolicyBurdenBand() {
 
         {/* Right — message and CTA */}
         <div>
-          <p className="mb-4 text-lg font-medium text-neutral-dark/80">Hundreds of policies to manage</p>
+          <p className="mb-4 text-lg font-medium text-neutral-dark/80">{s('burden.eyebrow')}</p>
           <h2 className="text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            The average care setting must keep{' '}
-            <span className="box-decoration-clone rounded-md bg-[#5eead4] px-2 py-0.5">over 200 policies</span>
-            {' '}current. Your team can find any of them in seconds.
+            {s('burden.h2.pre')}{' '}
+            <span className="box-decoration-clone rounded-md bg-[#5eead4] px-2 py-0.5">{s('burden.h2.highlight')}</span>
+            {' '}{s('burden.h2.post')}
           </h2>
           <div className="mt-8 flex flex-col items-start gap-3">
             <Link
               href="/care-policies"
               className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             >
-              See how CareStream helps <span aria-hidden="true">→</span>
+              {s('burden.cta')} <span aria-hidden="true">→</span>
             </Link>
-            <p className="text-sm text-neutral-dark/70">In any language, on any device, grounded in your own documents.</p>
+            <p className="text-sm text-neutral-dark/70">{s('burden.sub')}</p>
           </div>
         </div>
       </div>
@@ -359,20 +354,11 @@ function PolicyBurdenBand() {
   )
 }
 
-function ValueProposition() {
+function ValueProposition({ s }: { s: Slot }) {
   const points = [
-    {
-      title: 'Policies your whole team can actually use',
-      body: 'From clinical procedures to safeguarding, your library is accessible in any language, at any hour, on any device, with no app to download and no training required.',
-    },
-    {
-      title: 'Compliance evidence that builds itself',
-      body: 'Every query is logged. Your CQC Readiness Report is compiled automatically from the audit trail, policy access, language activity, version history, staff engagement.',
-    },
-    {
-      title: 'Up and running in under an hour',
-      body: 'Upload your policies, add your staff email addresses, and you are live. No integration project, no IT department, no months-long rollout.',
-    },
+    { title: s('value.p1.title'), body: s('value.p1.body') },
+    { title: s('value.p2.title'), body: s('value.p2.body') },
+    { title: s('value.p3.title'), body: s('value.p3.body') },
   ]
 
   return (
@@ -382,11 +368,11 @@ function ValueProposition() {
 
           {/* Left, heading + feature list */}
           <div>
-            <SectionLabel>Why CareStreamAI</SectionLabel>
+            <SectionLabel>{s('value.label')}</SectionLabel>
             <h2 className="mb-10 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Built for care providers who want{' '}
-              <span className="gradient-text-teal">confident staff</span>{' '}
-              and watertight compliance
+              {s('value.h2.pre')}{' '}
+              <span className="gradient-text-teal">{s('value.h2.highlight')}</span>{' '}
+              {s('value.h2.post')}
             </h2>
 
             <div className="space-y-8">
@@ -426,39 +412,39 @@ function ValueProposition() {
   )
 }
 
-function TheSolution() {
+function TheSolution({ s }: { s: Slot }) {
   const cols = [
     {
       Icon: Globe,
       iconBg: 'bg-teal-light',
       iconColor: 'text-teal',
-      title: 'Ask in any language',
-      body: 'Staff ask about your policies in any of 60+ languages in the hub or by email. Language is detected automatically, no setup, no menus, no extra cost.',
+      title: s('solution.c1.title'),
+      body: s('solution.c1.body'),
     },
     {
       Icon: Zap,
       iconBg: 'bg-amber-50',
       iconColor: 'text-amber-brand',
-      title: 'Answer in any language',
-      body: 'Responses are generated in the language the question was asked in, drawn exclusively from your own approved policies. Under 30 seconds. Cited.',
+      title: s('solution.c2.title'),
+      body: s('solution.c2.body'),
     },
     {
       Icon: ClipboardCheck,
       iconBg: 'bg-green-50',
       iconColor: 'text-green-700',
-      title: 'Evidence for inspection',
-      body: 'Every query is logged. The CQC Readiness Report turns your audit trail into inspection evidence, showing equitable policy access across your multilingual team.',
+      title: s('solution.c3.title'),
+      body: s('solution.c3.body'),
     },
   ]
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>How CareStreamAI Helps</SectionLabel>
+        <SectionLabel>{s('solution.label')}</SectionLabel>
         <h2 className="mb-4 max-w-2xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-          Policy access that works for your whole team.
+          {s('solution.h2')}
         </h2>
         <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-          Not just the ones who speak English.
+          {s('solution.sub')}
         </p>
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -477,7 +463,7 @@ function TheSolution() {
   )
 }
 
-function GroupLevel() {
+function GroupLevel({ s }: { s: Slot }) {
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
@@ -485,16 +471,11 @@ function GroupLevel() {
 
           {/* Left, text */}
           <div>
-            <SectionLabel>Group Providers</SectionLabel>
+            <SectionLabel>{s('group.label')}</SectionLabel>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Built for group-level care delivery
+              {s('group.h2')}
             </h2>
-            <p className="text-lg leading-relaxed text-neutral-mid">
-              Real-time policy visibility across every service, for multi-site providers.
-              With a single policy library and centralised oversight, group leaders can
-              standardise procedures, spot compliance gaps earlier, and drive consistent
-              outcomes across every location, without adding headcount.
-            </p>
+            <div className={`text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('group.body') }} />
           </div>
 
           {/* Right, image */}
@@ -515,7 +496,7 @@ function GroupLevel() {
   )
 }
 
-function FreeTrialBand() {
+function FreeTrialBand({ s }: { s: Slot }) {
   return (
     <section className="bg-[#fce4a3]">
       <div className="mx-auto grid max-w-content items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-20">
@@ -558,21 +539,21 @@ function FreeTrialBand() {
 
         {/* Right — message and CTA */}
         <div>
-          <p className="mb-4 text-lg font-medium text-neutral-dark/80">A risk free way to get started</p>
+          <p className="mb-4 text-lg font-medium text-neutral-dark/80">{s('freetrial.eyebrow')}</p>
           <h2 className="text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            CareStream is{' '}
-            <span className="box-decoration-clone rounded-md bg-[#5eead4] px-2 py-0.5">free for 14 days</span>
+            {s('freetrial.h2.pre')}{' '}
+            <span className="box-decoration-clone rounded-md bg-[#5eead4] px-2 py-0.5">{s('freetrial.h2.highlight')}</span>
             <br />
-            for your whole team.
+            {s('freetrial.h2.post')}
           </h2>
           <div className="mt-8 flex flex-col items-start gap-3">
             <Link
               href="/register"
               className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             >
-              Start Your Free Trial <span aria-hidden="true">→</span>
+              {s('freetrial.cta')} <span aria-hidden="true">→</span>
             </Link>
-            <p className="text-sm text-neutral-dark/70">Full access for 14 days. No charge until day 14 — cancel anytime.</p>
+            <p className="text-sm text-neutral-dark/70">{s('freetrial.sub')}</p>
           </div>
         </div>
       </div>
@@ -580,14 +561,14 @@ function FreeTrialBand() {
   )
 }
 
-function OperateAtScale() {
+function OperateAtScale({ s }: { s: Slot }) {
   const points = [
-    'Clear total cost of ownership across your group',
-    'Lower cost per service user as you grow',
-    'One policy library, consistently applied across every site',
-    'Multilingual access as standard, no extra configuration',
-    'Group-level CQC Readiness Reports, generated automatically',
-    'A partner that listens and scales with you',
+    s('scale.point1'),
+    s('scale.point2'),
+    s('scale.point3'),
+    s('scale.point4'),
+    s('scale.point5'),
+    s('scale.point6'),
   ]
 
   return (
@@ -597,13 +578,12 @@ function OperateAtScale() {
 
           {/* Left, heading + list + CTA */}
           <div>
-            <SectionLabel>Enterprise Ready</SectionLabel>
+            <SectionLabel>{s('scale.label')}</SectionLabel>
             <h2 className="mb-6 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Designed to operate at scale
+              {s('scale.h2')}
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-              Everything a group operator needs to run consistent, compliant care across
-              multiple sites, without the complexity of enterprise software.
+              {s('scale.intro')}
             </p>
             <ul className="mb-10 space-y-4">
               {points.map((point) => (
@@ -617,7 +597,7 @@ function OperateAtScale() {
               href="/demo"
               className="btn-amber inline-flex items-center gap-2 rounded-btn px-8 py-4 text-sm font-bold text-white"
             >
-              Book a demo with our group team <ArrowRight size={16} />
+              {s('scale.cta')} <ArrowRight size={16} />
             </a>
           </div>
 
@@ -639,39 +619,19 @@ function OperateAtScale() {
   )
 }
 
-function HowItWorks() {
+function HowItWorks({ s }: { s: Slot }) {
   const steps = [
-    {
-      num: '01',
-      title: 'Upload your policies',
-      body: 'Upload your policy library and staff handbook via the admin dashboard. PDF, Word, or plain text. CareStreamAI processes them and builds your private, searchable library.',
-      mockup: 'mockup-06' as const,
-    },
-    {
-      num: '02',
-      title: 'Staff start asking',
-      body: 'Your team sends questions via email or the web chat portal, in any language. CareStreamAI identifies the language automatically and retrieves the most relevant policy content.',
-      mockup: 'mockup-01' as const,
-    },
-    {
-      num: '03',
-      title: 'Instant, grounded answers',
-      body: 'Responses arrive in under 30 seconds, in the language the question was asked, drawn only from your approved documents. Never the internet.',
-      mockup: 'mockup-02' as const,
-    },
-    {
-      num: '04',
-      title: 'Your compliance evidence builds',
-      body: 'Every query is logged. Your CQC Readiness Report builds automatically, policy access, language activity, staff engagement, version history.',
-      mockup: 'mockup-05' as const,
-    },
+    { num: '01', title: s('howitworks.step1.title'), body: s('howitworks.step1.body'), mockup: 'mockup-06' as const },
+    { num: '02', title: s('howitworks.step2.title'), body: s('howitworks.step2.body'), mockup: 'mockup-01' as const },
+    { num: '03', title: s('howitworks.step3.title'), body: s('howitworks.step3.body'), mockup: 'mockup-02' as const },
+    { num: '04', title: s('howitworks.step4.title'), body: s('howitworks.step4.body'), mockup: 'mockup-05' as const },
   ]
   return (
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>The Process</SectionLabel>
+        <SectionLabel>{s('howitworks.label')}</SectionLabel>
         <h2 className="mb-16 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-          Up and running in hours.<br className="hidden sm:block" /> Not months.
+          {s('howitworks.h2.line1')}<br className="hidden sm:block" /> {s('howitworks.h2.line2')}
         </h2>
 
         <div className="space-y-20">
@@ -701,7 +661,7 @@ function HowItWorks() {
             href="/how-it-works"
             className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark"
           >
-            See the full walkthrough <ArrowRight size={16} />
+            {s('howitworks.cta')} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -709,28 +669,24 @@ function HowItWorks() {
   )
 }
 
-function TrustSection() {
+function TrustSection({ s }: { s: Slot }) {
   return (
     <section className="relative overflow-hidden bg-white py-24">
       <div className="mx-auto max-w-content px-6">
         <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
           <div>
-            <SectionLabel>Why It Can Be Trusted</SectionLabel>
+            <SectionLabel>{s('trust.label')}</SectionLabel>
             <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-              The AI doesn&apos;t make things up.{' '}
-              <span className="gradient-text-teal">It can&apos;t.</span>
+              {s('trust.h2.pre')}{' '}
+              <span className="gradient-text-teal">{s('trust.h2.emphasis')}</span>
             </h2>
-            <p className="mb-10 text-lg leading-relaxed text-neutral-mid">
-              CareStreamAI only answers from your uploaded, approved documents. Not the internet. Not
-              general AI knowledge. Not another organisation&apos;s policies. If your policy doesn&apos;t say it,
-              CareStreamAI won&apos;t say it.
-            </p>
+            <div className={`mb-10 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('trust.body') }} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-2xl bg-green-50 p-6">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-green-700">What it uses</p>
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-green-700">{s('trust.uses.heading')}</p>
                 <ul className="space-y-2.5">
-                  {['Your uploaded policies', 'Your staff handbook', 'Your approved regulatory guidance', 'Exact sections relevant to each query'].map(u => (
+                  {[s('trust.uses.i1'), s('trust.uses.i2'), s('trust.uses.i3'), s('trust.uses.i4')].map(u => (
                     <li key={u} className="flex items-start gap-2.5 text-sm text-green-800">
                       <Check size={15} className="mt-0.5 flex-shrink-0 text-green-500" /> {u}
                     </li>
@@ -738,9 +694,9 @@ function TrustSection() {
                 </ul>
               </div>
               <div className="rounded-2xl bg-red-50 p-6">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-red-600">What it never uses</p>
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-red-600">{s('trust.never.heading')}</p>
                 <ul className="space-y-2.5">
-                  {['The internet', 'Other organisations\' policies', 'General AI training data', 'Anything outside your documents'].map(n => (
+                  {[s('trust.never.i1'), s('trust.never.i2'), s('trust.never.i3'), s('trust.never.i4')].map(n => (
                     <li key={n} className="flex items-start gap-2.5 text-sm text-red-800">
                       <span className="mt-0.5 flex-shrink-0 font-bold text-red-400">✕</span> {n}
                     </li>
@@ -751,7 +707,7 @@ function TrustSection() {
 
             <div className="mt-8">
               <Link href="/trust" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
-                How we keep your data private and secure <ArrowRight size={16} />
+                {s('trust.cta')} <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -765,7 +721,7 @@ function TrustSection() {
   )
 }
 
-function CareSectorAiSection() {
+function CareSectorAiSection({ s }: { s: Slot }) {
   const bubbles = [
     { label: 'Care Policies',       pos: 'left-3 top-[12%]' },
     { label: 'Care Training',       pos: 'left-1 top-[45%]' },
@@ -784,10 +740,10 @@ function CareSectorAiSection() {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9L12 2zM5 15l.9 2.6L8.5 18.5 5.9 19.4 5 22l-.9-2.6L1.5 18.5l2.6-.9L5 15zm14 0l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" />
                 </svg>
-                New
+                {s('caresectorai.badge')}
               </span>
               <h2 className="mt-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-                Finally, AI that works for the Care Sector
+                {s('caresectorai.h2')}
               </h2>
             </div>
 
@@ -821,14 +777,14 @@ function CareSectorAiSection() {
   )
 }
 
-function RegulationLayerSection() {
+function RegulationLayerSection({ s }: { s: Slot }) {
   const frameworks = [
-    { name: 'CQC Fundamental Standards',       reg: 'Reg 12, 17 & 19', desc: 'The baseline requirements every registered service must meet: safe care, governance, and fit and proper persons.' },
-    { name: 'Health & Safety at Work Act 1974', reg: 'HSWA 1974',       desc: 'Employer and employee duties around risk assessment, safe systems of work, and incident reporting.' },
-    { name: 'GDPR & Data Protection Act 2018',  reg: 'UK GDPR',         desc: 'How resident and staff data must be collected, stored, shared, and protected.' },
-    { name: 'Mental Capacity Act 2005',          reg: 'MCA 2005',        desc: 'Supporting residents who may lack capacity to make decisions, including best-interest processes.' },
-    { name: 'Safeguarding Adults',               reg: 'Care Act 2014',   desc: 'Legal duties to protect adults at risk from abuse, neglect, and exploitation.' },
-    { name: 'RIDDOR',                            reg: 'RIDDOR 2013',     desc: 'When and how to report workplace injuries, diseases, and dangerous occurrences to the HSE.' },
+    { name: s('reg.f1.name'), reg: s('reg.f1.reg'), desc: s('reg.f1.desc') },
+    { name: s('reg.f2.name'), reg: s('reg.f2.reg'), desc: s('reg.f2.desc') },
+    { name: s('reg.f3.name'), reg: s('reg.f3.reg'), desc: s('reg.f3.desc') },
+    { name: s('reg.f4.name'), reg: s('reg.f4.reg'), desc: s('reg.f4.desc') },
+    { name: s('reg.f5.name'), reg: s('reg.f5.reg'), desc: s('reg.f5.desc') },
+    { name: s('reg.f6.name'), reg: s('reg.f6.reg'), desc: s('reg.f6.desc') },
   ]
 
   return (
@@ -838,22 +794,17 @@ function RegulationLayerSection() {
         {/* Heading row */}
         <div className="mb-14 grid items-end gap-8 lg:grid-cols-2">
           <div>
-            <SectionLabel>Regulatory Intelligence</SectionLabel>
+            <SectionLabel>{s('reg.label')}</SectionLabel>
             <h2 className="text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-              Your policies and the law,{' '}
-              <span className="gradient-text-teal">answered together.</span>
+              {s('reg.h2.pre')}{' '}
+              <span className="gradient-text-teal">{s('reg.h2.emphasis')}</span>
             </h2>
           </div>
           <div className="lg:pb-1">
-            <p className="mb-4 text-lg leading-relaxed text-neutral-mid">
-              The UK care regulations and statutory frameworks that matter to a care service are loaded
-              into CareStream and kept up to date. When a staff member asks something that touches both
-              your internal policy and an external framework, the response explains how the two interact,
-              not just what your policy says in isolation.
-            </p>
+            <div className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('reg.intro') }} />
             <div className="inline-flex items-center gap-2 rounded-full bg-teal/10 px-4 py-2">
               <div className="h-2 w-2 rounded-full bg-teal" />
-              <span className="text-sm font-semibold text-teal">UK regulations, loaded and kept up to date</span>
+              <span className="text-sm font-semibold text-teal">{s('reg.pill')}</span>
             </div>
           </div>
         </div>
@@ -970,8 +921,8 @@ function RegulationLayerSection() {
 
         {/* Regulation cards */}
         <div className="mb-6 flex items-end justify-between gap-4">
-          <p className="text-sm font-semibold uppercase tracking-widest text-neutral-mid">A selection of frameworks included</p>
-          <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-xs font-bold text-teal">and more</span>
+          <p className="text-sm font-semibold uppercase tracking-widest text-neutral-mid">{s('reg.frameworks.label')}</p>
+          <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-xs font-bold text-teal">{s('reg.frameworks.badge')}</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {frameworks.map(({ name, reg, desc }) => (
@@ -990,7 +941,7 @@ function RegulationLayerSection() {
   )
 }
 
-function HomeKnowledgeCallout() {
+function HomeKnowledgeCallout({ s }: { s: Slot }) {
   const rows = [
     {
       q: 'Who is the infection control lead?',
@@ -1011,21 +962,18 @@ function HomeKnowledgeCallout() {
   return (
     <section className="bg-neutral-dark py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel light>Your Home. Not a Generic Care Home.</SectionLabel>
+        <SectionLabel light>{s('knowledge.label')}</SectionLabel>
         <h2 className="mb-6 max-w-3xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-          Not just what policies say.{' '}
-          <span style={{ color: '#E8850A' }}>How your home works.</span>
+          {s('knowledge.h2.pre')}{' '}
+          <span style={{ color: '#E8850A' }}>{s('knowledge.h2.emphasis')}</span>
         </h2>
-        <p className="mb-14 max-w-2xl text-lg leading-relaxed text-gray-300">
-          CareStreamAI extracts the specific facts from your documents, named individuals, schedules, exact
-          local procedures, and makes them instantly answerable.
-        </p>
+        <div className={`mb-14 max-w-2xl text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('knowledge.intro') }} />
 
         <div className="overflow-hidden rounded-2xl border border-white/10">
           <div className="grid grid-cols-3 border-b border-white/10 bg-white/10 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white/40">
-            <span>Question</span>
-            <span>Generic answer</span>
-            <span className="text-amber-brand">CareStreamAI answer</span>
+            <span>{s('knowledge.col.question')}</span>
+            <span>{s('knowledge.col.generic')}</span>
+            <span className="text-amber-brand">{s('knowledge.col.specific')}</span>
           </div>
           {rows.map(({ q, generic, specific }, i) => (
             <div
@@ -1042,14 +990,14 @@ function HomeKnowledgeCallout() {
         {/* Multilingual visualization */}
         <div className="mt-20">
           <div className="mb-3">
-            <SectionLabel light>60+ Languages</SectionLabel>
+            <SectionLabel light>{s('knowledge.ml.label')}</SectionLabel>
           </div>
           <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <h3 className="text-2xl font-extrabold text-white md:text-3xl">
-              Ask in any language. <span style={{ color: '#E8850A' }}>Answered in the same language.</span>
+              {s('knowledge.ml.h3.pre')} <span style={{ color: '#E8850A' }}>{s('knowledge.ml.h3.emphasis')}</span>
             </h3>
             <p className="max-w-xs text-sm leading-relaxed text-white/50">
-              Language is detected automatically. No selection required.
+              {s('knowledge.ml.sub')}
             </p>
           </div>
 
@@ -1134,32 +1082,24 @@ function HomeKnowledgeCallout() {
   )
 }
 
-function FeaturesOverview() {
+function FeaturesOverview({ s }: { s: Slot }) {
   const features: Array<{ icon: React.ReactNode; title: string; desc: string; highlight?: boolean }> = [
-    { icon: '🌍', title: '60+ language support',        desc: 'Staff ask in any language. Answers come back in the same language, automatically.' },
-    { icon: '💬', title: 'Hub and email',               desc: 'Use the hub in any browser or installed as an app, with a passwordless sign-in link. Email is there for anyone who prefers it.' },
-    {
-      icon: <Smartphone size={28} className="text-teal" />,
-      title: 'Installable hub app',
-      desc: 'Staff install the hub on their phone and get push notifications for training and reminders. Nothing to learn.',
-    },
-    {
-      icon: <Mic size={28} className="text-purple-600" />,
-      title: 'Voice input',
-      desc: 'Speak a question in any language, hands-free, and hear the answer read back from your policies.',
-    },
-    { icon: '🏠', title: 'Your home, in detail',        desc: 'Knows your specific roles, schedules, and local procedures, not just generic policy text.', highlight: true },
-    { icon: '📊', title: 'CQC Readiness Report',        desc: 'Inspection evidence generated automatically, covering access logs, language activity and staff engagement.' },
-    { icon: '🔍', title: 'Policy gap detection',        desc: "Identify which questions your policies aren't answering, before CQC does." },
-    { icon: '📚', title: 'Staff handbook self-service', desc: 'Turn your HR handbook into a 24/7 resource for leave, disciplinary, and employment questions.' },
-    { icon: '🔒', title: 'Immutable audit trail',       desc: 'Every query logged, timestamped, and auditable. CQC-ready from day one.' },
+    { icon: '🌍', title: s('features.f1.title'), desc: s('features.f1.desc') },
+    { icon: '💬', title: s('features.f2.title'), desc: s('features.f2.desc') },
+    { icon: <Smartphone size={28} className="text-teal" />, title: s('features.f3.title'), desc: s('features.f3.desc') },
+    { icon: <Mic size={28} className="text-purple-600" />, title: s('features.f4.title'), desc: s('features.f4.desc') },
+    { icon: '🏠', title: s('features.f5.title'), desc: s('features.f5.desc'), highlight: true },
+    { icon: '📊', title: s('features.f6.title'), desc: s('features.f6.desc') },
+    { icon: '🔍', title: s('features.f7.title'), desc: s('features.f7.desc') },
+    { icon: '📚', title: s('features.f8.title'), desc: s('features.f8.desc') },
+    { icon: '🔒', title: s('features.f9.title'), desc: s('features.f9.desc') },
   ]
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>What You Get</SectionLabel>
+        <SectionLabel>{s('features.label')}</SectionLabel>
         <h2 className="mb-14 text-4xl font-extrabold text-neutral-dark md:text-5xl">
-          Nine reasons care teams love it.
+          {s('features.h2')}
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -1183,7 +1123,7 @@ function FeaturesOverview() {
 
         <div className="mt-10 text-center">
           <Link href="/care-policies" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
-            See all features <ArrowRight size={16} />
+            {s('features.cta')} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -1191,7 +1131,7 @@ function FeaturesOverview() {
   )
 }
 
-function VoiceSection() {
+function VoiceSection({ s }: { s: Slot }) {
   const bars = [18, 32, 52, 38, 68, 48, 62, 42, 72, 54, 38, 58, 32, 48, 22]
 
   return (
@@ -1246,33 +1186,19 @@ function VoiceSection() {
 
           {/* Right, text */}
           <div>
-            <SectionLabel light>Voice in the Hub</SectionLabel>
+            <SectionLabel light>{s('voice.label')}</SectionLabel>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-white md:text-4xl lg:text-5xl">
-              Speak your question.{' '}
-              <span style={{ color: '#E8850A' }}>Hear your answer.</span>
+              {s('voice.h2.pre')}{' '}
+              <span style={{ color: '#E8850A' }}>{s('voice.h2.emphasis')}</span>
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-gray-300">
-              Not everyone types quickly in their second language. In the hub, staff can ask policy
-              questions by speaking instead of typing, hands-free, mid-task, in their own language,
-              and have the answer read back to them.
+              {s('voice.body')}
             </p>
             <div className="space-y-6">
               {[
-                {
-                  icon: '🗣️',
-                  title: 'Speak in your own language',
-                  body: 'The hub turns speech into text as staff talk, in over 60 languages, so anyone who finds typing in English hard can simply ask out loud.',
-                },
-                {
-                  icon: '🔊',
-                  title: 'Listen to the answer',
-                  body: 'Every answer can be read aloud in the hub, so staff can keep their hands free on the care floor while they listen.',
-                },
-                {
-                  icon: '📋',
-                  title: 'Same audit trail',
-                  body: 'Voice queries are logged identically to typed questions, capturing date, time, user and policy cited, all for your CQC records.',
-                },
+                { icon: '🗣️', title: s('voice.i1.title'), body: s('voice.i1.body') },
+                { icon: '🔊', title: s('voice.i2.title'), body: s('voice.i2.body') },
+                { icon: '📋', title: s('voice.i3.title'), body: s('voice.i3.body') },
               ].map(({ icon, title, body }) => (
                 <div key={title} className="flex gap-4">
                   <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl">{icon}</div>
@@ -1291,7 +1217,7 @@ function VoiceSection() {
   )
 }
 
-function PolicyGapsSection() {
+function PolicyGapsSection({ s }: { s: Slot }) {
   const gaps = [
     { question: 'What is the procedure for end-of-life care documentation?', status: 'gap',     queries: 14 },
     { question: 'How do we handle a resident requesting to leave against advice?',  status: 'gap',     queries: 9  },
@@ -1307,23 +1233,16 @@ function PolicyGapsSection() {
 
           {/* Left, text */}
           <div>
-            <SectionLabel>Policy Gap Detection</SectionLabel>
+            <SectionLabel>{s('gaps.label')}</SectionLabel>
             <h2 className="mb-5 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl lg:text-5xl">
-              Find your policy gaps{' '}
-              <span className="gradient-text-teal">before CQC does.</span>
+              {s('gaps.h2.pre')}{' '}
+              <span className="gradient-text-teal">{s('gaps.h2.emphasis')}</span>
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
-              Every time a query can&apos;t be answered from your documents, it&apos;s flagged.
-              Over time, patterns emerge. You can see exactly which questions your staff are asking
-              that your policies don&apos;t yet address.
+              {s('gaps.body')}
             </p>
             <ul className="mb-10 space-y-4">
-              {[
-                "See exactly which questions your policies can't answer.",
-                'Prioritised by query frequency, so you can fix the most common gaps first.',
-                'Monthly summary report, ready for your manager\'s review.',
-                'Included in your CQC Readiness Report as evidence of continuous improvement.',
-              ].map((point) => (
+              {[s('gaps.point1'), s('gaps.point2'), s('gaps.point3'), s('gaps.point4')].map((point) => (
                 <li key={point} className="flex items-start gap-3">
                   <ShieldAlert size={16} className="mt-0.5 flex-shrink-0 text-amber-brand" />
                   <span className="text-neutral-dark">{point}</span>
@@ -1334,7 +1253,7 @@ function PolicyGapsSection() {
               href="/care-policies"
               className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark"
             >
-              Learn more about Policy Gap Detection <ArrowRight size={16} />
+              {s('gaps.cta')} <ArrowRight size={16} />
             </Link>
           </div>
 
@@ -1394,58 +1313,58 @@ function PolicyGapsSection() {
   )
 }
 
-function PricingSnapshot() {
+function PricingSnapshot({ s }: { s: Slot }) {
   return (
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>Pricing</SectionLabel>
+        <SectionLabel>{s('pricing.label')}</SectionLabel>
         <h2 className="mb-4 text-4xl font-extrabold text-neutral-dark md:text-5xl">
-          Simple, transparent pricing.
+          {s('pricing.h2')}
         </h2>
-        <p className="mb-14 text-lg text-neutral-mid">No hidden costs. No per-user fees. No surprises.</p>
+        <p className="mb-14 text-lg text-neutral-mid">{s('pricing.sub')}</p>
 
         <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
           {/* Starter */}
           <div className="card-lift rounded-2xl border border-gray-200 bg-white p-8 shadow-card">
-            <p className="mb-1 text-sm font-semibold text-neutral-mid">Starter</p>
-            <p className="mb-1 text-4xl font-extrabold text-neutral-dark">£49<span className="text-base font-normal text-neutral-mid">/month</span></p>
-            <p className="mb-8 text-sm text-neutral-mid">Per home. Unlimited staff users.</p>
+            <p className="mb-1 text-sm font-semibold text-neutral-mid">{s('pricing.starter.name')}</p>
+            <p className="mb-1 text-4xl font-extrabold text-neutral-dark">{s('pricing.starter.price')}<span className="text-base font-normal text-neutral-mid">{s('pricing.starter.per')}</span></p>
+            <p className="mb-8 text-sm text-neutral-mid">{s('pricing.starter.note')}</p>
             <ul className="mb-8 space-y-3 text-sm">
-              {['Policy library (up to 25 policies)', 'Hub and email access for all staff', '60+ language support', '500 queries/month', 'Full audit trail', 'Basic analytics'].map(f => (
+              {[s('pricing.starter.f1'), s('pricing.starter.f2'), s('pricing.starter.f3'), s('pricing.starter.f4'), s('pricing.starter.f5'), s('pricing.starter.f6')].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-neutral-dark">
                   <Check size={16} className="flex-shrink-0 text-teal" /> {f}
                 </li>
               ))}
             </ul>
             <Link href="/register" className="block rounded-btn border-2 border-teal px-6 py-3 text-center text-sm font-bold text-teal hover:bg-teal-light">
-              Start Free Trial
+              {s('pricing.starter.cta')}
             </Link>
           </div>
 
           {/* Professional */}
           <div className="card-lift relative rounded-2xl bg-teal-gradient p-8 shadow-teal-glow">
             <span className="absolute right-6 top-6 rounded-pill bg-amber-brand px-3 py-1 text-xs font-bold text-white">
-              Most popular
+              {s('pricing.pro.badge')}
             </span>
-            <p className="mb-1 text-sm font-semibold text-white/60">Professional</p>
-            <p className="mb-1 text-4xl font-extrabold text-white">£129<span className="text-base font-normal text-white/60">/month</span></p>
-            <p className="mb-8 text-sm text-white/60">Per home. Everything in Starter, plus:</p>
+            <p className="mb-1 text-sm font-semibold text-white/60">{s('pricing.pro.name')}</p>
+            <p className="mb-1 text-4xl font-extrabold text-white">{s('pricing.pro.price')}<span className="text-base font-normal text-white/60">{s('pricing.pro.per')}</span></p>
+            <p className="mb-8 text-sm text-white/60">{s('pricing.pro.note')}</p>
             <ul className="mb-8 space-y-3 text-sm">
-              {['Unlimited policies', '5,000 queries/month', 'CQC Readiness Report PDF', 'Policy gap detection', 'Language analytics', 'Staff engagement by individual'].map(f => (
+              {[s('pricing.pro.f1'), s('pricing.pro.f2'), s('pricing.pro.f3'), s('pricing.pro.f4'), s('pricing.pro.f5'), s('pricing.pro.f6')].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-white">
                   <Check size={16} className="flex-shrink-0 text-white/70" /> {f}
                 </li>
               ))}
             </ul>
             <Link href="/register" className="btn-amber block rounded-btn px-6 py-3 text-center text-sm">
-              Start Free Trial
+              {s('pricing.pro.cta')}
             </Link>
           </div>
         </div>
 
         <div className="mt-10 text-center">
           <Link href="/pricing" className="inline-flex items-center gap-2 font-semibold text-teal hover:text-teal-dark">
-            Full pricing and feature comparison <ArrowRight size={16} />
+            {s('pricing.cta')} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -1506,7 +1425,7 @@ function Testimonials() {
   )
 }
 
-function FinalCta() {
+function FinalCta({ s }: { s: Slot }) {
   return (
     <section className="relative overflow-hidden bg-hero-gradient py-28 text-center">
       <div className="absolute inset-0 dot-mesh" />
@@ -1514,19 +1433,19 @@ function FinalCta() {
       <div className="absolute -right-20 bottom-0 h-[300px] w-[300px] rounded-full bg-teal/30" />
 
       <div className="relative mx-auto max-w-3xl px-6">
-        <p className="section-label mb-6 text-white/40">Get Started</p>
+        <p className="section-label mb-6 text-white/40">{s('finalcta.eyebrow')}</p>
         <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white md:text-5xl lg:text-[56px]">
-          Give your whole team the policy access they deserve.
+          {s('finalcta.h2')}
         </h2>
         <p className="mb-12 text-xl leading-relaxed text-white/70">
-          14-day free trial. No charge until day 14. Set up in under an hour.
+          {s('finalcta.sub')}
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link href="/demo" className="btn-amber rounded-btn px-10 py-4 text-base">
-            Book a Free Demo
+            {s('finalcta.primary')}
           </Link>
           <Link href="/register" className="btn-ghost-white rounded-btn px-10 py-4 text-base">
-            Start Free Trial
+            {s('finalcta.secondary')}
           </Link>
         </div>
       </div>
@@ -1534,28 +1453,26 @@ function FinalCta() {
   )
 }
 
-function OurServices() {
+function OurServices({ s }: { s: Slot }) {
   const services = [
-    { Icon: FileText,      title: 'Care Policies',       href: '/care-policies',       desc: 'Every policy answerable in seconds, in 60+ languages, with the source policy and version cited.' },
-    { Icon: BookOpen,      title: 'HR Policies',         href: '/hr-policies',         desc: 'Your staff handbook on demand. Leave, pay and disciplinary questions answered in any language.' },
-    { Icon: GraduationCap, title: 'Staff Training',      href: '/staff-training',      desc: 'Modules built from your own policies, delivered in the hub, with renewal reminders and tracking.' },
-    { Icon: ClipboardCheck,title: 'Care Audits',         href: '/care-audits',         desc: 'Guided, structured audits that score each section and produce an inspection-ready report.' },
-    { Icon: Shield,        title: 'CQC & Compliance',    href: '/cqc-compliance',      desc: 'Evidence that builds itself, plus regulation coverage showing exactly where your gaps are.' },
-    { Icon: HelpCircle,    title: 'CQC Staff Questions', href: '/cqc-staff-questions', desc: 'Inspector-style questions, answered by staff in their own words and scored by AI, with retry.' },
-    { Icon: MessageSquare, title: 'CQC Report Chat',     href: '/cqc-report-chat',     desc: 'Upload your inspection report and chat with it, cross-referenced against your own policies.' },
-    { Icon: ShieldAlert,   title: 'Business Continuity', href: '/business-continuity', desc: 'Make your business continuity information instantly queryable by every member of staff, on any shift.' },
+    { Icon: FileText,      title: s('services.s1.title'), href: '/care-policies',       desc: s('services.s1.desc') },
+    { Icon: BookOpen,      title: s('services.s2.title'), href: '/hr-policies',         desc: s('services.s2.desc') },
+    { Icon: GraduationCap, title: s('services.s3.title'), href: '/staff-training',      desc: s('services.s3.desc') },
+    { Icon: ClipboardCheck,title: s('services.s4.title'), href: '/care-audits',         desc: s('services.s4.desc') },
+    { Icon: Shield,        title: s('services.s5.title'), href: '/cqc-compliance',      desc: s('services.s5.desc') },
+    { Icon: HelpCircle,    title: s('services.s6.title'), href: '/cqc-staff-questions', desc: s('services.s6.desc') },
+    { Icon: MessageSquare, title: s('services.s7.title'), href: '/cqc-report-chat',     desc: s('services.s7.desc') },
+    { Icon: ShieldAlert,   title: s('services.s8.title'), href: '/business-continuity', desc: s('services.s8.desc') },
   ]
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>Our Services</SectionLabel>
+        <SectionLabel>{s('services.label')}</SectionLabel>
         <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-          One platform for your whole care operation.
+          {s('services.h2')}
         </h2>
         <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
-          CareStream is far more than policy access. Training, audits, CQC preparation and your staff
-          handbook all run on the same engine, grounded in your own documents, and all in one hub your
-          team signs into once.
+          {s('services.intro')}
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {services.map(({ Icon, title, href, desc }) => (
@@ -1581,7 +1498,7 @@ function OurServices() {
 }
 
 // ── Sits below the logo marquee: image + "diverse workforce" message ──────────
-function DiverseWorkforce() {
+function DiverseWorkforce({ s }: { s: Slot }) {
   return (
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
@@ -1603,23 +1520,14 @@ function DiverseWorkforce() {
 
           {/* Text */}
           <div>
-            <SectionLabel>A diverse workforce</SectionLabel>
+            <SectionLabel>{s('diverse.label')}</SectionLabel>
             <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-              Everything you need to manage a{' '}
-              <span className="gradient-text-teal">diverse workforce</span>
+              {s('diverse.h2.pre')}{' '}
+              <span className="gradient-text-teal">{s('diverse.h2.emphasis')}</span>
             </h2>
-            <div className="space-y-5 text-lg leading-relaxed text-neutral-mid">
-              <p>
-                Care teams are more diverse than ever. Overseas recruits, bank staff and night-shift
-                workers all need to understand your policies, training and procedures, and many of them
-                think in a language other than English.
-              </p>
-              <p>
-                CareStream gives every member of your team instant, cited answers from your own
-                documents, in over 60 languages, on any device. Policies, training, audits and CQC
-                preparation all run on one hub your team signs into once, so everyone stays confident,
-                capable and compliant.
-              </p>
+            <div className={`space-y-5 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+              <div dangerouslySetInnerHTML={{ __html: s('diverse.p1') }} />
+              <div dangerouslySetInnerHTML={{ __html: s('diverse.p2') }} />
             </div>
           </div>
         </div>
@@ -1629,18 +1537,16 @@ function DiverseWorkforce() {
 }
 
 // ── Sits below "View all settings we serve": two product blocks (training + hub) ──
-function HubAndTraining() {
+function HubAndTraining({ s }: { s: Slot }) {
   return (
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
-        <SectionLabel>Explore CareStream</SectionLabel>
+        <SectionLabel>{s('hubtrain.label')}</SectionLabel>
         <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-          Two ways your whole team gets more from your policies
+          {s('hubtrain.h2')}
         </h2>
         <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">
-          Everything runs on one engine, grounded in your own documents. Turn your policies into
-          training your team completes, and give every member of staff a single hub for policies,
-          audits and CQC preparation.
+          {s('hubtrain.intro')}
         </p>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -1649,19 +1555,18 @@ function HubAndTraining() {
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
               <GraduationCap size={24} className="text-white" />
             </div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/70">CareStream Training</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/70">{s('hubtrain.training.eyebrow')}</p>
             <h3 className="mb-3 text-2xl font-bold text-white">
-              Training modules built from your own policies
+              {s('hubtrain.training.title')}
             </h3>
             <p className="mb-8 flex-1 leading-relaxed text-white/80">
-              Turn your policies into staff training delivered in the hub, in any language, with
-              renewal reminders and completion tracking that becomes inspection-ready CQC evidence.
+              {s('hubtrain.training.body')}
             </p>
             <Link
               href="/staff-training"
               className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-teal transition-transform hover:scale-[1.02]"
             >
-              Learn more about training <ArrowRight size={15} />
+              {s('hubtrain.training.cta')} <ArrowRight size={15} />
             </Link>
           </div>
 
@@ -1670,19 +1575,18 @@ function HubAndTraining() {
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
               <LayoutGrid size={24} className="text-amber-brand" />
             </div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-brand">CareStream Hub</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-brand">{s('hubtrain.hub.eyebrow')}</p>
             <h3 className="mb-3 text-2xl font-bold text-neutral-dark">
-              Policies, audits and CQC in one hub
+              {s('hubtrain.hub.title')}
             </h3>
             <p className="mb-8 flex-1 leading-relaxed text-neutral-mid">
-              Every policy, your staff handbook, training, audits and CQC preparation, answerable in
-              seconds from your own documents. One hub your whole team signs into once, on any device.
+              {s('hubtrain.hub.body')}
             </p>
             <Link
               href="/how-it-works"
               className="inline-flex w-fit items-center gap-2 rounded-full bg-neutral-dark px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             >
-              Explore the hub <ArrowRight size={15} />
+              {s('hubtrain.hub.cta')} <ArrowRight size={15} />
             </Link>
           </div>
         </div>
@@ -1692,23 +1596,21 @@ function HubAndTraining() {
 }
 
 // ── Sits above "How CareStreamAI Helps": three reasons to choose CareStream ────
-function WhyChooseCareStream() {
+function WhyChooseCareStream({ s }: { s: Slot }) {
   const cols = [
-    { Icon: Users,       title: 'Trusted expertise', body: 'Policies, training, audits and CQC preparation, brought together with one trusted partner built for the care sector.' },
-    { Icon: Headset,     title: 'Personal support',  body: 'Work with a team that understands your service, your staff and your goals, and is there when you need them.' },
-    { Icon: ShieldCheck, title: 'Complete confidence', body: 'From day-to-day questions to inspection day, we help you stay compliant, reduce risk and make informed decisions.' },
+    { Icon: Users,       title: s('whychoose.c1.title'), body: s('whychoose.c1.body') },
+    { Icon: Headset,     title: s('whychoose.c2.title'), body: s('whychoose.c2.body') },
+    { Icon: ShieldCheck, title: s('whychoose.c3.title'), body: s('whychoose.c3.body') },
   ]
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-content px-6">
         <div className="mx-auto mb-16 max-w-3xl text-center">
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
-            Why care providers choose CareStreamAI
+            {s('whychoose.h2')}
           </h2>
           <p className="text-lg leading-relaxed text-neutral-mid">
-            At CareStream, we do not just answer questions. We become a trusted extension of your team,
-            combining your own documents with smart technology to help you manage policies, training and
-            CQC readiness with confidence.
+            {s('whychoose.intro')}
           </p>
         </div>
 
@@ -1799,40 +1701,41 @@ async function getHomeFaqs(): Promise<Faq[]> {
 }
 
 export default async function HomePage() {
-  const [faqs, featuredPosts] = await Promise.all([getHomeFaqs(), getFeaturedPosts()])
+  const [faqs, featuredPosts, slots] = await Promise.all([getHomeFaqs(), getFeaturedPosts(), getContentSlots('/')])
+  const s = makeSlot(HOME_SLOTS, slots)
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />
       <MarketingNav />
       <main className="flex-1">
-        <Hero />
-        <StatsStrip />
-        <TheProblem />
+        <Hero s={s} />
+        <StatsStrip s={s} />
+        <TheProblem s={s} />
         <LogoMarquee />
-        <DiverseWorkforce />
-        <CareSettings />
-        <HubAndTraining />
-        <PolicyBurdenBand />
-        <ValueProposition />
-        <WhyChooseCareStream />
-        <TheSolution />
-        <OurServices />
-        <GroupLevel />
-        <FreeTrialBand />
-        <OperateAtScale />
-        <HowItWorks />
-        <TrustSection />
-        <CareSectorAiSection />
-        <RegulationLayerSection />
-        <HomeKnowledgeCallout />
-        <FeaturesOverview />
-        <VoiceSection />
-        <PolicyGapsSection />
+        <DiverseWorkforce s={s} />
+        <CareSettings s={s} />
+        <HubAndTraining s={s} />
+        <PolicyBurdenBand s={s} />
+        <ValueProposition s={s} />
+        <WhyChooseCareStream s={s} />
+        <TheSolution s={s} />
+        <OurServices s={s} />
+        <GroupLevel s={s} />
+        <FreeTrialBand s={s} />
+        <OperateAtScale s={s} />
+        <HowItWorks s={s} />
+        <TrustSection s={s} />
+        <CareSectorAiSection s={s} />
+        <RegulationLayerSection s={s} />
+        <HomeKnowledgeCallout s={s} />
+        <FeaturesOverview s={s} />
+        <VoiceSection s={s} />
+        <PolicyGapsSection s={s} />
         <HomeBlogSection posts={featuredPosts} />
-        <PricingSnapshot />
+        <PricingSnapshot s={s} />
         <HomeFaq faqs={faqs} />
         {/* Reviews hidden until we have real testimonials. Re-instate <Testimonials /> when ready. */}
-        <FinalCta />
+        <FinalCta s={s} />
       </main>
       <MarketingFooter />
     </div>

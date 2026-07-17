@@ -369,6 +369,7 @@ export interface PolicyLintSignal {
   phrase_source: string | null   // regex source, compiled case-insensitive
   acronyms:      string[]         // matched case-sensitively as whole uppercase words
   superseded_by: string | null
+  source_urls:   string[]         // authoritative page(s) evidencing the change (shown to tenants)
   is_active:     boolean
   approved:      boolean          // only approved signals are used by tenant scans
   approved_at:   string | null

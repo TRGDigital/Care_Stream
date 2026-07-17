@@ -160,6 +160,7 @@ function EditModal({ signal, token, onClose, onSaved }: {
   const [phrase, setPhrase]       = useState(s?.phrase_source ?? '')
   const [acronyms, setAcronyms]   = useState((s?.acronyms ?? []).join(', '))
   const [supersededBy, setSupersededBy] = useState(s?.superseded_by ?? '')
+  const [sourceUrls, setSourceUrls] = useState((s?.source_urls ?? []).join('\n'))
   const [active, setActive]       = useState(s?.is_active ?? true)
   const [busy, setBusy]           = useState(false)
   const [err, setErr]             = useState('')
@@ -192,7 +193,9 @@ function EditModal({ signal, token, onClose, onSaved }: {
     const payload = {
       label: label.trim(), category, severity, detail: detail.trim(),
       phrase_source: phrase.trim() || null, acronyms: acronymList,
-      superseded_by: supersededBy.trim() || null, is_active: active,
+      superseded_by: supersededBy.trim() || null,
+      source_urls: sourceUrls.split(/[\n,]/).map(x => x.trim()).filter(Boolean),
+      is_active: active,
     }
     try {
       const api = createPlatformClient(token).policyLintSignals
@@ -281,8 +284,12 @@ function EditModal({ signal, token, onClose, onSaved }: {
             <input value={supersededBy} onChange={e => setSupersededBy(e.target.value)} className={INPUT} placeholder="e.g. CQC Single Assessment Framework (quality statements)" />
           </label>
 
-          <label className="mt-4 block"><span className={LABEL}>Why it matters <span className="font-normal normal-case text-gray-400">· shown to the tenant</span></span>
+          <label className="mt-4 block"><span className={LABEL}>Why it matters <span className="font-normal normal-case text-gray-400">· shown to the tenant as “When this changed”</span></span>
             <textarea value={detail} onChange={e => setDetail(e.target.value)} rows={3} className={INPUT} />
+          </label>
+
+          <label className="mt-4 block"><span className={LABEL}>Source link(s) <span className="font-normal normal-case text-gray-400">· one authoritative URL per line, shown to the tenant as “Source ↗”</span></span>
+            <textarea value={sourceUrls} onChange={e => setSourceUrls(e.target.value)} rows={2} className={`${INPUT} font-mono text-xs`} placeholder={'https://www.legislation.gov.uk/...\nhttps://www.cqc.org.uk/...'} />
           </label>
 
           <label className="mt-4 flex items-center gap-2 text-sm text-neutral-dark">

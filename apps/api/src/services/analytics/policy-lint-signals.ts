@@ -41,6 +41,7 @@ export interface TextSignal {
   phrases?:      RegExp          // full-phrase detector, case-insensitive (phrases aren't common words)
   acronyms?:     string[]        // acronym forms, matched CASE-SENSITIVELY as whole uppercase words
   supersededBy?: string          // the current term/framework to replace it with
+  sourceUrls?:   string[]        // authoritative page(s) evidencing the change (shown to tenants)
 }
 
 // ── Superseded legislation, regulators and frameworks ────────────────────────────

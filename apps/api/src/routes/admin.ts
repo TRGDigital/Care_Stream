@@ -1759,6 +1759,7 @@ adminRouter.post('/policy-lint-signals', async (req: Request, res: Response) => 
       signal_key, category, severity: String(b.severity ?? 'medium'), label,
       detail: String(b.detail ?? ''), phrase_source, acronyms,
       superseded_by: b.superseded_by ? String(b.superseded_by) : null,
+      source_urls: qsStrArray(b.source_urls),
       is_active: b.is_active !== false, sort_order: Number(b.sort_order) || 0,
       approved: false, approved_at: null,   // new signals are Pending until reviewed
     } })
@@ -1787,6 +1788,7 @@ adminRouter.patch('/policy-lint-signals/:id', async (req: Request, res: Response
   }
   if (b.acronyms !== undefined) { data.acronyms = qsStrArray(b.acronyms); matchingChanged = true }
   if (b.superseded_by !== undefined) data.superseded_by = b.superseded_by ? String(b.superseded_by) : null
+  if (b.source_urls !== undefined) data.source_urls = qsStrArray(b.source_urls)   // reference only — doesn't affect matching/approval
   if (typeof b.is_active === 'boolean') data.is_active = b.is_active
   if (b.sort_order !== undefined) data.sort_order = Number(b.sort_order) || 0
   if (matchingChanged) { data.approved = false; data.approved_at = null }

@@ -20,6 +20,7 @@ export interface LintFinding {
   label:         string
   detail:        string
   superseded_by: string | null
+  source_urls:   string[]                               // authoritative page(s) evidencing the change
   kind:          'text' | 'structure' | 'review_currency'
   count:         number                                 // total occurrences (text signals)
   terms:         string[]                               // DISTINCT matched strings (phrase + acronyms) — highlight/replace every one
@@ -45,6 +46,7 @@ function compile(row: any): TextSignal {
     phrases:   row.phrase_source ? new RegExp(row.phrase_source, 'i') : undefined,
     acronyms:  Array.isArray(row.acronyms) ? row.acronyms : [],
     supersededBy: row.superseded_by ?? undefined,
+    sourceUrls: Array.isArray(row.source_urls) ? row.source_urls : [],
   }
 }
 
@@ -95,6 +97,7 @@ export function lintPolicyText(
     findings.push({
       signal_key: s.id, category: s.category, severity: s.severity,
       label: s.label, detail: s.detail, superseded_by: s.supersededBy ?? null,
+      source_urls: s.sourceUrls ?? [],
       kind: 'text', count: hits.length, terms, samples: hits.slice(0, 5),
     })
   }
@@ -105,14 +108,14 @@ export function lintPolicyText(
       signal_key: 'thin-content', category: 'structure', severity: 'medium',
       label: 'Very little content',
       detail: 'The extracted policy text is under ~600 characters, which usually means a stub, a cover sheet, or a failed text extraction rather than a complete policy.',
-      superseded_by: null, kind: 'structure', count: 1, terms: [], samples: [],
+      superseded_by: null, source_urls: [], kind: 'structure', count: 1, terms: [], samples: [],
     })
   } else if (!/policy statement|purpose|scope|\baim\b/i.test(body)) {
     findings.push({
       signal_key: 'missing-purpose-scope', category: 'structure', severity: 'medium',
       label: 'No policy statement, purpose or scope',
       detail: 'The document does not contain a policy statement, purpose, aim or scope. A compliant policy should state what it is for and who it applies to.',
-      superseded_by: null, kind: 'structure', count: 1, terms: [], samples: [],
+      superseded_by: null, source_urls: [], kind: 'structure', count: 1, terms: [], samples: [],
     })
   }
 
@@ -126,7 +129,7 @@ export function lintPolicyText(
       detail: reviewed == null
         ? 'The policy has never recorded a review date. Set a last-reviewed date and review interval so its currency can be tracked.'
         : 'The policy has passed its review interval (last reviewed date + review interval). Review it and record the new date.',
-      superseded_by: null, kind: 'review_currency', count: 1, terms: [], samples: [],
+      superseded_by: null, source_urls: [], kind: 'review_currency', count: 1, terms: [], samples: [],
     })
   }
 
@@ -176,9 +179,25 @@ export async function getTenantLint(tenantId: string) {
     ? rows.reduce((max: Date, r: any) => (r.scanned_at > max ? r.scanned_at : max), rows[0].scanned_at)
     : null
 
+  // Overlay each finding's DISPLAY metadata (detail / superseded_by / source_urls)
+  // from the live signal catalogue, keyed by signal_key — so admin edits to a signal
+  // (e.g. adding a source link) show immediately, without needing a re-scan. The
+  // cached result keeps the per-policy matches (terms, counts, positions).
+  const sigRows = await (prisma as any).policyLintSignal.findMany({
+    select: { signal_key: true, detail: true, superseded_by: true, source_urls: true },
+  }).catch(() => [])
+  const sigMap = new Map<string, { detail: string; superseded_by: string | null; source_urls: string[] }>()
+  for (const s of sigRows as any[]) {
+    sigMap.set(s.signal_key, { detail: s.detail ?? '', superseded_by: s.superseded_by ?? null, source_urls: Array.isArray(s.source_urls) ? s.source_urls : [] })
+  }
+  const enrich = (f: LintFinding): LintFinding => {
+    const s = sigMap.get(f.signal_key)
+    return s ? { ...f, detail: s.detail || f.detail, superseded_by: s.superseded_by ?? f.superseded_by, source_urls: s.source_urls } : { ...f, source_urls: f.source_urls ?? [] }
+  }
+
   const withIssues = (rows as any[])
     .filter(r => Array.isArray(r.findings) && r.findings.length > 0)
-    .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: r.findings as LintFinding[], scanned_at: new Date(r.scanned_at).toISOString() }))
+    .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
     .sort((a, b) => a.score - b.score)   // worst first
 
   // Count distinct superseded-reference / high signals across the library for the summary.

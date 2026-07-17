@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -170,6 +170,15 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                             <div className="min-w-0">
                               <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">When this changed</p>
                               <p className="mt-0.5 text-xs leading-relaxed text-neutral-dark">{f.detail}</p>
+                              {(f.source_urls ?? []).length > 0 && (
+                                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                                  {(f.source_urls ?? []).map((u, k) => (
+                                    <a key={k} href={u} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-700 underline underline-offset-2 hover:no-underline">
+                                      Source{(f.source_urls ?? []).length > 1 ? ` ${k + 1}` : ''} <ExternalLink size={10} />
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -213,7 +222,14 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                       {f.detail && (
                         <div className="mt-1 flex items-start gap-1.5">
                           <History size={12} className="mt-0.5 shrink-0 text-amber-600" />
-                          <p className="text-xs leading-relaxed text-neutral-dark"><span className="font-semibold text-amber-700">When this changed: </span>{f.detail}</p>
+                          <p className="text-xs leading-relaxed text-neutral-dark">
+                            <span className="font-semibold text-amber-700">When this changed: </span>{f.detail}
+                            {(f.source_urls ?? []).map((u, k) => (
+                              <a key={k} href={u} target="_blank" rel="noopener noreferrer" className="ml-1.5 inline-flex items-center gap-0.5 align-baseline text-[11px] font-semibold text-amber-700 underline underline-offset-2 hover:no-underline">
+                                Source{(f.source_urls ?? []).length > 1 ? ` ${k + 1}` : ''}<ExternalLink size={10} />
+                              </a>
+                            ))}
+                          </p>
                         </div>
                       )}
                     </div>

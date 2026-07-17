@@ -532,6 +532,7 @@ model PolicyLintSignal {
   phrase_source String?                           // regex source, compiled case-insensitive
   acronyms      String[] @default([])             // matched case-sensitively as whole uppercase words
   superseded_by String?                           // current term/framework to replace it with
+  source_urls   String[] @default([])             // authoritative page(s) evidencing the change (shown to tenants)
   is_active     Boolean  @default(true)
   approved      Boolean  @default(false)           // only APPROVED signals are used by tenant scans
   approved_at   DateTime?

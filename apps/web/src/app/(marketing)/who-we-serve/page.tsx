@@ -6,6 +6,8 @@ import {
 import { PageHero, PageCta } from '@/components/marketing/ui'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 import { pageMetadata } from '@/lib/page-meta'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { WHO_WE_SERVE_SLOTS } from '@/lib/page-slots/who-we-serve'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/who-we-serve', {
@@ -18,13 +20,14 @@ const ICONS: Record<string, LucideIcon> = {
   heart: Heart, pill: Pill, building: Building2, shield: ShieldCheck,
 }
 
-export default function WhoWeServePage() {
+export default async function WhoWeServePage() {
+  const s = makeSlot(WHO_WE_SERVE_SLOTS, await getContentSlots('/who-we-serve'))
   return (
     <>
       <PageHero
-        label="Who We Serve"
-        title="Built for every CQC-regulated setting."
-        subtitle="CareStream gives your whole team instant access to your policies, training, audits and CQC tools, grounded in your own documents and in any language. Whatever kind of service you run, find out how CareStream works for you."
+        label={s('header.label')}
+        title={s('header.title')}
+        subtitle={s('header.subtitle')}
       />
 
       <section className="bg-white py-24">

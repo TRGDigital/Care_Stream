@@ -14,6 +14,9 @@ import { FAQ_SLOTS } from './faq'
 import { WHO_ITS_FOR_SLOTS } from './who-its-for'
 import { PRICING_SLOTS } from './pricing'
 import { STAFF_TRAINING_SLOTS } from './staff-training'
+import { WHO_WE_SERVE_SLOTS } from './who-we-serve'
+import { CONTACT_SLOTS } from './contact'
+import { DEMO_SLOTS } from './demo'
 
 export type { SlotDef } from './types'
 export { makeSlot } from './types'
@@ -36,6 +39,9 @@ export const PAGE_SLOTS: Record<string, SlotDef[]> = {
   '/who-its-for': WHO_ITS_FOR_SLOTS,
   '/pricing': PRICING_SLOTS,
   '/staff-training': STAFF_TRAINING_SLOTS,
+  '/who-we-serve': WHO_WE_SERVE_SLOTS,
+  '/contact': CONTACT_SLOTS,
+  '/demo': DEMO_SLOTS,
 }
 
 export function slotsForPath(path: string): SlotDef[] | null {

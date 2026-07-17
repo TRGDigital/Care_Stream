@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { PageHero } from '@/components/marketing/ui'
 import { ContactForm } from './contact-form'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { CONTACT_SLOTS } from '@/lib/page-slots/contact'
 
 export const metadata = {
   title: 'Contact',
@@ -12,46 +14,32 @@ export const metadata = {
   },
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const s = makeSlot(CONTACT_SLOTS, await getContentSlots('/contact'))
   return (
     <>
       <PageHero
-        label="Contact"
-        title="Get in touch."
-        subtitle="Questions about the product, pricing, data security, or your specific situation, we respond to every message within one business day."
+        label={s('hero.label')}
+        title={s('hero.title')}
+        subtitle={s('hero.subtitle')}
       />
 
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-16 lg:grid-cols-2">
             <div>
-              <h2 className="mb-10 text-3xl font-extrabold text-neutral-dark">How to reach us</h2>
+              <h2 className="mb-10 text-3xl font-extrabold text-neutral-dark">{s('reach.h2')}</h2>
               <div className="space-y-5">
                 {[
-                  {
-                    icon: '✉️',
-                    title: 'General enquiries',
-                    detail: 'Questions about the product, pricing, or how CareStreamAI would work in your setting.',
-                    email: 'hello@carestreamai.com',
-                  },
-                  {
-                    icon: '⚖️',
-                    title: 'Data protection and legal',
-                    detail: 'UK GDPR enquiries, DPA requests, and legal correspondence.',
-                    email: 'dpo@carestreamai.com',
-                  },
-                  {
-                    icon: '🛠️',
-                    title: 'Technical support',
-                    detail: 'For existing subscribers, login issues, upload problems, or anything not working as expected.',
-                    email: 'support@carestreamai.com',
-                  },
-                ].map(({ icon, title, detail, email }) => (
-                  <div key={title} className="card-lift flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+                  { icon: '✉️', key: 'reach.card1', email: 'hello@carestreamai.com' },
+                  { icon: '⚖️', key: 'reach.card2', email: 'dpo@carestreamai.com' },
+                  { icon: '🛠️', key: 'reach.card3', email: 'support@carestreamai.com' },
+                ].map(({ icon, key, email }) => (
+                  <div key={key} className="card-lift flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                     <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-teal-light text-2xl">{icon}</div>
                     <div>
-                      <p className="mb-1 font-bold text-neutral-dark">{title}</p>
-                      <p className="mb-2 text-sm leading-relaxed text-neutral-mid">{detail}</p>
+                      <p className="mb-1 font-bold text-neutral-dark">{s(`${key}.title`)}</p>
+                      <p className="mb-2 text-sm leading-relaxed text-neutral-mid">{s(`${key}.detail`)}</p>
                       <a href={`mailto:${email}`} className="text-sm font-semibold text-teal hover:underline">{email}</a>
                     </div>
                   </div>
@@ -59,9 +47,9 @@ export default function ContactPage() {
               </div>
 
               <div className="mt-8 rounded-2xl bg-teal-light p-6">
-                <p className="mb-1 font-bold text-teal">Prefer a call?</p>
+                <p className="mb-1 font-bold text-teal">{s('call.title')}</p>
                 <p className="text-sm leading-relaxed text-neutral-mid">
-                  Book a 30-minute demo and we can answer your questions live.{' '}
+                  {s('call.body')}{' '}
                   <Link href="/demo" className="font-semibold text-teal hover:underline">Book here →</Link>
                 </p>
               </div>
@@ -69,7 +57,7 @@ export default function ContactPage() {
 
             <div>
               <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-elevated">
-                <h3 className="mb-6 text-xl font-bold text-neutral-dark">Send a message</h3>
+                <h3 className="mb-6 text-xl font-bold text-neutral-dark">{s('form.h3')}</h3>
                 <ContactForm />
               </div>
             </div>

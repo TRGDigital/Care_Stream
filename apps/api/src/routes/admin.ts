@@ -2775,12 +2775,18 @@ adminRouter.patch('/audit-seeds/:id', async (req: Request, res: Response) => {
     if (typeof b.frequency === 'string' && FREQS.includes(b.frequency)) tData.frequency = b.frequency
     if (Object.keys(tData).length) await tx.auditTemplate.update({ where: { id }, data: tData })
 
+    // Only WRITE rows that actually changed. Big templates (e.g. Health & Safety
+    // has 9 sections / 49 questions) would otherwise fire ~60 sequential writes
+    // and blow the interactive-transaction budget; a typical edit touches a few.
     const keptSectionIds = new Set<string>()
     for (let si = 0; si < sections.length; si++) {
       const s = sections[si]
       let sectionId: string | null = s.id && curSectionById.has(s.id) ? s.id : null
       if (sectionId) {
-        await tx.auditSection.update({ where: { id: sectionId }, data: { title: s.title, section_order: si } })
+        const cs = curSectionById.get(sectionId)
+        if (cs.title !== s.title || cs.section_order !== si) {
+          await tx.auditSection.update({ where: { id: sectionId }, data: { title: s.title, section_order: si } })
+        }
       } else {
         const created = await tx.auditSection.create({ data: { template_id: id, title: s.title, section_order: si } })
         sectionId = created.id
@@ -2792,9 +2798,12 @@ adminRouter.patch('/audit-seeds/:id', async (req: Request, res: Response) => {
       const keptQIds = new Set<string>()
       for (let qi = 0; qi < s.questions.length; qi++) {
         const q = s.questions[qi]
-        if (q.id && curQById.has(q.id)) {
-          await tx.auditQuestion.update({ where: { id: q.id }, data: { question_text: q.text, question_type: q.type, question_order: qi, is_active: true } })
+        const cq = q.id ? curQById.get(q.id) : null
+        if (cq) {
           keptQIds.add(q.id)
+          if (cq.question_text !== q.text || cq.question_type !== q.type || cq.question_order !== qi || !cq.is_active) {
+            await tx.auditQuestion.update({ where: { id: q.id }, data: { question_text: q.text, question_type: q.type, question_order: qi, is_active: true } })
+          }
         } else {
           await tx.auditQuestion.create({ data: { section_id: sectionId!, question_text: q.text, question_type: q.type, question_order: qi } })
         }
@@ -2811,7 +2820,7 @@ adminRouter.patch('/audit-seeds/:id', async (req: Request, res: Response) => {
         for (const q of cs.questions) if (q.is_active) await tx.auditQuestion.update({ where: { id: q.id }, data: { is_active: false } })
       }
     }
-  })
+  }, { timeout: 20000, maxWait: 8000 })
 
   const updated = await (prisma as any).auditTemplate.findUnique({
     where:   { id },

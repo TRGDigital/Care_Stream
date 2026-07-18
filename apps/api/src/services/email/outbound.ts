@@ -234,30 +234,46 @@ export async function sendSupportRequestNotification(opts: {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping support-request notification'); return }
 
-  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
-  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const to        = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const fromEmail = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const from      = { email: fromEmail, name: 'New CareStream Support' }
   const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
-  const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:13px;font-weight:600">${esc(v)}</td></tr>`
+  const line = (k: string, v: string) => `<p style="margin:0 0 4px;font-size:14px;color:${NEUTRAL_DARK}"><strong>${k}:</strong> ${esc(v)}</p>`
 
-  const html = emailWrapper(`
-    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🛟 New support request</p>
-    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A client has raised a support request from Help &amp; Guides.</p>
-    <table style="border-collapse:collapse;margin:0 0 16px">
-      ${row('Client', opts.tenantName)}
-      ${row('CS number', opts.csNumber ?? '—')}
-      ${row('From', opts.submitterName ?? '—')}
-      ${row('Email', opts.submitterEmail ?? '—')}
-      ${opts.image ? row('Attachment', opts.image.filename) : ''}
-    </table>
-    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">Message</p>
-    <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;background:#f9fafb;border:1px solid #eef0f2;border-radius:8px;padding:12px 14px;margin:0 0 18px">${esc(opts.message)}</div>
-    <p style="color:#9ca3af;font-size:12px;margin:0">Reply to this email to reach ${esc(opts.submitterName ?? 'the client')} directly (they are CC'd). Open the platform console → Service Requests to track it.</p>
-    ${emailFooter()}
-  `)
+  // Deliberately plain, self-contained HTML — no branded full-width card. A fixed-
+  // width, overflow:hidden wrapper overlaps the sender's own signature when this
+  // email is replied to; a simple top-aligned block keeps replies clean. A matching
+  // plain-text part is included for clients that quote text on reply.
+  const html = `
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${NEUTRAL_DARK}">
+  <p style="margin:0 0 12px">A client has raised a support request from Help &amp; Guides.</p>
+  ${line('Client', opts.tenantName)}
+  ${line('CS number', opts.csNumber ?? '—')}
+  ${line('From', opts.submitterName ?? '—')}
+  ${line('Email', opts.submitterEmail ?? '—')}
+  ${opts.image ? line('Attachment', opts.image.filename) : ''}
+  <p style="margin:14px 0 4px;font-size:14px;color:${NEUTRAL_MID}"><strong>Message</strong></p>
+  <div style="white-space:pre-wrap;font-size:14px;color:${NEUTRAL_DARK}">${esc(opts.message)}</div>
+  <p style="margin:16px 0 0;font-size:12px;color:#9ca3af">Reply to reach ${esc(opts.submitterName ?? 'the client')} directly (they are CC'd). Track it in the platform console under Service Requests.</p>
+</div>`.trim()
+
+  const text = [
+    'A client has raised a support request from Help & Guides.',
+    '',
+    `Client: ${opts.tenantName}`,
+    `CS number: ${opts.csNumber ?? '-'}`,
+    `From: ${opts.submitterName ?? '-'}`,
+    `Email: ${opts.submitterEmail ?? '-'}`,
+    ...(opts.image ? [`Attachment: ${opts.image.filename}`] : []),
+    '',
+    'Message:',
+    opts.message,
+  ].join('\n')
 
   const msg: Parameters<typeof sgMail.send>[0] = {
     to, from,
     subject: `Support request from ${opts.tenantName}${opts.csNumber ? ` (${opts.csNumber})` : ''}`,
+    text,
     html,
   }
   // CC the submitting admin and set reply-to so a reply reaches them.

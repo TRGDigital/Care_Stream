@@ -67,6 +67,41 @@ function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose:
   )
 }
 
+// Vercel serverless caps request bodies at ~4.5 MB, so downscale/compress large
+// images in the browser before upload (a phone screenshot/photo ends up well under
+// 1 MB). Small images are sent as-is to preserve quality.
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.size <= 1.5 * 1024 * 1024) return file
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(r.result as string)
+      r.onerror = () => reject(new Error('read failed'))
+      r.readAsDataURL(file)
+    })
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image()
+      i.onload = () => resolve(i)
+      i.onerror = () => reject(new Error('decode failed'))
+      i.src = dataUrl
+    })
+    const MAX = 1600
+    const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+    const w = Math.max(1, Math.round(img.width * scale))
+    const h = Math.max(1, Math.round(img.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w; canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(img, 0, 0, w, h)
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82))
+    if (!blob) return file
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
+  } catch {
+    return file
+  }
+}
+
 function SupportRequestModal({ open, onClose, token, userName, userEmail, tenantName }: {
   open: boolean; onClose: () => void; token?: string
   userName?: string | null; userEmail?: string | null; tenantName?: string | null
@@ -104,7 +139,12 @@ function SupportRequestModal({ open, onClose, token, userName, userEmail, tenant
   async function submit() {
     if (!token || !message.trim()) return
     setSubmitting(true); setError('')
-    try { await createApiClient(token).supportRequests.create(message.trim(), file); setDone(true) }
+    try {
+      const toSend = file ? await compressImage(file) : null
+      if (toSend && toSend.size > 4 * 1024 * 1024) { setError('That image is too large even after optimising. Please try a smaller one.'); setSubmitting(false); return }
+      await createApiClient(token).supportRequests.create(message.trim(), toSend)
+      setDone(true)
+    }
     catch (e: any) { setError(e?.message ?? 'Could not send your request. Please try again.') }
     finally { setSubmitting(false) }
   }

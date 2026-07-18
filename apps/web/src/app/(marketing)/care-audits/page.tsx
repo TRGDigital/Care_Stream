@@ -379,7 +379,10 @@ export default async function CareAuditsPage() {
                   className="h-auto w-full max-w-[300px] rounded-xl ring-1 ring-gray-200"
                 />
               </div>
-              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.mobile')}</figcaption>
+              <figcaption className="border-t border-gray-100 px-5 py-4">
+                <p className="text-sm font-semibold text-neutral-dark">{s('evidence.cap.mobile')}</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">{s('evidence.desc.mobile')}</p>
+              </figcaption>
             </figure>
 
             {/* Hub — evidence attached to the question (landscape) */}
@@ -393,7 +396,10 @@ export default async function CareAuditsPage() {
                   className="h-auto w-full rounded-xl ring-1 ring-gray-200"
                 />
               </div>
-              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.desktop')}</figcaption>
+              <figcaption className="border-t border-gray-100 px-5 py-4">
+                <p className="text-sm font-semibold text-neutral-dark">{s('evidence.cap.desktop')}</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">{s('evidence.desc.desktop')}</p>
+              </figcaption>
             </figure>
 
             {/* Admin review — evidence when the audit is audited (landscape) */}
@@ -407,7 +413,10 @@ export default async function CareAuditsPage() {
                   className="h-auto w-full rounded-xl ring-1 ring-gray-200"
                 />
               </div>
-              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.admin')}</figcaption>
+              <figcaption className="border-t border-gray-100 px-5 py-4">
+                <p className="text-sm font-semibold text-neutral-dark">{s('evidence.cap.admin')}</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">{s('evidence.desc.admin')}</p>
+              </figcaption>
             </figure>
           </div>
         </div>

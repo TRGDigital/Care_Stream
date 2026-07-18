@@ -16,8 +16,11 @@ export const CARE_AUDITS_SLOTS: SlotDef[] = [
   { key: 'evidence.h2', group: 'Photo evidence', label: 'Heading', default: 'Capture the evidence, right on the question.' },
   { key: 'evidence.intro', group: 'Photo evidence', label: 'Intro paragraph', rich: true, default: 'When you spot something as you walk the floor, take a photo there and then. On a phone or tablet, your team can attach one or more images to any audit question as they go. The photos are optional, compressed automatically, and stored against that exact question, so when the audit is reviewed the evidence is right there beside the answer.' },
   { key: 'evidence.cap.mobile', group: 'Photo evidence', label: 'Caption · phone', default: 'Take or upload photos on a phone or tablet, question by question.' },
+  { key: 'evidence.desc.mobile', group: 'Photo evidence', label: 'Description · phone', multiline: true, default: 'Out on the floor, tap Add to snap a photo or choose one from the gallery. Each image attaches to the question you are on, and they are compressed automatically so they upload quickly, even on care home wifi.' },
   { key: 'evidence.cap.desktop', group: 'Photo evidence', label: 'Caption · hub', default: 'Attached to the exact question in the staff hub.' },
+  { key: 'evidence.desc.desktop', group: 'Photo evidence', label: 'Description · hub', multiline: true, default: 'The evidence sits right under the answer, so anyone opening the audit can see exactly what was checked and what it looked like, not just a Yes or a No.' },
   { key: 'evidence.cap.admin', group: 'Photo evidence', label: 'Caption · review', default: 'Every photo is waiting when the audit is reviewed.' },
+  { key: 'evidence.desc.admin', group: 'Photo evidence', label: 'Description · review', multiline: true, default: 'When a manager or inspector reviews the completed audit, the photos appear beneath each question. Click any thumbnail to open it full size as part of your evidence trail.' },
 
   // The problem with manual audits
   { key: 'problem.label', group: 'The problem', label: 'Eyebrow', default: 'The Problem With Manual Audits' },

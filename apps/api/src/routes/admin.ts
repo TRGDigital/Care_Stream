@@ -2825,6 +2825,24 @@ adminRouter.patch('/audit-seeds/:id', async (req: Request, res: Response) => {
   ok(res, { template: updated })
 })
 
+// ─── PATCH /admin/audit-seeds/:id/reviewed ────────────────────────────────────
+// Platform review tracking: mark a seed template as content-checked (or not).
+adminRouter.patch('/audit-seeds/:id/reviewed', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  const seed = await (prisma as any).auditTemplate.findFirst({
+    where:  { id, is_seed: true, tenant_id: null },
+    select: { id: true },
+  })
+  if (!seed) { err(res, 'NOT_FOUND', 'Audit seed not found', 404); return }
+  const reviewed = req.body?.reviewed !== false
+  const updated = await (prisma as any).auditTemplate.update({
+    where:  { id },
+    data:   { seed_reviewed: reviewed, seed_reviewed_at: reviewed ? new Date() : null },
+    select: { id: true, seed_reviewed: true, seed_reviewed_at: true },
+  })
+  ok(res, updated)
+})
+
 adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {
   const authors = await (prisma as any).blogAuthor.findMany({ orderBy: { name: 'asc' } })
   ok(res, { authors, total: authors.length })

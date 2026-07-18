@@ -454,6 +454,8 @@ export interface AuditSeedTemplate {
   description: string | null
   frequency:   string
   sections:    AuditSeedSection[]
+  seed_reviewed?:    boolean       // platform: content-checked this seed
+  seed_reviewed_at?: string | null
 }
 
 // Edit payload: id present = edit in place, id absent = create new.
@@ -823,6 +825,9 @@ export function createPlatformClient(token: string) {
       // it, and anything left out is soft-removed on the server.
       update: (id: string, data: AuditSeedUpdate) =>
         adminFetch<{ template: AuditSeedTemplate }>(`/audit-seeds/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      // Mark (or unmark) a seed template as content-checked.
+      setReviewed: (id: string, reviewed: boolean) =>
+        adminFetch<{ id: string; seed_reviewed: boolean; seed_reviewed_at: string | null }>(`/audit-seeds/${id}/reviewed`, token, { method: 'PATCH', body: JSON.stringify({ reviewed }) }),
     },
 
     trainingSeeds: {

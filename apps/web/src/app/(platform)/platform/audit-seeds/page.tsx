@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type AuditSeedTemplate } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { ChevronDown, ClipboardCheck, Loader2, Eye } from 'lucide-react'
+import { ChevronDown, ClipboardCheck, Loader2, Eye, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditSeedEditor } from '@/components/platform/audit-seed-editor'
 
@@ -38,7 +38,26 @@ function FrequencyBadge({ frequency }: { frequency: string }) {
   )
 }
 
-function TemplateRow({ template, onOpen }: { template: AuditSeedTemplate; onOpen: () => void }) {
+function ReviewedToggle({ reviewed, onToggle, size = 'sm' }: { reviewed: boolean; onToggle: (next: boolean) => void; size?: 'sm' | 'md' }) {
+  return (
+    <button
+      onClick={() => onToggle(!reviewed)}
+      title={reviewed ? 'Content-checked — click to unmark' : 'Mark as content-checked'}
+      className={clsx(
+        'inline-flex items-center gap-1.5 rounded-lg border font-semibold transition-colors',
+        size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1.5 text-xs',
+        reviewed
+          ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+          : 'border-gray-200 bg-white text-neutral-mid hover:bg-neutral-light',
+      )}
+    >
+      <CheckCircle2 size={size === 'md' ? 15 : 13} className={reviewed ? '' : 'opacity-40'} />
+      {reviewed ? 'Checked' : 'Mark checked'}
+    </button>
+  )
+}
+
+function TemplateRow({ template, onOpen, onToggleReviewed }: { template: AuditSeedTemplate; onOpen: () => void; onToggleReviewed: (next: boolean) => void }) {
   const [open, setOpen] = useState(false)
 
   const totalQuestions = template.sections.reduce((n, s) => n + s.questions.length, 0)
@@ -68,6 +87,7 @@ function TemplateRow({ template, onOpen }: { template: AuditSeedTemplate; onOpen
         <div className="flex shrink-0 items-center gap-2">
           <FrequencyBadge frequency={template.frequency} />
           <span className="hidden text-xs text-neutral-mid sm:inline">{template.sections.length} sections · {totalQuestions} questions</span>
+          <ReviewedToggle reviewed={!!template.seed_reviewed} onToggle={onToggleReviewed} />
           <button
             onClick={onOpen}
             className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40"
@@ -153,6 +173,17 @@ export default function AuditSeedsPage() {
     (n, t) => n + t.sections.reduce((m, s) => m + s.questions.length, 0),
     0,
   )
+  const reviewedCount = templates.filter(t => t.seed_reviewed).length
+
+  // Mark/unmark a seed as content-checked (optimistic; revert on failure).
+  async function toggleReviewed(id: string, next: boolean) {
+    setTemplates(ts => ts.map(t => (t.id === id ? { ...t, seed_reviewed: next } : t)))
+    try {
+      await createPlatformClient(token!).auditSeeds.setReviewed(id, next)
+    } catch {
+      setTemplates(ts => ts.map(t => (t.id === id ? { ...t, seed_reviewed: !next } : t)))
+    }
+  }
 
   return (
     <PlatformShell>
@@ -165,6 +196,12 @@ export default function AuditSeedsPage() {
             <p className="mt-1 text-sm text-neutral-mid">
               {templates.length} audit template{templates.length !== 1 ? 's' : ''} · {totalQuestions} total questions seeded into the platform
             </p>
+            {templates.length > 0 && (
+              <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-mid">
+                <CheckCircle2 size={13} className={reviewedCount === templates.length ? 'text-green-600' : 'text-neutral-mid/50'} />
+                {reviewedCount} of {templates.length} content-checked
+              </p>
+            )}
           </div>
           <input
             type="text"
@@ -223,7 +260,7 @@ export default function AuditSeedsPage() {
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-neutral-mid">{group.length}</span>
                   </div>
                   <div className="space-y-2">
-                    {group.map(t => <TemplateRow key={t.id} template={t} onOpen={() => setEditId(t.id)} />)}
+                    {group.map(t => <TemplateRow key={t.id} template={t} onOpen={() => setEditId(t.id)} onToggleReviewed={next => toggleReviewed(t.id, next)} />)}
                   </div>
                 </div>
               )
@@ -239,8 +276,10 @@ export default function AuditSeedsPage() {
           <AuditSeedEditor
             token={token}
             template={t}
+            reviewed={!!t.seed_reviewed}
+            onToggleReviewed={next => toggleReviewed(t.id, next)}
             onClose={() => setEditId(null)}
-            onSaved={updated => setTemplates(ts => ts.map(x => (x.id === updated.id ? updated : x)))}
+            onSaved={updated => setTemplates(ts => ts.map(x => (x.id === updated.id ? { ...updated, seed_reviewed: x.seed_reviewed, seed_reviewed_at: x.seed_reviewed_at } : x)))}
           />
         )
       })()}

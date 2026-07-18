@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react'
 import { createPlatformClient, type AuditSeedTemplate } from '@/lib/platform-api'
 import { clsx } from 'clsx'
-import { Plus, Trash2, Loader2, X, Pencil, Eye, AlertTriangle, ClipboardCheck } from 'lucide-react'
+import { Plus, Trash2, Loader2, X, Pencil, Eye, AlertTriangle, ClipboardCheck, CheckCircle2 } from 'lucide-react'
 
 const FREQS = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic']
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -64,10 +64,12 @@ function PreviewControls({ type }: { type: string }) {
 }
 
 export function AuditSeedEditor({
-  token, template, onClose, onSaved,
+  token, template, reviewed, onToggleReviewed, onClose, onSaved,
 }: {
   token: string
   template: AuditSeedTemplate
+  reviewed: boolean
+  onToggleReviewed: (next: boolean) => void
   onClose: () => void
   onSaved: (t: AuditSeedTemplate) => void
 }) {
@@ -160,6 +162,14 @@ export function AuditSeedEditor({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => onToggleReviewed(!reviewed)}
+              title={reviewed ? 'Content-checked — click to unmark' : 'Mark as content-checked'}
+              className={clsx('inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors',
+                reviewed ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100' : 'border-gray-200 bg-white text-neutral-mid hover:bg-neutral-light')}
+            >
+              <CheckCircle2 size={15} className={reviewed ? '' : 'opacity-40'} /> {reviewed ? 'Checked' : 'Mark checked'}
+            </button>
             {!editing && (
               <button onClick={startEditing} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark">
                 <Pencil size={14} /> Edit content

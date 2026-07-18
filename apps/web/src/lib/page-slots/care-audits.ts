@@ -11,6 +11,14 @@ export const CARE_AUDITS_SLOTS: SlotDef[] = [
   { key: 'hero.cta1', group: 'Hero', label: 'Primary button', default: 'Start Free Trial' },
   { key: 'hero.cta2', group: 'Hero', label: 'Secondary button', default: 'Book a Demo' },
 
+  // Photo evidence (screenshots of the feature)
+  { key: 'evidence.label', group: 'Photo evidence', label: 'Eyebrow', default: 'Photo evidence' },
+  { key: 'evidence.h2', group: 'Photo evidence', label: 'Heading', default: 'Capture the evidence, right on the question.' },
+  { key: 'evidence.intro', group: 'Photo evidence', label: 'Intro paragraph', rich: true, default: 'When you spot something as you walk the floor, take a photo there and then. On a phone or tablet, your team can attach one or more images to any audit question as they go. The photos are optional, compressed automatically, and stored against that exact question, so when the audit is reviewed the evidence is right there beside the answer.' },
+  { key: 'evidence.cap.mobile', group: 'Photo evidence', label: 'Caption · phone', default: 'Take or upload photos on a phone or tablet, question by question.' },
+  { key: 'evidence.cap.desktop', group: 'Photo evidence', label: 'Caption · hub', default: 'Attached to the exact question in the staff hub.' },
+  { key: 'evidence.cap.admin', group: 'Photo evidence', label: 'Caption · review', default: 'Every photo is waiting when the audit is reviewed.' },
+
   // The problem with manual audits
   { key: 'problem.label', group: 'The problem', label: 'Eyebrow', default: 'The Problem With Manual Audits' },
   { key: 'problem.h2', group: 'The problem', label: 'Heading', default: 'Most care setting audits take too long, read differently every time, and rarely lead to action.' },

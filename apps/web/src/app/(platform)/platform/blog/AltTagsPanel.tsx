@@ -5,6 +5,7 @@ import { Loader2, Check } from 'lucide-react'
 import { fetchTrainingSeoIndex, platformAssetUrl } from '@/lib/platform-api'
 import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
 import { CUSTOMER_LOGOS } from '@/lib/customer-logos'
+import { FEATURE_IMAGES } from '@/lib/feature-images'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -42,7 +43,11 @@ export function AltTagsPanel({ token }: { token: string }) {
         const logoVirtual: ImageAlt[] = CUSTOMER_LOGOS
           .map(l => ({ id: '', src: l.src, alt: l.name }))
           .filter(im => !haveSrc.has(im.src))
-        const merged = [...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual]
+        // Product feature screenshots (e.g. audit evidence photos).
+        const featureVirtual: ImageAlt[] = FEATURE_IMAGES
+          .map(f => ({ id: '', src: f.src, alt: f.alt }))
+          .filter(im => !haveSrc.has(im.src))
+        const merged = [...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual, ...featureVirtual]
         setImages(merged)
         setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {

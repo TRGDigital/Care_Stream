@@ -7,6 +7,8 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CARE_AUDITS_SLOTS } from '@/lib/page-slots/care-audits'
+import { SiteImage } from '@/components/site-image'
+import { FEATURE_IMAGE_ALT } from '@/lib/feature-images'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -350,6 +352,63 @@ export default async function CareAuditsPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Photo evidence ───────────────────────────────────────────────── */}
+      <section className="bg-teal-light/25 py-24">
+        <div className="mx-auto max-w-content px-6">
+          <div className="mx-auto mb-14 max-w-3xl text-center">
+            <SectionLabel>{s('evidence.label')}</SectionLabel>
+            <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark">
+              {s('evidence.h2')}
+            </h2>
+            <div className={`text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('evidence.intro') }} />
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-12">
+            {/* Phone — capture on the floor (portrait, spans both rows on desktop) */}
+            <figure className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card lg:col-span-4 lg:row-span-2">
+              <div className="flex flex-1 items-center justify-center bg-neutral-light/40 p-5">
+                <SiteImage
+                  src="/features/audit-evidence/hub-mobile.jpg"
+                  alt={FEATURE_IMAGE_ALT['/features/audit-evidence/hub-mobile.jpg']}
+                  width={792} height={1600}
+                  sizes="(max-width: 1024px) 90vw, 30vw"
+                  className="h-auto w-full max-w-[300px] rounded-xl ring-1 ring-gray-200"
+                />
+              </div>
+              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.mobile')}</figcaption>
+            </figure>
+
+            {/* Hub — evidence attached to the question (landscape) */}
+            <figure className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card lg:col-span-8">
+              <div className="bg-neutral-light/40 p-5">
+                <SiteImage
+                  src="/features/audit-evidence/hub-desktop.png"
+                  alt={FEATURE_IMAGE_ALT['/features/audit-evidence/hub-desktop.png']}
+                  width={1800} height={1117}
+                  sizes="(max-width: 1024px) 90vw, 55vw"
+                  className="h-auto w-full rounded-xl ring-1 ring-gray-200"
+                />
+              </div>
+              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.desktop')}</figcaption>
+            </figure>
+
+            {/* Admin review — evidence when the audit is audited (landscape) */}
+            <figure className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card lg:col-span-8">
+              <div className="bg-neutral-light/40 p-5">
+                <SiteImage
+                  src="/features/audit-evidence/admin-review.png"
+                  alt={FEATURE_IMAGE_ALT['/features/audit-evidence/admin-review.png']}
+                  width={1800} height={926}
+                  sizes="(max-width: 1024px) 90vw, 55vw"
+                  className="h-auto w-full rounded-xl ring-1 ring-gray-200"
+                />
+              </div>
+              <figcaption className="border-t border-gray-100 px-5 py-3 text-sm font-medium text-neutral-dark">{s('evidence.cap.admin')}</figcaption>
+            </figure>
           </div>
         </div>
       </section>

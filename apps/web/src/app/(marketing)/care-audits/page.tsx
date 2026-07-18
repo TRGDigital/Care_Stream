@@ -374,7 +374,7 @@ export default async function CareAuditsPage() {
                 <SiteImage
                   src="/features/audit-evidence/hub-mobile.jpg"
                   alt={FEATURE_IMAGE_ALT['/features/audit-evidence/hub-mobile.jpg']}
-                  width={792} height={1600}
+                  width={776} height={1600}
                   sizes="(max-width: 1024px) 90vw, 30vw"
                   className="h-auto w-full max-w-[300px] rounded-xl ring-1 ring-gray-200"
                 />

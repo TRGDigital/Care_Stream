@@ -133,6 +133,19 @@ export async function uploadEvidenceFile(params: {
   return s3Key
 }
 
+// Audit evidence: an image attached to a question's answer during an audit.
+export async function uploadAuditEvidence(params: {
+  tenantId: string; runId: string; key: string; buffer: Buffer; mimeType: string
+}): Promise<string> {
+  const s3Key = `tenants/${params.tenantId}/audits/${params.runId}/${params.key}`
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: params.mimeType,
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId, run_id: params.runId },
+  }))
+  return s3Key
+}
+
 // Support request: an image a tenant attaches when raising a service request.
 export async function uploadSupportImage(params: {
   tenantId: string; key: string; buffer: Buffer; mimeType: string

@@ -750,6 +750,18 @@ export function createApiClient(token: string) {
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
       complete: (id: string) => apiFetch<{ run: any; recommendations: string }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       report: (id: string) => apiFetch<{ report: any }>(`/audits/runs/${id}/report`, token),
+      // Per-question evidence photos (optional). Image is compressed client-side first.
+      uploadEvidence: (runId: string, questionId: string, image: File) => {
+        const form = new FormData(); form.append('image', image)
+        return apiFetch<{ evidence: { id: string; question_id: string; file_name: string; file_type: string; size_bytes: number; created_at: string } }>(`/audits/runs/${runId}/questions/${questionId}/evidence`, token, { method: 'POST', body: form, headers: {} })
+      },
+      deleteEvidence: (evidenceId: string) => apiFetch<{ deleted: boolean }>(`/audits/evidence/${evidenceId}`, token, { method: 'DELETE' }),
+      // Fetch the image bytes with auth (can't be a plain <img src>) → object URL.
+      evidenceBlob: async (evidenceId: string): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/audits/evidence/${evidenceId}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not load image')
+        return res.blob()
+      },
       stats: () => apiFetch<{
         total: number; completed: number; in_progress: number
         due: number; due_list: Array<{ id: string; name: string; frequency: string }>; completed_this_month: number

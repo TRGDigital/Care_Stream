@@ -1863,10 +1863,33 @@ model AuditRun {
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])
   template           AuditTemplate @relation(fields: [template_id], references: [id])
   answers            AuditAnswer[]
+  evidence           AuditAnswerEvidence[]
 
   @@index([tenant_id, status])
   @@index([tenant_id, audit_month])
   @@map("audit_runs")
+}
+
+// Optional evidence photo(s) attached to a question's answer while conducting an
+// audit (keyed by run + question, so it survives before/after the answer is set).
+model AuditAnswerEvidence {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  run_id      String
+  question_id String
+  s3_key      String
+  file_name   String
+  file_type   String
+  size_bytes  Int      @default(0)
+  scan_status String   @default("skipped")   // clean | skipped
+  uploaded_by String?
+  created_at  DateTime @default(now())
+  run         AuditRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@index([run_id])
+  @@index([run_id, question_id])
+  @@index([tenant_id])
+  @@map("audit_answer_evidence")
 }
 
 model AuditAnswer {

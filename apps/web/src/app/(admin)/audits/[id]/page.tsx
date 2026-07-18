@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause } from 'lucide-react'
+import { AuthedImage } from '@/components/authed-image'
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -155,6 +156,7 @@ export default function AuditRunPage() {
   const [saving,    setSaving]      = useState(false)
   const [completing, setCompleting] = useState(false)
   const [report,    setReport]      = useState<any>(null)
+  const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
@@ -175,6 +177,9 @@ export default function AuditRunPage() {
         })
       }
       setAnswers(map)
+      const evMap = new Map<string, any[]>()
+      for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
+      setEvidence(evMap)
       setSummary({
         strengths:        r.strengths        ?? '',
         improvements:     r.improvements     ?? '',
@@ -431,6 +436,29 @@ export default function AuditRunPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Evidence photos captured during the audit */}
+                    {(() => {
+                      const evs = evidence.get(q.id) ?? []
+                      if (evs.length === 0) return null
+                      return (
+                        <div className="mt-3">
+                          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-neutral-mid"><Camera size={13} /> Evidence ({evs.length})</div>
+                          <div className="flex flex-wrap gap-2">
+                            {evs.map((ev: any) => (
+                              <AuthedImage
+                                key={ev.id}
+                                id={ev.id}
+                                load={() => api!.audits.evidenceBlob(ev.id)}
+                                alt={ev.file_name}
+                                onClick={() => api!.audits.evidenceBlob(ev.id).then(b => window.open(URL.createObjectURL(b), '_blank', 'noopener')).catch(() => {})}
+                                className="h-20 w-20 cursor-pointer rounded-lg object-cover ring-1 ring-gray-200 hover:ring-teal"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 )
               })}

@@ -7,9 +7,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
+import { useIsMobileOrTablet } from '@/lib/use-device'
+import { compressImage } from '@/lib/image-compress'
+import { AuthedImage } from '@/components/authed-image'
 import {
   ClipboardCheck, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2,
-  Sparkles, Play, Pause, Plus,
+  Sparkles, Play, Pause, Plus, Camera, X,
 } from 'lucide-react'
 
 type Answer = { answer_yn: boolean | null; answer_na: boolean; outcome_text: string; actions_text: string }
@@ -211,6 +214,9 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
   const [section,   setSection]   = useState(0)
   const [saving,    setSaving]    = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [evidence,  setEvidence]  = useState<Map<string, any[]>>(new Map())
+  const [uploadingQ, setUploadingQ] = useState<string | null>(null)
+  const isMobile = useIsMobileOrTablet()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
@@ -219,9 +225,26 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
       const map = new Map<string, Answer>()
       for (const a of (r.answers ?? [])) map.set(a.question_id, { answer_yn: a.answer_yn ?? null, answer_na: a.answer_na ?? false, outcome_text: a.outcome_text ?? '', actions_text: a.actions_text ?? '' })
       setAnswers(map)
+      const evMap = new Map<string, any[]>()
+      for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
+      setEvidence(evMap)
       setSummary({ strengths: r.strengths ?? '', improvements: r.improvements ?? '', actions_deadline: r.actions_deadline ?? '' })
     }).catch(() => {}).finally(() => setLoading(false))
   }, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function addPhoto(qId: string, f: File | null) {
+    if (!f) return
+    setUploadingQ(qId)
+    try {
+      const img = await compressImage(f)
+      const { evidence: ev } = await api.audits.uploadEvidence(runId, qId, img)
+      setEvidence(prev => { const next = new Map(prev); next.set(qId, [...(next.get(qId) ?? []), ev]); return next })
+    } catch { /* leave the audit untouched on failure */ } finally { setUploadingQ(null) }
+  }
+  async function removePhoto(qId: string, id: string) {
+    setEvidence(prev => { const next = new Map(prev); next.set(qId, (next.get(qId) ?? []).filter(e => e.id !== id)); return next })
+    await api.audits.deleteEvidence(id).catch(() => {})
+  }
 
   const scheduleSave = useCallback((qId: string, value: Answer) => {
     clearTimeout(saveTimer.current)
@@ -334,6 +357,41 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
                     className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-dark placeholder:text-neutral-mid focus:border-teal focus:outline-none disabled:bg-gray-50"
                   />
                 )}
+
+                {/* Evidence photos — capture/upload on phone or tablet (optional);
+                    thumbnails always show if any exist. */}
+                {(() => {
+                  const evs = evidence.get(q.id) ?? []
+                  const showAdd = isMobile && !isCompleted
+                  if (!showAdd && evs.length === 0) return null
+                  return (
+                    <div className="mt-2">
+                      <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-neutral-mid"><Camera size={13} /> Evidence photos{evs.length ? ` (${evs.length})` : ''}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {evs.map(ev => (
+                          <div key={ev.id} className="relative">
+                            <AuthedImage
+                              id={ev.id}
+                              load={() => api.audits.evidenceBlob(ev.id)}
+                              alt={ev.file_name}
+                              onClick={() => api.audits.evidenceBlob(ev.id).then(b => window.open(URL.createObjectURL(b), '_blank', 'noopener')).catch(() => {})}
+                              className="h-16 w-16 cursor-pointer rounded-lg object-cover ring-1 ring-gray-200"
+                            />
+                            {!isCompleted && (
+                              <button onClick={() => removePhoto(q.id, ev.id)} aria-label="Remove photo" className="absolute -right-1.5 -top-1.5 rounded-full bg-white p-0.5 text-neutral-mid shadow ring-1 ring-gray-200 hover:text-red-500"><X size={12} /></button>
+                            )}
+                          </div>
+                        ))}
+                        {showAdd && (
+                          <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-gray-300 text-neutral-mid hover:border-teal hover:text-teal">
+                            {uploadingQ === q.id ? <Loader2 size={16} className="animate-spin" /> : <><Camera size={16} /><span className="text-[9px]">Add</span></>}
+                            <input type="file" accept="image/*" className="hidden" disabled={uploadingQ === q.id} onChange={e => { addPhoto(q.id, e.target.files?.[0] ?? null); e.currentTarget.value = '' }} />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )
           })}

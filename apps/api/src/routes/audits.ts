@@ -1,7 +1,12 @@
 import { Router, Request, Response } from 'express'
+import { randomUUID } from 'crypto'
 import { prisma } from '../db/client'
 import { requireAdmin, requireAuditAccess, auditTemplateAllowed } from '../middleware/auth'
 import { ok, err } from '../lib/response'
+import { imageUploadMiddleware } from '../middleware/upload'
+import { detectEvidenceType } from '../lib/evidence-file'
+import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
+import { uploadAuditEvidence, downloadFile, deleteFile } from '../services/storage/s3'
 import { callClaude } from '../services/ai/claude'
 import { trackAiAction, checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
@@ -1134,7 +1139,14 @@ auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
   })
 
   if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
-  ok(res, { run })
+
+  // Attach any evidence photos (grouped client-side by question_id).
+  const evidence = await (prisma as any).auditAnswerEvidence.findMany({
+    where:   { run_id: run.id },
+    orderBy: { created_at: 'asc' },
+    select:  { id: true, question_id: true, file_name: true, file_type: true, size_bytes: true, created_at: true },
+  })
+  ok(res, { run: { ...run, evidence } })
 })
 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────
@@ -1202,6 +1214,81 @@ auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, 
   )
 
   ok(res, { saved: answers.length })
+})
+
+// ─── Audit evidence photos (optional, per question) ──────────────────────────
+const SAFE_AUDIT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
+// POST /audits/runs/:id/questions/:questionId/evidence — attach one image.
+auditsRouter.post('/runs/:id/questions/:questionId/evidence', requireAuditAccess, imageUploadMiddleware, async (req: Request, res: Response) => {
+  const tenantId   = req.user!.tenant_id
+  const runId      = String(req.params.id)
+  const questionId = String(req.params.questionId)
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) { err(res, 'NO_FILE', 'No image was uploaded.', 400); return }
+
+  const run = await (prisma as any).auditRun.findFirst({
+    where:  { id: runId, tenant_id: tenantId, status: 'in_progress' },
+    select: { id: true, template_id: true },
+  })
+  if (!run || !auditTemplateAllowed(req, run.template_id)) { err(res, 'NOT_FOUND', 'In-progress audit run not found', 404); return }
+
+  // The question must belong to this run's template.
+  const question = await (prisma as any).auditQuestion.findFirst({
+    where:  { id: questionId, section: { template_id: run.template_id } },
+    select: { id: true },
+  })
+  if (!question) { err(res, 'NOT_FOUND', 'Question not found on this audit', 404); return }
+
+  const detected = detectEvidenceType(file.buffer)
+  if (!detected || !detected.mime.startsWith('image/')) { err(res, 'INVALID_IMAGE', 'That file is not a valid image.', 400); return }
+
+  const scan = await scanBuffer(file.buffer, file.originalname)
+  if (scan.status === 'infected') { err(res, 'MALWARE_DETECTED', 'That image failed the malware scan and was not uploaded.', 400); return }
+  if (scan.status === 'error' && scannerConfigured()) { err(res, 'SCAN_FAILED', 'The image could not be virus-scanned just now, so it was not uploaded. Please try again.', 503); return }
+
+  const key   = `${randomUUID()}.${detected.ext}`
+  const s3Key = await uploadAuditEvidence({ tenantId, runId: run.id, key, buffer: file.buffer, mimeType: detected.mime })
+  const ev = await (prisma as any).auditAnswerEvidence.create({
+    data: {
+      tenant_id: tenantId, run_id: run.id, question_id: questionId, s3_key: s3Key,
+      file_name: file.originalname.slice(0, 200), file_type: detected.mime, size_bytes: file.size ?? 0,
+      scan_status: scan.status === 'clean' ? 'clean' : 'skipped', uploaded_by: req.user!.sub,
+    },
+  })
+  ok(res, { evidence: { id: ev.id, question_id: ev.question_id, file_name: ev.file_name, file_type: ev.file_type, size_bytes: ev.size_bytes, created_at: ev.created_at } }, 201)
+})
+
+// GET /audits/evidence/:id — stream the image (authenticated, tenant-scoped).
+auditsRouter.get('/evidence/:id', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const ev = await (prisma as any).auditAnswerEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+  if (!ev) { err(res, 'NOT_FOUND', 'Evidence not found', 404); return }
+  try {
+    const buf  = await downloadFile(ev.s3_key)
+    const type = SAFE_AUDIT_IMAGE_TYPES.has(ev.file_type) ? ev.file_type : 'application/octet-stream'
+    res.setHeader('Content-Type', type)
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; img-src 'self' data:; object-src 'none'")
+    res.setHeader('Cache-Control', 'private, no-store')
+    const disposition = type === 'application/octet-stream' ? 'attachment' : 'inline'
+    res.setHeader('Content-Disposition', `${disposition}; filename="${String(ev.file_name).replace(/[^a-zA-Z0-9._\- ]/g, '_')}"`)
+    res.send(buf)
+  } catch (e: any) { err(res, 'DOWNLOAD_FAILED', e?.message ?? 'Could not load image', 500) }
+})
+
+// DELETE /audits/evidence/:id — remove an evidence image (only while in progress).
+auditsRouter.delete('/evidence/:id', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const ev = await (prisma as any).auditAnswerEvidence.findFirst({
+    where:   { id: String(req.params.id), tenant_id: tenantId },
+    include: { run: { select: { status: true, template_id: true } } },
+  })
+  if (!ev || !auditTemplateAllowed(req, ev.run.template_id)) { err(res, 'NOT_FOUND', 'Evidence not found', 404); return }
+  if (ev.run.status !== 'in_progress') { err(res, 'LOCKED', 'This audit is completed and its evidence is locked.', 400); return }
+  try { await deleteFile(ev.s3_key) } catch { /* best effort — row removal is what matters */ }
+  await (prisma as any).auditAnswerEvidence.delete({ where: { id: ev.id } })
+  ok(res, { deleted: true })
 })
 
 // ─── POST /audits/runs/:id/complete ──────────────────────────────────────────

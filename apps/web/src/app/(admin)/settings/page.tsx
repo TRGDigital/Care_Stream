@@ -237,6 +237,13 @@ export default function SettingsPage() {
       setAllowlist(data.email_allowlist ?? [])
       setFacilityType(data.facility_type ?? '')
       setRoomCount(data.room_count ?? 0)
+      // Organisation details + the flags/context that gate and populate that
+      // section, so it renders instantly from cache (not just after refetch).
+      setFeatureFlags(data.feature_flags ?? {})
+      setOrgDetails(data.organisation_details ?? {})
+      if (data.org_context) setOrgContext(data.org_context)
+      setServiceProfile(data.service_profile ?? {})
+      setServiceTriggers(data.service_triggers ?? [])
       setLogoUrl(data.logo_url ?? null)
       setEmailPrefs(data.email_preferences ?? {})
       setStaffRoles(data.staff_roles ?? [])

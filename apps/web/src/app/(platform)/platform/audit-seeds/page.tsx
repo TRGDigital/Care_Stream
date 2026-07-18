@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type AuditSeedTemplate } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { ChevronDown, ChevronUp, ClipboardCheck, Loader2 } from 'lucide-react'
+import { ChevronDown, ClipboardCheck, Loader2, Eye } from 'lucide-react'
 import { clsx } from 'clsx'
+import { AuditSeedEditor } from '@/components/platform/audit-seed-editor'
 
 const FREQUENCY_LABELS: Record<string, string> = {
   daily:     'Daily',
@@ -37,7 +38,7 @@ function FrequencyBadge({ frequency }: { frequency: string }) {
   )
 }
 
-function TemplateRow({ template }: { template: AuditSeedTemplate }) {
+function TemplateRow({ template, onOpen }: { template: AuditSeedTemplate; onOpen: () => void }) {
   const [open, setOpen] = useState(false)
 
   const totalQuestions = template.sections.reduce((n, s) => n + s.questions.length, 0)
@@ -50,26 +51,31 @@ function TemplateRow({ template }: { template: AuditSeedTemplate }) {
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-neutral-light/50"
-      >
-        {open
-          ? <ChevronDown size={16} className="shrink-0 text-neutral-mid" />
-          : <ChevronDown size={16} className={clsx('shrink-0 text-neutral-mid transition-transform', '-rotate-90')} />
-        }
-        <ClipboardCheck size={15} className="shrink-0 text-teal" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-neutral-dark">{template.name}</p>
-          {template.description && (
-            <p className="mt-0.5 text-xs text-neutral-mid line-clamp-1">{template.description}</p>
-          )}
-        </div>
+      <div className="flex w-full items-center gap-3 px-4 py-3.5">
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <ChevronDown size={16} className={clsx('shrink-0 text-neutral-mid transition-transform', !open && '-rotate-90')} />
+          <ClipboardCheck size={15} className="shrink-0 text-teal" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-neutral-dark">{template.name}</p>
+            {template.description && (
+              <p className="mt-0.5 text-xs text-neutral-mid line-clamp-1">{template.description}</p>
+            )}
+          </div>
+        </button>
         <div className="flex shrink-0 items-center gap-2">
           <FrequencyBadge frequency={template.frequency} />
-          <span className="text-xs text-neutral-mid">{template.sections.length} sections · {totalQuestions} questions</span>
+          <span className="hidden text-xs text-neutral-mid sm:inline">{template.sections.length} sections · {totalQuestions} questions</span>
+          <button
+            onClick={onOpen}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/40"
+          >
+            <Eye size={13} /> Preview / edit
+          </button>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="divide-y divide-gray-100 border-t border-gray-100">
@@ -114,6 +120,7 @@ export default function AuditSeedsPage() {
   const [loading,   setLoading]      = useState(true)
   const [error,     setError]        = useState<string | null>(null)
   const [search,    setSearch]       = useState('')
+  const [editId,    setEditId]       = useState<string | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -216,7 +223,7 @@ export default function AuditSeedsPage() {
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-neutral-mid">{group.length}</span>
                   </div>
                   <div className="space-y-2">
-                    {group.map(t => <TemplateRow key={t.id} template={t} />)}
+                    {group.map(t => <TemplateRow key={t.id} template={t} onOpen={() => setEditId(t.id)} />)}
                   </div>
                 </div>
               )
@@ -224,6 +231,19 @@ export default function AuditSeedsPage() {
           </div>
         )}
       </div>
+
+      {editId && token && (() => {
+        const t = templates.find(x => x.id === editId)
+        if (!t) return null
+        return (
+          <AuditSeedEditor
+            token={token}
+            template={t}
+            onClose={() => setEditId(null)}
+            onSaved={updated => setTemplates(ts => ts.map(x => (x.id === updated.id ? updated : x)))}
+          />
+        )
+      })()}
     </PlatformShell>
   )
 }

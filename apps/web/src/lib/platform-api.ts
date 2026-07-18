@@ -456,6 +456,18 @@ export interface AuditSeedTemplate {
   sections:    AuditSeedSection[]
 }
 
+// Edit payload: id present = edit in place, id absent = create new.
+export interface AuditSeedUpdate {
+  name?:        string
+  description?: string | null
+  frequency?:   string
+  sections: Array<{
+    id?:    string
+    title:  string
+    questions: Array<{ id?: string; question_text: string; question_type: string }>
+  }>
+}
+
 export interface UsageData {
   tenantUsage:         Array<{ tenant_id: string; tenant_name: string; query_count: number }>
   dailySeries:         Array<{ date: string; count: number }>
@@ -806,6 +818,11 @@ export function createPlatformClient(token: string) {
     auditSeeds: {
       list: () =>
         adminFetch<{ templates: AuditSeedTemplate[]; total: number }>('/audit-seeds', token),
+      // Edit a shared seed template. Payload mirrors the template structure; sections
+      // and questions keep their id where they exist (edited in place), new ones omit
+      // it, and anything left out is soft-removed on the server.
+      update: (id: string, data: AuditSeedUpdate) =>
+        adminFetch<{ template: AuditSeedTemplate }>(`/audit-seeds/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
     },
 
     trainingSeeds: {

@@ -2723,6 +2723,108 @@ adminRouter.get('/audit-seeds', async (_req: Request, res: Response) => {
   ok(res, { templates, total: templates.length })
 })
 
+// ─── PATCH /admin/audit-seeds/:id ─────────────────────────────────────────────
+// Edit a platform audit seed. These rows are shared read-only by EVERY tenant
+// (tenant_id null, is_seed true), so an edit reaches every tenant's live audits
+// immediately. To keep historical audit answers intact we edit in place: existing
+// questions keep their id (their past answers stay valid), and a removed question
+// is soft-deleted (is_active=false) rather than hard-deleted, which run rendering
+// already hides (questions are fetched with is_active: true).
+adminRouter.patch('/audit-seeds/:id', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  const seed = await (prisma as any).auditTemplate.findFirst({
+    where:  { id, is_seed: true, tenant_id: null },
+    select: { id: true },
+  })
+  if (!seed) { err(res, 'NOT_FOUND', 'Audit seed not found', 404); return }
+
+  const b = req.body ?? {}
+  const FREQS = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic']
+  const TYPES = ['yes_no', 'yes_no_na', 'findings', 'free_text']
+
+  if (!Array.isArray(b.sections)) { err(res, 'VALIDATION_ERROR', 'sections array is required', 400); return }
+
+  // Normalise + validate the whole payload before touching the DB, so a bad edit
+  // never applies partially.
+  const sections = b.sections.map((s: any) => ({
+    id:    s?.id ? String(s.id) : null,
+    title: String(s?.title ?? '').trim(),
+    questions: (Array.isArray(s?.questions) ? s.questions : [])
+      .map((q: any) => ({
+        id:   q?.id ? String(q.id) : null,
+        text: String(q?.question_text ?? '').trim(),
+        type: TYPES.includes(q?.question_type) ? q.question_type : 'yes_no',
+      }))
+      .filter((q: any) => q.text),
+  }))
+  if (!sections.length)                                    { err(res, 'VALIDATION_ERROR', 'Add at least one section', 400); return }
+  if (sections.some((s: any) => !s.title))                 { err(res, 'VALIDATION_ERROR', 'Every section needs a title', 400); return }
+  if (sections.some((s: any) => s.questions.length === 0)) { err(res, 'VALIDATION_ERROR', 'Every section needs at least one question', 400); return }
+
+  const current = await (prisma as any).auditTemplate.findUnique({
+    where:   { id },
+    include: { sections: { include: { questions: true } } },
+  })
+  const curSectionById = new Map<string, any>(current.sections.map((s: any) => [s.id, s]))
+
+  await (prisma as any).$transaction(async (tx: any) => {
+    // Template-level fields
+    const tData: any = {}
+    if (typeof b.name === 'string' && b.name.trim())              tData.name = b.name.trim()
+    if (b.description !== undefined)                              tData.description = b.description ? String(b.description).trim() : null
+    if (typeof b.frequency === 'string' && FREQS.includes(b.frequency)) tData.frequency = b.frequency
+    if (Object.keys(tData).length) await tx.auditTemplate.update({ where: { id }, data: tData })
+
+    const keptSectionIds = new Set<string>()
+    for (let si = 0; si < sections.length; si++) {
+      const s = sections[si]
+      let sectionId: string | null = s.id && curSectionById.has(s.id) ? s.id : null
+      if (sectionId) {
+        await tx.auditSection.update({ where: { id: sectionId }, data: { title: s.title, section_order: si } })
+      } else {
+        const created = await tx.auditSection.create({ data: { template_id: id, title: s.title, section_order: si } })
+        sectionId = created.id
+      }
+      keptSectionIds.add(sectionId!)
+
+      const cur = curSectionById.get(sectionId!)
+      const curQById = new Map<string, any>((cur?.questions ?? []).map((q: any) => [q.id, q]))
+      const keptQIds = new Set<string>()
+      for (let qi = 0; qi < s.questions.length; qi++) {
+        const q = s.questions[qi]
+        if (q.id && curQById.has(q.id)) {
+          await tx.auditQuestion.update({ where: { id: q.id }, data: { question_text: q.text, question_type: q.type, question_order: qi, is_active: true } })
+          keptQIds.add(q.id)
+        } else {
+          await tx.auditQuestion.create({ data: { section_id: sectionId!, question_text: q.text, question_type: q.type, question_order: qi } })
+        }
+      }
+      // Questions removed from a kept section → soft-delete (keep their answers).
+      for (const q of (cur?.questions ?? [])) {
+        if (q.is_active && !keptQIds.has(q.id)) await tx.auditQuestion.update({ where: { id: q.id }, data: { is_active: false } })
+      }
+    }
+    // Whole sections removed → soft-delete their questions (section rows carry no
+    // is_active flag; an empty section renders nothing to tenants).
+    for (const cs of current.sections) {
+      if (!keptSectionIds.has(cs.id)) {
+        for (const q of cs.questions) if (q.is_active) await tx.auditQuestion.update({ where: { id: q.id }, data: { is_active: false } })
+      }
+    }
+  })
+
+  const updated = await (prisma as any).auditTemplate.findUnique({
+    where:   { id },
+    include: {
+      sections: {
+        orderBy: { section_order: 'asc' },
+        include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } },
+      },
+    },
+  })
+  ok(res, { template: updated })
+})
+
 adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {
   const authors = await (prisma as any).blogAuthor.findMany({ orderBy: { name: 'asc' } })
   ok(res, { authors, total: authors.length })

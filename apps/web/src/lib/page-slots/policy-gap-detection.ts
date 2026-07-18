@@ -11,6 +11,23 @@ export const POLICY_GAP_DETECTION_SLOTS: SlotDef[] = [
   { key: 'hero.cta.primary', group: 'Hero', label: 'Primary button', default: 'Start Free Trial' },
   { key: 'hero.cta.secondary', group: 'Hero', label: 'Secondary button', default: 'Book a Demo' },
 
+  // The three checks (overview of what Policy Gap Detection runs)
+  { key: 'checks.label', group: 'The three checks', label: 'Eyebrow', default: 'What we check for' },
+  { key: 'checks.h2', group: 'The three checks', label: 'Heading', default: 'Three checks across your whole policy library.' },
+  { key: 'checks.intro', group: 'The three checks', label: 'Intro paragraph', rich: true, default: 'Policy Gap Detection runs three different checks over everything you have uploaded. One finds what is missing, one finds what has gone out of date, and one finds where your policies disagree with each other. Together they turn a shelf of documents into a measured, defensible picture of where you stand.' },
+
+  { key: 'check1.title', group: 'The three checks', label: 'Card 1 · Title', default: 'Regulation coverage' },
+  { key: 'check1.body', group: 'The three checks', label: 'Card 1 · Body', multiline: true, default: 'We read the actual content of every policy, not just its title, and judge each regulation that applies to your service as covered, partly covered or a gap, mapped to the CQC Single Assessment Framework. You get a coverage score, and the policy that evidences each requirement is named for you.' },
+  { key: 'check1.tag', group: 'The three checks', label: 'Card 1 · Tag', default: 'Covered · Partial · Gap' },
+
+  { key: 'check2.title', group: 'The three checks', label: 'Card 2 · Title', default: 'Out-of-date content' },
+  { key: 'check2.body', group: 'The three checks', label: 'Card 2 · Body', multiline: true, default: 'We scan your whole library for policies that have quietly gone stale: superseded law and regulators, retired frameworks like the CQC Key Lines of Enquiry, pandemic-era wording and unfilled template placeholders. It runs instantly and uses no AI credits, and every flag shows what changed, what it should say now, and a link to the source.' },
+  { key: 'check2.tag', group: 'The three checks', label: 'Card 2 · Tag', default: 'Superseded law · Stale wording' },
+
+  { key: 'check3.title', group: 'The three checks', label: 'Card 3 · Title', default: 'Cross-policy consistency' },
+  { key: 'check3.body', group: 'The three checks', label: 'Card 3 · Body', multiline: true, default: 'We compare related and near-duplicate policies and surface where they contradict each other on the same point: conflicting timeframes, escalation routes, named roles or definitions, and drift between two versions of a policy that have slowly grown apart. You resolve the conflict yourself, before it turns up in an inspection.' },
+  { key: 'check3.tag', group: 'The three checks', label: 'Card 3 · Tag', default: 'Contradictions · Drift' },
+
   // Steps
   { key: 'steps.label', group: 'How it works', label: 'Eyebrow', default: 'How it works' },
   { key: 'steps.h2', group: 'How it works', label: 'Heading', default: 'From “are we compliant?” to exactly what to do about it.' },

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {
   ShieldAlert, ScanSearch, ListChecks, Scale, FileText, GraduationCap,
   History, SlidersHorizontal, Check, ArrowRight, Sparkles,
+  CalendarClock, GitCompare,
 } from 'lucide-react'
 import { SectionLabel, PageCta } from '@/components/marketing/ui'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
@@ -68,6 +69,13 @@ function CoverageMockup() {
   )
 }
 
+// The three checks Policy Gap Detection runs across the library.
+const CHECKS = [
+  { Icon: ScanSearch,   key: 'check1' },
+  { Icon: CalendarClock, key: 'check2' },
+  { Icon: GitCompare,    key: 'check3' },
+]
+
 const STEPS = [
   { Icon: ScanSearch,        key: 'step1' },
   { Icon: ListChecks,        key: 'step2' },
@@ -109,8 +117,35 @@ export default async function PolicyGapDetectionPage() {
         </div>
       </section>
 
+      {/* The three checks */}
+      <section className="bg-white pt-24 pb-4">
+        <div className="mx-auto max-w-content px-6">
+          <SectionLabel>{s('checks.label')}</SectionLabel>
+          <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+            {s('checks.h2')}
+          </h2>
+          <div className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('checks.intro') }} />
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {CHECKS.map(({ Icon, key }, i) => (
+              <div key={key} className="flex flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-light text-teal">
+                    <Icon size={20} />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-teal">{String(i + 1).padStart(2, '0')}</span>
+                </div>
+                <h3 className="mb-3 text-xl font-extrabold leading-tight text-neutral-dark">{s(`${key}.title`)}</h3>
+                <p className="mb-5 flex-1 text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
+                <span className="inline-flex w-fit items-center rounded-full bg-neutral-light px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-neutral-dark">{s(`${key}.tag`)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Steps */}
-      <section className="bg-white py-24">
+      <section className="bg-white pt-16 pb-24">
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>{s('steps.label')}</SectionLabel>
           <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">

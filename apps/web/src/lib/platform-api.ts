@@ -458,6 +458,22 @@ export interface AuditSeedTemplate {
   seed_reviewed_at?: string | null
 }
 
+export interface ServiceRequest {
+  id:               string
+  tenant_id:        string
+  tenant_name:      string | null
+  tenant_cs_number: string | null
+  submitter_name:   string | null
+  submitter_email:  string | null
+  message:          string
+  image_s3_key:     string | null
+  image_file_name:  string | null
+  image_type:       string | null
+  image_size_bytes: number | null
+  status:           string
+  created_at:       string
+}
+
 // Edit payload: id present = edit in place, id absent = create new.
 export interface AuditSeedUpdate {
   name?:        string
@@ -566,6 +582,20 @@ export function createPlatformClient(token: string) {
       }>('/feature-requests', token),
       updateStatus: (id: string, status: string) =>
         adminFetch<{ updated: boolean }>(`/feature-requests/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    },
+
+    serviceRequests: {
+      list: (status?: string) =>
+        adminFetch<{ requests: ServiceRequest[]; counts: Record<string, number>; total: number }>(
+          `/service-requests${status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : ''}`, token),
+      updateStatus: (id: string, status: string) =>
+        adminFetch<{ updated: boolean }>(`/service-requests/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
+      // The image is admin-token protected, so fetch it into a blob for display.
+      fetchImage: async (id: string): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/admin/service-requests/${id}/image`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not load image')
+        return res.blob()
+      },
     },
 
     onboarding: {

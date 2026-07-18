@@ -29,6 +29,7 @@ import { workforceRouter } from './routes/workforce'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { featureRequestsRouter } from './routes/feature-requests'
+import { supportRequestsRouter } from './routes/support-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
@@ -182,6 +183,7 @@ app.use('/workforce', workforceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/feature-requests', featureRequestsRouter)
+app.use('/support-requests', supportRequestsRouter)
 app.use('/agent-actions', agentActionsRouter)
 
 seedTrainingModulesIfEmpty()

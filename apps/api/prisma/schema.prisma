@@ -2098,6 +2098,28 @@ model FeatureRequest {
   @@map("feature_requests")
 }
 
+// ─── Tenant support / service requests (raised from the Guides page) ──────────
+model SupportRequest {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  user_id          String?
+  tenant_name      String?
+  tenant_cs_number String?              // account_number snapshot, e.g. CS-1001
+  submitter_name   String?
+  submitter_email  String?
+  message          String
+  image_s3_key     String?
+  image_file_name  String?
+  image_type       String?
+  image_size_bytes Int?
+  status           String   @default("new")   // new | in_progress | resolved
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  @@index([status, created_at])
+  @@index([tenant_id])
+  @@map("support_requests")
+}
+
 // ─── CPD module reviews (assessor notes per annual module) ────────────────────
 model ModuleReview {
   id               String   @id @default(uuid())

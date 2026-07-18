@@ -133,6 +133,19 @@ export async function uploadEvidenceFile(params: {
   return s3Key
 }
 
+// Support request: an image a tenant attaches when raising a service request.
+export async function uploadSupportImage(params: {
+  tenantId: string; key: string; buffer: Buffer; mimeType: string
+}): Promise<string> {
+  const s3Key = `tenants/${params.tenantId}/support/${params.key}`
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: params.mimeType,
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId },
+  }))
+  return s3Key
+}
+
 // Workforce compliance register: a staff member's credential document
 // (DBS/right-to-work/registration/reference scan).
 export async function uploadCredentialFile(params: {

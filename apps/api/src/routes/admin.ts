@@ -9,7 +9,7 @@ import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGener
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
-import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText } from '../services/storage/s3'
+import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { formatPolicyHtml, getEnglishPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { TRAINING_TOPICS } from '../data/training-topics'
@@ -2850,6 +2850,45 @@ adminRouter.patch('/audit-seeds/:id/reviewed', async (req: Request, res: Respons
     select: { id: true, seed_reviewed: true, seed_reviewed_at: true },
   })
   ok(res, updated)
+})
+
+// ─── Service requests (tenant support tickets) ────────────────────────────────
+adminRouter.get('/service-requests', async (req: Request, res: Response) => {
+  const status = req.query.status ? String(req.query.status) : undefined
+  const where  = status && status !== 'all' ? { status } : {}
+  const [requests, grouped] = await Promise.all([
+    (prisma as any).supportRequest.findMany({ where, orderBy: { created_at: 'desc' }, take: 500 }),
+    (prisma as any).supportRequest.groupBy({ by: ['status'], _count: { _all: true } }),
+  ])
+  const counts: Record<string, number> = {}
+  for (const g of grouped) counts[g.status] = g._count._all
+  ok(res, { requests, counts, total: requests.length })
+})
+
+adminRouter.patch('/service-requests/:id', async (req: Request, res: Response) => {
+  const id     = String(req.params.id)
+  const status = String(req.body?.status ?? '')
+  if (!['new', 'in_progress', 'resolved'].includes(status)) { err(res, 'INVALID', 'Invalid status', 400); return }
+  const existing = await (prisma as any).supportRequest.findUnique({ where: { id }, select: { id: true } })
+  if (!existing) { err(res, 'NOT_FOUND', 'Request not found', 404); return }
+  await (prisma as any).supportRequest.update({ where: { id }, data: { status } })
+  ok(res, { updated: true })
+})
+
+// Stream the attached image (platform admin only). Fetched with the admin token,
+// so it can't be a plain <img src>; the console fetches it into a blob URL.
+adminRouter.get('/service-requests/:id/image', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  const r  = await (prisma as any).supportRequest.findUnique({
+    where: { id }, select: { image_s3_key: true, image_type: true, image_file_name: true },
+  })
+  if (!r?.image_s3_key) { err(res, 'NOT_FOUND', 'No image on this request', 404); return }
+  try {
+    const buf = await downloadFile(r.image_s3_key)
+    res.setHeader('Content-Type', r.image_type ?? 'application/octet-stream')
+    res.setHeader('Content-Disposition', `inline; filename="${String(r.image_file_name ?? 'image').replace(/"/g, '')}"`)
+    res.send(buf)
+  } catch (e: any) { err(res, 'DOWNLOAD_FAILED', e?.message ?? 'Could not load image', 500) }
 })
 
 adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {

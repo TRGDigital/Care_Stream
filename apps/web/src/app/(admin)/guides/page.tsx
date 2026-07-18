@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import {
@@ -58,6 +58,107 @@ function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose:
               <button onClick={close} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light">Cancel</button>
               <button onClick={submit} disabled={submitting || !title.trim() || !details.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
                 {submitting ? <Loader2 size={15} className="animate-spin" /> : <Lightbulb size={15} />} Submit request
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SupportRequestModal({ open, onClose, token, userName, userEmail, tenantName }: {
+  open: boolean; onClose: () => void; token?: string
+  userName?: string | null; userEmail?: string | null; tenantName?: string | null
+}) {
+  const [message, setMessage]       = useState('')
+  const [file, setFile]             = useState<File | null>(null)
+  const [preview, setPreview]       = useState<string | null>(null)
+  const [cs, setCs]                 = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone]             = useState(false)
+  const [error, setError]           = useState('')
+
+  // Pull the account (CS) number so we can show what will be sent with the ticket.
+  useEffect(() => {
+    if (!open || !token) return
+    createApiClient(token).settings.get().then(s => setCs((s as any).account_number ?? null)).catch(() => {})
+  }, [open, token])
+
+  // Revoke the object URL when the preview changes / on unmount.
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+
+  if (!open) return null
+
+  function reset() { setMessage(''); setFile(null); setPreview(null); setDone(false); setError('') }
+  function close() { reset(); onClose() }
+
+  function pickFile(f: File | null) {
+    setError('')
+    if (!f) { setFile(null); setPreview(null); return }
+    if (!f.type.startsWith('image/')) { setError('Please choose an image file (JPG, PNG, WebP or GIF).'); return }
+    if (f.size > 10 * 1024 * 1024)    { setError('Image must be under 10 MB.'); return }
+    setFile(f); setPreview(URL.createObjectURL(f))
+  }
+
+  async function submit() {
+    if (!token || !message.trim()) return
+    setSubmitting(true); setError('')
+    try { await createApiClient(token).supportRequests.create(message.trim(), file); setDone(true) }
+    catch (e: any) { setError(e?.message ?? 'Could not send your request. Please try again.') }
+    finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={close}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 flex items-center gap-2 border-b border-gray-100 bg-white px-6 py-4">
+          <LifeBuoy size={18} className="text-teal" />
+          <h2 className="flex-1 text-base font-bold text-neutral-dark">Raise a support request</h2>
+          <button onClick={close} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+        {done ? (
+          <div className="px-6 py-8 text-center">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-green-100"><CheckCircle size={22} className="text-green-600" /></div>
+            <p className="mb-1 font-semibold text-neutral-dark">Request sent</p>
+            <p className="mb-5 text-sm text-neutral-mid">Our team has your request and will reply to <span className="font-medium text-neutral-dark">{userEmail}</span>. You are copied on the email.</p>
+            <button onClick={close} className="rounded-lg bg-teal px-5 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Done</button>
+          </div>
+        ) : (
+          <div className="px-6 py-5">
+            <p className="mb-3 text-sm text-neutral-mid">Ask a question or tell us about an issue. Our team will reply by email, and you will be copied in.</p>
+
+            <div className="mb-4 rounded-lg border border-gray-100 bg-neutral-light/40 px-3 py-2.5 text-xs text-neutral-mid">
+              <p>Sending as <span className="font-semibold text-neutral-dark">{userName ?? 'your account'}</span>{userEmail ? <> · {userEmail}</> : null}</p>
+              {(tenantName || cs) && <p className="mt-0.5">{tenantName}{cs ? <> · <span className="font-medium text-neutral-dark">{cs}</span></> : null}</p>}
+            </div>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-mid">Your question or issue</span>
+              <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} maxLength={5000} placeholder="Describe what you need help with. Include any steps or screenshots that would help us understand." className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20" />
+            </label>
+
+            <div className="mt-3">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-mid">Attach an image (optional)</span>
+              {preview ? (
+                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-2">
+                  <img src={preview} alt="Attachment preview" className="h-14 w-14 shrink-0 rounded object-cover" />
+                  <span className="min-w-0 flex-1 truncate text-xs text-neutral-mid">{file?.name}</span>
+                  <button onClick={() => pickFile(null)} className="shrink-0 rounded p-1 text-neutral-mid hover:text-red-500" aria-label="Remove image"><X size={16} /></button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-3 text-sm text-neutral-mid hover:border-teal hover:text-teal">
+                  <Upload size={15} /> Choose an image
+                  <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={e => pickFile(e.target.files?.[0] ?? null)} />
+                </label>
+              )}
+            </div>
+
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={close} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-neutral-mid hover:bg-neutral-light">Cancel</button>
+              <button onClick={submit} disabled={submitting || !message.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+                {submitting ? <Loader2 size={15} className="animate-spin" /> : <LifeBuoy size={15} />} Send request
               </button>
             </div>
           </div>
@@ -1928,6 +2029,7 @@ export default function HelpPage() {
   const { data: session } = useSession()
   const [query, setQuery] = useState('')
   const [showRequest, setShowRequest] = useState(false)
+  const [showSupport, setShowSupport] = useState(false)
   // Single-open accordion: only one section expanded at a time.
   const [openId, setOpenId] = useState<string | null>(GUIDE_SECTIONS.find(s => s.defaultOpen)?.id ?? null)
   const q = query.trim().toLowerCase()
@@ -1938,6 +2040,14 @@ export default function HelpPage() {
   return (
     <div className="space-y-6">
       <FeatureRequestModal open={showRequest} onClose={() => setShowRequest(false)} token={session?.accessToken} />
+      <SupportRequestModal
+        open={showSupport}
+        onClose={() => setShowSupport(false)}
+        token={session?.accessToken}
+        userName={session?.user?.name}
+        userEmail={session?.user?.email}
+        tenantName={(session?.user as any)?.tenantName}
+      />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark">Help &amp; Guides</h1>
@@ -1945,9 +2055,14 @@ export default function HelpPage() {
             Step-by-step guides for every part of CareStream. Search or click a section to expand it.
           </p>
         </div>
-        <button onClick={() => setShowRequest(true)} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-dark">
-          <Lightbulb size={16} /> Request New Feature
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setShowSupport(true)} className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-teal/40 bg-white px-4 py-2.5 text-sm font-semibold text-teal shadow-sm transition-colors hover:bg-teal-light/40">
+            <LifeBuoy size={16} /> Raise Support Request
+          </button>
+          <button onClick={() => setShowRequest(true)} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-dark">
+            <Lightbulb size={16} /> Request New Feature
+          </button>
+        </div>
       </div>
 
       {/* Search */}

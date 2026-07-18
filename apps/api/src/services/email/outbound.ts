@@ -222,6 +222,57 @@ export async function sendFeatureRequestNotification(opts: {
   await sgMail.send({ to, from, subject: `Feature request from ${opts.tenantName}: ${opts.title}`, html })
 }
 
+// ─── Support / service request (raised from the Guides page) ──────────────────
+// Goes to the platform owner, CC's the submitting admin, and carries the tenant's
+// CS number so the account is easy to find. The attached image (if any) is inlined.
+export async function sendSupportRequestNotification(opts: {
+  tenantName: string; csNumber?: string | null
+  submitterName?: string | null; submitterEmail?: string | null
+  message: string
+  image?: { buffer: Buffer; filename: string; type: string } | null
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping support-request notification'); return }
+
+  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:13px;font-weight:600">${esc(v)}</td></tr>`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🛟 New support request</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A client has raised a support request from Help &amp; Guides.</p>
+    <table style="border-collapse:collapse;margin:0 0 16px">
+      ${row('Client', opts.tenantName)}
+      ${row('CS number', opts.csNumber ?? '—')}
+      ${row('From', opts.submitterName ?? '—')}
+      ${row('Email', opts.submitterEmail ?? '—')}
+      ${opts.image ? row('Attachment', opts.image.filename) : ''}
+    </table>
+    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">Message</p>
+    <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;background:#f9fafb;border:1px solid #eef0f2;border-radius:8px;padding:12px 14px;margin:0 0 18px">${esc(opts.message)}</div>
+    <p style="color:#9ca3af;font-size:12px;margin:0">Reply to this email to reach ${esc(opts.submitterName ?? 'the client')} directly (they are CC'd). Open the platform console → Service Requests to track it.</p>
+    ${emailFooter()}
+  `)
+
+  const msg: Parameters<typeof sgMail.send>[0] = {
+    to, from,
+    subject: `Support request from ${opts.tenantName}${opts.csNumber ? ` (${opts.csNumber})` : ''}`,
+    html,
+  }
+  // CC the submitting admin and set reply-to so a reply reaches them.
+  if (opts.submitterEmail) { (msg as any).cc = opts.submitterEmail; (msg as any).replyTo = opts.submitterEmail }
+  if (opts.image) {
+    (msg as any).attachments = [{
+      content: opts.image.buffer.toString('base64'),
+      filename: opts.image.filename,
+      type: opts.image.type,
+      disposition: 'attachment',
+    }]
+  }
+  await sgMail.send(msg)
+}
+
 // ─── Face-to-face / training payroll report (PDF attachment) ──────────────────
 export async function sendF2FPayrollEmail(opts: { to: string; orgName: string; monthLabel: string; pdfBase64: string }): Promise<void> {
   ensureInitialised()

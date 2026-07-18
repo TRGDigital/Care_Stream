@@ -720,6 +720,16 @@ export function createApiClient(token: string) {
         apiFetch<{ id: string }>('/feature-requests', token, { method: 'POST', body: JSON.stringify({ title, details }) }),
     },
 
+    supportRequests: {
+      // Raise a support ticket; optionally attach one image (multipart).
+      create: (message: string, image?: File | null) => {
+        const form = new FormData()
+        form.append('message', message)
+        if (image) form.append('image', image)
+        return apiFetch<{ id: string }>('/support-requests', token, { method: 'POST', body: form, headers: {} })
+      },
+    },
+
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[] }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),

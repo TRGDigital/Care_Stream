@@ -19,8 +19,9 @@ export type HomeBlogPost = {
 const staticFeatured: HomeBlogPost[] = POSTS.filter(p => p.featured)
 
 export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
-  // DB-driven featured posts when available; fall back to the static list. Show three, with room for images.
-  const featured = (posts && posts.length > 0 ? posts : staticFeatured).slice(0, 3)
+  // DB-driven featured posts when available; fall back to the static list.
+  // Three cards visible at a time (with room for images); scroll through the rest via the arrows.
+  const featured = posts && posts.length > 0 ? posts : staticFeatured
   const showArrows = featured.length > 3
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
@@ -46,7 +47,7 @@ export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
     if (!el) return
     const card = el.querySelector<HTMLElement>('[data-blog-card]')
     const gap = 24
-    const amount = direction * ((card?.offsetWidth ?? el.clientWidth / 4) + gap)
+    const amount = direction * ((card?.offsetWidth ?? el.clientWidth / 3) + gap)
     el.scrollBy({ left: amount, behavior: 'smooth' })
   }
 

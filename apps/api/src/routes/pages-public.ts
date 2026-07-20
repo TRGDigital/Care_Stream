@@ -28,6 +28,7 @@ publicPagesRouter.get('/', async (req: Request, res: Response) => {
     select: {
       path:           true,
       title:          true,
+      meta_title:     true,
       description:    true,
       og_title:       true,
       og_description: true,

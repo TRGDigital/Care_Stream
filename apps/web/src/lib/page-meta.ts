@@ -32,6 +32,7 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
       const p = body?.data?.page
       if (p) {
         if (p.title) title = p.title
+        if (p.meta_title) title = p.meta_title // separate SEO <title>, overrides the page title/H1
         if (p.description) description = p.description
         ogTitle = p.og_title || undefined
         ogDescription = p.og_description || undefined

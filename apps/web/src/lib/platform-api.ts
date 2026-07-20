@@ -139,6 +139,7 @@ export interface TenantSummary {
   slug:                string
   tier:                string   // "full" | "training_only"
   subscription_status: string
+  enterprise_discount?: boolean  // platform-allocated 20% Enterprise closing discount
   created_at:          string
   plan:                PlanLimits | null
   sub_tenant_count:    number
@@ -650,6 +651,8 @@ export function createPlatformClient(token: string) {
         adminFetch<{ tenants: TenantSummary[]; total: number }>('/tenants', token),
       get: (id: string) =>
         adminFetch<TenantDetail>(`/tenants/${id}`, token),
+      setEnterpriseDiscount: (id: string, enabled: boolean) =>
+        adminFetch<{ tenant: { id: string; enterprise_discount: boolean } }>(`/tenants/${id}/enterprise-discount`, token, { method: 'PATCH', body: JSON.stringify({ enabled }) }),
       invoices: (id: string) => adminFetch<{
         invoices: Array<{ id: string; date: string; description: string; amount_pence: number; status: string; pdf_url: string | null; hosted_url: string | null }>
         next_billing_date: string | null

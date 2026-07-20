@@ -581,6 +581,21 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license })
 })
 
+// ─── PATCH /admin/tenants/:id/enterprise-discount ────────────────────────────
+// Platform-only: allocate (or remove) the 20% Enterprise closing discount for a tenant.
+// Applied automatically at their checkout — never self-serve. Body: { enabled: boolean }.
+adminRouter.patch('/tenants/:id/enterprise-discount', async (req: Request, res: Response) => {
+  const enabled = req.body?.enabled === true
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: req.params.id }, select: { id: true } })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+  const updated = await (prisma as any).tenant.update({
+    where: { id: req.params.id },
+    data:  { enterprise_discount: enabled },
+    select: { id: true, enterprise_discount: true },
+  })
+  ok(res, { tenant: updated })
+})
+
 // ─── GET /admin/tenants/:id/invoices ─────────────────────────────────────────
 // A tenant's Stripe invoices + revenue summary, for the platform clients view
 // (track monthly revenue per tenant). Reuses the billing service.
@@ -3183,7 +3198,7 @@ function buildFeaturePageData(body: any) {
 
 function buildPageData(body: any) {
   const {
-    title, description, og_title, og_description, og_image_url,
+    title, meta_title, description, og_title, og_description, og_image_url,
     is_footer_page, footer_group, footer_label, footer_sort,
     page_type, status, faqs, content, content_updated, content_slots,
   } = body ?? {}
@@ -3191,6 +3206,7 @@ function buildPageData(body: any) {
     ...(content_updated !== undefined && { content_updated: Boolean(content_updated) }),
     ...(content_slots   !== undefined && { content_slots: (content_slots && typeof content_slots === 'object') ? content_slots : {} }),
     ...(title          !== undefined && { title:          title?.trim() ?? ''          }),
+    ...(meta_title     !== undefined && { meta_title:     meta_title?.trim() || null   }),
     ...(description    !== undefined && { description:    description?.trim() || null  }),
     ...(og_title       !== undefined && { og_title:       og_title?.trim() || null     }),
     ...(og_description !== undefined && { og_description: og_description?.trim() || null }),

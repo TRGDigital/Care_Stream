@@ -1323,7 +1323,7 @@ function PricingSnapshot({ s }: { s: Slot }) {
         </h2>
         <p className="mb-14 text-lg text-neutral-mid">{s('pricing.sub')}</p>
 
-        <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
+        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
           {/* Starter */}
           <div className="card-lift rounded-2xl border border-gray-200 bg-white p-8 shadow-card">
             <p className="mb-1 text-sm font-semibold text-neutral-mid">{s('pricing.starter.name')}</p>
@@ -1358,6 +1358,26 @@ function PricingSnapshot({ s }: { s: Slot }) {
             </ul>
             <Link href="/register" className="btn-amber block rounded-btn px-6 py-3 text-center text-sm">
               {s('pricing.pro.cta')}
+            </Link>
+          </div>
+
+          {/* Enterprise */}
+          <div className="card-lift relative rounded-2xl border border-gray-200 bg-white p-8 shadow-card">
+            <span className="absolute right-6 top-6 rounded-pill bg-teal-light px-3 py-1 text-xs font-bold text-teal">
+              {s('pricing.ent.badge')}
+            </span>
+            <p className="mb-1 text-sm font-semibold text-neutral-mid">{s('pricing.ent.name')}</p>
+            <p className="mb-1 text-4xl font-extrabold text-neutral-dark">{s('pricing.ent.price')}<span className="text-base font-normal text-neutral-mid">{s('pricing.ent.per')}</span></p>
+            <p className="mb-8 text-sm text-neutral-mid">{s('pricing.ent.note')}</p>
+            <ul className="mb-8 space-y-3 text-sm">
+              {[s('pricing.ent.f1'), s('pricing.ent.f2'), s('pricing.ent.f3'), s('pricing.ent.f4'), s('pricing.ent.f5'), s('pricing.ent.f6')].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-neutral-dark">
+                  <Check size={16} className="flex-shrink-0 text-teal" /> {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/register" className="block rounded-btn border-2 border-teal px-6 py-3 text-center text-sm font-bold text-teal hover:bg-teal-light">
+              {s('pricing.ent.cta')}
             </Link>
           </div>
         </div>

@@ -302,6 +302,18 @@ export const HOME_SLOTS: SlotDef[] = [
   { key: 'pricing.pro.f5', group: 'Pricing', label: 'Professional feature 5', default: 'Language analytics' },
   { key: 'pricing.pro.f6', group: 'Pricing', label: 'Professional feature 6', default: 'Staff engagement by individual' },
   { key: 'pricing.pro.cta', group: 'Pricing', label: 'Professional CTA', default: 'Start Free Trial' },
+  { key: 'pricing.ent.badge', group: 'Pricing', label: 'Enterprise badge', default: 'Everything included' },
+  { key: 'pricing.ent.name', group: 'Pricing', label: 'Enterprise name', default: 'Enterprise' },
+  { key: 'pricing.ent.price', group: 'Pricing', label: 'Enterprise price', default: '£385' },
+  { key: 'pricing.ent.per', group: 'Pricing', label: 'Enterprise price suffix', default: '/month' },
+  { key: 'pricing.ent.note', group: 'Pricing', label: 'Enterprise note', default: 'Per home. Everything in Professional, plus:' },
+  { key: 'pricing.ent.f1', group: 'Pricing', label: 'Enterprise feature 1', default: 'Unlimited annual training allocations' },
+  { key: 'pricing.ent.f2', group: 'Pricing', label: 'Enterprise feature 2', default: 'Build your own audits' },
+  { key: 'pricing.ent.f3', group: 'Pricing', label: 'Enterprise feature 3', default: 'Training effectiveness analytics' },
+  { key: 'pricing.ent.f4', group: 'Pricing', label: 'Enterprise feature 4', default: 'Multi-site group console' },
+  { key: 'pricing.ent.f5', group: 'Pricing', label: 'Enterprise feature 5', default: 'Workforce compliance register' },
+  { key: 'pricing.ent.f6', group: 'Pricing', label: 'Enterprise feature 6', default: 'Priority support' },
+  { key: 'pricing.ent.cta', group: 'Pricing', label: 'Enterprise CTA', default: 'Start Free Trial' },
   { key: 'pricing.cta', group: 'Pricing', label: 'Compare CTA', default: 'Full pricing and feature comparison' },
 
   // Final CTA

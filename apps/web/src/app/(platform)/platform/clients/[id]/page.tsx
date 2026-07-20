@@ -405,6 +405,49 @@ function OnboardingEmailsSection({ token, tenantId }: { token: string; tenantId:
   )
 }
 
+function EnterpriseDiscountToggle({ token, tenantId, planName, initial }: { token: string; tenantId: string; planName: string | null; initial: boolean }) {
+  const [on, setOn] = useState(initial)
+  const [saving, setSaving] = useState(false)
+  const isEnterprise = planName === 'Enterprise'
+
+  async function toggle() {
+    const next = !on
+    setOn(next); setSaving(true)
+    try {
+      await createPlatformClient(token).tenants.setEnterpriseDiscount(tenantId, next)
+    } catch {
+      setOn(!next) // revert on failure
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 border-t border-gray-100 pt-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-neutral-dark">Enterprise closing discount (20% off monthly)</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-neutral-mid">
+            {isEnterprise
+              ? 'Applied automatically at this tenant’s Enterprise monthly checkout. Private — not a shareable code.'
+              : 'Only applies on the Enterprise monthly plan. Enable it here, then move the tenant to Enterprise.'}
+          </p>
+        </div>
+        <button
+          onClick={toggle}
+          disabled={saving}
+          role="switch"
+          aria-checked={on}
+          className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-green-600' : 'bg-gray-300'}`}
+        >
+          <span className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white transition-transform ${on ? 'translate-x-5' : 'translate-x-1'}`} style={{ height: '1.125rem', width: '1.125rem' }} />
+        </button>
+      </div>
+      {on && <p className="mt-2 rounded-lg bg-green-50 px-2.5 py-1.5 text-[11px] font-medium text-green-700">✓ 20% discount allocated{isEnterprise ? '' : ' (takes effect once on Enterprise)'}</p>}
+    </div>
+  )
+}
+
 function GapUsageSection({ token, tenantId }: { token: string; tenantId: string }) {
   const [data, setData] = useState<Awaited<ReturnType<ReturnType<typeof createPlatformClient>['tenants']['gapUsage']>> | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -908,6 +951,15 @@ export default function ClientDetailPage() {
                     ))}
                   </div>
                 </div>
+
+                {token && (
+                  <EnterpriseDiscountToggle
+                    token={token}
+                    tenantId={id}
+                    planName={(detail.tenant.plan as PlanLimits).name}
+                    initial={!!(detail.tenant as { enterprise_discount?: boolean }).enterprise_discount}
+                  />
+                )}
               </div>
             )}
 

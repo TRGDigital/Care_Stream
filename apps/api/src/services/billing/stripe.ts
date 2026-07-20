@@ -96,12 +96,20 @@ async function ensurePlanPrice(plan: any, interval: BillingInterval = 'month'): 
 // Creates a hosted Checkout Session for a tenant to subscribe to a plan.
 export async function createCheckoutSession(tenantId: string, planId: string, interval: BillingInterval = 'month'): Promise<string> {
   const stripe = getStripe()
-  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true } })
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true, enterprise_discount: true } })
   if (!tenant) throw new Error('Tenant not found')
   const plan = await (prisma as any).plan.findUnique({ where: { id: planId } })
   if (!plan || !plan.is_active) throw new Error('Plan not available')
 
   const priceId = await ensurePlanPrice(plan, interval)
+
+  // Per-tenant Enterprise closing discount: applied only when the platform has flagged this
+  // tenant, on the Enterprise plan, monthly billing. It is never self-serve.
+  const applyEnterpriseDiscount =
+    tenant.enterprise_discount === true &&
+    plan.name === 'Enterprise' &&
+    interval === 'month' &&
+    !!plan.stripe_coupon_id
   const admin = await (prisma as any).user.findFirst({
     where:   { tenant_id: tenantId, role: 'admin', is_active: true },
     orderBy: { created_at: 'asc' }, select: { email: true },
@@ -120,8 +128,12 @@ export async function createCheckoutSession(tenantId: string, planId: string, in
     // 14-day free trial with the card captured up front; Stripe auto-charges at trial end.
     subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId }, trial_period_days: TRIAL_DAYS },
     payment_method_collection: 'always',
-    allow_promotion_codes: true,
     billing_address_collection: 'required',
+    // Stripe forbids `discounts` and `allow_promotion_codes` together: pre-apply our coupon
+    // for flagged Enterprise tenants, otherwise let customers enter a public promo code.
+    ...(applyEnterpriseDiscount
+      ? { discounts: [{ coupon: plan.stripe_coupon_id as string }] }
+      : { allow_promotion_codes: true }),
     success_url: `${webUrl()}/start?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:  `${webUrl()}/start?checkout=cancelled`,
   }

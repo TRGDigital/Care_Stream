@@ -6,6 +6,7 @@
 // highlighted passage in the policy's draft and shows it in place (green).
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { findBlock, findHeadingBlock, markSafBlockEl, markBlockAdoptedEl, newBlock } from './gap-detail-modal'
 import { X, Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown } from 'lucide-react'
 
@@ -45,9 +46,17 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   const previewRef = useRef<HTMLDivElement>(null)
   const refKey = statements[0]?.reference_key ?? ''
 
+  // Cache the formatted policy HTML on the FIRST open, keyed by policy. The server rebuilds the
+  // formatted copy on demand (which is non-deterministic), so re-fetching each time made the
+  // highlights/wording appear to shift. Cached client-side, every later open is instant and
+  // identical. The preview is the original policy (adoptions are overlaid in the browser), so it
+  // never goes stale.
   useEffect(() => {
+    const key = `wording-preview-${policyId}`
+    const cached = persistentCache.get<string>(key)
+    if (cached != null) { setHtml(cached); return }
     createApiClient(token).policies.preview(policyId)
-      .then(d => setHtml(d.html || ''))
+      .then(d => { const h = d.html || ''; persistentCache.set(key, h); setHtml(h) })
       .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
   }, [policyId, token])
 

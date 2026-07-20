@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { highlightStaleTerms, findBlock } from '@/lib/policy-preview'
 import { X, Loader2, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Ban, Sparkles } from 'lucide-react'
 
@@ -26,8 +27,7 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
   const positions = conflict.positions
   const [selected, setSelected] = useState(0)                 // which policy shows on the right
   const [htmlBy, setHtmlBy] = useState<Record<string, string>>({})
-  const [previewLoad, setPreviewLoad] = useState(false)
-  const [previewErr, setPreviewErr] = useState('')
+  const [errBy, setErrBy] = useState<Record<string, string>>({})
   const previewRef = useRef<HTMLDivElement>(null)
 
   // The single reconciled wording every policy should adopt. Present on newer conflicts; fetched
@@ -43,6 +43,8 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
   const [dismissing, setDismissing] = useState(false)
 
   const shownId = positions[selected]?.policy_id
+  const shownErr = shownId ? errBy[shownId] : ''
+  const previewLoad = !!shownId && htmlBy[shownId] === undefined && !errBy[shownId]
   const withQuote = positions.filter(p => p.quote)
   const allApplied = withQuote.length > 0 && withQuote.every(p => applied.has(p.policy_id))
   const applyLabel = positions.length === 2 ? 'Apply to both policies' : `Apply to all ${positions.length} policies`
@@ -57,15 +59,23 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
       .finally(() => setResLoad(false))
   }, [conflict.key, conflict.resolution, token])
 
-  // Load the selected policy's preview (cached per policy).
+  // Prefetch + cache EVERY involved policy's formatted preview when the drill-in opens, so
+  // switching between them is instant and identical — no slow re-fetch that flashed the policy
+  // in a half-formatted state first. The formatted HTML is rebuilt on demand server-side (a few
+  // DB + AI calls), so caching it also spares the API a burst of concurrent work. The cache is
+  // shared with the wording overlay and survives reloads.
   useEffect(() => {
-    if (!shownId || htmlBy[shownId] !== undefined) return
-    setPreviewLoad(true); setPreviewErr('')
-    createApiClient(token).policies.preview(shownId)
-      .then(d => setHtmlBy(m => ({ ...m, [shownId]: d.html || '' })))
-      .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
-      .finally(() => setPreviewLoad(false))
-  }, [shownId]) // eslint-disable-line react-hooks/exhaustive-deps
+    let cancelled = false
+    positions.forEach(p => {
+      const key = `policy-preview-${p.policy_id}`
+      const cached = persistentCache.get<string>(key)
+      if (cached != null) { setHtmlBy(m => (p.policy_id in m ? m : { ...m, [p.policy_id]: cached })); return }
+      createApiClient(token).policies.preview(p.policy_id)
+        .then(d => { const h = d.html || ''; persistentCache.set(key, h); if (!cancelled) setHtmlBy(m => ({ ...m, [p.policy_id]: h })) })
+        .catch(e => { if (!cancelled) setErrBy(m => ({ ...m, [p.policy_id]: e.message ?? 'Could not load the policy.' })) })
+    })
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Highlight the disputed passage in the shown policy — or, once aligned, show the reconciled
   // wording in its place (green) — and scroll to it.
@@ -225,12 +235,12 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
 
             {previewLoad ? (
               <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
-            ) : previewErr ? (
-              <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
+            ) : shownErr ? (
+              <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{shownErr}</div>
             ) : (
               <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             )}
-            {!previewLoad && !previewErr && !positions[selected]?.quote && (
+            {!previewLoad && !shownErr && !positions[selected]?.quote && (
               <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-mid"><AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-500" /> No exact passage recorded for this policy — read it to locate the wording.</p>
             )}
           </div>

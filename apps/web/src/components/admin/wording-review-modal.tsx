@@ -52,7 +52,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   // identical. The preview is the original policy (adoptions are overlaid in the browser), so it
   // never goes stale.
   useEffect(() => {
-    const key = `wording-preview-${policyId}`
+    const key = `policy-preview-${policyId}`
     const cached = persistentCache.get<string>(key)
     if (cached != null) { setHtml(cached); return }
     createApiClient(token).policies.preview(policyId)

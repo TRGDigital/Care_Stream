@@ -91,29 +91,37 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   return true
 }
 
-// Find (without mutating) the block/heading a SAF wording suggestion belongs to. Shared by the
-// marker below and by callers that need each suggestion's position before numbering them.
-export function locateSafBlock(root: HTMLElement, anchor: string): HTMLElement | null {
-  if (!anchor || normText(anchor).length < 6) return null
+// Find a heading (h1–h6) whose text matches the anchor — used to place "add under heading"
+// wording. A title is never rewritten, so this deliberately looks ONLY at headings (a short
+// anchor like "Training" must not fuzzy-match the body paragraph that happens to say "training").
+export function findHeadingBlock(root: HTMLElement, anchor: string): HTMLElement | null {
+  const q = normText(anchor)
+  if (q.length < 3) return null
+  const heads = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
+  return heads.find(h => normText(h.textContent || '') === q)
+      ?? heads.find(h => { const t = normText(h.textContent || ''); return t.length >= 3 && (t.includes(q) || q.includes(t)) })
+      ?? null
+}
+
+// Tint + W-number a SAF "amend" block that has already been located (element-based, so the
+// caller can guarantee one block hosts at most one badge). Indigo, distinct from gap markers.
+export function markSafBlockEl(el: HTMLElement, num: number): void {
+  if (!el.dataset.csMarked) el.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
+  el.dataset.csMarked = '1'
+  el.insertBefore(makeBadge('W' + num, 'bg-indigo-600 text-white'), el.firstChild)
+}
+
+// Anchor-based SAF marker (Coverage detail): locate the block or heading, tint indigo, W-number.
+export function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
+  if (!anchor || normText(anchor).length < 6) return false
   let target = findBlock(root, anchor)
   if (!target) {
     const q = normText(anchor)
     const heads = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
     target = heads.find(h => { const t = normText(h.textContent || ''); return t === q || (t.length >= 6 && (t.includes(q) || q.includes(t))) }) ?? null
   }
-  return target
-}
-
-// Highlight the block/heading a SAF wording suggestion belongs to, in indigo with its number
-// (distinct from the amber "what to add" markers). Returns whether it could be placed.
-export function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
-  const target = locateSafBlock(root, anchor)
   if (!target) return false
-  // Don't stack a second background tint on a block a gap marker already tinted — that muddies
-  // the colour. Keep the gap tint; the indigo chip is enough to signal the SAF suggestion.
-  if (!target.dataset.csMarked) target.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
-  target.dataset.csMarked = '1'
-  target.insertBefore(makeBadge('W' + num, 'bg-indigo-600 text-white'), target.firstChild)
+  markSafBlockEl(target, num)
   return true
 }
 
@@ -150,7 +158,17 @@ function adoptedBlock(i: number, text: string, title?: string): HTMLElement {
   return wrap
 }
 
-// Amend ADOPTED: replace the whole block content in place with the adopted wording (green).
+// Amend ADOPTED (element-based): replace the located block's content in place with the adopted
+// wording (green), keeping its W-number so it still lines up with its card on the left.
+export function markBlockAdoptedEl(el: HTMLElement, num: number, newText: string): void {
+  el.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+  el.dataset.csMarked = '1'
+  el.textContent = ''
+  el.appendChild(makeBadge('W' + num, 'bg-green-600 text-white'))
+  el.appendChild(document.createTextNode(newText))
+}
+
+// Anchor-based amend-adopted (Coverage detail): locate the block, replace in place, numeric badge.
 export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText: string): boolean {
   const target = findBlock(root, anchor)
   if (!target) return false
@@ -161,6 +179,35 @@ export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, n
   target.appendChild(makeBadge(String(i + 1), 'bg-green-600 text-white'))
   target.appendChild(document.createTextNode(newText))
   return true
+}
+
+// A "new content" block for add-under-heading / new-section suggestions: a bold title over the
+// body. Green once adopted (it's now part of the draft); indigo + dashed while still proposed.
+// Titles are never rewritten in place, so new wording is always presented as its own block.
+export function newBlock(num: number, title: string | undefined, body: string, adopted: boolean, note: string): HTMLElement {
+  const wrap = document.createElement('div')
+  wrap.className = adopted
+    ? 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
+    : 'not-prose my-2 rounded-md border border-dashed border-indigo-300 bg-indigo-50/60 px-3 py-2'
+  const head = document.createElement('div')
+  head.className = 'mb-1 flex items-center gap-2'
+  head.appendChild(makeBadge('W' + num, adopted ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white'))
+  const tag = document.createElement('span')
+  tag.className = `text-[10px] font-bold uppercase tracking-wide ${adopted ? 'text-green-700' : 'text-indigo-700'}`
+  tag.textContent = adopted ? 'Adopted' : note
+  head.appendChild(tag)
+  wrap.appendChild(head)
+  if (title) {
+    const h = document.createElement('p')
+    h.className = `text-sm font-bold ${adopted ? 'text-green-900' : 'text-neutral-dark'}`
+    h.textContent = title
+    wrap.appendChild(h)
+  }
+  const p = document.createElement('p')
+  p.className = `whitespace-pre-line text-sm leading-relaxed ${adopted ? 'text-green-900' : 'text-neutral-dark'}`
+  p.textContent = body
+  wrap.appendChild(p)
+  return wrap
 }
 
 type AdoptedMap = Map<number, { new_text: string; section_title?: string; placement: string }>

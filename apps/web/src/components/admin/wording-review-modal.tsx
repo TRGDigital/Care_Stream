@@ -6,10 +6,22 @@
 // highlighted passage in the policy's draft and shows it in place (green).
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { locateSafBlock, markSafBlock, markBlockAdopted } from './gap-detail-modal'
+import { findBlock, findHeadingBlock, markSafBlockEl, markBlockAdoptedEl, newBlock } from './gap-detail-modal'
 import { X, Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown } from 'lucide-react'
 
 type Alignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }
+
+// New wording (add-under-heading / new-section) often carries its own title as the first short
+// line — split it out so the title can be shown bold and never duplicated in the body.
+function splitNewWording(a: Alignment): { title?: string; body: string } {
+  if (a.section_title && a.section_title.trim()) return { title: a.section_title.trim(), body: a.wording.trim() }
+  const parts = a.wording.split(/\n\n+/)
+  const head = parts[0]?.trim() ?? ''
+  if (parts.length > 1 && head.length > 0 && head.length <= 80 && !/[.!?:]$/.test(head)) {
+    return { title: head, body: parts.slice(1).join('\n\n').trim() }
+  }
+  return { body: a.wording.trim() }
+}
 
 export function WordingReviewModal({ token, policyId, policyName, statements, alignments, onClose, onAdopted }: {
   token: string
@@ -47,29 +59,49 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
     if (!root || html == null) return
     root.innerHTML = html
 
-    // 1) Locate each suggestion's block (without mutating) and record its document position.
+    // 1) Locate each suggestion (without mutating), placement-aware: an "amend" rewrites an
+    //    existing body block; "add_under_heading" attaches under a heading; "new_section" has
+    //    no anchor and lands at the end. A title is never rewritten in place.
     const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote,h1,h2,h3,h4,h5,h6'))
+    const elFor  = alignments.map(a =>
+      a.placement === 'amend'            ? findBlock(root, a.anchor)
+    : a.placement === 'add_under_heading' ? findHeadingBlock(root, a.anchor)
+    : null)
     const pos = new Map<number, number>()
-    alignments.forEach((a, i) => {
-      if (!a.anchor) return
-      const el = locateSafBlock(root, a.anchor)
-      if (el) pos.set(i, blocks.indexOf(el))
-    })
-    // 2) Located suggestions in document order, then any unlocated ones in their original order.
+    elFor.forEach((el, i) => { if (el) pos.set(i, blocks.indexOf(el)) })
+
+    // 2) Located suggestions in document order, then any without a position (new sections,
+    //    or anchors we could not find) in their original order.
     const inDoc = [...pos.keys()].sort((x, y) => (pos.get(x) ?? 0) - (pos.get(y) ?? 0))
     const rest  = alignments.map((_, i) => i).filter(i => !pos.has(i))
     const ord   = [...inDoc, ...rest]
     const num   = new Map<number, number>()
     ord.forEach((origIdx, k) => num.set(origIdx, k + 1))
 
-    // 3) Insert the markers with those shared numbers.
+    // 3) Render the markers with those shared numbers. Each body block hosts at most ONE amend
+    //    badge — two suggestions never stack on the same passage.
+    const claimed = new Set<Element>()
     const loc = new Set<number>()
     ord.forEach(origIdx => {
       const a = alignments[origIdx]
-      if (!a.anchor) return
       const n = num.get(origIdx) ?? origIdx + 1
-      if (adopted.has(origIdx)) { if (markBlockAdopted(root, a.anchor, n - 1, a.wording)) loc.add(origIdx); return }
-      if (markSafBlock(root, a.anchor, n)) loc.add(origIdx)
+      const { title, body } = splitNewWording(a)
+      if (a.placement === 'amend') {
+        const el = elFor[origIdx]
+        if (!el || claimed.has(el)) return          // no block, or would collide → leave unplaced
+        claimed.add(el)
+        if (adopted.has(origIdx)) markBlockAdoptedEl(el, n, a.wording)
+        else markSafBlockEl(el, n)
+        loc.add(origIdx)
+      } else if (a.placement === 'add_under_heading') {
+        const node = newBlock(n, title, body, adopted.has(origIdx), 'New wording to add here')
+        const h = elFor[origIdx]
+        if (h) h.after(node); else root.appendChild(node)   // heading gone → append at the end
+        loc.add(origIdx)
+      } else {                                       // new_section
+        root.appendChild(newBlock(n, title ?? (a.section_title || undefined), body, adopted.has(origIdx), 'New section'))
+        loc.add(origIdx)
+      }
     })
     setLocated(loc)
     setOrder(ord)
@@ -78,10 +110,14 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   async function adopt(a: Alignment, idx: number) {
     setAdopting(idx); setAdoptErr('')
     try {
+      const { title, body } = splitNewWording(a)
       await createApiClient(token).analytics.adoptSuggestion({
         policy_id: policyId, reference_key: refKey, requirement: a.focus,
         placement: a.placement, old_text: (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.anchor : '',
-        new_text: a.wording, section_title: a.placement === 'new_section' ? (a.section_title || undefined) : undefined,
+        // For a new section, add the title as a bold heading (## …) with just the body beneath it,
+        // so the title isn't repeated in the body text.
+        new_text: a.placement === 'new_section' ? body : a.wording,
+        section_title: a.placement === 'new_section' ? (title || undefined) : undefined,
       })
       setAdopted(s => new Set(s).add(idx))
       onAdopted?.()
@@ -132,6 +168,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
             {order.map((origIdx, k) => {
               const a = alignments[origIdx]
               const num = k + 1
+              const { title, body } = splitNewWording(a)
               return (
               <div key={origIdx} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
                 <div className="flex items-start gap-2">
@@ -140,17 +177,16 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
                 </div>
                 <p className="mt-1.5 text-[11px] text-neutral-mid">
                   {located.has(origIdx)
-                    ? <>Highlighted <span className="font-semibold text-indigo-700">W{num}</span> in the policy{a.placement === 'amend' ? <>, adopting rewrites that passage.</> : <>, add the wording there.</>}</>
+                    ? <>Shown as <span className="font-semibold text-indigo-700">W{num}</span> in the policy{a.placement === 'amend' ? <>; adopting rewrites that passage.</> : a.placement === 'add_under_heading' ? <>, as a new block under its heading; adopt to add it.</> : <>, as a new section; adopt to add it.</>}</>
                     : html == null
                       ? <span className="inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Locating this passage in the policy…</span>
-                      : a.placement === 'new_section'
-                        ? <>Add as a new section{a.section_title ? ` “${a.section_title}”` : ''}.</>
-                        : a.placement === 'amend'
-                          ? <>Couldn&rsquo;t pinpoint this passage automatically &mdash; adopting still rewrites it in your draft.</>
-                          : <>Add near this wording in your policy.</>}
+                      : <>Couldn&rsquo;t pinpoint this passage automatically &mdash; adopting still rewrites it in your draft.</>}
                 </p>
-                {a.placement === 'amend' && <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Person-centred rewrite</p>}
-                <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
+                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
+                  {a.placement === 'amend' ? 'Person-centred rewrite' : a.placement === 'new_section' ? 'New section to add' : 'New wording to add'}
+                </p>
+                {a.placement !== 'amend' && title && <p className="mt-0.5 text-sm font-bold text-neutral-dark">{title}</p>}
+                <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.placement === 'amend' ? a.wording : body}</p>
                 <div className="mt-2">
                   {adopted.has(origIdx) ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, shown in the policy</span>

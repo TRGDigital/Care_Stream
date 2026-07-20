@@ -992,10 +992,11 @@ export function createApiClient(token: string) {
         high: number
         conflicts: Array<{
           id: string; key: string; set_type: 'duplicate' | 'topic'; set_label: string
-          topic: string; summary: string; severity: 'high' | 'medium' | 'low'
+          topic: string; summary: string; severity: 'high' | 'medium' | 'low'; resolution: string
           positions: Array<{ policy_id: string; policy_name: string; statement: string; quote: string }>
         }>
       }>('/analytics/consistency', token),
+      consistencyResolve: (key: string) => apiFetch<{ resolution: string }>('/analytics/consistency/resolve', token, { method: 'POST', body: JSON.stringify({ key }) }),
       consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
       consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),

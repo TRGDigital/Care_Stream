@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, findBlock } from '@/lib/policy-preview'
-import { X, Loader2, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Ban } from 'lucide-react'
+import { X, Loader2, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Ban, Sparkles } from 'lucide-react'
 
 type Conflict = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['consistency']>>['conflicts'][number]
 
@@ -13,9 +13,9 @@ const SEV_BADGE: Record<string, string> = {
   low:    'bg-slate-100 text-slate-600',
 }
 
-// A/B (switcher) drill-in for one cross-policy conflict: the disagreeing policies' claims on the
-// left with a "pick the correct value" step, and the policy preview on the right with a switcher
-// and the disputed passage highlighted — the same split-screen as the coverage/lint drill-ins.
+// Drill-in for one cross-policy conflict: the disagreeing policies on the left with a SINGLE
+// reconciled wording to adopt into all of them ("Apply to both"), and the policy preview on the
+// right with a switcher and the disputed passage highlighted (green once aligned).
 export function ConflictModal({ token, conflict, onClose, onResolved, onDismissed }: {
   token:       string
   conflict:    Conflict
@@ -25,19 +25,37 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
 }) {
   const positions = conflict.positions
   const [selected, setSelected] = useState(0)                 // which policy shows on the right
-  const [correct, setCorrect] = useState<number | null>(null) // which position is the source of truth
   const [htmlBy, setHtmlBy] = useState<Record<string, string>>({})
   const [previewLoad, setPreviewLoad] = useState(false)
   const [previewErr, setPreviewErr] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
 
-  const [adopted, setAdopted] = useState<Set<string>>(new Set())
-  const [busy, setBusy] = useState<string | null>(null)
+  // The single reconciled wording every policy should adopt. Present on newer conflicts; fetched
+  // (generated + cached) on open for older ones.
+  const [resolution, setResolution] = useState<string>(conflict.resolution ?? '')
+  const [resLoad, setResLoad] = useState(!conflict.resolution)
+  const [resErr, setResErr] = useState('')
+
+  const [applied, setApplied] = useState<Set<string>>(new Set())
+  const [busy, setBusy] = useState(false)
   const [adoptErr, setAdoptErr] = useState('')
   const [pending, setPending] = useState(0)
   const [dismissing, setDismissing] = useState(false)
 
   const shownId = positions[selected]?.policy_id
+  const withQuote = positions.filter(p => p.quote)
+  const allApplied = withQuote.length > 0 && withQuote.every(p => applied.has(p.policy_id))
+  const applyLabel = positions.length === 2 ? 'Apply to both policies' : `Apply to all ${positions.length} policies`
+
+  // Fetch the reconciled wording if this conflict predates it.
+  useEffect(() => {
+    if (conflict.resolution) return
+    setResLoad(true); setResErr('')
+    createApiClient(token).analytics.consistencyResolve(conflict.key)
+      .then(d => { if (d.resolution) setResolution(d.resolution); else setResErr('We could not draft a single wording for this one — align the policies by hand.') })
+      .catch(e => setResErr(e.message ?? 'Could not draft a reconciled wording.'))
+      .finally(() => setResLoad(false))
+  }, [conflict.key, conflict.resolution, token])
 
   // Load the selected policy's preview (cached per policy).
   useEffect(() => {
@@ -49,7 +67,8 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
       .finally(() => setPreviewLoad(false))
   }, [shownId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Highlight the disputed passage in the shown policy and scroll to it.
+  // Highlight the disputed passage in the shown policy — or, once aligned, show the reconciled
+  // wording in its place (green) — and scroll to it.
   useEffect(() => {
     const root = previewRef.current
     const html = shownId ? htmlBy[shownId] : undefined
@@ -57,6 +76,16 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
     root.innerHTML = html
     const quote = positions[selected]?.quote
     if (!quote) return
+
+    if (applied.has(shownId) && resolution) {
+      const block = findBlock(root, quote)
+      if (block) {
+        block.textContent = resolution
+        block.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+        block.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        return
+      }
+    }
     highlightStaleTerms(root, [[quote]])
     let el = root.querySelector<HTMLElement>('mark[data-lint="0"]')
     // The extracted quote isn't always verbatim in the formatted policy — fall back to the
@@ -66,26 +95,30 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
       if (block) { block.classList.add('bg-yellow-200', 'rounded', 'px-1', 'py-0.5'); el = block }
     }
     el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }, [selected, htmlBy]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected, htmlBy, applied, resolution]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function replaceIn(wrongIdx: number) {
-    if (correct == null) return
-    const wrong = positions[wrongIdx], right = positions[correct]
-    if (!wrong.quote || !right.quote) { setAdoptErr('This one has no exact wording to replace — open the policy and edit it directly.'); return }
-    setBusy(wrong.policy_id); setAdoptErr('')
+  // Apply the one reconciled wording to every policy, replacing its conflicting passage.
+  async function applyToAll() {
+    if (!resolution) return
+    setBusy(true); setAdoptErr('')
+    const done = new Set(applied)
+    let lastPending = pending
     try {
-      const res = await createApiClient(token).analytics.adoptSuggestion({
-        policy_id: wrong.policy_id, reference_key: `consistency:${conflict.key}`,
-        requirement: conflict.topic, placement: 'amend',
-        old_text: wrong.quote, new_text: right.quote,
-      })
-      setAdopted(s => new Set(s).add(wrong.policy_id))
-      setPending(res.pending)
-      onResolved()
-      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      for (const p of positions) {
+        if (!p.quote || done.has(p.policy_id)) continue
+        const res = await createApiClient(token).analytics.adoptSuggestion({
+          policy_id: p.policy_id, reference_key: `consistency:${conflict.key}`,
+          requirement: conflict.topic, placement: 'amend',
+          old_text: p.quote, new_text: resolution,
+        })
+        done.add(p.policy_id); lastPending = res.pending
+      }
+      setApplied(done); setPending(lastPending); onResolved()
+      const noQuote = positions.length - withQuote.length
+      if (noQuote > 0) setAdoptErr(`Applied where we could locate the passage. ${noQuote} polic${noQuote === 1 ? 'y has' : 'ies have'} no exact passage recorded — open ${noQuote === 1 ? 'it' : 'them'} and paste the wording in.`)
     } catch (e: any) {
-      setAdoptErr(e.message ?? 'Could not apply this change.')
-    } finally { setBusy(null) }
+      setAdoptErr(e.message ?? 'Could not apply the wording.')
+    } finally { setBusy(false) }
   }
 
   async function dismiss() {
@@ -110,7 +143,7 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
         </div>
 
         <div className="grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[87vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
-          {/* LEFT — the disagreement + resolution */}
+          {/* LEFT — the disagreement + single reconciled wording */}
           <div className="space-y-4 overflow-y-auto px-6 py-5 lg:max-h-[87vh]">
             {conflict.summary && <p className="text-sm text-neutral-dark">{conflict.summary}</p>}
             {pending > 0 && (
@@ -119,42 +152,51 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
               </p>
             )}
 
+            {/* What each policy currently says — read-only context */}
             <div>
-              <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">These policies disagree — pick the correct one</p>
+              <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">These policies disagree</p>
               <div className="space-y-2">
                 {positions.map((p, i) => (
-                  <div key={i} className={`rounded-lg border px-4 py-3 ${correct === i ? 'border-green-300 bg-green-50/40' : 'border-gray-200 bg-white'}`}>
-                    <label className="flex cursor-pointer items-start gap-2.5">
-                      <input type="radio" name="correct" checked={correct === i} onChange={() => setCorrect(i)} className="mt-1 accent-green-600" />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-neutral-dark">
-                          <FileText size={13} className="shrink-0 text-teal" /> {p.policy_name}
-                          {correct === i && <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-green-700">Correct</span>}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-dark">{p.statement}</p>
-                        {p.quote && <p className="mt-1 border-l-2 border-gray-200 pl-2 text-xs italic text-neutral-mid">&ldquo;{p.quote}&rdquo;</p>}
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <button onClick={() => setSelected(i)} className="text-xs font-medium text-teal hover:underline">Show in this policy</button>
-                          {correct != null && correct !== i && (
-                            adopted.has(p.policy_id) ? (
-                              <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Aligned in draft</span>
-                            ) : (
-                              <button onClick={() => replaceIn(i)} disabled={busy !== null}
-                                className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-2.5 py-1 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
-                                {busy === p.policy_id ? <><Loader2 size={12} className="animate-spin" /> Aligning…</> : <><Check size={12} /> Align to the correct value</>}
-                              </button>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    </label>
+                  <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+                    <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-neutral-dark">
+                      <FileText size={13} className="shrink-0 text-teal" /> {p.policy_name}
+                      {applied.has(p.policy_id) && <span className="inline-flex items-center gap-1 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-green-700"><Check size={10} /> Aligned</span>}
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-dark">{p.statement}</p>
+                    {p.quote && <p className="mt-1 border-l-2 border-gray-200 pl-2 text-xs italic text-neutral-mid">&ldquo;{p.quote}&rdquo;</p>}
+                    <button onClick={() => setSelected(i)} className="mt-2 text-xs font-medium text-teal hover:underline">Show in this policy</button>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* The one reconciled wording + apply-to-all */}
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
+              <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-indigo-700"><Sparkles size={13} /> Agreed wording for {positions.length === 2 ? 'both policies' : 'all these policies'}</p>
+              {resLoad ? (
+                <p className="mt-2 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Drafting a single wording that resolves the conflict…</p>
+              ) : resErr ? (
+                <p className="mt-2 text-sm text-red-600">{resErr}</p>
+              ) : (
+                <>
+                  <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-neutral-dark">{resolution}</p>
+                  <p className="mt-2 text-xs text-neutral-mid">Adopting replaces the conflicting passage in {positions.length === 2 ? 'both policies' : 'each policy'} with this wording, so they all say the same thing.</p>
+                  <div className="mt-2.5">
+                    {allApplied ? (
+                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700"><CheckCircle2 size={15} /> Applied to {positions.length === 2 ? 'both policies' : 'all policies'}</span>
+                    ) : (
+                      <button onClick={applyToAll} disabled={busy || !resolution}
+                        className="inline-flex items-center gap-1.5 rounded-btn bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
+                        {busy ? <><Loader2 size={14} className="animate-spin" /> Applying…</> : <><Check size={14} /> {applyLabel}</>}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
-            {correct == null && <p className="flex items-start gap-1.5 text-xs text-neutral-mid"><Info size={13} className="mt-0.5 shrink-0" /> Pick which policy holds the correct value, then align the others to it. Each change goes through the same approval workflow.</p>}
+            <p className="flex items-start gap-1.5 text-xs text-neutral-mid"><Info size={13} className="mt-0.5 shrink-0" /> Each change goes into the policy draft and through the same approval workflow before staff see it.</p>
 
             <div className="border-t border-gray-100 pt-3">
               <button onClick={dismiss} disabled={dismissing}
@@ -175,7 +217,11 @@ export function ConflictModal({ token, conflict, onClose, onResolved, onDismisse
                 </button>
               ))}
             </div>
-            <p className="mb-3 text-xs text-neutral-mid">The disputed passage is highlighted in <span className="font-medium text-neutral-dark">{positions[selected]?.policy_name}</span>.</p>
+            <p className="mb-3 text-xs text-neutral-mid">
+              {applied.has(shownId ?? '')
+                ? <>The agreed wording is now shown in place (green) in <span className="font-medium text-neutral-dark">{positions[selected]?.policy_name}</span>.</>
+                : <>The disputed passage is highlighted in <span className="font-medium text-neutral-dark">{positions[selected]?.policy_name}</span>.</>}
+            </p>
 
             {previewLoad ? (
               <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>

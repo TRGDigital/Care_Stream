@@ -253,13 +253,14 @@ export async function extractClaimsBatch(tenantId: string, batch: Array<{ id: st
 
 export interface ConflictPosition { policy_id: string; policy_name: string; statement: string; quote: string }
 export interface PolicyConflict {
-  id:        string
-  set_type:  'duplicate' | 'topic'
-  set_label: string
-  topic:     string
-  summary:   string
-  severity:  'high' | 'medium' | 'low'
-  positions: ConflictPosition[]
+  id:         string
+  set_type:   'duplicate' | 'topic'
+  set_label:  string
+  topic:      string
+  summary:    string
+  severity:   'high' | 'medium' | 'low'
+  resolution: string        // one reconciled wording to replace the conflicting passage in EVERY policy
+  positions:  ConflictPosition[]
 }
 
 const DETECT_SYSTEM =
@@ -284,12 +285,13 @@ function detectPrompt(members: Array<{ name: string; claims: PolicyClaim[] }>): 
     '- Different points that merely share words.',
     'When in any doubt, DO NOT report it.',
     '',
-    'For each genuine contradiction return: topic (the point in dispute), summary (one sentence), severity (high|medium|low), and positions — for EACH conflicting policy, its exact name from the list, its claim (statement), and a short VERBATIM quote copied from that policy.',
+    'For each genuine contradiction return: topic (the point in dispute), summary (one sentence), severity (high|medium|low), resolution, and positions — for EACH conflicting policy, its exact name from the list, its claim (statement), and a short VERBATIM quote copied from that policy.',
+    'resolution = ONE correct, reconciled wording that should REPLACE the conflicting passage in EVERY one of these policies so they all agree. Write it as one or two clear, self-contained sentences that would read naturally in any of the policies, using the value that is correct and compliant with UK care regulation and best practice. If you are genuinely unsure which value is correct, choose the safer or stricter option.',
     '',
     'POLICIES AND CLAIMS:',
     blocks,
     '',
-    'Return ONLY JSON: {"conflicts":[{"topic":"...","summary":"...","severity":"...","positions":[{"policy_name":"...","statement":"...","quote":"..."}]}]}',
+    'Return ONLY JSON: {"conflicts":[{"topic":"...","summary":"...","severity":"...","resolution":"...","positions":[{"policy_name":"...","statement":"...","quote":"..."}]}]}',
   ].join('\n')
 }
 
@@ -325,7 +327,7 @@ async function detectSetConflicts(set: ComparisonSet, claimsByPolicy: Map<string
     out.push({
       id: `${set.id}-${i}`, set_type: set.type, set_label: set.label,
       topic: String(c?.topic ?? '').trim() || 'Inconsistency', summary: String(c?.summary ?? '').trim(),
-      severity, positions,
+      severity, resolution: String(c?.resolution ?? '').trim(), positions,
     })
   })
   return out
@@ -363,6 +365,53 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
 // even though the volatile per-run id changes.
 export function conflictKey(c: PolicyConflict): string {
   return `${normName(c.topic)}::${[...new Set(c.positions.map(p => p.policy_id))].sort().join(',')}`
+}
+
+// ── On-demand reconciliation ──────────────────────────────────────────────────────
+// A conflict detected before we started producing a reconciled wording has no `resolution`.
+// The drill-in fetches one here on open — generated once and cached back into the stored
+// conflict, so both new and older conflicts show a single "apply to both" wording.
+
+const RECONCILE_SYSTEM =
+  'You reconcile a contradiction between policies from ONE UK care service into a single correct wording that every one of those policies should adopt, so they stop disagreeing.'
+
+function reconcilePrompt(c: PolicyConflict): string {
+  return [
+    `Point in dispute: ${c.topic}`,
+    c.summary ? `Summary: ${c.summary}` : '',
+    '',
+    'The policies currently say:',
+    ...c.positions.map(p => `- ${p.policy_name}: ${p.statement}${p.quote ? ` | "${p.quote}"` : ''}`),
+    '',
+    'Write ONE correct, reconciled wording that should REPLACE the conflicting passage in EVERY one of these policies so they all agree. It must be self-contained (one or two clear sentences), read naturally in any of the policies, and use the value that is correct and compliant with UK care regulation and best practice. If you are genuinely unsure which value is correct, choose the safer or stricter option.',
+    'Return ONLY JSON: {"resolution":"..."}',
+  ].filter(Boolean).join('\n')
+}
+
+export async function resolveConflict(tenantId: string, key: string): Promise<{ resolution: string }> {
+  const row = await (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { conflicts: true } }).catch(() => null)
+  const conflicts: PolicyConflict[] = Array.isArray(row?.conflicts) ? row.conflicts : []
+  const idx = conflicts.findIndex(c => conflictKey(c) === key)
+  if (idx < 0) return { resolution: '' }
+  const c = conflicts[idx]
+  if (c.resolution && c.resolution.trim()) return { resolution: c.resolution.trim() }
+
+  await checkAiCreditLimit(tenantId)
+  let resolution = ''
+  try {
+    const out = await callClaude(RECONCILE_SYSTEM, reconcilePrompt(c), { maxTokens: 600, temperature: 0 })
+    const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
+    resolution = String(parsed?.resolution ?? '').trim()
+  } catch (e: any) {
+    console.error('[consistency] reconcile failed', key, e?.message)
+    return { resolution: '' }
+  }
+  if (resolution) {
+    conflicts[idx] = { ...c, resolution }
+    await (prisma as any).policyConsistency.update({ where: { tenant_id: tenantId }, data: { conflicts } }).catch(() => {})
+    await logAiCredit(tenantId, 'policy_consistency', key)
+  }
+  return { resolution }
 }
 
 export async function dismissConflict(tenantId: string, key: string): Promise<void> {

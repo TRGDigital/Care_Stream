@@ -13,7 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
-import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -685,6 +685,25 @@ analyticsRouter.get('/consistency', requireAdmin, async (_req: Request, res: Res
     ok(res, await getConsistency(tenantId))
   } catch (e: any) {
     err(res, 'CONSISTENCY_READ_FAILED', e.message ?? 'Could not load consistency.', 500)
+  }
+})
+
+// Get (generating + caching if needed) the single reconciled wording for one conflict.
+analyticsRouter.post('/consistency/resolve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const key = String((req.body ?? {}).key ?? '').trim()
+  if (!key) { err(res, 'VALIDATION_ERROR', 'key is required'); return }
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    ok(res, await resolveConflict(tenantId, key))
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'CONSISTENCY_RESOLVE_FAILED', e.message ?? 'Could not reconcile this conflict.', 500)
   }
 })
 

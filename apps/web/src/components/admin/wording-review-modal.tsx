@@ -94,7 +94,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
         else markSafBlockEl(el, n)
         loc.add(origIdx)
       } else if (a.placement === 'add_under_heading') {
-        const node = newBlock(n, title, body, adopted.has(origIdx), 'New wording to add here')
+        const node = newBlock(n, title, body, adopted.has(origIdx), 'New wording')
         const h = elFor[origIdx]
         if (h) h.after(node); else root.appendChild(node)   // heading gone → append at the end
         loc.add(origIdx)

@@ -181,30 +181,39 @@ export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, n
   return true
 }
 
+// A round W-numbered badge that lines up with the left-hand cards, in the palette of the block
+// it sits in (green when adopted, teal while proposed) — matches the Coverage detail's badges.
+function roundWBadge(num: number, cls: string): HTMLElement {
+  const b = document.createElement('span')
+  b.textContent = 'W' + num
+  b.className = `flex h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${cls}`
+  return b
+}
+
 // A "new content" block for add-under-heading / new-section suggestions: a bold title over the
-// body. Green once adopted (it's now part of the draft); indigo + dashed while still proposed.
-// Titles are never rewritten in place, so new wording is always presented as its own block.
+// body. Formatted to match the Coverage detail's new sections — green once adopted (it's part of
+// the draft), teal + dashed while still proposed. Titles are always presented as their own block.
 export function newBlock(num: number, title: string | undefined, body: string, adopted: boolean, note: string): HTMLElement {
   const wrap = document.createElement('div')
   wrap.className = adopted
     ? 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
-    : 'not-prose my-2 rounded-md border border-dashed border-indigo-300 bg-indigo-50/60 px-3 py-2'
+    : 'not-prose my-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2'
   const head = document.createElement('div')
   head.className = 'mb-1 flex items-center gap-2'
-  head.appendChild(makeBadge('W' + num, adopted ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white'))
+  head.appendChild(roundWBadge(num, adopted ? 'bg-green-200 text-green-900' : 'bg-teal-200 text-teal-900'))
   const tag = document.createElement('span')
-  tag.className = `text-[10px] font-bold uppercase tracking-wide ${adopted ? 'text-green-700' : 'text-indigo-700'}`
+  tag.className = `text-[10px] font-bold uppercase tracking-wide ${adopted ? 'text-green-700' : 'text-teal-700'}`
   tag.textContent = adopted ? 'Adopted' : note
   head.appendChild(tag)
   wrap.appendChild(head)
   if (title) {
     const h = document.createElement('p')
-    h.className = `text-sm font-bold ${adopted ? 'text-green-900' : 'text-neutral-dark'}`
+    h.className = `text-sm font-bold ${adopted ? 'text-green-900' : 'text-teal-900'}`
     h.textContent = title
     wrap.appendChild(h)
   }
   const p = document.createElement('p')
-  p.className = `whitespace-pre-line text-sm leading-relaxed ${adopted ? 'text-green-900' : 'text-neutral-dark'}`
+  p.className = `whitespace-pre-line text-sm leading-relaxed ${adopted ? 'text-green-900' : 'text-teal-900'}`
   p.textContent = body
   wrap.appendChild(p)
   return wrap

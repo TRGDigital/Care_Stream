@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { locateSafBlock, markSafBlock, markBlockAdopted } from './gap-detail-modal'
-import { X, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown } from 'lucide-react'
 
 type Alignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }
 
@@ -29,6 +29,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   // W-numbers read 1,2,3… top-to-bottom on both panels. Falls back to list order until located.
   const [order, setOrder]       = useState<number[]>(() => alignments.map((_, i) => i))
   const [adoptErr, setAdoptErr] = useState('')
+  const [synOpen, setSynOpen]   = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const refKey = statements[0]?.reference_key ?? ''
 
@@ -99,7 +100,31 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
           <button onClick={onClose} aria-label="Close" className="shrink-0 rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"><X size={18} /></button>
         </div>
 
-        <div className="grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[87vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+        {/* Synopsis — what SAF wording alignment is and does (like the Coverage detail summary) */}
+        <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50/50">
+          <div className="flex items-start gap-2.5 px-4 py-3">
+            <BookOpen size={15} className="mt-0.5 shrink-0 text-indigo-600" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">About CQC wording alignment</p>
+              <p className="mt-1 text-sm leading-relaxed text-neutral-dark">
+                CQC&rsquo;s Single Assessment Framework (SAF) judges providers against &ldquo;quality statements&rdquo; written as first-person &ldquo;we&rdquo; statements &mdash; plain, person-centred language about people&rsquo;s experiences and outcomes.
+              </p>
+              {synOpen && (
+                <div className="mt-2 space-y-2 text-sm leading-relaxed text-neutral-dark">
+                  <p>This checks {policyName ? 'this policy' : 'the policy'} against the quality statements it supports{statements.length ? <> ({statements.map(s => s.name).join(', ')})</> : ''}, and suggests rewrites so your wording mirrors that person-centred style. It never changes the policy&rsquo;s meaning or your legal duties &mdash; only how it reads.</p>
+                  <p>Each suggestion is numbered (W1, W2&hellip;) and highlighted on the policy to the right. Adopting a rewrite replaces that passage in your working draft; nothing changes for staff until you publish the policy.</p>
+                </div>
+              )}
+              <div className="mt-2">
+                <button onClick={() => setSynOpen(o => !o)} className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 underline underline-offset-2 hover:no-underline">
+                  {synOpen ? <>Show less <ChevronDown size={11} className="rotate-180" /></> : <>Read more <ChevronDown size={11} /></>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[80vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           {/* Suggestions */}
           <div className="space-y-3 overflow-y-auto px-6 py-5 lg:max-h-[87vh]">
             <p className="text-xs text-neutral-mid">{alignments.length} area{alignments.length === 1 ? '' : 's'} could read in a more person-centred way. Adopting a rewrite replaces the highlighted passage in your policy draft.</p>
@@ -116,11 +141,13 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
                 <p className="mt-1.5 text-[11px] text-neutral-mid">
                   {located.has(origIdx)
                     ? <>Highlighted <span className="font-semibold text-indigo-700">W{num}</span> in the policy{a.placement === 'amend' ? <>, adopting rewrites that passage.</> : <>, add the wording there.</>}</>
-                    : a.placement === 'new_section'
-                      ? <>Add as a new section{a.section_title ? ` “${a.section_title}”` : ''}.</>
-                      : a.placement === 'amend'
-                        ? <>Rewrites: &ldquo;{a.anchor}&rdquo;</>
-                        : <>Add near: &ldquo;{a.anchor}&rdquo;</>}
+                    : html == null
+                      ? <span className="inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Locating this passage in the policy…</span>
+                      : a.placement === 'new_section'
+                        ? <>Add as a new section{a.section_title ? ` “${a.section_title}”` : ''}.</>
+                        : a.placement === 'amend'
+                          ? <>Couldn&rsquo;t pinpoint this passage automatically &mdash; adopting still rewrites it in your draft.</>
+                          : <>Add near this wording in your policy.</>}
                 </p>
                 {a.placement === 'amend' && <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Person-centred rewrite</p>}
                 <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>

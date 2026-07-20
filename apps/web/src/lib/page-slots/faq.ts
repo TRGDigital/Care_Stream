@@ -63,7 +63,7 @@ export const FAQ_SLOTS: SlotDef[] = [
   // Pricing & Plans
   { key: 'pricing.title', group: 'Pricing & Plans', label: 'Section heading', default: 'Pricing & Plans' },
   { key: 'pricing.q1', group: 'Pricing & Plans', label: 'Q1 question', default: 'What plans are available?' },
-  { key: 'pricing.a1', group: 'Pricing & Plans', label: 'Q1 answer', rich: true, default: 'CareStreamAI is available on two plans: Starter (£49/month) and Professional (£129/month). Both include full policy library, 50+ language support, email and chat channels, and full audit logging. Professional adds CQC Readiness Reports, policy gap detection, language analytics, and individual staff engagement data.' },
+  { key: 'pricing.a1', group: 'Pricing & Plans', label: 'Q1 answer', rich: true, default: 'CareStreamAI is available on two plans: Starter (£85/month) and Professional (£230/month). Both include full policy library, 50+ language support, email and chat channels, and full audit logging. Professional adds CQC Readiness Reports, policy gap detection, language analytics, and individual staff engagement data.' },
   { key: 'pricing.q2', group: 'Pricing & Plans', label: 'Q2 question', default: 'Is there a free trial?' },
   { key: 'pricing.a2', group: 'Pricing & Plans', label: 'Q2 answer', rich: true, default: 'Yes. A 14-day free trial is available on either plan. You add your card to start the trial, but you are not charged until day 14 — cancel anytime before then and you pay nothing.' },
   { key: 'pricing.q3', group: 'Pricing & Plans', label: 'Q3 question', default: 'Can I switch plans?' },

@@ -15,7 +15,7 @@ export const PRICING_SLOTS: SlotDef[] = [
 
   // Plans — Starter
   { key: 'plans.starter.name', group: 'Plans · Starter', label: 'Name', default: 'Starter' },
-  { key: 'plans.starter.caption', group: 'Plans · Starter', label: 'Price caption', default: '£490/year, save £98' },
+  { key: 'plans.starter.caption', group: 'Plans · Starter', label: 'Price caption', default: '£850/year, save £170' },
   { key: 'plans.starter.feat1', group: 'Plans · Starter', label: 'Feature 1', default: '10 annual training allocations per month' },
   { key: 'plans.starter.feat2', group: 'Plans · Starter', label: 'Feature 2', default: 'Up to 25 policies, 1 handbook, 10 staff users' },
   { key: 'plans.starter.feat3', group: 'Plans · Starter', label: 'Feature 3', default: '500 queries per month' },
@@ -25,7 +25,7 @@ export const PRICING_SLOTS: SlotDef[] = [
   // Plans — Professional
   { key: 'plans.professional.name', group: 'Plans · Professional', label: 'Name', default: 'Professional' },
   { key: 'plans.professional.badge', group: 'Plans · Professional', label: 'Badge', default: 'Most popular' },
-  { key: 'plans.professional.caption', group: 'Plans · Professional', label: 'Price caption', default: '£1,290/year, save £258' },
+  { key: 'plans.professional.caption', group: 'Plans · Professional', label: 'Price caption', default: '£2,300/year, save £460' },
   { key: 'plans.professional.feat1', group: 'Plans · Professional', label: 'Feature 1', default: '30 annual training allocations per month' },
   { key: 'plans.professional.feat2', group: 'Plans · Professional', label: 'Feature 2', default: 'Unlimited policies, handbooks and staff users' },
   { key: 'plans.professional.feat3', group: 'Plans · Professional', label: 'Feature 3', default: '5,000 queries per month' },
@@ -39,7 +39,7 @@ export const PRICING_SLOTS: SlotDef[] = [
   // Plans — Enterprise
   { key: 'plans.enterprise.name', group: 'Plans · Enterprise', label: 'Name', default: 'Enterprise' },
   { key: 'plans.enterprise.badge', group: 'Plans · Enterprise', label: 'Badge', default: 'Everything included' },
-  { key: 'plans.enterprise.caption', group: 'Plans · Enterprise', label: 'Price caption', default: '£2,100/year, save £443.88' },
+  { key: 'plans.enterprise.caption', group: 'Plans · Enterprise', label: 'Price caption', default: '£3,850/year, save £770' },
   { key: 'plans.enterprise.feat1', group: 'Plans · Enterprise', label: 'Feature 1', default: 'Unlimited annual training allocations' },
   { key: 'plans.enterprise.feat2', group: 'Plans · Enterprise', label: 'Feature 2', default: 'Everything in Professional, plus:' },
   { key: 'plans.enterprise.feat3', group: 'Plans · Enterprise', label: 'Feature 3', default: 'Build your own audits' },

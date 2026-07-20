@@ -25,7 +25,7 @@ export const HOME_SLOTS: SlotDef[] = [
   { key: 'stats.s2.label', group: 'Stats strip', label: 'Stat 2 label', default: 'Languages spoken in UK care settings' },
   { key: 'stats.s3.num', group: 'Stats strip', label: 'Stat 3 figure', default: '1 in 3' },
   { key: 'stats.s3.label', group: 'Stats strip', label: 'Stat 3 label', default: 'Night-shift policy questions go unanswered' },
-  { key: 'stats.s4.num', group: 'Stats strip', label: 'Stat 4 figure', default: '£49' },
+  { key: 'stats.s4.num', group: 'Stats strip', label: 'Stat 4 figure', default: '£85' },
   { key: 'stats.s4.label', group: 'Stats strip', label: 'Stat 4 label', default: 'per month, less than one agency shift hour' },
 
   // The Problem
@@ -280,7 +280,7 @@ export const HOME_SLOTS: SlotDef[] = [
   { key: 'pricing.h2', group: 'Pricing', label: 'Heading', default: 'Simple, transparent pricing.' },
   { key: 'pricing.sub', group: 'Pricing', label: 'Sub-text', default: 'No hidden costs. No per-user fees. No surprises.' },
   { key: 'pricing.starter.name', group: 'Pricing', label: 'Starter name', default: 'Starter' },
-  { key: 'pricing.starter.price', group: 'Pricing', label: 'Starter price', default: '£49' },
+  { key: 'pricing.starter.price', group: 'Pricing', label: 'Starter price', default: '£85' },
   { key: 'pricing.starter.per', group: 'Pricing', label: 'Starter price suffix', default: '/month' },
   { key: 'pricing.starter.note', group: 'Pricing', label: 'Starter note', default: 'Per home. Unlimited staff users.' },
   { key: 'pricing.starter.f1', group: 'Pricing', label: 'Starter feature 1', default: 'Policy library (up to 25 policies)' },
@@ -292,7 +292,7 @@ export const HOME_SLOTS: SlotDef[] = [
   { key: 'pricing.starter.cta', group: 'Pricing', label: 'Starter CTA', default: 'Start Free Trial' },
   { key: 'pricing.pro.badge', group: 'Pricing', label: 'Professional badge', default: 'Most popular' },
   { key: 'pricing.pro.name', group: 'Pricing', label: 'Professional name', default: 'Professional' },
-  { key: 'pricing.pro.price', group: 'Pricing', label: 'Professional price', default: '£129' },
+  { key: 'pricing.pro.price', group: 'Pricing', label: 'Professional price', default: '£230' },
   { key: 'pricing.pro.per', group: 'Pricing', label: 'Professional price suffix', default: '/month' },
   { key: 'pricing.pro.note', group: 'Pricing', label: 'Professional note', default: 'Per home. Everything in Starter, plus:' },
   { key: 'pricing.pro.f1', group: 'Pricing', label: 'Professional feature 1', default: 'Unlimited policies' },

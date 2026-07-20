@@ -12,7 +12,7 @@ const BODY = `# CareStreamAI
 
 > AI-powered policy access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies — in 50+ languages — via web chat, email and voice. Answers are grounded only in the customer's documents and a curated UK regulatory knowledge base (RAG), so the AI never invents content.
 
-CareStreamAI is a B2B SaaS for care homes, domiciliary care, supported living and other regulated health & social care settings. Each client's data is isolated, processed in the UK/EEA, encrypted at rest and in transit, and never used to train AI models. Plans: Starter £49/home/month and Professional £129/home/month, with a 14-day free trial. CareStreamAI is an independent product and is not affiliated with or endorsed by the CQC.
+CareStreamAI is a B2B SaaS for care homes, domiciliary care, supported living and other regulated health & social care settings. Each client's data is isolated, processed in the UK/EEA, encrypted at rest and in transit, and never used to train AI models. Plans: Starter £85/home/month and Professional £230/home/month, with a 14-day free trial. CareStreamAI is an independent product and is not affiliated with or endorsed by the CQC.
 
 ## Product
 
@@ -22,7 +22,7 @@ CareStreamAI is a B2B SaaS for care homes, domiciliary care, supported living an
 - [Staff Training](${u('/staff-training')}): Deliver and track training modules across channels.
 - [Regulatory Knowledge](${u('/regulatory-knowledge')}): Curated UK frameworks — GDPR, RIDDOR, the Care Act, CQC Fundamental Standards.
 - [Who It's For](${u('/who-its-for')}): Care homes, domiciliary, supported living and more.
-- [Pricing](${u('/pricing')}): Starter £49 and Professional £129 per home / month; 14-day free trial, priced per home not per user.
+- [Pricing](${u('/pricing')}): Starter £85 and Professional £230 per home / month; 14-day free trial, priced per home not per user.
 
 ## Company
 

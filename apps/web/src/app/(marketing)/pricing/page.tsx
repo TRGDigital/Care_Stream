@@ -49,9 +49,9 @@ export const metadata = {
 // Structural plan config. Copy (name, caption, badge, features) is in PRICING_SLOTS;
 // price and layout flags stay here.
 const PLANS = [
-  { id: 'starter',      slot: 'plans.starter',      price: '£49',     highlight: false, hasBadge: false, featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5'] },
-  { id: 'professional', slot: 'plans.professional', price: '£129',    highlight: true,  hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
-  { id: 'enterprise',   slot: 'plans.enterprise',   price: '£211.99', highlight: false, hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
+  { id: 'starter',      slot: 'plans.starter',      price: '£85',   highlight: false, hasBadge: false, featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5'] },
+  { id: 'professional', slot: 'plans.professional', price: '£230',  highlight: true,  hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
+  { id: 'enterprise',   slot: 'plans.enterprise',   price: '£385',  highlight: false, hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
 ]
 
 // ─── Comparison matrix ────────────────────────────────────────────────────────

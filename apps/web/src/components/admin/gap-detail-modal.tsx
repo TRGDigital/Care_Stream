@@ -91,16 +91,23 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   return true
 }
 
-// Highlight the block/heading a SAF wording suggestion belongs to, in indigo with its number
-// (distinct from the amber "what to add" markers). Returns whether it could be placed.
-export function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
-  if (!anchor || normText(anchor).length < 6) return false
+// Find (without mutating) the block/heading a SAF wording suggestion belongs to. Shared by the
+// marker below and by callers that need each suggestion's position before numbering them.
+export function locateSafBlock(root: HTMLElement, anchor: string): HTMLElement | null {
+  if (!anchor || normText(anchor).length < 6) return null
   let target = findBlock(root, anchor)
   if (!target) {
     const q = normText(anchor)
     const heads = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
     target = heads.find(h => { const t = normText(h.textContent || ''); return t === q || (t.length >= 6 && (t.includes(q) || q.includes(t))) }) ?? null
   }
+  return target
+}
+
+// Highlight the block/heading a SAF wording suggestion belongs to, in indigo with its number
+// (distinct from the amber "what to add" markers). Returns whether it could be placed.
+export function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
+  const target = locateSafBlock(root, anchor)
   if (!target) return false
   // Don't stack a second background tint on a block a gap marker already tinted — that muddies
   // the colour. Keep the gap tint; the indigo chip is enough to signal the SAF suggestion.

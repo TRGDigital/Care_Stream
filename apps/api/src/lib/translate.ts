@@ -480,7 +480,7 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
       'You are formatting a UK care-home policy so staff can read it easily on screen.',
       first
         ? 'First, REMOVE any letterhead or contact details: the organisation-name banner, "Registered Office", postal address, telephone number, website URL, email address, and any image descriptions (e.g. "A green house with a fence", "Description automatically generated").'
-        : 'This is a CONTINUATION of the same policy — do NOT add a document title. REMOVE any footer, letterhead or contact details (registered office, postal address, telephone, website, email, image descriptions).',
+        : 'This is a CONTINUATION of the same policy — do NOT add a document title. REMOVE only letterhead or contact details (registered office, postal address, telephone, website, email, image descriptions). KEEP all policy content, including any sign-off block such as "Signed", "Date", "Version", approval lines or "Policy review date" — these are policy content, not a footer.',
       first
         ? 'Then format the remaining content as clean HTML: the policy title as a single <h2>; section/sub-section headings as <h3>; lists of items or steps as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels.'
         : 'Format this section as clean HTML: section/sub-section headings as <h3>; lists as <ul><li>…</li></ul> or <ol><li>…</li></ol>; normal text as <p>. Use <strong> for emphasised labels. Do NOT add an <h2> title.',

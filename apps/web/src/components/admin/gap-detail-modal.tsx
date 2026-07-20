@@ -498,13 +498,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     if (!detail?.target_policy || safResult || safLoad) return
     checkSaf()
   }, [detail?.target_policy]) // eslint-disable-line react-hooks/exhaustive-deps
-  async function adoptSaf(a: { focus: string; placement: 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }, idx: number) {
+  async function adoptSaf(a: { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }, idx: number) {
     if (!safResult?.target_policy) return
     setSafBusy(idx); setSafErr('')
     try {
       await createApiClient(token).analytics.adoptSuggestion({
         policy_id: safResult.target_policy.id, reference_key: detail?.reference_key ?? referenceKey, requirement: a.focus,
-        placement: a.placement, old_text: a.placement === 'add_under_heading' ? a.anchor : '',
+        // amend: replace the passage. add_under_heading: add under the anchor heading. new_section: brand-new.
+        placement: a.placement, old_text: (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.anchor : '',
         new_text: a.wording, section_title: a.placement === 'new_section' ? (a.section_title || undefined) : undefined,
       })
       setSafAdopted(s => new Set(s).add(idx))
@@ -897,18 +898,23 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                               </div>
                               <p className="mt-1.5 text-[11px] text-neutral-mid">
                                 {safLocated.has(i)
-                                  ? <>Highlighted <span className="font-semibold text-indigo-700">W{i + 1}</span> in your {detail.target_policy?.name ?? 'policy'} (right), add the wording there.</>
+                                  ? <>Highlighted <span className="font-semibold text-indigo-700">W{i + 1}</span> in your {detail.target_policy?.name ?? 'policy'} (right){a.placement === 'amend' ? <>, adopting rewrites that passage.</> : <>, add the wording there.</>}</>
                                   : a.placement === 'new_section'
                                     ? <>Add as a <span className="font-semibold">new section</span>{a.section_title ? <> &ldquo;{a.section_title}&rdquo;</> : null} at the end.</>
-                                    : <>Add near: &ldquo;{a.anchor}&rdquo;</>}
+                                    : a.placement === 'amend'
+                                      ? <>Rewrites your current wording: &ldquo;{a.anchor}&rdquo;</>
+                                      : <>Add near: &ldquo;{a.anchor}&rdquo;</>}
                               </p>
+                              {a.placement === 'amend' && (
+                                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Person-centred rewrite</p>
+                              )}
                               <p className="mt-1.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
                               <div className="mt-2">
                                 {safAdopted.has(i) ? (
                                   <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>
                                 ) : (
                                   <button onClick={() => adoptSaf(a, i)} disabled={safBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50">
-                                    {safBusy === i ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : 'Adopt this wording'}
+                                    {safBusy === i ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : (a.placement === 'amend' ? 'Adopt this rewrite' : 'Adopt this wording')}
                                   </button>
                                 )}
                               </div>

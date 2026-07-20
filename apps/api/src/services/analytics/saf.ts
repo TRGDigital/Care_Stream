@@ -89,7 +89,7 @@ export async function qualityStatementCoverage(tenantId: string): Promise<SafOve
 // policy that covers it READS the way CQC's SAF expects (person-centred), not just whether it
 // covers the requirement. Drafts person-centred additions in the policy's own voice, adoptable
 // through the same flow as gap suggestions. Consumes an AI credit (called via the route).
-export type SafAlignment = { focus: string; placement: 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }
+export type SafAlignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }
 export type SafAlignmentResult = {
   statements: Array<{ reference_key: string; name: string; we_statement: string }>
   target_policy: { id: string; name: string } | null
@@ -144,12 +144,17 @@ The policy as written:
 ${policyText}
 """
 
-Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect (it may cover the procedure but read too procedurally, or omit the person-centred framing). For each genuine gap, write a short addition (2 to 4 sentences) in THIS policy's own voice and style that adds the missing person-centred wording, grounded in the policy, inventing no facts. Only include genuine gaps; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
+Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect well. For each one, PREFER to improve wording that is already there:
+- Locate the exact existing sentence or short passage (1 to 3 sentences), copied VERBATIM from the policy above, that covers this area but reads too procedurally or omits the person-centred framing.
+- Rewrite it in THIS policy's own voice and style so it reflects the quality, keeping every fact, name, role and specific it already contains, and inventing nothing.
+- Set "placement" to "amend", set "anchor" to that exact existing passage (verbatim, the full text being replaced), and set "wording" to your rewritten version that will REPLACE that passage.
 
-For each addition decide WHERE it goes and set "anchor" to a short VERBATIM quote copied exactly from the policy above (a heading or a sentence) that the addition should sit under or next to, so it can be located in the document. Use placement "add_under_heading" when the anchor is an existing heading or nearby text; use "new_section" only when there is genuinely no relevant place and it must be a brand-new section (then give a "section_title" and leave "anchor" empty). Prefer a real anchor over a new section wherever possible.
+Only if the policy genuinely contains no relevant passage to improve for that quality, add new wording instead: use "add_under_heading" with "anchor" set to a short verbatim heading or sentence it should sit under, or "new_section" with a "section_title" when there is no relevant place at all. Always prefer "amend" of existing wording over adding new wording wherever a relevant passage exists.
+
+Only include genuine improvements; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
 
 Respond with JSON only:
-{"alignments":[{"focus":"<short label of the person-centred quality being added>","placement":"add_under_heading|new_section","anchor":"<a short verbatim quote copied from the policy, or empty for a new section>","section_title":"<title for a new section, or empty>","wording":"<the addition>"}]}`
+{"alignments":[{"focus":"<short label of the person-centred quality>","placement":"amend|add_under_heading|new_section","anchor":"<the exact existing passage to replace for amend, a heading or sentence to add under for add_under_heading, or empty for new_section>","section_title":"<title for a new section, or empty>","wording":"<the rewritten passage for amend, or the new wording to add>"}]}`
 
   let alignments: SafAlignment[] = []
   try {
@@ -158,13 +163,19 @@ Respond with JSON only:
     alignments = (Array.isArray(parsed.alignments) ? parsed.alignments : [])
       .filter((a: any) => a && String(a.wording ?? '').trim() && String(a.focus ?? '').trim())
       .slice(0, 5)
-      .map((a: any) => ({
-        focus: String(a.focus).trim().slice(0, 160),
-        placement: a.placement === 'add_under_heading' ? 'add_under_heading' : 'new_section',
-        anchor: String(a.anchor ?? '').trim().slice(0, 300),
-        section_title: String(a.section_title ?? '').trim().slice(0, 200),
-        wording: String(a.wording).trim().slice(0, 4000),
-      }))
+      .map((a: any) => {
+        let placement: SafAlignment['placement'] = (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.placement : 'new_section'
+        const anchor = String(a.anchor ?? '').trim().slice(0, 600)
+        // amend/add_under_heading need an anchor to locate; without one, treat as a new section.
+        if ((placement === 'amend' || placement === 'add_under_heading') && !anchor) placement = 'new_section'
+        return {
+          focus: String(a.focus).trim().slice(0, 160),
+          placement,
+          anchor,
+          section_title: String(a.section_title ?? '').trim().slice(0, 200),
+          wording: String(a.wording).trim().slice(0, 4000),
+        }
+      })
   } catch (e: any) {
     console.error('[saf] alignment failed', e?.message)
     return { statements: stmtOut, target_policy: { id: policy.id, name: policy.name }, alignments: [], message: 'The wording check could not be completed. Please try again.' }

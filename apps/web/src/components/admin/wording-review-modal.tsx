@@ -210,6 +210,34 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
             ) : (
               <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             )}
+
+            {/* What changes, key — same legend as the Coverage detail, mapping each W-number to
+                what it does in the policy above. */}
+            {html != null && alignments.length > 0 && (
+              <div className="mt-5 border-t border-gray-100 pt-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-mid">What changes, key</p>
+                <ul className="space-y-1.5">
+                  {order.map((origIdx, k) => {
+                    const a = alignments[origIdx]
+                    const num = k + 1
+                    const isNew = a.placement !== 'amend'
+                    const { title } = splitNewWording(a)
+                    return (
+                      <li key={origIdx} className="flex gap-2 text-xs text-neutral-dark">
+                        <span className={`flex h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${isNew ? 'bg-teal-100 text-teal-800' : 'bg-indigo-100 text-indigo-700'}`}>W{num}</span>
+                        <span className="min-w-0">
+                          {a.placement === 'amend'
+                            ? <><span className="font-medium text-indigo-700">{a.focus}</span> <span className="text-neutral-mid">&mdash; rewrite this whole passage to read in a more person-centred way.</span></>
+                            : a.placement === 'add_under_heading'
+                              ? <><span className="text-neutral-dark">New wording{title ? <>: {title}</> : null}</span> <span className="text-neutral-mid">(added under the &ldquo;{a.anchor}&rdquo; heading)</span></>
+                              : <span className="text-neutral-dark">New section{title ? <>: {title}</> : null}</span>}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

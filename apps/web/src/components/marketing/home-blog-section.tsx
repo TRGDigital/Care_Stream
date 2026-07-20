@@ -13,13 +13,15 @@ export type HomeBlogPost = {
   title: string
   summary: string
   readTime: string
+  image?: string | null
 }
 
 const staticFeatured: HomeBlogPost[] = POSTS.filter(p => p.featured)
 
 export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
-  // DB-driven featured posts when available; fall back to the static list.
-  const featured = posts && posts.length > 0 ? posts : staticFeatured
+  // DB-driven featured posts when available; fall back to the static list. Show three, with room for images.
+  const featured = (posts && posts.length > 0 ? posts : staticFeatured).slice(0, 3)
+  const showArrows = featured.length > 3
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(true)
@@ -61,24 +63,26 @@ export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
             </h2>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-2">
-            <button
-              onClick={() => scrollBy(-1)}
-              disabled={!canPrev}
-              aria-label="Previous posts"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-card transition-all hover:border-teal hover:text-teal disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={() => scrollBy(1)}
-              disabled={!canNext}
-              aria-label="Next posts"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-card transition-all hover:border-teal hover:text-teal disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+          {showArrows && (
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <button
+                onClick={() => scrollBy(-1)}
+                disabled={!canPrev}
+                aria-label="Previous posts"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-card transition-all hover:border-teal hover:text-teal disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => scrollBy(1)}
+                disabled={!canNext}
+                aria-label="Next posts"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-card transition-all hover:border-teal hover:text-teal disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -90,8 +94,15 @@ export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
               key={post.slug}
               href={`/blog/${post.slug}`}
               data-blog-card
-              className="card-lift group flex w-full flex-none flex-col rounded-2xl border border-gray-100 bg-white p-7 shadow-card md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]"
+              className="card-lift group flex w-full flex-none flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
             >
+              {post.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={post.image} alt={post.title} loading="lazy" className="h-44 w-full object-cover" />
+              ) : (
+                <div className="h-44 w-full bg-gradient-to-br from-teal-light to-neutral-light" />
+              )}
+              <div className="flex flex-1 flex-col p-7">
               <div className="mb-5 flex items-center justify-between">
                 <span className={`rounded-full px-3 py-1 text-xs font-bold ${post.categoryColor}`}>
                   {post.category}
@@ -107,6 +118,7 @@ export function HomeBlogSection({ posts }: { posts?: HomeBlogPost[] }) {
                 <span className="inline-flex items-center gap-1 font-semibold text-teal group-hover:underline">
                   Read <ArrowRight size={12} />
                 </span>
+              </div>
               </div>
             </Link>
           ))}

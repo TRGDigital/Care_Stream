@@ -1665,6 +1665,7 @@ async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
       const posts = (body?.data?.posts ?? []) as Array<{
         slug: string; title: string; excerpt: string | null; category: string
         publication_date: string | null; read_time_minutes: number; is_featured: boolean
+        feature_image_url: string | null
       }>
       const mapped = posts
         .filter(p => p.is_featured)
@@ -1676,6 +1677,7 @@ async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
           title:         p.title,
           summary:       p.excerpt ?? '',
           readTime:      `${p.read_time_minutes} min read`,
+          image:         p.feature_image_url ?? null,
         }))
       if (mapped.length > 0) return mapped
     }

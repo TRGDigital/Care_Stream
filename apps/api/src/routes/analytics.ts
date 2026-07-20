@@ -15,7 +15,7 @@ import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict } from '../services/analytics/policy-consistency'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix } from '../services/analytics/policy-adoption'
-import { qualityStatementCoverage, safAlignment } from '../services/analytics/saf'
+import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -768,6 +768,30 @@ analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'SAF_ALIGN_FAILED', e.message ?? 'Could not check the wording alignment.', 500)
   }
+})
+
+// ── CQC wording alignment as its own analysis (per policy, re-run over the whole library) ──
+// POST /analytics/wording-alignment/start — clear results, return the number of policies.
+analyticsRouter.post('/wording-alignment/start', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  ok(res, await startPolicyWordingAlignment(tenantId))
+})
+
+// POST /analytics/wording-alignment/batch — analyse the next batch of policies (loop until remaining === 0).
+analyticsRouter.post('/wording-alignment/batch', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    ok(res, await wordingAlignmentBatch(tenantId))
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'WORDING_FAILED', e.message ?? 'Could not check the wording alignment.', 500)
+  }
+})
+
+// GET /analytics/wording-alignment — the per-policy results (accordion data).
+analyticsRouter.get('/wording-alignment', requireAdmin, async (_req: Request, res: Response) => {
+  ok(res, await getPolicyWordingAlignment(getTenantId()))
 })
 
 // GET CQC Single Assessment Framework readiness: quality-statement coverage inherited from

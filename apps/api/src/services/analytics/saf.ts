@@ -6,6 +6,7 @@ import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { downloadExtractedText } from '../storage/s3'
 import { checkAiCreditLimit, logAiCredit } from '../../lib/plan-limits'
+import { mapLimit } from '../../lib/translate'
 
 export type SafStatement = {
   number: number; reference_key: string; name: string; we_statement: string
@@ -103,6 +104,55 @@ function parseJson(text: string): any {
   try { return JSON.parse(text.slice(a, b + 1)) } catch { return {} }
 }
 
+// Shared: run the person-centred wording check for one policy against its quality statements
+// and return up to 5 rewrite/add suggestions. The caller handles credit checks/logging/caching.
+async function generateAlignments(statements: any[], policyText: string): Promise<SafAlignment[]> {
+  const cues = [...new Set(statements.flatMap((s: any) => (s.expectation_cues as string[]) ?? []))].slice(0, 14)
+  const keepTerms = ((await (prisma as any).platformGlossary.findMany({ where: { keep: true }, select: { term: true } }).catch(() => [])) as any[]).map(t => t.term).slice(0, 30)
+
+  const system = 'You are a CQC inspection expert helping a care provider make a policy read the way CQC\'s Single Assessment Framework expects. Respond only with valid JSON.'
+  const user = `CQC quality statement(s) this policy evidences:
+${statements.map((s: any) => `- ${s.name}: "${s.we_statement}"`).join('\n')}
+
+The person-centred qualities CQC looks for in the wording:
+${cues.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+
+The policy as written:
+"""
+${policyText}
+"""
+
+Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect well. For each one, PREFER to improve wording that is already there:
+- Locate the exact existing sentence or short passage (1 to 3 sentences), copied VERBATIM from the policy above, that covers this area but reads too procedurally or omits the person-centred framing.
+- Rewrite it in THIS policy's own voice and style so it reflects the quality, keeping every fact, name, role and specific it already contains, and inventing nothing.
+- Set "placement" to "amend", set "anchor" to that exact existing passage (verbatim, the full text being replaced), and set "wording" to your rewritten version that will REPLACE that passage.
+
+Only if the policy genuinely contains no relevant passage to improve for that quality, add new wording instead: use "add_under_heading" with "anchor" set to a short verbatim heading or sentence it should sit under, or "new_section" with a "section_title" when there is no relevant place at all. Always prefer "amend" of existing wording over adding new wording wherever a relevant passage exists.
+
+Only include genuine improvements; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
+
+Respond with JSON only:
+{"alignments":[{"focus":"<short label of the person-centred quality>","placement":"amend|add_under_heading|new_section","anchor":"<the exact existing passage to replace for amend, a heading or sentence to add under for add_under_heading, or empty for new_section>","section_title":"<title for a new section, or empty>","wording":"<the rewritten passage for amend, or the new wording to add>"}]}`
+
+  const text = await callClaude(system, user, { maxTokens: 2600, temperature: 0.3 })
+  const parsed = parseJson(text)
+  return (Array.isArray(parsed.alignments) ? parsed.alignments : [])
+    .filter((a: any) => a && String(a.wording ?? '').trim() && String(a.focus ?? '').trim())
+    .slice(0, 5)
+    .map((a: any) => {
+      let placement: SafAlignment['placement'] = (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.placement : 'new_section'
+      const anchor = String(a.anchor ?? '').trim().slice(0, 600)
+      if ((placement === 'amend' || placement === 'add_under_heading') && !anchor) placement = 'new_section'
+      return {
+        focus: String(a.focus).trim().slice(0, 160),
+        placement,
+        anchor,
+        section_title: String(a.section_title ?? '').trim().slice(0, 200),
+        wording: String(a.wording).trim().slice(0, 4000),
+      }
+    })
+}
+
 export async function safAlignment(tenantId: string, referenceKey: string, policyId: string, force = false): Promise<SafAlignmentResult> {
   const statements = await (prisma as any).qualityStatement.findMany({
     where: { is_active: true, linked_regulations: { has: referenceKey } },
@@ -129,53 +179,9 @@ export async function safAlignment(tenantId: string, referenceKey: string, polic
 
   await checkAiCreditLimit(tenantId)   // throws PlanLimitError → 402 in the route
 
-  const cues = [...new Set((statements as any[]).flatMap(s => (s.expectation_cues as string[]) ?? []))].slice(0, 14)
-  const keepTerms = ((await (prisma as any).platformGlossary.findMany({ where: { keep: true }, select: { term: true } }).catch(() => [])) as any[]).map(t => t.term).slice(0, 30)
-
-  const system = 'You are a CQC inspection expert helping a care provider make a policy read the way CQC\'s Single Assessment Framework expects. Respond only with valid JSON.'
-  const user = `CQC quality statement(s) this policy evidences:
-${(statements as any[]).map(s => `- ${s.name}: "${s.we_statement}"`).join('\n')}
-
-The person-centred qualities CQC looks for in the wording:
-${cues.map((c, i) => `${i + 1}. ${c}`).join('\n')}
-
-The policy as written:
-"""
-${policyText}
-"""
-
-Task: find up to 5 of those person-centred qualities that this policy's WORDING does not already reflect well. For each one, PREFER to improve wording that is already there:
-- Locate the exact existing sentence or short passage (1 to 3 sentences), copied VERBATIM from the policy above, that covers this area but reads too procedurally or omits the person-centred framing.
-- Rewrite it in THIS policy's own voice and style so it reflects the quality, keeping every fact, name, role and specific it already contains, and inventing nothing.
-- Set "placement" to "amend", set "anchor" to that exact existing passage (verbatim, the full text being replaced), and set "wording" to your rewritten version that will REPLACE that passage.
-
-Only if the policy genuinely contains no relevant passage to improve for that quality, add new wording instead: use "add_under_heading" with "anchor" set to a short verbatim heading or sentence it should sit under, or "new_section" with a "section_title" when there is no relevant place at all. Always prefer "amend" of existing wording over adding new wording wherever a relevant passage exists.
-
-Only include genuine improvements; if the policy already reflects a quality well, omit it. Keep these terms exact where used: ${keepTerms.join(', ')}.
-
-Respond with JSON only:
-{"alignments":[{"focus":"<short label of the person-centred quality>","placement":"amend|add_under_heading|new_section","anchor":"<the exact existing passage to replace for amend, a heading or sentence to add under for add_under_heading, or empty for new_section>","section_title":"<title for a new section, or empty>","wording":"<the rewritten passage for amend, or the new wording to add>"}]}`
-
-  let alignments: SafAlignment[] = []
+  let alignments: SafAlignment[]
   try {
-    const text = await callClaude(system, user, { maxTokens: 2600, temperature: 0.3 })
-    const parsed = parseJson(text)
-    alignments = (Array.isArray(parsed.alignments) ? parsed.alignments : [])
-      .filter((a: any) => a && String(a.wording ?? '').trim() && String(a.focus ?? '').trim())
-      .slice(0, 5)
-      .map((a: any) => {
-        let placement: SafAlignment['placement'] = (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.placement : 'new_section'
-        const anchor = String(a.anchor ?? '').trim().slice(0, 600)
-        // amend/add_under_heading need an anchor to locate; without one, treat as a new section.
-        if ((placement === 'amend' || placement === 'add_under_heading') && !anchor) placement = 'new_section'
-        return {
-          focus: String(a.focus).trim().slice(0, 160),
-          placement,
-          anchor,
-          section_title: String(a.section_title ?? '').trim().slice(0, 200),
-          wording: String(a.wording).trim().slice(0, 4000),
-        }
-      })
+    alignments = await generateAlignments(statements as any[], policyText)
   } catch (e: any) {
     console.error('[saf] alignment failed', e?.message)
     return { statements: stmtOut, target_policy: { id: policy.id, name: policy.name }, alignments: [], message: 'The wording check could not be completed. Please try again.' }
@@ -191,4 +197,99 @@ Respond with JSON only:
   if (coverage?.id) await (prisma as any).regulationCoverage.update({ where: { id: coverage.id }, data: { saf_alignment: result, saf_analysed_at: new Date() } }).catch(() => {})
   if (alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', referenceKey)
   return result
+}
+
+// ── Per-policy wording alignment (its own analysis on /gaps) ───────────────────
+export type PolicyWordingRow = {
+  policy_id: string; policy_name: string
+  statements: Array<{ reference_key: string; name: string; we_statement: string }>
+  alignments: SafAlignment[]
+  message: string
+  has_suggestions: boolean
+}
+export type WordingProgress = { done: number; analysed: number; total: number; remaining: number }
+
+// The quality statements a policy is checked against = statements linked to the
+// regulations this policy evidences (from the coverage analysis).
+async function statementsForPolicy(tenantId: string, policyId: string): Promise<any[]> {
+  const cov = await (prisma as any).regulationCoverage.findMany({
+    where: { tenant_id: tenantId, evidence_policy_id: policyId }, select: { reference_key: true },
+  })
+  const regKeys = [...new Set((cov as any[]).map(c => c.reference_key))]
+  if (!regKeys.length) return []
+  return (prisma as any).qualityStatement.findMany({
+    where: { is_active: true, linked_regulations: { hasSome: regKeys } },
+    select: { reference_key: true, name: true, we_statement: true, expectation_cues: true },
+    orderBy: { number: 'asc' },
+  })
+}
+
+// Start a fresh per-policy wording run: clear this tenant's results, return the total
+// (active policies) so the frontend can drive a progress bar over the batches.
+export async function startPolicyWordingAlignment(tenantId: string): Promise<{ total: number }> {
+  await (prisma as any).policyWordingAlignment.deleteMany({ where: { tenant_id: tenantId } })
+  const total = await (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } })
+  return { total }
+}
+
+// Analyse the next batch of not-yet-done active policies. One AI call per policy that has
+// linked quality statements; policies with none get an empty result (no AI, no credit).
+// Idempotent/resumable: processes whichever active policies don't yet have a result row.
+export async function wordingAlignmentBatch(tenantId: string, batchSize = 3): Promise<WordingProgress> {
+  const policies = await (prisma as any).policy.findMany({
+    where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true }, orderBy: { name: 'asc' },
+  })
+  const total = (policies as any[]).length
+  if (!total) return { done: 0, analysed: 0, total: 0, remaining: 0 }
+  const existing = await (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true } })
+  const doneIds = new Set((existing as any[]).map(e => e.policy_id))
+  const todo = (policies as any[]).filter(p => !doneIds.has(p.id)).slice(0, batchSize)
+  if (!todo.length) return { done: 0, analysed: doneIds.size, total, remaining: 0 }
+
+  await mapLimit(todo, 3, async (p: any) => {
+    const statements = await statementsForPolicy(tenantId, p.id)
+    const stmtOut = (statements as any[]).map(s => ({ reference_key: s.reference_key, name: s.name, we_statement: s.we_statement }))
+    let alignments: SafAlignment[] = []
+    let message: string
+    if (!statements.length) {
+      message = 'This policy is not linked to any CQC quality statement, so there is nothing to check its wording against.'
+    } else {
+      const raw = await downloadExtractedText(tenantId, p.id).catch(() => null)
+      const policyText = (raw ?? '').slice(0, 12000)
+      if (!policyText) {
+        message = 'The policy text is not available to check.'
+      } else {
+        await checkAiCreditLimit(tenantId)   // throws PlanLimitError → stops the run (402)
+        try { alignments = await generateAlignments(statements as any[], policyText) }
+        catch (e: any) { console.error('[saf] policy wording failed', p.id, e?.message); alignments = [] }
+        if (alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', p.id)
+        message = alignments.length
+          ? `${alignments.length} area${alignments.length === 1 ? '' : 's'} could read in a more person-centred way for CQC.`
+          : 'This policy already reads in a person-centred way for the quality statements it supports.'
+      }
+    }
+    await (prisma as any).policyWordingAlignment.upsert({
+      where: { tenant_id_policy_id: { tenant_id: tenantId, policy_id: p.id } },
+      create: { tenant_id: tenantId, policy_id: p.id, policy_name: p.name, statements: stmtOut, alignments, message, has_suggestions: alignments.length > 0, analysed_at: new Date() },
+      update: { policy_name: p.name, statements: stmtOut, alignments, message, has_suggestions: alignments.length > 0, analysed_at: new Date() },
+    })
+  })
+
+  const analysed = doneIds.size + todo.length
+  return { done: todo.length, analysed, total, remaining: Math.max(0, total - analysed) }
+}
+
+export async function getPolicyWordingAlignment(tenantId: string): Promise<{ policies: PolicyWordingRow[]; analysed: number; total_suggestions: number; analysed_at: string | null }> {
+  const rows = await (prisma as any).policyWordingAlignment.findMany({
+    where: { tenant_id: tenantId }, orderBy: [{ has_suggestions: 'desc' }, { policy_name: 'asc' }],
+  })
+  const policies: PolicyWordingRow[] = (rows as any[]).map(r => ({
+    policy_id: r.policy_id, policy_name: r.policy_name ?? 'Policy',
+    statements: Array.isArray(r.statements) ? r.statements : [],
+    alignments: Array.isArray(r.alignments) ? r.alignments : [],
+    message: r.message ?? '', has_suggestions: !!r.has_suggestions,
+  }))
+  const total_suggestions = policies.reduce((n, p) => n + p.alignments.length, 0)
+  const analysed_at = (rows as any[]).length ? new Date(Math.max(...(rows as any[]).map(r => new Date(r.analysed_at).getTime()))).toISOString() : null
+  return { policies, analysed: policies.length, total_suggestions, analysed_at }
 }

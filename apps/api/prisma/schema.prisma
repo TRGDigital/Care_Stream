@@ -824,6 +824,25 @@ model RegulationCoverage {
   @@map("regulation_coverage")
 }
 
+// Per-policy CQC wording alignment: does each policy READ the person-centred way the
+// SAF quality statements it supports expect? Its own analysis (re-run over every
+// policy), shown as an accordion on /gaps. One AI call per policy that has statements.
+model PolicyWordingAlignment {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  policy_id       String
+  policy_name     String?
+  statements      Json?    // [{reference_key,name,we_statement}]
+  alignments      Json?    // [{focus,placement,anchor,section_title,wording}]
+  message         String?
+  has_suggestions Boolean  @default(false)
+  analysed_at     DateTime @default(now())
+
+  @@unique([tenant_id, policy_id])
+  @@index([tenant_id])
+  @@map("policy_wording_alignment")
+}
+
 // On-demand deep-dive for a partial/gap regulation: the highlight quotes + the
 // "what to add" suggestions, each verified against the WHOLE policy corpus so we
 // never recommend adding something the tenant already holds elsewhere. Generated

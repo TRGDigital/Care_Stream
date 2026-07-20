@@ -493,11 +493,8 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     catch (e: any) { setSafErr(e.message ?? 'Could not check the wording.') }
     finally { setSafLoad(false) }
   }
-  // Auto-run once the policy that evidences this regulation is known (cached server-side).
-  useEffect(() => {
-    if (!detail?.target_policy || safResult || safLoad) return
-    checkSaf()
-  }, [detail?.target_policy]) // eslint-disable-line react-hooks/exhaustive-deps
+  // CQC wording alignment moved to its own analysis on /gaps (per policy). No longer
+  // runs inline in the coverage detail, so it never auto-runs here.
   async function adoptSaf(a: { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }, idx: number) {
     if (!safResult?.target_policy) return
     setSafBusy(idx); setSafErr('')
@@ -871,59 +868,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     </div>
                   )}
 
-                  {/* CQC wording alignment (SAF) — runs automatically when a policy evidences this */}
-                  {detail?.target_policy && (
-                    <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Sparkles size={15} className="text-indigo-600" /> CQC wording alignment</p>
-                        {safResult && !safLoad && (
-                          <button onClick={() => checkSaf(true)} className="text-xs font-medium text-indigo-700 hover:text-indigo-900">Re-check</button>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-neutral-mid">Whether <strong>{detail.target_policy.name}</strong> reads the way CQC&rsquo;s quality statement expects, not just whether it covers the rule.</p>
-                      {safLoad && <p className="mt-2 flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={13} className="animate-spin" /> Checking the wording…</p>}
-                      {safErr && !safLoad && <p className="mt-2 text-xs text-red-600">{safErr}</p>}
-                      {safResult && !safLoad && (
-                        <div className="mt-2 space-y-3">
-                          {safResult.statements.length > 0 && <p className="text-xs text-neutral-mid">Supports CQC quality statement{safResult.statements.length === 1 ? '' : 's'}: <span className="font-medium text-neutral-dark">{safResult.statements.map(s => s.name).join(', ')}</span></p>}
-                          <p className="text-sm text-neutral-dark">{safResult.message}</p>
-                          {safResult.alignments.length > 0 && safSuppressed.size === safResult.alignments.length && (
-                            <p className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5 text-xs text-neutral-mid">The wording CQC looks for here is already handled by the &ldquo;What to add&rdquo; suggestions above, adopt those and this policy will read the way the quality statement expects.</p>
-                          )}
-                          {safResult.alignments.map((a, i) => safSuppressed.has(i) ? null : (
-                            <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
-                              <div className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">W{i + 1}</span>
-                                <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
-                              </div>
-                              <p className="mt-1.5 text-[11px] text-neutral-mid">
-                                {safLocated.has(i)
-                                  ? <>Highlighted <span className="font-semibold text-indigo-700">W{i + 1}</span> in your {detail.target_policy?.name ?? 'policy'} (right){a.placement === 'amend' ? <>, adopting rewrites that passage.</> : <>, add the wording there.</>}</>
-                                  : a.placement === 'new_section'
-                                    ? <>Add as a <span className="font-semibold">new section</span>{a.section_title ? <> &ldquo;{a.section_title}&rdquo;</> : null} at the end.</>
-                                    : a.placement === 'amend'
-                                      ? <>Rewrites your current wording: &ldquo;{a.anchor}&rdquo;</>
-                                      : <>Add near: &ldquo;{a.anchor}&rdquo;</>}
-                              </p>
-                              {a.placement === 'amend' && (
-                                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Person-centred rewrite</p>
-                              )}
-                              <p className="mt-1.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
-                              <div className="mt-2">
-                                {safAdopted.has(i) ? (
-                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>
-                                ) : (
-                                  <button onClick={() => adoptSaf(a, i)} disabled={safBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50">
-                                    {safBusy === i ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : (a.placement === 'amend' ? 'Adopt this rewrite' : 'Adopt this wording')}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* CQC wording alignment moved to its own analysis on /gaps (per policy). */}
 
                   {/* Already covered (quiet footnote — not the focus) */}
                   {covered.length > 0 && (

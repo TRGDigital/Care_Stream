@@ -9,6 +9,7 @@ import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
 import { ConflictModal } from '@/components/admin/conflict-modal'
+import { WordingReviewModal } from '@/components/admin/wording-review-modal'
 import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
@@ -847,10 +848,7 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
   const [progress, setProgress] = useState<string | null>(null)
   const [runErr, setRunErr]   = useState('')
   const [open, setOpen]       = useState(false)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [adopting, setAdopting] = useState<string | null>(null)  // `${policyId}:${idx}`
-  const [adopted, setAdopted]   = useState<Set<string>>(new Set())
-  const [adoptErr, setAdoptErr] = useState('')
+  const [selected, setSelected] = useState<WordingData['policies'][number] | null>(null)
 
   useEffect(() => {
     const cached = persistentCache.get<WordingData>(`admin-wording-${userId}`)
@@ -866,7 +864,7 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
   useEffect(() => { load() }, [load])
 
   async function run() {
-    setRunning(true); setProgress('Preparing…'); setRunErr(''); setAdopted(new Set())
+    setRunning(true); setProgress('Preparing…'); setRunErr('')
     const api = createApiClient(token)
     try {
       const { total } = await api.analytics.wordingAlignmentStart()
@@ -880,20 +878,6 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
       setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
       load()
     } finally { setRunning(false); setProgress(null) }
-  }
-
-  async function adopt(policyId: string, refKey: string, a: WordingData['policies'][number]['alignments'][number], idx: number) {
-    const key = `${policyId}:${idx}`
-    setAdopting(key); setAdoptErr('')
-    try {
-      await createApiClient(token).analytics.adoptSuggestion({
-        policy_id: policyId, reference_key: refKey, requirement: a.focus,
-        placement: a.placement, old_text: (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.anchor : '',
-        new_text: a.wording, section_title: a.placement === 'new_section' ? (a.section_title || undefined) : undefined,
-      })
-      setAdopted(s => new Set(s).add(key))
-    } catch (e: any) { setAdoptErr(e?.message ?? 'Could not adopt this.') }
-    finally { setAdopting(null) }
   }
 
   const when = data?.analysed_at ? new Date(data.analysed_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
@@ -921,7 +905,6 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
           </button>
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
-        {adoptErr && <p className="px-6 pt-2 text-xs text-red-600">{adoptErr}</p>}
 
         {loading && !data ? (
           <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
@@ -942,61 +925,36 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
               {when && <span className="ml-auto text-gray-400">Checked {when}</span>}
             </div>
             <div className="divide-y divide-gray-50">
-              {withSuggestions.map(p => {
-                const isOpen = expanded.has(p.policy_id)
-                const refKey = p.statements[0]?.reference_key ?? ''
-                return (
-                  <div key={p.policy_id}>
-                    <button onClick={() => setExpanded(s => { const n = new Set(s); n.has(p.policy_id) ? n.delete(p.policy_id) : n.add(p.policy_id); return n })}
-                      className="flex w-full items-center gap-3 px-6 py-3.5 text-left hover:bg-gray-50/50">
-                      <FileText size={14} className="shrink-0 text-neutral-mid" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-neutral-dark">{p.policy_name}</span>
-                        <span className="block truncate text-xs text-neutral-mid">{p.message}</span>
-                      </span>
-                      <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">{p.alignments.length}</span>
-                      <ChevronDown size={14} className={`shrink-0 text-neutral-mid transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {isOpen && (
-                      <div className="space-y-2.5 bg-gray-50/40 px-6 py-3">
-                        {p.statements.length > 0 && <p className="text-[11px] text-neutral-mid">Supports: <span className="font-medium text-neutral-dark">{p.statements.map(s => s.name).join(', ')}</span></p>}
-                        {p.alignments.map((a, i) => {
-                          const key = `${p.policy_id}:${i}`
-                          return (
-                            <div key={i} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
-                              <div className="flex items-start gap-2">
-                                <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">W{i + 1}</span>
-                                <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
-                              </div>
-                              {a.placement === 'amend'
-                                ? <div className="mt-1.5"><p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Current wording</p><p className="mt-0.5 whitespace-pre-line rounded bg-gray-50 px-2 py-1.5 text-xs text-neutral-mid">{a.anchor}</p></div>
-                                : a.placement === 'new_section'
-                                  ? <p className="mt-1.5 text-[11px] text-neutral-mid">Add as a new section{a.section_title ? ` “${a.section_title}”` : ''}.</p>
-                                  : <p className="mt-1.5 text-[11px] text-neutral-mid">Add under: &ldquo;{a.anchor}&rdquo;</p>}
-                              <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">{a.placement === 'amend' ? 'Person-centred rewrite' : 'Suggested wording'}</p>
-                              <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.wording}</p>
-                              <div className="mt-2">
-                                {adopted.has(key) ? (
-                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, review it in the policy</span>
-                                ) : (
-                                  <button onClick={() => adopt(p.policy_id, refKey, a, i)} disabled={adopting !== null}
-                                    className="inline-flex items-center gap-1.5 rounded-btn border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50">
-                                    {adopting === key ? <><Loader2 size={13} className="animate-spin" /> Adopting…</> : (a.placement === 'amend' ? 'Adopt this rewrite' : 'Adopt this wording')}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
+              {withSuggestions.map(p => (
+                <div key={p.policy_id} className="flex items-center gap-3 px-6 py-3.5">
+                  <FileText size={14} className="shrink-0 text-neutral-mid" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-neutral-dark">{p.policy_name}</p>
+                    <p className="truncate text-xs text-neutral-mid">{p.message}</p>
                   </div>
-                )
-              })}
+                  <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">{p.alignments.length}</span>
+                  <button onClick={() => setSelected(p)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">
+                    <Wand2 size={12} /> Review &amp; resolve
+                  </button>
+                </div>
+              ))}
             </div>
           </>
         )}
       </div>)}
+
+      {selected && (
+        <WordingReviewModal
+          token={token}
+          policyId={selected.policy_id}
+          policyName={selected.policy_name}
+          statements={selected.statements}
+          alignments={selected.alignments}
+          onClose={() => setSelected(null)}
+          onAdopted={load}
+        />
+      )}
     </div>
   )
 }

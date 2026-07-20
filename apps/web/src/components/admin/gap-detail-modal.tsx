@@ -44,7 +44,7 @@ const sigWords = (s: string): string[] => [...new Set(normMatch(s).replace(/[^a-
 // Tier 2 (fallback): the block sharing the most of the anchor's distinctive words, so an
 // anchor that isn't a verbatim substring (formatting/extraction differences, spans blocks)
 // still lands on the right paragraph instead of dropping to the "find it yourself" list.
-function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
+export function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
   const needle = normMatch(anchor)
   if (needle.length < 6) return null
   const blocks = Array.from(root.querySelectorAll('p,li,td,blockquote')) as HTMLElement[]
@@ -93,7 +93,7 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
 
 // Highlight the block/heading a SAF wording suggestion belongs to, in indigo with its number
 // (distinct from the amber "what to add" markers). Returns whether it could be placed.
-function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
+export function markSafBlock(root: HTMLElement, anchor: string, num: number): boolean {
   if (!anchor || normText(anchor).length < 6) return false
   let target = findBlock(root, anchor)
   if (!target) {
@@ -144,7 +144,7 @@ function adoptedBlock(i: number, text: string, title?: string): HTMLElement {
 }
 
 // Amend ADOPTED: replace the whole block content in place with the adopted wording (green).
-function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText: string): boolean {
+export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText: string): boolean {
   const target = findBlock(root, anchor)
   if (!target) return false
   target.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')

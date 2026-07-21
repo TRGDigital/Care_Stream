@@ -1340,12 +1340,12 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
     return lines.join('\n')
   }).join('\n')
 
-  // Fetch AI prompt (with default fallback)
-  const promptRecord = await (prisma as any).aiPrompt.findFirst({
-    where: { usage: 'audit_recommendations', is_active: true },
-    orderBy: { updated_at: 'desc' },
-  })
-  const promptTemplate = promptRecord?.system_prompt ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
+  // Fetch the (optional) admin-editable prompt, falling back to the built-in default. `usage`
+  // is the unique key on AiPrompt; there is no is_active/system_prompt column.
+  const promptRecord = await (prisma as any).aiPrompt.findUnique({
+    where: { usage: 'audit_recommendations' },
+  }).catch(() => null)
+  const promptTemplate = promptRecord?.content ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
 
   const filledPrompt = promptTemplate
     .replace('{{audit_name}}',      run.template.name)

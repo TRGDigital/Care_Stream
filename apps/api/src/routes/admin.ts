@@ -35,7 +35,7 @@ import { cloneTenant } from '../services/tenant/clone'
 import { reconcileTenantBilling, listInvoices, getSubscriptionInfo } from '../services/billing/stripe'
 import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
-import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT } from './audits'
+import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT, ensurePlatformTemplatesSeeded } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
 import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/analytics/policy-lint-signals'
 import { callClaude } from '../services/ai/claude'
@@ -2725,6 +2725,7 @@ adminRouter.get('/tenants/:id/audit-stats', async (req: Request, res: Response) 
 // ─── GET /admin/audit-seeds ───────────────────────────────────────────────────
 
 adminRouter.get('/audit-seeds', async (_req: Request, res: Response) => {
+  await ensurePlatformTemplatesSeeded().catch(() => {})   // make sure new code-defined seeds exist
   const templates = await (prisma as any).auditTemplate.findMany({
     where:   { is_seed: true, tenant_id: null },
     include: {

@@ -751,6 +751,414 @@ const PLATFORM_TEMPLATES: TSeed[] = [
     ],
   },
 
+  // 12 — Staff Training & Compliance (monthly)
+  {
+    name: 'Staff Training & Compliance',
+    description: 'Monthly review of mandatory and role-specific training, induction and the Care Certificate, supervision, appraisal and competency, and the training and compliance records that underpin a safe, skilled workforce.',
+    frequency: 'monthly',
+    sections: [
+      {
+        title: 'Section 1: Mandatory Training',
+        questions: [
+          'Safeguarding adults training is completed and in date for all staff.',
+          'Mental Capacity Act and Deprivation of Liberty Safeguards training is completed and in date.',
+          'Moving and handling training (theory and practical) is completed and in date.',
+          'Fire safety training and evacuation awareness is completed and in date.',
+          'Infection prevention and control training is completed and in date.',
+          'Health and safety, including COSHH, is completed and in date.',
+          'Food hygiene training is completed and in date for relevant staff.',
+          'First aid / basic life support cover is in place and in date.',
+          'Medication training and annual competency is completed for all staff who administer.',
+        ],
+      },
+      {
+        title: 'Section 2: Specialist & Role-Specific Training',
+        questions: [
+          'Oliver McGowan Mandatory Training on Learning Disability and Autism is completed to the required tier.',
+          'Dementia care training is completed for staff supporting people living with dementia.',
+          'End of life and palliative care training is completed for relevant staff.',
+          'Tissue viability / pressure area care training is completed for care staff.',
+          'Nutrition, hydration and dysphagia awareness is completed for relevant staff.',
+          'Equality, diversity and human rights training is completed.',
+          'Data protection and confidentiality training is completed.',
+        ],
+      },
+      {
+        title: 'Section 3: Induction & Care Certificate',
+        questions: [
+          'New starters have completed a structured induction before working unsupervised.',
+          'Care Certificate is on track to complete within 12 weeks for eligible new staff.',
+          'Shadowing shifts are recorded for new starters.',
+          'Agency staff receive a local induction and their training is verified on arrival.',
+        ],
+      },
+      {
+        title: 'Section 4: Supervision, Appraisal & Competency',
+        questions: [
+          'One-to-one supervisions are held at the frequency set in policy.',
+          'Every member of staff has an annual appraisal recorded.',
+          'Competency assessments (for example medication and moving and handling) are current.',
+          'Reflective practice or learning from incidents is discussed and recorded in supervision.',
+        ],
+      },
+      {
+        title: 'Section 5: Records & Compliance',
+        questions: [
+          'The training matrix is up to date and identifies who is due or overdue.',
+          'Renewals for expiring training are booked in advance.',
+          'Professional registrations (for example NMC) are checked and in date.',
+          'DBS checks are in date and renewed in line with policy.',
+          'Right to work documentation is verified and held for all staff.',
+          { text: 'Overall training compliance rate and any recurring gaps.', type: 'findings' },
+        ],
+      },
+    ],
+  },
+
+  // 13 — Care Plan Review & Update (monthly)
+  {
+    name: 'Care Plan Review & Update',
+    description: 'Monthly audit of care plans and risk assessments for currency, person-centredness, mental capacity and consent, health and wellbeing, and evidence that people and their families are involved and outcomes are recorded.',
+    frequency: 'monthly',
+    sections: [
+      {
+        title: 'Section 1: Content & Person-Centredness',
+        defaultType: 'yes_no_na',
+        questions: [
+          'The care plan reflects the person’s assessed needs, wishes and preferences.',
+          'It records what matters to the person and their life history.',
+          'It is written in plain, respectful language about the person, not just tasks.',
+          'Communication needs and any Accessible Information Standard requirements are recorded.',
+          'Protected characteristics and cultural, religious or spiritual needs are addressed.',
+        ],
+      },
+      {
+        title: 'Section 2: Currency & Review',
+        defaultType: 'yes_no_na',
+        questions: [
+          'The care plan has been reviewed within the last month, or sooner after a change of need.',
+          'Changes are dated, signed and clearly evidenced.',
+          'Previous versions are retained so the history of care is traceable.',
+        ],
+      },
+      {
+        title: 'Section 3: Risk Assessments',
+        defaultType: 'yes_no_na',
+        questions: [
+          'Falls risk assessment is current and linked to the care plan.',
+          'Skin / pressure area risk (for example Waterlow) is current.',
+          'Nutrition and hydration risk (for example MUST) is current.',
+          'Moving and handling assessment is current and matches the equipment in use.',
+          'Choking / dysphagia risk and any SALT guidance are recorded and followed.',
+          'Bedrails, lap belts or other restrictive equipment are risk-assessed.',
+        ],
+      },
+      {
+        title: 'Section 4: Consent, Mental Capacity & DoLS',
+        defaultType: 'yes_no_na',
+        questions: [
+          'Consent to care is recorded, or a capacity assessment is in place where consent cannot be given.',
+          'Best interests decisions are recorded where the person lacks capacity.',
+          'DoLS applications and authorisations are tracked and conditions are being met.',
+          'Lasting Power of Attorney or advance decisions are noted and respected.',
+        ],
+      },
+      {
+        title: 'Section 5: Health, Wellbeing & Involvement',
+        questions: [
+          'Weights, and any escalation for weight loss, are recorded.',
+          'Continence, skin integrity, oral health and pain are monitored and recorded.',
+          'Input from GP, district nurse or other professionals is recorded and acted on.',
+          'The person and, where appropriate, their family are involved in the care plan.',
+          'Daily records reflect the care plan and evidence the care delivered.',
+          { text: 'Care plans sampled this month and any themes found.', type: 'findings' },
+        ],
+      },
+    ],
+  },
+
+  // 14 — Daily Medication Audit (daily)
+  {
+    name: 'Daily Medication Audit',
+    description: 'A short daily check of medicines safety covering MAR charts, controlled drugs and stock, storage and temperatures, administration practice, and errors and disposal.',
+    frequency: 'daily',
+    sections: [
+      {
+        title: 'Section 1: MAR Charts',
+        defaultType: 'yes_no_na',
+        questions: [
+          'MAR charts have no unexplained gaps or missing signatures for the last 24 hours.',
+          'Allergies and sensitivities are clearly recorded on the MAR.',
+          'PRN (as required) medicines have a current protocol and administrations are justified.',
+          'Handwritten entries and amendments are signed and witnessed.',
+          'Time-specific medicines (for example Parkinson’s) were given on time.',
+        ],
+      },
+      {
+        title: 'Section 2: Controlled Drugs & Stock',
+        defaultType: 'yes_no_na',
+        questions: [
+          'The controlled drugs register balance matches the physical stock and is witnessed.',
+          'The controlled drugs cabinet is secure and compliant.',
+          'Stock balances for a sample of medicines reconcile with the MAR.',
+        ],
+      },
+      {
+        title: 'Section 3: Storage & Temperature',
+        defaultType: 'yes_no_na',
+        questions: [
+          'Medicines are stored securely and the trolley or room is locked when unattended.',
+          'Fridge temperatures are recorded and within the 2 to 8 degrees range.',
+          'Room temperature is monitored where required.',
+          'No expired or discontinued medicines are in use or storage.',
+        ],
+      },
+      {
+        title: 'Section 4: Administration Practice',
+        defaultType: 'yes_no_na',
+        questions: [
+          'Staff observed following the rights of administration (right person, medicine, dose, time and route).',
+          'Covert administration, where used, is authorised and supported by a capacity assessment and pharmacist advice.',
+          'Self-administration, where in place, is risk-assessed and reviewed.',
+          'Thickened fluids and crushed or dispersed medicines follow current guidance.',
+        ],
+      },
+      {
+        title: 'Section 5: Errors, Ordering & Disposal',
+        questions: [
+          { text: 'Any medication errors, near misses or discrepancies in the last 24 hours, and the action taken.', type: 'findings' },
+          'Ordering and stock levels are managed so no one has missed a dose through unavailability.',
+          'Returns and disposal (including controlled drugs) are recorded correctly.',
+          'The homely remedies protocol is in place and followed.',
+        ],
+      },
+    ],
+  },
+
+  // 15 — Fluid Intake & Hydration (daily)
+  {
+    name: 'Fluid Intake & Hydration',
+    description: 'A daily hydration audit covering fluid charts, individual targets and risk, and escalation and outcomes for people at risk of dehydration.',
+    frequency: 'daily',
+    sections: [
+      {
+        title: 'Section 1: Charts & Recording',
+        defaultType: 'yes_no_na',
+        questions: [
+          'Fluid charts are in place for everyone identified as needing one.',
+          'Charts are completed at the time care is given, not written up later.',
+          'Intake is totalled at the end of each shift and each day.',
+          'Output is recorded where this is part of the person’s plan.',
+        ],
+      },
+      {
+        title: 'Section 2: Targets & Risk',
+        defaultType: 'yes_no_na',
+        questions: [
+          'An individual daily fluid target is set and recorded.',
+          'People at higher risk are identified (for example dysphagia, dementia, catheter, recent UTI or infection).',
+          'Thickened fluids are prepared to the correct consistency in line with SALT guidance.',
+          'Drinks and prompts are offered regularly and preferences are respected.',
+        ],
+      },
+      {
+        title: 'Section 3: Escalation & Outcomes',
+        questions: [
+          'Low intake against target is escalated to the nurse in charge or GP.',
+          'Signs of dehydration (for example concentrated urine, confusion, dry mouth) are monitored and acted on.',
+          'Weights and any linked nutrition (MUST) concerns are considered alongside hydration.',
+          { text: 'People below their fluid target today and the action taken.', type: 'findings' },
+        ],
+      },
+    ],
+  },
+
+  // 16 — Monthly Governance Review (monthly)
+  {
+    name: 'Monthly Governance Review',
+    description: 'A strategic monthly governance review pulling together incidents, safeguarding and notifications, complaints and feedback, audit and action plans, staffing and training, clinical quality data, and regulatory records for management oversight.',
+    frequency: 'monthly',
+    sections: [
+      {
+        title: 'Section 1: Incidents, Safeguarding & Notifications',
+        questions: [
+          'Accidents and incidents are logged and analysed for trends this month.',
+          'Safeguarding concerns are referred appropriately and tracked to outcome.',
+          'All required CQC statutory notifications have been submitted.',
+          'Learning from incidents and safeguarding is shared with the team.',
+          { text: 'Key incident, accident and safeguarding themes this month.', type: 'findings' },
+        ],
+      },
+      {
+        title: 'Section 2: Complaints & Feedback',
+        questions: [
+          'Complaints are logged and responded to within the policy timescale.',
+          'Complaint themes are analysed and used to improve the service.',
+          'Compliments and positive feedback are recorded.',
+        ],
+      },
+      {
+        title: 'Section 3: Audit & Action Plans',
+        questions: [
+          'Scheduled audits for the month have been completed.',
+          'Action plans have named owners and target dates.',
+          'Overdue actions are escalated and progressed.',
+        ],
+      },
+      {
+        title: 'Section 4: Staffing & Training',
+        questions: [
+          'Staffing levels meet resident dependency and the rota is safe.',
+          'Agency and bank usage is monitored and inductions are verified.',
+          'Training compliance is on target and gaps are being addressed.',
+          'Supervisions and appraisals are on schedule.',
+        ],
+      },
+      {
+        title: 'Section 5: Clinical Quality Data',
+        questions: [
+          { text: 'Falls, pressure ulcers, weight loss, infections and hospital admissions this month, with any trends.', type: 'findings' },
+          'DoLS applications and authorisations are up to date and tracked.',
+          'Care plan and medication audit outcomes have been reviewed.',
+        ],
+      },
+      {
+        title: 'Section 6: Regulatory & Records',
+        questions: [
+          'Policies due for review this month have been reviewed.',
+          'Statement of Purpose and CQC registration details are current.',
+          'Required meetings have been held (for example staff, residents and health and safety).',
+          'Insurance, servicing and compliance certificates are in date.',
+        ],
+      },
+    ],
+  },
+
+  // 17 — Resident Feedback Round (monthly)
+  {
+    name: 'Resident Feedback Round',
+    description: 'A monthly resident feedback round capturing people’s voice on choice and control, dignity and respect, food and environment, activities and social contact, and how the service listens and acts on what people say.',
+    frequency: 'monthly',
+    sections: [
+      {
+        title: 'Section 1: Voice, Choice & Control',
+        questions: [
+          'People are asked about their care and daily routines and feel listened to.',
+          'Choices are respected (for example when to get up and go to bed, meals and activities).',
+          'People know how to raise a concern or complaint and feel able to.',
+          { text: 'What people told us about choice and control this month.', type: 'findings' },
+        ],
+      },
+      {
+        title: 'Section 2: Dignity & Respect',
+        questions: [
+          'Privacy and dignity are respected during care.',
+          'People are addressed by their preferred name and treated as individuals.',
+          'Support with personal appearance and grooming is provided as people wish.',
+          'Cultural, religious and spiritual needs are supported.',
+        ],
+      },
+      {
+        title: 'Section 3: Food & Environment',
+        questions: [
+          'People are satisfied with the food, choice and mealtime experience.',
+          'Bedrooms and communal areas are comfortable, clean and homely.',
+          'Temperature, noise and lighting suit the people living there.',
+        ],
+      },
+      {
+        title: 'Section 4: Activities & Social Contact',
+        questions: [
+          'Meaningful activities and occupation are offered and reflect people’s interests.',
+          'Contact with family, friends and the community is supported.',
+          'Boredom, loneliness and isolation are recognised and addressed.',
+        ],
+      },
+      {
+        title: 'Section 5: Listening & Acting on Feedback',
+        questions: [
+          'Residents’ and relatives’ meetings are held and recorded.',
+          'There is clear "you said, we did" evidence of acting on feedback.',
+          'Survey or feedback results are shared and used to improve the service.',
+          { text: 'Actions agreed from this month’s feedback.', type: 'findings' },
+        ],
+      },
+    ],
+  },
+
+  // 18 — Single Assessment Framework Review (quarterly)
+  {
+    name: 'Single Assessment Framework Review',
+    description: 'A quarterly self-assessment against the CQC Single Assessment Framework, working through the quality statements under each of the five key questions. For each, record the evidence of how you meet it and any actions. Use this as your strategic CQC readiness review.',
+    frequency: 'quarterly',
+    sections: [
+      {
+        title: 'Safe',
+        defaultType: 'findings',
+        questions: [
+          'Learning culture: we learn from safety events and use them to improve.',
+          'Safe systems, pathways and transitions: care is safe across services and at points of transition.',
+          'Safeguarding: we protect people from abuse and neglect.',
+          'Involving people to manage risks: we work with people to understand and manage risks.',
+          'Safe environments: the environment and equipment are safe and well maintained.',
+          'Safe and effective staffing: we have enough suitably skilled, competent staff.',
+          'Infection prevention and control: we assess and manage the risk of infection.',
+          'Medicines optimisation: medicines are managed safely and support good outcomes.',
+        ],
+      },
+      {
+        title: 'Effective',
+        defaultType: 'findings',
+        questions: [
+          'Assessing needs: we assess needs and review care and treatment.',
+          'Delivering evidence-based care and treatment: care follows current best practice.',
+          'How staff, teams and services work together: we work well across teams and services.',
+          'Supporting people to live healthier lives: we support people to manage their health.',
+          'Monitoring and improving outcomes: we monitor outcomes and improve them.',
+          'Consent to care and treatment: we get consent and follow the Mental Capacity Act.',
+        ],
+      },
+      {
+        title: 'Caring',
+        defaultType: 'findings',
+        questions: [
+          'Kindness, compassion and dignity: we treat people with kindness and respect privacy.',
+          'Treating people as individuals: care meets people’s individual needs and preferences.',
+          'Independence, choice and control: we promote independence, choice and control.',
+          'Responding to people’s immediate needs: we respond promptly to needs, views and wishes.',
+          'Workforce wellbeing and enablement: we support and enable our staff.',
+        ],
+      },
+      {
+        title: 'Responsive',
+        defaultType: 'findings',
+        questions: [
+          'Person-centred care: care is centred on the person and what matters to them.',
+          'Care provision, integration and continuity: care is coordinated and continuous.',
+          'Providing information: we give people accessible, tailored information.',
+          'Listening to and involving people: we listen, involve people and act on feedback.',
+          'Equity in access: everyone can access the care they need.',
+          'Equity in experiences and outcomes: we work to reduce inequality in experience and outcomes.',
+          'Planning for the future: we support people to plan for important changes, including end of life.',
+        ],
+      },
+      {
+        title: 'Well-led',
+        defaultType: 'findings',
+        questions: [
+          'Shared direction and culture: we have a shared vision and a positive culture.',
+          'Capable, compassionate and inclusive leaders: leaders have the skills and values to lead well.',
+          'Freedom to speak up: staff feel safe and are encouraged to speak up.',
+          'Workforce equality, diversity and inclusion: we value and support equality and inclusion.',
+          'Governance, management and sustainability: we have clear governance and accountability.',
+          'Partnerships and communities: we work in partnership to plan and improve care.',
+          'Learning, improvement and innovation: we focus on learning, improvement and innovation.',
+          'Environmental sustainability: we consider our environmental impact.',
+        ],
+      },
+    ],
+  },
+
 ]
 
 export const DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT = `You are a senior care quality consultant with deep expertise in UK care home regulation, CQC inspection frameworks, and best-practice governance for registered care settings.
@@ -819,7 +1227,7 @@ Write clearly and professionally in UK English. Avoid generic statements that co
 
 // ─── Seed helper ─────────────────────────────────────────────────────────────
 
-async function ensurePlatformTemplatesSeeded() {
+export async function ensurePlatformTemplatesSeeded() {
   const existing = await (prisma as any).auditTemplate.findMany({
     where:  { is_seed: true, tenant_id: null },
     select: { name: true },
@@ -1097,13 +1505,17 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   })
   if (existing) return ok(res, { run: existing })
 
+  // Default the auditor to the signed-in user so every run always carries who did it and their
+  // role (the AI recommendations otherwise flag "Unknown" as an accountability gap).
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, job_role: true } }).catch(() => null)
+
   const run = await (prisma as any).auditRun.create({
     data: {
       tenant_id:    tenantId,
       template_id,
       audit_month:  periodDate,
-      auditor_name: auditor_name?.trim() ?? null,
-      auditor_role: auditor_role?.trim() ?? null,
+      auditor_name: (auditor_name?.trim() || me?.name || null),
+      auditor_role: (auditor_role?.trim() || me?.job_role || null),
       room_number:  room,
     },
   })
@@ -1418,6 +1830,15 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
     },
   })
   if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+
+  // Backfill the auditor from the person completing it if it wasn't captured at start, so the
+  // report always records who carried it out and their role.
+  if (!run.auditor_name || !run.auditor_role) {
+    const cu = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, job_role: true } }).catch(() => null)
+    run.auditor_name = run.auditor_name || cu?.name || null
+    run.auditor_role = run.auditor_role || cu?.job_role || null
+    await (prisma as any).auditRun.update({ where: { id: run.id }, data: { auditor_name: run.auditor_name, auditor_role: run.auditor_role } }).catch(() => {})
+  }
 
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
 

@@ -1297,6 +1297,36 @@ auditsRouter.delete('/evidence/:id', requireAuditAccess, async (req: Request, re
   ok(res, { deleted: true })
 })
 
+// The 34 CQC Single Assessment Framework quality statements, grouped by key question, as a
+// compact reference the model can ground the "CQC compliance" section in (so it names real
+// statements instead of guessing). Read live from platform data, so edits there flow through.
+const KQ_ORDER = ['safe', 'effective', 'caring', 'responsive', 'well-led'] as const
+const KQ_LABEL: Record<string, string> = { safe: 'SAFE', effective: 'EFFECTIVE', caring: 'CARING', responsive: 'RESPONSIVE', 'well-led': 'WELL-LED' }
+
+async function buildQualityStatementsBlock(): Promise<string> {
+  const rows = await (prisma as any).qualityStatement.findMany({
+    where:   { is_active: true },
+    select:  { name: true, key_question: true, we_statement: true, number: true },
+    orderBy: [{ key_question: 'asc' }, { number: 'asc' }],
+  }).catch(() => [])
+  if (!rows.length) return ''
+  const byKq = new Map<string, any[]>()
+  for (const r of rows) {
+    const k = String(r.key_question || '').toLowerCase()
+    if (!byKq.has(k)) byKq.set(k, [])
+    byKq.get(k)!.push(r)
+  }
+  const parts: string[] = []
+  for (const kq of KQ_ORDER) {
+    const list = byKq.get(kq)
+    if (!list?.length) continue
+    parts.push(KQ_LABEL[kq] ?? kq.toUpperCase())
+    for (const r of list) parts.push(`- ${r.name}: ${String(r.we_statement || '').trim()}`)
+    parts.push('')
+  }
+  return parts.join('\n').trim()
+}
+
 // Generate the AI recommendations for a completed audit and save them to the run. Extracted so it
 // can run either at completion (no approval) OR once the care manager approves (approval workflow).
 export async function generateAuditRecommendations(tenantId: string, runId: string): Promise<string> {
@@ -1333,9 +1363,12 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     return lines.join('\n')
   }).join('\n')
 
-  const promptRecord = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'audit_recommendations' } }).catch(() => null)
+  const [promptRecord, qsBlock] = await Promise.all([
+    (prisma as any).aiPrompt.findUnique({ where: { usage: 'audit_recommendations' } }).catch(() => null),
+    buildQualityStatementsBlock(),
+  ])
   const promptTemplate = promptRecord?.content ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
-  const filledPrompt = promptTemplate
+  let filledPrompt = promptTemplate
     .replace('{{audit_name}}',        run.template.name)
     .replace('{{organisation_name}}', run.tenant.name)
     .replace('{{auditor_name}}',      run.auditor_name ?? 'Unknown')
@@ -1345,6 +1378,13 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     .replace('{{strengths}}',         run.strengths ?? 'Not provided')
     .replace('{{improvements}}',      run.improvements ?? 'Not provided')
     .replace('{{actions_deadline}}',  run.actions_deadline ?? 'Not specified')
+    .replace('{{cqc_quality_statements}}', qsBlock)
+
+  // If the prompt doesn't position the placeholder itself, append the statements + how to use them,
+  // so the CQC compliance section is always grounded in the real quality statements.
+  if (qsBlock && !promptTemplate.includes('{{cqc_quality_statements}}')) {
+    filledPrompt += `\n\nCQC SINGLE ASSESSMENT FRAMEWORK — QUALITY STATEMENTS (reference)\n${qsBlock}\n\nWhen writing the CQC COMPLIANCE NOTES section, link each failed or weak item to the most relevant quality statement above, naming it exactly (for example "Safe environments"). Use only statements from this list and do not invent others.`
+  }
 
   let recommendations: string
   try {

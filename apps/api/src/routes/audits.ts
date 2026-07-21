@@ -1242,6 +1242,7 @@ export async function ensurePlatformTemplatesSeeded() {
         description: tmpl.description,
         is_seed:     true,
         frequency:   tmpl.frequency,
+        subject_scope: auditSubjectScope(tmpl.name),
         tenant_id:   null,
         sections: {
           create: tmpl.sections.map((s, si) => ({
@@ -1269,11 +1270,25 @@ export function isRoomBasedAudit(name: string): boolean {
   return /bedroom/i.test(name ?? '')
 }
 
+// What each run of a template is "about": a whole-service audit (none), or one room, resident or
+// staff member. Used to seed subject_scope and as a fallback for older rows.
+export function auditSubjectScope(name: string): 'none' | 'room' | 'resident' | 'staff' {
+  if (/bedroom/i.test(name ?? '')) return 'room'
+  if (['Care Plan Review & Update', 'Fluid Intake & Hydration', 'Resident Feedback Round'].includes(name)) return 'resident'
+  if (name === 'Staff Training & Compliance') return 'staff'
+  return 'none'
+}
+
+// A human label for a run's subject, used in the report and the AI recommendations.
+export function subjectLabel(scope: string): string {
+  return scope === 'resident' ? 'Resident' : scope === 'staff' ? 'Staff member' : scope === 'room' ? 'Room' : ''
+}
+
 auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Response) => {
   await ensurePlatformTemplatesSeeded()
   const tenantId = req.user!.tenant_id
 
-  const [templates, tenant] = await Promise.all([
+  const [templates, tenant, staffRows, subjectRows] = await Promise.all([
     (prisma as any).auditTemplate.findMany({
       where: {
         is_active: true,
@@ -1286,6 +1301,8 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
       orderBy: [{ tenant_id: 'asc' }, { name: 'asc' }],
     }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true, room_count: true } }),
+    (prisma as any).user.findMany({ where: { tenant_id: tenantId, name: { not: null } }, select: { name: true, job_role: true }, orderBy: { name: 'asc' } }).catch(() => []),
+    (prisma as any).auditRun.findMany({ where: { tenant_id: tenantId, room_number: { not: null } }, select: { template_id: true, room_number: true }, orderBy: { created_at: 'desc' }, take: 400 }).catch(() => []),
   ])
 
   // Room picker options: rooms 1..room_count, plus any custom-named rooms.
@@ -1294,13 +1311,27 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
   const custom   = (Array.isArray(tenant?.rooms) ? tenant.rooms : []).filter((r: string) => !numbered.includes(r))
   const rooms    = [...numbered, ...custom]
 
-  let withFlags = (templates as any[]).map(t => ({ ...t, room_based: isRoomBasedAudit(t.name) }))
+  // Staff picker options (for staff-scoped audits) and per-template recent subjects (autocomplete
+  // for resident-scoped audits).
+  const staff = [...new Set((staffRows as any[]).map(u => String(u.name || '').trim()).filter(Boolean))]
+  const recentSubjects: Record<string, string[]> = {}
+  for (const r of subjectRows as any[]) {
+    const v = String(r.room_number || '').trim()
+    if (!v) continue
+    const list = recentSubjects[r.template_id] ?? (recentSubjects[r.template_id] = [])
+    if (!list.includes(v) && list.length < 50) list.push(v)
+  }
+
+  let withFlags = (templates as any[]).map(t => {
+    const scope = t.subject_scope ?? (isRoomBasedAudit(t.name) ? 'room' : 'none')
+    return { ...t, subject_scope: scope, room_based: scope === 'room' }
+  })
   // "Staff + Audits" members only see their allocated templates.
   if (req.auditAllowed !== 'all') {
     const allowed = req.auditAllowed as string[]
     withFlags = withFlags.filter(t => allowed.includes(t.id))
   }
-  ok(res, { templates: withFlags, rooms })
+  ok(res, { templates: withFlags, rooms, staff, recent_subjects: recentSubjects })
 })
 
 // ─── POST /audits/rooms ───────────────────────────────────────────────────────
@@ -1477,7 +1508,7 @@ auditsRouter.get('/runs', requireAuditAccess, async (req: Request, res: Response
 
 auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId                                    = req.user!.tenant_id
-  const { template_id, audit_month, auditor_name, auditor_role, room_number } = req.body
+  const { template_id, audit_month, auditor_name, auditor_role, room_number, subject } = req.body
 
   if (!template_id)  return err(res, 'MISSING_TEMPLATE', 'template_id is required', 400)
   if (!audit_month)  return err(res, 'MISSING_MONTH',    'audit_month is required', 400)
@@ -1488,10 +1519,15 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   })
   if (!template) return err(res, 'NOT_FOUND', 'Audit template not found', 404)
 
-  // Room-based audits (e.g. bedrooms) are tracked one room at a time.
-  const roomBased = isRoomBasedAudit(template.name)
-  const room = roomBased ? String(room_number ?? '').trim().slice(0, 40) : null
-  if (roomBased && !room) return err(res, 'MISSING_ROOM', 'A room must be selected for this audit', 400)
+  // Scoped audits (a room, a resident, or a staff member) are tracked one subject at a time; the
+  // subject value is stored in room_number and the run is unique per subject and period.
+  const scope: string = template.subject_scope ?? (isRoomBasedAudit(template.name) ? 'room' : 'none')
+  const scoped = scope !== 'none'
+  const subjectValue = scoped ? String(subject ?? room_number ?? '').trim().slice(0, 80) : null
+  if (scoped && !subjectValue) {
+    const what = scope === 'resident' ? 'resident' : scope === 'staff' ? 'staff member' : 'room'
+    return err(res, 'MISSING_SUBJECT', `Choose the ${what} this audit is for.`, 400)
+  }
 
   // Daily audits are tracked per calendar day (one run per day); all other
   // frequencies are tracked per month. The audit_month column stores the run's
@@ -1501,7 +1537,7 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   periodDate.setHours(0, 0, 0, 0)
 
   const existing = await (prisma as any).auditRun.findFirst({
-    where: { tenant_id: tenantId, template_id, audit_month: periodDate, ...(roomBased ? { room_number: room } : {}) },
+    where: { tenant_id: tenantId, template_id, audit_month: periodDate, ...(scoped ? { room_number: subjectValue } : {}) },
   })
   if (existing) return ok(res, { run: existing })
 
@@ -1516,15 +1552,15 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
       audit_month:  periodDate,
       auditor_name: (auditor_name?.trim() || me?.name || null),
       auditor_role: (auditor_role?.trim() || me?.job_role || null),
-      room_number:  room,
+      room_number:  subjectValue,
     },
   })
 
-  // Remember new rooms for the picker.
-  if (room) {
+  // Remember typed room names for the room picker (residents and staff are picked elsewhere).
+  if (subjectValue && scope === 'room') {
     const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true } })
     const rooms: string[] = Array.isArray(t?.rooms) ? t.rooms : []
-    if (!rooms.includes(room)) await (prisma as any).tenant.update({ where: { id: tenantId }, data: { rooms: [...rooms, room] } }).catch(() => {})
+    if (!rooms.includes(subjectValue)) await (prisma as any).tenant.update({ where: { id: tenantId }, data: { rooms: [...rooms, subjectValue] } }).catch(() => {})
   }
 
   ok(res, { run }, 201)
@@ -1780,8 +1816,15 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     buildQualityStatementsBlock(),
   ])
   const promptTemplate = promptRecord?.content ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
+  // For a scoped run (resident / staff / room), name the subject so the recommendations are
+  // specific to that person or room rather than the service as a whole.
+  const runScope = run.template.subject_scope ?? 'none'
+  const auditNameForPrompt = (runScope !== 'none' && run.room_number)
+    ? `${run.template.name} for ${subjectLabel(runScope)}: ${run.room_number}`
+    : run.template.name
+
   let filledPrompt = promptTemplate
-    .replace('{{audit_name}}',        run.template.name)
+    .replace('{{audit_name}}',        auditNameForPrompt)
     .replace('{{organisation_name}}', run.tenant.name)
     .replace('{{auditor_name}}',      run.auditor_name ?? 'Unknown')
     .replace('{{auditor_role}}',      run.auditor_role ?? 'Unknown')
@@ -1910,6 +1953,8 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
   const report = {
     organisation:      run.tenant.name,
     audit_name:        run.template.name,
+    subject:           run.room_number,
+    subject_scope:     run.template.subject_scope ?? 'none',
     auditor_name:      run.auditor_name,
     auditor_role:      run.auditor_role,
     audit_month:       run.audit_month,

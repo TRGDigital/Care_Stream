@@ -1828,6 +1828,7 @@ model AuditTemplate {
   seed_reviewed    Boolean   @default(false)      // platform: content-checked this seed template
   seed_reviewed_at DateTime?
   frequency   String         @default("monthly")  // daily | weekly | monthly | quarterly | periodic
+  subject_scope String       @default("none")     // none | room | resident | staff — what each run is about
   module_ids  String[]       @default([])         // training modules this audit measures the impact of
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt

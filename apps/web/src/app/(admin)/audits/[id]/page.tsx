@@ -67,10 +67,15 @@ function ScoreBadge({ yes, total }: { yes: number; total: number }) {
 
 // ─── Print view ───────────────────────────────────────────────────────────────
 
+const AUDIT_SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
+
 function PrintReport({ report }: { report: any }) {
   return (
     <div className="hidden print:block p-8 font-sans text-sm text-black">
-      <h1 className="mb-1 text-2xl font-bold">{report.audit_name}</h1>
+      <h1 className="mb-1 text-2xl font-bold">
+        {report.audit_name}
+        {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}` : ''}
+      </h1>
       <p className="mb-0.5 text-base">{report.organisation}</p>
       <table className="mb-4 w-full border-collapse text-xs">
         <tbody>
@@ -293,7 +298,10 @@ export default function AuditRunPage() {
           </button>
 
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-neutral-dark">{run.template.name}</h1>
+            <h1 className="text-xl font-bold text-neutral-dark">
+              {run.template.name}
+              {run.room_number && <span className="text-neutral-mid"> · {AUDIT_SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ?? ''} {run.room_number}</span>}
+            </h1>
             <p className="text-sm text-neutral-mid">
               {new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
               {run.auditor_name && ` · ${run.auditor_name}`}

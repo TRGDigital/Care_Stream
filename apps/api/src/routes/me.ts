@@ -351,6 +351,8 @@ meRouter.get('/audit-approvals/:runId', async (req: Request, res: Response) => {
   const answerMap = new Map<string, any>((run.answers as any[]).map(a => [a.question_id, a]))
   const report = {
     audit_name:        run.template.name,
+    subject:           run.room_number,
+    subject_scope:     run.template.subject_scope ?? 'none',
     auditor_name:      run.auditor_name,
     auditor_role:      run.auditor_role,
     audit_month:       run.audit_month,

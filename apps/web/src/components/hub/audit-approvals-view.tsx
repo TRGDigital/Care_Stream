@@ -6,7 +6,9 @@ import { AuditRecs } from '@/components/audit-recs'
 import { persistentCache } from '@/lib/page-cache'
 import { Loader2, FileCheck2, ChevronLeft, Check, X, ClipboardCheck, History } from 'lucide-react'
 
-type Item = { run_id: string; template_name: string; auditor_name: string; audit_month: string; submitted_at: string | null }
+type Item = { run_id: string; template_name: string; subject: string | null; subject_scope: string; auditor_name: string; audit_month: string; submitted_at: string | null }
+const SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
+const subjectSuffix = (i: { subject?: string | null; subject_scope?: string }) => i.subject ? ` · ${SUBJECT_LABEL[i.subject_scope ?? 'none'] ? SUBJECT_LABEL[i.subject_scope ?? 'none'] + ' ' : ''}${i.subject}` : ''
 type Recent = { run_id: string; template_name: string; approved_by: string; approved_at: string | null; audit_month: string }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['auditApprovalDetail']>>['report']
 
@@ -80,7 +82,7 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
           <button onClick={() => setSelected(null)} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-neutral-mid hover:text-teal"><ChevronLeft size={15} /> Back to audits</button>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="truncate text-lg font-bold text-neutral-dark">{selected.template_name}</h2>
+              <h2 className="truncate text-lg font-bold text-neutral-dark">{selected.template_name}<span className="font-medium text-neutral-mid">{subjectSuffix(selected)}</span></h2>
               <p className="mt-0.5 text-xs text-neutral-mid">
                 {monthLabel(selected.audit_month)}{selected.auditor_name ? ` · completed by ${selected.auditor_name}` : ''}
               </p>
@@ -161,7 +163,7 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
                   <div className="flex min-w-0 items-center gap-3">
                     <ClipboardCheck size={16} className="shrink-0 text-teal" />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-neutral-dark">{a.template_name}</p>
+                      <p className="truncate text-sm font-medium text-neutral-dark">{a.template_name}<span className="text-neutral-mid">{subjectSuffix(a)}</span></p>
                       <p className="text-xs text-neutral-mid">{monthLabel(a.audit_month)}{a.auditor_name ? ` · ${a.auditor_name}` : ''}{a.submitted_at ? ` · submitted ${new Date(a.submitted_at).toLocaleDateString('en-GB')}` : ''}</p>
                     </div>
                   </div>

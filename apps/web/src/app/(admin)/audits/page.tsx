@@ -81,6 +81,7 @@ export default function AuditsPage() {
   const [auditorName, setAuditorName] = useState('')
   const [auditorRole, setAuditorRole] = useState('')
   const [rooms,       setRooms]       = useState<string[]>([])
+  const [staff,       setStaff]       = useState<string[]>([])
   const [room,        setRoom]        = useState('')
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
@@ -94,7 +95,7 @@ export default function AuditsPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [session?.accessToken])
@@ -102,7 +103,7 @@ export default function AuditsPage() {
   async function reloadTemplates() {
     if (!session?.accessToken) return
     const t = await createApiClient(session.accessToken).audits.templates().catch(() => null)
-    if (t) { setTemplates(t.templates); setRooms(t.rooms ?? []) }
+    if (t) { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []) }
   }
   async function removeTemplate(id: string, name: string) {
     if (!session?.accessToken) return
@@ -113,16 +114,18 @@ export default function AuditsPage() {
   }
 
   const selTpl = templates.find(t => t.id === selTemplate)
-  const needsRoom = !!selTpl?.room_based
+  const scope: string = selTpl?.subject_scope ?? (selTpl?.room_based ? 'room' : 'none')
+  const needsSubject = scope !== 'none'
+  const subjectWord = scope === 'resident' ? 'resident' : scope === 'staff' ? 'staff member' : 'room'
   const customTemplates = templates.filter(t => t.tenant_id)
 
   function requestConfirm() {
-    if (!selTemplate || (needsRoom && !room.trim())) return
+    if (!selTemplate || (needsSubject && !room.trim())) return
     setConfirming(true)
   }
 
   async function startAudit() {
-    if (!session?.accessToken || !selTemplate || (needsRoom && !room.trim())) return
+    if (!session?.accessToken || !selTemplate || (needsSubject && !room.trim())) return
     setStarting(true)
     try {
       const api  = createApiClient(session.accessToken)
@@ -132,7 +135,7 @@ export default function AuditsPage() {
         audit_month:  date.toISOString(),
         auditor_name: auditorName || undefined,
         auditor_role: auditorRole || undefined,
-        ...(needsRoom ? { room_number: room.trim() } : {}),
+        ...(needsSubject ? { subject: room.trim() } : {}),
       })
       router.push(`/audits/${run.id}`)
     } catch {
@@ -236,17 +239,18 @@ export default function AuditsPage() {
                     className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                   />
                 </div>
-                {needsRoom && (
+                {needsSubject && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-mid">Room / bed no.</label>
+                    <label className="mb-1 block text-xs font-medium text-neutral-mid capitalize">{subjectWord}</label>
                     <input
-                      list="admin-audit-rooms"
+                      list={scope === 'staff' ? 'admin-audit-staff' : scope === 'room' ? 'admin-audit-rooms' : undefined}
                       value={room}
                       onChange={e => setRoom(e.target.value)}
-                      placeholder="Select or type a room"
+                      placeholder={scope === 'resident' ? 'Resident name or initials' : scope === 'staff' ? 'Select or type a staff member' : 'Select or type a room'}
                       className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                     />
                     <datalist id="admin-audit-rooms">{rooms.map(r => <option key={r} value={r} />)}</datalist>
+                    <datalist id="admin-audit-staff">{staff.map(r => <option key={r} value={r} />)}</datalist>
                   </div>
                 )}
                 <div>
@@ -273,7 +277,7 @@ export default function AuditsPage() {
               <div className="mt-4 flex gap-3">
                 <button
                   onClick={requestConfirm}
-                  disabled={!selTemplate || (needsRoom && !room.trim())}
+                  disabled={!selTemplate || (needsSubject && !room.trim())}
                   className="flex items-center gap-2 rounded-btn bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                 >
                   <ClipboardCheck size={14} />
@@ -295,8 +299,8 @@ export default function AuditsPage() {
                 <p className="text-xs text-neutral-mid">
                   Month: <span className="font-medium text-neutral-dark">{monthLabel(auditMonth + '-01')}</span>
                 </p>
-                {needsRoom && room.trim() && (
-                  <p className="text-xs text-neutral-mid">Room: <span className="font-medium text-neutral-dark">{room.trim()}</span></p>
+                {needsSubject && room.trim() && (
+                  <p className="text-xs text-neutral-mid capitalize">{subjectWord}: <span className="font-medium text-neutral-dark">{room.trim()}</span></p>
                 )}
                 {auditorName && (
                   <p className="text-xs text-neutral-mid">

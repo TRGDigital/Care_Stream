@@ -884,6 +884,7 @@ function ChatPageInner() {
         </div>
         )}
         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5">
+          <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Learning</p>
           {!isReviewer && (
           <button
             onClick={() => setView('chat')}
@@ -929,6 +930,9 @@ function ChatPageInner() {
             Follow-up
             {navCounts.followup > 0 && <NavBadge count={navCounts.followup} className="bg-red-500" />}
           </button>
+          {(canAudit || canF2F || (canSupervisions && !isReviewer) || !isReviewer || policyApprovals.is_manager || auditApprovals.is_manager) && (
+            <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Compliance</p>
+          )}
           {canAudit && (
             <button
               onClick={() => setView('audits')}
@@ -986,6 +990,9 @@ function ChatPageInner() {
             Audit sign-off
             {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
           </button>
+          )}
+          {!isReviewer && (
+            <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">For you</p>
           )}
           {!isReviewer && (
           <button

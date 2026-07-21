@@ -1891,6 +1891,7 @@ model AuditRun {
   approved_by_role   String?
   approved_at        DateTime?
   approval_note      String?                                // manager's send-back comment
+  readiness_scores   Json?                                  // AI CQC-domain readiness scores (0-100) for this run
   created_at         DateTime      @default(now())
   updated_at         DateTime      @updatedAt
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])
@@ -1921,6 +1922,25 @@ model AuditApproval {
   @@index([run_id])
   @@index([tenant_id])
   @@map("audit_approvals")
+}
+
+// A monthly snapshot of the blended CQC Readiness Score (audit performance + policy coverage),
+// per CQC key question, so the score can be trended over time.
+model ReadinessSnapshot {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  period      DateTime                        // month start
+  overall     Int
+  safe        Int?
+  effective   Int?
+  caring      Int?
+  responsive  Int?
+  well_led    Int?
+  computed_at DateTime @default(now())
+
+  @@unique([tenant_id, period])
+  @@index([tenant_id])
+  @@map("readiness_snapshots")
 }
 
 // Optional evidence photo(s) attached to a question's answer while conducting an

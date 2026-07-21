@@ -1001,6 +1001,7 @@ export function createApiClient(token: string) {
         }>
       }>('/analytics/consistency', token),
       consistencyResolve: (key: string) => apiFetch<{ resolution: string }>('/analytics/consistency/resolve', token, { method: 'POST', body: JSON.stringify({ key }) }),
+      readiness: () => apiFetch<{ overall: number | null; rag: string; band: string; updated_at: string; has_audit: boolean; has_policy: boolean; domains: Array<{ key: string; label: string; score: number | null; rag: string; band: string; audit: number | null; policy: number | null }>; trend: Array<{ period: string; overall: number }> }>('/analytics/readiness', token),
       consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
       consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),

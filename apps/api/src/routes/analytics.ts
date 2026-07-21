@@ -14,6 +14,7 @@ import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch 
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
+import { getReadinessScore } from '../services/analytics/readiness'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
@@ -669,6 +670,16 @@ analyticsRouter.post('/consistency/detect', requireAdmin, async (_req: Request, 
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'CONSISTENCY_DETECT_FAILED', e.message ?? 'Could not run consistency detection.', 500)
+  }
+})
+
+// CQC Readiness Score — blended audit performance + policy coverage, per key question, trended.
+analyticsRouter.get('/readiness', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    ok(res, await getReadinessScore(tenantId))
+  } catch (e: any) {
+    err(res, 'READINESS_FAILED', e.message ?? 'Could not compute readiness.', 500)
   }
 })
 

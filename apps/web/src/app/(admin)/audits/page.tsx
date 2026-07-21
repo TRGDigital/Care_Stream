@@ -11,6 +11,7 @@ import { AuditBuilder } from '@/components/admin/audit-builder'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { LockChip } from '@/components/admin/upgrade-gate'
+import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
@@ -184,6 +185,8 @@ export default function AuditsPage() {
       </div>
 
       <HowToAccordion />
+
+      {session?.accessToken && <CqcReadinessCard token={session.accessToken} userId={userId} />}
 
       {showBuilder && session?.accessToken && (
         <AuditBuilder token={session.accessToken} onClose={() => setShowBuilder(false)} onCreated={reloadTemplates} />

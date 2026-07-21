@@ -13,6 +13,7 @@ import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
+import { scoreAuditDomains } from '../services/analytics/readiness'
 
 export const auditsRouter = Router()
 
@@ -1845,13 +1846,17 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     filledPrompt += `\n\nCQC SINGLE ASSESSMENT FRAMEWORK — QUALITY STATEMENTS (reference)\n${qsBlock}\n\nWhen writing the CQC COMPLIANCE NOTES section, link each failed or weak item to the most relevant quality statement above, naming it exactly (for example "Safe environments"). Use only statements from this list and do not invent others.`
   }
 
+  // Score this audit's CQC domains in parallel (feeds the CQC Readiness Score). Never throws.
+  const scoresP = scoreAuditDomains(run.template.name, auditResultsText)
+
   let recommendations: string
   try {
     recommendations = await callClaude('You are a senior health and safety consultant specialising in UK care home compliance.', filledPrompt, { maxTokens: 1200 })
   } catch {
     recommendations = 'AI recommendations could not be generated at this time. Please review the audit results manually.'
   }
-  await (prisma as any).auditRun.update({ where: { id: runId }, data: { ai_recommendations: recommendations } })
+  const scores = await scoresP
+  await (prisma as any).auditRun.update({ where: { id: runId }, data: { ai_recommendations: recommendations, ...(scores ? { readiness_scores: scores } : {}) } })
   trackAiAction(tenantId, 'audit_recs', runId)
   return recommendations
 }

@@ -6,6 +6,7 @@
 // compact summary card that launches it.
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
 type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; status: string; source: string; done_at: string | null }
@@ -19,28 +20,33 @@ const PRIORITY: Record<string, { label: string; cls: string }> = {
 const STATUS_CLS: Record<string, string> = { open: 'text-neutral-mid', in_progress: 'text-amber-700', done: 'text-green-700' }
 
 export function AuditActionPlan({ token, runId, canGenerate }: { token: string; runId: string; canGenerate?: boolean }) {
-  const [plan, setPlan]   = useState<Plan | null>(null)
-  const [staff, setStaff] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
+  const cacheKey = `action-plan-${runId}`
+  const cached = persistentCache.get<{ plan: Plan; staff: string[] }>(cacheKey)
+  const [plan, setPlan]   = useState<Plan | null>(cached?.plan ?? null)
+  const [staff, setStaff] = useState<string[]>(cached?.staff ?? [])
+  const [loading, setLoading] = useState(!cached)
   const [busy, setBusy]   = useState(false)
   const [generating, setGenerating] = useState(false)
   const [newDesc, setNewDesc] = useState('')
   const [open, setOpen]   = useState(false)
   const api = createApiClient(token)
 
+  // Keep the cache in step with local edits so re-opening the page paints the latest instantly.
+  const cachePlan = (p: Plan | null) => { if (p) persistentCache.set(cacheKey, { plan: p, staff }) }
+
   function load() {
     Promise.all([api.audits.actionPlan(runId), api.audits.templates().catch(() => ({ staff: [] as string[] }))])
-      .then(([p, t]) => { setPlan(p); setStaff((t as any).staff ?? []) })
+      .then(([p, t]) => { const st = (t as any).staff ?? []; setPlan(p); setStaff(st); if (p) persistentCache.set(cacheKey, { plan: p, staff: st }) })
       .catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setLocal = (id: string, p: Partial<Action>) => setPlan(pl => pl ? { ...pl, actions: pl.actions.map(a => a.id === id ? { ...a, ...p } : a) } : pl)
+  const setLocal = (id: string, p: Partial<Action>) => setPlan(pl => { const next = pl ? { ...pl, actions: pl.actions.map(a => a.id === id ? { ...a, ...p } : a) } : pl; cachePlan(next); return next })
   const save = (id: string, p: Partial<Action>) => { setLocal(id, p); api.audits.updateAuditAction(id, p as any).catch(() => {}) }
-  async function remove(id: string) { setPlan(pl => pl ? { ...pl, actions: pl.actions.filter(a => a.id !== id) } : pl); await api.audits.deleteAuditAction(id).catch(() => {}) }
-  async function add() { const d = newDesc.trim(); if (!d) return; setNewDesc(''); const p = await api.audits.addAuditAction(runId, d, 'priority').catch(() => null); if (p) setPlan(p as Plan) }
-  async function approve() { setBusy(true); try { const p = await api.audits.approveActionPlan(runId); setPlan(p as Plan) } catch { /* ignore */ } finally { setBusy(false) } }
-  async function generate() { setGenerating(true); try { const p = await api.audits.generateActionPlan(runId); setPlan(p as Plan); setOpen(true) } catch { /* ignore */ } finally { setGenerating(false) } }
+  async function remove(id: string) { setPlan(pl => { const next = pl ? { ...pl, actions: pl.actions.filter(a => a.id !== id) } : pl; cachePlan(next); return next }); await api.audits.deleteAuditAction(id).catch(() => {}) }
+  async function add() { const d = newDesc.trim(); if (!d) return; setNewDesc(''); const p = await api.audits.addAuditAction(runId, d, 'priority').catch(() => null); if (p) { setPlan(p as Plan); cachePlan(p as Plan) } }
+  async function approve() { setBusy(true); try { const p = await api.audits.approveActionPlan(runId); setPlan(p as Plan); cachePlan(p as Plan) } catch { /* ignore */ } finally { setBusy(false) } }
+  async function generate() { setGenerating(true); try { const p = await api.audits.generateActionPlan(runId); setPlan(p as Plan); cachePlan(p as Plan); setOpen(true) } catch { /* ignore */ } finally { setGenerating(false) } }
 
   if (loading) return <div className="h-24 animate-pulse rounded-card bg-gray-50" />
   if (!plan) return null

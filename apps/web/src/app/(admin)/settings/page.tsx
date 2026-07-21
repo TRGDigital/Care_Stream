@@ -1077,6 +1077,12 @@ export default function SettingsPage() {
                 <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
+            <div className="mt-4 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
+              <p className="text-sm font-medium text-neutral-dark">Action plans</p>
+              <p className="mt-0.5 text-sm text-neutral-mid">
+                When an audit is completed, CareStream drafts an action plan from its recommendations. Review it, set priorities and due dates, and assign each action to a staff member, then approve it. Approved actions then appear in that person&rsquo;s hub under &ldquo;My actions&rdquo;, where they mark them Start and Done, and you can track progress from the audit. <a href="/help/audits/action-plan" className="font-medium text-teal hover:underline">Learn more</a>.
+              </p>
+            </div>
             {savingOrg && <p className="mt-2 text-xs text-neutral-mid">Saving…</p>}
             {orgSaved && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-green-600"><Check size={14} /> Saved</p>}
           </SettingSection>

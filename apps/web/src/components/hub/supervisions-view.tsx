@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient, type SupRecord } from '@/lib/api-client'
+import { persistentCache, hubKey } from '@/lib/page-cache'
 import { CalendarDays, CheckCircle2 } from 'lucide-react'
 
 function startOfToday(): number { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() }
@@ -13,11 +14,15 @@ function fmtLong(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-export function SupervisionsHubView({ token }: { token: string }) {
-  const [records, setRecords] = useState<SupRecord[] | null>(null)
+export function SupervisionsHubView({ token, userId }: { token: string; userId?: string }) {
+  const cacheKey = hubKey('supervisions', userId ?? 'me')
+  const cached = persistentCache.get<SupRecord[]>(cacheKey)
+  const [records, setRecords] = useState<SupRecord[] | null>(cached ?? null)
   useEffect(() => {
-    createApiClient(token).me.supervisions().then(d => setRecords(d.records)).catch(() => setRecords([]))
-  }, [token])
+    createApiClient(token).me.supervisions()
+      .then(d => { setRecords(d.records); persistentCache.set(cacheKey, d.records) })
+      .catch(() => setRecords(r => r ?? []))
+  }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (records === null) {
     return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-100" />)}</div>

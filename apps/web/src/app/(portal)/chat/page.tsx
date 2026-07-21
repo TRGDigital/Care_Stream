@@ -1174,7 +1174,7 @@ function ChatPageInner() {
 
         {/* Supervisions & appraisals (Enterprise) */}
         {view === 'supervisions' && canSupervisions && session?.accessToken && (
-          <SupervisionsHubView token={session.accessToken} />
+          <SupervisionsHubView token={session.accessToken} userId={userId} />
         )}
 
         {/* F2F Training (admin-only) */}

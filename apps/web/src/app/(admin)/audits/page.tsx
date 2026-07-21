@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
@@ -222,12 +222,17 @@ export default function AuditsPage() {
         </div>
       )}
 
-      {/* ── New audit form ─────────────────────────────────────────────────────── */}
+      {/* ── New audit form (overlay) ───────────────────────────────────────────── */}
       {showNew && (
-        <div className="mb-6 rounded-card bg-white p-6 shadow-card">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowNew(false); setConfirming(false) }}>
+          <div className="flex max-h-[88vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+              <h2 className="text-base font-semibold text-neutral-dark">{confirming ? 'Confirm audit' : 'Start a new audit'}</h2>
+              <button onClick={() => { setShowNew(false); setConfirming(false) }} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
           {!confirming ? (
             <>
-              <h2 className="mb-4 text-sm font-semibold text-neutral-dark">Start a new audit</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Audit type</label>
@@ -311,7 +316,6 @@ export default function AuditsPage() {
             </>
           ) : (
             <>
-              <h2 className="mb-1 text-sm font-semibold text-neutral-dark">Confirm audit</h2>
               <p className="mb-4 text-xs text-neutral-mid">Please confirm the details below before starting.</p>
               <div className="mb-5 rounded-lg border border-teal/20 bg-teal-light/30 px-5 py-4 space-y-1.5">
                 <p className="text-sm font-medium text-neutral-dark">
@@ -349,6 +353,8 @@ export default function AuditsPage() {
               </div>
             </>
           )}
+            </div>
+          </div>
         </div>
       )}
 

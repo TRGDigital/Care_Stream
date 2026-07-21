@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
+import { AuditRecs } from '@/components/audit-recs'
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -135,7 +136,7 @@ function PrintReport({ report }: { report: any }) {
       {report.ai_recommendations && (
         <div className="mt-6 border border-gray-300 p-3">
           <h2 className="mb-2 text-sm font-bold uppercase">AI Recommendations</h2>
-          <pre className="whitespace-pre-wrap text-xs">{report.ai_recommendations}</pre>
+          <AuditRecs text={report.ai_recommendations} className="!text-xs" />
         </div>
       )}
 
@@ -626,7 +627,9 @@ export default function AuditRunPage() {
                   <Sparkles size={16} className="text-teal" />
                   <h2 className="font-semibold text-neutral-dark">AI Recommendations</h2>
                 </div>
-                <pre className="whitespace-pre-wrap rounded-lg border border-gray-100 bg-neutral-light/40 p-4 font-sans text-sm leading-relaxed !text-neutral-dark">{run.ai_recommendations}</pre>
+                <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
+                  <AuditRecs text={run.ai_recommendations} />
+                </div>
               </div>
             )}
           </div>

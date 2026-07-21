@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { AuditRecs } from '@/components/audit-recs'
 import { persistentCache } from '@/lib/page-cache'
 import { Loader2, FileCheck2, ChevronLeft, Check, X, ClipboardCheck, History } from 'lucide-react'
 
@@ -120,7 +121,7 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
                 <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-4">
                   {detail.strengths && <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Strengths</p><p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{detail.strengths}</p></div>}
                   {detail.improvements && <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Areas to improve</p><p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{detail.improvements}</p></div>}
-                  {detail.ai_recommendations && <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">AI recommendations</p><p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{detail.ai_recommendations}</p></div>}
+                  {detail.ai_recommendations && <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">AI recommendations</p><AuditRecs text={detail.ai_recommendations} className="mt-0.5" /></div>}
                 </div>
               )}
 

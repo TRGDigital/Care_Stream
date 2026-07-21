@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { AuditRecs } from '@/components/audit-recs'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { useIsMobileOrTablet } from '@/lib/use-device'
 import { compressImage } from '@/lib/image-compress'
@@ -431,7 +432,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
         {isCompleted && (
           <div className="mt-6 rounded-xl border border-green-200 bg-green-50/50 p-4 text-sm text-neutral-dark">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-green-700"><CheckCircle2 size={15} /> Completed</p>
-            {run.ai_recommendations && <div className="mt-2"><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI recommendations</p><p className="whitespace-pre-wrap text-sm text-neutral-dark">{run.ai_recommendations}</p></div>}
+            {run.ai_recommendations && <div className="mt-2"><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI recommendations</p><AuditRecs text={run.ai_recommendations} /></div>}
             <p className="mt-2 text-xs text-neutral-mid">Open the admin Audit section to print or export this audit.</p>
           </div>
         )}

@@ -809,9 +809,13 @@ Provide an overall audit quality rating using the following scale:
 
 State the rating, then give a 2–3 sentence justification citing specific evidence from this audit.
 
----
+FORMATTING RULES
+- Use the exact section headings above, each on its own line starting with "## ".
+- Use "- " at the start of every list item. Use **bold** only for key terms, the quality rating, and the CQC key-question labels (Safe, Effective, Caring, Responsive, Well-Led).
+- Do NOT output any horizontal rules (---), tables, code blocks, or a document title. Start directly with the first "## " heading.
+- Keep it tight and scannable — short sentences, no filler, no repetition between sections. A registered manager should be able to read the whole report in about two minutes.
 
-Write clearly and professionally. Avoid generic statements that could apply to any care home — every point must be tied to the specific evidence in this audit. Use plain English that a registered manager could share directly with their team.`
+Write clearly and professionally in UK English. Avoid generic statements that could apply to any care home — every point must be tied to the specific evidence in this audit. Use plain English that a registered manager could share directly with their team.`
 
 // ─── Seed helper ─────────────────────────────────────────────────────────────
 

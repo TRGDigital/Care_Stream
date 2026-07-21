@@ -48,7 +48,15 @@ export function CqcReadinessCard({ token, userId }: { token: string; userId?: st
       <div className="flex items-center gap-2">
         <ShieldCheck size={18} className="shrink-0 text-teal" />
         <div>
-          <h2 className="text-sm font-bold text-neutral-dark">CQC Readiness Score</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-bold text-neutral-dark">
+            CQC Readiness Score
+            <span className="group relative inline-flex">
+              <Info size={13} className="cursor-help text-neutral-mid hover:text-neutral-dark" />
+              <span className="pointer-events-none invisible absolute left-0 top-full z-20 mt-1.5 w-72 rounded-lg border border-gray-200 bg-white p-3 text-[11px] font-normal leading-relaxed text-neutral-dark opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100">
+                Blends two signals per CQC key question: how your audits are performing <strong>in practice</strong> (AI-scored from your completed monthly audits) and how well your policies cover the regulations <strong>on paper</strong>. The overall score is the mean of the five domains, snapshotted monthly so you can track the trend. It is an internal readiness indicator to focus improvement, not a prediction of your CQC rating.
+              </span>
+            </span>
+          </h2>
           <p className="text-xs text-neutral-mid">If an inspector walked in tomorrow, how ready are you? Blends audit performance with policy coverage.</p>
         </div>
       </div>

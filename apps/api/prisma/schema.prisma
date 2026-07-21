@@ -1892,6 +1892,7 @@ model AuditRun {
   approved_at        DateTime?
   approval_note      String?                                // manager's send-back comment
   readiness_scores   Json?                                  // AI CQC-domain readiness scores (0-100) for this run
+  action_plan_status String       @default("none")          // none | draft | approved
   created_at         DateTime      @default(now())
   updated_at         DateTime      @updatedAt
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])
@@ -1899,10 +1900,33 @@ model AuditRun {
   answers            AuditAnswer[]
   evidence           AuditAnswerEvidence[]
   approvals          AuditApproval[]
+  actions            AuditAction[]
 
   @@index([tenant_id, status])
   @@index([tenant_id, audit_month])
   @@map("audit_runs")
+}
+
+// An action derived from an audit's recommendations (or added by hand). Created as a draft plan
+// the tenant reviews, edits, approves and assigns, then tracks to completion.
+model AuditAction {
+  id          String    @id @default(uuid())
+  run_id      String
+  tenant_id   String
+  description String
+  priority    String    @default("priority")  // immediate | priority | monitor
+  due_date    DateTime?
+  assigned_to String?
+  status      String    @default("open")       // open | in_progress | done
+  source      String    @default("ai")         // ai | manual
+  done_at     DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  run         AuditRun  @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@index([run_id])
+  @@index([tenant_id, status])
+  @@map("audit_actions")
 }
 
 // Audit trail of approval events on an audit run: who submitted it, and the care

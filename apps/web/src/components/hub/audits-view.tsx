@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { AuditRecs } from '@/components/audit-recs'
+import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { useIsMobileOrTablet } from '@/lib/use-device'
 import { compressImage } from '@/lib/image-compress'
@@ -42,14 +43,14 @@ export function AuditsView({ token, userId }: { token: string; userId: string })
   if (activeRunId) {
     return <AuditRunner token={token} runId={activeRunId} onExit={() => setActiveRunId(null)} />
   }
-  return <AuditList api={api} userId={userId} onOpen={setActiveRunId} />
+  return <AuditList api={api} token={token} userId={userId} onOpen={setActiveRunId} />
 }
 
 // ─── List: templates to start, in-progress to resume, recent completed ─────────
 
 const SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
 
-function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiClient>; userId: string; onOpen: (runId: string) => void }) {
+function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof createApiClient>; token: string; userId: string; onOpen: (runId: string) => void }) {
   const ck = hubKey('audits', userId)
   const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[]; staff: string[]; recentSubjects: Record<string, string[]>; stats: any }>(ck)
   const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
@@ -104,6 +105,9 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><ClipboardCheck size={20} className="text-teal" /> Audits</h2>
         <p className="mb-5 text-sm text-neutral-mid">Start, save and complete audits here — they appear in your admin Audit section automatically.</p>
+
+        {/* CQC Readiness Score — admin-role only; the endpoint is admin-gated so it hides for others. */}
+        <CqcReadinessCard token={token} userId={userId} />
 
         {/* Snapshot */}
         {stats && (

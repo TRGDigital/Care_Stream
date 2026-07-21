@@ -14,6 +14,7 @@ import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
+import { extractDraftActions, createDraftActionPlan, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan } from '../services/audits/action-plan'
 
 export const auditsRouter = Router()
 
@@ -1846,8 +1847,10 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     filledPrompt += `\n\nCQC SINGLE ASSESSMENT FRAMEWORK — QUALITY STATEMENTS (reference)\n${qsBlock}\n\nWhen writing the CQC COMPLIANCE NOTES section, link each failed or weak item to the most relevant quality statement above, naming it exactly (for example "Safe environments"). Use only statements from this list and do not invent others.`
   }
 
-  // Score this audit's CQC domains in parallel (feeds the CQC Readiness Score). Never throws.
-  const scoresP = scoreAuditDomains(run.template.name, auditResultsText)
+  // In parallel with the recommendations: score the CQC domains (Readiness Score) and extract a
+  // draft action plan. Both never throw.
+  const scoresP  = scoreAuditDomains(run.template.name, auditResultsText)
+  const actionsP = extractDraftActions(run.template.name, auditResultsText)
 
   let recommendations: string
   try {
@@ -1857,6 +1860,7 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
   }
   const scores = await scoresP
   await (prisma as any).auditRun.update({ where: { id: runId }, data: { ai_recommendations: recommendations, ...(scores ? { readiness_scores: scores } : {}) } })
+  await createDraftActionPlan(tenantId, runId, await actionsP).catch(e => console.error('[audits] draft action plan:', e))
   trackAiAction(tenantId, 'audit_recs', runId)
   return recommendations
 }
@@ -1999,4 +2003,49 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
   }
 
   ok(res, { report })
+})
+
+// ─── Audit action plan ────────────────────────────────────────────────────────
+
+auditsRouter.get('/runs/:id/action-plan', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    const plan = await getActionPlan(tenantId, String(req.params.id))
+    if (!plan) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+    ok(res, plan)
+  } catch (e: any) { err(res, 'ACTION_PLAN_FAILED', e.message ?? 'Could not load the action plan.', 500) }
+})
+
+auditsRouter.post('/runs/:id/actions', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const description = String(req.body?.description ?? '').trim()
+  if (!description) return err(res, 'VALIDATION_ERROR', 'A description is required')
+  try {
+    await addAction(tenantId, String(req.params.id), description, String(req.body?.priority ?? 'priority'))
+    ok(res, await getActionPlan(tenantId, String(req.params.id)))
+  } catch (e: any) { err(res, 'ACTION_ADD_FAILED', e.message ?? 'Could not add the action.', 500) }
+})
+
+auditsRouter.patch('/actions/:actionId', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await updateAction(tenantId, String(req.params.actionId), req.body ?? {})
+    ok(res, { updated: true })
+  } catch (e: any) { err(res, 'ACTION_UPDATE_FAILED', e.message ?? 'Could not update the action.', 500) }
+})
+
+auditsRouter.delete('/actions/:actionId', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await deleteAction(tenantId, String(req.params.actionId))
+    ok(res, { deleted: true })
+  } catch (e: any) { err(res, 'ACTION_DELETE_FAILED', e.message ?? 'Could not delete the action.', 500) }
+})
+
+auditsRouter.post('/runs/:id/action-plan/approve', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await approveActionPlan(tenantId, String(req.params.id))
+    ok(res, await getActionPlan(tenantId, String(req.params.id)))
+  } catch (e: any) { err(res, 'ACTION_APPROVE_FAILED', e.message ?? 'Could not approve the plan.', 500) }
 })

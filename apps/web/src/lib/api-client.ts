@@ -749,6 +749,11 @@ export function createApiClient(token: string) {
       saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
       complete: (id: string) => apiFetch<{ run: any; recommendations: string; approval_required?: boolean }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
+      actionPlan: (id: string) => apiFetch<{ status: string; actions: Array<{ id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; status: string; source: string; done_at: string | null }> }>(`/audits/runs/${id}/action-plan`, token),
+      addAuditAction: (id: string, description: string, priority: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/actions`, token, { method: 'POST', body: JSON.stringify({ description, priority }) }),
+      updateAuditAction: (actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; status?: string }) => apiFetch<{ updated: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'PATCH', body: JSON.stringify(patch) }),
+      deleteAuditAction: (actionId: string) => apiFetch<{ deleted: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'DELETE' }),
+      approveActionPlan: (id: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/action-plan/approve`, token, { method: 'POST' }),
       report: (id: string) => apiFetch<{ report: any }>(`/audits/runs/${id}/report`, token),
       // Per-question evidence photos (optional). Image is compressed client-side first.
       uploadEvidence: (runId: string, questionId: string, image: File) => {

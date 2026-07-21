@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
+import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -640,6 +641,8 @@ export default function AuditRunPage() {
                 </div>
               </div>
             )}
+
+            {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} />}
           </div>
         )}
       </div>

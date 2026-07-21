@@ -27,7 +27,7 @@ export default function Page() {
         { type: 'p', text: 'It combines both into a score for each CQC key question (Safe, Effective, Caring, Responsive, Well-led), and an overall score out of 100.' },
 
         { type: 'subheading', text: 'Where to find it' },
-        { type: 'p', text: 'It appears at the top of your Audits page, and in the hub Audits tab for admins. You see the overall score, a colour-coded breakdown of the five domains, and a trend that builds up month by month so you can evidence improvement over time.' },
+        { type: 'p', text: 'Once turned on, it appears at the top of your Audits page, and in the hub Audits tab for admins. You see the overall score, a colour-coded breakdown of the five domains, and a trend that builds up month by month so you can evidence improvement over time.' },
 
         { type: 'subheading', text: 'How to improve it' },
         { type: 'bullets', items: [
@@ -36,8 +36,8 @@ export default function Page() {
           'Keep your policies up to date and fill any gaps flagged on the Policy Gaps page.',
         ] },
 
-        { type: 'subheading', text: 'Turning it off' },
-        { type: 'p', text: 'If you would rather keep your view simpler, you can hide the score under Settings, then Audits. We keep measuring it in the background, so you can switch it back on any time and your history is still there.' },
+        { type: 'subheading', text: 'Turning it on' },
+        { type: 'p', text: 'The score is off by default to keep your view simple. To show it, go to Settings, then Audits, and switch on "Show the CQC Readiness Score". We keep measuring it in the background either way, so as soon as you turn it on your history is already there.' },
 
         { type: 'note', text: 'The Readiness Score is your own internal indicator to guide improvement. It is not a prediction of the rating CQC will give you.' },
       ]}

@@ -408,7 +408,7 @@ export default function SettingsPage() {
     const next = { ...orgDetails, require_audit_manager_approval: requireAuditApproval ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
-  const showReadiness = orgDetails.show_readiness_score !== 'off'
+  const showReadiness = orgDetails.show_readiness_score === 'on'
   function toggleReadiness() {
     const next = { ...orgDetails, show_readiness_score: showReadiness ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
@@ -1068,7 +1068,7 @@ export default function SettingsPage() {
               <div className="min-w-0">
                 <p className="text-sm font-medium text-neutral-dark">Show the CQC Readiness Score</p>
                 <p className="mt-0.5 text-sm text-neutral-mid">
-                  Shows a CQC Readiness Score (audit performance blended with policy coverage) on your Audits pages. On by default. We keep measuring it in the background either way, so you can turn it back on any time and the history is there. Turn it off if you&rsquo;d rather keep the view simpler.
+                  Shows a CQC Readiness Score (audit performance blended with policy coverage) on your Audits pages. Off by default, so your view stays simple. We keep measuring it in the background either way, so whenever you turn it on the history is already there.
                 </p>
               </div>
               <button type="button" role="switch" aria-checked={showReadiness} aria-label="Show the CQC Readiness Score"

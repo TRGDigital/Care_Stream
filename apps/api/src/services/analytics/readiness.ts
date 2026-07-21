@@ -121,8 +121,8 @@ export async function getReadinessScore(tenantId: string): Promise<ReadinessResu
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } }).catch(() => null),
   ])
   // The data is always computed and snapshotted in the background; this flag only controls whether
-  // the tenant chooses to display it (Settings → Audits). Shown by default.
-  const visible = ((tenant?.organisation_details ?? {}) as Record<string, string>).show_readiness_score !== 'off'
+  // the tenant chooses to display it (Settings → Audits). Hidden by default; tenant opts in.
+  const visible = ((tenant?.organisation_details ?? {}) as Record<string, string>).show_readiness_score === 'on'
 
   const domains = DOMAINS.map(key => {
     const a = audit[key], p = policy[key]

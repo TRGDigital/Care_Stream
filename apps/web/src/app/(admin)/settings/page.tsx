@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
+import { usePlanFeatures } from '@/lib/use-plan-features'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
@@ -149,6 +150,7 @@ function DangerZone({ token }: { token: string }) {
 
 export default function SettingsPage() {
   const { data: session }           = useSession()
+  const { features: planFeatures }  = usePlanFeatures()
   const router                      = useRouter()
   const userId = session?.user?.email ?? 'guest'
   const [inboundEmail,   setInboundEmail]   = useState('')
@@ -1042,7 +1044,7 @@ export default function SettingsPage() {
         </SettingSection>
 
         {/* ── Audits ────────────────────────────────────────────────────────── */}
-        {featureFlags.has_custom_audits && (
+        {(planFeatures == null || planFeatures.has_custom_audits) && (
           <SettingSection icon={ShieldCheck} title="Audits" description="Require your care manager to sign off completed audits before they are final.">
             <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
               <div className="min-w-0">

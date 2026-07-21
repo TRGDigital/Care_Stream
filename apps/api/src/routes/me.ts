@@ -327,7 +327,8 @@ meRouter.post('/policy-approvals/:policyId/reject', async (req: Request, res: Re
 meRouter.get('/audit-approvals', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
-  if (!(await tenantHasFlag(tenantId, 'has_custom_audits')) || !(await isCareManager(userId))) {
+  const auditsEnabled = (await getPlanFeatures(tenantId).catch(() => null))?.has_custom_audits
+  if (!auditsEnabled || !(await isCareManager(userId))) {
     ok(res, { is_manager: false, audits: [], recent: [] }); return
   }
   const [audits, recent] = await Promise.all([getPendingAuditApprovals(tenantId), getRecentApprovedAudits(tenantId)])

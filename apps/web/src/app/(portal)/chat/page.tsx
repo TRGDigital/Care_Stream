@@ -866,7 +866,7 @@ function ChatPageInner() {
       {navOpen && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setNavOpen(false)} />}
 
       {/* ── Left panel (static ≥ md, drawer on mobile) ─────────────────────── */}
-      <aside className={`w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:static md:z-auto md:flex md:shadow-none ${navOpen ? 'fixed inset-y-0 left-0 z-50 flex shadow-2xl' : 'hidden'}`}>
+      <aside className={`w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white overflow-y-auto [@media(min-width:768px)_and_(min-height:800px)]:overflow-hidden md:static md:z-auto md:flex md:shadow-none ${navOpen ? 'fixed inset-y-0 left-0 z-50 flex shadow-2xl' : 'hidden'}`}>
         {/* Close (mobile drawer only) */}
         <button onClick={() => setNavOpen(false)} aria-label="Close menu" className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light md:hidden">
           <X size={18} />
@@ -1015,8 +1015,9 @@ function ChatPageInner() {
           )}
         </div>
 
-        {/* Scrollable secondary area: saved policies + chat history (nav above stays fixed) */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        {/* Scrollable secondary area: saved policies + chat history. On roomy screens the nav
+            above stays fixed and only this scrolls; on small/short screens the whole aside scrolls. */}
+        <div className="[@media(min-width:768px)_and_(min-height:800px)]:flex-1 [@media(min-width:768px)_and_(min-height:800px)]:min-h-0 [@media(min-width:768px)_and_(min-height:800px)]:overflow-y-auto">
         {/* Saved policies (hidden for reviewers) */}
         {!isReviewer && savedPolicies.length > 0 && (
           <div className="border-t border-gray-100 px-3 py-3">

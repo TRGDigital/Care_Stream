@@ -16,6 +16,7 @@ import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
+import { getMyActions, countMyOpenActions, setMyActionStatus } from '../services/audits/action-plan'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
@@ -186,7 +187,8 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const now = new Date()
-  const [tEnr, induction, cqc, tWrong, oWrong] = await Promise.all([
+  const meUser = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null)
+  const [tEnr, induction, cqc, tWrong, oWrong, actions] = await Promise.all([
     // Split into My Training (manual modules) vs Annual Training (AI modules).
     (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
@@ -194,6 +196,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
     // Direct counts of outstanding wrong answers (was fetch-all-rows-and-sum).
     (prisma as any).trainingAnswer.count({ where: { is_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
     (prisma as any).onboardingProgress.count({ where: { answer_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
+    countMyOpenActions(tenantId, meUser?.name ?? ''),
   ])
   const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
@@ -211,7 +214,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
       if (ids.length) { const a = await getAuditsDue(tenantId, ids); audits = a.due.length + a.inProgress }
     } catch { /* ignore */ }
   }
-  ok(res, { training, induction, cqc, followup, annual, audits })
+  ok(res, { training, induction, cqc, followup, annual, audits, actions: actions as number })
 })
 
 // ─── Care manager: policies awaiting their approval (Policy Change Adoption) ──
@@ -396,6 +399,28 @@ meRouter.post('/audit-approvals/:runId/reject', async (req: Request, res: Respon
   const r = await rejectAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', comment)
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   ok(res, r)
+})
+
+// ─── GET /me/actions ──────────────────────────────────────────────────────────
+// Audit action-plan items assigned to the signed-in staff member (approved plans only).
+meRouter.get('/actions', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
+  ok(res, await getMyActions(tenantId, me?.name ?? ''))
+})
+
+// Staff member updates the status of one of their own actions (open | in_progress | done).
+meRouter.patch('/actions/:id', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
+  try {
+    await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), String(req.body?.status ?? ''))
+    ok(res, await getMyActions(tenantId, me?.name ?? ''))
+  } catch (e: any) {
+    err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not update the action.')
+  }
 })
 
 

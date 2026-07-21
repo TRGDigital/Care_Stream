@@ -173,7 +173,7 @@ export default function AuditRunPage() {
   const [saving,    setSaving]      = useState(false)
   const [completing, setCompleting] = useState(false)
   const [approvalRequired, setApprovalRequired] = useState(false)
-  const [recsOpen,  setRecsOpen]    = useState(true)
+  const [recsOpen,  setRecsOpen]    = useState(false)
   const [report,    setReport]      = useState<any>(null)
   const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()

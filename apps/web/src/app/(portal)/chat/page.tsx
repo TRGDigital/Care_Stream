@@ -18,6 +18,7 @@ import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { ProgressView } from '@/components/hub/progress-view'
+import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import Link from 'next/link'
@@ -29,7 +30,7 @@ import { persistentCache, hubKey } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, ListChecks, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -344,7 +345,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   // Remembered from the last load so the Supervisions item shows immediately on
@@ -394,7 +395,7 @@ function ChatPageInner() {
   // Voice: dictate in the chosen reply language, else the staff member's own language.
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
     useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
-  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0 })
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number; actions: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0, actions: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
@@ -431,7 +432,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals') setView(v)
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') setView(v)
   }, [searchParams])
 
   // Care manager: policies awaiting their approval (drives the Policies sidebar item).
@@ -530,7 +531,7 @@ function ChatPageInner() {
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.counts()
-      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
+      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})
   }, [session?.accessToken, view]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -986,6 +987,16 @@ function ChatPageInner() {
             {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
           </button>
           )}
+          {!isReviewer && (navCounts.actions > 0 || view === 'actions') && (
+          <button
+            onClick={() => setView('actions')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'actions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <ListChecks size={15} />
+            My actions
+            {navCounts.actions > 0 && <NavBadge count={navCounts.actions} className="bg-orange-500" />}
+          </button>
+          )}
           {!isReviewer && (
           <button
             onClick={() => setView('progress')}
@@ -1121,21 +1132,21 @@ function ChatPageInner() {
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
           <AnnualTrainingView token={session.accessToken} userId={userId} secondLang={secondLang} reviewer={isReviewer} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
           }} />
         )}
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
           <FollowUpView token={session.accessToken} userId={userId} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
           }} />
         )}
 
         {/* CQC Prep view */}
         {view === 'cqc' && session?.accessToken && (
           <CqcView token={session.accessToken} secondLang={secondLang} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
           }} />
         )}
 
@@ -1152,6 +1163,13 @@ function ChatPageInner() {
         {/* My Progress view */}
         {view === 'progress' && session?.accessToken && (
           <ProgressView token={session.accessToken} />
+        )}
+
+        {/* My actions (audit action-plan items assigned to me) */}
+        {view === 'actions' && session?.accessToken && (
+          <MyActionsView token={session.accessToken} userId={userId} onChange={() => {
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
+          }} />
         )}
 
         {/* Supervisions & appraisals (Enterprise) */}

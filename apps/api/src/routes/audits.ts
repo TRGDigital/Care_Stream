@@ -1293,6 +1293,66 @@ auditsRouter.delete('/evidence/:id', requireAuditAccess, async (req: Request, re
   ok(res, { deleted: true })
 })
 
+// Generate the AI recommendations for a completed audit and save them to the run. Extracted so it
+// can run either at completion (no approval) OR once the care manager approves (approval workflow).
+export async function generateAuditRecommendations(tenantId: string, runId: string): Promise<string> {
+  const run = await (prisma as any).auditRun.findFirst({
+    where: { id: runId, tenant_id: tenantId },
+    include: {
+      template: { include: { sections: { orderBy: { section_order: 'asc' }, include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } } } } },
+      answers:  true,
+      tenant:   { select: { name: true } },
+    },
+  })
+  if (!run) return ''
+
+  const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
+  const auditResultsText = run.template.sections.map((section: any) => {
+    const lines: string[] = [`\n${section.title}:`]
+    for (const q of section.questions) {
+      const a: any = answerMap.get(q.id)
+      if (q.question_type === 'yes_no' || q.question_type === 'yes_no_na') {
+        let yn: string
+        if (a?.answer_na)                yn = 'N/A'
+        else if (a?.answer_yn === true)  yn = 'YES'
+        else if (a?.answer_yn === false) yn = 'NO'
+        else                             yn = 'NOT ANSWERED'
+        lines.push(`  - ${q.question_text}: ${yn}`)
+        if (a?.outcome_text) lines.push(`    Outcome: ${a.outcome_text}`)
+        if (a?.actions_text) lines.push(`    Actions: ${a.actions_text}`)
+      } else {
+        lines.push(`  - ${q.question_text}`)
+        if (a?.outcome_text) lines.push(`    Findings: ${a.outcome_text}`)
+        if (a?.actions_text) lines.push(`    Actions & Timescales: ${a.actions_text}`)
+      }
+    }
+    return lines.join('\n')
+  }).join('\n')
+
+  const promptRecord = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'audit_recommendations' } }).catch(() => null)
+  const promptTemplate = promptRecord?.content ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
+  const filledPrompt = promptTemplate
+    .replace('{{audit_name}}',        run.template.name)
+    .replace('{{organisation_name}}', run.tenant.name)
+    .replace('{{auditor_name}}',      run.auditor_name ?? 'Unknown')
+    .replace('{{auditor_role}}',      run.auditor_role ?? 'Unknown')
+    .replace('{{audit_date}}',        new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }))
+    .replace('{{audit_results}}',     auditResultsText)
+    .replace('{{strengths}}',         run.strengths ?? 'Not provided')
+    .replace('{{improvements}}',      run.improvements ?? 'Not provided')
+    .replace('{{actions_deadline}}',  run.actions_deadline ?? 'Not specified')
+
+  let recommendations: string
+  try {
+    recommendations = await callClaude('You are a senior health and safety consultant specialising in UK care home compliance.', filledPrompt, { maxTokens: 1200 })
+  } catch {
+    recommendations = 'AI recommendations could not be generated at this time. Please review the audit results manually.'
+  }
+  await (prisma as any).auditRun.update({ where: { id: runId }, data: { ai_recommendations: recommendations } })
+  trackAiAction(tenantId, 'audit_recs', runId)
+  return recommendations
+}
+
 // ─── POST /audits/runs/:id/complete ──────────────────────────────────────────
 
 auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request, res: Response) => {
@@ -1315,87 +1375,29 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   })
   if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
 
-  // Build audit results summary for AI
-  const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
-
-  const auditResultsText = run.template.sections.map((section: any) => {
-    const lines: string[] = [`\n${section.title}:`]
-    for (const q of section.questions) {
-      const a: any = answerMap.get(q.id)
-      if (q.question_type === 'yes_no' || q.question_type === 'yes_no_na') {
-        let yn: string
-        if (a?.answer_na)            yn = 'N/A'
-        else if (a?.answer_yn === true)  yn = 'YES'
-        else if (a?.answer_yn === false) yn = 'NO'
-        else                             yn = 'NOT ANSWERED'
-        lines.push(`  - ${q.question_text}: ${yn}`)
-        if (a?.outcome_text) lines.push(`    Outcome: ${a.outcome_text}`)
-        if (a?.actions_text) lines.push(`    Actions: ${a.actions_text}`)
-      } else {
-        lines.push(`  - ${q.question_text}`)
-        if (a?.outcome_text) lines.push(`    Findings: ${a.outcome_text}`)
-        if (a?.actions_text) lines.push(`    Actions & Timescales: ${a.actions_text}`)
-      }
-    }
-    return lines.join('\n')
-  }).join('\n')
-
-  // Fetch the (optional) admin-editable prompt, falling back to the built-in default. `usage`
-  // is the unique key on AiPrompt; there is no is_active/system_prompt column.
-  const promptRecord = await (prisma as any).aiPrompt.findUnique({
-    where: { usage: 'audit_recommendations' },
-  }).catch(() => null)
-  const promptTemplate = promptRecord?.content ?? DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT
-
-  const filledPrompt = promptTemplate
-    .replace('{{audit_name}}',      run.template.name)
-    .replace('{{organisation_name}}', run.tenant.name)
-    .replace('{{auditor_name}}',    run.auditor_name ?? 'Unknown')
-    .replace('{{auditor_role}}',    run.auditor_role ?? 'Unknown')
-    .replace('{{audit_date}}',      new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }))
-    .replace('{{audit_results}}',   auditResultsText)
-    .replace('{{strengths}}',       run.strengths ?? 'Not provided')
-    .replace('{{improvements}}',    run.improvements ?? 'Not provided')
-    .replace('{{actions_deadline}}', run.actions_deadline ?? 'Not specified')
-
-  let recommendations: string
-  try {
-    recommendations = await callClaude(
-      'You are a senior health and safety consultant specialising in UK care home compliance.',
-      filledPrompt,
-      { maxTokens: 1200 },
-    )
-  } catch {
-    recommendations = 'AI recommendations could not be generated at this time. Please review the audit results manually.'
-  }
-
-  const completed = await (prisma as any).auditRun.update({
-    where: { id: run.id },
-    data:  {
-      status:             'completed',
-      ai_recommendations: recommendations,
-      completed_at:       new Date(),
-    },
-  })
-  trackAiAction(tenantId, 'audit_recs', run.id)
-
-  // If this tenant requires manager sign-off, route the completed audit to the care manager
-  // in the hub instead of treating it as final.
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
+
+  // When manager approval is on, completing just marks it done and sends it to the care manager —
+  // fast, with NO AI call. The AI recommendations are generated once the manager approves.
   if (approvalRequired) {
+    const completed = await (prisma as any).auditRun.update({
+      where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
+    })
     await submitAuditForApproval(tenantId, run.id, run.auditor_name ?? '').catch(e => console.error('[audits/complete] submit for approval:', e))
-    // Reflect the submit in the returned run so the client shows the "awaiting approval" state
-    // immediately (the update above ran before the submit changed these fields).
     completed.approval_status = 'pending_manager'
     completed.submitted_at    = new Date()
     completed.submitted_by    = run.auditor_name ?? null
+    ok(res, { run: completed, recommendations: null, approval_required: true })
+    return
   }
 
-  ok(res, { run: completed, recommendations, approval_required: approvalRequired })
+  // No approval required: generate the recommendations now and finalise.
+  const recommendations = await generateAuditRecommendations(tenantId, run.id)
+  const completed = await (prisma as any).auditRun.update({
+    where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
+  })
 
-  // When approval is required the audit isn't final yet, so don't email admins "completed" —
-  // the care manager is notified in the hub, and admins see it once it's approved.
-  if (approvalRequired) return
+  ok(res, { run: completed, recommendations, approval_required: false })
 
   const orgName = run.tenant?.name ?? ''
   notifyAdmin(run.tenant_id ?? tenantId, 'audit_updates', (email, name) =>

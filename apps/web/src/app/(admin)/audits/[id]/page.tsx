@@ -597,7 +597,7 @@ export default function AuditRunPage() {
                   <p className="text-sm font-semibold text-neutral-dark">Ready to {approvalRequired ? 'send for approval' : 'complete'}?</p>
                   <p className="text-xs text-neutral-mid">
                     {approvalRequired
-                      ? 'This generates the AI recommendations and sends the audit to your care manager in the hub to review and approve. It’s final once they sign it off.'
+                      ? 'This sends the audit to your care manager in the hub to review and approve. The AI recommendations are generated once they sign it off.'
                       : 'Completing the audit generates AI recommendations and locks the report for printing.'}
                   </p>
                 </div>
@@ -626,9 +626,7 @@ export default function AuditRunPage() {
                   <Sparkles size={16} className="text-teal" />
                   <h2 className="font-semibold text-neutral-dark">AI Recommendations</h2>
                 </div>
-                <div className="prose prose-sm max-w-none text-neutral-dark [&_strong]:text-neutral-dark [&_p]:text-sm [&_ul]:text-sm [&_li]:text-sm">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-neutral-dark">{run.ai_recommendations}</pre>
-                </div>
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-neutral-dark">{run.ai_recommendations}</pre>
               </div>
             )}
           </div>

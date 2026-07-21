@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Loader2, FileCheck2, ChevronLeft, Check, X, ClipboardCheck, History } from 'lucide-react'
 
 type Item = { run_id: string; template_name: string; auditor_name: string; audit_month: string; submitted_at: string | null }
@@ -18,10 +19,12 @@ function answerLabel(q: Detail['sections'][number]['questions'][number]): { text
   return { text: 'Not answered', tone: 'text-amber-600' }
 }
 
-export function AuditApprovalsView({ token, onChange }: { token: string; onChange?: () => void }) {
-  const [list, setList]       = useState<Item[]>([])
-  const [recent, setRecent]   = useState<Recent[]>([])
-  const [loading, setLoading] = useState(true)
+export function AuditApprovalsView({ token, userId, onChange }: { token: string; userId?: string; onChange?: () => void }) {
+  const cacheKey = `hub-audit-approvals-${userId ?? 'me'}`
+  const cached = persistentCache.get<{ audits: Item[]; recent: Recent[] }>(cacheKey)
+  const [list, setList]       = useState<Item[]>(cached?.audits ?? [])
+  const [recent, setRecent]   = useState<Recent[]>(cached?.recent ?? [])
+  const [loading, setLoading] = useState(!cached)
   const [selected, setSelected] = useState<Item | null>(null)
   const [detail, setDetail]   = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -31,9 +34,9 @@ export function AuditApprovalsView({ token, onChange }: { token: string; onChang
   const [error, setError]     = useState('')
 
   function load() {
-    setLoading(true)
     createApiClient(token).me.auditApprovals()
-      .then(r => { setList(r.audits); setRecent(r.recent ?? []) }).catch(() => {}).finally(() => setLoading(false))
+      .then(r => { setList(r.audits); setRecent(r.recent ?? []); persistentCache.set(cacheKey, { audits: r.audits, recent: r.recent ?? [] }) })
+      .catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [token])
 
@@ -46,7 +49,7 @@ export function AuditApprovalsView({ token, onChange }: { token: string; onChang
 
   async function approve() {
     if (!selected) return
-    if (!confirm(`Approve "${selected.template_name}"? Your name and today's date are saved to the audit.`)) return
+    if (!confirm(`Approve "${selected.template_name}"? This finalises the audit and generates the AI recommendations (takes a few seconds). Your name and today's date are saved to it.`)) return
     setBusy(true); setError('')
     try {
       await createApiClient(token).me.approveAuditAsManager(selected.run_id)
@@ -83,7 +86,7 @@ export function AuditApprovalsView({ token, onChange }: { token: string; onChang
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button onClick={reject} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Send back</button>
-              <button onClick={approve} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <><Loader2 size={14} className="animate-spin" /> …</> : <><FileCheck2 size={14} /> Approve</>}</button>
+              <button onClick={approve} disabled={busy} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <><Loader2 size={14} className="animate-spin" /> Approving…</> : <><FileCheck2 size={14} /> Approve</>}</button>
             </div>
           </div>
           {error && <div className="mt-3 rounded-md border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}

@@ -422,7 +422,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             </div>
             <p className="mt-2 text-xs text-neutral-mid">
               {approvalRequired
-                ? 'Generates AI recommendations and sends the audit to your care manager to review and approve. It’s final once they sign it off.'
+                ? 'Sends the audit to your care manager to review and approve. The AI recommendations are generated once they approve.'
                 : 'Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.'}
             </p>
           </div>

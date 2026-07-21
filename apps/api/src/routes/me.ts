@@ -16,6 +16,7 @@ import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
+import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
 import { tenantHasFlag } from '../lib/plan-limits'
@@ -377,6 +378,8 @@ meRouter.post('/audit-approvals/:runId/approve', async (req: Request, res: Respo
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true, job_role: true } })
   const r = await managerApproveAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', me?.job_role || '')
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  // Now that it's approved, generate the AI recommendations (the final step of the workflow).
+  await generateAuditRecommendations(tenantId, String(req.params.runId)).catch(e => console.error('[audit approve] recs:', e))
   ok(res, r)
 })
 

@@ -1146,7 +1146,7 @@ function ChatPageInner() {
 
         {/* Audits to approve (care manager) */}
         {view === 'audit-approvals' && session?.accessToken && (
-          <AuditApprovalsView token={session.accessToken} onChange={refreshAuditApprovals} />
+          <AuditApprovalsView token={session.accessToken} userId={userId} onChange={refreshAuditApprovals} />
         )}
 
         {/* My Progress view */}

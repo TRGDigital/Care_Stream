@@ -626,7 +626,7 @@ export default function AuditRunPage() {
                   <Sparkles size={16} className="text-teal" />
                   <h2 className="font-semibold text-neutral-dark">AI Recommendations</h2>
                 </div>
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-neutral-dark">{run.ai_recommendations}</pre>
+                <pre className="whitespace-pre-wrap rounded-lg border border-gray-100 bg-neutral-light/40 p-4 font-sans text-sm leading-relaxed !text-neutral-dark">{run.ai_recommendations}</pre>
               </div>
             )}
           </div>

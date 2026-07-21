@@ -56,6 +56,7 @@ export type PendingAudit = {
   run_id: string
   template_name: string
   subject: string | null
+  subject_room: string | null
   subject_scope: string
   auditor_name: string
   audit_month: string
@@ -66,13 +67,14 @@ export type PendingAudit = {
 export async function getPendingAuditApprovals(tenantId: string): Promise<PendingAudit[]> {
   const runs = await (prisma as any).auditRun.findMany({
     where: { tenant_id: tenantId, approval_status: 'pending_manager' },
-    select: { id: true, auditor_name: true, audit_month: true, submitted_at: true, room_number: true, template: { select: { name: true, subject_scope: true } } },
+    select: { id: true, auditor_name: true, audit_month: true, submitted_at: true, room_number: true, subject_room: true, template: { select: { name: true, subject_scope: true } } },
     orderBy: { submitted_at: 'asc' },
   })
   return (runs as any[]).map(r => ({
     run_id: r.id,
     template_name: r.template?.name ?? 'Audit',
     subject: r.room_number ?? null,
+    subject_room: r.subject_room ?? null,
     subject_scope: r.template?.subject_scope ?? 'none',
     auditor_name: r.auditor_name ?? '',
     audit_month: r.audit_month,

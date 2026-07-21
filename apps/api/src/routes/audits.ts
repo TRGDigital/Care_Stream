@@ -1525,6 +1525,8 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   const scope: string = template.subject_scope ?? (isRoomBasedAudit(template.name) ? 'room' : 'none')
   const scoped = scope !== 'none'
   const subjectValue = scoped ? String(subject ?? room_number ?? '').trim().slice(0, 80) : null
+  // A resident-scoped audit can also record which room the person is in (optional).
+  const subjectRoom = scope === 'resident' ? (String(req.body.subject_room ?? '').trim().slice(0, 40) || null) : null
   if (scoped && !subjectValue) {
     const what = scope === 'resident' ? 'resident' : scope === 'staff' ? 'staff member' : 'room'
     return err(res, 'MISSING_SUBJECT', `Choose the ${what} this audit is for.`, 400)
@@ -1554,6 +1556,7 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
       auditor_name: (auditor_name?.trim() || me?.name || null),
       auditor_role: (auditor_role?.trim() || me?.job_role || null),
       room_number:  subjectValue,
+      subject_room: subjectRoom,
     },
   })
 
@@ -1821,7 +1824,7 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
   // specific to that person or room rather than the service as a whole.
   const runScope = run.template.subject_scope ?? 'none'
   const auditNameForPrompt = (runScope !== 'none' && run.room_number)
-    ? `${run.template.name} for ${subjectLabel(runScope)}: ${run.room_number}`
+    ? `${run.template.name} for ${subjectLabel(runScope)}: ${run.room_number}${run.subject_room ? ` (Room ${run.subject_room})` : ''}`
     : run.template.name
 
   let filledPrompt = promptTemplate
@@ -1955,6 +1958,7 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
     organisation:      run.tenant.name,
     audit_name:        run.template.name,
     subject:           run.room_number,
+    subject_room:      run.subject_room,
     subject_scope:     run.template.subject_scope ?? 'none',
     auditor_name:      run.auditor_name,
     auditor_role:      run.auditor_role,

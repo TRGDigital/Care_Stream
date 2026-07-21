@@ -352,6 +352,7 @@ meRouter.get('/audit-approvals/:runId', async (req: Request, res: Response) => {
   const report = {
     audit_name:        run.template.name,
     subject:           run.room_number,
+    subject_room:      run.subject_room,
     subject_scope:     run.template.subject_scope ?? 'none',
     auditor_name:      run.auditor_name,
     auditor_role:      run.auditor_role,

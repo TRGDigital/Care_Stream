@@ -74,7 +74,7 @@ function PrintReport({ report }: { report: any }) {
     <div className="hidden print:block p-8 font-sans text-sm text-black">
       <h1 className="mb-1 text-2xl font-bold">
         {report.audit_name}
-        {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}` : ''}
+        {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
       </h1>
       <p className="mb-0.5 text-base">{report.organisation}</p>
       <table className="mb-4 w-full border-collapse text-xs">
@@ -300,7 +300,7 @@ export default function AuditRunPage() {
           <div className="flex-1">
             <h1 className="text-xl font-bold text-neutral-dark">
               {run.template.name}
-              {run.room_number && <span className="text-neutral-mid"> · {AUDIT_SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ?? ''} {run.room_number}</span>}
+              {run.room_number && <span className="text-neutral-mid"> · {AUDIT_SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ?? ''} {run.room_number}{run.subject_room ? ` (Room ${run.subject_room})` : ''}</span>}
             </h1>
             <p className="text-sm text-neutral-mid">
               {new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}

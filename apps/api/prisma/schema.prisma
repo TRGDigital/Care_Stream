@@ -1874,7 +1874,8 @@ model AuditRun {
   auditor_name       String?
   auditor_role       String?
   shift              String?                                // 'day' | 'night' — for shift-based daily templates
-  room_number        String?                                // for room-by-room templates
+  room_number        String?                                // room-by-room templates, or the subject value for scoped audits
+  subject_room       String?                                // optional room for a resident-scoped audit (which room the person is in)
   status             String        @default("in_progress")  // in_progress | completed
   ai_recommendations String?
   strengths          String?

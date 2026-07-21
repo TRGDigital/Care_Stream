@@ -59,6 +59,7 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
   const [recentSubjects, setRecentSubjects] = useState<Record<string, string[]>>(cached?.recentSubjects ?? {})
   const [stats,     setStats]     = useState<any>(cached?.stats ?? null)
   const [roomInput, setRoomInput] = useState<Record<string, string>>({})
+  const [subjectRoomInput, setSubjectRoomInput] = useState<Record<string, string>>({})
   const [loading,   setLoading]   = useState(!cached)
   const [starting,  setStarting]  = useState<string | null>(null)
 
@@ -70,20 +71,20 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
   }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function start(templateId: string, subject?: string) {
+  async function start(templateId: string, subject?: string, subjectRoom?: string) {
     if (starting) return
     setStarting(templateId)
     try {
       const now = new Date()
       const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, ...(subject ? { subject } : {}) })
+      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, ...(subject ? { subject } : {}), ...(subjectRoom ? { subject_room: subjectRoom } : {}) })
       onOpen(run.id)
     } catch { /* ignore */ } finally { setStarting(null) }
   }
 
   // Look up a run's subject label (Resident / Staff / Room) from its template.
   const scopeOf = (r: any) => templates.find(t => t.id === r.template_id)?.subject_scope ?? 'none'
-  const runSuffix = (r: any) => r.room_number ? ` · ${SUBJECT_LABEL[scopeOf(r)] ? SUBJECT_LABEL[scopeOf(r)] + ' ' : ''}${r.room_number}` : ''
+  const runSuffix = (r: any) => r.room_number ? ` · ${SUBJECT_LABEL[scopeOf(r)] ? SUBJECT_LABEL[scopeOf(r)] + ' ' : ''}${r.room_number}${r.subject_room ? ` (Room ${r.subject_room})` : ''}` : ''
 
   if (loading) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />)}</div>
 
@@ -161,7 +162,7 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
                       {scope === 'resident' && <datalist id={listId}>{(recentSubjects[t.id] ?? []).map(s => <option key={s} value={s} />)}</datalist>}
                       <p className="text-sm font-medium text-neutral-dark">{t.name}</p>
                       {t.description && <p className="mt-0.5 line-clamp-2 text-xs text-neutral-mid">{t.description}</p>}
-                      <div className="mt-2.5 flex items-center gap-2">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
                         <input
                           list={listId}
                           value={roomInput[t.id] ?? ''}
@@ -169,7 +170,16 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
                           placeholder={placeholder}
                           className="w-48 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none"
                         />
-                        <button onClick={() => { if (subject) start(t.id, subject) }} disabled={!subject || starting === t.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+                        {scope === 'resident' && (
+                          <input
+                            list="audit-rooms"
+                            value={subjectRoomInput[t.id] ?? ''}
+                            onChange={e => setSubjectRoomInput(p => ({ ...p, [t.id]: e.target.value }))}
+                            placeholder="Room (optional)"
+                            className="w-32 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none"
+                          />
+                        )}
+                        <button onClick={() => { if (subject) start(t.id, subject, scope === 'resident' ? (subjectRoomInput[t.id] ?? '').trim() || undefined : undefined) }} disabled={!subject || starting === t.id} className="flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
                           {starting === t.id ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} {btnLabel}
                         </button>
                       </div>
@@ -313,7 +323,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
 
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-bold text-neutral-dark">{run.template?.name}{run.room_number ? ` · ${SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ? SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] + ' ' : ''}${run.room_number}` : ''}</h2>
+            <h2 className="truncate text-lg font-bold text-neutral-dark">{run.template?.name}{run.room_number ? ` · ${SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ? SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] + ' ' : ''}${run.room_number}${run.subject_room ? ` (Room ${run.subject_room})` : ''}` : ''}</h2>
             <p className="text-xs text-neutral-mid">{periodLabel(run.audit_month)}{isCompleted ? ' · Completed' : ''}</p>
           </div>
           {saving && <span className="shrink-0 text-xs text-neutral-mid">Saving…</span>}

@@ -85,6 +85,7 @@ export default function AuditsPage() {
   const [rooms,       setRooms]       = useState<string[]>([])
   const [staff,       setStaff]       = useState<string[]>([])
   const [room,        setRoom]        = useState('')
+  const [subjectRoom, setSubjectRoom] = useState('')
   const [startError,  setStartError]  = useState('')
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
@@ -139,6 +140,7 @@ export default function AuditsPage() {
         auditor_name: auditorName || undefined,
         auditor_role: auditorRole || undefined,
         ...(needsSubject ? { subject: room.trim() } : {}),
+        ...(scope === 'resident' && subjectRoom.trim() ? { subject_room: subjectRoom.trim() } : {}),
       })
       router.push(`/audits/${run.id}`)
     } catch (e: any) {
@@ -257,6 +259,18 @@ export default function AuditsPage() {
                     <datalist id="admin-audit-staff">{staff.map(r => <option key={r} value={r} />)}</datalist>
                   </div>
                 )}
+                {scope === 'resident' && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-neutral-mid">Room <span className="text-neutral-mid/60">(optional)</span></label>
+                    <input
+                      list="admin-audit-rooms"
+                      value={subjectRoom}
+                      onChange={e => setSubjectRoom(e.target.value)}
+                      placeholder="Select or type a room"
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Auditor name</label>
                   <input
@@ -304,7 +318,7 @@ export default function AuditsPage() {
                   Month: <span className="font-medium text-neutral-dark">{monthLabel(auditMonth + '-01')}</span>
                 </p>
                 {needsSubject && room.trim() && (
-                  <p className="text-xs text-neutral-mid capitalize">{subjectWord}: <span className="font-medium text-neutral-dark">{room.trim()}</span></p>
+                  <p className="text-xs text-neutral-mid"><span className="capitalize">{subjectWord}</span>: <span className="font-medium text-neutral-dark">{room.trim()}</span>{scope === 'resident' && subjectRoom.trim() ? <> · Room <span className="font-medium text-neutral-dark">{subjectRoom.trim()}</span></> : null}</p>
                 )}
                 {auditorName && (
                   <p className="text-xs text-neutral-mid">

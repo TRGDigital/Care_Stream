@@ -6,9 +6,9 @@ import { AuditRecs } from '@/components/audit-recs'
 import { persistentCache } from '@/lib/page-cache'
 import { Loader2, FileCheck2, ChevronLeft, Check, X, ClipboardCheck, History } from 'lucide-react'
 
-type Item = { run_id: string; template_name: string; subject: string | null; subject_scope: string; auditor_name: string; audit_month: string; submitted_at: string | null }
+type Item = { run_id: string; template_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string; audit_month: string; submitted_at: string | null }
 const SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
-const subjectSuffix = (i: { subject?: string | null; subject_scope?: string }) => i.subject ? ` · ${SUBJECT_LABEL[i.subject_scope ?? 'none'] ? SUBJECT_LABEL[i.subject_scope ?? 'none'] + ' ' : ''}${i.subject}` : ''
+const subjectSuffix = (i: { subject?: string | null; subject_room?: string | null; subject_scope?: string }) => i.subject ? ` · ${SUBJECT_LABEL[i.subject_scope ?? 'none'] ? SUBJECT_LABEL[i.subject_scope ?? 'none'] + ' ' : ''}${i.subject}${i.subject_room ? ` (Room ${i.subject_room})` : ''}` : ''
 type Recent = { run_id: string; template_name: string; approved_by: string; approved_at: string | null; audit_month: string }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['auditApprovalDetail']>>['report']
 

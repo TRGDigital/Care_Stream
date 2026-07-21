@@ -39,7 +39,9 @@ publicPagesRouter.get('/', async (req: Request, res: Response) => {
     },
   })
   if (!page) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }
-  // Public, rarely-changing content — let Vercel's edge cache it (stale-while-revalidate).
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  // Not edge-cached: the SEO tool pushes content_slots and needs the change to appear at once.
+  // The web app already caches this fetch (Next data cache, 60s) so this doesn't add real load,
+  // and on-demand revalidation (revalidateTag slots:<path>) can then bust it for instant publish.
+  res.setHeader('Cache-Control', 'no-store')
   ok(res, { page })
 })

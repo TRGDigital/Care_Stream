@@ -57,6 +57,13 @@ const CATEGORIES = [
     ],
   },
   {
+    icon: '✅',
+    title: 'Monthly Audits',
+    articles: [
+      { title: 'How AI audit recommendations work', href: '/help/audits/ai-recommendations' },
+    ],
+  },
+  {
     icon: '🔒',
     title: 'Data & Security',
     articles: [

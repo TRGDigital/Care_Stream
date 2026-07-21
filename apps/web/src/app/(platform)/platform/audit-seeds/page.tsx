@@ -134,6 +134,46 @@ function TemplateRow({ template, onOpen, onToggleReviewed }: { template: AuditSe
   )
 }
 
+// Platform-facing explainer of how the audit AI recommendations are generated and what feeds
+// the prompt. Collapsible so it stays out of the way once read.
+function AiRecsAccordion() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="overflow-hidden rounded-xl border border-indigo-200 bg-indigo-50/40">
+      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-2 px-5 py-4 text-left">
+        <ClipboardCheck size={16} className="shrink-0 text-indigo-600" />
+        <span className="text-sm font-semibold text-neutral-dark">How the AI recommendations are generated</span>
+        <ChevronDown size={16} className={clsx('ml-auto shrink-0 text-neutral-mid transition-transform', !open && '-rotate-90')} />
+      </button>
+      {open && (
+        <div className="space-y-4 border-t border-indigo-100 px-5 py-4 text-sm leading-relaxed text-neutral-dark">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">When it runs</p>
+            <p className="mt-1">When a Monthly Audit is completed, CareStream generates a set of AI recommendations. If the tenant has <strong>manager approval</strong> switched on for audits, the recommendations are generated at the point the care manager approves; otherwise they are generated on completion.</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">What feeds the AI prompt</p>
+            <ul className="mt-1 space-y-1">
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" /><strong>The audit itself</strong> — every question and its answer (Yes / No / N/A, findings text, and actions text), section by section.</li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" /><strong>The auditor&rsquo;s summary</strong> — strengths, areas requiring improvement, and the action deadline.</li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" /><strong>Context</strong> — audit name, organisation, auditor name and role, and the audit month.</li>
+              <li className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" /><strong>The 34 CQC Single Assessment Framework quality statements</strong> — grouped by key question, read live from <code className="rounded bg-white px-1 py-0.5 text-xs font-mono">/platform/quality-statements</code>, so the CQC section cites real statements rather than guessing.</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">The prompt</p>
+            <p className="mt-1">The instructions come from the editable <strong>Monthly Audit — AI Recommendations</strong> prompt in <code className="rounded bg-white px-1 py-0.5 text-xs font-mono">/platform/prompts</code>. Editing it changes the output for every tenant. It can position the quality statements with a <code className="rounded bg-white px-1 py-0.5 text-xs font-mono">{'{{cqc_quality_statements}}'}</code> placeholder; if the placeholder is absent, the statements are appended automatically.</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">The output</p>
+            <p className="mt-1">A structured report with Immediate actions, Priority improvements, CQC compliance notes, Commendations, and Next month focus. It is grounded only in the audit data provided, and is shown to the tenant as formatted text on the audit and its printable report.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AuditSeedsPage() {
   const token                        = usePlatformAuth()
   const [templates, setTemplates]    = useState<AuditSeedTemplate[]>([])
@@ -211,6 +251,9 @@ export default function AuditSeedsPage() {
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal focus:outline-none"
           />
         </div>
+
+        {/* How the AI recommendations are generated (collapsible) */}
+        <AiRecsAccordion />
 
         {/* Info panel */}
         <div className="rounded-xl border border-teal/20 bg-teal-light/30 p-5 text-sm space-y-3">

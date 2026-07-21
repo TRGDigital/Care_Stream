@@ -19,20 +19,32 @@ export default function Page() {
       blocks={[
         { type: 'p', text: 'When you complete an audit, CareStream drafts an action plan from its recommendations. Instead of a list of findings you have to type up yourself, you get a starting set of actions ready to review.' },
 
+        { type: 'p', text: 'The action plan opens in its own window from the completed audit, so you can work through it without losing your place. On the audit you will see an Action plan card showing the status and how many actions are open; open it to review or update the plan.' },
+
         { type: 'subheading', text: 'Review and approve the draft' },
         { type: 'p', text: 'The plan starts as a draft so nothing is set in stone. You stay in control of what your team commits to.' },
         { type: 'bullets', items: [
           'Edit the wording of any action, or add your own.',
           'Set a priority and a due date.',
-          'Assign each action to a staff member.',
+          'Assign each action to a staff member by picking their name from the list.',
           'When you are happy, approve the plan to start tracking it.',
         ] },
+
+        { type: 'subheading', text: 'How staff see their actions in the hub' },
+        { type: 'p', text: 'Once you approve the plan, everyone you assigned an action to sees it in their own staff hub, under a "My actions" tab. This is how the work reaches the person doing it, rather than sitting in a report only the manager reads.' },
+        { type: 'bullets', items: [
+          'Each staff member sees only the actions assigned to them, with the priority, the audit it came from and the due date.',
+          'They move each action along themselves: Start it, then Mark done when it is finished.',
+          'A due date that has passed is flagged so nothing is quietly missed.',
+          'Draft plans are never shown to staff. Actions only appear once you have approved the plan.',
+        ] },
+        { type: 'note', text: 'Actions are matched to a staff member by their name, so assign them to the name that matches how the person is set up in your staff list.' },
 
         { type: 'subheading', text: 'Track it to completion' },
         { type: 'bullets', items: [
           'Each action has a status: Open, In progress, or Done.',
-          'Update the status as the work gets done, so completed actions are ticked off.',
-          'Reassign actions or change due dates at any time.',
+          'As staff update their own actions in the hub, the status updates for you too.',
+          'You can reassign actions or change due dates at any time.',
         ] },
 
         { type: 'subheading', text: 'Older audits' },

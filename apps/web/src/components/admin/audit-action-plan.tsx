@@ -90,7 +90,7 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
       {/* ── Editor overlay ── */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setOpen(false)}>
-          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="flex max-h-[88vh] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
               <div className="flex items-center gap-2">
                 <ClipboardList size={16} className="text-teal" />
@@ -156,7 +156,7 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
                     </div>
                   )
                 })}
-                {plan.actions.length === 0 && <p className="text-sm text-neutral-mid">No actions{draft ? ' — add the first one below.' : '.'}</p>}
+                {plan.actions.length === 0 && <p className="text-sm text-neutral-mid">{draft ? 'No actions yet. Add the first one below.' : 'No actions.'}</p>}
               </div>
 
               {draft && (

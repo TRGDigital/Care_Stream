@@ -74,6 +74,7 @@ export default function AuditsPage() {
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
+  const [availOpen,   setAvailOpen]   = useState(false)
   const [linking, setLinking] = useState<any>(null)
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
@@ -225,7 +226,7 @@ export default function AuditsPage() {
       {/* ── New audit form (overlay) ───────────────────────────────────────────── */}
       {showNew && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowNew(false); setConfirming(false) }}>
-          <div className="flex max-h-[88vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="flex max-h-[88vh] w-full max-w-5xl flex-col rounded-2xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
               <h2 className="text-base font-semibold text-neutral-dark">{confirming ? 'Confirm audit' : 'Start a new audit'}</h2>
               <button onClick={() => { setShowNew(false); setConfirming(false) }} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
@@ -234,7 +235,7 @@ export default function AuditsPage() {
           {!confirming ? (
             <>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
+                <div className="sm:col-span-2">
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Audit type</label>
                   <select
                     value={selTemplate}
@@ -435,32 +436,40 @@ export default function AuditsPage() {
           </div>
         )}
 
-        {/* ── Available audits for this tenant ──────────────────────────────── */}
+        {/* ── Available audits for this tenant (accordion, closed by default) ─── */}
         {templates.length > 0 && (
-          <div className="mt-8">
-            <h2 className="mb-1 text-sm font-semibold text-neutral-dark">Available audits ({templates.length})</h2>
-            <p className="mb-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time.</p>
-            <div className="overflow-hidden rounded-lg border border-gray-100 bg-white">
-              <table className="w-full text-left text-sm">
-                <tbody className="divide-y divide-gray-50">
-                  {templates.map(t => {
-                    const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
-                    return (
-                      <tr key={t.id}>
-                        <td className="px-4 py-2.5 font-medium text-neutral-dark">
-                          {t.name}
-                          {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
-                        </td>
-                        <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
-                        <td className="px-4 py-2.5 text-right">
-                          {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div className="mt-8 overflow-hidden rounded-lg border border-gray-100 bg-white">
+            <button
+              onClick={() => setAvailOpen(v => !v)}
+              className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-light/40"
+            >
+              <h2 className="text-sm font-semibold text-neutral-dark">Available audits ({templates.length})</h2>
+              <ChevronDown size={16} className={clsx('ml-auto shrink-0 text-neutral-mid transition-transform', !availOpen && '-rotate-90')} />
+            </button>
+            {availOpen && (
+              <div className="border-t border-gray-100">
+                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time.</p>
+                <table className="mt-2 w-full text-left text-sm">
+                  <tbody className="divide-y divide-gray-50">
+                    {templates.map(t => {
+                      const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
+                      return (
+                        <tr key={t.id}>
+                          <td className="px-4 py-2.5 font-medium text-neutral-dark">
+                            {t.name}
+                            {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
+                          <td className="px-4 py-2.5 text-right">
+                            {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

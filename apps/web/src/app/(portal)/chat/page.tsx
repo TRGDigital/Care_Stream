@@ -883,7 +883,7 @@ function ChatPageInner() {
           </button>
         </div>
         )}
-        <div className="p-3 space-y-0.5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5">
           {!isReviewer && (
           <button
             onClick={() => setView('chat')}
@@ -987,7 +987,7 @@ function ChatPageInner() {
             {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
           </button>
           )}
-          {!isReviewer && (navCounts.actions > 0 || view === 'actions') && (
+          {!isReviewer && (
           <button
             onClick={() => setView('actions')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'actions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}

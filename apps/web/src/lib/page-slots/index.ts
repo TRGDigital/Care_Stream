@@ -56,7 +56,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 // page always falls back to the in-code defaults (the current copy).
 export async function getContentSlots(path: string): Promise<Record<string, string>> {
   try {
-    const res = await fetch(`${API_URL}/public/site-pages?path=${encodeURIComponent(path)}`, { next: { revalidate: 60 } })
+    const res = await fetch(`${API_URL}/public/site-pages?path=${encodeURIComponent(path)}`, { next: { revalidate: 60, tags: [`slots:${path}`] } })
     if (res.ok) {
       const slots = (await res.json())?.data?.page?.content_slots
       if (slots && typeof slots === 'object') return slots as Record<string, string>

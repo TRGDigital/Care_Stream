@@ -16,11 +16,12 @@ const PRIORITY: Record<string, { label: string; cls: string }> = {
 }
 const STATUS_CLS: Record<string, string> = { open: 'text-neutral-mid', in_progress: 'text-amber-700', done: 'text-green-700' }
 
-export function AuditActionPlan({ token, runId }: { token: string; runId: string }) {
+export function AuditActionPlan({ token, runId, canGenerate }: { token: string; runId: string; canGenerate?: boolean }) {
   const [plan, setPlan]   = useState<Plan | null>(null)
   const [staff, setStaff] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy]   = useState(false)
+  const [generating, setGenerating] = useState(false)
   const [newDesc, setNewDesc] = useState('')
   const api = createApiClient(token)
 
@@ -36,9 +37,25 @@ export function AuditActionPlan({ token, runId }: { token: string; runId: string
   async function remove(id: string) { setPlan(pl => pl ? { ...pl, actions: pl.actions.filter(a => a.id !== id) } : pl); await api.audits.deleteAuditAction(id).catch(() => {}) }
   async function add() { const d = newDesc.trim(); if (!d) return; setNewDesc(''); const p = await api.audits.addAuditAction(runId, d, 'priority').catch(() => null); if (p) setPlan(p as Plan) }
   async function approve() { setBusy(true); try { const p = await api.audits.approveActionPlan(runId); setPlan(p as Plan) } catch { /* ignore */ } finally { setBusy(false) } }
+  async function generate() { setGenerating(true); try { const p = await api.audits.generateActionPlan(runId); setPlan(p as Plan) } catch { /* ignore */ } finally { setGenerating(false) } }
 
   if (loading) return <div className="h-32 animate-pulse rounded-card bg-gray-50" />
-  if (!plan || plan.status === 'none') return null
+  if (!plan) return null
+
+  // No plan yet (e.g. an audit completed before the tracker existed) — offer to generate one.
+  if (plan.status === 'none') {
+    if (!canGenerate) return null
+    return (
+      <div className="rounded-card bg-white p-6 shadow-card">
+        <div className="flex items-center gap-2"><ClipboardList size={16} className="text-teal" /><h2 className="font-semibold text-neutral-dark">Action plan</h2></div>
+        <p className="mt-1 text-xs text-neutral-mid">Turn this audit&rsquo;s recommendations into a tracked action plan you can edit, assign to staff and work to completion.</p>
+        <button onClick={generate} disabled={generating}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+          {generating ? <><Loader2 size={14} className="animate-spin" /> Generating…</> : <><ClipboardList size={14} /> Generate action plan tracker</>}
+        </button>
+      </div>
+    )
+  }
 
   const draft = plan.status === 'draft'
   const openCount = plan.actions.filter(a => a.status !== 'done').length

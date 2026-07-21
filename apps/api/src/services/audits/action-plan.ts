@@ -46,6 +46,20 @@ export async function createDraftActionPlan(tenantId: string, runId: string, act
   await (prisma as any).auditRun.update({ where: { id: runId }, data: { action_plan_status: 'draft' } }).catch(() => {})
 }
 
+// Generate a draft plan on demand for an already-completed audit that has none yet (e.g. audits
+// completed before the tracker existed). Extracts the actions from the run's recommendations.
+export async function generateActionPlanForRun(tenantId: string, runId: string): Promise<void> {
+  const run = await (prisma as any).auditRun.findFirst({
+    where: { id: runId, tenant_id: tenantId },
+    select: { action_plan_status: true, ai_recommendations: true, template: { select: { name: true } } },
+  })
+  if (!run) throw new Error('Audit not found')
+  if (run.action_plan_status !== 'none') return
+  if (!run.ai_recommendations) throw new Error('Complete the audit first so there are recommendations to work from.')
+  const actions = await extractDraftActions(run.template?.name ?? 'Audit', run.ai_recommendations)
+  await createDraftActionPlan(tenantId, runId, actions)
+}
+
 export async function getActionPlan(tenantId: string, runId: string) {
   const run = await (prisma as any).auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { action_plan_status: true } })
   if (!run) return null

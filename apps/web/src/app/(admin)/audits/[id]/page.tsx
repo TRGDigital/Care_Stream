@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -173,6 +173,7 @@ export default function AuditRunPage() {
   const [saving,    setSaving]      = useState(false)
   const [completing, setCompleting] = useState(false)
   const [approvalRequired, setApprovalRequired] = useState(false)
+  const [recsOpen,  setRecsOpen]    = useState(true)
   const [report,    setReport]      = useState<any>(null)
   const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()
@@ -629,20 +630,25 @@ export default function AuditRunPage() {
               </p>
             )}
 
-            {/* AI Recommendations panel */}
+            {/* AI Recommendations — collapsible */}
             {run.ai_recommendations && (
-              <div className="rounded-card bg-white p-6 shadow-card">
-                <div className="mb-4 flex items-center gap-2">
-                  <Sparkles size={16} className="text-teal" />
+              <div className="overflow-hidden rounded-card bg-white shadow-card">
+                <button onClick={() => setRecsOpen(o => !o)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+                  <Sparkles size={16} className="shrink-0 text-teal" />
                   <h2 className="font-semibold text-neutral-dark">AI Recommendations</h2>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
-                  <AuditRecs text={run.ai_recommendations} />
-                </div>
+                  <ChevronDown size={16} className={clsx('ml-auto shrink-0 text-neutral-mid transition-transform', !recsOpen && '-rotate-90')} />
+                </button>
+                {recsOpen && (
+                  <div className="px-6 pb-6">
+                    <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-4">
+                      <AuditRecs text={run.ai_recommendations} />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} />}
+            {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} canGenerate={isCompleted && !!run.ai_recommendations} />}
           </div>
         )}
       </div>

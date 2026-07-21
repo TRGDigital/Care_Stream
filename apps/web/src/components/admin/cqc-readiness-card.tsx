@@ -39,7 +39,7 @@ export function CqcReadinessCard({ token, userId }: { token: string; userId?: st
   }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading && !data) return <div className="mb-6 h-40 animate-pulse rounded-card bg-gray-50" />
-  if (!data || (!data.has_audit && !data.has_policy)) return null
+  if (!data || data.visible === false || (!data.has_audit && !data.has_policy)) return null
 
   const overall = data.overall
 

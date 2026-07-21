@@ -61,6 +61,8 @@ const CATEGORIES = [
     title: 'Monthly Audits',
     articles: [
       { title: 'How AI audit recommendations work', href: '/help/audits/ai-recommendations' },
+      { title: 'Your CQC Readiness Score', href: '/help/audits/readiness-score' },
+      { title: 'Turning audits into an action plan', href: '/help/audits/action-plan' },
     ],
   },
   {

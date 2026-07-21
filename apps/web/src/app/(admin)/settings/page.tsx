@@ -408,6 +408,11 @@ export default function SettingsPage() {
     const next = { ...orgDetails, require_audit_manager_approval: requireAuditApproval ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
+  const showReadiness = orgDetails.show_readiness_score !== 'off'
+  function toggleReadiness() {
+    const next = { ...orgDetails, show_readiness_score: showReadiness ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
     if (!session?.accessToken) return
@@ -1057,6 +1062,19 @@ export default function SettingsPage() {
                 onClick={toggleAuditApproval}
                 className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireAuditApproval ? 'bg-teal' : 'bg-gray-300'}`}>
                 <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireAuditApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Show the CQC Readiness Score</p>
+                <p className="mt-0.5 text-sm text-neutral-mid">
+                  Shows a CQC Readiness Score (audit performance blended with policy coverage) on your Audits pages. On by default. We keep measuring it in the background either way, so you can turn it back on any time and the history is there. Turn it off if you&rsquo;d rather keep the view simpler.
+                </p>
+              </div>
+              <button type="button" role="switch" aria-checked={showReadiness} aria-label="Show the CQC Readiness Score"
+                onClick={toggleReadiness}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showReadiness ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
             {savingOrg && <p className="mt-2 text-xs text-neutral-mid">Saving…</p>}

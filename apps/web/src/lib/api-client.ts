@@ -754,6 +754,7 @@ export function createApiClient(token: string) {
       updateAuditAction: (actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; status?: string }) => apiFetch<{ updated: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'PATCH', body: JSON.stringify(patch) }),
       deleteAuditAction: (actionId: string) => apiFetch<{ deleted: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'DELETE' }),
       approveActionPlan: (id: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/action-plan/approve`, token, { method: 'POST' }),
+      generateActionPlan: (id: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/action-plan/generate`, token, { method: 'POST' }),
       report: (id: string) => apiFetch<{ report: any }>(`/audits/runs/${id}/report`, token),
       // Per-question evidence photos (optional). Image is compressed client-side first.
       uploadEvidence: (runId: string, questionId: string, image: File) => {
@@ -1006,7 +1007,7 @@ export function createApiClient(token: string) {
         }>
       }>('/analytics/consistency', token),
       consistencyResolve: (key: string) => apiFetch<{ resolution: string }>('/analytics/consistency/resolve', token, { method: 'POST', body: JSON.stringify({ key }) }),
-      readiness: () => apiFetch<{ overall: number | null; rag: string; band: string; updated_at: string; has_audit: boolean; has_policy: boolean; domains: Array<{ key: string; label: string; score: number | null; rag: string; band: string; audit: number | null; policy: number | null }>; trend: Array<{ period: string; overall: number }> }>('/analytics/readiness', token),
+      readiness: () => apiFetch<{ visible: boolean; overall: number | null; rag: string; band: string; updated_at: string; has_audit: boolean; has_policy: boolean; domains: Array<{ key: string; label: string; score: number | null; rag: string; band: string; audit: number | null; policy: number | null }>; trend: Array<{ period: string; overall: number }> }>('/analytics/readiness', token),
       consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
       consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),

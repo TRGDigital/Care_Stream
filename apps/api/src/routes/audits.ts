@@ -14,7 +14,7 @@ import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
-import { extractDraftActions, createDraftActionPlan, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan } from '../services/audits/action-plan'
+import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan } from '../services/audits/action-plan'
 
 export const auditsRouter = Router()
 
@@ -2040,6 +2040,14 @@ auditsRouter.delete('/actions/:actionId', requireAuditAccess, async (req: Reques
     await deleteAction(tenantId, String(req.params.actionId))
     ok(res, { deleted: true })
   } catch (e: any) { err(res, 'ACTION_DELETE_FAILED', e.message ?? 'Could not delete the action.', 500) }
+})
+
+auditsRouter.post('/runs/:id/action-plan/generate', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await generateActionPlanForRun(tenantId, String(req.params.id))
+    ok(res, await getActionPlan(tenantId, String(req.params.id)))
+  } catch (e: any) { err(res, 'ACTION_GENERATE_FAILED', e.message ?? 'Could not generate the action plan.', 500) }
 })
 
 auditsRouter.post('/runs/:id/action-plan/approve', requireAuditAccess, async (req: Request, res: Response) => {

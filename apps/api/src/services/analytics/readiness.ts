@@ -103,6 +103,7 @@ async function auditPerformanceByDomain(tenantId: string): Promise<Record<Domain
 }
 
 export type ReadinessResult = {
+  visible: boolean
   overall: number | null
   rag: string
   band: string
@@ -114,7 +115,14 @@ export type ReadinessResult = {
 }
 
 export async function getReadinessScore(tenantId: string): Promise<ReadinessResult> {
-  const [policy, audit] = await Promise.all([policyCoverageByDomain(tenantId), auditPerformanceByDomain(tenantId)])
+  const [policy, audit, tenant] = await Promise.all([
+    policyCoverageByDomain(tenantId),
+    auditPerformanceByDomain(tenantId),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } }).catch(() => null),
+  ])
+  // The data is always computed and snapshotted in the background; this flag only controls whether
+  // the tenant chooses to display it (Settings → Audits). Shown by default.
+  const visible = ((tenant?.organisation_details ?? {}) as Record<string, string>).show_readiness_score !== 'off'
 
   const domains = DOMAINS.map(key => {
     const a = audit[key], p = policy[key]
@@ -139,5 +147,5 @@ export async function getReadinessScore(tenantId: string): Promise<ReadinessResu
   const snaps = await (prisma as any).readinessSnapshot.findMany({ where: { tenant_id: tenantId }, select: { period: true, overall: true }, orderBy: { period: 'asc' }, take: 12 }).catch(() => [])
   const trend = (snaps as any[]).map(s => ({ period: new Date(s.period).toISOString().slice(0, 10), overall: s.overall }))
 
-  return { overall, rag: ragOf(overall), band: bandOf(overall), updated_at: new Date().toISOString(), has_audit, has_policy, domains, trend }
+  return { visible, overall, rag: ragOf(overall), band: bandOf(overall), updated_at: new Date().toISOString(), has_audit, has_policy, domains, trend }
 }

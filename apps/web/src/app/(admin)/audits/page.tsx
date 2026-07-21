@@ -13,6 +13,8 @@ import { usePlanFeatures } from '@/lib/use-plan-features'
 import { LockChip } from '@/components/admin/upgrade-gate'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
+const SCOPE_WORD: Record<string, string> = { resident: 'resident', staff: 'staff member', room: 'room' }
 
 function monthLabel(d: string | Date) {
   const date = new Date(d)
@@ -83,6 +85,7 @@ export default function AuditsPage() {
   const [rooms,       setRooms]       = useState<string[]>([])
   const [staff,       setStaff]       = useState<string[]>([])
   const [room,        setRoom]        = useState('')
+  const [startError,  setStartError]  = useState('')
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
@@ -95,7 +98,7 @@ export default function AuditsPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [session?.accessToken])
@@ -126,7 +129,7 @@ export default function AuditsPage() {
 
   async function startAudit() {
     if (!session?.accessToken || !selTemplate || (needsSubject && !room.trim())) return
-    setStarting(true)
+    setStarting(true); setStartError('')
     try {
       const api  = createApiClient(session.accessToken)
       const date = new Date(auditMonth + '-01')
@@ -138,7 +141,8 @@ export default function AuditsPage() {
         ...(needsSubject ? { subject: room.trim() } : {}),
       })
       router.push(`/audits/${run.id}`)
-    } catch {
+    } catch (e: any) {
+      setStartError(e?.message ?? 'Could not start the audit. Please try again.')
       setStarting(false)
     }
   }
@@ -308,6 +312,7 @@ export default function AuditsPage() {
                   </p>
                 )}
               </div>
+              {startError && <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{startError}</p>}
               <div className="flex gap-3">
                 <button
                   onClick={startAudit}
@@ -404,6 +409,35 @@ export default function AuditsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* ── Available audits for this tenant ──────────────────────────────── */}
+        {templates.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-1 text-sm font-semibold text-neutral-dark">Available audits ({templates.length})</h2>
+            <p className="mb-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time.</p>
+            <div className="overflow-hidden rounded-lg border border-gray-100 bg-white">
+              <table className="w-full text-left text-sm">
+                <tbody className="divide-y divide-gray-50">
+                  {templates.map(t => {
+                    const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
+                    return (
+                      <tr key={t.id}>
+                        <td className="px-4 py-2.5 font-medium text-neutral-dark">
+                          {t.name}
+                          {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

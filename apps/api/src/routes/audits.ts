@@ -1288,7 +1288,7 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
   await ensurePlatformTemplatesSeeded()
   const tenantId = req.user!.tenant_id
 
-  const [templates, tenant, staffRows, subjectRows] = await Promise.all([
+  const [templates, tenant, staffRows, subjectRows, meRow] = await Promise.all([
     (prisma as any).auditTemplate.findMany({
       where: {
         is_active: true,
@@ -1303,6 +1303,7 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true, room_count: true } }),
     (prisma as any).user.findMany({ where: { tenant_id: tenantId, name: { not: null } }, select: { name: true, job_role: true }, orderBy: { name: 'asc' } }).catch(() => []),
     (prisma as any).auditRun.findMany({ where: { tenant_id: tenantId, room_number: { not: null } }, select: { template_id: true, room_number: true }, orderBy: { created_at: 'desc' }, take: 400 }).catch(() => []),
+    (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, job_role: true } }).catch(() => null),
   ])
 
   // Room picker options: rooms 1..room_count, plus any custom-named rooms.
@@ -1331,7 +1332,7 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
     const allowed = req.auditAllowed as string[]
     withFlags = withFlags.filter(t => allowed.includes(t.id))
   }
-  ok(res, { templates: withFlags, rooms, staff, recent_subjects: recentSubjects })
+  ok(res, { templates: withFlags, rooms, staff, recent_subjects: recentSubjects, me: { name: meRow?.name ?? null, job_role: meRow?.job_role ?? null } })
 })
 
 // ─── POST /audits/rooms ───────────────────────────────────────────────────────

@@ -731,7 +731,7 @@ export function createApiClient(token: string) {
     },
 
     audits: {
-      templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]> }>('/audits/templates', token),
+      templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>('/audits/templates', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),
       updateTemplateModules: (id: string, module_ids: string[]) => apiFetch<{ updated: boolean }>(`/audits/templates/${id}`, token, { method: 'PATCH', body: JSON.stringify({ module_ids }) }),
       deleteTemplate: (id: string) => apiFetch<{ deleted: boolean }>(`/audits/templates/${id}`, token, { method: 'DELETE' }),

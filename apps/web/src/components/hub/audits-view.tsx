@@ -51,12 +51,12 @@ const SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'St
 
 function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiClient>; userId: string; onOpen: (runId: string) => void }) {
   const ck = hubKey('audits', userId)
-  const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[]; stats: any }>(ck)
+  const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[]; staff: string[]; recentSubjects: Record<string, string[]>; stats: any }>(ck)
   const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
   const [runs,      setRuns]      = useState<any[]>(cached?.runs ?? [])
   const [rooms,     setRooms]     = useState<string[]>(cached?.rooms ?? [])
-  const [staff,     setStaff]     = useState<string[]>([])
-  const [recentSubjects, setRecentSubjects] = useState<Record<string, string[]>>({})
+  const [staff,     setStaff]     = useState<string[]>(cached?.staff ?? [])
+  const [recentSubjects, setRecentSubjects] = useState<Record<string, string[]>>(cached?.recentSubjects ?? {})
   const [stats,     setStats]     = useState<any>(cached?.stats ?? null)
   const [roomInput, setRoomInput] = useState<Record<string, string>>({})
   const [loading,   setLoading]   = useState(!cached)
@@ -64,7 +64,7 @@ function AuditList({ api, userId, onOpen }: { api: ReturnType<typeof createApiCl
 
   function load() {
     Promise.all([api.audits.templates(), api.audits.runs(), api.audits.stats()])
-      .then(([t, r, s]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRecentSubjects(t.recent_subjects ?? {}); setRuns(r.runs ?? []); setStats(s); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [], stats: s }) })
+      .then(([t, r, s]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRecentSubjects(t.recent_subjects ?? {}); setRuns(r.runs ?? []); setStats(s); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [], staff: t.staff ?? [], recentSubjects: t.recent_subjects ?? {}, stats: s }) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

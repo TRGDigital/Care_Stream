@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { applyChanges } from '@/lib/policy-render'
 import { applyRoleNames } from '@/lib/policy-names'
 import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History, Undo2, Send } from 'lucide-react'
@@ -15,12 +16,14 @@ type Ext  = { policy_id: string; name: string; version: string; sent: boolean; r
 type Selected = { policy_id: string; name: string; version: string; changes: number; readOnly: boolean }
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['policyApprovalDetail']>>
 
-export function PoliciesView({ token, onChange }: { token: string; onChange?: () => void }) {
-  const [list, setList]       = useState<Item[]>([])
-  const [published, setPublished] = useState<Pub[]>([])
-  const [returned, setReturned]   = useState<Ret[]>([])
-  const [awaitingExt, setAwaitingExt] = useState<Ext[]>([])
-  const [loading, setLoading] = useState(true)
+export function PoliciesView({ token, userId, onChange }: { token: string; userId?: string; onChange?: () => void }) {
+  const cacheKey = `hub-policy-approvals-${userId ?? 'me'}`
+  const cached = persistentCache.get<{ policies: Item[]; published: Pub[]; returned: Ret[]; awaiting_external: Ext[] }>(cacheKey)
+  const [list, setList]       = useState<Item[]>(cached?.policies ?? [])
+  const [published, setPublished] = useState<Pub[]>(cached?.published ?? [])
+  const [returned, setReturned]   = useState<Ret[]>(cached?.returned ?? [])
+  const [awaitingExt, setAwaitingExt] = useState<Ext[]>(cached?.awaiting_external ?? [])
+  const [loading, setLoading] = useState(!cached)
   const [selected, setSelected] = useState<Selected | null>(null)
   const [detail, setDetail]   = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -33,9 +36,8 @@ export function PoliciesView({ token, onChange }: { token: string; onChange?: ()
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
-    setLoading(true)
     createApiClient(token).me.policyApprovals()
-      .then(r => { setList(r.policies); setPublished(r.published ?? []); setReturned(r.returned ?? []); setAwaitingExt(r.awaiting_external ?? []) }).catch(() => {}).finally(() => setLoading(false))
+      .then(r => { setList(r.policies); setPublished(r.published ?? []); setReturned(r.returned ?? []); setAwaitingExt(r.awaiting_external ?? []); persistentCache.set(cacheKey, { policies: r.policies, published: r.published ?? [], returned: r.returned ?? [], awaiting_external: r.awaiting_external ?? [] }) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [token])
 

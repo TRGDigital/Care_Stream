@@ -1141,7 +1141,7 @@ function ChatPageInner() {
 
         {/* Policies to approve (care manager) */}
         {view === 'policies' && session?.accessToken && (
-          <PoliciesView token={session.accessToken} onChange={refreshPolicyApprovals} />
+          <PoliciesView token={session.accessToken} userId={userId} onChange={refreshPolicyApprovals} />
         )}
 
         {/* Audits to approve (care manager) */}

@@ -1384,6 +1384,11 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
   if (approvalRequired) {
     await submitAuditForApproval(tenantId, run.id, run.auditor_name ?? '').catch(e => console.error('[audits/complete] submit for approval:', e))
+    // Reflect the submit in the returned run so the client shows the "awaiting approval" state
+    // immediately (the update above ran before the submit changed these fields).
+    completed.approval_status = 'pending_manager'
+    completed.submitted_at    = new Date()
+    completed.submitted_by    = run.auditor_name ?? null
   }
 
   ok(res, { run: completed, recommendations, approval_required: approvalRequired })

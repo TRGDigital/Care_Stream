@@ -241,8 +241,12 @@ export default function AuditRunPage() {
     setCompleting(true)
     await saveSummary()
     try {
-      const { run: completed } = await api.audits.complete(id)
-      setRun(completed)
+      await api.audits.complete(id)
+      // Re-fetch the FULL run (the complete response is a bare update with no template relation,
+      // which the page renders). This also picks up the fresh approval status for the banner.
+      const { run: r, approval_required } = await api.audits.getRun(id)
+      setRun(r)
+      setApprovalRequired(!!approval_required)
       const { report: rpt } = await api.audits.report(id)
       setReport(rpt)
     } catch {

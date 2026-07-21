@@ -401,6 +401,11 @@ export default function SettingsPage() {
     const next = { ...orgDetails, require_external_approval: requireExternalApproval ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
+  const requireAuditApproval = orgDetails.require_audit_manager_approval === 'on'
+  function toggleAuditApproval() {
+    const next = { ...orgDetails, require_audit_manager_approval: requireAuditApproval ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
 
   async function saveResponseStyleValue(value: 'standard' | 'concise') {
     if (!session?.accessToken) return
@@ -1035,6 +1040,27 @@ export default function SettingsPage() {
             {roomsSaved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</span>}
           </div>
         </SettingSection>
+
+        {/* ── Audits ────────────────────────────────────────────────────────── */}
+        {featureFlags.has_custom_audits && (
+          <SettingSection icon={ShieldCheck} title="Audits" description="Require your care manager to sign off completed audits before they are final.">
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Require manager approval for completed audits</p>
+                <p className="mt-0.5 text-sm text-neutral-mid">
+                  When on, a completed audit is sent to your care manager in the hub to review and approve. Their name and the date are saved to the audit as a record. Off by default, so audits are final as soon as they&rsquo;re completed.
+                </p>
+              </div>
+              <button type="button" role="switch" aria-checked={requireAuditApproval} aria-label="Require manager approval for completed audits"
+                onClick={toggleAuditApproval}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireAuditApproval ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireAuditApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            {savingOrg && <p className="mt-2 text-xs text-neutral-mid">Saving…</p>}
+            {orgSaved && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-green-600"><Check size={14} /> Saved</p>}
+          </SettingSection>
+        )}
 
         {/* ── Response detail level ─────────────────────────────────────────── */}
         <SettingSection icon={SlidersHorizontal} title="Response detail level" description="Choose how much detail CareStream includes in its responses.">

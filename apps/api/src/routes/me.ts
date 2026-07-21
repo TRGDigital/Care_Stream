@@ -15,6 +15,7 @@ import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
+import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
 import { tenantHasFlag } from '../lib/plan-limits'
@@ -318,6 +319,74 @@ meRouter.post('/policy-approvals/:policyId/reject', async (req: Request, res: Re
     ? req.body.feedback.filter((f: any) => f && typeof f.change_id === 'string').map((f: any) => ({ change_id: String(f.change_id), note: String(f.note ?? '') }))
     : []
   const r = await rejectPolicy(tenantId, String(req.params.policyId), 'manager', me?.name || me?.email || 'Care manager', String(req.body?.comment ?? ''), feedback)
+  if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  ok(res, r)
+})
+
+// ── Audit approvals (care manager, hub) ───────────────────────────────────────
+meRouter.get('/audit-approvals', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await tenantHasFlag(tenantId, 'has_custom_audits')) || !(await isCareManager(userId))) {
+    ok(res, { is_manager: false, audits: [], recent: [] }); return
+  }
+  const [audits, recent] = await Promise.all([getPendingAuditApprovals(tenantId), getRecentApprovedAudits(tenantId)])
+  ok(res, { is_manager: true, audits, recent })
+})
+
+meRouter.get('/audit-approvals/:runId', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if (!(await isCareManager((req as any).user.sub))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const run = await (prisma as any).auditRun.findFirst({
+    where: { id: String(req.params.runId), tenant_id: tenantId },
+    include: {
+      template: { include: { sections: { orderBy: { section_order: 'asc' }, include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } } } } },
+      answers:  true,
+      tenant:   { select: { name: true } },
+    },
+  })
+  if (!run) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  const answerMap = new Map<string, any>((run.answers as any[]).map(a => [a.question_id, a]))
+  const report = {
+    audit_name:        run.template.name,
+    auditor_name:      run.auditor_name,
+    auditor_role:      run.auditor_role,
+    audit_month:       run.audit_month,
+    submitted_by:      run.submitted_by,
+    submitted_at:      run.submitted_at,
+    strengths:         run.strengths,
+    improvements:      run.improvements,
+    actions_deadline:  run.actions_deadline,
+    ai_recommendations: run.ai_recommendations,
+    sections: (run.template.sections as any[]).map(s => ({
+      title:     s.title,
+      questions: (s.questions as any[]).map(q => {
+        const a: any = answerMap.get(q.id)
+        return { id: q.id, question: q.question_text, question_type: q.question_type, answer_yn: a?.answer_yn ?? null, answer_na: a?.answer_na ?? false, outcome_text: a?.outcome_text ?? null, actions_text: a?.actions_text ?? null }
+      }),
+    })),
+  }
+  ok(res, { report })
+})
+
+meRouter.post('/audit-approvals/:runId/approve', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true, job_role: true } })
+  const r = await managerApproveAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', me?.job_role || '')
+  if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  ok(res, r)
+})
+
+meRouter.post('/audit-approvals/:runId/reject', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const comment = String(req.body?.comment ?? '').trim()
+  if (!comment) { err(res, 'VALIDATION_ERROR', 'Add a note so the auditor knows what to change.'); return }
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
+  const r = await rejectAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', comment)
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   ok(res, r)
 })

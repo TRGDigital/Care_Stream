@@ -1880,16 +1880,45 @@ model AuditRun {
   improvements       String?
   actions_deadline   String?
   completed_at       DateTime?
+  // Manager approval workflow (opt-in per tenant). none = no approval needed;
+  // pending_manager = submitted, awaiting the care manager; approved / rejected.
+  approval_status    String        @default("none")
+  submitted_at       DateTime?
+  submitted_by       String?
+  approved_by_name   String?
+  approved_by_role   String?
+  approved_at        DateTime?
+  approval_note      String?                                // manager's send-back comment
   created_at         DateTime      @default(now())
   updated_at         DateTime      @updatedAt
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])
   template           AuditTemplate @relation(fields: [template_id], references: [id])
   answers            AuditAnswer[]
   evidence           AuditAnswerEvidence[]
+  approvals          AuditApproval[]
 
   @@index([tenant_id, status])
   @@index([tenant_id, audit_month])
   @@map("audit_runs")
+}
+
+// Audit trail of approval events on an audit run: who submitted it, and the care
+// manager's approve / send-back decisions, with names + timestamps.
+model AuditApproval {
+  id            String   @id @default(uuid())
+  run_id        String
+  tenant_id     String
+  stage         String                        // 'submitted' | 'manager'
+  decision      String   @default("approved") // 'submitted' | 'approved' | 'rejected'
+  approver_name String   @default("")
+  approver_role String   @default("")
+  comment       String   @default("")
+  created_at    DateTime @default(now())
+  run           AuditRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@index([run_id])
+  @@index([tenant_id])
+  @@map("audit_approvals")
 }
 
 // Optional evidence photo(s) attached to a question's answer while conducting an

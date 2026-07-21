@@ -12,6 +12,7 @@ import { trackAiAction, checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
+import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 
 export const auditsRouter = Router()
 
@@ -1377,7 +1378,18 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   })
   trackAiAction(tenantId, 'audit_recs', run.id)
 
-  ok(res, { run: completed, recommendations })
+  // If this tenant requires manager sign-off, route the completed audit to the care manager
+  // in the hub instead of treating it as final.
+  const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
+  if (approvalRequired) {
+    await submitAuditForApproval(tenantId, run.id, run.auditor_name ?? '').catch(e => console.error('[audits/complete] submit for approval:', e))
+  }
+
+  ok(res, { run: completed, recommendations, approval_required: approvalRequired })
+
+  // When approval is required the audit isn't final yet, so don't email admins "completed" —
+  // the care manager is notified in the hub, and admins see it once it's approved.
+  if (approvalRequired) return
 
   const orgName = run.tenant?.name ?? ''
   notifyAdmin(run.tenant_id ?? tenantId, 'audit_updates', (email, name) =>
@@ -1430,6 +1442,13 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
     audit_month:       run.audit_month,
     status:            run.status,
     completed_at:      run.completed_at,
+    approval_status:   run.approval_status,
+    submitted_by:      run.submitted_by,
+    submitted_at:      run.submitted_at,
+    approved_by_name:  run.approved_by_name,
+    approved_by_role:  run.approved_by_role,
+    approved_at:       run.approved_at,
+    approval_note:     run.approval_note,
     strengths:         run.strengths,
     improvements:      run.improvements,
     actions_deadline:  run.actions_deadline,

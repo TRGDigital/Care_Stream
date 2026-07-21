@@ -13,6 +13,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { PoliciesView } from '@/components/hub/policies-view'
+import { AuditApprovalsView } from '@/components/hub/audit-approvals-view'
 import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
@@ -343,8 +344,9 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
+  const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   // Remembered from the last load so the Supervisions item shows immediately on
   // reload instead of popping in once /billing/summary resolves. Revalidated below.
   const [superCached, setSuperCached]                  = useState(false)
@@ -429,7 +431,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies') setView(v)
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals') setView(v)
   }, [searchParams])
 
   // Care manager: policies awaiting their approval (drives the Policies sidebar item).
@@ -442,6 +444,13 @@ function ChatPageInner() {
       .then(r => { const v = { is_manager: r.is_manager, count: r.policies.length }; setPolicyApprovals(v); try { localStorage.setItem(`cs_polappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
   }, [session?.accessToken, userId])
   useEffect(() => { refreshPolicyApprovals() }, [refreshPolicyApprovals])
+
+  const refreshAuditApprovals = useCallback(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).me.auditApprovals()
+      .then(r => { const v = { is_manager: r.is_manager, count: r.audits.length }; setAuditApprovals(v); try { localStorage.setItem(`cs_audappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
+  }, [session?.accessToken, userId])
+  useEffect(() => { refreshAuditApprovals() }, [refreshAuditApprovals])
 
   // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
   useEffect(() => {
@@ -460,6 +469,7 @@ function ChatPageInner() {
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
     try { const p = JSON.parse(localStorage.getItem(`cs_polappr_${userId}`) || 'null'); if (p && typeof p === 'object') setPolicyApprovals(p) } catch { /* ignore */ }
+    try { const ap = JSON.parse(localStorage.getItem(`cs_audappr_${userId}`) || 'null'); if (ap && typeof ap === 'object') setAuditApprovals(ap) } catch { /* ignore */ }
     try { const w = JSON.parse(localStorage.getItem(`cs_super_${userId}`)   || 'null'); if (typeof w === 'boolean') setSuperCached(w) } catch { /* ignore */ }
     try { const dc = JSON.parse(localStorage.getItem(`cs_doccats_${userId}`) || 'null'); if (Array.isArray(dc)) setAvailableCats(dc) } catch { /* ignore */ }
   }, [userId])
@@ -966,6 +976,16 @@ function ChatPageInner() {
             {policyApprovals.count > 0 && <NavBadge count={policyApprovals.count} className="bg-rose-500" />}
           </button>
           )}
+          {auditApprovals.is_manager && (
+          <button
+            onClick={() => setView('audit-approvals')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audit-approvals' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <ClipboardCheck size={15} />
+            Audit sign-off
+            {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
+          </button>
+          )}
           {!isReviewer && (
           <button
             onClick={() => setView('progress')}
@@ -1122,6 +1142,11 @@ function ChatPageInner() {
         {/* Policies to approve (care manager) */}
         {view === 'policies' && session?.accessToken && (
           <PoliciesView token={session.accessToken} onChange={refreshPolicyApprovals} />
+        )}
+
+        {/* Audits to approve (care manager) */}
+        {view === 'audit-approvals' && session?.accessToken && (
+          <AuditApprovalsView token={session.accessToken} onChange={refreshAuditApprovals} />
         )}
 
         {/* My Progress view */}

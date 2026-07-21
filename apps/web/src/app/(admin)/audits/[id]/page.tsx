@@ -138,6 +138,16 @@ function PrintReport({ report }: { report: any }) {
           <pre className="whitespace-pre-wrap text-xs">{report.ai_recommendations}</pre>
         </div>
       )}
+
+      {report.approved_by_name && (
+        <div className="mt-6 border border-gray-300 p-3">
+          <h2 className="mb-2 text-sm font-bold uppercase">Manager sign-off</h2>
+          <p className="text-xs">
+            Approved by <strong>{report.approved_by_name}</strong>{report.approved_by_role ? ` (${report.approved_by_role})` : ''}
+            {report.approved_at ? ` on ${new Date(report.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -304,6 +314,23 @@ export default function AuditRunPage() {
             )}
           </div>
         </div>
+
+        {/* Manager approval status */}
+        {run.approval_status === 'pending_manager' && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <span className="font-semibold">Awaiting manager approval.</span> This audit has been sent to your care manager in the hub to review and sign off{run.submitted_at ? `, submitted ${new Date(run.submitted_at).toLocaleDateString('en-GB')}` : ''}.
+          </div>
+        )}
+        {run.approval_status === 'approved' && (
+          <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            <span className="font-semibold">Approved by {run.approved_by_name || 'the care manager'}{run.approved_by_role ? ` (${run.approved_by_role})` : ''}</span>{run.approved_at ? ` on ${new Date(run.approved_at).toLocaleDateString('en-GB')}` : ''}. This sign-off is saved to the audit record.
+          </div>
+        )}
+        {run.approval_status === 'rejected' && (
+          <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <span className="font-semibold">Sent back by your care manager.</span>{run.approval_note ? ` “${run.approval_note}”` : ''} Amend the audit and complete it again to re-submit for approval.
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="mb-6 rounded-card bg-white p-4 shadow-card">

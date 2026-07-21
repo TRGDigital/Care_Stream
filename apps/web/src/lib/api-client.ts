@@ -748,7 +748,7 @@ export function createApiClient(token: string) {
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
-      complete: (id: string) => apiFetch<{ run: any; recommendations: string }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
+      complete: (id: string) => apiFetch<{ run: any; recommendations: string; approval_required?: boolean }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       report: (id: string) => apiFetch<{ report: any }>(`/audits/runs/${id}/report`, token),
       // Per-question evidence photos (optional). Image is compressed client-side first.
       uploadEvidence: (runId: string, questionId: string, image: File) => {
@@ -788,6 +788,10 @@ export function createApiClient(token: string) {
       policyApprovalDetail: (policyId: string) => apiFetch<{ policy_name: string; version: string; html: string; changes: Array<{ id: string; reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title: string; applied_by: string; applied_at: string; published: boolean; manager_feedback: string }>; show_role_names: boolean; role_names: Record<string, string[]> }>(`/me/policy-approvals/${encodeURIComponent(policyId)}`, token),
       approvePolicyAsManager: (policyId: string) => apiFetch<{ status: string; version?: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/approve`, token, { method: 'POST' }),
       rejectPolicyAsManager: (policyId: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []) => apiFetch<{ status: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment, feedback }) }),
+      auditApprovals: () => apiFetch<{ is_manager: boolean; audits: Array<{ run_id: string; template_name: string; auditor_name: string; audit_month: string; submitted_at: string | null }>; recent: Array<{ run_id: string; template_name: string; approved_by: string; approved_at: string | null; audit_month: string }> }>('/me/audit-approvals', token),
+      auditApprovalDetail: (runId: string) => apiFetch<{ report: { audit_name: string; auditor_name: string | null; auditor_role: string | null; audit_month: string; submitted_by: string | null; submitted_at: string | null; strengths: string | null; improvements: string | null; actions_deadline: string | null; ai_recommendations: string | null; sections: Array<{ title: string; questions: Array<{ id: string; question: string; question_type: string; answer_yn: boolean | null; answer_na: boolean; outcome_text: string | null; actions_text: string | null }> }> } }>(`/me/audit-approvals/${encodeURIComponent(runId)}`, token),
+      approveAuditAsManager: (runId: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/approve`, token, { method: 'POST' }),
+      rejectAuditAsManager: (runId: string, comment: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
       documentCategories: () => apiFetch<{ available: string[] }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),

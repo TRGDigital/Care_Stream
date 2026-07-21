@@ -1147,7 +1147,8 @@ auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
     orderBy: { created_at: 'asc' },
     select:  { id: true, question_id: true, file_name: true, file_type: true, size_bytes: true, created_at: true },
   })
-  ok(res, { run: { ...run, evidence } })
+  const approval_required = await auditApprovalRequired(tenantId).catch(() => false)
+  ok(res, { run: { ...run, evidence }, approval_required })
 })
 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────

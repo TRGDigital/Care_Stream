@@ -165,6 +165,7 @@ export default function AuditRunPage() {
   const [section,   setSection]     = useState(0)
   const [saving,    setSaving]      = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [approvalRequired, setApprovalRequired] = useState(false)
   const [report,    setReport]      = useState<any>(null)
   const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()
@@ -174,8 +175,9 @@ export default function AuditRunPage() {
   // Load run
   useEffect(() => {
     if (!api) return
-    api.audits.getRun(id).then(({ run: r }) => {
+    api.audits.getRun(id).then(({ run: r, approval_required }) => {
       setRun(r)
+      setApprovalRequired(!!approval_required)
       // Hydrate answers from saved data
       const map = new Map<string, any>()
       for (const a of r.answers) {
@@ -588,8 +590,12 @@ export default function AuditRunPage() {
             {!isCompleted && (
               <div className="flex items-center justify-between rounded-card border border-teal/20 bg-teal/5 p-5">
                 <div>
-                  <p className="text-sm font-semibold text-neutral-dark">Ready to complete?</p>
-                  <p className="text-xs text-neutral-mid">Completing the audit generates AI recommendations and locks the report for printing.</p>
+                  <p className="text-sm font-semibold text-neutral-dark">Ready to {approvalRequired ? 'send for approval' : 'complete'}?</p>
+                  <p className="text-xs text-neutral-mid">
+                    {approvalRequired
+                      ? 'This generates the AI recommendations and sends the audit to your care manager in the hub to review and approve. It’s final once they sign it off.'
+                      : 'Completing the audit generates AI recommendations and locks the report for printing.'}
+                  </p>
                 </div>
                 <button
                   onClick={completeAudit}
@@ -597,7 +603,7 @@ export default function AuditRunPage() {
                   className="flex items-center gap-2 rounded-btn bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                 >
                   {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  {completing ? 'Generating…' : 'Complete & get AI recommendations'}
+                  {completing ? (approvalRequired ? 'Sending…' : 'Generating…') : (approvalRequired ? 'Send to care manager for approval' : 'Complete & get AI recommendations')}
                 </button>
               </div>
             )}

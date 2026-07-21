@@ -214,14 +214,16 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
   const [section,   setSection]   = useState(0)
   const [saving,    setSaving]    = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [approvalRequired, setApprovalRequired] = useState(false)
   const [evidence,  setEvidence]  = useState<Map<string, any[]>>(new Map())
   const [uploadingQ, setUploadingQ] = useState<string | null>(null)
   const isMobile = useIsMobileOrTablet()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
-    api.audits.getRun(runId).then(({ run: r }) => {
+    api.audits.getRun(runId).then(({ run: r, approval_required }) => {
       setRun(r)
+      setApprovalRequired(!!approval_required)
       const map = new Map<string, Answer>()
       for (const a of (r.answers ?? [])) map.set(a.question_id, { answer_yn: a.answer_yn ?? null, answer_na: a.answer_na ?? false, outcome_text: a.outcome_text ?? '', actions_text: a.actions_text ?? '' })
       setAnswers(map)
@@ -414,11 +416,15 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             <input value={summary.actions_deadline} onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))} placeholder="Deadline for actions" className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <div className="flex items-center gap-3">
               <button onClick={complete} disabled={completing} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
-                {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Complete audit
+                {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {approvalRequired ? 'Send for approval' : 'Complete audit'}
               </button>
               <button onClick={onExit} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40"><Pause size={13} /> Save &amp; exit</button>
             </div>
-            <p className="mt-2 text-xs text-neutral-mid">Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.</p>
+            <p className="mt-2 text-xs text-neutral-mid">
+              {approvalRequired
+                ? 'Generates AI recommendations and sends the audit to your care manager to review and approve. It’s final once they sign it off.'
+                : 'Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.'}
+            </p>
           </div>
         )}
 

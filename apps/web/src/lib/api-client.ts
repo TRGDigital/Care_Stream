@@ -744,7 +744,7 @@ export function createApiClient(token: string) {
       },
       createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string }) =>
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
-      getRun: (id: string) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token),
+      getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),

@@ -27,6 +27,9 @@ export function auditRecsToHtml(md: string): string {
     if ((m = t.match(/^#{4,}\s+(.*)$/)))        { closeList(); out.push(`<h5>${inline(m[1])}</h5>`); continue }
     if ((m = t.match(/^###\s+(.*)$/)))          { closeList(); out.push(`<h4>${inline(m[1])}</h4>`); continue }
     if ((m = t.match(/^#{1,2}\s+(.*)$/)))       { closeList(); out.push(`<h3>${inline(m[1])}</h3>`); continue }
+    // A whole line that is only bold text is a section heading (the platform prompt uses
+    // **IMMEDIATE ACTIONS REQUIRED** style headings rather than ## ).
+    if ((m = t.match(/^\*\*(.+?)\*\*[:.]?$/)))  { closeList(); out.push(`<h3>${esc(m[1])}</h3>`); continue }
     if ((m = t.match(/^[-*•]\s+(.*)$/)) || (m = t.match(/^\d+[.)]\s+(.*)$/))) {
       if (!listOpen) { out.push('<ul>'); listOpen = true }
       out.push(`<li>${inline(m[1])}</li>`); continue

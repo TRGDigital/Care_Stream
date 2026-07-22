@@ -276,7 +276,7 @@ function insertBeforeEndMatter(root: HTMLElement, node: HTMLElement) {
 function appendEndCallouts(root: HTMLElement, unplacedAmend: HighlightItem[], newSections: HighlightItem[], adopted: AdoptedMap, adoptedExtra: Array<{ i: number; text: string }>) {
   const adoptedNew = newSections.filter(it => adopted.has(it.i))
   const pendingNew = newSections.filter(it => !adopted.has(it.i))
-  if (!unplacedAmend.length && !pendingNew.length && !adoptedNew.length && !adoptedExtra.length) return
+  if (!pendingNew.length && !adoptedNew.length && !adoptedExtra.length) return
   const wrap = document.createElement('div')
   wrap.className = 'not-prose mt-4 space-y-2 border-t border-dashed border-gray-300 pt-3'
 
@@ -311,25 +311,9 @@ function appendEndCallouts(root: HTMLElement, unplacedAmend: HighlightItem[], ne
     }
   }
 
-  if (unplacedAmend.length) {
-    const h = document.createElement('p')
-    h.className = 'mt-2 text-[10px] font-bold uppercase tracking-wide text-amber-700'
-    h.textContent = 'Also amend these (find the quoted wording in the policy)'
-    wrap.appendChild(h)
-    for (const it of unplacedAmend) {
-      const row = document.createElement('div')
-      row.className = 'flex items-start gap-2 rounded-md border border-dashed border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900'
-      row.appendChild(numberBadge(it.i))
-      const body = document.createElement('span')
-      const strong = document.createElement('strong')
-      strong.textContent = 'Amend near: '
-      body.appendChild(strong)
-      const q = it.quote.length > 140 ? it.quote.slice(0, 140) + '…' : it.quote
-      body.appendChild(document.createTextNode(`“${q}”`))
-      row.appendChild(body)
-      wrap.appendChild(row)
-    }
-  }
+  // NOTE: we deliberately do NOT render "Amend near" callouts for amend suggestions we couldn't
+  // pin to an exact passage. An amend is either placed in situ (highlighted + adoptable) or it is
+  // not shown — a vague "find the quoted wording yourself" prompt isn't adoptable and confuses.
 
   insertBeforeEndMatter(root, wrap)
 }

@@ -216,6 +216,23 @@ model StaffSupervision {
   @@map("staff_supervisions")
 }
 
+// Agreed actions from a completed supervision — shown to the staff member in the hub "My actions"
+// to-do list (alongside audit actions) and tracked by admins. Linked to the supervisee by user_id.
+model SupervisionAction {
+  id             String   @id @default(uuid())
+  supervision_id String
+  tenant_id      String
+  user_id        String                              // the supervisee this action belongs to
+  description    String
+  status         String   @default("open")           // open | in_progress | done
+  done_at        DateTime?
+  created_at     DateTime @default(now())
+
+  @@index([tenant_id, user_id, status])
+  @@index([supervision_id])
+  @@map("supervision_actions")
+}
+
 // ─── Training licences (training-only gateway tier) ─────────────────────────────
 // One row = one staff seat × one standard module, bought one-off at £25.99. The
 // admin allocates a licence to a staff member (user_id) for a module (topic). A

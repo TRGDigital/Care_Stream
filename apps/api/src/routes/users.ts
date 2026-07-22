@@ -59,7 +59,7 @@ usersRouter.get('/:id/actions', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const u = await (prisma as any).user.findUnique({ where: { id: String(req.params.id) }, select: { name: true, tenant_id: true } }).catch(() => null)
   if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
-  ok(res, await getMyActions(tenantId, u.name ?? ''))
+  ok(res, await getMyActions(tenantId, u.name ?? '', String(req.params.id)))
 })
 
 // ─── GET /users/:id ───────────────────────────────────────────────────────────

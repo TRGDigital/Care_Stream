@@ -180,49 +180,52 @@ export async function listActionPlans(tenantId: string) {
 // draft plan is still being reviewed by the manager and should not reach staff.
 const STATUS_RANK: Record<string, number> = { in_progress: 0, open: 1, done: 2 }
 
-export async function getMyActions(tenantId: string, staffName: string) {
+export async function getMyActions(tenantId: string, staffName: string, userId?: string) {
   const name = (staffName ?? '').trim()
-  if (!name) return { actions: [] as any[] }
-  const rows = await (prisma as any).auditAction.findMany({
-    where: {
-      tenant_id: tenantId,
-      is_external: false,                                    // external-contractor actions are tracked by admins
-      assigned_to: { equals: name, mode: 'insensitive' },
-      run: { action_plan_status: 'approved' },
-    },
-    include: { run: { select: { id: true, template: { select: { name: true } } } } },
-  }).catch(() => [])
-  const actions = (rows as any[])
-    .map(a => ({
-      id: a.id,
-      description: a.description,
-      priority: a.priority,
-      due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
-      status: a.status,
-      done_at: a.done_at ? new Date(a.done_at).toISOString() : null,
-      run_id: a.run_id,
-      audit_name: a.run?.template?.name ?? 'Audit',
-    }))
-    .sort((x, y) =>
-      (STATUS_RANK[x.status] ?? 1) - (STATUS_RANK[y.status] ?? 1) ||
-      (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1) ||
-      (x.due_date ?? '9999').localeCompare(y.due_date ?? '9999'))
+  const [auditRows, supRows] = await Promise.all([
+    name ? (prisma as any).auditAction.findMany({
+      where: {
+        tenant_id: tenantId,
+        is_external: false,                                   // external-contractor actions are tracked by admins
+        assigned_to: { equals: name, mode: 'insensitive' },
+        run: { action_plan_status: 'approved' },
+      },
+      include: { run: { select: { id: true, template: { select: { name: true } } } } },
+    }).catch(() => []) : Promise.resolve([]),
+    userId ? (prisma as any).supervisionAction.findMany({ where: { tenant_id: tenantId, user_id: userId } }).catch(() => []) : Promise.resolve([]),
+  ])
+  const auditActions = (auditRows as any[]).map(a => ({
+    id: a.id, description: a.description, priority: a.priority,
+    due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
+    status: a.status, done_at: a.done_at ? new Date(a.done_at).toISOString() : null,
+    run_id: a.run_id, audit_name: a.run?.template?.name ?? 'Audit', source: 'audit',
+  }))
+  const supActions = (supRows as any[]).map(s => ({
+    id: s.id, description: s.description, priority: 'priority',
+    due_date: null, status: s.status, done_at: s.done_at ? new Date(s.done_at).toISOString() : null,
+    run_id: '', audit_name: 'Supervision', source: 'supervision',
+  }))
+  const actions = [...auditActions, ...supActions].sort((x, y) =>
+    (STATUS_RANK[x.status] ?? 1) - (STATUS_RANK[y.status] ?? 1) ||
+    (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1) ||
+    (x.due_date ?? '9999').localeCompare(y.due_date ?? '9999'))
   return { actions }
 }
 
 // Count of a staff member's outstanding (not done) actions, for the hub nav badge.
-export async function countMyOpenActions(tenantId: string, staffName: string): Promise<number> {
+export async function countMyOpenActions(tenantId: string, staffName: string, userId?: string): Promise<number> {
   const name = (staffName ?? '').trim()
-  if (!name) return 0
-  return (prisma as any).auditAction.count({
-    where: {
-      tenant_id: tenantId,
-      is_external: false,
-      assigned_to: { equals: name, mode: 'insensitive' },
-      status: { not: 'done' },
-      run: { action_plan_status: 'approved' },
-    },
-  }).catch(() => 0)
+  const [audit, sup] = await Promise.all([
+    name ? (prisma as any).auditAction.count({
+      where: {
+        tenant_id: tenantId, is_external: false,
+        assigned_to: { equals: name, mode: 'insensitive' },
+        status: { not: 'done' }, run: { action_plan_status: 'approved' },
+      },
+    }).catch(() => 0) : Promise.resolve(0),
+    userId ? (prisma as any).supervisionAction.count({ where: { tenant_id: tenantId, user_id: userId, status: { not: 'done' } } }).catch(() => 0) : Promise.resolve(0),
+  ])
+  return (audit as number) + (sup as number)
 }
 
 // ── External-contractor actions (admin-tracked in the hub) ─────────────────────
@@ -315,13 +318,18 @@ export async function getAssignedActionsSummary(tenantId: string) {
 }
 
 // A staff member may only change the status of an action assigned to them.
-export async function setMyActionStatus(tenantId: string, staffName: string, actionId: string, status: string): Promise<void> {
+export async function setMyActionStatus(tenantId: string, staffName: string, actionId: string, status: string, userId?: string): Promise<void> {
   const name = (staffName ?? '').trim()
   if (!['open', 'in_progress', 'done'].includes(status)) throw new Error('Invalid status')
-  const existing = await (prisma as any).auditAction.findFirst({
+  const doneAt = status === 'done' ? new Date() : null
+  // An action id is either an audit action assigned to this staff member, or a supervision action
+  // that belongs to them — update whichever it is.
+  const audit = name ? await (prisma as any).auditAction.findFirst({
     where: { id: actionId, tenant_id: tenantId, assigned_to: { equals: name, mode: 'insensitive' }, run: { action_plan_status: 'approved' } },
     select: { id: true },
-  })
-  if (!existing) throw new Error('Action not found')
-  await (prisma as any).auditAction.update({ where: { id: actionId }, data: { status, done_at: status === 'done' ? new Date() : null } })
+  }).catch(() => null) : null
+  if (audit) { await (prisma as any).auditAction.update({ where: { id: actionId }, data: { status, done_at: doneAt } }); return }
+  const sup = userId ? await (prisma as any).supervisionAction.findFirst({ where: { id: actionId, tenant_id: tenantId, user_id: userId }, select: { id: true } }).catch(() => null) : null
+  if (sup) { await (prisma as any).supervisionAction.update({ where: { id: actionId }, data: { status, done_at: doneAt } }); return }
+  throw new Error('Action not found')
 }

@@ -195,7 +195,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
     // Direct counts of outstanding wrong answers (was fetch-all-rows-and-sum).
     (prisma as any).trainingAnswer.count({ where: { is_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
     (prisma as any).onboardingProgress.count({ where: { answer_correct: false, enrollment: { tenant_id: tenantId, user_id: userId } } }).catch(() => 0),
-    countMyOpenActions(tenantId, meUser?.name ?? ''),
+    countMyOpenActions(tenantId, meUser?.name ?? '', userId),
   ])
   const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
@@ -411,7 +411,7 @@ meRouter.get('/actions', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
-  ok(res, await getMyActions(tenantId, me?.name ?? ''))
+  ok(res, await getMyActions(tenantId, me?.name ?? '', userId))
 })
 
 // Staff member updates the status of one of their own actions (open | in_progress | done).
@@ -420,8 +420,8 @@ meRouter.patch('/actions/:id', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
   try {
-    await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), String(req.body?.status ?? ''))
-    ok(res, await getMyActions(tenantId, me?.name ?? ''))
+    await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), String(req.body?.status ?? ''), userId)
+    ok(res, await getMyActions(tenantId, me?.name ?? '', userId))
   } catch (e: any) {
     err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not update the action.')
   }
@@ -1188,7 +1188,7 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
 meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
-  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true } }).catch(() => null)
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true, user_id: true } }).catch(() => null)
   if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
   const form = (req.body?.form && typeof req.body.form === 'object') ? req.body.form : {}
   const nextDate = req.body?.next_date
@@ -1196,5 +1196,23 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
     where: { id: r.id },
     data: { form, status: 'completed', completed_at: new Date(), ...(nextDate ? { next_due: new Date(nextDate) } : {}) },
   })
+
+  // Sync the agreed actions into the supervisee's "My actions" to-do list. Match by description so
+  // an action the staff member already started/finished keeps its status when the form is re-saved.
+  const wanted: string[] = Array.isArray(form.agreed_actions)
+    ? [...new Set(form.agreed_actions.map((a: any) => String(a?.description ?? '').trim()).filter(Boolean))] as string[]
+    : []
+  const existing = await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId } }).catch(() => [])
+  const existingByDesc = new Map((existing as any[]).map(e => [e.description.trim().toLowerCase(), e]))
+  const wantedSet = new Set(wanted.map(w => w.toLowerCase()))
+  const toCreate = wanted.filter(w => !existingByDesc.has(w.toLowerCase()))
+  if (toCreate.length) {
+    await (prisma as any).supervisionAction.createMany({
+      data: toCreate.map(desc => ({ supervision_id: r.id, tenant_id: tenantId, user_id: r.user_id, description: desc.slice(0, 1000) })),
+    }).catch(() => {})
+  }
+  const toDelete = (existing as any[]).filter(e => !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
+  if (toDelete.length) await (prisma as any).supervisionAction.deleteMany({ where: { id: { in: toDelete } } }).catch(() => {})
+
   ok(res, { ok: true })
 })

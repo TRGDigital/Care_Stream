@@ -8,6 +8,8 @@ import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info,
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
 
+const fmtReviewDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
 // The same split-screen as the Regulation-coverage drill-in, for out-of-date content: the
 // stale findings on the left (each with a one-click "Replace" that flows through the same
 // approval workflow), the policy on the right with the stale wording highlighted.
@@ -88,6 +90,24 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setNavPos(s => ({ ...s, [n]: idx + 1 }))
   }
 
+  // Reflect an applied change in the right-hand preview so it's visible on the policy side:
+  // swap the highlighted wording for the new text and turn it green (an applied change). For a
+  // fill, only the marks whose text is the given token are swapped (a finding may have several).
+  function updatePreview(n: number, fromText: string | null, toText: string) {
+    const marks = previewRef.current?.querySelectorAll<HTMLElement>(`mark[data-lint="${n}"]`)
+    if (!marks) return
+    const from = fromText?.trim().toLowerCase()
+    let first: HTMLElement | null = null
+    marks.forEach(m => {
+      if (from != null && (m.textContent ?? '').trim().toLowerCase() !== from) return
+      m.textContent = toText
+      m.className = 'rounded bg-green-200 px-0.5 font-medium'
+      m.removeAttribute('data-lint')
+      if (!first) first = m
+    })
+    ;(first as HTMLElement | null)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
   // Load the policy preview (right pane).
   useEffect(() => {
     setPreviewLoad(true)
@@ -118,7 +138,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     }
   }, [html, policySearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function replace(f: Finding, idx: number) {
+  async function replace(f: Finding, idx: number, n: number) {
     const terms = termsOf(f)
     if (!f.superseded_by || !terms.length) return
     setBusy(idx); setAdoptErr('')
@@ -138,7 +158,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setAdopted(s => new Set(s).add(idx))
       setPending(last)
       onAdopted?.()
-      if (!anyApplied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      if (anyApplied) updatePreview(n, null, f.superseded_by)
+      else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not apply this replacement.')
     } finally {
@@ -147,7 +168,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   }
 
   // Fill one placeholder token (e.g. [insert name]) with the admin's text, everywhere it appears.
-  async function fillToken(f: Finding, term: string) {
+  async function fillToken(f: Finding, term: string, n: number) {
     const key = `${f.signal_key}::${term}`
     const value = (fillValues[key] ?? '').trim()
     if (!value) return
@@ -160,7 +181,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setFilled(s => new Set(s).add(key))
       setPending(res.pending)
       onAdopted?.()
-      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      if (res.applied) updatePreview(n, term, value)
+      else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not fill this in.')
     } finally {
@@ -247,7 +269,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           {adopted.has(i) ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
                           ) : (
-                            <button onClick={() => replace(f, i)} disabled={busy !== null}
+                            <button onClick={() => replace(f, i, n)} disabled={busy !== null}
                               className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
                               {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace in {policyName}</>}
                             </button>
@@ -292,10 +314,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                                   ) : (
                                     <>
                                       <input value={fillValues[key] ?? ''} onChange={e => setFillValues(s => ({ ...s, [key]: e.target.value }))}
-                                        onKeyDown={e => e.key === 'Enter' && fillToken(f, t)}
+                                        onKeyDown={e => e.key === 'Enter' && fillToken(f, t, n)}
                                         placeholder="Type the value…"
                                         className="min-w-0 flex-1 rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
-                                      <button onClick={() => fillToken(f, t)} disabled={fillBusy !== null || !(fillValues[key] ?? '').trim()}
+                                      <button onClick={() => fillToken(f, t, n)} disabled={fillBusy !== null || !(fillValues[key] ?? '').trim()}
                                         className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
                                         {fillBusy === key ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Fill in
                                       </button>
@@ -324,7 +346,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                   <p className="text-sm font-medium text-neutral-dark">{reviewFinding.label}</p>
                   {reviewFinding.detail && <p className="mt-0.5 text-xs text-neutral-mid">{reviewFinding.detail}</p>}
                   {reviewDone ? (
-                    <p className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Review date saved</p>
+                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Saved. Last reviewed {fmtReviewDate(reviewDate)}, next review due {fmtReviewDate(new Date(new Date(reviewDate).getTime() + reviewInterval * 86_400_000).toISOString().slice(0, 10))}.</p>
                   ) : (
                     <div className="mt-2.5 flex flex-wrap items-end gap-3">
                       <label className="text-xs text-neutral-mid">Last reviewed

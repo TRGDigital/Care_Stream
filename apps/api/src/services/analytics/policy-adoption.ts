@@ -219,22 +219,52 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
   reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title?: string; applied_by: string
 }): Promise<{ applied: boolean; pending: number; document_id: string; change_id: string }> {
   const doc = await getOrInitDocument(tenantId, policyId)
-  const { content, applied } = applyChange(doc.draft_content, input.placement, input.old_text, input.new_text, input.section_title)
+  let { content, applied } = applyChange(doc.draft_content, input.placement, input.old_text, input.new_text, input.section_title)
+
+  // Re-fill / re-amend: if the token/old_text is gone because it was already replaced, update the
+  // PREVIOUS value in place instead of failing — so correcting a placeholder actually lands in the
+  // draft. Find the latest prior fill for this reference_key + old_text whose value is still present.
+  if (!applied && input.placement === 'amend' && input.old_text && input.new_text) {
+    const priors = await (prisma as any).policyDocumentChange.findMany({
+      where: { document_id: doc.id, reference_key: input.reference_key, old_text: input.old_text, reverted: false },
+      orderBy: { applied_at: 'desc' },
+    }).catch(() => [])
+    for (const p of priors as any[]) {
+      if (p.new_text && p.new_text !== input.new_text && doc.draft_content.includes(p.new_text)) {
+        content = doc.draft_content.split(p.new_text).join(input.new_text)
+        applied = true
+        break
+      }
+    }
+    // Retire the superseded fills so the change log and pending count stay clean.
+    if (applied && (priors as any[]).length) {
+      await (prisma as any).policyDocumentChange.updateMany({
+        where: { id: { in: (priors as any[]).map(p => p.id) } }, data: { reverted: true },
+      }).catch(() => {})
+    }
+  }
+
   if (applied) {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { draft_content: content } })
   }
-  const change = await (prisma as any).policyDocumentChange.create({
-    data: {
-      document_id: doc.id, tenant_id: tenantId, reference_key: input.reference_key,
-      requirement: input.requirement.slice(0, 500), placement: input.placement,
-      old_text: input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000),
-      section_title: (input.section_title ?? '').slice(0, 200), applied_by: input.applied_by,
-    },
-  })
-  // New adopted changes reset the approval cycle back to draft.
-  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft' } }).catch(() => {})
+  // Only record a change when it actually landed in the draft, so nothing shows as pending that
+  // was never placed (previously a not-found amend still recorded an orphan change).
+  let changeId = ''
+  if (applied) {
+    const change = await (prisma as any).policyDocumentChange.create({
+      data: {
+        document_id: doc.id, tenant_id: tenantId, reference_key: input.reference_key,
+        requirement: input.requirement.slice(0, 500), placement: input.placement,
+        old_text: input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000),
+        section_title: (input.section_title ?? '').slice(0, 200), applied_by: input.applied_by,
+      },
+    })
+    changeId = change.id
+    // New adopted changes reset the approval cycle back to draft.
+    await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft' } }).catch(() => {})
+  }
   const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false, reverted: false } })
-  return { applied, pending, document_id: doc.id, change_id: change.id }
+  return { applied, pending, document_id: doc.id, change_id: changeId }
 }
 
 // ─── Approval workflow ────────────────────────────────────────────────────────

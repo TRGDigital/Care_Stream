@@ -181,8 +181,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setFilled(s => new Set(s).add(key))
       setPending(res.pending)
       onAdopted?.()
-      if (res.applied) updatePreview(n, term, value)
-      else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      updatePreview(n, term, value)   // reflect on the policy side straight away
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not fill this in.')
     } finally {

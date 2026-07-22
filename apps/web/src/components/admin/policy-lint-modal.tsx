@@ -54,22 +54,26 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
 
   const isReplaceable = (f: Finding) => f.kind === 'text' && !!f.superseded_by && termsOf(f).length > 0
   const isFillable    = (f: Finding) => f.category === 'placeholder' && f.kind === 'text' && !f.superseded_by && termsOf(f).length > 0
+  const isNote        = (f: Finding) => f.category === 'advisory_note' && termsOf(f).length > 0
 
   // A finding is one-click replaceable when it's a text match with a known replacement.
   const replaceable = findings.map((f, i) => ({ f, i })).filter(({ f }) => isReplaceable(f))
   // A placeholder ([insert name], XXXX…) is fillable: located in the policy, filled with your text.
   const fillable    = findings.map((f, i) => ({ f, i })).filter(({ f }) => isFillable(f))
+  // A context note is located + explained, but there is nothing to change.
+  const noteworthy  = findings.map((f, i) => ({ f, i })).filter(({ f }) => isNote(f))
   // The review-currency flag ("No review date recorded" / "Overdue for review") → date picker.
   const reviewFinding = findings.find(f => f.signal_key === 'overdue-review') ?? null
-  const advisory = findings.filter(f => !isReplaceable(f) && !isFillable(f) && f.signal_key !== 'overdue-review')
+  const advisory = findings.filter(f => !isReplaceable(f) && !isFillable(f) && !isNote(f) && f.signal_key !== 'overdue-review')
 
-  // Both replaceable and fillable findings are highlighted in the preview, sharing one numbering
-  // (replaceable first, then fillable), so colours/badges stay unique across the whole document.
-  const highlightList = [...replaceable, ...fillable]
+  // Replaceable, fillable and note findings are all highlighted in the preview, sharing one
+  // numbering (in this order) so colours/badges stay unique across the whole document.
+  const highlightList = [...replaceable, ...fillable, ...noteworthy]
 
   const byN = <T extends { n: number }>(a: T, b: T) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n)
-  const located = replaceable.map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
+  const located     = replaceable.map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
   const locatedFill = fillable.map((r, pos) => ({ ...r, n: numbering[replaceable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
+  const locatedNote = noteworthy.map((r, pos) => ({ ...r, n: numbering[replaceable.length + fillable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
 
   // Scroll to the NEXT occurrence of a finding each click (1st, 2nd, … then wraps), flashing it.
   function scrollToHighlight(n: number) {
@@ -348,6 +352,38 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             )}
 
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
+
+            {/* For awareness — located + explained, nothing to change */}
+            {locatedNote.length > 0 && (
+              <div className="space-y-2">
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Info size={15} className="text-sky-600" /> For awareness (no change needed)</p>
+                {locatedNote.map(({ f, i, n }) => {
+                  const total = markCounts[n] ?? f.count
+                  const shown = navPos[n]
+                  return (
+                    <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+                      <div className="flex items-start gap-2.5">
+                        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${quoteColour(n)}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-neutral-dark">{f.label}</p>
+                          {f.detail && <p className="mt-0.5 text-xs leading-relaxed text-neutral-dark">{f.detail}</p>}
+                          {(f.source_urls ?? []).length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-x-3">
+                              {(f.source_urls ?? []).map((u, k) => (
+                                <a key={k} href={u} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-sky-700 underline underline-offset-2 hover:no-underline">Source <ExternalLink size={10} /></a>
+                              ))}
+                            </div>
+                          )}
+                          <button onClick={() => scrollToHighlight(n)} className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
+                            <Locate size={13} /> {total > 1 ? (shown ? `Show ${shown} of ${total}` : `Show in policy (${total})`) : 'Show in policy'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {advisory.length > 0 && (
               <div className="space-y-2">

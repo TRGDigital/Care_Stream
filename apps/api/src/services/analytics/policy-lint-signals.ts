@@ -31,6 +31,7 @@ export type LintCategory =
   | 'placeholder'
   | 'structure'
   | 'review_currency'
+  | 'advisory_note'          // located + explained in the preview, but nothing to action (context only)
 
 export interface TextSignal {
   id:            string
@@ -161,6 +162,34 @@ export const TEXT_SIGNALS: TextSignal[] = [
     detail: 'The FACS eligibility bands were replaced by the national eligibility criteria under the Care Act 2014.',
     phrases: /fair access to care/i, acronyms: ['FACS'],
     supersededBy: 'Care Act 2014 national eligibility criteria',
+  },
+  {
+    id: 'nmw-regs-1999',
+    category: 'superseded_legislation', severity: 'medium',
+    label: 'Refers to the National Minimum Wage Regulations 1999',
+    detail: 'The National Minimum Wage Regulations 1999 were revoked and replaced by the National Minimum Wage Regulations 2015. (The National Minimum Wage Act 1998 remains correct — it is the Regulations that changed.)',
+    phrases: /national minimum wage regulations 1999/i,
+    supersededBy: 'National Minimum Wage Regulations 2015',
+    sourceUrls: ['https://www.legislation.gov.uk/uksi/2015/621/contents/made'],
+  },
+  {
+    id: 'misrepresentation-title',
+    category: 'superseded_legislation', severity: 'low',
+    label: 'Incorrect title: "Misrepresentations Act 1967"',
+    detail: 'The correct statutory title is the Misrepresentation Act 1967 (singular). The Act is still in force; only the citation is mistyped.',
+    phrases: /misrepresentations act 1967/i,
+    supersededBy: 'Misrepresentation Act 1967',
+    sourceUrls: ['https://www.legislation.gov.uk/ukpga/1967/7/contents'],
+  },
+
+  // Context notes (highlighted + explained, but nothing to change) ----------------
+  {
+    id: 'growth-infrastructure-2013',
+    category: 'advisory_note', severity: 'low',
+    label: 'Cites the Growth and Infrastructure Act 2013 (employee shareholder status)',
+    detail: 'This Act is still on the statute book, so nothing needs changing. Its main employment relevance was "employee shareholder" status, whose tax advantages were removed in September 2016 and which is effectively defunct for new agreements. Keep it if you wish, but it carries little practical weight now.',
+    phrases: /growth and infrastructure act 2013/i,
+    sourceUrls: ['https://www.legislation.gov.uk/ukpga/2013/27/contents'],
   },
 
   // Regulators / bodies ----------------------------------------------------------

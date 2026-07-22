@@ -250,7 +250,7 @@ export default async function StaffTrainingPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('how.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('how.intro')}
           </p>
 
@@ -280,7 +280,7 @@ export default async function StaffTrainingPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('two.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('two.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2">
@@ -324,7 +324,7 @@ export default async function StaffTrainingPage() {
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
               {s('library.h2')}
             </h2>
-            <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
               {s('library.intro')}
             </p>
             <TrainingLibraryTabs groups={catalogue.groups} settings={catalogue.settings} topics={catalogue.topics} />
@@ -683,7 +683,7 @@ export default async function StaffTrainingPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             {s('beyond.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             {s('beyond.intro')}
           </p>
 
@@ -708,7 +708,7 @@ export default async function StaffTrainingPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('f2f.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('f2f.intro')}
           </p>
 
@@ -772,7 +772,7 @@ export default async function StaffTrainingPage() {
             {s('cqc.h2')}
           </h2>
           <div
-            className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
+            className={`mb-12 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
             dangerouslySetInnerHTML={{ __html: s('cqc.intro') }}
           />
 

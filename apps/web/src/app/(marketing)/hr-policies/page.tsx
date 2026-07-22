@@ -161,7 +161,7 @@ export default async function HRPoliciesPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('how.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('how.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-3">
@@ -334,7 +334,7 @@ export default async function HRPoliciesPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             {s('topics.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             {s('topics.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -365,7 +365,7 @@ export default async function HRPoliciesPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('equality.h2')}
           </h2>
-          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('equality.p1') }} />
+          <div className={`mb-12 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('equality.p1') }} />
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
               <span>{s('equality.tableHead1')}</span>

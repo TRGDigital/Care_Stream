@@ -44,7 +44,7 @@ export default async function CollectionsIndexPage() {
   return (
     <section className="mx-auto max-w-content px-6 py-16 md:py-20">
       <h1 className="mb-3 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">Collections</h1>
-      <p className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+      <p className="mb-12 text-lg leading-relaxed text-neutral-mid">
         Curated guides and resources, grouped by topic.
       </p>
 

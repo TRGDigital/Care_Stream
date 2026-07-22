@@ -195,7 +195,7 @@ export default async function BusinessContinuityPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('how.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('how.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-3">
@@ -299,7 +299,7 @@ export default async function BusinessContinuityPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             {s('resilience.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             {s('resilience.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -323,7 +323,7 @@ export default async function BusinessContinuityPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('cqc.h2')}
           </h2>
-          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
+          <div className={`mb-12 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
             <div dangerouslySetInnerHTML={{ __html: s('cqc.intro') }} />
           </div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">

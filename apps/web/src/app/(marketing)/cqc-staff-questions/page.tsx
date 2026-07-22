@@ -180,7 +180,7 @@ export default function CQCStaffQuestionsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             Inspector-style questions, answered in their own words, scored instantly.
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             No training day and no classroom. Questions aligned to the five CQC key questions
             are sent to each staff member in the hub. They answer in their own words, the AI scores
             the answer and gives feedback, and their readiness is tracked in real time.
@@ -402,7 +402,7 @@ export default function CQCStaffQuestionsPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             Know exactly where every member of your team stands before the inspector arrives.
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             CQC inspections are rarely announced with much notice. CareStream keeps your team in a
             state of continuous readiness, with a live picture of how everyone is performing across
             all five key questions.
@@ -459,7 +459,7 @@ export default function CQCStaffQuestionsPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
             A preparation record that shows inspectors exactly how you develop staff competence.
           </h2>
-          <div className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <div className="mb-12 text-lg leading-relaxed text-neutral-mid">
             <p>
               When an inspector asks how you ensure staff are competent to carry out their roles,
               a supervision record from six months ago is a limited answer. CareStream gives you

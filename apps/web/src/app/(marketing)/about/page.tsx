@@ -196,7 +196,7 @@ export default async function AboutPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('platform.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('platform.intro')}
           </p>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">

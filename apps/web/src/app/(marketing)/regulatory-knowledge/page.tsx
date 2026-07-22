@@ -146,7 +146,7 @@ export default function RegulatoryKnowledgePage() {
           <h2 className="mb-5 text-4xl font-extrabold text-neutral-dark">
             The regulatory landscape of UK care.
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             Our regulatory knowledge base covers the legislation, statutory guidance, professional standards,
             and regulatory frameworks that shape day-to-day practice in UK care settings.
           </p>

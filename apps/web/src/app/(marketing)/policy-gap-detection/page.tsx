@@ -124,7 +124,7 @@ export default async function PolicyGapDetectionPage() {
           <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('checks.h2')}
           </h2>
-          <div className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('checks.intro') }} />
+          <div className="mb-14 text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('checks.intro') }} />
 
           <div className="grid gap-6 md:grid-cols-3">
             {CHECKS.map(({ Icon, key }, i) => (
@@ -151,7 +151,7 @@ export default async function PolicyGapDetectionPage() {
           <h2 className="mb-4 max-w-3xl text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('steps.h2')}
           </h2>
-          <div className="mb-16 max-w-2xl text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('steps.intro') }} />
+          <div className="mb-16 text-lg leading-relaxed text-neutral-mid [&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2" dangerouslySetInnerHTML={{ __html: s('steps.intro') }} />
 
           <div className="space-y-6">
             {STEPS.map(({ Icon, key }, i) => (

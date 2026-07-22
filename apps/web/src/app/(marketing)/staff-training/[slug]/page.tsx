@@ -233,7 +233,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
               A closer look at the {m.title.toLowerCase()} module.
             </h2>
-            <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+            <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
               The module is built in short, practical sections. Each one teaches a part of the topic,
               then applies it to a real care scenario and checks understanding before moving on.
             </p>
@@ -328,7 +328,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             Not a slideshow once a year. Training that sticks.
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             CareStream delivers {m.title.toLowerCase()} training in the hub your team already uses, grounded in
             best practice and your own policies, so it fits your care setting and not a generic template.
           </p>

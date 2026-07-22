@@ -201,7 +201,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('how.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('how.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-3">
@@ -228,7 +228,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('build.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('build.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -250,7 +250,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('loop.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('loop.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -429,7 +429,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('report.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('report.intro')}
           </p>
 
@@ -558,7 +558,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('rec.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('rec.intro')}
           </p>
 
@@ -648,7 +648,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white">
             {s('toolkit.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             {s('toolkit.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -672,7 +672,7 @@ export default async function CareAuditsPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
             {s('cqc.h2')}
           </h2>
-          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('cqc.intro') }} />
+          <div className={`mb-12 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('cqc.intro') }} />
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <div className="grid grid-cols-[1fr_2fr] border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
               <span>{s('cqc.th1')}</span>

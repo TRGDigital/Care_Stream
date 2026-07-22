@@ -206,7 +206,7 @@ export default async function FeaturesPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('channels.h2')}
           </h2>
-          <div className={`mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('channels.intro') }} />
+          <div className={`mb-14 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('channels.intro') }} />
 
           <div className="grid gap-6 lg:grid-cols-2">
 
@@ -309,7 +309,7 @@ export default async function FeaturesPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('policyMgmt.h2')}
           </h2>
-          <div className={`mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('policyMgmt.intro') }} />
+          <div className={`mb-14 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('policyMgmt.intro') }} />
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {POLICY_CARDS.map(({ Icon, bg, color, key }) => (
@@ -332,7 +332,7 @@ export default async function FeaturesPage() {
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
             {s('regulatory.h2')}
           </h2>
-          <div className={`mb-12 max-w-2xl text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('regulatory.intro') }} />
+          <div className={`mb-12 text-lg leading-relaxed text-gray-300 ${RICH_LINK_WHITE}`} dangerouslySetInnerHTML={{ __html: s('regulatory.intro') }} />
 
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -377,8 +377,8 @@ export default async function FeaturesPage() {
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>{s('knowledge.label')}</SectionLabel>
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl" dangerouslySetInnerHTML={{ __html: s('knowledge.h2') }} />
-          <div className={`mb-6 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('knowledge.p1') }} />
-          <div className={`mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('knowledge.p2') }} />
+          <div className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('knowledge.p1') }} />
+          <div className={`mb-14 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('knowledge.p2') }} />
 
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
             <div className="grid grid-cols-3 border-b border-gray-100 bg-neutral-light px-6 py-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">
@@ -469,7 +469,7 @@ export default async function FeaturesPage() {
           <h2 className="mb-5 text-4xl font-extrabold text-neutral-dark md:text-5xl">
             {s('analytics.h2')}
           </h2>
-          <div className={`mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('analytics.intro') }} />
+          <div className={`mb-14 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`} dangerouslySetInnerHTML={{ __html: s('analytics.intro') }} />
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card">
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100 bg-neutral-light text-left text-xs font-bold uppercase tracking-widest text-neutral-mid">

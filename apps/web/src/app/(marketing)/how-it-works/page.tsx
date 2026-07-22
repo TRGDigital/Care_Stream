@@ -185,7 +185,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('start.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('start.intro')}
           </p>
 
@@ -220,7 +220,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-6 text-4xl font-extrabold leading-tight text-white md:text-5xl">
             {s('ai.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-gray-300">
+          <p className="mb-14 text-lg leading-relaxed text-gray-300">
             {s('ai.intro')}
           </p>
 
@@ -256,7 +256,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('hub.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('hub.intro')}
           </p>
 
@@ -337,7 +337,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-white md:text-5xl">
             {s('training.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mb-14 text-lg leading-relaxed text-white/80">
             {s('training.intro')}
           </p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -415,7 +415,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('reg.h2')}
           </h2>
-          <p className="mb-12 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-12 text-lg leading-relaxed text-neutral-mid">
             {s('reg.intro')}
           </p>
 
@@ -600,7 +600,7 @@ export default async function HowItWorksPage() {
           <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
             {s('analytics.h2')}
           </h2>
-          <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             {s('analytics.intro')}
           </p>
 

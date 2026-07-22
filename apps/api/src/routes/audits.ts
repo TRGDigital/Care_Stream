@@ -2054,11 +2054,14 @@ auditsRouter.get('/action-plans', requireAuditAccess, async (req: Request, res: 
 })
 
 // Send the signed-in admin sample assignment emails (staff + external-contractor) so they can
-// preview what assignees receive when a plan is approved.
+// preview what assignees receive when a plan is approved. Platform-owner only (not tenants).
+const OWNER_EMAILS = (process.env.PLATFORM_ADMIN_EMAILS ?? 'len@crosswayscarehome.co.uk,len@carestreamai.com')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
 auditsRouter.post('/action-plan/preview-emails', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, email: true } }).catch(() => null)
   if (!me?.email) { err(res, 'NO_EMAIL', 'Your account has no email address to send the preview to.', 400); return }
+  if (!OWNER_EMAILS.includes(String(me.email).toLowerCase())) { err(res, 'FORBIDDEN', 'Not available for this account.', 403); return }
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
   const orgName = tenant?.name || 'Your care home'
   const day = 86_400_000

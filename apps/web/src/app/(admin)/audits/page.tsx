@@ -14,6 +14,9 @@ import { usePlanFeatures } from '@/lib/use-plan-features'
 import { LockChip } from '@/components/admin/upgrade-gate'
 import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
 
+// The "Preview assignment emails" button is a platform-owner tool, not a tenant feature.
+const OWNER_EMAILS = ['len@crosswayscarehome.co.uk', 'len@carestreamai.com']
+
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
 const SCOPE_WORD: Record<string, string> = { resident: 'resident', staff: 'staff member', room: 'room' }
@@ -68,6 +71,7 @@ export default function AuditsPage() {
   const canCustomAudits = features == null || features.has_custom_audits
   const canLinkTraining = features == null || features.has_training_impact
   const userId = session?.user?.email ?? 'guest'
+  const isOwner = OWNER_EMAILS.includes((session?.user?.email ?? '').toLowerCase())
   const router                      = useRouter()
   const [templates, setTemplates]   = useState<any[]>([])
   const [runs,      setRuns]        = useState<any[]>([])
@@ -98,6 +102,8 @@ export default function AuditsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ templates: any[]; runs: any[] }>(`admin-audits-${userId}`)
     if (cached) { setTemplates(cached.templates); setRuns(cached.runs); setLoading(false) }
+    const cachedPlans = persistentCache.get<typeof actionPlans>(`admin-action-plans-${userId}`)
+    if (cachedPlans) setActionPlans(cachedPlans)
   }, [userId])
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function AuditsPage() {
       .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
-    api.audits.actionPlans().then(d => setActionPlans(d.plans)).catch(() => {})
+    api.audits.actionPlans().then(d => { setActionPlans(d.plans); persistentCache.set(`admin-action-plans-${userId}`, d.plans) }).catch(() => {})
   }, [session?.accessToken])
 
   async function sendPreviewEmails() {
@@ -205,14 +211,16 @@ export default function AuditsPage() {
         <div className="mb-6">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><ClipboardList size={15} className="text-teal" /> Action plans{actionPlans.length > 0 ? ` (${actionPlans.length})` : ''}</h2>
-            <div className="flex items-center gap-2">
-              {preview === 'sent'  && <span className="text-xs font-medium text-green-600">Preview sent, check your inbox</span>}
-              {preview === 'error' && <span className="text-xs font-medium text-red-600">Could not send preview</span>}
-              <button onClick={sendPreviewEmails} disabled={preview === 'sending'}
-                className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
-                {preview === 'sending' ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />} Preview assignment emails
-              </button>
-            </div>
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                {preview === 'sent'  && <span className="text-xs font-medium text-green-600">Preview sent, check your inbox</span>}
+                {preview === 'error' && <span className="text-xs font-medium text-red-600">Could not send preview</span>}
+                <button onClick={sendPreviewEmails} disabled={preview === 'sending'}
+                  className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                  {preview === 'sending' ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />} Preview assignment emails
+                </button>
+              </div>
+            )}
           </div>
           <p className="mb-3 text-xs text-neutral-mid">Every audit with an action plan. Open one to review, assign and track it. When a plan is approved, staff are emailed the actions assigned to them, and any external-contractor actions are emailed to admins.</p>
           {actionPlans.length > 0 ? (
@@ -222,7 +230,7 @@ export default function AuditsPage() {
               ))}
             </div>
           ) : (
-            <p className="rounded-card border border-gray-100 bg-white px-5 py-4 text-sm text-neutral-mid">No action plans yet. Complete an audit and generate its action plan, or use &ldquo;Preview assignment emails&rdquo; above to see what assignees receive.</p>
+            <p className="rounded-card border border-gray-100 bg-white px-5 py-4 text-sm text-neutral-mid">No action plans yet. Complete an audit, then generate its action plan to review, assign and track the actions here.</p>
           )}
         </div>
       )}

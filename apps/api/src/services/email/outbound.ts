@@ -951,3 +951,82 @@ export async function sendLpSubmissionEmail(opts: SendLpSubmissionOptions): Prom
     html,
   })
 }
+
+// ─── Audit action-plan assignment emails ────────────────────────────────────────
+// Sent when an action plan is approved: each staff member gets their assigned actions;
+// admins get any actions assigned to external contractors (which they track themselves).
+
+type ActionLine = { description: string; priority: string; due_date: string | null; audit_name: string; contractor?: string | null }
+
+const PRIORITY_LABEL: Record<string, { label: string; bg: string; fg: string }> = {
+  immediate: { label: 'Do now',   bg: '#fee2e2', fg: '#b91c1c' },
+  priority:  { label: 'Priority', bg: '#fef3c7', fg: '#b45309' },
+  monitor:   { label: 'Monitor',  bg: '#e2e8f0', fg: '#475569' },
+}
+const escHtml = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+const dueLabel = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null
+
+function actionRowsHtml(actions: ActionLine[], showContractor = false): string {
+  return actions.map(a => {
+    const p = PRIORITY_LABEL[a.priority] ?? PRIORITY_LABEL.priority
+    const due = dueLabel(a.due_date)
+    const meta = [
+      escHtml(a.audit_name),
+      showContractor && a.contractor ? `Contractor: ${escHtml(a.contractor)}` : '',
+      due ? `Due ${due}` : '',
+    ].filter(Boolean).join(' &nbsp;·&nbsp; ')
+    return `
+    <tr>
+      <td style="padding:12px 14px;border:1px solid #e5e7eb;border-radius:8px">
+        <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${p.bg};color:${p.fg};font-size:11px;font-weight:700;margin-bottom:6px">${p.label}</div>
+        <p style="margin:0 0 4px;color:${NEUTRAL_DARK};font-size:14px;line-height:1.5">${escHtml(a.description)}</p>
+        <p style="margin:0;color:#6b7280;font-size:12px">${meta}</p>
+      </td>
+    </tr>`
+  }).join('<tr><td style="height:8px"></td></tr>')
+}
+
+export async function sendActionPlanStaffEmail(opts: { to: string; staffName: string; orgName: string; actions: ActionLine[] }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping action-plan staff email'); return }
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.staffName.split(' ')[0] || opts.staffName
+  const n         = opts.actions.length
+  const hubUrl    = `${WEB_URL}/login`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${escHtml(firstName)},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      ${escHtml(opts.orgName)} has assigned you <strong>${n} action${n === 1 ? '' : 's'}</strong> from an audit action plan. Please complete ${n === 1 ? 'it' : 'them'} and mark ${n === 1 ? 'it' : 'each one'} done in your CareStream hub, under <strong>My actions</strong>.
+    </p>
+    <table style="border-collapse:separate;width:100%;margin:0 0 24px">${actionRowsHtml(opts.actions)}</table>
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${hubUrl}" style="display:inline-block;padding:12px 28px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open my actions</a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `${n} audit action${n === 1 ? '' : 's'} assigned to you — ${opts.orgName}`, html })
+}
+
+export async function sendActionPlanExternalEmail(opts: { to: string; orgName: string; actions: ActionLine[] }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping action-plan external email'); return }
+  const from   = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const n      = opts.actions.length
+  const hubUrl = `${WEB_URL}/login`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      An audit action plan at <strong>${escHtml(opts.orgName)}</strong> has <strong>${n} action${n === 1 ? '' : 's'}</strong> assigned to an external contractor. As an administrator, please track ${n === 1 ? 'this' : 'these'} and tick ${n === 1 ? 'it' : 'each one'} off once the work is complete, in your hub under <strong>My actions → External contractor actions</strong>.
+    </p>
+    <table style="border-collapse:separate;width:100%;margin:0 0 24px">${actionRowsHtml(opts.actions, true)}</table>
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${hubUrl}" style="display:inline-block;padding:12px 28px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open my actions</a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `External contractor actions to track — ${opts.orgName}`, html })
+}

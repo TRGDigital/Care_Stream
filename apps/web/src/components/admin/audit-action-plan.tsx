@@ -45,7 +45,7 @@ const PRIORITY: Record<string, { label: string; cls: string }> = {
 }
 const STATUS_CLS: Record<string, string> = { open: 'text-neutral-mid', in_progress: 'text-amber-700', done: 'text-green-700' }
 
-export function AuditActionPlan({ token, runId, canGenerate }: { token: string; runId: string; canGenerate?: boolean }) {
+export function AuditActionPlan({ token, runId, canGenerate, heading }: { token: string; runId: string; canGenerate?: boolean; heading?: string }) {
   const cacheKey = `action-plan-${runId}`
   const cached = persistentCache.get<{ plan: Plan; staff: StaffOption[] }>(cacheKey)
   const [plan, setPlan]   = useState<Plan | null>(cached?.plan ?? null)
@@ -105,7 +105,7 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <ClipboardList size={16} className="text-teal" />
-            <h2 className="font-semibold text-neutral-dark">Action plan</h2>
+            <h2 className="font-semibold text-neutral-dark">{heading ? `${heading} — Action plan` : 'Action plan'}</h2>
             {!isNone && StatusBadge}
             {!isNone && <span className="text-xs text-neutral-mid">{draft ? `${plan.actions.length} action${plan.actions.length === 1 ? '' : 's'}` : `${openCount} open`}</span>}
           </div>

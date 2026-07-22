@@ -5,6 +5,7 @@
 
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
+import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../email/outbound'
 
 const PRIORITY_RANK: Record<string, number> = { immediate: 0, priority: 1, monitor: 2 }
 const normPriority = (p: any): string => (p === 'immediate' || p === 'monitor' ? p : 'priority')
@@ -100,9 +101,77 @@ export async function deleteAction(tenantId: string, actionId: string): Promise<
 }
 
 export async function approveActionPlan(tenantId: string, runId: string): Promise<void> {
-  const run = await (prisma as any).auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { id: true } })
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { id: true, action_plan_status: true } })
   if (!run) throw new Error('Audit not found')
+  const wasDraft = run.action_plan_status === 'draft'
   await (prisma as any).auditRun.update({ where: { id: runId }, data: { action_plan_status: 'approved' } })
+  // On the draft→approved transition, email assignees (staff their actions; admins the external ones).
+  if (wasDraft) notifyActionPlanAssignees(tenantId, runId).catch(() => {})
+}
+
+const emailLine = (a: any) => ({
+  description: a.description, priority: a.priority,
+  due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
+  audit_name: a.run?.template?.name ?? 'Audit', contractor: a.external_name ?? null,
+})
+
+// Notify assignees when a plan is approved: staff members get the actions assigned to them; admins
+// get the external-contractor actions (which they track). Fire-and-forget, never blocks approval.
+export async function notifyActionPlanAssignees(tenantId: string, runId: string): Promise<void> {
+  try {
+    const [rows, tenant] = await Promise.all([
+      (prisma as any).auditAction.findMany({
+        where: { run_id: runId, tenant_id: tenantId, status: { not: 'done' } },
+        include: { run: { select: { template: { select: { name: true } } } } },
+      }),
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+    ])
+    const orgName = tenant?.name || 'Your care home'
+
+    // Staff-assigned (internal, has a name) — one email per staff member with their actions.
+    const staffActions = (rows as any[]).filter(a => !a.is_external && a.assigned_to)
+    if (staffActions.length) {
+      const byName = new Map<string, any[]>()
+      for (const a of staffActions) { const arr = byName.get(a.assigned_to) ?? []; arr.push(a); byName.set(a.assigned_to, arr) }
+      const users = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { name: true, email: true } }).catch(() => [])
+      for (const [name, actions] of byName) {
+        const u = (users as any[]).find(x => (x.name ?? '').trim().toLowerCase() === name.trim().toLowerCase())
+        if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: name, orgName, actions: actions.map(emailLine) }).catch(() => {})
+      }
+    }
+
+    // External-contractor actions — one email to each admin.
+    const externalActions = (rows as any[]).filter(a => a.is_external)
+    if (externalActions.length) {
+      const admins = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, role: 'admin', is_active: true }, select: { email: true } }).catch(() => [])
+      const adminEmails = [...new Set((admins as any[]).map(a => a.email).filter(Boolean))]
+      for (const email of adminEmails) await sendActionPlanExternalEmail({ to: email, orgName, actions: externalActions.map(emailLine) }).catch(() => {})
+    }
+  } catch (e) {
+    console.error('[action-plan] notify assignees failed:', e)
+  }
+}
+
+// List every audit that has an action plan (draft or approved), with a status summary, so admins
+// can view and manage them from the Audits page (not only inside each audit).
+export async function listActionPlans(tenantId: string) {
+  const runs = await (prisma as any).auditRun.findMany({
+    where: { tenant_id: tenantId, action_plan_status: { in: ['draft', 'approved'] } },
+    select: {
+      id: true, action_plan_status: true, room_number: true,
+      template: { select: { name: true } },
+      actions: { select: { status: true } },
+    },
+    orderBy: { updated_at: 'desc' },
+  }).catch(() => [])
+  return (runs as any[]).map(r => ({
+    run_id: r.id,
+    audit_name: r.template?.name ?? 'Audit',
+    subject: r.room_number ?? null,
+    status: r.action_plan_status as string,
+    total: (r.actions ?? []).length,
+    open: (r.actions ?? []).filter((a: any) => a.status !== 'done').length,
+  }))
 }
 
 // ── Staff-facing "My actions" ─────────────────────────────────────────────────

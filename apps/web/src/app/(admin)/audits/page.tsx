@@ -5,10 +5,11 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
+import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { LockChip } from '@/components/admin/upgrade-gate'
 import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
@@ -89,6 +90,8 @@ export default function AuditsPage() {
   const [room,        setRoom]        = useState('')
   const [subjectRoom, setSubjectRoom] = useState('')
   const [startError,  setStartError]  = useState('')
+  const [actionPlans, setActionPlans] = useState<Array<{ run_id: string; audit_name: string; subject: string | null; status: 'draft' | 'approved'; total: number; open: number }>>([])
+  const [preview, setPreview] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.
@@ -104,7 +107,15 @@ export default function AuditsPage() {
       .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
+    api.audits.actionPlans().then(d => setActionPlans(d.plans)).catch(() => {})
   }, [session?.accessToken])
+
+  async function sendPreviewEmails() {
+    if (!session?.accessToken || preview === 'sending') return
+    setPreview('sending')
+    try { await createApiClient(session.accessToken).audits.previewActionPlanEmails(); setPreview('sent') }
+    catch { setPreview('error') }
+  }
 
   async function reloadTemplates() {
     if (!session?.accessToken) return
@@ -188,6 +199,33 @@ export default function AuditsPage() {
       <HowToAccordion />
 
       {session?.accessToken && <CqcReadinessCard token={session.accessToken} userId={userId} />}
+
+      {/* ── Action plans (viewable here as well as in the hub) ───────────────────── */}
+      {session?.accessToken && (
+        <div className="mb-6">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><ClipboardList size={15} className="text-teal" /> Action plans{actionPlans.length > 0 ? ` (${actionPlans.length})` : ''}</h2>
+            <div className="flex items-center gap-2">
+              {preview === 'sent'  && <span className="text-xs font-medium text-green-600">Preview sent, check your inbox</span>}
+              {preview === 'error' && <span className="text-xs font-medium text-red-600">Could not send preview</span>}
+              <button onClick={sendPreviewEmails} disabled={preview === 'sending'}
+                className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
+                {preview === 'sending' ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />} Preview assignment emails
+              </button>
+            </div>
+          </div>
+          <p className="mb-3 text-xs text-neutral-mid">Every audit with an action plan. Open one to review, assign and track it. When a plan is approved, staff are emailed the actions assigned to them, and any external-contractor actions are emailed to admins.</p>
+          {actionPlans.length > 0 ? (
+            <div className="space-y-3">
+              {actionPlans.map(p => (
+                <AuditActionPlan key={p.run_id} token={session.accessToken} runId={p.run_id} heading={p.subject ? `${p.audit_name} · ${p.subject}` : p.audit_name} />
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-card border border-gray-100 bg-white px-5 py-4 text-sm text-neutral-mid">No action plans yet. Complete an audit and generate its action plan, or use &ldquo;Preview assignment emails&rdquo; above to see what assignees receive.</p>
+          )}
+        </div>
+      )}
 
       {showBuilder && session?.accessToken && (
         <AuditBuilder token={session.accessToken} onClose={() => setShowBuilder(false)} onCreated={reloadTemplates} />

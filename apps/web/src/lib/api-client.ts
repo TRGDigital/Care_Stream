@@ -735,6 +735,8 @@ export function createApiClient(token: string) {
 
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>('/audits/templates', token),
+      actionPlans: () => apiFetch<{ plans: Array<{ run_id: string; audit_name: string; subject: string | null; status: 'draft' | 'approved'; total: number; open: number }> }>('/audits/action-plans', token),
+      previewActionPlanEmails: () => apiFetch<{ sent_to: string }>('/audits/action-plan/preview-emails', token, { method: 'POST' }),
       actionsSummary: () => apiFetch<{
         totals: { assigned: number; open: number; in_progress: number; done: number; overdue: number }
         by_staff: Array<{ name: string; assigned: number; open: number; in_progress: number; done: number; overdue: number }>

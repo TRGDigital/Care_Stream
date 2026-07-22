@@ -14,7 +14,8 @@ import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
-import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary } from '../services/audits/action-plan'
+import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary, listActionPlans } from '../services/audits/action-plan'
+import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../services/email/outbound'
 
 export const auditsRouter = Router()
 
@@ -2045,6 +2046,41 @@ auditsRouter.delete('/actions/:actionId', requireAuditAccess, async (req: Reques
 // Admin analytics: assigned action-plan actions across the tenant (assigned / done / outstanding).
 auditsRouter.get('/actions/summary', requireAdmin, async (req: Request, res: Response) => {
   ok(res, await getAssignedActionsSummary(req.user!.tenant_id))
+})
+
+// Every audit that has an action plan (draft/approved) — for the Audits page list.
+auditsRouter.get('/action-plans', requireAuditAccess, async (req: Request, res: Response) => {
+  ok(res, { plans: await listActionPlans(req.user!.tenant_id) })
+})
+
+// Send the signed-in admin sample assignment emails (staff + external-contractor) so they can
+// preview what assignees receive when a plan is approved.
+auditsRouter.post('/action-plan/preview-emails', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, email: true } }).catch(() => null)
+  if (!me?.email) { err(res, 'NO_EMAIL', 'Your account has no email address to send the preview to.', 400); return }
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
+  const orgName = tenant?.name || 'Your care home'
+  const day = 86_400_000
+  const iso = (d: number) => new Date(Date.now() + d * day).toISOString()
+  try {
+    await sendActionPlanStaffEmail({
+      to: me.email, staffName: me.name ?? 'there', orgName,
+      actions: [
+        { description: 'Update the fire evacuation plan to reflect the new bedroom layout.', priority: 'immediate', due_date: iso(7),  audit_name: 'Health & Safety Audit', contractor: null },
+        { description: 'Complete refresher training on safe moving and handling.',            priority: 'priority',  due_date: iso(14), audit_name: 'Health & Safety Audit', contractor: null },
+      ],
+    })
+    await sendActionPlanExternalEmail({
+      to: me.email, orgName,
+      actions: [
+        { description: 'Service and re-certify the passenger lift.', priority: 'priority', due_date: iso(21), audit_name: 'Premises & Equipment Audit', contractor: 'Otis Lifts Ltd' },
+      ],
+    })
+    ok(res, { sent_to: me.email })
+  } catch (e: any) {
+    err(res, 'PREVIEW_FAILED', e?.message ?? 'Could not send the preview emails.', 500)
+  }
 })
 
 auditsRouter.post('/runs/:id/action-plan/generate', requireAuditAccess, async (req: Request, res: Response) => {

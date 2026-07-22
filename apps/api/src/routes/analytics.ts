@@ -7,7 +7,7 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
-import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit, requireTenantFlag } from '../lib/plan-limits'
+import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
@@ -731,9 +731,9 @@ analyticsRouter.post('/consistency/dismiss', requireAdmin, async (req: Request, 
   }
 })
 
-// ─── Policy Change Adoption (beta; per-tenant flag) ──────────────────────────
-// Adopt a gap suggestion into the tenant's editable policy. Gated by the plan feature
-// AND the per-tenant has_policy_adoption flag (Ferndale test only for now).
+// ─── Policy Change Adoption ──────────────────────────────────────────────────
+// Adopt a gap suggestion into the tenant's editable policy. Gated by the gap-detection plan
+// feature (which surfaces the Replace/Fill buttons), so any gap-detection tenant can apply changes.
 
 // GET /analytics/gaps/adoption-context — variables + role-holders for the adopt UI.
 analyticsRouter.get('/gaps/adoption-context', requireAdmin, async (_req: Request, res: Response) => {
@@ -751,7 +751,6 @@ analyticsRouter.post('/gaps/adopt', requireAdmin, async (req: Request, res: Resp
   const tenantId = getTenantId()
   try {
     await checkFeature(tenantId, 'has_gap_detection')
-    await requireTenantFlag(tenantId, 'has_policy_adoption')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -839,7 +838,7 @@ analyticsRouter.get('/gaps/saf-coverage', requireAdmin, async (_req: Request, re
 // GET every updated policy with its approval timeline (Analytics → Updated Policies).
 analyticsRouter.get('/gaps/approvals-overview', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     ok(res, await approvalsOverview(tenantId))
   } catch (e: any) {
@@ -862,7 +861,7 @@ analyticsRouter.get('/gaps/policy-documents-summary', requireAdmin, async (_req:
 analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await requireTenantFlag(tenantId, 'has_policy_adoption')
+    await checkFeature(tenantId, 'has_gap_detection')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -881,7 +880,7 @@ analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async
 analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await requireTenantFlag(tenantId, 'has_policy_adoption')
+    await checkFeature(tenantId, 'has_gap_detection')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -902,7 +901,7 @@ analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req:
 analyticsRouter.post('/gaps/policy-document/:policyId/publish', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await requireTenantFlag(tenantId, 'has_policy_adoption')
+    await checkFeature(tenantId, 'has_gap_detection')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -935,7 +934,7 @@ analyticsRouter.get('/gaps/policy-approvals/:policyId', requireAdmin, async (req
 // POST admin submits the adopted changes for approval (was: publish).
 analyticsRouter.post('/gaps/policy-document/:policyId/submit', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     const me = await meName(req)
     const r = await submitForApproval(tenantId, String(req.params.policyId), me?.name || me?.email || 'Admin')
@@ -947,7 +946,7 @@ analyticsRouter.post('/gaps/policy-document/:policyId/submit', requireAdmin, asy
 // POST care manager approves (gated to the Care Manager position).
 analyticsRouter.post('/gaps/policy-document/:policyId/manager-approve', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await requireTenantFlag(tenantId, 'has_policy_adoption') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     const me = await meName(req)
     if (!/care manager|registered manager/i.test(String(me?.job_role ?? ''))) { err(res, 'FORBIDDEN', 'Only the care manager can give this approval.', 403); return }

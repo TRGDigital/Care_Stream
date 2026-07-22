@@ -84,6 +84,10 @@ function makeBadge(text: string, colour: string): HTMLElement {
 function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   const target = findBlock(root, anchor)
   if (!target) return false
+  // Guardrail: a block hosts AT MOST ONE fix. Two suggestions can't both own the same passage —
+  // you can't apply two different changes to the same text — so a second one here is not badged
+  // (it falls through to an end-of-policy callout instead of stacking "1" and "2" on one sentence).
+  if (target.dataset.csMarked) return false
   target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
   target.dataset.csMarked = '1'
   target.dataset.csGap = '1'   // a "what to add" fix owns this block — SAF wording here is moot
@@ -172,6 +176,7 @@ export function markBlockAdoptedEl(el: HTMLElement, num: number, newText: string
 export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, newText: string): boolean {
   const target = findBlock(root, anchor)
   if (!target) return false
+  if (target.dataset.csMarked) return false   // one fix per block — don't clobber/stack on a taken passage
   target.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
   target.dataset.csMarked = '1'
   target.dataset.csGap = '1'

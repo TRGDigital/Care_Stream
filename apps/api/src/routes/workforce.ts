@@ -297,32 +297,57 @@ workforceRouter.get('/staff/:userId/supervisions', async (req: Request, res: Res
 workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const userId = String(req.params.userId)
-  const { type, held_on, conducted_by, next_due, notes } = req.body ?? {}
+  const { type, held_on, conducted_by, conducted_by_user_id, next_due, notes } = req.body ?? {}
   if (!SUPERVISION_TYPES.includes(type)) { err(res, 'VALIDATION_ERROR', 'Type must be supervision or appraisal.'); return }
   if (!held_on) { err(res, 'VALIDATION_ERROR', 'A date is required.'); return }
   if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+
+  // Resolve the conductor: an admin picked from the list (conducted_by_user_id), whose name we
+  // store for display. Falls back to the free-text name if no user was picked.
+  let conductorId: string | null = null
+  let conductorName: string | null = conducted_by?.toString().trim() || null
+  if (conducted_by_user_id) {
+    const c = await (prisma as any).user.findFirst({ where: { id: String(conducted_by_user_id), tenant_id: tenantId }, select: { id: true, name: true } })
+    if (c) { conductorId = c.id; conductorName = c.name || conductorName }
+  }
+
   const record = await (prisma as any).staffSupervision.create({
     data: {
       id: randomUUID(), tenant_id: tenantId, user_id: userId, type,
       held_on:      new Date(held_on),
-      conducted_by: conducted_by?.toString().trim() || null,
+      conducted_by: conductorName,
+      conducted_by_user_id: conductorId,
       next_due:     next_due ? new Date(next_due) : null,
       notes:        notes?.toString().trim() || null,
     },
   })
 
-  // Booking confirmation to the staff member for upcoming (today or future) sessions.
   const held = new Date(held_on)
   const startToday = new Date(); startToday.setHours(0, 0, 0, 0)
-  if (held.getTime() >= startToday.getTime()) {
-    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-    const label = type === 'appraisal' ? 'appraisal' : 'supervision'
-    const by = conducted_by?.toString().trim()
+  const isUpcoming = held.getTime() >= startToday.getTime()
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+  const label = type === 'appraisal' ? 'appraisal' : 'supervision'
+
+  // Booking confirmation to the staff member for upcoming (today or future) sessions.
+  if (isUpcoming) {
     const bodyHtml =
-      `<p style="font-size:15px;margin:0 0 12px">Your ${label} has been booked for <strong>${fmtLong(held)}</strong>${by ? ` with ${escapeHtml(by)}` : ''}.</p>` +
+      `<p style="font-size:15px;margin:0 0 12px">Your ${label} has been booked for <strong>${fmtLong(held)}</strong>${conductorName ? ` with ${escapeHtml(conductorName)}` : ''}.</p>` +
       `<p style="font-size:14px;color:#666;margin:0">You'll get a reminder the day before. You can see it any time in your CareStream hub under <strong>Supervisions</strong>.</p>`
     notifyUsers(tenantId, 'supervision_updates', [userId], (email, name) =>
       sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml }),
+    ).catch(() => {})
+  }
+
+  // Notify the conductor (an admin) that they are conducting this session — they'll complete the
+  // recording form in their own hub under Supervisions.
+  if (conductorId && conductorId !== userId) {
+    const supervisee = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null)
+    const who = supervisee?.name || 'a staff member'
+    const bodyHtml =
+      `<p style="font-size:15px;margin:0 0 12px">You have been assigned to conduct a <strong>${label}</strong> for <strong>${escapeHtml(who)}</strong> on <strong>${fmtLong(held)}</strong>.</p>` +
+      `<p style="font-size:14px;color:#666;margin:0">Complete the supervision recording form in your CareStream hub under <strong>Supervisions</strong>.</p>`
+    notifyUsers(tenantId, 'supervision_updates', [conductorId], (email, name) =>
+      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `You're conducting ${who}'s ${label} on ${fmtLong(held)}`, bodyHtml }),
     ).catch(() => {})
   }
 

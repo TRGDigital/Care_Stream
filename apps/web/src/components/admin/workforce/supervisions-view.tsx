@@ -170,7 +170,8 @@ function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Ro
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
-  const [form, setForm] = useState({ type: 'supervision', held_on: '', conducted_by: '', next_due: '', notes: '' })
+  const [form, setForm] = useState({ type: 'supervision', held_on: '', conducted_by_user_id: '', next_due: '', notes: '' })
+  const [admins, setAdmins] = useState<Array<{ id: string; name: string; job_role: string | null }>>([])
 
   async function loadHistory() {
     try { setRecords((await api.workforce.staffSupervisions(staff.id)).records) }
@@ -178,13 +179,20 @@ function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Ro
     finally { setLoading(false) }
   }
   useEffect(() => { loadHistory() }, [staff.id])
+  // Admins who can conduct a supervision (from the staff list).
+  useEffect(() => {
+    api.users.list()
+      .then((d: any) => setAdmins((d.users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name, job_role: u.job_role ?? null }))))
+      .catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function add() {
     if (!form.held_on) { setErr('Please choose the date it was held.'); return }
     setBusy(true); setErr('')
     try {
-      await api.workforce.addSupervision(staff.id, { type: form.type, held_on: form.held_on, conducted_by: form.conducted_by, next_due: form.next_due || null, notes: form.notes })
-      setForm({ type: form.type, held_on: '', conducted_by: '', next_due: '', notes: '' })
+      const conductor = admins.find(a => a.id === form.conducted_by_user_id)
+      await api.workforce.addSupervision(staff.id, { type: form.type, held_on: form.held_on, conducted_by: conductor?.name, conducted_by_user_id: form.conducted_by_user_id || null, next_due: form.next_due || null, notes: form.notes })
+      setForm({ type: form.type, held_on: '', conducted_by_user_id: '', next_due: '', notes: '' })
       await loadHistory(); onSaved()
     } catch (e: any) { setErr(e?.message ?? 'Could not save the record.') }
     finally { setBusy(false) }
@@ -228,7 +236,10 @@ function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Ro
               <p className="text-[11px] text-neutral-mid sm:col-span-2">Choose a future date to <strong>book</strong> an upcoming session (the staff member is emailed, and reminded the day before), or a past date to record one already held.</p>
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-mid">Conducted by</label>
-                <input value={form.conducted_by} onChange={e => set({ conducted_by: e.target.value })} placeholder="e.g. Jane Smith (Manager)" className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                <select value={form.conducted_by_user_id} onChange={e => set({ conducted_by_user_id: e.target.value })} className="w-full rounded border border-gray-200 bg-white px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none">
+                  <option value="">Select an administrator…</option>
+                  {admins.map(a => <option key={a.id} value={a.id}>{a.name}{a.job_role ? ` · ${a.job_role}` : ''}</option>)}
+                </select>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-mid">Next due</label>

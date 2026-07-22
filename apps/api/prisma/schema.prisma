@@ -200,7 +200,11 @@ model StaffSupervision {
   user_id      String
   type         String    // supervision | appraisal
   held_on      DateTime
-  conducted_by String?
+  conducted_by String?                          // conductor's name (display)
+  conducted_by_user_id String?                  // the admin conducting it (for their hub + notifications)
+  status       String    @default("booked")     // booked | completed
+  completed_at DateTime?
+  form         Json?                             // the completed supervision recording form
   next_due     DateTime?
   notes        String?
   created_at   DateTime  @default(now())
@@ -208,6 +212,7 @@ model StaffSupervision {
 
   @@index([tenant_id])
   @@index([user_id])
+  @@index([conducted_by_user_id])
   @@map("staff_supervisions")
 }
 

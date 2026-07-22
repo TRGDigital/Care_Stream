@@ -480,7 +480,7 @@ export function createApiClient(token: string) {
         }>('/workforce/supervisions', token),
       staffSupervisions: (userId: string) =>
         apiFetch<{ user: { id: string; name: string; job_role: string | null }; records: SupRecord[] }>(`/workforce/staff/${userId}/supervisions`, token),
-      addSupervision: (userId: string, data: { type: string; held_on: string; conducted_by?: string; next_due?: string | null; notes?: string }) =>
+      addSupervision: (userId: string, data: { type: string; held_on: string; conducted_by?: string; conducted_by_user_id?: string | null; next_due?: string | null; notes?: string }) =>
         apiFetch<{ record: SupRecord }>(`/workforce/staff/${userId}/supervisions`, token, { method: 'POST', body: JSON.stringify(data) }),
       deleteSupervision: (id: string) =>
         apiFetch<{ deleted: boolean }>(`/workforce/supervisions/${id}`, token, { method: 'DELETE' }),

@@ -74,10 +74,11 @@ export function findBlock(root: HTMLElement, anchor: string): HTMLElement | null
 // A badge is a self-contained pill (solid background + padding + right margin) so that two
 // markers on the SAME block — e.g. a gap fix "2" and a SAF suggestion "W3" — read as two
 // distinct chips instead of mashing into a single "W32". Legible on any block tint.
-function makeBadge(text: string, colour: string): HTMLElement {
+function makeBadge(text: string, colour: string, itemIdx?: number): HTMLElement {
   const badge = document.createElement('sup')
   badge.textContent = text
   badge.className = `mr-1 inline-block rounded px-1 text-[10px] font-bold leading-none ${colour}`
+  if (itemIdx != null) badge.dataset.csItem = String(itemIdx)   // for sequential renumbering to match the left list
   return badge
 }
 
@@ -91,7 +92,7 @@ function markBlock(root: HTMLElement, anchor: string, i: number): boolean {
   target.classList.add(quoteColour(i), 'rounded', 'px-1', 'py-0.5')
   target.dataset.csMarked = '1'
   target.dataset.csGap = '1'   // a "what to add" fix owns this block — SAF wording here is moot
-  target.insertBefore(makeBadge(String(i + 1), 'bg-neutral-900 text-white'), target.firstChild)
+  target.insertBefore(makeBadge(String(i + 1), 'bg-neutral-900 text-white', i), target.firstChild)
   return true
 }
 
@@ -133,6 +134,7 @@ function greenBadge(i: number): HTMLElement {
   const b = document.createElement('span')
   b.textContent = String(i + 1)
   b.className = 'flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-200 text-[11px] font-bold text-green-900'
+  b.dataset.csItem = String(i)
   return b
 }
 
@@ -181,7 +183,7 @@ export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, n
   target.dataset.csMarked = '1'
   target.dataset.csGap = '1'
   target.textContent = ''
-  target.appendChild(makeBadge(String(i + 1), 'bg-green-600 text-white'))
+  target.appendChild(makeBadge(String(i + 1), 'bg-green-600 text-white', i))
   target.appendChild(document.createTextNode(newText))
   return true
 }
@@ -247,6 +249,7 @@ function numberBadge(i: number): HTMLElement {
   const b = document.createElement('span')
   b.textContent = String(i + 1)
   b.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`
+  b.dataset.csItem = String(i)
   return b
 }
 
@@ -325,6 +328,7 @@ function buildHeadingMarker(i: number, label?: string): HTMLElement {
   const badge = document.createElement('span')
   badge.textContent = String(i + 1)
   badge.className = `flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour(i)}`
+  badge.dataset.csItem = String(i)
   const body = document.createElement('span')
   const strong = document.createElement('strong')
   strong.textContent = 'Add a new subsection here. '
@@ -536,6 +540,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [safBusy, setSafBusy]         = useState<number | null>(null)
   const [safLocated, setSafLocated]   = useState<Set<number>>(new Set())   // alignments placed on the preview
   const [safSuppressed, setSafSuppressed] = useState<Set<number>>(new Set())  // alignments hidden: a gap fix owns that block
+  // Sequential display number per placed "what to add" item (original index → 1,2,3…), so the left
+  // list and the right-hand badges share the same numbering and unplaced items are dropped from both.
+  const [displayNums, setDisplayNums] = useState<Map<number, number>>(new Map())
 
   async function checkSaf(force = false) {
     if (!detail?.target_policy) return
@@ -621,6 +628,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     }
     root.innerHTML = html
     highlightQuotes(root, detail.highlight_quotes ?? [], detail.highlight_placements ?? [], detail.highlight_labels ?? [], adopted)
+    // Renumber the placed badges sequentially (item order) so there are no gaps, and expose the
+    // map so the left "What to add" list shows the same numbers and hides items that weren't placed.
+    const placedIdx = [...new Set(Array.from(root.querySelectorAll<HTMLElement>('[data-cs-item]')).map(b => Number(b.dataset.csItem)))]
+      .filter(n => Number.isFinite(n)).sort((a, b) => a - b)
+    const dnum = new Map<number, number>()
+    placedIdx.forEach((origIdx, k) => dnum.set(origIdx, k + 1))
+    root.querySelectorAll<HTMLElement>('[data-cs-item]').forEach(b => { const d = dnum.get(Number(b.dataset.csItem)); if (d) b.textContent = String(d) })
+    setDisplayNums(dnum)
     if (adoption?.show_role_names) applyRoleNames(root, adoption.role_names)
     // SAF wording-alignment markers (indigo, W-numbered), when the check is for this policy.
     // If a "what to add" fix already owns the same block (csGap), the SAF wording rewrite of
@@ -659,9 +674,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   // Order the list by the highlight number (document order), so the left checklist
   // reads in the same 1, 2, 3 sequence as the badges down the policy; brand-new
   // sections (no anchor) fall to the end.
-  const missing = (detail?.requirements.filter(r => r.status === 'missing') ?? [])
+  const allMissing = (detail?.requirements.filter(r => r.status === 'missing') ?? [])
     .slice()
     .sort((a, b) => (a.match_index ?? Number.MAX_SAFE_INTEGER) - (b.match_index ?? Number.MAX_SAFE_INTEGER))
+  // Show only items that were actually placed on the right (drop unplaceable ones), and use the
+  // shared sequential display number. Before the highlight pass has run (map empty), show all as-is.
+  const dnReady = displayNums.size > 0
+  const missing = dnReady ? allMissing.filter(r => r.match_index != null && displayNums.has(r.match_index - 1)) : allMissing
+  const displayNumOf = (r: { match_index?: number | null }) => (dnReady && r.match_index != null ? (displayNums.get(r.match_index - 1) ?? r.match_index) : r.match_index)
   const covered = detail?.requirements.filter(r => r.status === 'already_covered') ?? []
   const mailto = `mailto:hello@carestreamai.com?subject=${encodeURIComponent('Policy authoring request: ' + officialName)}&body=${encodeURIComponent(`We would like CareStream to write and supply a policy that covers ${officialName}.`)}`
 
@@ -826,15 +846,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       {missing.map((r, i) => (
                         <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
                           <div className="flex items-start gap-2">
-                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour((r.match_index ?? 1) - 1)}`}>{r.match_index}</span>
+                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour((r.match_index ?? 1) - 1)}`}>{displayNumOf(r)}</span>
                             <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
                           </div>
                           <p className="mt-1.5 text-xs text-amber-700">
                             {r.placement === 'add_under_heading'
-                              ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {r.match_index}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
+                              ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {displayNumOf(r)}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
                               : r.placement === 'new_section'
-                                ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{r.match_index}</span> at the end of your {detail.target_policy.name} (right), above the dates and sign-off</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}. Add it with the heading below.</>
-                                : <><span className="font-semibold">Replace the whole highlighted paragraph {r.match_index}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the wording below. It keeps everything already in that paragraph and adds what&rsquo;s missing, so swap the paragraph in full rather than part of it.</>}
+                                ? <>Add as a <span className="font-semibold">new section</span>{detail.target_policy ? <>, shown as <span className="font-semibold">{displayNumOf(r)}</span> at the end of your {detail.target_policy.name} (right), above the dates and sign-off</> : detail.suggested_new_policy_title ? <> in a new {detail.suggested_new_policy_title}</> : null}. Add it with the heading below.</>
+                                : <><span className="font-semibold">Replace the whole highlighted paragraph {displayNumOf(r)}</span> in your {detail.target_policy?.name ?? 'policy'} (right) with the wording below. It keeps everything already in that paragraph and adds what&rsquo;s missing, so swap the paragraph in full rather than part of it.</>}
                           </p>
                           {/* Why this matters / why adopt it */}
                           <div className="mt-1.5">

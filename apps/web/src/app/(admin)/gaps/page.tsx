@@ -178,19 +178,23 @@ export default function GapsPage() {
   if (!data) return null
 
   // Hide items that are corrected-to-covered (drill-in) or marked completed (archived).
-  const completedKeys = new Set<string>([...data.completed_keys, ...completedOverride])
+  // Guard every field: a partial / unexpected API response must never white-screen the page.
+  const regulationGaps = Array.isArray(data.regulation_gaps) ? data.regulation_gaps : []
+  const completedGaps  = Array.isArray(data.completed_gaps) ? data.completed_gaps : []
+  const meta           = data.meta ?? ({} as GapsData['meta'])
+  const completedKeys = new Set<string>([...(data.completed_keys ?? []), ...completedOverride])
   const hidden = (k: string) => correctedToCovered.has(k) || completedKeys.has(k)
-  const gapRegs     = data.regulation_gaps.filter(r => r.status === 'gap' && !hidden(r.reference_key))
-  const partialRegs = data.regulation_gaps.filter(r => r.status === 'partial' && !hidden(r.reference_key))
-  const coveredRegs = data.regulation_gaps.filter(r => r.status === 'covered')
-  const archived    = data.completed_gaps.filter(g => completedKeys.has(g.reference_key))
+  const gapRegs     = regulationGaps.filter(r => r.status === 'gap' && !hidden(r.reference_key))
+  const partialRegs = regulationGaps.filter(r => r.status === 'partial' && !hidden(r.reference_key))
+  const coveredRegs = regulationGaps.filter(r => r.status === 'covered')
+  const archived    = completedGaps.filter(g => completedKeys.has(g.reference_key))
 
   // Live metrics that reflect what the tenant sees below: partials/gaps they've
   // completed or corrected-to-covered now count as handled, so the score, the
   // "fully" count and the gaps block all move together as they close gaps —
   // rather than the percentage staying frozen at the last analysis run.
-  const totalRegs    = data.meta.regulations_total
-  const handledExtra = Math.max(0, (data.meta.regulations_partial + data.meta.regulations_gap) - (partialRegs.length + gapRegs.length))
+  const totalRegs    = meta.regulations_total ?? 0
+  const handledExtra = Math.max(0, ((meta.regulations_partial ?? 0) + (meta.regulations_gap ?? 0)) - (partialRegs.length + gapRegs.length))
   const fullyCovered = coveredRegs.length + handledExtra
   const score = data.analysed && totalRegs > 0
     ? Math.round(((fullyCovered + partialRegs.length * 0.5) / totalRegs) * 100)
@@ -411,7 +415,7 @@ export default function GapsPage() {
       )}
 
       {/* ── Regulation-updated alerts — under the coverage section ────────── */}
-      {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).length > 0 && (
+      {(data.regulation_alerts ?? []).filter(a => !dismissedAlerts.has(a.id)).length > 0 && (
         <div className="mb-6 rounded-card border border-amber-200 bg-amber-50 px-5 py-4">
           <div className="mb-2 flex items-center gap-2">
             <Info size={16} className="text-amber-600" />
@@ -419,7 +423,7 @@ export default function GapsPage() {
           </div>
           <p className="mb-3 text-xs text-amber-800">Review your policies for these, then re-run the coverage analysis. You can also generate a short training module on the update for your staff.</p>
           <div className="space-y-2">
-            {data.regulation_alerts.filter(a => !dismissedAlerts.has(a.id)).map(a => (
+            {(data.regulation_alerts ?? []).filter(a => !dismissedAlerts.has(a.id)).map(a => (
               <div key={a.id} className="flex flex-col gap-2 rounded-lg border border-amber-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm font-medium text-neutral-dark">{a.official_name}</p>
                 <div className="flex flex-shrink-0 items-center gap-3">
@@ -446,12 +450,12 @@ export default function GapsPage() {
           <h2 className="text-sm font-semibold text-neutral-dark">Top unanswered question themes</h2>
         </div>
         <div className="divide-y divide-gray-50">
-          {data.unanswered_themes.length === 0 ? (
+          {(data.unanswered_themes ?? []).length === 0 ? (
             <div className="flex items-center gap-3 px-6 py-5">
               <CheckCircle2 size={18} className="text-green-500" />
               <p className="text-sm text-neutral-mid">No recurring unanswered questions — great coverage.</p>
             </div>
-          ) : data.unanswered_themes.map(theme => (
+          ) : (data.unanswered_themes ?? []).map(theme => (
             <div key={theme.theme} className="px-6 py-4">
               <div className="mb-2 flex items-start justify-between gap-4">
                 <p className="font-semibold capitalize text-neutral-dark">{theme.theme}</p>
@@ -488,7 +492,7 @@ export default function GapsPage() {
         />
       )}
 
-      {data.meta.no_match_total === 0 && data.unanswered_themes.length === 0 && (
+      {data.meta.no_match_total === 0 && (data.unanswered_themes ?? []).length === 0 && (
         <div className="mt-6 flex items-center gap-3 rounded-card border border-green-100 bg-green-50 px-6 py-5">
           <TrendingUp size={20} className="text-green-600" />
           <div>
@@ -563,7 +567,7 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
           <Sparkles size={18} className="shrink-0 text-teal" />
           <p className="text-sm text-neutral-mid">Scan your policy library for out-of-date content, superseded law and regulators, pandemic-era wording and unfilled template placeholders. This runs instantly and uses no AI credits.</p>
         </div>
-      ) : data.policies.length === 0 ? (
+      ) : (data.policies ?? []).length === 0 ? (
         <div className="flex items-center gap-3 px-6 py-5">
           <CheckCircle2 size={18} className="text-green-500" />
           <p className="text-sm text-neutral-mid">No out-of-date content found across your policies.{when ? ` Last scanned ${when}.` : ''}</p>
@@ -577,7 +581,7 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
             {when && <span className="ml-auto text-gray-400">Scanned {when}</span>}
           </div>
           <div className="divide-y divide-gray-50">
-            {data.policies.map(p => {
+            {(data.policies ?? []).map(p => {
               const highs = p.findings.filter(f => f.severity === 'high').length
               return (
                 <div key={p.policy_id} className="flex items-center justify-between gap-3 px-6 py-3.5">

@@ -546,18 +546,12 @@ export async function getEnglishPolicyHtml(
     where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
   }).catch(() => null)
   const current: string | null = existing?.content ?? null
-  // Complete = ends on a closing block AND (when we have the source) isn't dramatically shorter than
-  // the raw text. A dropped section leaves a tidy-but-incomplete render that ends cleanly, so the
-  // end-check alone misses it; the length ratio catches those and forces a rebuild.
-  const looksComplete = (h: string): boolean => {
-    if (!policyHtmlEndsCleanly(h)) return false
-    if (!raw) return true
-    const textLen = h.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().length
-    const rawLen  = raw.replace(/\s+/g, ' ').trim().length
-    // Letterhead/footer removal legitimately trims some; a lost chunk trims a lot.
-    return !(rawLen > 2000 && textLen < rawLen * 0.7)
-  }
-  if (current && looksComplete(current)) return { html: current, cached: true }
+  // Serve the cached copy when it ends on a closing block (i.e. isn't a mid-tag truncated render).
+  // NB: do NOT re-derive completeness from a raw-vs-formatted length ratio here — reads happen on
+  // every policy preview, and legitimate letterhead/table removal can trip a ratio check, causing a
+  // costly re-format on every open. The chunked formatter never drops a section, so a fresh build is
+  // already complete; genuinely truncated old copies are healed by clearing their cached copy.
+  if (current && policyHtmlEndsCleanly(current)) return { html: current, cached: true }
   if (!raw) return { html: current, cached: !!current }   // can't rebuild without the source text
   const fresh = await formatPolicyHtml(raw, 'eng')
   if (!fresh) return { html: current, cached: !!current }

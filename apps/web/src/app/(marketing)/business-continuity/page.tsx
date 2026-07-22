@@ -5,6 +5,7 @@ import {
   RefreshCw, BookOpen, ShieldAlert,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { BUSINESS_CONTINUITY_SLOTS } from '@/lib/page-slots/business-continuity'
 
@@ -390,6 +391,8 @@ export default async function BusinessContinuityPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/business-continuity" />
 
       <PageCta
         heading="Turn your business continuity plan into a resource your whole team can actually use."

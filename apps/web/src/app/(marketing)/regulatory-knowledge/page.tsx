@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 export const metadata = {
   title: 'Regulatory Knowledge',
@@ -185,6 +186,8 @@ export default function RegulatoryKnowledgePage() {
           </p>
         </div>
       </section>
+
+      <EditableContentBlock path="/regulatory-knowledge" />
 
       <PageCta
         heading="Give your team the full picture, policy and regulation, together."

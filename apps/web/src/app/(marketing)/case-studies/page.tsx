@@ -1,4 +1,5 @@
 import { PageHero, PageCta } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CASE_STUDIES_SLOTS } from '@/lib/page-slots/case-studies'
 
@@ -80,6 +81,8 @@ export default async function CaseStudiesPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/case-studies" />
 
       <PageCta
         heading={s('cta.heading')}

@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { pageMetadata } from '@/lib/page-meta'
 import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 import { FaqAccordion } from '@/components/marketing/home-faq'
@@ -108,6 +109,8 @@ export default async function TrustPage() {
           ]} />
         </div>
       </section>
+
+      <EditableContentBlock path="/trust" />
 
       <PageCta
         heading="Have more questions about security or data?"

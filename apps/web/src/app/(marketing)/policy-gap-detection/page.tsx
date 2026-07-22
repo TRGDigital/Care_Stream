@@ -5,6 +5,7 @@ import {
   CalendarClock, GitCompare,
 } from 'lucide-react'
 import { SectionLabel, PageCta } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { POLICY_GAP_DETECTION_SLOTS } from '@/lib/page-slots/policy-gap-detection'
 
@@ -192,6 +193,8 @@ export default async function PolicyGapDetectionPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/policy-gap-detection" />
 
       <PageCta
         heading="See where your policies stand — before an inspector does."

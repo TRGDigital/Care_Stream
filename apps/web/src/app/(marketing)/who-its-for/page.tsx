@@ -5,6 +5,7 @@ import {
   Star, RefreshCw, Moon, ClipboardList, Camera,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { SiteImage } from '@/components/site-image'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { WHO_ITS_FOR_SLOTS } from '@/lib/page-slots/who-its-for'
@@ -400,6 +401,8 @@ export default async function WhoItsForPage() {
           </section>
         ))}
       </div>
+
+      <EditableContentBlock path="/who-its-for" />
 
       <PageCta
         heading="Whatever your care setting, CareStreamAI works for you."

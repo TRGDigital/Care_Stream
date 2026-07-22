@@ -5,6 +5,7 @@ import {
   MessageSquare, Mic, Volume2, Languages, Smartphone, Layers,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { HR_POLICIES_SLOTS } from '@/lib/page-slots/hr-policies'
 
@@ -442,6 +443,8 @@ export default async function HRPoliciesPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/hr-policies" />
 
       <PageCta
         heading="Give every member of your team equal access to the information they are entitled to."

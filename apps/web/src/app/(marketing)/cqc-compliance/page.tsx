@@ -4,6 +4,7 @@ import {
   ShieldCheck, AlertTriangle, HelpCircle,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CQC_COMPLIANCE_SLOTS } from '@/lib/page-slots/cqc-compliance'
 
@@ -424,6 +425,8 @@ export default async function CqcCompliancePage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/cqc-compliance" />
 
       <PageCta
         heading="Build your inspection evidence from day one."

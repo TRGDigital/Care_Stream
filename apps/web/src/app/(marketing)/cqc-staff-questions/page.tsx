@@ -5,6 +5,7 @@ import {
   ClipboardList, Target, Languages,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 export const metadata = {
   title:       'CQC Staff Preparation Questions | CareStreamAI',
@@ -547,6 +548,8 @@ export default function CQCStaffQuestionsPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/cqc-staff-questions" />
 
       <PageCta
         heading="Give every member of your team the confidence to speak to an inspector."

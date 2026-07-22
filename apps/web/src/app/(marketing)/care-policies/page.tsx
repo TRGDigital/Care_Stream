@@ -5,6 +5,7 @@ import {
   Check, Zap, Search, TrendingUp,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CARE_POLICIES_SLOTS } from '@/lib/page-slots/care-policies'
 
@@ -521,6 +522,8 @@ export default async function FeaturesPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/care-policies" />
 
       <PageCta
         heading="Try every feature free for 14 days."

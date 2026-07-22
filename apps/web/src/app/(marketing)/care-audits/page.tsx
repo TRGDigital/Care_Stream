@@ -5,6 +5,7 @@ import {
   ClipboardCheck, Printer, Layers, Save, Wrench, Users, GraduationCap,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CARE_AUDITS_SLOTS } from '@/lib/page-slots/care-audits'
 import { SiteImage } from '@/components/site-image'
@@ -737,6 +738,8 @@ export default async function CareAuditsPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/care-audits" />
 
       <PageCta
         heading="Replace inconsistent manual audits with a structured process that produces reports you can use."

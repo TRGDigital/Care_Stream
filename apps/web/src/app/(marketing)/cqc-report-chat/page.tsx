@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { FileText, MessageSquare, Search, Shield, Zap } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CQC_REPORT_CHAT_SLOTS } from '@/lib/page-slots/cqc-report-chat'
 
@@ -331,6 +332,8 @@ export default async function CqcReportChatPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/cqc-report-chat" />
 
       <PageCta
         heading="Start talking to your CQC report today."

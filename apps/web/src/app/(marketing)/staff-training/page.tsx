@@ -5,6 +5,7 @@ import {
   MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, CalendarDays,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
@@ -840,6 +841,8 @@ export default async function StaffTrainingPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/staff-training" />
 
       <PageCta
         heading="Turn compliance training into a year-round conversation."

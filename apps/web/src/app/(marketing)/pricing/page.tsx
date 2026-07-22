@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 import { Check, Minus, ChevronDown, GraduationCap, ArrowUpRight } from 'lucide-react'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { PRICING_SLOTS } from '@/lib/page-slots/pricing'
 
@@ -347,6 +348,8 @@ export default async function PricingPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/pricing" />
 
       <PageCta
         heading="Start your free 14-day trial today."

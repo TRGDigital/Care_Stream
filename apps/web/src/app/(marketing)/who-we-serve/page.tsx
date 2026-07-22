@@ -4,6 +4,7 @@ import {
   ArrowRight, type LucideIcon,
 } from 'lucide-react'
 import { PageHero, PageCta } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 import { pageMetadata } from '@/lib/page-meta'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
@@ -55,6 +56,8 @@ export default async function WhoWeServePage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/who-we-serve" />
 
       <PageCta
         heading="Not sure if CareStream fits your service?"

@@ -1,5 +1,6 @@
 import { FaqAccordion } from './faq-accordion'
 import { PageHero, PageCta } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
@@ -51,6 +52,8 @@ export default async function FaqPage() {
           <FaqAccordion groups={FAQ_GROUPS} />
         </div>
       </section>
+
+      <EditableContentBlock path="/faq" />
 
       <PageCta
         heading="Still have a question?"

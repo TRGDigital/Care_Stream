@@ -1,4 +1,5 @@
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
+import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { CheckCircle2, FileText, GraduationCap, Search, ShieldCheck, Zap } from 'lucide-react'
 import { pageMetadata } from '@/lib/page-meta'
 import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
@@ -260,6 +261,8 @@ export default function RagPage() {
           </div>
         </div>
       </section>
+
+      <EditableContentBlock path="/rag" />
 
       <PageCta
         heading="See it working on your own policies."

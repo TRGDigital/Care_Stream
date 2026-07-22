@@ -17,6 +17,7 @@ import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
+import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
@@ -1172,14 +1173,22 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId } }).catch(() => null)
   if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
-  const [su, me] = await Promise.all([
+  const [su, me, trainingMods, flows, cqcQs] = await Promise.all([
     (prisma as any).user.findUnique({ where: { id: r.user_id }, select: { name: true, job_role: true } }).catch(() => null),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null),
+    // Libraries the conductor can allocate against an agreed action — scoped to this tenant.
+    (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } }, select: { id: true, name: true }, orderBy: { sort_order: 'asc' } }).catch(() => []),
+    (prisma as any).onboardingFlow.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }).catch(() => []),
+    (prisma as any).cqcStaffQuestion.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, question: true, domain: true }, orderBy: [{ domain: 'asc' }, { created_at: 'asc' }] }).catch(() => []),
   ])
   ok(res, { record: {
     id: r.id, type: r.type, held_on: iso(r.held_on), next_due: iso(r.next_due), status: r.status, completed_at: iso(r.completed_at),
     form: r.form ?? null, conducted_by: r.conducted_by ?? me?.name ?? null,
     supervisee_id: r.user_id, supervisee: su?.name ?? 'Staff member', supervisee_role: su?.job_role ?? null,
+  }, libraries: {
+    training:  (trainingMods as any[]).map(m => ({ id: m.id, name: m.name })),
+    induction: (flows as any[]).map(f => ({ id: f.id, name: f.name })),
+    cqc:       (cqcQs as any[]).map(q => ({ id: q.id, name: q.question, domain: q.domain })),
   } })
 })
 
@@ -1214,5 +1223,21 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
   const toDelete = (existing as any[]).filter(e => !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
   if (toDelete.length) await (prisma as any).supervisionAction.deleteMany({ where: { id: { in: toDelete } } }).catch(() => {})
 
-  ok(res, { ok: true })
+  // Allocate any resources chosen against an agreed action (training / induction / CQC prep) to the
+  // supervisee, so they land in the staff member's hub. Idempotent: re-saving skips existing enrolments.
+  const ALLOC_TYPES = new Set(['training', 'induction', 'cqc'])
+  const allocations: Array<{ description: string; type: AllocationType; item_id: string; allocated: boolean; skipped?: boolean; error?: string }> = []
+  if (Array.isArray(form.agreed_actions)) {
+    for (const a of form.agreed_actions as any[]) {
+      const type = String(a?.alloc_type ?? '')
+      const itemId = String(a?.alloc_id ?? '').trim()
+      if (!ALLOC_TYPES.has(type) || !itemId) continue
+      const result = await allocateFromSupervision(tenantId, r.user_id, userId, type as AllocationType, itemId).catch(e => {
+        console.error('[conducting/complete] allocation error:', e); return { allocated: false, error: 'Could not allocate.' }
+      })
+      allocations.push({ description: String(a?.description ?? '').trim(), type: type as AllocationType, item_id: itemId, ...result })
+    }
+  }
+
+  ok(res, { ok: true, allocations })
 })

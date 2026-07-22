@@ -20,11 +20,31 @@ export const SUP_SECTIONS: Array<{ key: string; label: string }> = [
 
 const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'
 
+// An agreed action can optionally allocate a resource to the supervisee.
+type AllocType = '' | 'training' | 'induction' | 'cqc'
+type ActionRow = { description: string; alloc_type: AllocType; alloc_id: string }
+type LibItem = { id: string; name: string }
+type Libraries = { training: LibItem[]; induction: LibItem[]; cqc: LibItem[] }
+const EMPTY_LIBS: Libraries = { training: [], induction: [], cqc: [] }
+
+const ALLOC_LABELS: Array<{ value: AllocType; label: string }> = [
+  { value: '',          label: 'No allocation' },
+  { value: 'training',  label: 'Training' },
+  { value: 'induction', label: 'Induction' },
+  { value: 'cqc',       label: 'CQC prep' },
+]
+const ALLOC_PICK: Record<Exclude<AllocType, ''>, string> = {
+  training:  'Choose a training module…',
+  induction: 'Choose an induction flow…',
+  cqc:       'Choose a CQC prep question…',
+}
+
 export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { token: string; supervisionId: string; onClose: () => void; onSaved?: () => void }) {
   const [rec, setRec]         = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sections, setSections] = useState<Record<string, string>>({})
-  const [actions, setActions]   = useState<Array<{ description: string }>>([])
+  const [actions, setActions]   = useState<ActionRow[]>([])
+  const [libs, setLibs]         = useState<Libraries>(EMPTY_LIBS)
   const [nextDate, setNextDate] = useState('')
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
@@ -33,20 +53,33 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
     createApiClient(token).me.conductingDetail(supervisionId)
       .then(d => {
         setRec(d.record)
+        setLibs(d.libraries ?? EMPTY_LIBS)
         const f = d.record.form ?? {}
         setSections(f.sections ?? {})
-        setActions(Array.isArray(f.agreed_actions) && f.agreed_actions.length ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '' })) : [{ description: '' }])
+        setActions(Array.isArray(f.agreed_actions) && f.agreed_actions.length
+          ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '', alloc_type: (a.alloc_type ?? '') as AllocType, alloc_id: a.alloc_id ?? '' }))
+          : [{ description: '', alloc_type: '', alloc_id: '' }])
         setNextDate(d.record.next_due ? d.record.next_due.slice(0, 10) : '')
       })
       .catch(e => setErr(e?.message ?? 'Could not load the supervision.'))
       .finally(() => setLoading(false))
   }, [token, supervisionId])
 
+  const patchAction = (k: number, patch: Partial<ActionRow>) => setActions(p => p.map((x, j) => j === k ? { ...x, ...patch } : x))
+
   async function save() {
     setSaving(true); setErr('')
     try {
       await createApiClient(token).me.completeConducting(supervisionId, {
-        form: { sections, agreed_actions: actions.filter(a => a.description.trim()).map(a => ({ description: a.description.trim() })) },
+        form: { sections, agreed_actions: actions.filter(a => a.description.trim()).map(a => {
+          const item = a.alloc_type && a.alloc_id ? libs[a.alloc_type].find(o => o.id === a.alloc_id) : null
+          return {
+            description: a.description.trim(),
+            alloc_type: item ? a.alloc_type : undefined,
+            alloc_id:   item ? a.alloc_id : undefined,
+            alloc_name: item?.name,          // denormalised for display on the staff record
+          }
+        }) },
         next_date: nextDate || null,
       })
       onSaved?.(); onClose()
@@ -95,17 +128,36 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
             {/* Section 10 — Agreed actions */}
             <div>
               <label className="mb-1 block text-sm font-medium text-neutral-dark">10. Agreed actions</label>
-              <p className="mb-2 text-xs text-neutral-mid">Each action is added to {rec.supervisee.split(' ')[0]}&rsquo;s hub under &ldquo;My actions&rdquo;. If training is needed, allocate it the usual way in the hub.</p>
-              <div className="space-y-2">
-                {actions.map((a, k) => (
-                  <div key={k} className="flex items-center gap-2">
-                    <input value={a.description} onChange={e => setActions(p => p.map((x, j) => j === k ? { description: e.target.value } : x))}
-                      placeholder="Describe the action…" className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
-                    <button onClick={() => setActions(p => p.filter((_, j) => j !== k))} className="shrink-0 rounded p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600"><Trash2 size={14} /></button>
-                  </div>
-                ))}
+              <p className="mb-2 text-xs text-neutral-mid">Each action is added to {rec.supervisee.split(' ')[0]}&rsquo;s hub under &ldquo;My actions&rdquo;. You can also allocate a training module, an induction flow or a CQC prep question against an action, and it will be sent straight to their hub.</p>
+              <div className="space-y-2.5">
+                {actions.map((a, k) => {
+                  const options = a.alloc_type ? libs[a.alloc_type] : []
+                  return (
+                    <div key={k} className="rounded-lg border border-gray-200 p-2.5">
+                      <div className="flex items-center gap-2">
+                        <input value={a.description} onChange={e => patchAction(k, { description: e.target.value })}
+                          placeholder="Describe the action…" className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+                        <button onClick={() => setActions(p => p.filter((_, j) => j !== k))} className="shrink-0 rounded p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600"><Trash2 size={14} /></button>
+                      </div>
+                      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                        <select value={a.alloc_type} onChange={e => patchAction(k, { alloc_type: e.target.value as AllocType, alloc_id: '' })}
+                          className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-neutral-dark focus:border-teal focus:outline-none sm:w-44">
+                          {ALLOC_LABELS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        {a.alloc_type && (
+                          <select value={a.alloc_id} onChange={e => patchAction(k, { alloc_id: e.target.value })}
+                            className="flex-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-neutral-dark focus:border-teal focus:outline-none">
+                            <option value="">{ALLOC_PICK[a.alloc_type]}</option>
+                            {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                            {options.length === 0 && <option value="" disabled>None set up yet</option>}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <button onClick={() => setActions(p => [...p, { description: '' }])} className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-teal/40 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/30"><Plus size={13} /> Add action</button>
+              <button onClick={() => setActions(p => [...p, { description: '', alloc_type: '', alloc_id: '' }])} className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-teal/40 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/30"><Plus size={13} /> Add action</button>
             </div>
 
             {err && <p className="text-sm text-red-600">{err}</p>}

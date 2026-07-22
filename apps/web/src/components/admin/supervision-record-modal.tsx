@@ -3,9 +3,15 @@
 // Read-only view of a completed supervision recording — opened from a staff member's record page.
 
 import { SUP_SECTIONS } from '@/components/hub/supervision-form'
-import { X, CalendarDays, ListChecks } from 'lucide-react'
+import { X, CalendarDays, ListChecks, GraduationCap, ClipboardList, ShieldCheck } from 'lucide-react'
 
 const fmtDate = (iso: string | null | undefined) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'
+
+const ALLOC_BADGE: Record<string, { label: string; Icon: typeof GraduationCap }> = {
+  training:  { label: 'Training',  Icon: GraduationCap },
+  induction: { label: 'Induction', Icon: ClipboardList },
+  cqc:       { label: 'CQC prep',  Icon: ShieldCheck },
+}
 
 export function SupervisionRecordModal({ record, supervisee, onClose }: {
   record: { type: string; held_on: string; next_due?: string | null; conducted_by?: string | null; completed_at?: string | null; form?: any }
@@ -13,7 +19,7 @@ export function SupervisionRecordModal({ record, supervisee, onClose }: {
   onClose: () => void
 }) {
   const sections: Record<string, string> = record.form?.sections ?? {}
-  const actions: Array<{ description: string }> = Array.isArray(record.form?.agreed_actions) ? record.form.agreed_actions : []
+  const actions: Array<{ description: string; alloc_type?: string; alloc_name?: string }> = Array.isArray(record.form?.agreed_actions) ? record.form.agreed_actions : []
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-5" onClick={onClose}>
@@ -47,12 +53,22 @@ export function SupervisionRecordModal({ record, supervisee, onClose }: {
               <p className="mt-0.5 text-sm text-neutral-mid">None recorded.</p>
             ) : (
               <ul className="mt-1 space-y-1.5">
-                {actions.map((a, k) => (
-                  <li key={k} className="flex items-start gap-2 rounded-md border border-gray-100 bg-neutral-light/20 px-3 py-2 text-sm text-neutral-dark">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-teal/10 text-[10px] font-bold text-teal">{k + 1}</span>
-                    {a.description}
-                  </li>
-                ))}
+                {actions.map((a, k) => {
+                  const badge = a.alloc_type ? ALLOC_BADGE[a.alloc_type] : null
+                  return (
+                    <li key={k} className="flex items-start gap-2 rounded-md border border-gray-100 bg-neutral-light/20 px-3 py-2 text-sm text-neutral-dark">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-teal/10 text-[10px] font-bold text-teal">{k + 1}</span>
+                      <div className="min-w-0">
+                        <p>{a.description}</p>
+                        {badge && (
+                          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-teal/30 bg-teal/5 px-2 py-0.5 text-[11px] font-medium text-teal">
+                            <badge.Icon size={11} /> {badge.label} allocated{a.alloc_name ? `: ${a.alloc_name}` : ''}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>

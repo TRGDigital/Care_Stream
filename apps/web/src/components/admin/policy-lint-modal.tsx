@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink, SquarePen, CalendarClock } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -30,6 +30,19 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [busy, setBusy] = useState<number | null>(null)
   const [adoptErr, setAdoptErr] = useState('')
   const [pending, setPending] = useState(0)
+
+  // Fill-in placeholders: typed values + which tokens have been filled.
+  const [fillValues, setFillValues] = useState<Record<string, string>>({})
+  const [fillBusy, setFillBusy] = useState<string | null>(null)
+  const [filled, setFilled] = useState<Set<string>>(new Set())
+
+  // Review-date picker.
+  const today = new Date().toISOString().slice(0, 10)
+  const [reviewDate, setReviewDate] = useState(today)
+  const [reviewInterval, setReviewInterval] = useState(365)
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewDone, setReviewDone] = useState(false)
+  const [reviewErr, setReviewErr] = useState('')
   const [numbering, setNumbering] = useState<number[]>([])          // replaceable position → document-order number
   const [markCounts, setMarkCounts] = useState<Record<number, number>>({})  // highlighted occurrences per number
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
@@ -39,21 +52,24 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // cached before terms existed.
   const termsOf = (f: Finding): string[] => (f.terms?.length ? f.terms : [...new Set((f.samples ?? []).map(s => s.match))])
 
-  // A finding is one-click replaceable when it's a text match with a known replacement.
-  const replaceable = findings
-    .map((f, i) => ({ f, i }))
-    .filter(({ f }) => f.kind === 'text' && !!f.superseded_by && termsOf(f).length > 0)
-  const advisory = findings.filter(f => !(f.kind === 'text' && f.superseded_by && termsOf(f).length > 0))
+  const isReplaceable = (f: Finding) => f.kind === 'text' && !!f.superseded_by && termsOf(f).length > 0
+  const isFillable    = (f: Finding) => f.category === 'placeholder' && f.kind === 'text' && !f.superseded_by && termsOf(f).length > 0
 
-  // Order the left-hand list to match the document order of the highlights (numbering).
-  const ordered = replaceable
-    .map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 }))
-    .sort((a, b) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n))
-  // Located = we could highlight it in the preview (numbered). Unlocatable = detected in the text
-  // but not pinpointable here (extraction differs by more than casing) → shown as alternatives.
-  // Only findings we can pinpoint in the clean policy are shown. Anything unlocatable (rare now
-  // that truncation is fixed — essentially stripped letterhead/footer) is not surfaced.
-  const located = ordered.filter(o => o.n >= 0)
+  // A finding is one-click replaceable when it's a text match with a known replacement.
+  const replaceable = findings.map((f, i) => ({ f, i })).filter(({ f }) => isReplaceable(f))
+  // A placeholder ([insert name], XXXX…) is fillable: located in the policy, filled with your text.
+  const fillable    = findings.map((f, i) => ({ f, i })).filter(({ f }) => isFillable(f))
+  // The review-currency flag ("No review date recorded" / "Overdue for review") → date picker.
+  const reviewFinding = findings.find(f => f.signal_key === 'overdue-review') ?? null
+  const advisory = findings.filter(f => !isReplaceable(f) && !isFillable(f) && f.signal_key !== 'overdue-review')
+
+  // Both replaceable and fillable findings are highlighted in the preview, sharing one numbering
+  // (replaceable first, then fillable), so colours/badges stay unique across the whole document.
+  const highlightList = [...replaceable, ...fillable]
+
+  const byN = <T extends { n: number }>(a: T, b: T) => (a.n < 0 ? 1e9 : a.n) - (b.n < 0 ? 1e9 : b.n)
+  const located = replaceable.map((r, pos) => ({ ...r, n: numbering[pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
+  const locatedFill = fillable.map((r, pos) => ({ ...r, n: numbering[replaceable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
 
   // Scroll to the NEXT occurrence of a finding each click (1st, 2nd, … then wraps), flashing it.
   function scrollToHighlight(n: number) {
@@ -83,7 +99,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const root = previewRef.current
     if (!root || html == null) return
     root.innerHTML = html
-    setNumbering(highlightStaleTerms(root, replaceable.map(({ f }) => termsOf(f))))
+    setNumbering(highlightStaleTerms(root, highlightList.map(({ f }) => termsOf(f))))
     // Count highlighted occurrences per number and reset the "Show in policy" cycle.
     const counts: Record<number, number> = {}
     root.querySelectorAll<HTMLElement>('mark[data-lint]').forEach(m => { const k = Number(m.dataset.lint); counts[k] = (counts[k] ?? 0) + 1 })
@@ -123,6 +139,42 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setAdoptErr(e.message ?? 'Could not apply this replacement.')
     } finally {
       setBusy(null)
+    }
+  }
+
+  // Fill one placeholder token (e.g. [insert name]) with the admin's text, everywhere it appears.
+  async function fillToken(f: Finding, term: string) {
+    const key = `${f.signal_key}::${term}`
+    const value = (fillValues[key] ?? '').trim()
+    if (!value) return
+    setFillBusy(key); setAdoptErr('')
+    try {
+      const res = await createApiClient(token).analytics.adoptSuggestion({
+        policy_id: policyId, reference_key: `policy-lint:${f.signal_key}`,
+        requirement: f.label, placement: 'amend', old_text: term, new_text: value,
+      })
+      setFilled(s => new Set(s).add(key))
+      setPending(res.pending)
+      onAdopted?.()
+      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+    } catch (e: any) {
+      setAdoptErr(e.message ?? 'Could not fill this in.')
+    } finally {
+      setFillBusy(null)
+    }
+  }
+
+  // Record a review date on the policy, clearing the "No review date" / "Overdue" flag.
+  async function saveReview() {
+    setReviewBusy(true); setReviewErr('')
+    try {
+      await createApiClient(token).policies.setReview(policyId, { last_reviewed_at: reviewDate, review_interval_days: reviewInterval })
+      setReviewDone(true)
+      onAdopted?.()
+    } catch (e: any) {
+      setReviewErr(e.message ?? 'Could not save the review date.')
+    } finally {
+      setReviewBusy(false)
     }
   }
 
@@ -209,6 +261,92 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               </div>
             )}
 
+            {/* Fill in placeholders */}
+            {locatedFill.length > 0 && (
+              <div className="space-y-3">
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><SquarePen size={15} className="text-sky-600" /> Fill in placeholders ({locatedFill.length})</p>
+                {locatedFill.map(({ f, i, n }) => {
+                  const total = markCounts[n] ?? f.count
+                  const shown = navPos[n]
+                  return (
+                    <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+                      <div className="flex items-start gap-2.5">
+                        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${quoteColour(n)}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-neutral-dark">{f.label}</p>
+                          {f.detail && <p className="mt-0.5 text-xs text-neutral-mid">{f.detail}</p>}
+                          <div className="mt-2 space-y-2">
+                            {termsOf(f).map((t, k) => {
+                              const key = `${f.signal_key}::${t}`
+                              const done = filled.has(key)
+                              return (
+                                <div key={k} className="flex flex-wrap items-center gap-2">
+                                  <span className="rounded bg-sky-50 px-1.5 py-0.5 text-xs font-medium text-sky-700">{t}</span>
+                                  <span className="text-neutral-mid">→</span>
+                                  {done ? (
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Filled in your draft</span>
+                                  ) : (
+                                    <>
+                                      <input value={fillValues[key] ?? ''} onChange={e => setFillValues(s => ({ ...s, [key]: e.target.value }))}
+                                        onKeyDown={e => e.key === 'Enter' && fillToken(f, t)}
+                                        placeholder="Type the value…"
+                                        className="min-w-0 flex-1 rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+                                      <button onClick={() => fillToken(f, t)} disabled={fillBusy !== null || !(fillValues[key] ?? '').trim()}
+                                        className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
+                                        {fillBusy === key ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Fill in
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                          <button onClick={() => scrollToHighlight(n)} className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
+                            <Locate size={13} /> {total > 1 ? (shown ? `Show ${shown} of ${total}` : `Show in policy (${total})`) : 'Show in policy'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Review date */}
+            {reviewFinding && (
+              <div className="space-y-2">
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><CalendarClock size={15} className="text-teal" /> Review date</p>
+                <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+                  <p className="text-sm font-medium text-neutral-dark">{reviewFinding.label}</p>
+                  {reviewFinding.detail && <p className="mt-0.5 text-xs text-neutral-mid">{reviewFinding.detail}</p>}
+                  {reviewDone ? (
+                    <p className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Review date saved</p>
+                  ) : (
+                    <div className="mt-2.5 flex flex-wrap items-end gap-3">
+                      <label className="text-xs text-neutral-mid">Last reviewed
+                        <input type="date" value={reviewDate} max={today} onChange={e => setReviewDate(e.target.value)}
+                          className="mt-1 block rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+                      </label>
+                      <label className="text-xs text-neutral-mid">Review every
+                        <select value={reviewInterval} onChange={e => setReviewInterval(Number(e.target.value))}
+                          className="mt-1 block rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none">
+                          <option value={182}>6 months</option>
+                          <option value={365}>12 months</option>
+                          <option value={730}>2 years</option>
+                          <option value={1095}>3 years</option>
+                        </select>
+                      </label>
+                      <button onClick={saveReview} disabled={reviewBusy || !reviewDate}
+                        className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+                        {reviewBusy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save review date
+                      </button>
+                    </div>
+                  )}
+                  {reviewErr && <p className="mt-2 text-xs text-red-600">{reviewErr}</p>}
+                </div>
+              </div>
+            )}
+
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
 
             {advisory.length > 0 && (
@@ -250,8 +388,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                 <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{policyName}</span>
               </p>
-              {located.length > 0
-                ? <p className="mt-0.5 text-xs text-neutral-mid">The out-of-date wording is highlighted below. Use <span className="font-medium">Show in policy</span> on the left to jump to each one.</p>
+              {located.length > 0 || locatedFill.length > 0
+                ? <p className="mt-0.5 text-xs text-neutral-mid">The flagged wording and placeholders are highlighted below. Use <span className="font-medium">Show in policy</span> on the left to jump to each one.</p>
                 : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to find wording in this policy.</p>}
             </div>
 

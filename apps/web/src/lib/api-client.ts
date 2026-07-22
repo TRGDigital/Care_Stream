@@ -266,6 +266,8 @@ export function createApiClient(token: string) {
         apiFetch<{ done: number; remaining: number }>('/policies/backfill-signatures', token, { method: 'POST', body: JSON.stringify({ limit }) }),
       preview: (id: string) =>
         apiFetch<{ policy_id: string; name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }>(`/policies/${id}/preview`, token),
+      setReview: (id: string, body: { last_reviewed_at?: string; review_interval_days?: number }) =>
+        apiFetch<{ last_reviewed_at: string | null; review_interval_days: number | null }>(`/policies/${id}/review`, token, { method: 'PATCH', body: JSON.stringify(body) }),
     },
 
     users: {

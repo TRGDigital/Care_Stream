@@ -620,6 +620,32 @@ policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Respo
   }
 })
 
+// ─── PATCH /policies/:id/review ───────────────────────────────────────────────
+// Record when a policy was last reviewed (and optionally its review interval), so the
+// "No review date recorded / Overdue for review" lint flag clears and currency can be tracked.
+const ReviewSchema = z.object({
+  last_reviewed_at:     z.string().optional(),      // ISO date; defaults to today
+  review_interval_days: z.coerce.number().int().min(1).max(3650).optional(),
+})
+policiesRouter.patch('/:id/review', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.params.id)
+  const parsed = ReviewSchema.safeParse(req.body ?? {})
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', parsed.error.issues.map(i => i.message).join(', ')); return }
+
+  const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true } })
+  if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+
+  const when = parsed.data.last_reviewed_at ? new Date(parsed.data.last_reviewed_at) : new Date()
+  if (isNaN(when.getTime())) { err(res, 'VALIDATION_ERROR', 'Please provide a valid date.'); return }
+
+  const data: any = { last_reviewed_at: when }
+  if (parsed.data.review_interval_days != null) data.review_interval_days = parsed.data.review_interval_days
+
+  const updated = await (prisma as any).policy.update({ where: { id: policyId }, data, select: { last_reviewed_at: true, review_interval_days: true } })
+  ok(res, { last_reviewed_at: updated.last_reviewed_at, review_interval_days: updated.review_interval_days })
+})
+
 // ─── GET /policies/:id ────────────────────────────────────────────────────────
 // Returns the full extracted policy text (§4.3 — full policy return).
 // Serves pre-extracted text from S3 cache. Falls back to on-the-fly extraction

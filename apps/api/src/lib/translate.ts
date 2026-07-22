@@ -506,10 +506,24 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
     return html
   }
 
+  // Minimal, deterministic HTML for a chunk the model failed to format — so a failed section is
+  // NEVER silently dropped (which truncated long policies). Escapes and wraps paragraphs.
+  const basicHtml = (chunk: string): string =>
+    chunk.split(/\n\n+/).map(p => {
+      const safe = p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>').trim()
+      return safe ? `<p>${safe}</p>` : ''
+    }).filter(Boolean).join('\n')
+
   try {
-    // Concurrency-limited but order-preserving, so sections stay in order.
-    const parts = await mapLimit(chunks, 3, (chunk: string, i: number) => formatChunk(chunk, i === 0).catch(() => ''))
-    const full = parts.filter(Boolean).join('\n').trim()
+    // Concurrency-limited but order-preserving, so sections stay in order. Each chunk retries once,
+    // then falls back to minimal formatting — content is preserved even if a section won't format.
+    const parts = await mapLimit(chunks, 3, async (chunk: string, i: number) => {
+      let html = ''
+      try { html = await formatChunk(chunk, i === 0) }
+      catch { try { html = await formatChunk(chunk, i === 0) } catch { html = '' } }
+      return html.trim() ? html : basicHtml(chunk)   // never drop a section
+    })
+    const full = parts.map(p => p || '').join('\n').trim()
     return full || null
   } catch (e) {
     console.error('[policy] format failed:', e)
@@ -532,7 +546,18 @@ export async function getEnglishPolicyHtml(
     where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
   }).catch(() => null)
   const current: string | null = existing?.content ?? null
-  if (current && policyHtmlEndsCleanly(current)) return { html: current, cached: true }
+  // Complete = ends on a closing block AND (when we have the source) isn't dramatically shorter than
+  // the raw text. A dropped section leaves a tidy-but-incomplete render that ends cleanly, so the
+  // end-check alone misses it; the length ratio catches those and forces a rebuild.
+  const looksComplete = (h: string): boolean => {
+    if (!policyHtmlEndsCleanly(h)) return false
+    if (!raw) return true
+    const textLen = h.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().length
+    const rawLen  = raw.replace(/\s+/g, ' ').trim().length
+    // Letterhead/footer removal legitimately trims some; a lost chunk trims a lot.
+    return !(rawLen > 2000 && textLen < rawLen * 0.7)
+  }
+  if (current && looksComplete(current)) return { html: current, cached: true }
   if (!raw) return { html: current, cached: !!current }   // can't rebuild without the source text
   const fresh = await formatPolicyHtml(raw, 'eng')
   if (!fresh) return { html: current, cached: !!current }

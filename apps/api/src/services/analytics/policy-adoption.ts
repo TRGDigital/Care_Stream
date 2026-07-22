@@ -751,9 +751,11 @@ export async function getAdoptionContext(tenantId: string): Promise<{
   require_external_approval: boolean
 }> {
   const tenant = await (prisma as any).tenant.findUnique({
-    where: { id: tenantId }, select: { name: true, organisation_details: true, feature_flags: true, logo_url: true },
+    where: { id: tenantId }, select: { name: true, organisation_details: true, logo_url: true, plan: { select: { has_gap_detection: true } } },
   })
-  const enabled = !!((tenant?.feature_flags ?? {}) as Record<string, unknown>).has_policy_adoption
+  // Policy adoption is available to any gap-detection tenant (the feature that surfaces it),
+  // no longer gated behind a separate per-tenant flag.
+  const enabled = !!tenant?.plan?.has_gap_detection
   const od = (tenant?.organisation_details ?? {}) as Record<string, string>
 
   const staff = await (prisma as any).user.findMany({

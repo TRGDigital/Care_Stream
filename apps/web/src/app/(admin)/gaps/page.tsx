@@ -10,7 +10,7 @@ import { GapDetailModal } from '@/components/admin/gap-detail-modal'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
 import { ConflictModal } from '@/components/admin/conflict-modal'
 import { WordingReviewModal } from '@/components/admin/wording-review-modal'
-import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText } from 'lucide-react'
+import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText, AlertCircle } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -139,6 +139,15 @@ export default function GapsPage() {
     }
   }
 
+  // While an analysis is running, warn before the tab is closed or refreshed: leaving stops the
+  // run part-way, and starting again re-analyses from scratch and uses more AI credits.
+  useEffect(() => {
+    if (!analysing) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [analysing])
+
   // Policy gap detection is a Professional+ feature. While the plan is still
   // loading, show a skeleton (never the raw API error); once known, show the
   // upgrade prompt for locked tenants.
@@ -216,6 +225,33 @@ export default function GapsPage() {
 
   return (
     <div>
+      {/* Blocking overlay while a coverage analysis runs — the run is client-side, so leaving the
+          page stops it, and restarting re-analyses from scratch (extra AI credits). */}
+      {analysing && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
+            <Loader2 size={30} className="mx-auto animate-spin text-teal" />
+            <h2 className="mt-3 text-lg font-bold text-neutral-dark">Analysing your policies…</h2>
+            <p className="mt-1 text-sm text-neutral-mid">
+              {analyseProgress && analyseProgress.total > 0
+                ? <>Checked <strong className="text-neutral-dark">{analyseProgress.done}</strong> of <strong className="text-neutral-dark">{analyseProgress.total}</strong> regulations.</>
+                : 'Getting started…'}
+            </p>
+            {analyseProgress && analyseProgress.total > 0 && (
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <div className="h-2 rounded-full bg-teal transition-all" style={{ width: `${Math.min(100, Math.round((analyseProgress.done / analyseProgress.total) * 100))}%` }} />
+              </div>
+            )}
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-left">
+              <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
+              <p className="text-xs leading-relaxed text-amber-800">
+                Please keep this page open. If you leave or refresh, the analysis stops, and starting it again re-runs the whole check and uses more AI credits.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark">Policy Gap Detection</h1>

@@ -732,6 +732,11 @@ export function createApiClient(token: string) {
 
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>('/audits/templates', token),
+      actionsSummary: () => apiFetch<{
+        totals: { assigned: number; open: number; in_progress: number; done: number; overdue: number }
+        by_staff: Array<{ name: string; assigned: number; open: number; in_progress: number; done: number; overdue: number }>
+        actions: Array<{ id: string; description: string; assigned_to: string; status: string; priority: string; due_date: string | null; done_at: string | null; audit_name: string; overdue: boolean }>
+      }>('/audits/actions/summary', token),
       createTemplate: (data: any) => apiFetch<{ template: any }>('/audits/templates', token, { method: 'POST', body: JSON.stringify(data) }),
       updateTemplateModules: (id: string, module_ids: string[]) => apiFetch<{ updated: boolean }>(`/audits/templates/${id}`, token, { method: 'PATCH', body: JSON.stringify({ module_ids }) }),
       deleteTemplate: (id: string) => apiFetch<{ deleted: boolean }>(`/audits/templates/${id}`, token, { method: 'DELETE' }),

@@ -277,7 +277,7 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'cqc' | 'advanced' | 'effectiveness' | 'impact' | 'policies'
+type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'actions' | 'cqc' | 'advanced' | 'effectiveness' | 'impact' | 'policies'
 
 const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_training_impact' }[] = [
   { id: 'overview',   label: 'Overview' },
@@ -286,6 +286,7 @@ const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_tra
   { id: 'gaps',       label: 'Knowledge gaps' },
   { id: 'training',   label: 'Training' },
   { id: 'compliance', label: 'Audits' },
+  { id: 'actions',    label: 'Action plans' },
   { id: 'cqc',        label: 'CQC Staff Prep' },
   { id: 'effectiveness', label: 'Effectiveness of Training', premium: 'has_effectiveness' },
   { id: 'impact',        label: 'Training Impact',           premium: 'has_training_impact' },
@@ -312,6 +313,7 @@ export default function AnalyticsPage() {
   const [effectiveness, setEffectiveness] = useState<any>(null)
   const [impact,       setImpact]   = useState<any>(null)
   const [policiesOverview, setPoliciesOverview] = useState<any>(null)
+  const [actionsData,  setActionsData] = useState<any>(null)
   const [digestState,  setDigestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [tab,          setTab]      = useState<TabId>('overview')
   const [loading,      setLoading]  = useState(true)
@@ -322,7 +324,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ data: any; training: any; gaps: any; cqcPrep: any; audits: any; risk: any; reading: any; inductionPerf: any; kgaps: any; annual: any; engagement: any; langSwitch: any; f2f: any }>(`admin-analytics-${userId}`)
     if (cached) {
-      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null); setPoliciesOverview((cached as any).policiesOverview ?? null)
+      setEngagement(cached.engagement ?? null); setData(cached.data ?? null); setTraining(cached.training ?? null); setGaps(cached.gaps ?? null); setCqcPrep(cached.cqcPrep ?? null); setAuditData(cached.audits ?? null); setRiskData(cached.risk ?? null); setReadingData(cached.reading ?? null); setInductionPerf(cached.inductionPerf ?? null); setKgaps(cached.kgaps ?? null); setAnnual(cached.annual ?? null); setLangSwitch(cached.langSwitch ?? null); setF2f(cached.f2f ?? null); setEffectiveness((cached as any).effectiveness ?? null); setImpact((cached as any).impact ?? null); setPoliciesOverview((cached as any).policiesOverview ?? null); setActionsData((cached as any).actions ?? null)
       setLoading(false)
     }
   }, [userId])
@@ -347,10 +349,11 @@ export default function AnalyticsPage() {
       api.analytics.effectiveness().catch(() => null),
       api.analytics.trainingImpact().catch(() => null),
       api.analytics.policyApprovalsOverview().catch(() => null),
+      api.audits.actionsSummary().catch(() => null),
     ])
-      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv]) => {
-        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv)
-        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp, policiesOverview: polOv })
+      .then(([main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSw, f2fData, eff, imp, polOv, actions]) => {
+        setData(main); setTraining(training); setGaps(gaps); setCqcPrep(cqcPrep); setAuditData(audits); setRiskData(risk); setReadingData(reading); setInductionPerf(inductionPerf); setKgaps(kgaps); setAnnual(annual); setEngagement(engagement); setLangSwitch(langSw); setF2f(f2fData); setEffectiveness(eff); setImpact(imp); setPoliciesOverview(polOv); setActionsData(actions)
+        persistentCache.set(`admin-analytics-${userId}`, { data: main, training, gaps, cqcPrep, audits, risk, reading, inductionPerf, kgaps, annual, engagement, langSwitch: langSw, f2f: f2fData, effectiveness: eff, impact: imp, policiesOverview: polOv, actions })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -1227,6 +1230,80 @@ export default function AnalyticsPage() {
       ) : (
         <div className="mb-6 rounded-card border border-gray-100 bg-white p-6 shadow-card">
           <p className="text-sm text-neutral-mid">No audit data yet. Start your first audit from the Monthly Audits page.</p>
+        </div>
+      )}
+      </>)}
+
+      {tab === 'actions' && (<>
+      {/* ── Action plans (audit actions assigned to staff) ──────────────────── */}
+      <SectionDivider
+        title="Action plans"
+        subtitle="Audit actions assigned to staff: what has been given out, what is done, and what is still outstanding"
+      />
+      {actionsData && actionsData.totals.assigned > 0 ? (
+        <div className="mb-6 space-y-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <StatCard label="Assigned"    value={actionsData.totals.assigned} Icon={ClipboardCheck} iconBg="bg-teal/10" iconColor="text-teal" info="Total actions from approved plans that have been assigned to a staff member." />
+            <StatCard label="Outstanding" value={actionsData.totals.open + actionsData.totals.in_progress} Icon={Clock} iconBg="bg-amber-50" iconColor="text-amber-600" info="Assigned actions not yet marked done (open or in progress)." />
+            <StatCard label="Completed"   value={actionsData.totals.done} Icon={CheckCircle2} iconBg="bg-green-50" iconColor="text-green-600" info="Assigned actions the staff member has marked done." />
+            <StatCard label="Overdue"     value={actionsData.totals.overdue} Icon={AlertCircle} iconBg="bg-rose-50" iconColor="text-rose-600" info="Outstanding actions whose due date has passed." />
+          </div>
+
+          <Card title="By staff member" info="Each person's assigned actions and how many are done, still outstanding, or overdue.">
+            <div className="-mx-6 overflow-x-auto">
+              <table className="w-full min-w-[520px] text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-neutral-mid">
+                    <th className="px-6 py-2 font-medium">Staff member</th>
+                    <th className="px-3 py-2 text-right font-medium">Assigned</th>
+                    <th className="px-3 py-2 text-right font-medium">Done</th>
+                    <th className="px-3 py-2 text-right font-medium">Outstanding</th>
+                    <th className="px-6 py-2 text-right font-medium">Overdue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {actionsData.by_staff.map((s: any) => (
+                    <tr key={s.name}>
+                      <td className="px-6 py-2.5 font-medium text-neutral-dark">{s.name}</td>
+                      <td className="px-3 py-2.5 text-right text-neutral-dark">{s.assigned}</td>
+                      <td className="px-3 py-2.5 text-right text-green-700">{s.done}</td>
+                      <td className="px-3 py-2.5 text-right text-amber-700">{s.open + s.in_progress}</td>
+                      <td className={`px-6 py-2.5 text-right font-medium ${s.overdue > 0 ? 'text-rose-600' : 'text-neutral-mid'}`}>{s.overdue}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          <Card title="Outstanding actions" info="Assigned actions not yet completed, most urgent first. Overdue items are flagged.">
+            {(() => {
+              const rank: Record<string, number> = { immediate: 0, priority: 1, monitor: 2 }
+              const outstanding = (actionsData.actions as any[])
+                .filter(a => a.status !== 'done')
+                .sort((a, b) => Number(b.overdue) - Number(a.overdue) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
+              if (outstanding.length === 0) return <p className="text-sm text-neutral-mid">Nothing outstanding. Every assigned action is done.</p>
+              return (
+                <ul className="space-y-2">
+                  {outstanding.map(a => (
+                    <li key={a.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 bg-neutral-light/20 px-4 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-sm text-neutral-dark">{a.description}</p>
+                        <p className="mt-0.5 text-xs text-neutral-mid">{a.assigned_to} · {a.audit_name}{a.due_date ? ` · due ${new Date(a.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.overdue ? 'bg-rose-50 text-rose-700' : a.status === 'in_progress' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-neutral-mid'}`}>
+                        {a.overdue ? 'Overdue' : a.status === 'in_progress' ? 'In progress' : 'Open'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )
+            })()}
+          </Card>
+        </div>
+      ) : (
+        <div className="mb-6 rounded-card border border-gray-100 bg-white p-6 shadow-card">
+          <p className="text-sm text-neutral-mid">No assigned actions yet. When you approve an audit action plan and assign actions to staff, they will appear here and in each person&rsquo;s hub.</p>
         </div>
       )}
       </>)}

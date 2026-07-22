@@ -14,7 +14,7 @@ import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
-import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan } from '../services/audits/action-plan'
+import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary } from '../services/audits/action-plan'
 
 export const auditsRouter = Router()
 
@@ -2040,6 +2040,11 @@ auditsRouter.delete('/actions/:actionId', requireAuditAccess, async (req: Reques
     await deleteAction(tenantId, String(req.params.actionId))
     ok(res, { deleted: true })
   } catch (e: any) { err(res, 'ACTION_DELETE_FAILED', e.message ?? 'Could not delete the action.', 500) }
+})
+
+// Admin analytics: assigned action-plan actions across the tenant (assigned / done / outstanding).
+auditsRouter.get('/actions/summary', requireAdmin, async (req: Request, res: Response) => {
+  ok(res, await getAssignedActionsSummary(req.user!.tenant_id))
 })
 
 auditsRouter.post('/runs/:id/action-plan/generate', requireAuditAccess, async (req: Request, res: Response) => {

@@ -11,6 +11,7 @@ import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
 type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; status: string; source: string; done_at: string | null }
 type Plan = { status: string; actions: Action[] }
+type StaffOption = { name: string; job_role: string | null }
 
 // A textarea that grows to fit its content, so the full action text is always visible
 // without the user having to drag it open.
@@ -46,9 +47,9 @@ const STATUS_CLS: Record<string, string> = { open: 'text-neutral-mid', in_progre
 
 export function AuditActionPlan({ token, runId, canGenerate }: { token: string; runId: string; canGenerate?: boolean }) {
   const cacheKey = `action-plan-${runId}`
-  const cached = persistentCache.get<{ plan: Plan; staff: string[] }>(cacheKey)
+  const cached = persistentCache.get<{ plan: Plan; staff: StaffOption[] }>(cacheKey)
   const [plan, setPlan]   = useState<Plan | null>(cached?.plan ?? null)
-  const [staff, setStaff] = useState<string[]>(cached?.staff ?? [])
+  const [staff, setStaff] = useState<StaffOption[]>(cached?.staff ?? [])
   const [loading, setLoading] = useState(!cached)
   const [busy, setBusy]   = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -60,8 +61,19 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
   const cachePlan = (p: Plan | null) => { if (p) persistentCache.set(cacheKey, { plan: p, staff }) }
 
   function load() {
-    Promise.all([api.audits.actionPlan(runId), api.audits.templates().catch(() => ({ staff: [] as string[] }))])
-      .then(([p, t]) => { const st = (t as any).staff ?? []; setPlan(p); setStaff(st); if (p) persistentCache.set(cacheKey, { plan: p, staff: st }) })
+    // Staff come from the users list (the reliable source the training tools use), so the
+    // assignee dropdown is always populated. Keep the last good list if a fetch returns nothing.
+    Promise.all([api.audits.actionPlan(runId), api.users.list().catch(() => ({ users: [] }))])
+      .then(([p, u]) => {
+        const seen = new Set<string>()
+        const st: StaffOption[] = (((u as any).users ?? []) as any[])
+          .filter(x => x.is_active !== false && x.name && String(x.name).trim())
+          .map(x => ({ name: String(x.name).trim(), job_role: x.job_role ?? null }))
+          .filter(s => (seen.has(s.name) ? false : (seen.add(s.name), true)))
+        setPlan(p)
+        setStaff(prev => (st.length ? st : prev))
+        if (p) persistentCache.set(cacheKey, { plan: p, staff: st.length ? st : staff })
+      })
       .catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -172,8 +184,8 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
                         <select value={a.assigned_to ?? ''} onChange={e => save(a.id, { assigned_to: e.target.value || null })}
                           className="w-44 rounded-md border border-gray-200 px-2 py-1 text-xs text-neutral-dark focus:border-teal focus:outline-none">
                           <option value="">Unassigned</option>
-                          {staff.map(s => <option key={s} value={s}>{s}</option>)}
-                          {a.assigned_to && !staff.includes(a.assigned_to) && <option value={a.assigned_to}>{a.assigned_to}</option>}
+                          {staff.map(s => <option key={s.name} value={s.name}>{s.name}{s.job_role ? ` · ${s.job_role}` : ''}</option>)}
+                          {a.assigned_to && !staff.some(s => s.name === a.assigned_to) && <option value={a.assigned_to}>{a.assigned_to}</option>}
                         </select>
                         {!draft && (
                           <select value={a.status} onChange={e => save(a.id, { status: e.target.value })}

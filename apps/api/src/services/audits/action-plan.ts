@@ -152,6 +152,50 @@ export async function countMyOpenActions(tenantId: string, staffName: string): P
   }).catch(() => 0)
 }
 
+// ── Admin analytics: assigned actions across the tenant ───────────────────────
+// Every action from an APPROVED plan that is assigned to someone, so managers can see
+// what has been given out, what is done, and what is still outstanding (incl. overdue).
+export async function getAssignedActionsSummary(tenantId: string) {
+  const rows = await (prisma as any).auditAction.findMany({
+    where: { tenant_id: tenantId, assigned_to: { not: null }, run: { action_plan_status: 'approved' } },
+    include: { run: { select: { template: { select: { name: true } } } } },
+    orderBy: { created_at: 'desc' },
+  }).catch(() => [])
+  const today = new Date(new Date().toDateString())
+  const overdueOf = (a: any) => !!(a.due_date && a.status !== 'done' && new Date(a.due_date) < today)
+  const actions = (rows as any[]).map(a => ({
+    id: a.id,
+    description: a.description,
+    assigned_to: a.assigned_to as string,
+    status: a.status as string,
+    priority: a.priority as string,
+    due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
+    done_at: a.done_at ? new Date(a.done_at).toISOString() : null,
+    audit_name: a.run?.template?.name ?? 'Audit',
+    overdue: overdueOf(a),
+  }))
+  const totals = {
+    assigned:    actions.length,
+    open:        actions.filter(a => a.status === 'open').length,
+    in_progress: actions.filter(a => a.status === 'in_progress').length,
+    done:        actions.filter(a => a.status === 'done').length,
+    overdue:     actions.filter(a => a.overdue).length,
+  }
+  const byMap = new Map<string, { name: string; assigned: number; open: number; in_progress: number; done: number; overdue: number }>()
+  for (const a of actions) {
+    const g = byMap.get(a.assigned_to) ?? { name: a.assigned_to, assigned: 0, open: 0, in_progress: 0, done: 0, overdue: 0 }
+    g.assigned++
+    if (a.status === 'open') g.open++
+    else if (a.status === 'in_progress') g.in_progress++
+    else if (a.status === 'done') g.done++
+    if (a.overdue) g.overdue++
+    byMap.set(a.assigned_to, g)
+  }
+  // Most outstanding first, so the people with the most to do surface at the top.
+  const by_staff = [...byMap.values()].sort((a, b) => (b.assigned - b.done) - (a.assigned - a.done) || b.assigned - a.assigned)
+  return { totals, by_staff, actions }
+}
+
 // A staff member may only change the status of an action assigned to them.
 export async function setMyActionStatus(tenantId: string, staffName: string, actionId: string, status: string): Promise<void> {
   const name = (staffName ?? '').trim()

@@ -277,6 +277,7 @@ export function createApiClient(token: string) {
           onboarding: Array<{ id: string; completed_at: string | null; due_date: string | null; enrolled_at: string | null; flow_id: string; flow_name: string; flow_kind: string; care_setting: string | null; total_steps: number; completed_steps: number }>
         }>(`/users/${id}`, token),
       record: (id: string) => apiFetch<any>(`/users/${id}/record`, token),
+      actions: (id: string) => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>(`/users/${id}/actions`, token),
       remind: (id: string) => apiFetch<{ reminded: boolean; modules: number }>(`/users/${id}/remind`, token, { method: 'POST' }),
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
       markPractical: (id: string, enrollmentId: string, data: { signed: boolean; note?: string }) =>

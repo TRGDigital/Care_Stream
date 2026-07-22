@@ -1153,7 +1153,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={4}>Because this is your own AI-generated module, a quick confirmation appears before publishing, you acknowledge it&apos;s <strong>internally generated</strong> and that you&apos;ve reviewed it (see &ldquo;Your own training vs the standard library&rdquo; below).</Step>
             <Step n={5}><strong>Assign</strong> a published module to staff, individually or tap a <strong>role</strong> to select everyone in it, with an optional due date.</Step>
           </div>
-          <Tip>Always review AI-generated clinical content before publishing. You can tune the generation prompt in the Platform Console → AI Prompts → &ldquo;Annual Training, Module Generation&rdquo;.</Tip>
+          <Tip>Always review AI-generated clinical content before publishing.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Your own training vs the standard library">
@@ -1830,7 +1830,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             On completion, CareStream analyses every answer against CQC Key Questions and generates a structured report covering: immediate actions required, priority improvements, CQC compliance notes across the five key questions (Safe, Effective, Caring, Responsive, Well-Led), commendations, and recommended focus areas for the next cycle.
           </p>
-          <Tip>The AI recommendations prompt can be customised in the Platform Console under AI Prompts → Audit Recommendations, so you can tailor the output style for your organisation.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Action plans">
+          <p className="text-sm text-neutral-mid">
+            Recommendations only help if someone acts on them. From a completed audit, CareStream turns them into a tracked <strong>action plan</strong> you assign to staff and work to completion, so nothing is lost in a report.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>When an audit is completed, CareStream <strong>drafts an action plan</strong> from its recommendations. Open the completed audit and you&rsquo;ll see an <strong>Action plan</strong> card showing the status and how many actions are open. (For audits completed earlier, press <strong>Generate action plan tracker</strong> to build one from their existing recommendations.)</Step>
+            <Step n={2}>Open the plan to <strong>review the draft</strong>. Edit the wording, set a priority and due date, and <strong>assign each action to a staff member</strong> by picking their name. Add any of your own, then press <strong>Approve action plan</strong> to start tracking.</Step>
+            <Step n={3}>Once approved, each person sees the actions assigned to them in the <strong>Chat Hub under &ldquo;My actions&rdquo;</strong>, with the priority, the source audit and the due date. They move each one along themselves: <strong>Start</strong>, then <strong>Mark done</strong>. Overdue items are flagged.</Step>
+            <Step n={4}>Track allocation and completion in <strong>Analytics → Action plans</strong>: totals for assigned, outstanding, completed and overdue, a per-staff breakdown, and a most-urgent-first list of everything still outstanding. Each staff member&rsquo;s own record page also lists the actions assigned to them.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            A living action plan is strong evidence at inspection that you find issues and act on them, exactly what the <strong>Well-led</strong> key question looks for. Draft plans are never shown to staff; actions only appear in the hub once you approve the plan.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="Audit repository">

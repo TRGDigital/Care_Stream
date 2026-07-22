@@ -11,6 +11,7 @@ import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/emai
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
 import { buildStaffRecord } from '../lib/staff-record'
+import { getMyActions } from '../services/audits/action-plan'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import crypto from 'crypto'
 
@@ -50,6 +51,15 @@ usersRouter.get('/', async (req: Request, res: Response) => {
   })
 
   ok(res, { users, total: users.length })
+})
+
+// ─── GET /users/:id/actions ───────────────────────────────────────────────────
+// Audit action-plan items assigned to this staff member (approved plans; matched by name).
+usersRouter.get('/:id/actions', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const u = await (prisma as any).user.findUnique({ where: { id: String(req.params.id) }, select: { name: true, tenant_id: true } }).catch(() => null)
+  if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  ok(res, await getMyActions(tenantId, u.name ?? ''))
 })
 
 // ─── GET /users/:id ───────────────────────────────────────────────────────────

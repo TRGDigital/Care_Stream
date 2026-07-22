@@ -164,12 +164,17 @@ export default function StaffRecordPage() {
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
   const [compliance, setCompliance] = useState<any>(null)
   const [supervisions, setSupervisions] = useState<any>(null)
+  const [actions, setActions] = useState<any>(null)
   useEffect(() => {
     if (!token || !hasWorkforce) return
     const api = createApiClient(token)
     api.workforce.staff(id).then(setCompliance).catch(() => {})
     api.workforce.staffSupervisions(id).then(setSupervisions).catch(() => {})
   }, [token, id, hasWorkforce])
+  useEffect(() => {
+    if (!token) return
+    createApiClient(token).users.actions(id).then(setActions).catch(() => {})
+  }, [token, id])
   async function viewComplianceDoc(type: string) {
     try {
       const blob = await createApiClient(token).workforce.downloadDocument(id, type)
@@ -799,6 +804,46 @@ export default function StaffRecordPage() {
             <Trends trends={rec.trends} />
           </div>
         </div>
+
+        {/* Assigned audit actions */}
+        {actions && actions.actions.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
+            <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Assigned audit actions</p>
+            <p className="mb-3 text-xs text-neutral-mid">Actions from audit action plans assigned to {u.name.split(' ')[0]}. They work these in their hub under &ldquo;My actions&rdquo;.</p>
+            {(() => {
+              const rank: Record<string, number> = { immediate: 0, priority: 1, monitor: 2 }
+              const today = new Date(new Date().toDateString())
+              const list = [...actions.actions].sort((a: any, b: any) => (a.status === 'done' ? 1 : 0) - (b.status === 'done' ? 1 : 0) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
+              const outstanding = actions.actions.filter((a: any) => a.status !== 'done').length
+              const done = actions.actions.length - outstanding
+              return (
+                <>
+                  <div className="mb-3 flex gap-4 text-xs">
+                    <span><strong className="text-neutral-dark">{actions.actions.length}</strong> <span className="text-neutral-mid">assigned</span></span>
+                    <span><strong className="text-amber-700">{outstanding}</strong> <span className="text-neutral-mid">outstanding</span></span>
+                    <span><strong className="text-green-700">{done}</strong> <span className="text-neutral-mid">completed</span></span>
+                  </div>
+                  <ul className="space-y-2">
+                    {list.map((a: any) => {
+                      const overdue = a.due_date && a.status !== 'done' && new Date(a.due_date) < today
+                      return (
+                        <li key={a.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 bg-neutral-light/20 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className={`text-sm ${a.status === 'done' ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>{a.description}</p>
+                            <p className="mt-0.5 text-xs text-neutral-mid">{a.audit_name}{a.due_date ? ` · due ${fmtDate(a.due_date)}` : ''}{a.status === 'done' && a.done_at ? ` · done ${fmtDate(a.done_at)}` : ''}</p>
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.status === 'done' ? 'bg-green-50 text-green-700' : overdue ? 'bg-rose-50 text-rose-700' : a.status === 'in_progress' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-neutral-mid'}`}>
+                            {a.status === 'done' ? 'Done' : overdue ? 'Overdue' : a.status === 'in_progress' ? 'In progress' : 'Open'}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )
+            })()}
+          </div>
+        )}
 
         {/* Timeline */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">

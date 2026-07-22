@@ -1945,18 +1945,95 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Supervisions and appraisals">
           <p className="text-sm text-neutral-mid">
-            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page tracks each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and their next booked or due date, colour coded so overdue ones stand out.
+            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page is where you book and track each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and next booked or due date, colour coded so overdue ones stand out. Unlike the rest of the register, <strong>supervisions are available on every plan</strong>, and they have their own recording form, agreed-action tracking and allocation flow.
           </p>
-          <div className="mt-2 space-y-3">
-            <Step n={1}>Open the <strong>Compliance</strong> page and switch to the <strong>Supervisions &amp; appraisals</strong> tab.</Step>
-            <Step n={2}>Click a staff member and use <strong>Log a session</strong>: choose supervision or appraisal, the date, who is conducting it, an optional next-due date, and notes.</Step>
-            <Step n={3}>Choose a <strong>future date to book</strong> an upcoming session, or a past date to record one already held. Booked sessions show as <strong>Booked</strong> on the register with their date.</Step>
-          </div>
-          <p className="mt-3 text-sm text-neutral-mid">
-            When you book a future session, the staff member gets an <strong>email confirmation</strong>, and both the staff member and your admins get a <strong>reminder the day before</strong>. Staff can also see their booked and past sessions in their own hub under <strong>Supervisions</strong>. You can turn these emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>. Each staff member&rsquo;s record page shows their latest supervision and appraisal as CQC evidence.
-          </p>
+          <div className="mt-2"><Tip>See the dedicated <strong>Supervisions</strong> guide below for the full flow: booking, choosing who conducts it, completing the recording form, and allocating training, induction or CQC prep off the agreed actions.</Tip></div>
         </SectionBlock>
         <Tip>Enter the renewal date even for credentials without a fixed expiry (like a DBS on the update service), so the register can warn you in good time. Anything red or amber is where to focus before your next inspection.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'supervisions',
+    icon:    MessageSquare,
+    title:   'Supervisions',
+    summary: 'Book supervisions and appraisals, record them on a structured form, and allocate the training, induction or CQC prep that comes out of them',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is, available on every plan">
+          <p className="text-sm text-neutral-mid">
+            Supervisions let you book and record each staff member&rsquo;s 1:1 supervisions and annual appraisals, complete a structured recording form, and turn what you agree into actions and allocations that land straight in the staff member&rsquo;s hub. It is available on <strong>every plan</strong>. Every completed session is kept on the staff member&rsquo;s record as CQC evidence.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            You book and track sessions from <strong>Compliance &rarr; Supervisions &amp; appraisals</strong> in the Team section of the sidebar. The whole flow has three stages: <strong>book</strong> the session and choose who conducts it, the conductor <strong>records</strong> it on the form, and the agreed actions are <strong>allocated</strong> to the staff member.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="1. Booking a session and choosing who conducts it">
+          <div className="space-y-3">
+            <Step n={1}>Open the <strong>Compliance</strong> page and switch to the <strong>Supervisions &amp; appraisals</strong> tab.</Step>
+            <Step n={2}>Click a staff member and use <strong>Log a session</strong>. Choose <strong>supervision</strong> or <strong>appraisal</strong>, the date, an optional next-due date, and any notes.</Step>
+            <Step n={3}>Set <strong>Conducted by</strong>. This is a dropdown of your administrators, so you can allocate the person who will carry out the session rather than typing a name.</Step>
+            <Step n={4}>Choose a <strong>future date to book</strong> an upcoming session, or a past date to record one already held. Booked sessions show as <strong>Booked</strong> on the register with their date.</Step>
+          </div>
+          <div className="mt-3"><Tip>The person you pick under &ldquo;Conducted by&rdquo; is notified straight away: they get a message in <strong>their own hub</strong>, and an email, telling them they are conducting this staff member&rsquo;s session on the date. The staff member and your admins are notified too.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="2. Recording the supervision on the form">
+          <p className="text-sm text-neutral-mid">
+            The conductor completes the session on a structured recording form, in the style of the Skills for Care supervision template. They open it from their own hub, under <strong>Supervisions I&rsquo;m conducting</strong>, next to the booked session.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">The form is pre-filled with the <strong>staff member being supervised</strong>, the <strong>supervisor</strong> (from your admin list), and the <strong>date</strong>. It captures ten sections:</p>
+          <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>Actions from the previous meeting</li>
+            <li>Biggest achievement since the last supervision</li>
+            <li>Continuing to display the values of the organisation</li>
+            <li>Challenges faced, and how they were overcome</li>
+            <li>Any challenges that remain, and what is needed</li>
+            <li>Learning and development done, and how it has been put into practice</li>
+            <li>What to achieve before the next supervision</li>
+            <li>Feedback from the supervisor</li>
+            <li>Other areas of discussion</li>
+            <li>Agreed actions</li>
+          </ol>
+          <p className="mt-3 text-sm text-neutral-mid">
+            The conductor also sets the <strong>next supervision date</strong> on the form. When they <strong>Save &amp; complete</strong>, the session is recorded and saved against the staff member.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="3. Agreed actions become the staff member's to-do list">
+          <p className="text-sm text-neutral-mid">
+            Each agreed action is a free-text line. On completion, every action is written into the staff member&rsquo;s hub under <strong>My actions</strong>, so it works as a shared to-do list. The staff member can mark each one <strong>Start</strong>, <strong>Done</strong> or reopen it, and the same actions show on their record page so you can see they are being handled.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="4. Allocating training, induction or CQC prep from an action">
+          <p className="text-sm text-neutral-mid">
+            Next to each agreed action, the conductor can choose to <strong>allocate</strong> something to the staff member. Pick a type, then a second dropdown lists that item from your account:
+          </p>
+          <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Training',  'Allocate a training module from your ad-hoc training list. It appears in the staff member’s My training.'],
+              ['Induction', 'Allocate one of your staff onboarding flows. It appears in the staff member’s Induction.'],
+              ['CQC prep',  'Allocate a CQC prep question. It appears in the staff member’s CQC section.'],
+            ].map(([type, desc]) => (
+              <div key={type} className="grid grid-cols-[7rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{type}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            When you complete the form, the chosen item is sent to the staff member exactly as if you had allocated it the usual way, with the same email and hub notification, and it shows on their analytics page. It is safe to re-save a completed form: an item that has already been allocated is not sent twice.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Saved against the staff member">
+          <p className="text-sm text-neutral-mid">
+            Every completed supervision is saved on the staff member&rsquo;s <strong>record page</strong>, listed under their supervisions with a link to <strong>open the full form</strong> and the <strong>next session booked</strong> off it. Any items allocated from an action show a small badge on the record, so you can see at a glance what came out of each session. The register keeps colour-coding the last and next dates so overdue supervisions stand out.
+          </p>
+          <div className="mt-3"><Tip>Staff can see their own booked and past sessions in their hub under <strong>Supervisions</strong>. You can turn the confirmation and reminder emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>.</Tip></div>
+        </SectionBlock>
       </div>
     ),
   },

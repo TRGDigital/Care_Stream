@@ -150,7 +150,7 @@ const MATRIX: Group[] = [
       { label: 'Multi-site group console and benchmarking', values: [false, false, true] },
       { label: 'Workforce compliance register (DBS, right to work, registration, references)', values: [false, false, true] },
       { label: 'Credential document uploads + expiry alerts', values: [false, false, true] },
-      { label: 'Supervisions and appraisals tracking', values: [false, false, true] },
+      { label: 'Supervisions and appraisals tracking', values: [true, true, true] },
     ],
   },
   {

@@ -4,13 +4,38 @@
 // edits actions, sets due dates, assigns them to staff, then approves it to start tracking.
 // The editor opens in an overlay (same pattern as starting a new audit); the audit page shows a
 // compact summary card that launches it.
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
 type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; status: string; source: string; done_at: string | null }
 type Plan = { status: string; actions: Action[] }
+
+// A textarea that grows to fit its content, so the full action text is always visible
+// without the user having to drag it open.
+function AutoTextarea({ value, onChange, onBlur, className }: {
+  value: string
+  onChange: (v: string) => void
+  onBlur: (v: string) => void
+  className?: string
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` }
+  }, [value])
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      rows={1}
+      onChange={e => onChange(e.target.value)}
+      onBlur={e => onBlur(e.target.value)}
+      className={className}
+    />
+  )
+}
 
 const PRIORITY: Record<string, { label: string; cls: string }> = {
   immediate: { label: 'Immediate', cls: 'bg-red-50 text-red-700 border-red-200' },
@@ -130,10 +155,10 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
                           <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${pr.cls}`}>{pr.label}</span>
                         )}
                         {draft ? (
-                          <textarea value={a.description} rows={1}
-                            onChange={e => setLocal(a.id, { description: e.target.value })}
-                            onBlur={e => save(a.id, { description: e.target.value })}
-                            className="min-h-[2rem] flex-1 resize-y rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-neutral-dark focus:border-teal focus:outline-none" />
+                          <AutoTextarea value={a.description}
+                            onChange={v => setLocal(a.id, { description: v })}
+                            onBlur={v => save(a.id, { description: v })}
+                            className="flex-1 resize-none overflow-hidden rounded-md border border-gray-200 px-2.5 py-1.5 text-sm leading-snug text-neutral-dark focus:border-teal focus:outline-none" />
                         ) : (
                           <p className={`flex-1 text-sm ${a.status === 'done' ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>{a.description}</p>
                         )}

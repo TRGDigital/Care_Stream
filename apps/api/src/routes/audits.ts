@@ -1854,7 +1854,7 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
 
   let recommendations: string
   try {
-    recommendations = await callClaude('You are a senior health and safety consultant specialising in UK care home compliance.', filledPrompt, { maxTokens: 1200 })
+    recommendations = await callClaude('You are a senior health and safety consultant specialising in UK care home compliance.', filledPrompt, { maxTokens: 1200, feature: 'audit_recs' })
   } catch {
     recommendations = 'AI recommendations could not be generated at this time. Please review the audit results manually.'
   }

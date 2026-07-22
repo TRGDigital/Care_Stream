@@ -23,7 +23,7 @@ export async function extractDraftActions(auditName: string, auditResultsText: s
     auditResultsText.slice(0, 12000),
   ].join('\n')
   try {
-    const out = await callClaude(system, user, { maxTokens: 900, temperature: 0 })
+    const out = await callClaude(system, user, { maxTokens: 900, temperature: 0, feature: 'action_plan' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     return (Array.isArray(parsed.actions) ? parsed.actions : [])
       .map((a: any) => ({ description: String(a.description ?? '').trim(), priority: normPriority(a.priority) }))
@@ -65,7 +65,7 @@ export async function getActionPlan(tenantId: string, runId: string) {
   if (!run) return null
   const rows = await (prisma as any).auditAction.findMany({ where: { run_id: runId, tenant_id: tenantId } })
   const actions = (rows as any[])
-    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null }))
+    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, is_external: !!a.is_external, external_name: a.external_name ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null }))
     .sort((x, y) => (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1))
   return { status: run.action_plan_status as string, actions }
 }
@@ -76,7 +76,7 @@ export async function addAction(tenantId: string, runId: string, description: st
   await (prisma as any).auditAction.create({ data: { run_id: runId, tenant_id: tenantId, description: description.slice(0, 1000), priority: normPriority(priority), source: 'manual' } })
 }
 
-export async function updateAction(tenantId: string, actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; status?: string }): Promise<void> {
+export async function updateAction(tenantId: string, actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; is_external?: boolean; external_name?: string | null; status?: string }): Promise<void> {
   const existing = await (prisma as any).auditAction.findFirst({ where: { id: actionId, tenant_id: tenantId }, select: { id: true, status: true } })
   if (!existing) throw new Error('Action not found')
   const data: any = {}
@@ -84,6 +84,8 @@ export async function updateAction(tenantId: string, actionId: string, patch: { 
   if (patch.priority !== undefined) data.priority = normPriority(patch.priority)
   if (patch.due_date !== undefined) data.due_date = patch.due_date ? new Date(patch.due_date) : null
   if (patch.assigned_to !== undefined) data.assigned_to = patch.assigned_to ? String(patch.assigned_to).slice(0, 120) : null
+  if (patch.is_external !== undefined) data.is_external = !!patch.is_external
+  if (patch.external_name !== undefined) data.external_name = patch.external_name ? String(patch.external_name).slice(0, 120) : null
   if (patch.status !== undefined && ['open', 'in_progress', 'done'].includes(patch.status)) {
     data.status = patch.status
     data.done_at = patch.status === 'done' ? new Date() : null
@@ -115,6 +117,7 @@ export async function getMyActions(tenantId: string, staffName: string) {
   const rows = await (prisma as any).auditAction.findMany({
     where: {
       tenant_id: tenantId,
+      is_external: false,                                    // external-contractor actions are tracked by admins
       assigned_to: { equals: name, mode: 'insensitive' },
       run: { action_plan_status: 'approved' },
     },
@@ -145,11 +148,57 @@ export async function countMyOpenActions(tenantId: string, staffName: string): P
   return (prisma as any).auditAction.count({
     where: {
       tenant_id: tenantId,
+      is_external: false,
       assigned_to: { equals: name, mode: 'insensitive' },
       status: { not: 'done' },
       run: { action_plan_status: 'approved' },
     },
   }).catch(() => 0)
+}
+
+// ── External-contractor actions (admin-tracked in the hub) ─────────────────────
+// Actions flagged as external-contractor work from APPROVED plans. Admins see these in their hub
+// to check progress and tick them off once the contractor has finished — there is no staff account
+// to assign them to, so they are surfaced to admins rather than a named staff member.
+export async function getExternalActions(tenantId: string) {
+  const rows = await (prisma as any).auditAction.findMany({
+    where: { tenant_id: tenantId, is_external: true, run: { action_plan_status: 'approved' } },
+    include: { run: { select: { id: true, template: { select: { name: true } } } } },
+  }).catch(() => [])
+  const actions = (rows as any[])
+    .map(a => ({
+      id: a.id,
+      description: a.description,
+      priority: a.priority,
+      due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
+      status: a.status,
+      done_at: a.done_at ? new Date(a.done_at).toISOString() : null,
+      run_id: a.run_id,
+      audit_name: a.run?.template?.name ?? 'Audit',
+      external_name: a.external_name ?? null,
+    }))
+    .sort((x, y) =>
+      (STATUS_RANK[x.status] ?? 1) - (STATUS_RANK[y.status] ?? 1) ||
+      (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1) ||
+      (x.due_date ?? '9999').localeCompare(y.due_date ?? '9999'))
+  return { actions }
+}
+
+export async function countOpenExternalActions(tenantId: string): Promise<number> {
+  return (prisma as any).auditAction.count({
+    where: { tenant_id: tenantId, is_external: true, status: { not: 'done' }, run: { action_plan_status: 'approved' } },
+  }).catch(() => 0)
+}
+
+// An admin updates the status of an external-contractor action (approved plans only).
+export async function setExternalActionStatus(tenantId: string, actionId: string, status: string): Promise<void> {
+  if (!['open', 'in_progress', 'done'].includes(status)) throw new Error('Invalid status')
+  const existing = await (prisma as any).auditAction.findFirst({
+    where: { id: actionId, tenant_id: tenantId, is_external: true, run: { action_plan_status: 'approved' } },
+    select: { id: true },
+  })
+  if (!existing) throw new Error('Action not found')
+  await (prisma as any).auditAction.update({ where: { id: actionId }, data: { status, done_at: status === 'done' ? new Date() : null } })
 }
 
 // ── Admin analytics: assigned actions across the tenant ───────────────────────

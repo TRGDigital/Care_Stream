@@ -171,10 +171,10 @@ export interface TenantInsights {
     embed_onetime: number
     total_monthly_usd: number
     ai_measured?: boolean
-    ai_costed_queries?: number
-    ai_uncosted_queries?: number
+    ai_calls?: number
     ai_input_tokens?: number
     ai_output_tokens?: number
+    ai_by_feature?: Array<{ feature: string; calls: number; usd: number }>
     note: string
   }
 }
@@ -184,11 +184,12 @@ export interface PlatformCosts {
   ai: {
     usd: number
     measured: boolean
-    costed_queries: number
-    uncosted_queries: number
-    total_queries: number
+    calls: number
     input_tokens: number
     output_tokens: number
+    by_feature: Array<{ feature: string; calls: number; usd: number }>
+    by_tenant: Array<{ tenant_id: string | null; name: string; calls: number; usd: number }>
+    daily: Array<{ day: string; usd: number; calls: number }>
   }
   pinecone: { usd: number; vectors: number; namespaces: number; available: boolean }
   s3:       { usd: number; bytes: number; objects: number; available: boolean }

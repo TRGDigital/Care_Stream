@@ -908,6 +908,27 @@ model AiCreditLog {
   @@map("ai_credit_logs")
 }
 
+// Per-call LLM usage + real cost, captured from every Claude call (tenant auto-attributed from
+// the request's AsyncLocalStorage context). The single source of truth for measured AI spend on
+// the platform + per-client cost cards.
+model AiUsageEvent {
+  id                    String   @id @default(uuid())
+  tenant_id             String?                          // null = platform-level / no tenant context
+  feature               String   @default("other")       // chat|policy_format|audit_recs|translation|…
+  model                 String
+  input_tokens          Int      @default(0)
+  output_tokens         Int      @default(0)
+  cache_read_tokens     Int      @default(0)
+  cache_creation_tokens Int      @default(0)
+  cost_usd              Float    @default(0)
+  created_at            DateTime @default(now())
+
+  @@index([created_at])
+  @@index([tenant_id, created_at])
+  @@index([feature, created_at])
+  @@map("ai_usage_events")
+}
+
 // Catalogue of training topics admins can generate AI modules from.
 model TrainingTopic {
   id                 String   @id @default(uuid())
@@ -1917,6 +1938,8 @@ model AuditAction {
   priority    String    @default("priority")  // immediate | priority | monitor
   due_date    DateTime?
   assigned_to String?
+  is_external Boolean   @default(false)        // assigned to an external contractor (tracked by admins in the hub)
+  external_name String?                        // optional contractor name when is_external
   status      String    @default("open")       // open | in_progress | done
   source      String    @default("ai")         // ai | manual
   done_at     DateTime?

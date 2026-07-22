@@ -15,7 +15,7 @@
 //  11. Save QueryRecord, return response + citations
 
 import { prisma } from '../../db/client'
-import { withTokenTracking, getTrackedTotals } from '../../lib/token-usage'
+import { withTokenTracking, getTrackedTotals, withAiFeature } from '../../lib/token-usage'
 import { downloadExtractedText } from '../storage/s3'
 import { embedText } from './embedder'
 import {
@@ -480,7 +480,7 @@ async function loadPolicyMeta(
 export function runQueryPipeline(input: QueryInput): Promise<QueryOutput> {
   // Open a per-request LLM token-tracking scope; saveQueryRecord reads the
   // accumulated tokens + real cost at the end (§10.6).
-  return withTokenTracking(() => runQueryPipelineInner(input))
+  return withTokenTracking(() => withAiFeature('chat', () => runQueryPipelineInner(input)))
 }
 
 async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {

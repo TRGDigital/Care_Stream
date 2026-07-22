@@ -4,7 +4,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createHash } from 'crypto'
-import { recordUsage } from './token-usage'
+import { recordUsage, withAiFeature } from './token-usage'
 import { languageNameForCode } from '../data/languages'
 import { prisma } from '../db/client'
 import { approvedOverrideMap, overrideHash, applyOverrides } from './overrides'
@@ -517,12 +517,12 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
   try {
     // Concurrency-limited but order-preserving, so sections stay in order. Each chunk retries once,
     // then falls back to minimal formatting — content is preserved even if a section won't format.
-    const parts = await mapLimit(chunks, 3, async (chunk: string, i: number) => {
+    const parts = await withAiFeature('policy_format', () => mapLimit(chunks, 3, async (chunk: string, i: number) => {
       let html = ''
       try { html = await formatChunk(chunk, i === 0) }
       catch { try { html = await formatChunk(chunk, i === 0) } catch { html = '' } }
       return html.trim() ? html : basicHtml(chunk)   // never drop a section
-    })
+    }))
     const full = parts.map(p => p || '').join('\n').trim()
     return full || null
   } catch (e) {
@@ -580,7 +580,7 @@ export async function translatePolicyText(text: string, langCode: string, langNa
   }
   if (cur) chunks.push(cur)
 
-  const translated = await mapLimit(chunks, 4, async (chunk) => {
+  const translated = await withAiFeature('translation', () => mapLimit(chunks, 4, async (chunk) => {
     try {
       const msg = await anthropic.messages.create({
         model:      'claude-haiku-4-5-20251001',
@@ -594,7 +594,7 @@ export async function translatePolicyText(text: string, langCode: string, langNa
       console.error('[translate] policy chunk failed, keeping English:', e)
       return chunk
     }
-  })
+  }))
   return translated.join('\n\n')
 }
 

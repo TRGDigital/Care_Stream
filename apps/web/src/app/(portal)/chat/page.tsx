@@ -1178,7 +1178,7 @@ function ChatPageInner() {
 
         {/* My actions (audit action-plan items assigned to me) */}
         {view === 'actions' && session?.accessToken && (
-          <MyActionsView token={session.accessToken} userId={userId} onChange={() => {
+          <MyActionsView token={session.accessToken} userId={userId} isAdmin={isAdmin} onChange={() => {
             createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
           }} />
         )}

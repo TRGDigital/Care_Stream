@@ -208,24 +208,18 @@ adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => 
   if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
 
   const since30 = new Date(Date.now() - 30 * 86_400_000)
-  const [vectors, storage, queriesTotal, queries30, aiAgg] = await Promise.all([
+  const [vectors, storage, queriesTotal, queries30] = await Promise.all([
     getTenantVectorStats(tenantId).catch(() => null),
     getTenantStorageStats(tenantId).catch(() => null),
     (prisma as any).queryRecord.count({ where: { tenant_id: tenantId } }),
     (prisma as any).queryRecord.count({ where: { tenant_id: tenantId, created_at: { gte: since30 } } }),
-    (prisma as any).queryRecord.aggregate({
-      where:  { tenant_id: tenantId, created_at: { gte: since30 } },
-      _sum:   { ai_cost_usd: true, prompt_tokens: true, completion_tokens: true },
-      _count: { ai_cost_usd: true },   // non-null = queries with real token logging
-    }),
   ])
 
-  // ── Monthly cost — storage estimated; AI now from REAL per-query token logging. ──
+  // ── Monthly cost — storage estimated; AI measured from the per-call token log. ──
   const GB = 1024 ** 3
   const PINECONE_USD_PER_GB_MONTH = 0.33
   const S3_USD_PER_GB_MONTH       = 0.024                 // eu-west-2 S3 Standard
   const BYTES_PER_VECTOR          = 1536 * 4 + 1600        // 1536-dim float32 + ~chunk_text metadata
-  const AI_USD_PER_QUERY          = 0.02                   // fallback for pre-logging queries
   const EMBED_USD_PER_VECTOR      = 0.000005               // ~250 tokens × $0.02/1M (text-embedding-3-small)
 
   const vectorTotal   = vectors?.total ?? 0
@@ -233,13 +227,21 @@ adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => 
   const s3_usd        = ((storage?.bytes ?? 0) / GB) * S3_USD_PER_GB_MONTH
   const embed_onetime = vectorTotal * EMBED_USD_PER_VECTOR
 
-  // Real AI cost from logged tokens; blend in the old per-query estimate only for
-  // queries logged before token capture existed.
-  const realCost      = aiAgg?._sum?.ai_cost_usd ?? 0
-  const costedQueries = aiAgg?._count?.ai_cost_usd ?? 0
-  const uncosted      = Math.max(0, queries30 - costedQueries)
-  const ai_usd        = realCost + uncosted * AI_USD_PER_QUERY
-  const ai_is_measured = costedQueries > 0 && uncosted === 0
+  // AI cost measured from the durable per-call token log — EVERY AI feature (chat, formatting,
+  // audit recs, training, translation…), not just chat. Broken down by feature.
+  const aiUsage: any[] = await (prisma as any).aiUsageEvent.groupBy({
+    by:     ['feature'],
+    where:  { tenant_id: tenantId, created_at: { gte: since30 } },
+    _sum:   { cost_usd: true, input_tokens: true, output_tokens: true },
+    _count: { _all: true },
+  }).catch(() => [])
+  const ai_usd       = aiUsage.reduce((s, r) => s + (r._sum?.cost_usd ?? 0), 0)
+  const ai_calls     = aiUsage.reduce((s, r) => s + (r._count?._all ?? 0), 0)
+  const ai_input     = aiUsage.reduce((s, r) => s + (r._sum?.input_tokens ?? 0), 0)
+  const ai_output    = aiUsage.reduce((s, r) => s + (r._sum?.output_tokens ?? 0), 0)
+  const ai_by_feature = aiUsage
+    .map(r => ({ feature: r.feature as string, calls: r._count?._all ?? 0, usd: r._sum?.cost_usd ?? 0 }))
+    .sort((a, b) => b.usd - a.usd)
 
   ok(res, {
     vectors: vectors ? { ...vectors, available: true } : { namespaces: [], total: 0, available: false },
@@ -248,14 +250,12 @@ adminRouter.get('/tenants/:id/insights', async (req: Request, res: Response) => 
     costs: {
       pinecone_usd, s3_usd, ai_usd, embed_onetime,
       total_monthly_usd: pinecone_usd + s3_usd + ai_usd,
-      ai_measured:        ai_is_measured,
-      ai_costed_queries:  costedQueries,
-      ai_uncosted_queries: uncosted,
-      ai_input_tokens:    aiAgg?._sum?.prompt_tokens ?? 0,
-      ai_output_tokens:   aiAgg?._sum?.completion_tokens ?? 0,
-      note: ai_is_measured
-        ? 'AI cost is measured from real per-query token usage (input/output tokens × per-model prices). Storage costs are estimated from usage × published unit prices; embeddings shown separately as a one-off.'
-        : `AI cost is measured from real token logging for ${costedQueries} of ${queries30} recent queries; the remaining ${uncosted} (logged before token capture) use a ~$0.02/query estimate. Storage costs are estimated; embeddings shown separately.`,
+      ai_measured:        true,
+      ai_calls,
+      ai_input_tokens:    ai_input,
+      ai_output_tokens:   ai_output,
+      ai_by_feature,
+      note: 'AI cost is measured from real per-call token usage across every AI feature (input/output tokens × per-model prices) over the last 30 days. Storage/vectors are estimated from usage × published unit prices; embeddings shown separately as a one-off. Not invoiced amounts.',
     },
   })
 })
@@ -312,14 +312,22 @@ adminRouter.get('/tenants/:id/gap-usage', async (req: Request, res: Response) =>
 adminRouter.get('/costs', async (_req: Request, res: Response) => {
   const since30 = new Date(Date.now() - 30 * 86_400_000)
 
-  const [vectors, storage, aiAgg, emailQueries30, trainingSends30] = await Promise.all([
+  const [vectors, storage, aiByFeature, aiByTenant, aiDaily, emailQueries30, trainingSends30] = await Promise.all([
     getPlatformVectorStats().catch(() => null),
     getPlatformStorageStats().catch(() => null),
-    (prisma as any).queryRecord.aggregate({
-      where:  { created_at: { gte: since30 } },
-      _sum:   { ai_cost_usd: true, prompt_tokens: true, completion_tokens: true },
-      _count: { _all: true, ai_cost_usd: true },
-    }),
+    (prisma as any).aiUsageEvent.groupBy({
+      by: ['feature'], where: { created_at: { gte: since30 } },
+      _sum: { cost_usd: true, input_tokens: true, output_tokens: true }, _count: { _all: true },
+    }).catch(() => []),
+    (prisma as any).aiUsageEvent.groupBy({
+      by: ['tenant_id'], where: { created_at: { gte: since30 } },
+      _sum: { cost_usd: true }, _count: { _all: true },
+    }).catch(() => []),
+    // Per-day spend for a small trend (last 30 days), computed in SQL.
+    (prisma as any).$queryRaw`
+      SELECT date_trunc('day', created_at)::date AS day, sum(cost_usd) AS usd, count(*) AS calls
+      FROM ai_usage_events WHERE created_at >= ${since30}
+      GROUP BY 1 ORDER BY 1`.catch(() => []),
     // Outbound email replies ≈ one per email-channel query (inbound parse is free).
     (prisma as any).queryRecord.count({ where: { channel: 'email', created_at: { gte: since30 } } }),
     // Training pulses delivered (email or WhatsApp) — counted toward email estimate.
@@ -331,19 +339,31 @@ adminRouter.get('/costs', async (_req: Request, res: Response) => {
   const PINECONE_USD_PER_GB_MONTH = 0.33
   const S3_USD_PER_GB_MONTH       = 0.024
   const BYTES_PER_VECTOR          = 1536 * 4 + 1600
-  const AI_USD_PER_QUERY          = 0.02            // fallback for pre-logging queries
   const EMAIL_USD_PER_SEND        = 0.001           // ~SendGrid Essentials blended rate
 
   const vectorTotal  = vectors?.total ?? 0
   const pinecone_usd = (vectorTotal * BYTES_PER_VECTOR / GB) * PINECONE_USD_PER_GB_MONTH
   const s3_usd       = ((storage?.bytes ?? 0) / GB) * S3_USD_PER_GB_MONTH
 
-  const totalQueries30 = aiAgg?._count?._all ?? 0
-  const realCost       = aiAgg?._sum?.ai_cost_usd ?? 0
-  const costedQueries  = aiAgg?._count?.ai_cost_usd ?? 0
-  const uncosted       = Math.max(0, totalQueries30 - costedQueries)
-  const ai_usd         = realCost + uncosted * AI_USD_PER_QUERY
-  const ai_is_measured = costedQueries > 0 && uncosted === 0
+  // AI — measured from the per-call token log across EVERY feature and tenant.
+  const ai_usd    = (aiByFeature as any[]).reduce((s, r) => s + (r._sum?.cost_usd ?? 0), 0)
+  const ai_calls  = (aiByFeature as any[]).reduce((s, r) => s + (r._count?._all ?? 0), 0)
+  const ai_input  = (aiByFeature as any[]).reduce((s, r) => s + (r._sum?.input_tokens ?? 0), 0)
+  const ai_output = (aiByFeature as any[]).reduce((s, r) => s + (r._sum?.output_tokens ?? 0), 0)
+  const ai_by_feature = (aiByFeature as any[])
+    .map(r => ({ feature: r.feature as string, calls: r._count?._all ?? 0, usd: r._sum?.cost_usd ?? 0 }))
+    .sort((a, b) => b.usd - a.usd)
+
+  // Resolve tenant names for the top spenders.
+  const tenantIds = (aiByTenant as any[]).map(r => r.tenant_id).filter(Boolean)
+  const tenantRows = tenantIds.length
+    ? await (prisma as any).tenant.findMany({ where: { id: { in: tenantIds } }, select: { id: true, name: true } }).catch(() => [])
+    : []
+  const nameOf = new Map((tenantRows as any[]).map(t => [t.id, t.name]))
+  const ai_by_tenant = (aiByTenant as any[])
+    .map(r => ({ tenant_id: r.tenant_id as string | null, name: r.tenant_id ? (nameOf.get(r.tenant_id) ?? 'Unknown') : 'Platform / no tenant', calls: r._count?._all ?? 0, usd: r._sum?.cost_usd ?? 0 }))
+    .sort((a, b) => b.usd - a.usd)
+  const ai_daily = (aiDaily as any[]).map(r => ({ day: r.day instanceof Date ? r.day.toISOString().slice(0, 10) : String(r.day).slice(0, 10), usd: Number(r.usd ?? 0), calls: Number(r.calls ?? 0) }))
 
   const emailSends = (emailQueries30 ?? 0) + (trainingSends30 ?? 0)
   const email_usd  = emailSends * EMAIL_USD_PER_SEND
@@ -354,18 +374,19 @@ adminRouter.get('/costs', async (_req: Request, res: Response) => {
     period_days: 30,
     ai: {
       usd: ai_usd,
-      measured: ai_is_measured,
-      costed_queries: costedQueries,
-      uncosted_queries: uncosted,
-      total_queries: totalQueries30,
-      input_tokens: aiAgg?._sum?.prompt_tokens ?? 0,
-      output_tokens: aiAgg?._sum?.completion_tokens ?? 0,
+      measured: true,
+      calls: ai_calls,
+      input_tokens: ai_input,
+      output_tokens: ai_output,
+      by_feature: ai_by_feature,
+      by_tenant: ai_by_tenant,
+      daily: ai_daily,
     },
     pinecone: { usd: pinecone_usd, vectors: vectorTotal, namespaces: vectors?.namespaces ?? 0, available: !!vectors },
     s3:       { usd: s3_usd, bytes: storage?.bytes ?? 0, objects: storage?.objects ?? 0, available: !!storage },
     email:    { usd: email_usd, sends: emailSends, reply_emails: emailQueries30 ?? 0, training_sends: trainingSends30 ?? 0 },
     total_monthly_usd,
-    note: 'Platform-wide. AI cost is measured from real per-query token usage; Pinecone, S3 and Email are estimated from usage × published unit prices (not invoiced amounts). Email = email-channel replies + training sends over the last 30 days. Inbound email parsing is free.',
+    note: 'Platform-wide, last 30 days. AI cost is measured from real per-call token usage across every AI feature and tenant (input/output tokens × per-model prices). Pinecone, S3 and Email are estimated from usage × published unit prices (not invoiced amounts). Inbound email parsing is free.',
   })
 })
 

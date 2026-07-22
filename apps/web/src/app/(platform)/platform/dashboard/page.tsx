@@ -1149,11 +1149,11 @@ function PlatformCosts({ token }: { token: string | null }) {
   const cards = [
     {
       key: 'ai', label: 'AI (Claude)', Icon: Cpu, usd: costs.ai.usd,
-      badge: costs.ai.measured ? { text: 'Measured', cls: 'bg-green-50 text-green-700' } : { text: 'Part-estimated', cls: 'bg-amber-50 text-amber-700' },
+      badge: { text: 'Measured', cls: 'bg-green-50 text-green-700' },
       lines: [
-        `${fmtNum(costs.ai.total_queries)} queries (30d)`,
+        `${fmtNum(costs.ai.calls)} AI calls (30d)`,
         `${fmtNum(costs.ai.input_tokens)} in / ${fmtNum(costs.ai.output_tokens)} out tokens`,
-        costs.ai.uncosted_queries > 0 ? `${fmtNum(costs.ai.uncosted_queries)} pre-logging (estimated)` : 'All queries token-logged',
+        'Every feature, token-metered',
       ],
     },
     {
@@ -1218,6 +1218,48 @@ function PlatformCosts({ token }: { token: string | null }) {
             </ul>
           </div>
         ))}
+      </div>
+
+      {/* AI cost breakdown: by feature + by client (the factual, token-metered detail) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2"><Cpu size={15} className="text-teal" /><h3 className="text-sm font-semibold text-neutral-dark">AI cost by feature (30d)</h3></div>
+          {costs.ai.by_feature.length === 0 ? (
+            <p className="text-xs text-neutral-mid">No AI usage recorded yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {costs.ai.by_feature.map(f => {
+                const pct = costs.ai.usd > 0 ? Math.round((f.usd / costs.ai.usd) * 100) : 0
+                return (
+                  <li key={f.feature}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-neutral-dark">{f.feature.replace(/_/g, ' ')}</span>
+                      <span className="text-neutral-mid">{fmtUsd(f.usd)} · {fmtNum(f.calls)} calls</span>
+                    </div>
+                    <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-1.5 rounded-full bg-teal" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2"><Database size={15} className="text-teal" /><h3 className="text-sm font-semibold text-neutral-dark">AI cost by client (30d)</h3></div>
+          {costs.ai.by_tenant.length === 0 ? (
+            <p className="text-xs text-neutral-mid">No AI usage recorded yet.</p>
+          ) : (
+            <ul className="divide-y divide-gray-50">
+              {costs.ai.by_tenant.slice(0, 12).map((t, i) => (
+                <li key={t.tenant_id ?? `none-${i}`} className="flex items-center justify-between py-1.5 text-xs">
+                  <span className="min-w-0 truncate font-medium text-neutral-dark">{t.name}</span>
+                  <span className="shrink-0 text-neutral-mid">{fmtUsd(t.usd)} · {fmtNum(t.calls)} calls</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <p className="text-[11px] leading-relaxed text-neutral-mid">{costs.note}</p>

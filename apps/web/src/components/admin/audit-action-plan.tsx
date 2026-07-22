@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
-type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; status: string; source: string; done_at: string | null }
+type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }
 type Plan = { status: string; actions: Action[] }
 type StaffOption = { name: string; job_role: string | null }
 
@@ -187,6 +187,18 @@ export function AuditActionPlan({ token, runId, canGenerate }: { token: string; 
                           {staff.map(s => <option key={s.name} value={s.name}>{s.name}{s.job_role ? ` · ${s.job_role}` : ''}</option>)}
                           {a.assigned_to && !staff.some(s => s.name === a.assigned_to) && <option value={a.assigned_to}>{a.assigned_to}</option>}
                         </select>
+                        {/* External contractor: an add-on to the staff assignment. When ticked, the action is
+                            tracked by admins in their hub (there is no staff account to assign it to). */}
+                        <label className="inline-flex items-center gap-1 text-neutral-mid">
+                          <input type="checkbox" checked={a.is_external} onChange={e => save(a.id, { is_external: e.target.checked })} className="accent-teal" />
+                          External contractor
+                        </label>
+                        {a.is_external && (
+                          <input value={a.external_name ?? ''} placeholder="Contractor name (optional)"
+                            onChange={e => setLocal(a.id, { external_name: e.target.value })}
+                            onBlur={e => save(a.id, { external_name: e.target.value || null })}
+                            className="w-40 rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+                        )}
                         {!draft && (
                           <select value={a.status} onChange={e => save(a.id, { status: e.target.value })}
                             className={`rounded-md border border-gray-200 px-2 py-1 text-xs font-medium ${STATUS_CLS[a.status] ?? ''}`}>

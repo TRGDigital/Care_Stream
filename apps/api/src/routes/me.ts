@@ -16,7 +16,7 @@ import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
-import { getMyActions, countMyOpenActions, setMyActionStatus } from '../services/audits/action-plan'
+import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
@@ -214,7 +214,12 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
       if (ids.length) { const a = await getAuditsDue(tenantId, ids); audits = a.due.length + a.inProgress }
     } catch { /* ignore */ }
   }
-  ok(res, { training, induction, cqc, followup, annual, audits, actions: actions as number })
+  // The "My actions" badge = my assigned actions, plus (for admins) open external-contractor actions.
+  let actionsCount = actions as number
+  if ((req as any).user.role === 'admin') {
+    actionsCount += await countOpenExternalActions(tenantId).catch(() => 0)
+  }
+  ok(res, { training, induction, cqc, followup, annual, audits, actions: actionsCount })
 })
 
 // ─── Care manager: policies awaiting their approval (Policy Change Adoption) ──
@@ -418,6 +423,25 @@ meRouter.patch('/actions/:id', async (req: Request, res: Response) => {
   try {
     await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), String(req.body?.status ?? ''))
     ok(res, await getMyActions(tenantId, me?.name ?? ''))
+  } catch (e: any) {
+    err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not update the action.')
+  }
+})
+
+// ─── External-contractor actions (admins only) ────────────────────────────────
+// Admins track audit actions assigned to external contractors and tick them off on completion.
+meRouter.get('/external-actions', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if ((req as any).user.role !== 'admin') { ok(res, { actions: [] }); return }
+  ok(res, await getExternalActions(tenantId))
+})
+
+meRouter.patch('/external-actions/:id', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if ((req as any).user.role !== 'admin') { err(res, 'FORBIDDEN', 'Admins only', 403); return }
+  try {
+    await setExternalActionStatus(tenantId, String(req.params.id), String(req.body?.status ?? ''))
+    ok(res, await getExternalActions(tenantId))
   } catch (e: any) {
     err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not update the action.')
   }

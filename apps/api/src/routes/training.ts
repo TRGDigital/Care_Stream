@@ -1247,7 +1247,7 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
     const policyContext = await settingSeedContextForModule(tenantId, module.name)
     const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.${QUESTION_JSON_FORMAT}`
 
-    const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.6 })
+    const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.6, feature: 'training' })
     const generated = parseGeneratedQuestions(raw)
 
     if (generated.length === 0) {
@@ -1359,7 +1359,7 @@ trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: R
     const questionList = questions.map((q: any, i: number) => `${i + 1}. ${q.text}`).join('\n')
     const userMessage  = `${buildSeedContext(seed)}\n\nFor each of the following questions, generate exactly 4 answer options (A, B, C, D) and identify the correct one.\nReturn the same number of questions as given, in the same order.\n\nQuestions:\n${questionList}${QUESTION_JSON_FORMAT}`
 
-    const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.4 })
+    const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.4, feature: 'training' })
     const generated = parseGeneratedQuestions(raw)
 
     if (generated.length === 0) {

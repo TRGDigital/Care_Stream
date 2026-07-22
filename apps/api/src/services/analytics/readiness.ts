@@ -40,7 +40,7 @@ export async function scoreAuditDomains(auditName: string, auditResultsText: str
     auditResultsText.slice(0, 12000),
   ].join('\n')
   try {
-    const out = await callClaude(system, user, { maxTokens: 300, temperature: 0 })
+    const out = await callClaude(system, user, { maxTokens: 300, temperature: 0, feature: 'readiness' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     const scores: Record<string, number | null> = { overall: clamp(parsed.overall) }
     for (const d of DOMAINS) scores[d] = parsed[d] == null ? null : clamp(parsed[d])

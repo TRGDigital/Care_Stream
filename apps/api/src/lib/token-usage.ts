@@ -1,4 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { prisma } from '../db/client'
+import { getTenantIdOrNull } from '../db/tenant-context'
 
 // §10.6 — Per-request LLM token + cost tracking.
 //
@@ -46,13 +48,47 @@ export function withTokenTracking<T>(fn: () => Promise<T>): Promise<T> {
   return als.run({ calls: [] }, fn)
 }
 
-/** Record one LLM call's usage into the active scope (no-op outside a scope). */
+// Feature attribution for AI usage (e.g. 'chat', 'policy_format', 'audit_recs'). Set at the
+// operation entry point; read when each call is persisted. Defaults to 'other' when unset.
+const featureAls = new AsyncLocalStorage<string>()
+export function withAiFeature<T>(feature: string, fn: () => Promise<T>): Promise<T> {
+  return featureAls.run(feature, fn)
+}
+
+// Persist one call's real usage + cost to the durable ai_usage_events log — the single source of
+// truth for measured AI spend (platform + per-client). Tenant is auto-attributed from the request
+// context; fire-and-forget so it never slows or fails an AI call.
+function persistAiUsage(model: string, usage: {
+  input_tokens?: number | null; output_tokens?: number | null
+  cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null
+}): void {
+  const input = usage.input_tokens ?? 0
+  const output = usage.output_tokens ?? 0
+  const cacheRead = usage.cache_read_input_tokens ?? 0
+  const cacheCreate = usage.cache_creation_input_tokens ?? 0
+  if (!input && !output && !cacheRead && !cacheCreate) return
+  const p = priceFor(model)
+  const cost = (input * p.input + output * p.output + cacheRead * p.cacheRead + cacheCreate * p.cacheWrite) / 1_000_000
+  ;(prisma as any).aiUsageEvent.create({
+    data: {
+      tenant_id: getTenantIdOrNull(),
+      feature: featureAls.getStore() ?? 'other',
+      model,
+      input_tokens: input, output_tokens: output,
+      cache_read_tokens: cacheRead, cache_creation_tokens: cacheCreate,
+      cost_usd: cost,
+    },
+  }).catch(() => { /* never let cost logging break an AI call */ })
+}
+
+/** Record one LLM call's usage: persist it durably AND add it to the active query scope (if any). */
 export function recordUsage(model: string, usage: {
   input_tokens?:          number | null
   output_tokens?:         number | null
   cache_read_input_tokens?:     number | null
   cache_creation_input_tokens?: number | null
 } | null | undefined): void {
+  if (usage) persistAiUsage(model, usage)
   const store = als.getStore()
   if (!store || !usage) return
   store.calls.push({

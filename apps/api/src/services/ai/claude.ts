@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { recordUsage } from '../../lib/token-usage'
+import { recordUsage, withAiFeature } from '../../lib/token-usage'
 
 // §4.3 — Claude API client.
 // Model: claude-sonnet-4-5 (configurable via CLAUDE_MODEL env var).
@@ -19,6 +19,7 @@ export interface ClaudeOptions {
   maxTokens?:  number
   temperature?: number
   model?:      string
+  feature?:    string   // cost attribution, e.g. 'audit_recs' (defaults to any outer context / 'other')
 }
 
 export async function callClaude(
@@ -27,22 +28,25 @@ export async function callClaude(
   options?:     ClaudeOptions,
 ): Promise<string> {
   const model = options?.model ?? MODEL
-  const response = await client.messages.create({
-    model,
-    max_tokens: options?.maxTokens  ?? 4096,
-    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:     withBritishEnglish(systemPrompt),
-    messages:   [{ role: 'user', content: userMessage }],
-  })
+  const exec = async () => {
+    const response = await client.messages.create({
+      model,
+      max_tokens: options?.maxTokens  ?? 4096,
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      system:     withBritishEnglish(systemPrompt),
+      messages:   [{ role: 'user', content: userMessage }],
+    })
 
-  recordUsage(model, response.usage)
+    recordUsage(model, response.usage)
 
-  const block = response.content[0]
-  if (!block || block.type !== 'text') {
-    throw new Error('Claude returned no text content')
+    const block = response.content[0]
+    if (!block || block.type !== 'text') {
+      throw new Error('Claude returned no text content')
+    }
+
+    return block.text
   }
-
-  return block.text
+  return options?.feature ? withAiFeature(options.feature, exec) : exec()
 }
 
 // Streaming variant — emits text deltas via onText as they arrive, and resolves with the
@@ -54,19 +58,22 @@ export async function callClaudeStream(
   onText:       (delta: string) => void,
 ): Promise<string> {
   const model = options?.model ?? MODEL
-  const stream = client.messages.stream({
-    model,
-    max_tokens: options?.maxTokens ?? 4096,
-    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:   withBritishEnglish(systemPrompt),
-    messages,
-  })
-  stream.on('text', (delta) => onText(delta))
-  const final = await stream.finalMessage()
-  recordUsage(model, final.usage)
-  const block = final.content[0]
-  if (!block || block.type !== 'text') throw new Error('Claude returned no text content')
-  return block.text
+  const exec = async () => {
+    const stream = client.messages.stream({
+      model,
+      max_tokens: options?.maxTokens ?? 4096,
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      system:   withBritishEnglish(systemPrompt),
+      messages,
+    })
+    stream.on('text', (delta) => onText(delta))
+    const final = await stream.finalMessage()
+    recordUsage(model, final.usage)
+    const block = final.content[0]
+    if (!block || block.type !== 'text') throw new Error('Claude returned no text content')
+    return block.text
+  }
+  return options?.feature ? withAiFeature(options.feature, exec) : exec()
 }
 
 // §8.2 — Multi-turn variant for email conversation threads.
@@ -76,20 +83,23 @@ export async function callClaudeWithHistory(
   messages:     Anthropic.Messages.MessageParam[],
   options?:     ClaudeOptions,
 ): Promise<string> {
-  const response = await client.messages.create({
-    model:      MODEL,
-    max_tokens: options?.maxTokens  ?? 4096,
-    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
-    system:     withBritishEnglish(systemPrompt),
-    messages,
-  })
+  const exec = async () => {
+    const response = await client.messages.create({
+      model:      MODEL,
+      max_tokens: options?.maxTokens  ?? 4096,
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      system:     withBritishEnglish(systemPrompt),
+      messages,
+    })
 
-  recordUsage(MODEL, response.usage)
+    recordUsage(MODEL, response.usage)
 
-  const block = response.content[0]
-  if (!block || block.type !== 'text') {
-    throw new Error('Claude returned no text content')
+    const block = response.content[0]
+    if (!block || block.type !== 'text') {
+      throw new Error('Claude returned no text content')
+    }
+
+    return block.text
   }
-
-  return block.text
+  return options?.feature ? withAiFeature(options.feature, exec) : exec()
 }

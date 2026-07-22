@@ -8,6 +8,7 @@ import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
+import { SupervisionRecordModal } from '@/components/admin/supervision-record-modal'
 import {
   ArrowLeft, Award, BadgeCheck, Bell, BookOpen, Brain, CalendarDays, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Paperclip, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
@@ -164,6 +165,7 @@ export default function StaffRecordPage() {
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
   const [compliance, setCompliance] = useState<any>(null)
   const [supervisions, setSupervisions] = useState<any>(null)
+  const [viewSup, setViewSup] = useState<any>(null)
   const [actions, setActions] = useState<any>(null)
   useEffect(() => {
     if (!token || !hasWorkforce) return
@@ -667,8 +669,28 @@ export default function StaffRecordPage() {
                 )
               })}
             </div>
+            {/* Completed recordings — open the full supervision form; the next one booked shows above. */}
+            {(() => {
+              const done = (supervisions.records ?? []).filter((r: any) => r.status === 'completed').sort((a: any, b: any) => new Date(b.held_on).getTime() - new Date(a.held_on).getTime())
+              if (!done.length) return null
+              return (
+                <div className="border-t border-gray-100 px-5 py-3.5">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Completed recordings</p>
+                  <ul className="space-y-1.5">
+                    {done.map((r: any) => (
+                      <li key={r.id} className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 text-sm text-neutral-dark"><span className="capitalize">{r.type}</span> · {fmtDate(r.held_on)}{r.conducted_by ? ` · by ${r.conducted_by}` : ''}</span>
+                        <button onClick={() => setViewSup(r)} className="shrink-0 rounded-btn border border-gray-200 px-2.5 py-1 text-xs font-medium text-teal hover:bg-teal-light/30 no-print">View form</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })()}
           </div>
         )}
+
+        {viewSup && <SupervisionRecordModal record={viewSup} supervisee={u.name} onClose={() => setViewSup(null)} />}
 
         {/* Induction questions */}
         {rec.induction_questions && rec.induction_questions.items.length > 0 && (

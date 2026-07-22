@@ -1146,3 +1146,55 @@ meRouter.get('/supervisions', async (req: Request, res: Response) => {
   })
   ok(res, { enabled: true, records })
 })
+
+// ─── Conductor: supervisions I'm conducting (complete the recording form here) ─
+const iso = (d: any) => (d ? new Date(d).toISOString() : null)
+
+meRouter.get('/conducting', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const rows = await (prisma as any).staffSupervision.findMany({
+    where: { tenant_id: tenantId, conducted_by_user_id: userId },
+    orderBy: { held_on: 'desc' },
+  }).catch(() => [])
+  const ids = [...new Set((rows as any[]).map(r => r.user_id))]
+  const users = ids.length ? await (prisma as any).user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, job_role: true } }).catch(() => []) : []
+  const uMap = new Map((users as any[]).map(u => [u.id, u]))
+  const records = (rows as any[]).map(r => ({
+    id: r.id, type: r.type, held_on: iso(r.held_on), status: r.status, next_due: iso(r.next_due), completed_at: iso(r.completed_at),
+    supervisee_id: r.user_id, supervisee: uMap.get(r.user_id)?.name ?? 'Staff member', supervisee_role: uMap.get(r.user_id)?.job_role ?? null,
+  }))
+  ok(res, { records })
+})
+
+meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
+  const [su, me] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: r.user_id }, select: { name: true, job_role: true } }).catch(() => null),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null),
+  ])
+  ok(res, { record: {
+    id: r.id, type: r.type, held_on: iso(r.held_on), next_due: iso(r.next_due), status: r.status, completed_at: iso(r.completed_at),
+    form: r.form ?? null, conducted_by: r.conducted_by ?? me?.name ?? null,
+    supervisee_id: r.user_id, supervisee: su?.name ?? 'Staff member', supervisee_role: su?.job_role ?? null,
+  } })
+})
+
+// Save the recording form + mark the supervision complete. (Agreed-actions → My actions is wired
+// in the next phase.)
+meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
+  const form = (req.body?.form && typeof req.body.form === 'object') ? req.body.form : {}
+  const nextDate = req.body?.next_date
+  await (prisma as any).staffSupervision.update({
+    where: { id: r.id },
+    data: { form, status: 'completed', completed_at: new Date(), ...(nextDate ? { next_due: new Date(nextDate) } : {}) },
+  })
+  ok(res, { ok: true })
+})

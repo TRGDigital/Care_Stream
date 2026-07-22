@@ -844,6 +844,9 @@ export function createApiClient(token: string) {
       savePolicy: (policyId: string) => apiFetch<{ saved: boolean }>('/me/saved-policies', token, { method: 'POST', body: JSON.stringify({ policy_id: policyId }) }),
       unsavePolicy: (policyId: string) => apiFetch<{ removed: boolean }>(`/me/saved-policies/${policyId}`, token, { method: 'DELETE' }),
       supervisions: () => apiFetch<{ enabled: boolean; records: SupRecord[] }>('/me/supervisions', token),
+      conducting: () => apiFetch<{ records: Array<{ id: string; type: string; held_on: string; status: string; next_due: string | null; completed_at: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }> }>('/me/conducting', token),
+      conductingDetail: (id: string) => apiFetch<{ record: { id: string; type: string; held_on: string; next_due: string | null; status: string; completed_at: string | null; form: any; conducted_by: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null } }>(`/me/conducting/${encodeURIComponent(id)}`, token),
+      completeConducting: (id: string, body: { form: any; next_date?: string | null }) => apiFetch<{ ok: boolean }>(`/me/conducting/${encodeURIComponent(id)}/complete`, token, { method: 'POST', body: JSON.stringify(body) }),
     },
 
     faceToFace: {

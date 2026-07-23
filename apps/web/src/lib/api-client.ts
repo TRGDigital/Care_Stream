@@ -1041,7 +1041,7 @@ export function createApiClient(token: string) {
       policiesDueForReview: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }> }>('/analytics/policies/due-for-review', token),
       reReviewPolicies: (policyIds: string[]) => apiFetch<{ rescanned: number }>('/analytics/policies/re-review', token, { method: 'POST', body: JSON.stringify({ policy_ids: policyIds }) }),
       acknowledgeAnalysis: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-analysis', token, { method: 'POST' }),
-      detectPolicySection: (policyId: string, anchor: string) => apiFetch<{ section_text: string; found: boolean }>('/analytics/gaps/detect-section', token, { method: 'POST', body: JSON.stringify({ policy_id: policyId, anchor }) }),
+      detectPolicySection: (policyId: string, anchor: string, opts?: { context?: string; granularity?: 'section' | 'sentence' }) => apiFetch<{ section_text: string; found: boolean }>('/analytics/gaps/detect-section', token, { method: 'POST', body: JSON.stringify({ policy_id: policyId, anchor, ...opts }) }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

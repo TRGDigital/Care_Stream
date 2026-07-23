@@ -212,8 +212,8 @@ function looksLikeHeading(line: string): boolean {
 // heading above it down to (but excluding) the next heading. If there's no heading above, it
 // falls back to the blank-line-delimited paragraph block around the anchor. Returned verbatim
 // so it can be removed with a plain amend (old_text → ""). Null if the anchor isn't present.
-function sectionAround(content: string, anchor: string): string | null {
-  const at = content.indexOf(anchor)
+function sectionAround(content: string, anchor: string, atOverride?: number): string | null {
+  const at = atOverride != null && atOverride >= 0 ? atOverride : content.indexOf(anchor)
   if (at < 0) return null
   const lines = content.split('\n')
   const starts: number[] = []
@@ -257,30 +257,62 @@ function sectionPrompt(window: string, phrase: string): string {
   ].join('\n')
 }
 
-// The section of a policy's draft that surrounds a given anchor phrase (e.g. COVID wording), so
-// the admin can confirm and delete the whole section. Uses a small grounded model call to find
-// the section boundaries (extracted policy text has no reliable heading markup), validates the
-// result is a real, bounded substring, and falls back to the heuristic if anything looks off.
-// Returns the verbatim block or null.
-export async function detectPolicySection(tenantId: string, policyId: string, anchor: string): Promise<string | null> {
+// Pick the occurrence of `anchor` whose surrounding text best matches `context` (so we act on the
+// right one when the same wording appears in several places). Falls back to the first occurrence.
+function bestOccurrence(content: string, anchor: string, context?: string): number {
+  const first = content.indexOf(anchor)
+  if (first < 0 || !context || !context.trim()) return first
+  const ctxWords = [...new Set(context.toLowerCase().split(/\W+/).filter(w => w.length > 3))]
+  let best = first, bestScore = -1
+  for (let i = first; i >= 0; i = content.indexOf(anchor, i + anchor.length)) {
+    const win = content.slice(Math.max(0, i - 140), i + anchor.length + 140).toLowerCase()
+    let score = 0
+    for (const w of ctxWords) if (win.includes(w)) score++
+    if (score > bestScore) { bestScore = score; best = i }
+  }
+  return best
+}
+
+// The single sentence in `content` that contains position `at`.
+function sentenceAt(content: string, at: number, anchorLen: number): string | null {
+  let start = at
+  while (start > 0 && !/[.!?\n]/.test(content[start - 1])) start--
+  let end = at + anchorLen
+  while (end < content.length && !/[.!?\n]/.test(content[end])) end++
+  if (end < content.length) end++
+  const sentence = content.slice(start, end).trim()
+  return sentence.length >= anchorLen ? sentence : null
+}
+
+// The verbatim span of the policy draft to act on around a flagged phrase. `context` (the text of
+// the block the occurrence sits in) disambiguates WHICH occurrence when the wording repeats.
+// granularity: 'section' = heading to next heading (grounded model call + heuristic fallback);
+// 'sentence' = just the sentence containing the occurrence. Returns the exact substring or null.
+export async function detectPolicySection(
+  tenantId: string, policyId: string, anchor: string,
+  opts?: { context?: string; granularity?: 'section' | 'sentence' },
+): Promise<string | null> {
   if (!anchor.trim()) return null
   const doc = await getOrInitDocument(tenantId, policyId)
   const content = String(doc.draft_content ?? '')
-  const at = content.indexOf(anchor)
+  const at = bestOccurrence(content, anchor, opts?.context)
   if (at < 0) return null
 
-  // The heading usually sits just before the match; the body runs after it.
+  if (opts?.granularity === 'sentence') return sentenceAt(content, at, anchor.length)
+
+  // Section: the heading usually sits just before the match; the body runs after it.
   const window = content.slice(Math.max(0, at - 2000), Math.min(content.length, at + anchor.length + 7000))
   try {
     const out = await callClaude(SECTION_SYSTEM, sectionPrompt(window, anchor), { model: SECTION_HAIKU, maxTokens: 400, temperature: 0, feature: 'covid_section' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     if (parsed?.found && parsed.start_anchor && parsed.end_anchor) {
-      const s = content.indexOf(String(parsed.start_anchor))
+      // Prefer the anchors nearest THIS occurrence (heading just before it, end just after).
+      const startA = String(parsed.start_anchor)
+      const s = content.lastIndexOf(startA, at) >= 0 ? content.lastIndexOf(startA, at) : content.indexOf(startA)
       const eAnchor = String(parsed.end_anchor)
-      const eFound = s >= 0 ? content.indexOf(eAnchor, s) : -1
+      const eFound = s >= 0 ? content.indexOf(eAnchor, at) : -1
       if (s >= 0 && eFound >= 0) {
         const span = content.slice(s, eFound + eAnchor.length)
-        // Must be a real span that includes the flagged wording and isn't essentially the whole doc.
         if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.7) {
           await logAiCredit(tenantId, 'covid_section', policyId)
           return span
@@ -289,7 +321,7 @@ export async function detectPolicySection(tenantId: string, policyId: string, an
     }
   } catch { /* fall through to the heuristic */ }
 
-  return sectionAround(content, anchor)
+  return sectionAround(content, anchor, at)
 }
 
 // Apply one change to the content. `applied` is false when an amend/heading anchor could

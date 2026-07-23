@@ -198,7 +198,7 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
 
   let claims: PolicyClaim[] = []
   try {
-    const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, text), { model: HAIKU, maxTokens: 2000, temperature: 0 })
+    const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, text), { model: HAIKU, maxTokens: 2000, temperature: 0, feature: 'policy_consistency' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     claims = (Array.isArray(parsed.claims) ? parsed.claims : [])
       .map((c: any) => ({ topic: String(c.topic ?? '').trim(), statement: String(c.statement ?? '').trim(), quote: groundQuote(String(c.quote ?? '').trim(), text), kind: (KINDS.has(c.kind) ? c.kind : 'other') as ClaimKind }))
@@ -304,7 +304,7 @@ async function detectSetConflicts(set: ComparisonSet, claimsByPolicy: Map<string
 
   let parsed: any
   try {
-    const out = await callClaude(DETECT_SYSTEM, detectPrompt(members), { maxTokens: 2600, temperature: 0 })
+    const out = await callClaude(DETECT_SYSTEM, detectPrompt(members), { maxTokens: 2600, temperature: 0, feature: 'policy_consistency' })
     parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
   } catch (e: any) {
     console.error('[consistency] detection failed for set', set.id, e?.message)
@@ -399,7 +399,7 @@ export async function resolveConflict(tenantId: string, key: string): Promise<{ 
   await checkAiCreditLimit(tenantId)
   let resolution = ''
   try {
-    const out = await callClaude(RECONCILE_SYSTEM, reconcilePrompt(c), { maxTokens: 600, temperature: 0 })
+    const out = await callClaude(RECONCILE_SYSTEM, reconcilePrompt(c), { maxTokens: 600, temperature: 0, feature: 'policy_consistency' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     resolution = String(parsed?.resolution ?? '').trim()
   } catch (e: any) {

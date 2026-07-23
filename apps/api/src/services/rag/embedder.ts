@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { recordUsage } from '../../lib/token-usage'
 
 // §4.1.1 / §4.1.2 — text-embedding-3-small used for both ingestion and query.
 // The same model and dimensions must be used in both phases so that similarity
@@ -25,6 +26,8 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
       model: EMBEDDING_MODEL,
       input: batch,
     })
+    // Log the measured embedding spend (per-input-token) to the durable AI cost log.
+    recordUsage(EMBEDDING_MODEL, { input_tokens: (response as any).usage?.total_tokens ?? (response as any).usage?.prompt_tokens ?? 0 })
 
     // OpenAI preserves input order in response.data
     for (let j = 0; j < response.data.length; j++) {

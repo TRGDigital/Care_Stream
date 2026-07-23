@@ -219,7 +219,7 @@ queryRouter.get('/starters', async (req: Request, res: Response) => {
       recentBlock,
       `Return ONLY a JSON array of 6 strings in English.`,
     ].filter(Boolean).join('\n')
-    const raw = await callClaude(sys, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 500, temperature: 0.8 })
+    const raw = await callClaude(sys, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 500, temperature: 0.8, feature: 'chat_suggest' })
     const start = raw.indexOf('['), end = raw.lastIndexOf(']')
     const arr = JSON.parse(raw.slice(start, end + 1))
     pool = Array.isArray(arr) ? arr.filter((q: any) => typeof q === 'string' && q.trim()).map((q: string) => q.trim()).slice(0, 6) : []

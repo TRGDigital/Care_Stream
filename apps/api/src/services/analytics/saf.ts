@@ -134,7 +134,7 @@ Only include genuine improvements; if the policy already reflects a quality well
 Respond with JSON only:
 {"alignments":[{"focus":"<short label of the person-centred quality>","placement":"amend|add_under_heading|new_section","anchor":"<the exact existing passage to replace for amend, a heading or sentence to add under for add_under_heading, or empty for new_section>","section_title":"<title for a new section, or empty>","wording":"<the rewritten passage for amend, or the new wording to add>"}]}`
 
-  const text = await callClaude(system, user, { maxTokens: 2600, temperature: 0.3 })
+  const text = await callClaude(system, user, { maxTokens: 2600, temperature: 0.3, feature: 'saf' })
   const parsed = parseJson(text)
   return (Array.isArray(parsed.alignments) ? parsed.alignments : [])
     .filter((a: any) => a && String(a.wording ?? '').trim() && String(a.focus ?? '').trim())

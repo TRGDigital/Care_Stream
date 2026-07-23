@@ -93,7 +93,7 @@ async function allocateCqc(tenantId: string, userId: string, questionId: string)
     `Rephrase the following CQC inspector question in a slightly different way that tests the same knowledge and competency. Keep it open-ended and realistic. Return only the rephrased question, nothing else.
 
 Original: ${q.question}`,
-    { maxTokens: 200 },
+    { maxTokens: 200, feature: 'cqc' },
   ).catch(() => q.question as string)
 
   await (prisma as any).cqcStaffDelivery.create({

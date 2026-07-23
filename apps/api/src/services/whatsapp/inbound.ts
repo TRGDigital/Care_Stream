@@ -13,6 +13,7 @@
 import twilio from 'twilio'
 import OpenAI from 'openai'
 import { prisma } from '../../db/client'
+import { recordCostUsd } from '../../lib/token-usage'
 import { runQueryPipeline } from '../rag/query'
 import { checkQueryLimit, PlanLimitError } from '../../lib/plan-limits'
 import { htmlToWhatsApp, splitIntoChunks } from '../../utils/htmlToWhatsApp'
@@ -253,6 +254,9 @@ async function transcribeVoiceNote(mediaUrl: string, mediaType: string): Promise
     model:    'whisper-1',
     language: 'en',  // Whisper auto-detects but this speeds it up for English
   })
+  // Whisper is billed at $0.006/minute. We don't have exact duration here, so record a modest
+  // per-voice-note estimate (about one minute) so voice transcription still shows in the cost log.
+  recordCostUsd('whisper-1', 0.006)
 
   return result.text.trim()
 }

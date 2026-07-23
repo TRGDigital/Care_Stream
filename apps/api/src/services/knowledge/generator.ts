@@ -41,6 +41,7 @@ async function extractQAPairs(policyText: string, facilityType: string): Promise
   const raw = await callClaude(systemPrompt, truncated, {
     maxTokens:   2048,
     temperature: 0.1,
+    feature:     'knowledge_gaps',
   })
 
   // Strip any accidental markdown fence

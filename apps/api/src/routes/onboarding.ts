@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { requireAuth, requireAdmin } from '../middleware/auth'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
-import Anthropic from '@anthropic-ai/sdk'
 import { notifyUsers, notifyFollowUp } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
 import { callClaude } from '../services/ai/claude'
@@ -41,8 +40,6 @@ import { languageNameForCode } from '../data/languages'
 
 export const onboardingRouter = Router()
 onboardingRouter.use(requireAuth)
-
-const ai = new Anthropic()
 
 // Returns any step policy_ids that do NOT belong to the given tenant. Steps may
 // reference a policy by id from the request body, so we must confirm ownership
@@ -97,7 +94,7 @@ onboardingRouter.post('/generate-questions', requireAdmin, async (req, res) => {
       .replace(/\{\{policy_name\}\}/g, policy.name)
       .replace(/\{\{count\}\}/g,       String(count))
       .replace(/\{\{policy_text\}\}/g, text.slice(0, 12000))
-    const raw = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, temperature: 0.4 })
+    const raw = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, temperature: 0.4, feature: 'onboarding' })
     const noFence = raw.replace(/```(?:json)?/gi, '').trim()
     const arr = JSON.parse(noFence.slice(noFence.indexOf('['), noFence.lastIndexOf(']') + 1))
     const questions = (Array.isArray(arr) ? arr : [])
@@ -553,17 +550,14 @@ onboardingRouter.post('/enrollments/:enrollmentId/steps/:stepId/complete', async
         answer_correct = Number.isInteger(sel) && sel === step.correct_option
         mcqIncorrect   = answer_correct === false   // wrong MCQ → make them retry (don't complete)
       } else if (step.question) {
-        // Free-text — AI verdict on whether the answer is broadly acceptable.
-        const msg = await ai.messages.create({
-          model:      'claude-haiku-4-5-20251001',
-          max_tokens: 10,
-          messages:   [{
-            role:    'user',
-            content: `Question: "${step.question}"\nStaff answer: "${answer_text}"\n\nIs this answer correct or broadly acceptable? Reply with only "yes" or "no".`,
-          }],
-        })
-        const verdict = ((msg.content[0] as any).text as string)?.trim().toLowerCase()
-        answer_correct = verdict === 'yes'
+        // Free-text — AI verdict on whether the answer is broadly acceptable. Routed through
+        // callClaude so its token cost is recorded to the AI usage log under 'onboarding'.
+        const verdictText = await callClaude(
+          'Reply with only "yes" or "no".',
+          `Question: "${step.question}"\nStaff answer: "${answer_text}"\n\nIs this answer correct or broadly acceptable?`,
+          { model: 'claude-haiku-4-5-20251001', maxTokens: 10, feature: 'onboarding' },
+        )
+        answer_correct = verdictText.trim().toLowerCase().startsWith('yes')
       }
     }
 
@@ -664,7 +658,7 @@ async function matchStepsToPolicies(
       `For each step index, choose the id of the single best-matching policy, or null if none is a reasonable fit.`,
       `Output JSON: {"map":[{"i":<step index>,"policy_id":"<id or null>"}]}`,
     ].join('\n')
-    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 1500, temperature: 0 })
+    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 1500, temperature: 0, feature: 'onboarding' })
     const noFence = raw.replace(/```(?:json)?/gi, '').trim()
     const parsed = JSON.parse(noFence.slice(noFence.indexOf('{'), noFence.lastIndexOf('}') + 1))
     const valid = new Set(policies.map(p => p.id))
@@ -711,7 +705,7 @@ async function tailorQuestionsToPolicies(
       ``,
       `Output JSON: {"items":[{"i":<index>,"question":"...","options":["","","",""],"correct_option":<0-3>}]}`,
     ].join('\n')
-    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 3000, temperature: 0.3 })
+    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 3000, temperature: 0.3, feature: 'onboarding' })
     const noFence = raw.replace(/```(?:json)?/gi, '').trim()
     const parsed = JSON.parse(noFence.slice(noFence.indexOf('{'), noFence.lastIndexOf('}') + 1))
     for (const it of (parsed?.items ?? [])) {

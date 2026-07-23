@@ -11,6 +11,20 @@
 import OpenAI from 'openai'
 import { prisma } from '../../db/client'
 import { uploadTrainingImage } from '../storage/s3'
+import { recordCostUsd } from '../../lib/token-usage'
+
+// gpt-image-1 cost. Priced from the returned usage tokens (image output tokens dominate):
+// text input $5, image input $10, image output $40 per 1M tokens. Falls back to a per-image
+// estimate for a 1024x1024 image at default (medium) quality when usage is absent.
+function imageCostUsd(usage: any): number {
+  if (usage && (usage.input_tokens || usage.output_tokens)) {
+    const textIn  = usage.input_tokens_details?.text_tokens ?? usage.input_tokens ?? 0
+    const imageIn = usage.input_tokens_details?.image_tokens ?? 0
+    const out     = usage.output_tokens ?? 0
+    return (textIn * 5 + imageIn * 10 + out * 40) / 1_000_000
+  }
+  return 0.042
+}
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
@@ -50,6 +64,7 @@ async function generateImageKey(name: string, context?: string | null): Promise<
     prompt: buildPrompt(template, name, context),
     size:   '1024x1024',
   })
+  recordCostUsd('gpt-image-1', imageCostUsd((result as any).usage))
   const b64 = result.data?.[0]?.b64_json
   if (!b64) throw new Error('Image generation returned no data')
   return uploadTrainingImage(Buffer.from(b64, 'base64'))

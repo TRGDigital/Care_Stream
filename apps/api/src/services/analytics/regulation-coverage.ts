@@ -196,7 +196,7 @@ EXTRACT FROM THE NAMED POLICY:
 Does this extract genuinely and substantively concern ${reg.official_name}? Answer false if it is only incidentally related, merely shares generic words, or is really about a different subject. Default to false when unsure.
 
 Respond with ONLY minified JSON: {"genuine":true|false,"why":"<short>"}`
-    const t = await callClaude('Respond only with valid JSON.', skeptic, { model: HAIKU, maxTokens: 120 })
+    const t = await callClaude('Respond only with valid JSON.', skeptic, { model: HAIKU, maxTokens: 120, feature: 'regulation_coverage' })
     const p = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
     return p.genuine === true
   } catch {
@@ -289,7 +289,7 @@ async function analyseOne(
     // than pointing a home at a policy that doesn't really concern this regulation.
     user += `\n\nBE STRICT. Judge "covered" or "partial" ONLY if a policy DIRECTLY and SUBSTANTIVELY addresses the specific subject of ${reg.official_name}. A policy that merely shares generic words (e.g. "planning", "care", "management", "general", "quality"), or mentions the topic only in passing, does NOT count — judge it "gap". If no extract genuinely concerns this regulation, judge "gap". When in doubt, choose "gap".`
 
-    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250, feature: 'regulation_coverage' })
     const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
     let status: CoverageRow['status'] = ['covered', 'partial', 'gap'].includes(parsed.status) ? parsed.status : 'gap'
     let evidence: Excerpt | null = status === 'gap' ? null : (ordered.find(x => x.title === parsed.policy) ?? ordered[0])

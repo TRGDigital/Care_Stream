@@ -287,7 +287,7 @@ cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Res
       .replace('{{domain}}', domainLabel[domain] ?? domain)
       .replace('{{topic}}', topic)
 
-    const text = await callClaude('Respond only with valid JSON.', userMessage, { maxTokens: 600 })
+    const text = await callClaude('Respond only with valid JSON.', userMessage, { maxTokens: 600, feature: 'cqc' })
     let parsed: { question: string; model_answer: string }
     try {
       parsed = JSON.parse(text.trim())
@@ -336,7 +336,7 @@ cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, re
       .replace('{{topic_instruction}}', topicInstruction)
       .replace('{{avoid_list}}', avoid)
 
-    const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000 })
+    const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, feature: 'cqc' })
     let parsed: Array<{ domain: string; question: string; model_answer: string }>
     try {
       const start = text.indexOf('['), end = text.lastIndexOf(']')
@@ -426,7 +426,7 @@ cqcQuestionsRouter.post('/:id/deliver', requireAdmin, async (req: Request, res: 
       `Rephrase the following CQC inspector question in a slightly different way that tests the same knowledge and competency. Keep it open-ended and realistic. Return only the rephrased question, nothing else.
 
 Original: ${q.question}`,
-      { maxTokens: 200 },
+      { maxTokens: 200, feature: 'cqc' },
     ).catch(() => q.question as string)
 
     const deliveries = await (prisma as any).cqcStaffDelivery.createMany({
@@ -572,7 +572,7 @@ cqcQuestionsRouter.post('/deliveries/:id/answer', async (req: Request, res: Resp
       .replace('{{model_answer}}', delivery.question.model_answer)
       .replace('{{staff_answer}}', answer_text)
 
-    const evalText = await callClaude('Respond only with valid JSON.', evalPrompt, { maxTokens: 300 })
+    const evalText = await callClaude('Respond only with valid JSON.', evalPrompt, { maxTokens: 300, feature: 'cqc' })
     let score = 0
     let feedback = 'Thank you for your answer.'
     try {

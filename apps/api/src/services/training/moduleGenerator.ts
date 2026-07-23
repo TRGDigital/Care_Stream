@@ -238,7 +238,7 @@ export async function generateAnnualModuleDraft(
     system += `\n\nIMPORTANT — QUESTION HISTORY: the following ${exclude.length} question(s) have ALREADY been used in previous versions of this module. Do NOT repeat, copy, or lightly reword any of them. Produce genuinely NEW questions that test different scenarios, angles, or details of the same topic:\n${list}`
   }
 
-  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 8000, temperature: exclude.length ? 0.6 : 0.4 })
+  const raw = await callClaude(system, `Generate the "${topic.title}" annual training module now as JSON.`, { maxTokens: 8000, temperature: exclude.length ? 0.6 : 0.4, feature: 'annual_training' })
   const p = parseJson(raw)
 
   // Drop any generated question that still matches a previously-used one.

@@ -174,7 +174,7 @@ For each requirement, decide whether THIS policy text substantively addresses it
 
 Respond with ONLY minified JSON${curated.length ? ' — keep the requirement text identical to the list above and in the same order' : ''}:
 {"requirements":[{"requirement":"<requirement>","in_policy":true|false}]}`
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1400, temperature: 0 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1400, temperature: 0, feature: 'gap_detail' })
     const p = parseJson(text)
     const requirements = Array.isArray(p.requirements)
       ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: !!r.in_policy })).filter((r: any) => r.requirement)
@@ -196,7 +196,7 @@ The home has no policy that addresses this regulation. List up to ${MAX_REQUIREM
 
 Respond with ONLY minified JSON:
 {"requirements":[{"requirement":"<one specific requirement>"}]}`
-  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1200, temperature: 0 })
+  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1200, temperature: 0, feature: 'gap_detail' })
   const p = parseJson(text)
   return {
     requirements: Array.isArray(p.requirements) ? p.requirements.slice(0, MAX_REQUIREMENTS).map((r: any) => ({ requirement: String(r.requirement ?? ''), in_policy: false })).filter((r: any) => r.requirement) : [],
@@ -233,7 +233,7 @@ ${missing.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 Respond with ONLY minified JSON, an array in the same order as the requirements:
 {"locations":[{"quote":"<short verbatim phrase or heading, or empty>","is_heading":true|false}]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800, temperature: 0 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800, temperature: 0, feature: 'gap_detail' })
     const p = parseJson(text)
     const arr = Array.isArray(p.locations) ? p.locations : []
     return missing.map((_, i) => {
@@ -294,7 +294,7 @@ ${payload}
 Respond with ONLY minified JSON, an array in the same order:
 {"rewrites":["<combined improved passage>"]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2600, temperature: 0 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2600, temperature: 0, feature: 'gap_detail' })
     const p = parseJson(text)
     const arr = Array.isArray(p.rewrites) ? p.rewrites : []
     return items.map((it, i) => (typeof arr[i] === 'string' && arr[i].trim()) ? arr[i].trim() : (it.suggestion ?? ''))
@@ -328,7 +328,7 @@ NOTE B — what a provider's policy should cover for it:
 ${policy || '(none)'}
 
 Return ONLY compact JSON: {"care_setting":"...","policy_should_cover":"..."}. Use an empty string for any note marked "(none)".`
-    const raw = await callClaude(system, user, { model: HAIKU, maxTokens: 400, temperature: 0.2 })
+    const raw = await callClaude(system, user, { model: HAIKU, maxTokens: 400, temperature: 0.2, feature: 'gap_detail' })
     const m = raw.match(/\{[\s\S]*\}/)
     if (m) {
       const j = JSON.parse(m[0])
@@ -352,7 +352,7 @@ ${requirements.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 Respond with ONLY minified JSON, an array in the same order:
 {"titles":["<short heading>"]}`
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 500, temperature: 0 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 500, temperature: 0, feature: 'gap_detail' })
     const p = parseJson(text)
     const arr = Array.isArray(p.titles) ? p.titles : []
     return requirements.map((r, i) => (typeof arr[i] === 'string' && arr[i].trim()) ? arr[i].trim().slice(0, 80) : fallback(r))
@@ -404,7 +404,7 @@ ${payload}${glossaryBlock(glossary)}${voiceBlock(voiceSample)}
 Respond with ONLY minified JSON — an array in the same order:
 {"results":[{"already_covered":true|false,"covered_in":"<policy name or empty>","suggested_addition":"<example wording or empty>","target_policy":"<the home's policy name this belongs in, or empty>"}]}`
 
-  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2500, temperature: 0 })
+  const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 2500, temperature: 0, feature: 'gap_detail' })
   const p = parseJson(text)
   const results = Array.isArray(p.results) ? p.results : []
   return candidates.map((requirement, i) => {

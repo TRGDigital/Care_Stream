@@ -158,7 +158,7 @@ ${ctx.correctText ? `The correct answer was: "${ctx.correctText}"` : ''}
 
 Create the micro-lesson now.`
 
-  const raw = await callClaude(system, user, { maxTokens: 1600, temperature: 0.5 })
+  const raw = await callClaude(system, user, { maxTokens: 1600, temperature: 0.5, feature: 'remediation' })
   const p = parseJson(raw)
 
   // Normalise + guard the check question shape.

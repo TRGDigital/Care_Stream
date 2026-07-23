@@ -81,7 +81,7 @@ export async function neutraliseModuleVoice(module: {
   const raw = await callClaude(
     NEUTRALISE_PROMPT,
     `Neutralise the wording of this module and return the JSON in the same shape:\n\n${JSON.stringify(payload)}`,
-    { maxTokens: 8000, temperature: 0.2 },
+    { maxTokens: 8000, temperature: 0.2, feature: 'training_setup' },
   )
   const p = parseJson(raw)
   const newSections = Array.isArray(p?.sections) ? p.sections : []

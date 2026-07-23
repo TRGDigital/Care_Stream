@@ -2076,7 +2076,7 @@ PRACTICAL MEANING: ${reg.practical_meaning}
 ${sources ? `KNOWN SOURCE URLS:\n${sources}` : ''}`
 
   try {
-    const text = await callClaude('You are a UK health & social care compliance specialist. Reply with the requested text only, no preamble.', user, { model: 'claude-sonnet-4-5', maxTokens: 4000 })
+    const text = await callClaude('You are a UK health & social care compliance specialist. Reply with the requested text only, no preamble.', user, { model: 'claude-sonnet-4-5', maxTokens: 4000, feature: 'marketing_gen' })
     // Plain-text field — strip any stray code fences, never JSON-parse (long prose
     // in JSON truncates/breaks). Empty response is the only failure case.
     const requirements = String(text ?? '').replace(/^```[a-z]*\s*|\s*```$/g, '').trim()
@@ -2115,7 +2115,7 @@ Respond with ONLY minified JSON:
 {"required_elements":["<one concrete required element>"]}`
 
   try {
-    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 2800 })
+    const text = await callClaude('Respond only with valid JSON.', user, { model: 'claude-sonnet-4-5', maxTokens: 2800, feature: 'marketing_gen' })
     const slice = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)
     if (!slice) { err(res, 'GENERATE_FAILED', 'The model returned an unexpected response — please try again.', 502); return }
     const parsed = JSON.parse(slice)

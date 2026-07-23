@@ -35,6 +35,10 @@ const PRICES: Array<{ match: string; price: Price }> = [
   { match: 'opus',   price: { input: 15,   output: 75,  cacheRead: 1.5,  cacheWrite: 18.75 } },
   { match: 'sonnet', price: { input: 3,    output: 15,  cacheRead: 0.3,  cacheWrite: 3.75  } },
   { match: 'haiku',  price: { input: 0.8,  output: 4,   cacheRead: 0.08, cacheWrite: 1     } },
+  // OpenAI models used for indexing (embeddings). Priced per input token; no output/cache.
+  { match: 'text-embedding-3-large', price: { input: 0.13, output: 0, cacheRead: 0, cacheWrite: 0 } },
+  { match: 'text-embedding-3-small', price: { input: 0.02, output: 0, cacheRead: 0, cacheWrite: 0 } },
+  { match: 'text-embedding',         price: { input: 0.02, output: 0, cacheRead: 0, cacheWrite: 0 } },
 ]
 const DEFAULT_PRICE: Price = { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 }
 
@@ -77,6 +81,24 @@ function persistAiUsage(model: string, usage: {
       input_tokens: input, output_tokens: output,
       cache_read_tokens: cacheRead, cache_creation_tokens: cacheCreate,
       cost_usd: cost,
+    },
+  }).catch(() => { /* never let cost logging break an AI call */ })
+}
+
+// Persist a row with an explicit, already-computed USD cost. For models we price per-image or
+// per-minute rather than per-token (image generation, speech-to-text), where token counts don't
+// map to a Claude-style price. Tenant + feature are auto-attributed like recordUsage.
+export function recordCostUsd(model: string, costUsd: number, tokens?: { input_tokens?: number; output_tokens?: number }): void {
+  if (!(costUsd > 0)) return
+  ;(prisma as any).aiUsageEvent.create({
+    data: {
+      tenant_id: getTenantIdOrNull(),
+      feature: featureAls.getStore() ?? 'other',
+      model,
+      input_tokens: tokens?.input_tokens ?? 0,
+      output_tokens: tokens?.output_tokens ?? 0,
+      cache_read_tokens: 0, cache_creation_tokens: 0,
+      cost_usd: costUsd,
     },
   }).catch(() => { /* never let cost logging break an AI call */ })
 }

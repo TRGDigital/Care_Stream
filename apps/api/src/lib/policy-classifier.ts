@@ -52,7 +52,7 @@ export async function classifyPolicyText(
     `Output JSON: {"type":"<canonical type>","confidence":<0..1>}`,
   ].join('\n')
   try {
-    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 120, temperature: 0 })
+    const raw = await callClaude(system, user, { model: 'claude-haiku-4-5-20251001', maxTokens: 120, temperature: 0, feature: 'policy_classify' })
     const parsed = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
     const type = typeof parsed?.type === 'string' ? parsed.type.trim().slice(0, 120) : ''
     if (!type) return null

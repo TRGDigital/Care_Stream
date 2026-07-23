@@ -199,7 +199,7 @@ onboardingTemplatesRouter.post('/:id/ai-draft', async (req: Request, res: Respon
 
   let parsed: any
   try {
-    const raw = await callClaude(filled.system, user, { maxTokens: 3500, temperature: 0.4 })
+    const raw = await callClaude(filled.system, user, { maxTokens: 3500, temperature: 0.4, feature: 'onboarding' })
     parsed = extractJson(raw)
   } catch (e: any) {
     return err(res, 'AI_FAILED', `Could not generate a draft: ${e.message}`, 502)
@@ -284,7 +284,7 @@ onboardingTemplatesRouter.post('/:id/clone', async (req: Request, res: Response)
     const list = questionSteps.map((s, i) => ({ i, question: s.question, options: s.options, correct_option: typeof s.correct_option === 'number' ? s.correct_option : 0 }))
     const user = `Target care setting: ${label}. Rewrite each of these induction questions so they read correctly for staff working in a ${label} setting — adapt the scenario/context, keep exactly 4 options, keep the same correct_option index, and keep the same underlying topic. Input:\n${JSON.stringify(list)}\n\nOutput JSON only: {"questions":[{"i":<index>,"question":"...","options":["","","",""],"correct_option":<0-3>}]}`
     try {
-      const parsed = extractJson(await callClaude(system, user, { maxTokens: 8000, temperature: 0.4 }))
+      const parsed = extractJson(await callClaude(system, user, { maxTokens: 8000, temperature: 0.4, feature: 'onboarding' }))
       for (const q of (Array.isArray(parsed?.questions) ? parsed.questions : [])) {
         if (typeof q?.i === 'number' && typeof q.question === 'string' && Array.isArray(q.options) && q.options.length === 4) {
           reworded.set(q.i, { question: String(q.question), options: q.options.map((o: any) => String(o)), correct_option: typeof q.correct_option === 'number' ? q.correct_option : 0 })

@@ -204,7 +204,7 @@ async function aiAnonymise(content: string, prompt?: string): Promise<string> {
   const out: string[] = []
   for (const ch of chunks) {
     try {
-      const cleaned = await callClaude(sys, ch, { model: HAIKU, maxTokens: 4000, temperature: 0 })
+      const cleaned = await callClaude(sys, ch, { model: HAIKU, maxTokens: 4000, temperature: 0, feature: 'policy_seeds' })
       out.push(cleaned && cleaned.trim().length > 10 ? cleaned.trim() : ch)
     } catch {
       out.push(ch)   // keep the (deterministically-stripped) chunk on AI failure

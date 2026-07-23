@@ -622,7 +622,7 @@ analyticsRouter.post('/gaps/detect-section', requireAdmin, async (req: Request, 
   if (!policyId) { err(res, 'BAD_REQUEST', 'Missing policy.', 400); return }
   try {
     const r = await detectPolicySection(tenantId, policyId, anchor, { context, granularity })
-    ok(res, { section_text: r.section ?? '', found: !!r.section, debug: r.debug })
+    ok(res, { section_text: r.section ?? '', found: !!r.section, reason: r.reason ?? null })
   } catch (e: any) { err(res, 'DETECT_FAILED', e.message ?? 'Could not detect the section.', 500) }
 })
 

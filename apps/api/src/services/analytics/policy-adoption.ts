@@ -325,25 +325,29 @@ function sentenceAt(content: string, at: number, anchorLen: number): string | nu
 export async function detectPolicySection(
   tenantId: string, policyId: string, anchor: string,
   opts?: { context?: string; granularity?: 'section' | 'sentence' },
-): Promise<{ section: string | null; debug: string }> {
-  if (!anchor.trim()) return { section: null, debug: 'no-anchor' }
+): Promise<{ section: string | null; reason?: string }> {
+  if (!anchor.trim()) return { section: null }
   const doc = await getOrInitDocument(tenantId, policyId)
   const content = String(doc.draft_content ?? '')
-  const exactProbe = (opts?.context ?? '').trim().slice(0, 40)
-  const exactPos = exactProbe.length >= 12 ? normalizedIndexOf(content, exactProbe) : -2
-  const dbgIn = `v=BO3 anchor="${anchor.slice(0, 25)}" ctx="${(opts?.context ?? '').slice(0, 45)}" nexact=${exactPos} gran=${opts?.granularity ?? 'section'}`
-  const at = bestOccurrence(content, anchor, opts?.context)
-  if (at < 0) return { section: null, debug: `${dbgIn} | at=NOTFOUND` }
-  const atSnip = content.slice(Math.max(0, at - 30), at + 45).replace(/\n/g, '/')
-  const dbgAt = `at=${at} snip="${atSnip}"`
 
-  if (opts?.granularity === 'sentence') return { section: sentenceAt(content, at, anchor.length), debug: `${dbgIn} | ${dbgAt} | sentence` }
+  // The preview/cards are built from the ORIGINAL policy text, but we act on the draft. If a section
+  // context was given and it isn't in the current draft, that section has already been removed or
+  // reworded — say so rather than falling through to an unrelated occurrence of the bare term (which
+  // would silently target the wrong text).
+  const ctx = (opts?.context ?? '').trim()
+  if (ctx.length >= 12 && normalizedIndexOf(content, ctx.slice(0, 40)) < 0) {
+    return { section: null, reason: 'not-in-draft' }
+  }
+
+  const at = bestOccurrence(content, anchor, opts?.context)
+  if (at < 0) return { section: null, reason: 'not-in-draft' }
+
+  if (opts?.granularity === 'sentence') return { section: sentenceAt(content, at, anchor.length) }
 
   // Section: the heading usually sits just before the match; the body runs after it.
   const winStart = Math.max(0, at - 2000)
   const winEnd = Math.min(content.length, at + anchor.length + 7000)
   const window = content.slice(winStart, winEnd)
-  let aiDbg = 'ai=none'
   try {
     const out = await callClaude(SECTION_SYSTEM, sectionPrompt(window, anchor), { model: SECTION_HAIKU, maxTokens: 400, temperature: 0, feature: 'covid_section' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
@@ -354,23 +358,21 @@ export async function detectPolicySection(
       const eAnchor = String(parsed.end_anchor)
       const s = content.indexOf(startA, winStart)
       const eFound = s >= 0 ? content.indexOf(eAnchor, s) : -1
-      aiDbg = `ai s=${s} e=${eFound} startA="${startA.slice(0, 22)}" endA="${eAnchor.slice(0, 22)}"`
       // The section must sit around THIS occurrence: start at/before it, end within the window.
       if (s >= 0 && eFound >= 0 && s <= at + anchor.length && eFound + eAnchor.length <= winEnd + 200) {
         const span = content.slice(s, eFound + eAnchor.length)
         if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.6) {
           await logAiCredit(tenantId, 'covid_section', policyId)
-          return { section: span, debug: `${dbgIn} | ${dbgAt} | ${aiDbg} | AI-OK len=${span.length}` }
+          return { section: span }
         }
-        aiDbg += ' REJECT-validation'
-      } else aiDbg += ' REJECT-bounds'
-    } else aiDbg = `ai found=${parsed?.found}`
-  } catch (e: any) { aiDbg = `ai-err:${(e?.message ?? '').slice(0, 50)}` }
+      }
+    }
+  } catch { /* fall through to the heuristic */ }
 
   // Heuristic fallback — but never return an implausibly large "section" (that's the whole policy).
   const fb = sectionAround(content, anchor, at)
   const fbOk = !!fb && fb.length <= content.length * 0.5
-  return { section: fbOk ? fb : null, debug: `${dbgIn} | ${dbgAt} | ${aiDbg} | fb=${fb?.length ?? 0} used=${fbOk}` }
+  return { section: fbOk ? fb : null, reason: fbOk ? undefined : 'no-clear-section' }
 }
 
 // Apply one change to the content. `applied` is false when an amend/heading anchor could

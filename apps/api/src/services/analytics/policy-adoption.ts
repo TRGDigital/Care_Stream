@@ -301,19 +301,21 @@ export async function detectPolicySection(
   if (opts?.granularity === 'sentence') return sentenceAt(content, at, anchor.length)
 
   // Section: the heading usually sits just before the match; the body runs after it.
-  const window = content.slice(Math.max(0, at - 2000), Math.min(content.length, at + anchor.length + 7000))
+  const winStart = Math.max(0, at - 2000)
+  const window = content.slice(winStart, Math.min(content.length, at + anchor.length + 7000))
   try {
     const out = await callClaude(SECTION_SYSTEM, sectionPrompt(window, anchor), { model: SECTION_HAIKU, maxTokens: 400, temperature: 0, feature: 'covid_section' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     if (parsed?.found && parsed.start_anchor && parsed.end_anchor) {
-      // Prefer the anchors nearest THIS occurrence (heading just before it, end just after).
+      // Locate the anchors WITHIN this occurrence's window (start at/after the window, end after start),
+      // so a repeated phrase elsewhere in the document can't stretch the span to the whole policy.
       const startA = String(parsed.start_anchor)
-      const s = content.lastIndexOf(startA, at) >= 0 ? content.lastIndexOf(startA, at) : content.indexOf(startA)
       const eAnchor = String(parsed.end_anchor)
-      const eFound = s >= 0 ? content.indexOf(eAnchor, at) : -1
-      if (s >= 0 && eFound >= 0) {
+      const s = content.indexOf(startA, winStart)
+      const eFound = s >= 0 ? content.indexOf(eAnchor, s) : -1
+      if (s >= 0 && eFound >= 0 && s <= at + anchor.length) {
         const span = content.slice(s, eFound + eAnchor.length)
-        if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.7) {
+        if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.6) {
           await logAiCredit(tenantId, 'covid_section', policyId)
           return span
         }
@@ -321,7 +323,9 @@ export async function detectPolicySection(
     }
   } catch { /* fall through to the heuristic */ }
 
-  return sectionAround(content, anchor, at)
+  // Heuristic fallback — but never return an implausibly large "section" (that's the whole policy).
+  const fb = sectionAround(content, anchor, at)
+  return fb && fb.length <= content.length * 0.5 ? fb : null
 }
 
 // Apply one change to the content. `applied` is false when an amend/heading anchor could

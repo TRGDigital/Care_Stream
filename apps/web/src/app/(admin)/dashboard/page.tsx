@@ -8,7 +8,7 @@ import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { PlanCard } from '@/components/admin/plan-card'
 import { persistentCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw } from 'lucide-react'
+import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
@@ -284,6 +284,19 @@ export default function DashboardPage() {
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 
+  // Mark one policy reviewed (records today), removing it from "due" here and on the hub / admin policies.
+  async function markReviewedDue(policyId: string) {
+    if (!session?.accessToken) return
+    try { await createApiClient(session.accessToken).policies.setReview(policyId, { last_reviewed_at: new Date().toISOString() }) }
+    catch { return }
+    setDueReview(list => {
+      const n = list.filter(x => x.policy_id !== policyId)
+      const cached = persistentCache.get<DashboardCache>(`admin-dashboard-${userId}`)
+      if (cached) persistentCache.set(`admin-dashboard-${userId}`, { ...cached, dueReview: n })
+      return n
+    })
+  }
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
@@ -306,13 +319,13 @@ export default function DashboardPage() {
           <p className="mb-3 text-xs text-neutral-mid">These policies have reached the review date you set. Re-review them to re-check for out-of-date content and refresh their status, then run the AI analyses on the Policy Gap Detection page if needed.</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {dueReview.slice(0, 9).map(p => (
-              <Link key={p.policy_id} href="/gaps" className="flex items-center justify-between gap-2 rounded-lg border border-red-100 bg-white px-3 py-2.5 transition-colors hover:border-red-300">
+              <div key={p.policy_id} className="flex items-center justify-between gap-2 rounded-lg border border-red-100 bg-white px-3 py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-neutral-dark">{p.name}</p>
-                  <p className="truncate text-xs text-neutral-mid">Due {fmtDate(p.next_review_due)}</p>
+                  <p className="truncate text-xs text-neutral-mid">Due {fmtDate(p.next_review_due)}{p.days_overdue > 0 ? ` · ${p.days_overdue}d over` : ''}</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-red-50 px-2 py-1 text-[11px] font-medium leading-none text-red-600">{p.days_overdue === 0 ? 'Due today' : `${p.days_overdue}d over`}</span>
-              </Link>
+                <button onClick={() => markReviewedDue(p.policy_id)} className="inline-flex shrink-0 items-center gap-1 rounded-btn bg-teal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark"><Check size={11} /> Reviewed</button>
+              </div>
             ))}
           </div>
           {dueReview.length > 9 && <p className="mt-2 text-xs text-neutral-mid">+{dueReview.length - 9} more.</p>}

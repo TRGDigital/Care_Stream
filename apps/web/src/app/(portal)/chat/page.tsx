@@ -347,6 +347,7 @@ function ChatPageInner() {
 
   const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
+  const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   // Remembered from the last load so the Supervisions item shows immediately on
   // reload instead of popping in once /billing/summary resolves. Revalidated below.
@@ -446,6 +447,15 @@ function ChatPageInner() {
   }, [session?.accessToken, userId])
   useEffect(() => { refreshPolicyApprovals() }, [refreshPolicyApprovals])
 
+  // Policies past their review date drive the Policies badge too (admins only; silently 0 otherwise).
+  const refreshDueReview = useCallback(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).analytics.policiesDueForReview()
+      .then(r => { const c = (r?.policies ?? []).length; setDueReviewCount(c); try { localStorage.setItem(`cs_duereview_${userId}`, String(c)) } catch { /* ignore */ } }).catch(() => {})
+  }, [session?.accessToken, userId])
+  useEffect(() => { refreshDueReview() }, [refreshDueReview])
+  const refreshPolicyStuff = useCallback(() => { refreshPolicyApprovals(); refreshDueReview() }, [refreshPolicyApprovals, refreshDueReview])
+
   const refreshAuditApprovals = useCallback(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.auditApprovals()
@@ -470,6 +480,7 @@ function ChatPageInner() {
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
     try { const p = JSON.parse(localStorage.getItem(`cs_polappr_${userId}`) || 'null'); if (p && typeof p === 'object') setPolicyApprovals(p) } catch { /* ignore */ }
+    try { const dr = Number(localStorage.getItem(`cs_duereview_${userId}`) || '0'); if (dr > 0) setDueReviewCount(dr) } catch { /* ignore */ }
     try { const ap = JSON.parse(localStorage.getItem(`cs_audappr_${userId}`) || 'null'); if (ap && typeof ap === 'object') setAuditApprovals(ap) } catch { /* ignore */ }
     try { const w = JSON.parse(localStorage.getItem(`cs_super_${userId}`)   || 'null'); if (typeof w === 'boolean') setSuperCached(w) } catch { /* ignore */ }
     try { const dc = JSON.parse(localStorage.getItem(`cs_doccats_${userId}`) || 'null'); if (Array.isArray(dc)) setAvailableCats(dc) } catch { /* ignore */ }
@@ -971,14 +982,14 @@ function ChatPageInner() {
             {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </button>
           )}
-          {policyApprovals.is_manager && (
+          {(policyApprovals.is_manager || dueReviewCount > 0) && (
           <button
             onClick={() => setView('policies')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'policies' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <FileText size={15} />
             Policies
-            {policyApprovals.count > 0 && <NavBadge count={policyApprovals.count} className="bg-rose-500" />}
+            {policyApprovals.count + dueReviewCount > 0 && <NavBadge count={policyApprovals.count + dueReviewCount} className="bg-rose-500" />}
           </button>
           )}
           {auditApprovals.is_manager && (
@@ -1163,7 +1174,7 @@ function ChatPageInner() {
 
         {/* Policies to approve (care manager) */}
         {view === 'policies' && session?.accessToken && (
-          <PoliciesView token={session.accessToken} userId={userId} onChange={refreshPolicyApprovals} />
+          <PoliciesView token={session.accessToken} userId={userId} onChange={refreshPolicyStuff} />
         )}
 
         {/* Audits to approve (care manager) */}

@@ -44,12 +44,25 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
   }
   useEffect(load, [token])
 
+  const [markingId, setMarkingId] = useState<string | null>(null)
   useEffect(() => {
     createApiClient(token).analytics.policiesDueForReview()
       .then(d => { const l = d?.policies ?? []; setDueReview(l); persistentCache.set(dueKey, l) })
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
+
+  // Mark a policy reviewed: records today's review date, which moves its next review forward and
+  // removes it from "due" on every surface (hub, dashboard, admin policies) once they refresh.
+  async function markReviewed(policyId: string) {
+    setMarkingId(policyId)
+    try {
+      await createApiClient(token).policies.setReview(policyId, { last_reviewed_at: new Date().toISOString() })
+      setDueReview(l => { const n = l.filter(x => x.policy_id !== policyId); persistentCache.set(dueKey, n); return n })
+      onChange?.()
+    } catch { /* keep it in the list on failure */ }
+    finally { setMarkingId(null) }
+  }
 
   useEffect(() => {
     if (!selected) { setDetail(null); return }
@@ -184,7 +197,12 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
                     <p className="text-xs text-neutral-mid">Due {new Date(d.next_review_due).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{d.days_overdue > 0 ? ` · ${d.days_overdue} day${d.days_overdue === 1 ? '' : 's'} overdue` : ''}</p>
                   </div>
                 </div>
-                <a href="/gaps" className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark">Review</a>
+                <div className="flex shrink-0 items-center gap-2">
+                  <a href="/gaps" className="rounded-btn border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">Review</a>
+                  <button onClick={() => markReviewed(d.policy_id)} disabled={markingId === d.policy_id} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                    {markingId === d.policy_id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Mark reviewed
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

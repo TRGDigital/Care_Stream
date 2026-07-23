@@ -105,6 +105,14 @@ export default function PoliciesPage() {
       .catch(() => {})
   }
 
+  // Mark one policy reviewed (records today), removing it from "due" here and on the hub / dashboard.
+  async function markReviewedDue(policyId: string) {
+    if (!session?.accessToken) return
+    try { await createApiClient(session.accessToken).policies.setReview(policyId, { last_reviewed_at: new Date().toISOString() }) }
+    catch { return }
+    setDueReview(list => { const n = list.filter(x => x.policy_id !== policyId); persistentCache.set(`admin-policies-due-${userId}`, n); return n })
+  }
+
   function loadDuplicates() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
@@ -415,7 +423,10 @@ export default function PoliciesPage() {
                   <p className="truncate text-sm font-medium text-neutral-dark">{d.name}</p>
                   <p className="text-xs text-neutral-mid">Due {new Date(d.next_review_due).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{d.days_overdue > 0 ? ` · ${d.days_overdue} day${d.days_overdue === 1 ? '' : 's'} overdue` : ''}</p>
                 </div>
-                <a href="/gaps" className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark">Review</a>
+                <div className="flex shrink-0 items-center gap-2">
+                  <a href="/gaps" className="rounded-btn border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50">Review</a>
+                  <button onClick={() => markReviewedDue(d.policy_id)} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark"><CalendarClock size={13} /> Mark reviewed</button>
+                </div>
               </li>
             ))}
           </ul>

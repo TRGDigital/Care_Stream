@@ -302,7 +302,8 @@ export async function detectPolicySection(
 
   // Section: the heading usually sits just before the match; the body runs after it.
   const winStart = Math.max(0, at - 2000)
-  const window = content.slice(winStart, Math.min(content.length, at + anchor.length + 7000))
+  const winEnd = Math.min(content.length, at + anchor.length + 7000)
+  const window = content.slice(winStart, winEnd)
   try {
     const out = await callClaude(SECTION_SYSTEM, sectionPrompt(window, anchor), { model: SECTION_HAIKU, maxTokens: 400, temperature: 0, feature: 'covid_section' })
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
@@ -313,7 +314,8 @@ export async function detectPolicySection(
       const eAnchor = String(parsed.end_anchor)
       const s = content.indexOf(startA, winStart)
       const eFound = s >= 0 ? content.indexOf(eAnchor, s) : -1
-      if (s >= 0 && eFound >= 0 && s <= at + anchor.length) {
+      // The section must sit around THIS occurrence: start at/before it, end within the window.
+      if (s >= 0 && eFound >= 0 && s <= at + anchor.length && eFound + eAnchor.length <= winEnd + 200) {
         const span = content.slice(s, eFound + eAnchor.length)
         if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.6) {
           await logAiCredit(tenantId, 'covid_section', policyId)

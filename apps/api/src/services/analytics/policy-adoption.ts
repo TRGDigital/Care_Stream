@@ -257,18 +257,39 @@ function sectionPrompt(window: string, phrase: string): string {
   ].join('\n')
 }
 
+// Find where `probe` appears in `content`, tolerating case and whitespace differences (the context
+// comes from rendered HTML, whose textContent can carry non-breaking spaces and title-casing that the
+// raw draft does not). Returns the RAW index in `content`, or -1. `\s` in JS already covers U+00A0.
+function normalizedIndexOf(content: string, probe: string): number {
+  const normProbe = probe.toLowerCase().replace(/\s+/g, ' ').trim()
+  if (normProbe.length < 12) return -1
+  let norm = ''
+  const map: number[] = []
+  let prevSpace = false
+  for (let i = 0; i < content.length; i++) {
+    const ch = content[i]
+    if (/\s/.test(ch)) {
+      if (prevSpace) continue
+      norm += ' '; map.push(i); prevSpace = true
+    } else {
+      norm += ch.toLowerCase(); map.push(i); prevSpace = false
+    }
+  }
+  const idx = norm.indexOf(normProbe)
+  return idx < 0 ? -1 : map[idx]
+}
+
 // Pick which occurrence of `anchor` to act on when the same wording repeats. `context` is the text
 // of the block the flagged occurrence sits in (e.g. the section heading), so the most reliable match
-// is the anchor sitting right where that context appears verbatim. Falls back to word-overlap, then
-// to the first occurrence.
+// is the anchor sitting right where that context appears. Falls back to word-overlap, then to first.
 function bestOccurrence(content: string, anchor: string, context?: string): number {
   const first = content.indexOf(anchor)
   if (first < 0 || !context || !context.trim()) return first
   const ctx = context.trim()
-  // 1. Exact context match: the anchor at/just after where the context text appears verbatim.
+  // 1. Context match (case/whitespace tolerant): the anchor at/just after where the context appears.
   for (const probe of [ctx, ctx.slice(0, 60), ctx.slice(0, 40)]) {
-    if (probe.length < 12) continue
-    const cPos = content.indexOf(probe)
+    if (probe.trim().length < 12) continue
+    const cPos = normalizedIndexOf(content, probe)
     if (cPos >= 0) {
       const a = content.indexOf(anchor, cPos)
       if (a >= 0 && a <= cPos + probe.length + 400) return a
@@ -309,8 +330,8 @@ export async function detectPolicySection(
   const doc = await getOrInitDocument(tenantId, policyId)
   const content = String(doc.draft_content ?? '')
   const exactProbe = (opts?.context ?? '').trim().slice(0, 40)
-  const exactPos = exactProbe.length >= 12 ? content.indexOf(exactProbe) : -2
-  const dbgIn = `v=BO2 anchor="${anchor.slice(0, 25)}" ctx="${(opts?.context ?? '').slice(0, 45)}" exact=${exactPos} gran=${opts?.granularity ?? 'section'}`
+  const exactPos = exactProbe.length >= 12 ? normalizedIndexOf(content, exactProbe) : -2
+  const dbgIn = `v=BO3 anchor="${anchor.slice(0, 25)}" ctx="${(opts?.context ?? '').slice(0, 45)}" nexact=${exactPos} gran=${opts?.granularity ?? 'section'}`
   const at = bestOccurrence(content, anchor, opts?.context)
   if (at < 0) return { section: null, debug: `${dbgIn} | at=NOTFOUND` }
   const atSnip = content.slice(Math.max(0, at - 30), at + 45).replace(/\n/g, '/')

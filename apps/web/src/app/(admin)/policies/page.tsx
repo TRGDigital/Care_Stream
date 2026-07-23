@@ -93,9 +93,16 @@ export default function PoliciesPage() {
 
   function loadReviewSummary() {
     if (!session?.accessToken) return
-    const api = createApiClient(session.accessToken)
-    api.analytics.policyDocumentsSummary().then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
-    api.analytics.policiesDueForReview().then(d => setDueReview(d?.policies ?? [])).catch(() => {})
+    createApiClient(session.accessToken).analytics.policyDocumentsSummary().then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
+  }
+
+  // Policies due for review — fetched on its own (not tangled with the heavy list load), cached
+  // and hydrated like the dashboard so the panel shows reliably.
+  function loadDueReview() {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).analytics.policiesDueForReview()
+      .then(d => { const list = d?.policies ?? []; setDueReview(list); persistentCache.set(`admin-policies-due-${userId}`, list) })
+      .catch(() => {})
   }
 
   function loadDuplicates() {
@@ -129,6 +136,14 @@ export default function PoliciesPage() {
 
   useEffect(load, [session?.accessToken])
   useEffect(loadDuplicates, [session?.accessToken])
+
+  // Due-for-review panel: hydrate from cache instantly, then refresh from the API.
+  useEffect(() => {
+    const cached = persistentCache.get<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>(`admin-policies-due-${userId}`)
+    if (cached) setDueReview(cached)
+    loadDueReview()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.accessToken, userId])
 
   // While any policy is still processing, refresh the list + duplicate flags every
   // few seconds so a newly-detected duplicate surfaces without a manual reload.

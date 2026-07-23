@@ -222,6 +222,20 @@ export default function PoliciesPage() {
 
   return (
     <div>
+      {/* TEMP unconditional diagnostic — inline styles so no CSS can hide it. Remove after debugging. */}
+      <div style={{ background: '#fff3cd', color: '#663c00', padding: '8px 10px', marginBottom: 12, fontSize: 12, fontFamily: 'monospace', border: '2px solid #e0a800', borderRadius: 6, wordBreak: 'break-all' }}>
+        HUB DEBUG · tab={String(tab)} · loading={String(loading)} · dueReview.length={dueReview.length} · data={JSON.stringify(dueReview)}
+      </div>
+      {/* TEMP inline-styled panel to compare against the Tailwind one below. */}
+      {tab === 'active' && dueReview.length > 0 && (
+        <div style={{ background: '#fef2f2', border: '2px solid #fca5a5', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+          <p style={{ fontWeight: 600, color: '#7f1d1d', margin: 0 }}>Policies due for review (inline-styled test panel)</p>
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+            {dueReview.map(d => <li key={d.policy_id} style={{ fontSize: 13 }}>{d.name} — due {String(d.next_review_due)}</li>)}
+          </ul>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-dark">Policies</h1>

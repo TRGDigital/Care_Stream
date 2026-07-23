@@ -74,7 +74,6 @@ export default function PoliciesPage() {
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
   const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>>([])
   const [dueReview,      setDueReview]       = useState<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>([])
-  const [dueDebug,       setDueDebug]        = useState('init')
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
@@ -100,11 +99,10 @@ export default function PoliciesPage() {
   // Policies due for review — fetched on its own (not tangled with the heavy list load), cached
   // and hydrated like the dashboard so the panel shows reliably.
   function loadDueReview() {
-    if (!session?.accessToken) { setDueDebug('no-token'); return }
-    setDueDebug('loading')
+    if (!session?.accessToken) return
     createApiClient(session.accessToken).analytics.policiesDueForReview()
-      .then(d => { const list = d?.policies ?? []; setDueReview(list); persistentCache.set(`admin-policies-due-${userId}`, list); setDueDebug(`ok:${list.length}`) })
-      .catch(e => setDueDebug(`err:${(e?.message ?? 'unknown').slice(0, 80)}`))
+      .then(d => { const list = d?.policies ?? []; setDueReview(list); persistentCache.set(`admin-policies-due-${userId}`, list) })
+      .catch(() => {})
   }
 
   function loadDuplicates() {
@@ -403,11 +401,6 @@ export default function PoliciesPage() {
           Archived policies are no longer active in CareStream. They will not be returned in staff
           queries or used by the AI assistant. They are kept here for your records only.
         </p>
-      )}
-
-      {/* TEMP diagnostic for the due-for-review panel — remove once confirmed. */}
-      {tab === 'active' && (
-        <p className="mb-2 rounded bg-amber-50 px-2 py-1 text-[11px] font-mono text-amber-700">due-review diagnostic: {dueDebug} · rendered={dueReview.length}</p>
       )}
 
       {/* Policies due for review (review dates set on /gaps that have come around) */}

@@ -5,7 +5,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { applyChanges } from '@/lib/policy-render'
 import { applyRoleNames } from '@/lib/policy-names'
-import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History, Undo2, Send } from 'lucide-react'
+import { Loader2, FileCheck2, ChevronLeft, GitCompare, Check, X, FileText, History, Undo2, Send, CalendarClock } from 'lucide-react'
 
 const placementLabel = (p: string) => p === 'amend' ? 'Amended paragraph' : p === 'add_under_heading' ? 'Added subsection' : 'New section'
 
@@ -34,12 +34,22 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
   const [notes, setNotes]     = useState<Record<string, string>>({})   // per-change feedback
   const [general, setGeneral] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
+  // Policies whose review date has come around (admins only; silently empty for others).
+  const dueKey = `hub-due-review-${userId ?? 'me'}`
+  const [dueReview, setDueReview] = useState<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>(persistentCache.get(dueKey) ?? [])
 
   function load() {
     createApiClient(token).me.policyApprovals()
       .then(r => { setList(r.policies); setPublished(r.published ?? []); setReturned(r.returned ?? []); setAwaitingExt(r.awaiting_external ?? []); persistentCache.set(cacheKey, { policies: r.policies, published: r.published ?? [], returned: r.returned ?? [], awaiting_external: r.awaiting_external ?? [] }) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(load, [token])
+
+  useEffect(() => {
+    createApiClient(token).analytics.policiesDueForReview()
+      .then(d => { const l = d?.policies ?? []; setDueReview(l); persistentCache.set(dueKey, l) })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
 
   useEffect(() => {
     if (!selected) { setDetail(null); return }
@@ -159,6 +169,28 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
     <div className="mx-auto max-w-3xl">
+      {/* Policies due for review — the review dates set on the gap-analysis page that have come around. */}
+      {dueReview.length > 0 && (
+        <div className="mb-6 rounded-card border border-red-200 bg-red-50/50 p-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-red-900"><CalendarClock size={15} /> Policies due for review</h3>
+          <p className="mt-1 text-sm text-red-800/80">These policies have reached the review date you set. Review them, then record a new review date.</p>
+          <ul className="mt-4 space-y-2">
+            {dueReview.map(d => (
+              <li key={d.policy_id} className="flex items-center justify-between gap-3 rounded-lg border border-red-100 bg-white px-4 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FileText size={16} className="shrink-0 text-red-500" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{d.name}</p>
+                    <p className="text-xs text-neutral-mid">Due {new Date(d.next_review_due).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{d.days_overdue > 0 ? ` · ${d.days_overdue} day${d.days_overdue === 1 ? '' : 's'} overdue` : ''}</p>
+                  </div>
+                </div>
+                <a href="/gaps" className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark">Review</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <h2 className="text-lg font-bold text-neutral-dark">Policies to approve</h2>
       <p className="mt-1 text-sm text-neutral-mid">Policy changes the admin has approved and sent to you for your approval. Review the changes, then approve them or send them back.</p>
       {msg && <div className="mt-4 flex items-center gap-2 rounded-md border border-green-100 bg-green-50 px-4 py-2.5 text-sm text-green-800"><Check size={15} /> {msg}</div>}

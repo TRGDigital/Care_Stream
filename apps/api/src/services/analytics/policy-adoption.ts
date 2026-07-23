@@ -308,7 +308,9 @@ export async function detectPolicySection(
   if (!anchor.trim()) return { section: null, debug: 'no-anchor' }
   const doc = await getOrInitDocument(tenantId, policyId)
   const content = String(doc.draft_content ?? '')
-  const dbgIn = `anchor="${anchor.slice(0, 25)}" ctx="${(opts?.context ?? '').slice(0, 45)}" gran=${opts?.granularity ?? 'section'}`
+  const exactProbe = (opts?.context ?? '').trim().slice(0, 40)
+  const exactPos = exactProbe.length >= 12 ? content.indexOf(exactProbe) : -2
+  const dbgIn = `v=BO2 anchor="${anchor.slice(0, 25)}" ctx="${(opts?.context ?? '').slice(0, 45)}" exact=${exactPos} gran=${opts?.granularity ?? 'section'}`
   const at = bestOccurrence(content, anchor, opts?.context)
   if (at < 0) return { section: null, debug: `${dbgIn} | at=NOTFOUND` }
   const atSnip = content.slice(Math.max(0, at - 30), at + 45).replace(/\n/g, '/')

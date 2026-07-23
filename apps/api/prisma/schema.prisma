@@ -1241,6 +1241,7 @@ model FeaturePage {
   og_image_url     String?
   content          Json     @default("{}")                    // FeaturePageContent (eyebrow, intro, whatItIs, outcomes, howItWorks, keyPoints, sidebar, whyItWorks, cta)
   faqs             Json     @default("[]")                    // [{ question, answer }]
+  content_updated  Boolean  @default(false)                   // personal "I've reviewed/updated this" tracker; no effect on the live page
   sort             Int      @default(0)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt

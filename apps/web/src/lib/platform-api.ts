@@ -335,6 +335,7 @@ export interface FeaturePage {
   og_image_url:     string | null
   content:          FeaturePageContent
   faqs:             Array<{ question: string; answer: string }>
+  content_updated:  boolean
   sort:             number
   created_at:       string
   updated_at:       string

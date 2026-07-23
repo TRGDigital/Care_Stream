@@ -1678,6 +1678,7 @@ export default function BlogPage() {
 
   // Per-page "content updated" tracker (Pages tab) — which row is mid-save.
   const [togglingPath, setTogglingPath] = useState<string | null>(null)
+  const [togglingFeature, setTogglingFeature] = useState<string | null>(null)
 
   // When a page is opened for editing (including from the Footer Links tab),
   // The editor opens inline under the clicked row, so only nudge it into view if it is
@@ -1822,6 +1823,23 @@ export default function BlogPage() {
       setError(e.message)
     } finally {
       setTogglingPath(null)
+    }
+  }
+
+  // Personal "I've reviewed/updated this feature page" marker. Persists on the record
+  // but has NO effect on the live page (same as the site-pages tracker above).
+  async function toggleFeatureUpdated(fp: FeaturePage) {
+    if (!token) return
+    const next = !fp.content_updated
+    setTogglingFeature(fp.id)
+    try {
+      const api = createPlatformClient(token)
+      const res = await api.featurePages.update(fp.id, { content_updated: next } as any)
+      setFeaturePages(prev => prev.map(f => f.id === fp.id ? res.featurePage : f))
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setTogglingFeature(null)
     }
   }
 
@@ -2469,6 +2487,22 @@ export default function BlogPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleFeatureUpdated(f)}
+                          disabled={togglingFeature === f.id}
+                          title={f.content_updated ? 'Marked as updated — click to unmark. This is just your tracker; it does not change the live page.' : "Mark as updated. Just your own tracker; it doesn't change the live page."}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${f.content_updated ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 text-neutral-mid hover:bg-neutral-light'}`}
+                        >
+                          {togglingFeature === f.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <span className={`relative h-3.5 w-6 rounded-full transition-colors ${f.content_updated ? 'bg-green-500' : 'bg-gray-300'}`}>
+                              <span className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-white shadow transition-all ${f.content_updated ? 'left-3' : 'left-0.5'}`} />
+                            </span>
+                          )}
+                          {f.content_updated ? 'Updated' : 'Mark updated'}
+                        </button>
                         <button onClick={() => { setEditFeaturePage(f); setShowFeaturePage(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
                         <button onClick={() => deleteFeaturePage(f.id, f.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
                       </div>

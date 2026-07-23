@@ -3192,7 +3192,9 @@ adminRouter.patch('/feature-pages/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data:  buildFeaturePageData(req.body),
   })
-  if (featurePage.status === 'published' && featurePage.slug) {
+  // A pure "mark updated" toggle is just a personal tracker; don't re-submit the page for indexing.
+  const onlyTracker = Object.keys(req.body ?? {}).every((k) => k === 'content_updated')
+  if (!onlyTracker && featurePage.status === 'published' && featurePage.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/features/${featurePage.slug}`], { source: 'page' })
   }
   ok(res, { featurePage })
@@ -3204,7 +3206,7 @@ adminRouter.delete('/feature-pages/:id', async (req: Request, res: Response) => 
 })
 
 function buildFeaturePageData(body: any) {
-  const { title, slug, status, meta_title, meta_description, og_image_url, content, faqs, sort } = body ?? {}
+  const { title, slug, status, meta_title, meta_description, og_image_url, content, faqs, content_updated, sort } = body ?? {}
   return {
     ...(title            !== undefined && { title:            title?.trim() ?? ''            }),
     ...(slug             !== undefined && { slug:             slug?.trim()                   }),
@@ -3214,6 +3216,7 @@ function buildFeaturePageData(body: any) {
     ...(og_image_url     !== undefined && { og_image_url:     og_image_url?.trim() || null   }),
     ...(content          !== undefined && { content:          (content && typeof content === 'object') ? content : {} }),
     ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
+    ...(content_updated  !== undefined && { content_updated:  Boolean(content_updated)       }),
     ...(sort             !== undefined && { sort:             Number(sort) || 0             }),
   }
 }

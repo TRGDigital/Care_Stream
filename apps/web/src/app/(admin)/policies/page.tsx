@@ -9,7 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock } from 'lucide-react'
 import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
@@ -73,6 +73,7 @@ export default function PoliciesPage() {
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
   const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>>([])
+  const [dueReview,      setDueReview]       = useState<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
@@ -92,8 +93,9 @@ export default function PoliciesPage() {
 
   function loadReviewSummary() {
     if (!session?.accessToken) return
-    createApiClient(session.accessToken).analytics.policyDocumentsSummary()
-      .then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
+    const api = createApiClient(session.accessToken)
+    api.analytics.policyDocumentsSummary().then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
+    api.analytics.policiesDueForReview().then(d => setDueReview(d?.policies ?? [])).catch(() => {})
   }
 
   function loadDuplicates() {
@@ -384,6 +386,25 @@ export default function PoliciesPage() {
           Archived policies are no longer active in CareStream. They will not be returned in staff
           queries or used by the AI assistant. They are kept here for your records only.
         </p>
+      )}
+
+      {/* Policies due for review (review dates set on /gaps that have come around) */}
+      {tab === 'active' && dueReview.length > 0 && (
+        <div className="mb-4 rounded-card border border-red-200 bg-red-50/50 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-red-900"><CalendarClock size={15} /> Policies due for review</p>
+          <p className="mt-0.5 text-xs text-red-800/80">These policies have reached the review date you set. Review them, then record a new review date.</p>
+          <ul className="mt-3 space-y-2">
+            {dueReview.map(d => (
+              <li key={d.policy_id} className="flex items-center justify-between gap-3 rounded-lg border border-red-100 bg-white px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-dark">{d.name}</p>
+                  <p className="text-xs text-neutral-mid">Due {new Date(d.next_review_due).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{d.days_overdue > 0 ? ` · ${d.days_overdue} day${d.days_overdue === 1 ? '' : 's'} overdue` : ''}</p>
+                </div>
+                <a href="/gaps" className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark">Review</a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Adopted changes to review (Policy Change Adoption) */}

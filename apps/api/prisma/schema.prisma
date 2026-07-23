@@ -395,6 +395,7 @@ model Policy {
   handbook_metadata    Json?                               // §4.6.6: chapter_count, chapter_map, etc.
   review_interval_days Int?                                // §10.5 policy review reminders
   last_reviewed_at     DateTime?
+  review_reminder_sent_at DateTime?                        // when the "due for review" email was last sent (per cycle)
   superseded_by        String?                             // FK to newer Policy version (§10.5)
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt

@@ -15,6 +15,8 @@ import { formatPolicyHtml } from '../../lib/translate'
 import { isEmailEnabled } from '../../lib/notify'
 import { sendPushToUsers } from '../../lib/push'
 import { resolvedPolicyIds } from './review-resolutions'
+import { callClaude } from '../ai/claude'
+import { logAiCredit } from '../../lib/plan-limits'
 
 // External review links expire after this many days (security hygiene + wrong-recipient recovery).
 export const EXTERNAL_LINK_TTL_DAYS = 30
@@ -239,12 +241,55 @@ function sectionAround(content: string, anchor: string): string | null {
   return section.trim() ? section.replace(/\n+$/, '\n') : null
 }
 
-// The section of a policy's draft that surrounds a given anchor phrase (e.g. COVID wording),
-// so the admin can confirm and delete the whole section. Returns the verbatim block or null.
+const SECTION_HAIKU = 'claude-haiku-4-5-20251001'
+const SECTION_SYSTEM = 'You find the exact boundaries of one self-contained section inside a UK care policy document. You never summarise or paraphrase; you copy text verbatim.'
+
+function sectionPrompt(window: string, phrase: string): string {
+  return [
+    `A care policy contains pandemic-era (COVID-19) wording. The matched phrase is: "${phrase}".`,
+    'Below is the surrounding policy text. Identify the single self-contained SECTION that is specifically about COVID-19 or the pandemic (its heading and the paragraphs under it), stopping before the next unrelated heading or topic.',
+    'Return ONLY JSON: {"found":true,"start_anchor":"...","end_anchor":"..."}',
+    '- start_anchor: the exact first 6 to 12 words of that section, copied verbatim (usually its heading line).',
+    '- end_anchor: the exact last 6 to 12 words of that section, copied verbatim.',
+    'Both anchors MUST be exact substrings copied character-for-character from the text below. Cover ONLY the COVID section, never the whole document. If the wording is just a phrase inside a general paragraph with no distinct COVID section, return {"found":false}.',
+    '',
+    `TEXT:\n"""\n${window}\n"""`,
+  ].join('\n')
+}
+
+// The section of a policy's draft that surrounds a given anchor phrase (e.g. COVID wording), so
+// the admin can confirm and delete the whole section. Uses a small grounded model call to find
+// the section boundaries (extracted policy text has no reliable heading markup), validates the
+// result is a real, bounded substring, and falls back to the heuristic if anything looks off.
+// Returns the verbatim block or null.
 export async function detectPolicySection(tenantId: string, policyId: string, anchor: string): Promise<string | null> {
   if (!anchor.trim()) return null
   const doc = await getOrInitDocument(tenantId, policyId)
-  return sectionAround(String(doc.draft_content ?? ''), anchor)
+  const content = String(doc.draft_content ?? '')
+  const at = content.indexOf(anchor)
+  if (at < 0) return null
+
+  // The heading usually sits just before the match; the body runs after it.
+  const window = content.slice(Math.max(0, at - 2000), Math.min(content.length, at + anchor.length + 7000))
+  try {
+    const out = await callClaude(SECTION_SYSTEM, sectionPrompt(window, anchor), { model: SECTION_HAIKU, maxTokens: 400, temperature: 0, feature: 'covid_section' })
+    const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
+    if (parsed?.found && parsed.start_anchor && parsed.end_anchor) {
+      const s = content.indexOf(String(parsed.start_anchor))
+      const eAnchor = String(parsed.end_anchor)
+      const eFound = s >= 0 ? content.indexOf(eAnchor, s) : -1
+      if (s >= 0 && eFound >= 0) {
+        const span = content.slice(s, eFound + eAnchor.length)
+        // Must be a real span that includes the flagged wording and isn't essentially the whole doc.
+        if (span.includes(anchor) && span.length >= anchor.length && span.length <= content.length * 0.7) {
+          await logAiCredit(tenantId, 'covid_section', policyId)
+          return span
+        }
+      }
+    }
+  } catch { /* fall through to the heuristic */ }
+
+  return sectionAround(content, anchor)
 }
 
 // Apply one change to the content. `applied` is false when an amend/heading anchor could

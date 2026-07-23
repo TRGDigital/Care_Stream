@@ -207,6 +207,7 @@ type DashboardCache = {
   chartData: Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>
   channels:  { chat: number; email: number; whatsapp: number; voice: number }
   followUp:  { staff: Array<{ id: string; name: string; job_role: string | null; unreviewed: number }>; summary: { total: number; total_gaps: number } } | null
+  dueReview?: DuePolicy[]
 }
 
 type DuePolicy = { policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }
@@ -230,7 +231,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const cached = persistentCache.get<DashboardCache>(`admin-dashboard-${userId}`)
     if (cached) {
-      setQueries(cached.queries); setChartData(cached.chartData); setChannels(cached.channels); setStats(cached.stats); setFollowUp(cached.followUp ?? null)
+      setQueries(cached.queries); setChartData(cached.chartData); setChannels(cached.channels); setStats(cached.stats); setFollowUp(cached.followUp ?? null); setDueReview(cached.dueReview ?? [])
       setLoading(false)
     }
   }, [userId])
@@ -250,7 +251,8 @@ export default function DashboardPage() {
     ]).then(([policiesRes, usersRes, queriesRes, chartRes, analyticsRes, followUpRes, dueRes]) => {
       const nextFollowUp = followUpRes.status === 'fulfilled' ? followUpRes.value : null
       setFollowUp(nextFollowUp)
-      setDueReview(dueRes.status === 'fulfilled' ? (dueRes.value?.policies ?? []) : [])
+      const nextDueReview = dueRes.status === 'fulfilled' ? (dueRes.value?.policies ?? []) : []
+      setDueReview(nextDueReview)
       const nextStats = {
         activePolicies: policiesRes.status === 'fulfilled' ? String(policiesRes.value?.total ?? '—') : '—',
         // Count ACTIVE staff only — deactivated members shouldn't inflate the headcount.
@@ -265,7 +267,7 @@ export default function DashboardPage() {
         if (ch) nextChannels = { chat: ch.chat ?? 0, email: ch.email ?? 0, whatsapp: ch.whatsapp ?? 0, voice: ch.voice ?? 0 }
       }
       setStats(nextStats); setQueries(nextQueries); setChartData(nextChart); setChannels(nextChannels)
-      persistentCache.set<DashboardCache>(`admin-dashboard-${userId}`, { stats: nextStats, queries: nextQueries, chartData: nextChart, channels: nextChannels, followUp: nextFollowUp })
+      persistentCache.set<DashboardCache>(`admin-dashboard-${userId}`, { stats: nextStats, queries: nextQueries, chartData: nextChart, channels: nextChannels, followUp: nextFollowUp, dueReview: nextDueReview })
     }).finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken, chartDays])

@@ -12,6 +12,7 @@ import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
+import { runPolicyReviewReminders } from '../services/policies/review-reminders'
 
 export const cronRouter = Router()
 
@@ -31,6 +32,19 @@ cronRouter.get('/knowledge-gaps', async (req: Request, res: Response) => {
     ok(res, result)
   } catch (e: any) {
     console.error('[cron/knowledge-gaps] failed:', e?.message ?? e)
+    err(res, 'JOB_FAILED', e.message, 500)
+  }
+})
+
+// Daily: email a tenant's admins when policies reach their review date. Several policies due on
+// the same day go in ONE email. Fires once per review cycle (re-armed when a new date is set).
+cronRouter.get('/policy-review-reminders', async (req: Request, res: Response) => {
+  if (!authed(req)) { err(res, 'FORBIDDEN', 'Not authorised.', 403); return }
+  try {
+    const result = await runPolicyReviewReminders({ force: req.query.force === '1' })
+    ok(res, result)
+  } catch (e: any) {
+    console.error('[cron/policy-review-reminders] failed:', e?.message ?? e)
     err(res, 'JOB_FAILED', e.message, 500)
   }
 })

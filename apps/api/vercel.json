@@ -14,6 +14,7 @@
     { "path": "/cron/knowledge-gaps", "schedule": "0 7 * * *" },
     { "path": "/cron/audit-reminders", "schedule": "0 8 * * *" },
     { "path": "/cron/credential-expiry", "schedule": "0 8 * * *" },
+    { "path": "/cron/policy-review-reminders", "schedule": "0 8 * * *" },
     { "path": "/cron/supervision-reminders", "schedule": "0 8 * * *" },
     { "path": "/cron/licence-renewals", "schedule": "0 9 * * *" },
     { "path": "/cron/onboarding-emails", "schedule": "0 9,10 * * *" },

@@ -878,6 +878,7 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
   const [data, setData] = useState<MatrixData | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
+  const [openUpdated, setOpenUpdated] = useState(false)
 
   useEffect(() => {
     const cached = persistentCache.get<MatrixData>(`admin-matrix-${userId}`)
@@ -889,10 +890,12 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
   }, [token, userId])
 
   const rows = data?.policies ?? []
+  const updatedRows = rows.filter(r => !!r.updated_at)   // policies that have had a change adopted/published
   const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')
   const updateRow = (r: MatrixRowT) => setData(d => (d ? { ...d, policies: d.policies.map(p => (p.policy_id === r.policy_id ? r : p)) } : d))
 
   return (
+    <>
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
         <FileClock size={16} className="shrink-0 text-teal" />
@@ -949,6 +952,66 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
         )}
       </div>)}
     </div>
+
+    {/* Original "what have we updated" view — policies that have had a change adopted/published. */}
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <button onClick={() => setOpenUpdated(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+        <FileText size={16} className="shrink-0 text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Updated policies</h2>
+        {updatedRows.length > 0 && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{updatedRows.length}</span>}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${openUpdated ? 'rotate-180' : ''}`} />
+      </button>
+      {openUpdated && (<div className="border-t border-gray-100">
+        {updatedRows.length === 0 ? (
+          <div className="flex items-center gap-3 px-6 py-5">
+            <Info size={18} className="shrink-0 text-neutral-mid" />
+            <p className="text-sm text-neutral-mid">No policies have been updated yet. When you adopt and publish a change from any section above, it appears here with what drove the update and its status.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
+                  <th className="px-6 py-2.5">Policy</th>
+                  <th className="px-3 py-2.5">Updated from</th>
+                  <th className="px-3 py-2.5">Status</th>
+                  <th className="px-3 py-2.5">Last change</th>
+                  <th className="px-6 py-2.5">Next review due</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {updatedRows.map(r => (
+                  <tr key={r.policy_id}>
+                    <td className="px-6 py-3">
+                      <p className="font-medium text-neutral-dark">{r.name}</p>
+                      <p className="text-xs text-neutral-mid">v{r.version}</p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {r.sources.length === 0 ? <span className="text-xs text-neutral-mid">—</span> : r.sources.map(s => (
+                          <span key={s} className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${SOURCE_STYLE[s] ?? 'bg-gray-100 text-neutral-mid'}`}>{SOURCE_LABEL[s] ?? s}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3"><span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${MSTATUS[r.status]?.cls ?? 'bg-gray-100 text-neutral-mid'}`}>{MSTATUS[r.status]?.label ?? r.status}</span></td>
+                    <td className="px-3 py-3 whitespace-nowrap text-neutral-dark tabular-nums">{fmt(r.updated_at)}</td>
+                    <td className="px-6 py-3 whitespace-nowrap tabular-nums">
+                      {r.last_reviewed_at ? (
+                        <>
+                          <span className={r.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(r.next_review_due)}</span>
+                          {r.review_overdue && <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
+                        </>
+                      ) : <span className="text-xs text-neutral-mid">not set</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>)}
+    </div>
+    </>
   )
 }
 

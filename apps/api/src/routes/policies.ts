@@ -639,7 +639,8 @@ policiesRouter.patch('/:id/review', requireAdmin, async (req: Request, res: Resp
   const when = parsed.data.last_reviewed_at ? new Date(parsed.data.last_reviewed_at) : new Date()
   if (isNaN(when.getTime())) { err(res, 'VALIDATION_ERROR', 'Please provide a valid date.'); return }
 
-  const data: any = { last_reviewed_at: when }
+  // Recording a review starts a fresh cycle, so re-arm the reminder (clear the last-sent stamp).
+  const data: any = { last_reviewed_at: when, review_reminder_sent_at: null }
   if (parsed.data.review_interval_days != null) data.review_interval_days = parsed.data.review_interval_days
 
   const updated = await (prisma as any).policy.update({ where: { id: policyId }, data, select: { last_reviewed_at: true, review_interval_days: true } })

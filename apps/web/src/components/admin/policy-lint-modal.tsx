@@ -41,7 +41,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Pandemic-era (COVID) wording is grouped by SECTION: a section with several COVID mentions is
   // one card (delete/edit the whole block); a lone mention in a general paragraph is its own card.
   const [covidGroups, setCovidGroups] = useState<Array<{ g: number; count: number; context: string; dedicated: boolean; term: string }>>([])
-  const [covidSectionDelete, setCovidSectionDelete] = useState<{ g: number; text: string } | null>(null)
+  const [covidSectionDelete, setCovidSectionDelete] = useState<{ g: number; text: string; debug?: string } | null>(null)
   const [covidEdit, setCovidEdit] = useState<{ g: number; dedicated: boolean; original: string; text: string } | null>(null)
   const [covidBusy, setCovidBusy] = useState<number | null>(null)
   const [covidDetecting, setCovidDetecting] = useState<number | null>(null)
@@ -288,8 +288,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setCovidDetecting(grp.g); setAdoptErr('')
     try {
       const r = await createApiClient(token).analytics.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: 'section' })
-      if (r.found && r.section_text) setCovidSectionDelete({ g: grp.g, text: r.section_text })
-      else setAdoptErr('Could not find a clear section around this wording. Use the edit option instead.')
+      if (r.found && r.section_text) setCovidSectionDelete({ g: grp.g, text: r.section_text, debug: r.debug })
+      else setAdoptErr(`Could not find a clear section. DEBUG: ${r.debug ?? '?'}`)
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not find the section.') }
     finally { setCovidDetecting(null) }
   }
@@ -527,6 +527,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                         {covidSectionDelete?.g === grp.g && (
                           <div className="mt-2.5 rounded-lg border border-rose-200 bg-rose-50/60 p-3">
                             <p className="text-xs font-semibold text-rose-700">This will remove the following section from your draft:</p>
+                            {covidSectionDelete.debug && <p className="mt-1 rounded bg-amber-50 px-2 py-1 font-mono text-[10px] text-amber-800" style={{ wordBreak: 'break-all' }}>DEBUG: {covidSectionDelete.debug}</p>}
                             <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-rose-100 bg-white px-2.5 py-2 text-[11px] leading-relaxed text-neutral-dark">{covidSectionDelete.text.trim()}</pre>
                             <div className="mt-2 flex items-center gap-2">
                               <button onClick={deleteCovidSection} disabled={covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{covidBusy === grp.g ? <><Loader2 size={13} className="animate-spin" /> Deleting…</> : <><Trash2 size={13} /> Delete section</>}</button>

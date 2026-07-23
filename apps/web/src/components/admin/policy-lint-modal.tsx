@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
-import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink, SquarePen, CalendarClock } from 'lucide-react'
+import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink, SquarePen, CalendarClock, Trash2 } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
 type Finding = LintData['policies'][number]['findings'][number]
@@ -35,6 +35,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Editable replacement text (per finding index) for signals with no single clean swap, e.g.
   // pandemic-era wording. Pre-filled with the suggested phrase; the admin can accept or reword.
   const [editText, setEditText] = useState<Record<number, string>>({})
+  // Section-delete flow (COVID): the detected section awaiting the admin's confirmation.
+  const [sectionDelete, setSectionDelete] = useState<{ idx: number; text: string } | null>(null)
+  const [detecting, setDetecting] = useState<number | null>(null)
 
   // Fill-in placeholders: typed values + which tokens have been filled.
   const [fillValues, setFillValues] = useState<Record<string, string>>({})
@@ -173,6 +176,38 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     }
   }
 
+  // COVID section delete: find the section around the flagged wording, then (on confirm) remove it.
+  async function detectSection(f: Finding, idx: number) {
+    const anchor = termsOf(f)[0]
+    if (!anchor) return
+    setDetecting(idx); setAdoptErr('')
+    try {
+      const r = await createApiClient(token).analytics.detectPolicySection(policyId, anchor)
+      if (r.found && r.section_text) setSectionDelete({ idx, text: r.section_text })
+      else setAdoptErr('Could not find a clear section around this wording to delete. Use Remove or Replace instead.')
+    } catch (e: any) { setAdoptErr(e.message ?? 'Could not find the section.') }
+    finally { setDetecting(null) }
+  }
+
+  async function deleteSection() {
+    if (!sectionDelete) return
+    const { idx, text } = sectionDelete
+    setBusy(idx); setAdoptErr('')
+    try {
+      const res = await createApiClient(token).analytics.adoptSuggestion({
+        policy_id: policyId, reference_key: 'policy-lint:covid-era',
+        requirement: 'Remove pandemic-era section', placement: 'amend',
+        old_text: text, new_text: '',
+      })
+      setAdopted(s => new Set(s).add(idx))
+      setPending(res.pending)
+      onAdopted?.()
+      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      setSectionDelete(null)
+    } catch (e: any) { setAdoptErr(e.message ?? 'Could not delete the section.') }
+    finally { setBusy(null) }
+  }
+
   // Fill one placeholder token (e.g. [insert name]) with the admin's text, everywhere it appears.
   async function fillToken(f: Finding, term: string, n: number) {
     const key = `${f.signal_key}::${term}`
@@ -305,7 +340,28 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                             className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">
                             <Locate size={13} /> {total > 1 ? (shown ? `Show ${shown} of ${total}` : `Show in policy (${total})`) : 'Show in policy'}
                           </button>
+                          {f.signal_key === 'covid-era' && !adopted.has(i) && (
+                            <button onClick={() => detectSection(f, i)} disabled={busy !== null || detecting !== null}
+                              className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
+                              {detecting === i ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
+                            </button>
+                          )}
                         </div>
+                        {/* Confirm before removing an entire section (COVID). */}
+                        {sectionDelete?.idx === i && (
+                          <div className="mt-2.5 rounded-lg border border-rose-200 bg-rose-50/60 p-3">
+                            <p className="text-xs font-semibold text-rose-700">This will remove the following section from your draft:</p>
+                            <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-rose-100 bg-white px-2.5 py-2 text-[11px] leading-relaxed text-neutral-dark">{sectionDelete.text.trim()}</pre>
+                            <p className="mt-1.5 text-[11px] text-neutral-mid">It becomes a draft change you review (and can revert) before publishing. If this looks wrong, cancel and use Remove or Replace instead.</p>
+                            <div className="mt-2 flex items-center gap-2">
+                              <button onClick={deleteSection} disabled={busy !== null}
+                                className="inline-flex items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50">
+                                {busy === i ? <><Loader2 size={13} className="animate-spin" /> Deleting…</> : <><Trash2 size={13} /> Delete section</>}
+                              </button>
+                              <button onClick={() => setSectionDelete(null)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -16,7 +16,7 @@ import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-
 import { resolveSection, reopenSection, clearResolutions } from '../services/analytics/review-resolutions'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -607,6 +607,21 @@ analyticsRouter.post('/policy-lint/scan', requireAdmin, async (_req: Request, re
   } catch (e: any) {
     err(res, 'LINT_SCAN_FAILED', e.message ?? 'Could not scan policies.', 500)
   }
+})
+
+// Detect the policy section around a phrase (e.g. COVID wording) so the admin can confirm and
+// delete the whole section. Returns the verbatim block; deletion is a normal amend to "".
+analyticsRouter.post('/gaps/detect-section', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') }
+  catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  const policyId = String(req.body?.policy_id ?? '').trim()
+  const anchor = String(req.body?.anchor ?? '')
+  if (!policyId) { err(res, 'BAD_REQUEST', 'Missing policy.', 400); return }
+  try {
+    const section = await detectPolicySection(tenantId, policyId, anchor)
+    ok(res, { section_text: section ?? '', found: !!section })
+  } catch (e: any) { err(res, 'DETECT_FAILED', e.message ?? 'Could not detect the section.', 500) }
 })
 
 // "Mark as updated" — hide a policy from the out-of-date list until the next scan re-flags it.

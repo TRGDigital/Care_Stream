@@ -194,6 +194,59 @@ function insertBeforeEndMatter(content: string, block: string): string {
   return `${before}\n\n${block}\n\n${after}`.replace(/\n{3,}/g, '\n\n').trim() + '\n'
 }
 
+// Heuristic: does this line look like a section heading in extracted policy text? Extracted
+// text has no reliable markup, so we accept markdown headings, numbered headings ("5." / "5.1"),
+// and short ALL-CAPS / heading-style lines that don't end in a full stop.
+function looksLikeHeading(line: string): boolean {
+  const t = line.trim()
+  if (!t || t.length > 90) return false
+  if (/^#{1,6}\s/.test(t)) return true
+  if (/^\d+(\.\d+){0,3}[.)]?\s+\S/.test(t)) return true
+  if (/^[A-Z0-9][A-Z0-9 ,&/()'"-]{2,88}$/.test(t) && !/[.]$/.test(t)) return true
+  return false
+}
+
+// Return the exact substring of `content` for the section that contains `anchor`: from the
+// heading above it down to (but excluding) the next heading. If there's no heading above, it
+// falls back to the blank-line-delimited paragraph block around the anchor. Returned verbatim
+// so it can be removed with a plain amend (old_text → ""). Null if the anchor isn't present.
+function sectionAround(content: string, anchor: string): string | null {
+  const at = content.indexOf(anchor)
+  if (at < 0) return null
+  const lines = content.split('\n')
+  const starts: number[] = []
+  let acc = 0
+  for (const ln of lines) { starts.push(acc); acc += ln.length + 1 }
+  let aLine = 0
+  for (let i = 0; i < lines.length; i++) { if (starts[i] <= at) aLine = i; else break }
+
+  // Start at the nearest heading at or above the anchor line.
+  let start = aLine
+  while (start > 0 && !looksLikeHeading(lines[start])) start--
+  const startedOnHeading = looksLikeHeading(lines[start])
+  if (!startedOnHeading) {
+    // No heading above — use the paragraph block (back to the previous blank line).
+    start = aLine
+    while (start > 0 && lines[start - 1].trim() !== '') start--
+  }
+
+  // End at the next heading below the anchor, or (paragraph fallback) the next blank line.
+  let end = aLine + 1
+  if (startedOnHeading) { while (end < lines.length && !looksLikeHeading(lines[end])) end++ }
+  else { while (end < lines.length && lines[end].trim() !== '') end++ }
+
+  const section = content.slice(starts[start], end < lines.length ? starts[end] : content.length)
+  return section.trim() ? section.replace(/\n+$/, '\n') : null
+}
+
+// The section of a policy's draft that surrounds a given anchor phrase (e.g. COVID wording),
+// so the admin can confirm and delete the whole section. Returns the verbatim block or null.
+export async function detectPolicySection(tenantId: string, policyId: string, anchor: string): Promise<string | null> {
+  if (!anchor.trim()) return null
+  const doc = await getOrInitDocument(tenantId, policyId)
+  return sectionAround(String(doc.draft_content ?? ''), anchor)
+}
+
 // Apply one change to the content. `applied` is false when an amend/heading anchor could
 // not be located verbatim (the caller surfaces this rather than silently doing nothing).
 function applyChange(content: string, placement: string, oldText: string, newText: string, sectionTitle?: string): { content: string; applied: boolean } {

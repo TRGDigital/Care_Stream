@@ -36,7 +36,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // pandemic-era wording. Pre-filled with the suggested phrase; the admin can accept or reword.
   const [editText, setEditText] = useState<Record<number, string>>({})
   // Section-delete flow (COVID): the detected section awaiting the admin's confirmation.
-  const [sectionDelete, setSectionDelete] = useState<{ idx: number; text: string } | null>(null)
+  const [sectionDelete, setSectionDelete] = useState<{ idx: number; n: number; text: string } | null>(null)
   const [detecting, setDetecting] = useState<number | null>(null)
 
   // Fill-in placeholders: typed values + which tokens have been filled.
@@ -177,21 +177,51 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   }
 
   // COVID section delete: find the section around the flagged wording, then (on confirm) remove it.
-  async function detectSection(f: Finding, idx: number) {
+  async function detectSection(f: Finding, idx: number, n: number) {
     const anchor = termsOf(f)[0]
     if (!anchor) return
     setDetecting(idx); setAdoptErr('')
     try {
       const r = await createApiClient(token).analytics.detectPolicySection(policyId, anchor)
-      if (r.found && r.section_text) setSectionDelete({ idx, text: r.section_text })
+      if (r.found && r.section_text) setSectionDelete({ idx, n, text: r.section_text })
       else setAdoptErr('Could not find a clear section around this wording to delete. Use Remove or Replace instead.')
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not find the section.') }
     finally { setDetecting(null) }
   }
 
+  // Strike through the section in the right-pane preview so the deletion is shown, mirroring how a
+  // replacement turns green. Works on the formatted HTML: from the heading around the flagged mark
+  // down to the next heading. Best-effort visual only; the actual removal already applied to the draft.
+  function strikeSectionInPreview(n: number) {
+    const root = previewRef.current
+    if (!root) return
+    const mark = root.querySelector<HTMLElement>(`mark[data-lint="${n}"]`)
+    if (!mark) return
+    const isHeading = (el: Element | null): el is HTMLElement => !!el && /^H[1-6]$/.test(el.tagName)
+    // The top-level block (direct child of the preview root) that contains the flagged wording.
+    let block: HTMLElement | null = mark
+    while (block && block.parentElement && block.parentElement !== root) block = block.parentElement
+    if (!block || block.parentElement !== root) return
+    // Section start: the nearest heading at or before that block among the root's children.
+    let start: HTMLElement = block
+    for (let cur: Element | null = block; cur; cur = cur.previousElementSibling) {
+      start = cur as HTMLElement
+      if (isHeading(cur)) break
+    }
+    // Strike from the section start until the next heading (exclusive).
+    let firstStruck: HTMLElement | null = null
+    for (let node: Element | null = start; node; node = node.nextElementSibling) {
+      if (node !== start && isHeading(node)) break
+      const el = node as HTMLElement
+      el.style.textDecoration = 'line-through'; el.style.opacity = '0.5'; el.style.backgroundColor = '#fef2f2'
+      if (!firstStruck) firstStruck = el
+    }
+    firstStruck?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
   async function deleteSection() {
     if (!sectionDelete) return
-    const { idx, text } = sectionDelete
+    const { idx, n, text } = sectionDelete
     setBusy(idx); setAdoptErr('')
     try {
       const res = await createApiClient(token).analytics.adoptSuggestion({
@@ -202,7 +232,8 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setAdopted(s => new Set(s).add(idx))
       setPending(res.pending)
       onAdopted?.()
-      if (!res.applied) setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      if (res.applied) strikeSectionInPreview(n)
+      else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
       setSectionDelete(null)
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not delete the section.') }
     finally { setBusy(null) }
@@ -341,7 +372,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                             <Locate size={13} /> {total > 1 ? (shown ? `Show ${shown} of ${total}` : `Show in policy (${total})`) : 'Show in policy'}
                           </button>
                           {f.signal_key === 'covid-era' && !adopted.has(i) && (
-                            <button onClick={() => detectSection(f, i)} disabled={busy !== null || detecting !== null}
+                            <button onClick={() => detectSection(f, i, n)} disabled={busy !== null || detecting !== null}
                               className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
                               {detecting === i ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
                             </button>

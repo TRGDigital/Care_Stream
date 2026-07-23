@@ -8,7 +8,8 @@ import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { PlanCard } from '@/components/admin/plan-card'
 import { persistentCache } from '@/lib/page-cache'
-import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users } from 'lucide-react'
+import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
 const whatsappIconPath = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
@@ -208,9 +209,14 @@ type DashboardCache = {
   followUp:  { staff: Array<{ id: string; name: string; job_role: string | null; unreviewed: number }>; summary: { total: number; total_gaps: number } } | null
 }
 
+type DuePolicy = { policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }
+
 export default function DashboardPage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const userId = session?.user?.email ?? 'guest'
+  const [dueReview, setDueReview] = useState<DuePolicy[]>([])
+  const [reReviewing, setReReviewing] = useState(false)
   const [queries,    setQueries]    = useState<any[]>([])
   const [chartData,  setChartData]  = useState<Array<{ date: string; chat: number; email: number; whatsapp: number; voice: number }>>([])
   const [chartDays,  setChartDays]  = useState(30)
@@ -240,9 +246,11 @@ export default function DashboardPage() {
       api.analytics.dailyActivity(chartDays),
       api.analytics.get(),
       api.analytics.followUp(),
-    ]).then(([policiesRes, usersRes, queriesRes, chartRes, analyticsRes, followUpRes]) => {
+      api.analytics.policiesDueForReview().catch(() => ({ policies: [] })),
+    ]).then(([policiesRes, usersRes, queriesRes, chartRes, analyticsRes, followUpRes, dueRes]) => {
       const nextFollowUp = followUpRes.status === 'fulfilled' ? followUpRes.value : null
       setFollowUp(nextFollowUp)
+      setDueReview(dueRes.status === 'fulfilled' ? (dueRes.value?.policies ?? []) : [])
       const nextStats = {
         activePolicies: policiesRes.status === 'fulfilled' ? String(policiesRes.value?.total ?? '—') : '—',
         // Count ACTIVE staff only — deactivated members shouldn't inflate the headcount.
@@ -264,9 +272,50 @@ export default function DashboardPage() {
 
   const totalChannelQueries = channels.chat + channels.email + channels.voice
 
+  // Re-run the out-of-date scan for the due policies and open /gaps to review them.
+  async function reReviewDuePolicies() {
+    if (!session?.accessToken || dueReview.length === 0) return
+    setReReviewing(true)
+    try { await createApiClient(session.accessToken).analytics.reReviewPolicies(dueReview.map(p => p.policy_id)) } catch { /* still navigate */ }
+    router.push('/gaps')
+  }
+
+  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
+
+      {/* Policies due for review — surfaces when a policy's review date has come around. */}
+      {dueReview.length > 0 && (
+        <div className="mb-6 rounded-card border border-red-200 bg-red-50/50 p-5">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <CalendarClock size={16} className="text-red-600" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Policies due for review</h2>
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">{dueReview.length}</span>
+            <button
+              onClick={reReviewDuePolicies}
+              disabled={reReviewing}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50"
+            >
+              {reReviewing ? <><Loader2 size={13} className="animate-spin" /> Re-reviewing…</> : <><RefreshCw size={13} /> Re-review these policies</>}
+            </button>
+          </div>
+          <p className="mb-3 text-xs text-neutral-mid">These policies have reached the review date you set. Re-review them to re-check for out-of-date content and refresh their status, then run the AI analyses on the Policy Gap Detection page if needed.</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {dueReview.slice(0, 9).map(p => (
+              <Link key={p.policy_id} href="/gaps" className="flex items-center justify-between gap-2 rounded-lg border border-red-100 bg-white px-3 py-2.5 transition-colors hover:border-red-300">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-dark">{p.name}</p>
+                  <p className="truncate text-xs text-neutral-mid">Due {fmtDate(p.next_review_due)}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-red-50 px-2 py-1 text-[11px] font-medium leading-none text-red-600">{p.days_overdue === 0 ? 'Due today' : `${p.days_overdue}d over`}</span>
+              </Link>
+            ))}
+          </div>
+          {dueReview.length > 9 && <p className="mt-2 text-xs text-neutral-mid">+{dueReview.length - 9} more.</p>}
+        </div>
+      )}
 
       {session?.accessToken && (session.user as any)?.tenantId && (
         <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />

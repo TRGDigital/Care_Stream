@@ -717,6 +717,22 @@ model GapRemediation {
   @@map("gap_remediations")
 }
 
+// Per-policy "mark as updated" for the out-of-date + CQC-wording sections, so a policy the
+// admin has dealt with drops off its list until the next full (re)scan re-flags it if still
+// an issue. Coverage uses GapRemediation and consistency uses PolicyConsistency.dismissed.
+model PolicyReviewResolution {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  policy_id   String
+  section     String   // 'out_of_date' | 'wording'
+  resolved_at DateTime @default(now())
+  resolved_by String?
+
+  @@unique([tenant_id, policy_id, section])
+  @@index([tenant_id, section])
+  @@map("policy_review_resolutions")
+}
+
 // Best-effort monitoring of a regulation's source URLs (legislation.gov.uk, HSE,
 // NICE, gov.uk…). A weekly job fingerprints each URL; when a fingerprint changes we
 // flag the regulation for review (needs_update) — we never auto-edit content.

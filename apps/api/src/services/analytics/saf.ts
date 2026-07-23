@@ -3,6 +3,7 @@
 // crosswalk (never re-matched). Grouped by key question. This is the SAF readiness data layer.
 
 import { prisma } from '../../db/client'
+import { resolvedPolicyIds, clearResolutions } from './review-resolutions'
 import { callClaude } from '../ai/claude'
 import { downloadExtractedText } from '../storage/s3'
 import { checkAiCreditLimit, logAiCredit } from '../../lib/plan-limits'
@@ -228,6 +229,8 @@ async function statementsForPolicy(tenantId: string, policyId: string): Promise<
 // (active policies) so the frontend can drive a progress bar over the batches.
 export async function startPolicyWordingAlignment(tenantId: string): Promise<{ total: number }> {
   await (prisma as any).policyWordingAlignment.deleteMany({ where: { tenant_id: tenantId } })
+  // A fresh wording run supersedes any "mark as updated" for this section.
+  await clearResolutions(tenantId, 'wording')
   const total = await (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } })
   return { total }
 }
@@ -283,7 +286,9 @@ export async function getPolicyWordingAlignment(tenantId: string): Promise<{ pol
   const rows = await (prisma as any).policyWordingAlignment.findMany({
     where: { tenant_id: tenantId }, orderBy: [{ has_suggestions: 'desc' }, { policy_name: 'asc' }],
   })
-  const policies: PolicyWordingRow[] = (rows as any[]).map(r => ({
+  // Policies the admin has marked updated are hidden until the next wording run re-flags them.
+  const resolved = await resolvedPolicyIds(tenantId, 'wording')
+  const policies: PolicyWordingRow[] = (rows as any[]).filter(r => !resolved.has(r.policy_id)).map(r => ({
     policy_id: r.policy_id, policy_name: r.policy_name ?? 'Policy',
     statements: Array.isArray(r.statements) ? r.statements : [],
     alignments: Array.isArray(r.alignments) ? r.alignments : [],

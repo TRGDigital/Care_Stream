@@ -10,7 +10,7 @@ import { GapDetailModal } from '@/components/admin/gap-detail-modal'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
 import { ConflictModal } from '@/components/admin/conflict-modal'
 import { WordingReviewModal } from '@/components/admin/wording-review-modal'
-import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText, AlertCircle } from 'lucide-react'
+import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText, AlertCircle, CalendarClock, Check, X, Building2, Coins } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
 
@@ -55,9 +55,14 @@ export default function GapsPage() {
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
   const [ackOverride, setAckOverride] = useState(false)   // set true once the disclaimer is accepted this session
+  const [analysisAckOverride, setAnalysisAckOverride] = useState(false)   // set true once the credits notice is confirmed this session
   const [completedOverride, setCompletedOverride] = useState<Set<string>>(new Set())  // marked completed this session
   const [showArchive, setShowArchive] = useState(false)
   const [showCoverage, setShowCoverage] = useState(false)
+  // First-run gate before analysis: org-details check → disclaimer → AI-credits notice, one at a time.
+  const [orgDetails, setOrgDetails] = useState<Record<string, string> | null>(null)
+  const [orgSkipped, setOrgSkipped] = useState(false)
+  const [firstRunStep, setFirstRunStep] = useState<'org' | 'disclaimer' | 'credits' | null>(null)
 
   async function reopenGap(referenceKey: string) {
     setCompletedOverride(prev => { const n = new Set(prev); n.delete(referenceKey); return n })
@@ -65,6 +70,12 @@ export default function GapsPage() {
       await createApiClient(session.accessToken).analytics.reopenGap(referenceKey).catch(() => {})
       load()
     }
+  }
+
+  // "Mark as updated" for a regulation gap — archives it to Completed until re-analysis re-flags it.
+  async function markCoverageUpdated(referenceKey: string) {
+    setCompletedOverride(prev => new Set(prev).add(referenceKey))
+    if (session?.accessToken) createApiClient(session.accessToken).analytics.completeGap(referenceKey).catch(() => {})
   }
   // "Regulation updated" alerts — dismissed ids + per-alert training generation state.
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
@@ -137,6 +148,50 @@ export default function GapsPage() {
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
     }
+  }
+
+  // Fetch organisation details once so the first-run gate can check they're filled in.
+  useEffect(() => {
+    if (!session?.accessToken || locked) return
+    createApiClient(session.accessToken).settings.get()
+      .then(s => setOrgDetails(((s as any).organisation_details ?? {}) as Record<string, string>))
+      .catch(() => setOrgDetails({}))
+  }, [session?.accessToken, locked])
+
+  // Organisation-details completeness. These fields personalise the policies, so they matter
+  // for the analysis. An approver counts if either the default approver or registered manager is set.
+  const REQUIRED_ORG: Array<{ key: string; label: string }> = [
+    { key: 'nominated_individual', label: 'Nominated individual' },
+    { key: 'address', label: 'Registered address' },
+    { key: 'cqc_provider_id', label: 'CQC provider ID' },
+    { key: 'cqc_location_id', label: 'CQC location ID' },
+  ]
+  const orgMissing = orgDetails ? REQUIRED_ORG.filter(f => !String(orgDetails[f.key] ?? '').trim()) : []
+  const approverSet = orgDetails ? !!(String(orgDetails.default_approver ?? '').trim() || String(orgDetails.registered_manager ?? '').trim()) : true
+  const orgIncomplete = !!orgDetails && (orgMissing.length > 0 || !approverSet)
+
+  // The first outstanding gate step in order, or null if none are outstanding.
+  function firstGate(): 'org' | 'disclaimer' | 'credits' | null {
+    if (orgIncomplete && !orgSkipped) return 'org'
+    if (data && !data.remediation_acknowledged && !ackOverride) return 'disclaimer'
+    if (data && !data.analysis_acknowledged && !analysisAckOverride) return 'credits'
+    return null
+  }
+  function beginAnalysis() {
+    const step = firstGate()
+    if (step) setFirstRunStep(step)
+    else runAnalysis()
+  }
+  // Advance the queue after a step is cleared. Pass the flags that just changed so we don't wait
+  // for async state before deciding the next step.
+  function proceedAfter(step: 'org' | 'disclaimer' | 'credits') {
+    const order: Array<'org' | 'disclaimer' | 'credits'> = ['org', 'disclaimer', 'credits']
+    for (const s of order.slice(order.indexOf(step) + 1)) {
+      if (s === 'disclaimer' && data && !data.remediation_acknowledged && !ackOverride) { setFirstRunStep('disclaimer'); return }
+      if (s === 'credits' && data && !data.analysis_acknowledged && !analysisAckOverride) { setFirstRunStep('credits'); return }
+    }
+    setFirstRunStep(null)
+    runAnalysis()
   }
 
   // While an analysis is running, warn before the tab is closed or refreshed: leaving stops the
@@ -225,6 +280,71 @@ export default function GapsPage() {
 
   return (
     <div>
+      {/* First-run gate: shown one at a time before the analysis starts, so they never overlap. */}
+      {firstRunStep === 'org' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <Building2 size={22} className="mt-0.5 shrink-0 text-teal" />
+              <div>
+                <h2 className="text-lg font-bold text-neutral-dark">Complete your organisation details first</h2>
+                <p className="mt-1 text-sm text-neutral-mid">These details personalise your policies and help the analysis be accurate. A few are still missing:</p>
+              </div>
+            </div>
+            <ul className="mt-3 space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {orgMissing.map(f => <li key={f.key} className="flex items-center gap-2"><AlertCircle size={13} className="shrink-0" /> {f.label}</li>)}
+              {!approverSet && <li className="flex items-center gap-2"><AlertCircle size={13} className="shrink-0" /> Default approver or registered manager</li>}
+            </ul>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button onClick={() => { setOrgSkipped(true); proceedAfter('org') }} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Continue anyway</button>
+              <a href="/settings" className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Go to settings</a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {firstRunStep === 'disclaimer' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={22} className="mt-0.5 shrink-0 text-amber-500" />
+              <div>
+                <h2 className="text-lg font-bold text-neutral-dark">Before you run the analysis</h2>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{data.remediation_disclaimer}</p>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button onClick={() => setFirstRunStep(null)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
+              <button
+                onClick={async () => { try { await createApiClient(session!.accessToken!).analytics.acknowledgeRemediation() } catch {} setAckOverride(true); proceedAfter('disclaimer') }}
+                className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">I understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {firstRunStep === 'credits' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <Coins size={22} className="mt-0.5 shrink-0 text-teal" />
+              <div>
+                <h2 className="text-lg font-bold text-neutral-dark">A full re-run uses AI credits</h2>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">Running the coverage analysis reads through all of your policies and can take a few minutes. Please keep this page open until it finishes. If you leave or refresh, it stops and starting again re-runs the whole check and uses more AI credits.</p>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button onClick={() => setFirstRunStep(null)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
+              <button
+                onClick={async () => { try { await createApiClient(session!.accessToken!).analytics.acknowledgeAnalysis() } catch {} setAnalysisAckOverride(true); proceedAfter('credits') }}
+                className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Start analysis
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Blocking overlay while a coverage analysis runs — the run is client-side, so leaving the
           page stops it, and restarting re-analyses from scratch (extra AI credits). */}
       {analysing && (
@@ -260,7 +380,7 @@ export default function GapsPage() {
           </p>
           {analysedWhen && <p className="mt-1 text-xs text-neutral-mid">Coverage last analysed {analysedWhen}</p>}
         </div>
-        <button onClick={runAnalysis} disabled={analysing}
+        <button onClick={beginAnalysis} disabled={analysing}
           className="flex shrink-0 items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
           {analysing
             ? <><Loader2 size={15} className="animate-spin" /> {analyseProgress && analyseProgress.total > 0 ? `Analysing… ${analyseProgress.done}/${analyseProgress.total}` : 'Analysing…'}</>
@@ -383,6 +503,13 @@ export default function GapsPage() {
                           className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
                         >
                           <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
+                        </button>
+                        <button
+                          onClick={() => markCoverageUpdated(reg.reference_key)}
+                          title="Mark as updated. It moves to Completed and reappears if the next analysis still flags it."
+                          className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light"
+                        >
+                          <Check size={12} /> Mark as updated
                         </button>
                       </div>
                     </div>
@@ -574,6 +701,13 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
     finally { setScanning(false) }
   }
 
+  // "Mark as updated" — hide this policy from the list (until the next scan re-flags it).
+  async function markUpdated(policyId: string) {
+    setData(d => (d ? { ...d, policies: d.policies.filter(p => p.policy_id !== policyId), policies_with_issues: Math.max(0, d.policies_with_issues - 1) } : d))
+    setSelected(s => (s?.policy_id === policyId ? null : s))
+    try { await createApiClient(token).analytics.lintResolve(policyId) } catch { /* optimistic */ }
+  }
+
   const when = data?.scanned_at ? new Date(data.scanned_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
 
   return (
@@ -628,12 +762,19 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
                       {highs > 0 && <span className="text-rose-600"> · {highs} high-severity</span>}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={() => setSelected(p)}
                       className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
                     >
                       <Wand2 size={12} /> Review &amp; fix
+                    </button>
+                    <button
+                      onClick={() => markUpdated(p.policy_id)}
+                      title="Hide this policy from the list. It reappears if the next scan still finds issues."
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light"
+                    >
+                      <Check size={12} /> Mark as updated
                     </button>
                   </div>
                 </div>
@@ -661,13 +802,76 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
 // ── Policy update matrix ─────────────────────────────────────────────────────────
 type MatrixData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyMatrix']>>
 
-const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency' }
-const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600' }
+const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency', wording: 'CQC wording' }
+const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600', wording: 'bg-purple-50 text-purple-600' }
 const MSTATUS: Record<string, { label: string; cls: string }> = {
   published:        { label: 'Live',              cls: 'bg-green-50 text-green-700' },
   draft:            { label: 'Draft',             cls: 'bg-gray-100 text-neutral-mid' },
+  active:           { label: 'To review',         cls: 'bg-gray-100 text-neutral-mid' },
   pending_manager:  { label: 'With care manager', cls: 'bg-amber-50 text-amber-700' },
   pending_external: { label: 'Awaiting external', cls: 'bg-sky-50 text-sky-700' },
+}
+
+const REVIEW_INTERVALS = [{ v: 182, label: '6 months' }, { v: 365, label: '12 months' }, { v: 730, label: '2 years' }, { v: 1095, label: '3 years' }]
+
+// Inline "next review due" cell that an admin can set/edit on any listed policy. Saves via the
+// existing policies.setReview, then updates the row locally so the derived due date + badge move.
+type MatrixRowT = MatrixData['policies'][number]
+function ReviewDateCell({ token, row, onSaved }: { token: string; row: MatrixRowT; onSaved: (r: MatrixRowT) => void }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const inferredInterval = row.last_reviewed_at && row.next_review_due
+    ? Math.round((new Date(row.next_review_due).getTime() - new Date(row.last_reviewed_at).getTime()) / 86_400_000)
+    : 365
+  const [editing, setEditing] = useState(false)
+  const [date, setDate] = useState(row.last_reviewed_at ? row.last_reviewed_at.slice(0, 10) : today)
+  const [interval, setInterval] = useState(REVIEW_INTERVALS.some(i => i.v === inferredInterval) ? inferredInterval : 365)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')
+
+  async function save() {
+    setBusy(true); setErr('')
+    try {
+      await createApiClient(token).policies.setReview(row.policy_id, { last_reviewed_at: new Date(date).toISOString(), review_interval_days: interval })
+      const nextDue = new Date(new Date(date).getTime() + interval * 86_400_000)
+      onSaved({ ...row, last_reviewed_at: new Date(date).toISOString(), next_review_due: nextDue.toISOString(), review_overdue: Date.now() > nextDue.getTime() })
+      setEditing(false)
+    } catch (e: any) { setErr(e.message ?? 'Could not save the review date.') }
+    finally { setBusy(false) }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-[10px] text-neutral-mid">Last reviewed
+          <input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} className="mt-0.5 block rounded-md border border-gray-200 px-2 py-1 text-xs" />
+        </label>
+        <label className="text-[10px] text-neutral-mid">Every
+          <select value={interval} onChange={e => setInterval(Number(e.target.value))} className="mt-0.5 block rounded-md border border-gray-200 px-2 py-1 text-xs">
+            {REVIEW_INTERVALS.map(i => <option key={i.v} value={i.v}>{i.label}</option>)}
+          </select>
+        </label>
+        <button onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-btn bg-teal px-2 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+          {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Save
+        </button>
+        <button onClick={() => setEditing(false)} className="text-[11px] text-neutral-mid hover:text-neutral-dark">Cancel</button>
+        {err && <p className="w-full text-[11px] text-red-600">{err}</p>}
+      </div>
+    )
+  }
+  return (
+    <div className="flex items-center gap-2">
+      {row.last_reviewed_at ? (
+        <>
+          <span className={row.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(row.next_review_due)}</span>
+          {row.review_overdue && <span className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
+          <button onClick={() => setEditing(true)} className="text-[11px] font-medium text-teal hover:underline">Edit</button>
+        </>
+      ) : (
+        <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1 text-[11px] font-medium text-teal hover:underline"><CalendarClock size={12} /> Set review date</button>
+      )}
+    </div>
+  )
 }
 
 function PolicyMatrixSection({ token, userId }: { token: string; userId: string }) {
@@ -686,13 +890,14 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
 
   const rows = data?.policies ?? []
   const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')
+  const updateRow = (r: MatrixRowT) => setData(d => (d ? { ...d, policies: d.policies.map(p => (p.policy_id === r.policy_id ? r : p)) } : d))
 
   return (
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
         <FileClock size={16} className="shrink-0 text-teal" />
-        <h2 className="text-sm font-semibold text-neutral-dark">Policy update matrix</h2>
-        {rows.length > 0 && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{rows.length} updated</span>}
+        <h2 className="text-sm font-semibold text-neutral-dark">Policies to review</h2>
+        {rows.length > 0 && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{rows.length}</span>}
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -702,15 +907,17 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
         ) : rows.length === 0 ? (
           <div className="flex items-center gap-3 px-6 py-5">
             <Info size={18} className="shrink-0 text-neutral-mid" />
-            <p className="text-sm text-neutral-mid">No policies have been updated and published yet. Adopt and publish a change from any of the sections above and it will appear here with its next review date.</p>
+            <p className="text-sm text-neutral-mid">Every policy flagged across the sections above appears here once, so you can set a next review date for each. Run the analyses above to populate it.</p>
           </div>
         ) : (
+          <>
+          <p className="px-6 pt-3 text-xs text-neutral-mid">Each policy that needs attention appears once. Set a next review date so it reminds you on your dashboard when it comes around.</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
                   <th className="px-6 py-2.5">Policy</th>
-                  <th className="px-3 py-2.5">Updated from</th>
+                  <th className="px-3 py-2.5">Flagged in</th>
                   <th className="px-3 py-2.5">Status</th>
                   <th className="px-3 py-2.5">Last change</th>
                   <th className="px-6 py-2.5">Next review due</th>
@@ -732,19 +939,13 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
                     </td>
                     <td className="px-3 py-3"><span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${MSTATUS[r.status]?.cls ?? 'bg-gray-100 text-neutral-mid'}`}>{MSTATUS[r.status]?.label ?? r.status}</span></td>
                     <td className="px-3 py-3 whitespace-nowrap text-neutral-dark tabular-nums">{fmt(r.updated_at)}</td>
-                    <td className="px-6 py-3 whitespace-nowrap tabular-nums">
-                      {r.status !== 'published' ? <span className="text-xs text-neutral-mid">once published</span> : (
-                        <>
-                          <span className={r.review_overdue ? 'font-semibold text-red-600' : 'text-neutral-dark'}>{fmt(r.next_review_due)}</span>
-                          {r.review_overdue && <span className="ml-1.5 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Due</span>}
-                        </>
-                      )}
-                    </td>
+                    <td className="px-6 py-3"><ReviewDateCell token={token} row={r} onSaved={updateRow} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>)}
     </div>
@@ -801,6 +1002,13 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
     } finally { setRunning(false); setProgress(null) }
   }
 
+  // "Mark as updated" — dismiss this conflict (until the next check re-detects it).
+  async function markUpdated(conflict: Conflict) {
+    setData(d => (d ? { ...d, conflicts: d.conflicts.filter(c => c.id !== conflict.id) } : d))
+    setSelected(s => (s?.id === conflict.id ? null : s))
+    try { await createApiClient(token).analytics.consistencyDismiss(conflict.key) } catch { /* optimistic */ }
+  }
+
   const when = data?.analysed_at ? new Date(data.analysed_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
   const conflicts = data?.conflicts ?? []
 
@@ -854,10 +1062,17 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
                     </p>
                     <p className="truncate text-xs text-neutral-mid">{c.positions.map(p => p.policy_name).join(' vs ')}</p>
                   </div>
-                  <button onClick={() => setSelected(c)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">
-                    <Wand2 size={12} /> Review &amp; resolve
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button onClick={() => setSelected(c)}
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">
+                      <Wand2 size={12} /> Review &amp; resolve
+                    </button>
+                    <button onClick={() => markUpdated(c)}
+                      title="Hide this conflict. It reappears if the next check still detects it."
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light">
+                      <Check size={12} /> Mark as updated
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -920,6 +1135,13 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
     } finally { setRunning(false); setProgress(null) }
   }
 
+  // "Mark as updated" — hide this policy from the wording list (until the next run re-flags it).
+  async function markUpdated(policyId: string) {
+    setData(d => (d ? { ...d, policies: d.policies.filter(p => p.policy_id !== policyId) } : d))
+    setSelected(s => (s?.policy_id === policyId ? null : s))
+    try { await createApiClient(token).analytics.wordingResolve(policyId) } catch { /* optimistic */ }
+  }
+
   const when = data?.analysed_at ? new Date(data.analysed_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
   const withSuggestions = (data?.policies ?? []).filter(p => p.has_suggestions)
   const analysed = data?.analysed ?? 0
@@ -976,6 +1198,11 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
                   <button onClick={() => setSelected(p)}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">
                     <Wand2 size={12} /> Review &amp; resolve
+                  </button>
+                  <button onClick={() => markUpdated(p.policy_id)}
+                    title="Hide this policy from the list. It reappears if the next run still finds wording to improve."
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light">
+                    <Check size={12} /> Mark as updated
                   </button>
                 </div>
               ))}

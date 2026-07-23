@@ -299,6 +299,9 @@ export const TEXT_SIGNALS: TextSignal[] = [
     label: 'Contains pandemic-era (COVID-19) wording',
     detail: 'Emergency COVID-19 measures (shielding, social distancing, fixed self-isolation periods, visiting bans) have largely ended. Check the wording still reflects current, not emergency, practice.',
     phrases: /covid-?19|coronavirus|social distancing|\bshielding\b|\blockdown\b/i,
+    // Suggested neutral wording so admins can remove/replace the pandemic phrasing. The
+    // suggestion is editable in the UI, so they can accept it or write their own.
+    supersededBy: 'current infection prevention and control practice',
   },
 
   // ── Unfilled template placeholders ─────────────────────────────────────────────

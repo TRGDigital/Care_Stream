@@ -984,6 +984,7 @@ export function createApiClient(token: string) {
         regulation_gaps:   Array<{ reference_key: string; official_name: string; summary: string; care_home_context: string; status: 'covered' | 'partial' | 'gap' | 'unknown'; covered: boolean; confidence: number | null; evidence_policy_id: string | null; evidence_policy_name: string | null; reason: string | null; target_policies?: Array<{ id: string | null; name: string; count: number }>; target_policy?: { id: string | null; name: string } | null }>
         regulation_alerts: Array<{ id: string; reference_key: string; official_name: string; changed_fields: string[]; created_at: string }>
         remediation_acknowledged: boolean
+        analysis_acknowledged: boolean
         remediation_disclaimer: string
         completed_keys: string[]
         completed_gaps: Array<{ reference_key: string; official_name: string; completed_at: string; completed_by_name: string | null; status: 'covered' | 'partial' | 'gap' | 'unknown' }>
@@ -1029,8 +1030,17 @@ export function createApiClient(token: string) {
       consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
       consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
-      // Policy update matrix.
-      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
+      // Policy review matrix (deduped across the four gap sections).
+      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
+      // "Mark as updated" — hide a policy from a section list until the next scan re-flags it.
+      lintResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
+      lintReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),
+      wordingResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
+      wordingReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),
+      // Policies due for review + the dashboard "re-review these policies" action.
+      policiesDueForReview: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }> }>('/analytics/policies/due-for-review', token),
+      reReviewPolicies: (policyIds: string[]) => apiFetch<{ rescanned: number }>('/analytics/policies/re-review', token, { method: 'POST', body: JSON.stringify({ policy_ids: policyIds }) }),
+      acknowledgeAnalysis: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-analysis', token, { method: 'POST' }),
       gapDetail: (referenceKey: string, force = false) => apiFetch<{
         reference_key:    string
         official_name:    string

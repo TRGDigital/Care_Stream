@@ -14,6 +14,7 @@ import { siteUrl } from '../../lib/urls'
 import { formatPolicyHtml } from '../../lib/translate'
 import { isEmailEnabled } from '../../lib/notify'
 import { sendPushToUsers } from '../../lib/push'
+import { resolvedPolicyIds } from './review-resolutions'
 
 // External review links expire after this many days (security hygiene + wrong-recipient recovery).
 export const EXTERNAL_LINK_TTL_DAYS = 30
@@ -427,60 +428,121 @@ function sourceOfRef(refKey: string): 'out_of_date' | 'consistency' | 'coverage'
 
 export interface MatrixRow {
   policy_id: string; name: string; version: string
-  status: 'published' | 'draft' | 'pending_manager' | 'pending_external'
+  status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'
   updated_at: string | null
-  sources: Array<'coverage' | 'out_of_date' | 'consistency'>
+  sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording'>
   last_reviewed_at: string | null
   next_review_due: string | null
   review_overdue: boolean
 }
 
-// The policy update matrix: every policy with adopted changes (published or in progress), what
-// drove the update(s), when it last changed, and — once published — when it is next due for review.
+// The policy review matrix: every policy that currently appears in one of the four gap
+// sections (regulation coverage, out-of-date content, cross-policy consistency, CQC wording)
+// PLUS any policy with adopted changes, deduped so a policy in several sections shows once.
+// Each row carries which section(s) it came from, its adoption status, and an editable review
+// date (last reviewed + interval → next due / overdue) that can be set on any listed policy.
 export async function getPolicyMatrix(tenantId: string): Promise<{ policies: MatrixRow[] }> {
-  const docs = await (prisma as any).policyDocument.findMany({
-    where: { tenant_id: tenantId },
-    select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true },
-  })
-  if (!docs.length) return { policies: [] }
-
-  const [policies, changes] = await Promise.all([
-    (prisma as any).policy.findMany({ where: { id: { in: (docs as any[]).map(d => d.policy_id) } }, select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true } }),
-    (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true } }),
+  const [docs, lint, wording, consistency, coverage, completed, resolvedLint, resolvedWording] = await Promise.all([
+    (prisma as any).policyDocument.findMany({ where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true } }),
+    (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, findings: true } }),
+    (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId, has_suggestions: true }, select: { policy_id: true } }),
+    (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { conflicts: true, dismissed: true } }).catch(() => null),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId, status: 'partial' }, select: { reference_key: true, evidence_policy_id: true } }),
+    (prisma as any).gapRemediation.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true } }),
+    resolvedPolicyIds(tenantId, 'out_of_date'),
+    resolvedPolicyIds(tenantId, 'wording'),
   ])
-  const polById = new Map((policies as any[]).map(p => [p.id, p]))
-  const sourcesByDoc = new Map<string, Set<string>>()
-  const lastChangeByDoc = new Map<string, number>()
+
+  // section membership: policy_id -> Set<source>
+  const sections = new Map<string, Set<MatrixRow['sources'][number]>>()
+  const add = (pid: string | null | undefined, src: MatrixRow['sources'][number]) => {
+    if (!pid) return
+    if (!sections.has(pid)) sections.set(pid, new Set())
+    sections.get(pid)!.add(src)
+  }
+  for (const r of lint as any[]) {
+    if (Array.isArray(r.findings) && r.findings.length > 0 && !resolvedLint.has(r.policy_id)) add(r.policy_id, 'out_of_date')
+  }
+  for (const r of wording as any[]) if (!resolvedWording.has(r.policy_id)) add(r.policy_id, 'wording')
+  const dismissed = new Set<string>(Array.isArray(consistency?.dismissed) ? consistency.dismissed : [])
+  for (const c of (Array.isArray(consistency?.conflicts) ? consistency.conflicts : []) as any[]) {
+    const key = c?.id ?? c?.key
+    if (key && dismissed.has(String(key))) continue
+    for (const pos of (Array.isArray(c?.positions) ? c.positions : [])) add(pos?.policy_id, 'consistency')
+  }
+  const completedKeys = new Set((completed as any[]).map(r => r.reference_key))
+  for (const c of coverage as any[]) if (!completedKeys.has(c.reference_key)) add(c.evidence_policy_id, 'coverage')
+
+  // adoption data: policy_id -> { status, updatedAt, sources, version }
+  const docByPolicy = new Map<string, any>()
+  for (const d of docs as any[]) docByPolicy.set(d.policy_id, d)
+  const changes = (docs as any[]).length
+    ? await (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true } })
+    : []
+  const docIdToPolicy = new Map<string, string>((docs as any[]).map(d => [d.id, d.policy_id]))
+  const lastChangeByPolicy = new Map<string, number>()
   for (const c of changes as any[]) {
-    if (!sourcesByDoc.has(c.document_id)) sourcesByDoc.set(c.document_id, new Set())
-    sourcesByDoc.get(c.document_id)!.add(sourceOfRef(String(c.reference_key ?? '')))
+    const pid = docIdToPolicy.get(c.document_id)
+    if (!pid) continue
+    add(pid, sourceOfRef(String(c.reference_key ?? '')))
     const t = c.applied_at ? new Date(c.applied_at).getTime() : 0
-    lastChangeByDoc.set(c.document_id, Math.max(lastChangeByDoc.get(c.document_id) ?? 0, t))
+    lastChangeByPolicy.set(pid, Math.max(lastChangeByPolicy.get(pid) ?? 0, t))
   }
 
-  const rows: MatrixRow[] = (docs as any[])
-    .filter(d => sourcesByDoc.has(d.id))   // only policies that actually have adopted changes
-    .map(d => {
-      const p = polById.get(d.policy_id)
-      const status = d.approval_status as MatrixRow['status']
-      const publishedAt = d.published_at ? new Date(d.published_at) : null
-      const lastChange = lastChangeByDoc.get(d.id) ? new Date(lastChangeByDoc.get(d.id)!) : null
+  const policyIds = [...sections.keys()]
+  if (!policyIds.length) return { policies: [] }
+  const policyRows = await (prisma as any).policy.findMany({
+    where: { id: { in: policyIds }, tenant_id: tenantId }, select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true },
+  })
+  const polById = new Map((policyRows as any[]).map(p => [p.id, p]))
+
+  const now = Date.now()
+  const rows: MatrixRow[] = policyIds
+    .filter(pid => polById.has(pid))   // skip stale/deleted policy references
+    .map(pid => {
+      const p = polById.get(pid)
+      const doc = docByPolicy.get(pid)
+      const status: MatrixRow['status'] = doc?.approval_status ?? 'active'
+      const publishedAt = doc?.published_at ? new Date(doc.published_at) : null
+      const lastChange = lastChangeByPolicy.get(pid) ? new Date(lastChangeByPolicy.get(pid)!) : null
       const updatedAt = publishedAt ?? lastChange
-      // A review date only makes sense once it's live.
-      const reviewed = status === 'published' ? (p?.last_reviewed_at ? new Date(p.last_reviewed_at) : publishedAt) : null
+      // Review date can be set on any listed policy; next due derives from last reviewed + interval.
+      const reviewed = p?.last_reviewed_at ? new Date(p.last_reviewed_at) : null
       const interval = p?.review_interval_days ?? 365
       const nextDue = reviewed ? new Date(reviewed.getTime() + interval * 86_400_000) : null
       return {
-        policy_id: d.policy_id, name: p?.name ?? 'Policy', version: d.version, status,
+        policy_id: pid, name: p?.name ?? 'Policy', version: String(doc?.version ?? 1), status,
         updated_at: updatedAt?.toISOString() ?? null,
-        sources: [...(sourcesByDoc.get(d.id) ?? [])] as MatrixRow['sources'],
+        sources: [...(sections.get(pid) ?? [])],
         last_reviewed_at: reviewed?.toISOString() ?? null,
         next_review_due: nextDue?.toISOString() ?? null,
-        review_overdue: nextDue ? Date.now() > nextDue.getTime() : false,
+        review_overdue: nextDue ? now > nextDue.getTime() : false,
       }
     })
-    .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+    .sort((a, b) => a.name.localeCompare(b.name))
   return { policies: rows }
+}
+
+// Policies whose review date has come around (last reviewed + interval <= now). Drives the
+// dashboard "policies due for review" reminder. Only policies with a recorded review date can
+// be "due"; a policy that has never been reviewed is surfaced via the out-of-date scan instead.
+export interface DuePolicy { policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }
+export async function policiesDueForReview(tenantId: string): Promise<{ policies: DuePolicy[] }> {
+  const rows = await (prisma as any).policy.findMany({
+    where: { tenant_id: tenantId, status: 'active', last_reviewed_at: { not: null } },
+    select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true },
+  })
+  const now = Date.now()
+  const due: DuePolicy[] = (rows as any[])
+    .map(p => {
+      const reviewed = new Date(p.last_reviewed_at)
+      const interval = p.review_interval_days ?? 365
+      const nextDue = new Date(reviewed.getTime() + interval * 86_400_000)
+      return { policy_id: p.id, name: p.name, last_reviewed_at: reviewed.toISOString(), next_review_due: nextDue.toISOString(), days_overdue: Math.floor((now - nextDue.getTime()) / 86_400_000) }
+    })
+    .filter(p => p.days_overdue >= 0)
+    .sort((a, b) => b.days_overdue - a.days_overdue)
+  return { policies: due }
 }
 
 // Reject at a stage (admin, manager or external) — returns to draft for amendment.

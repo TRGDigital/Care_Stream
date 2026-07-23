@@ -13,9 +13,10 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
+import { resolveSection, reopenSection, clearResolutions } from '../services/analytics/review-resolutions'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -361,6 +362,12 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
   }).catch(() => null)
   const remediationAcknowledged = !!ack && ack.disclaimer_version === REMEDIATION_DISCLAIMER_VERSION
 
+  // Has this tenant seen the one-time "a full re-run uses AI credits, keep the page open" notice?
+  const analysisAck = await (prisma as any).legalAcknowledgement.findUnique({
+    where: { tenant_id_kind: { tenant_id: tenantId, kind: 'analysis_credits' } },
+  }).catch(() => null)
+  const analysisAcknowledged = !!analysisAck
+
   // Completed (archived) remediations — hidden from the active gap list.
   const remediations = await (prisma as any).gapRemediation.findMany({
     where: { tenant_id: tenantId }, orderBy: { completed_at: 'desc' },
@@ -454,6 +461,7 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
     regulation_gaps:   regulationGaps.sort((a, b) => rank(a.status) - rank(b.status)),
     regulation_alerts: regulationAlerts,
     remediation_acknowledged: remediationAcknowledged,
+    analysis_acknowledged:    analysisAcknowledged,
     remediation_disclaimer:   REMEDIATION_DISCLAIMER,
     completed_keys:  [...completedKeys],
     completed_gaps:  (remediations as any[]).map(r => ({
@@ -599,6 +607,19 @@ analyticsRouter.post('/policy-lint/scan', requireAdmin, async (_req: Request, re
   } catch (e: any) {
     err(res, 'LINT_SCAN_FAILED', e.message ?? 'Could not scan policies.', 500)
   }
+})
+
+// "Mark as updated" — hide a policy from the out-of-date list until the next scan re-flags it.
+analyticsRouter.post('/policy-lint/:policyId/resolve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const me = (req as any).user ?? {}
+  await resolveSection(tenantId, String(req.params.policyId), 'out_of_date', me.name ?? me.email ?? null)
+  ok(res, { resolved: true })
+})
+analyticsRouter.post('/policy-lint/:policyId/reopen', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  await reopenSection(tenantId, String(req.params.policyId), 'out_of_date')
+  ok(res, { reopened: true })
 })
 
 // ─── Cross-policy consistency (Phase 4b: clustering + claim extraction) ───────────
@@ -823,6 +844,19 @@ analyticsRouter.get('/wording-alignment', requireAdmin, async (_req: Request, re
   ok(res, await getPolicyWordingAlignment(getTenantId()))
 })
 
+// "Mark as updated" — hide a policy from the CQC-wording list until the next run re-flags it.
+analyticsRouter.post('/wording-alignment/:policyId/resolve', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const me = (req as any).user ?? {}
+  await resolveSection(tenantId, String(req.params.policyId), 'wording', me.name ?? me.email ?? null)
+  ok(res, { resolved: true })
+})
+analyticsRouter.post('/wording-alignment/:policyId/reopen', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  await reopenSection(tenantId, String(req.params.policyId), 'wording')
+  ok(res, { reopened: true })
+})
+
 // GET CQC Single Assessment Framework readiness: quality-statement coverage inherited from
 // the tenant's regulation coverage (Analytics → CQC readiness).
 analyticsRouter.get('/gaps/saf-coverage', requireAdmin, async (_req: Request, res: Response) => {
@@ -1014,6 +1048,31 @@ analyticsRouter.get('/gaps/matrix', requireAdmin, async (_req: Request, res: Res
   catch (e: any) { err(res, 'MATRIX_FAILED', e.message ?? 'Could not load the matrix.', 500) }
 })
 
+// Policies whose review date has come around — drives the dashboard reminder.
+analyticsRouter.get('/policies/due-for-review', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') }
+  catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { ok(res, await policiesDueForReview(tenantId)) }
+  catch (e: any) { err(res, 'DUE_FAILED', e.message ?? 'Could not load policies due for review.', 500) }
+})
+
+// Re-review specific policies: clear their "mark as updated" state and re-run the free
+// deterministic out-of-date scan for just those policies so current issues resurface. The
+// admin can then re-run the AI coverage/wording analyses from /gaps if they want.
+analyticsRouter.post('/policies/re-review', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try { await checkFeature(tenantId, 'has_gap_detection') }
+  catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  const ids = Array.isArray(req.body?.policy_ids) ? req.body.policy_ids.map((x: any) => String(x)).filter(Boolean) : []
+  if (!ids.length) { err(res, 'BAD_REQUEST', 'No policies selected.', 400); return }
+  try {
+    await clearResolutions(tenantId, undefined, ids)
+    const results = await scanTenantPolicies(tenantId, ids)
+    ok(res, { rescanned: results.length })
+  } catch (e: any) { err(res, 'REREVIEW_FAILED', e.message ?? 'Could not re-review the policies.', 500) }
+})
+
 // #9 — read-only published-version history.
 analyticsRouter.get('/gaps/policy-document/:policyId/versions', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
@@ -1179,6 +1238,26 @@ analyticsRouter.post('/gaps/acknowledge-remediation', requireAdmin, async (req: 
     where:  { tenant_id_kind: { tenant_id: tenantId, kind: 'policy_remediation' } },
     update: data,
     create: { tenant_id: tenantId, kind: 'policy_remediation', ...data },
+  }).catch(() => {})
+  ok(res, { acknowledged: true })
+})
+
+// Record that an admin has seen the one-time "a full re-run uses AI credits, keep the page
+// open" notice (once per tenant) so it doesn't show on every subsequent re-run.
+analyticsRouter.post('/gaps/acknowledge-analysis', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const user = (req as any).user ?? {}
+  const data = {
+    disclaimer_version: 'v1',
+    user_id:    user.id ?? user.user_id ?? null,
+    user_name:  user.name ?? null,
+    user_email: user.email ?? null,
+    acknowledged_at: new Date(),
+  }
+  await (prisma as any).legalAcknowledgement.upsert({
+    where:  { tenant_id_kind: { tenant_id: tenantId, kind: 'analysis_credits' } },
+    update: data,
+    create: { tenant_id: tenantId, kind: 'analysis_credits', ...data },
   }).catch(() => {})
   ok(res, { acknowledged: true })
 })

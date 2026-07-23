@@ -32,6 +32,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [busy, setBusy] = useState<number | null>(null)
   const [adoptErr, setAdoptErr] = useState('')
   const [pending, setPending] = useState(0)
+  // Editable replacement text (per finding index) for signals with no single clean swap, e.g.
+  // pandemic-era wording. Pre-filled with the suggested phrase; the admin can accept or reword.
+  const [editText, setEditText] = useState<Record<number, string>>({})
 
   // Fill-in placeholders: typed values + which tokens have been filled.
   const [fillValues, setFillValues] = useState<Record<string, string>>({})
@@ -138,19 +141,22 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     }
   }, [html, policySearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function replace(f: Finding, idx: number, n: number) {
+  async function replace(f: Finding, idx: number, n: number, newTextOverride?: string) {
     const terms = termsOf(f)
-    if (!f.superseded_by || !terms.length) return
+    // newTextOverride may be an empty string — that's an explicit "remove this wording".
+    const newText = (newTextOverride !== undefined ? newTextOverride : (f.superseded_by ?? '')).trim()
+    if (!terms.length) return
+    if (!newText && newTextOverride === undefined) return   // non-removal path needs a replacement
     setBusy(idx); setAdoptErr('')
     try {
-      // Replace EVERY distinct stale term (phrase + acronyms) with the current wording; each
+      // Replace EVERY distinct stale term (phrase + acronyms) with the chosen wording; each
       // amend does a global replace in the draft, so all occurrences are corrected at once.
       let anyApplied = false, last = 0
       for (const t of terms) {
         const res = await createApiClient(token).analytics.adoptSuggestion({
           policy_id: policyId, reference_key: `policy-lint:${f.signal_key}`,
           requirement: f.label, placement: 'amend',
-          old_text: t, new_text: f.superseded_by,
+          old_text: t, new_text: newText,
         })
         anyApplied = anyApplied || res.applied
         last = res.pending
@@ -158,7 +164,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       setAdopted(s => new Set(s).add(idx))
       setPending(last)
       onAdopted?.()
-      if (anyApplied) updatePreview(n, null, f.superseded_by)
+      if (anyApplied) updatePreview(n, null, newText)
       else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not apply this replacement.')
@@ -259,18 +265,40 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                             </div>
                           </div>
                         )}
-                        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
-                          {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
-                          <span className="text-neutral-mid">→</span>
-                          <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
-                        </p>
+                        {(() => {
+                          // Pandemic-era wording has no single clean swap, so the replacement is editable:
+                          // the admin can keep the suggested phrase or write their own before applying.
+                          const editable = f.signal_key === 'covid-era'
+                          const chosen = editText[i] ?? f.superseded_by ?? ''
+                          return editable ? (
+                            <div className="mt-2 space-y-1.5">
+                              <p className="flex flex-wrap items-center gap-1.5 text-sm">
+                                {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
+                                <span className="text-neutral-mid">→ replace with:</span>
+                              </p>
+                              <input
+                                type="text" value={chosen} disabled={adopted.has(i)}
+                                onChange={e => setEditText(s => ({ ...s, [i]: e.target.value }))}
+                                placeholder="Wording to replace it with"
+                                className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm text-neutral-dark focus:border-teal focus:outline-none disabled:bg-gray-50"
+                              />
+                              <p className="text-[11px] text-neutral-mid">Suggested wording shown. Edit it to fit your policy, or clear it to just remove the pandemic wording.</p>
+                            </div>
+                          ) : (
+                            <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+                              {termsOf(f).map((t, k) => <span key={k} className="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700 line-through">{t}</span>)}
+                              <span className="text-neutral-mid">→</span>
+                              <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">{f.superseded_by}</span>
+                            </p>
+                          )
+                        })()}
                         <div className="mt-2.5 flex flex-wrap items-center gap-2">
                           {adopted.has(i) ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Replaced in your draft</span>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> {f.signal_key === 'covid-era' && !(editText[i] ?? f.superseded_by ?? '').trim() ? 'Removed from your draft' : 'Replaced in your draft'}</span>
                           ) : (
-                            <button onClick={() => replace(f, i, n)} disabled={busy !== null}
+                            <button onClick={() => replace(f, i, n, f.signal_key === 'covid-era' ? (editText[i] ?? f.superseded_by ?? '') : undefined)} disabled={busy !== null}
                               className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
-                              {busy === i ? <><Loader2 size={13} className="animate-spin" /> Replacing…</> : <><Check size={13} /> Replace in {policyName}</>}
+                              {busy === i ? <><Loader2 size={13} className="animate-spin" /> Applying…</> : <><Check size={13} /> {f.signal_key === 'covid-era' && !(editText[i] ?? f.superseded_by ?? '').trim() ? `Remove in ${policyName}` : `Replace in ${policyName}`}</>}
                             </button>
                           )}
                           <button onClick={() => scrollToHighlight(n)}

@@ -6,6 +6,7 @@
 // cached per policy (policy_lint_results) so we don't re-read every document from S3 each time.
 
 import { prisma } from '../../db/client'
+import { resolvedPolicyIds, clearResolutions } from './review-resolutions'
 import { downloadExtractedText } from '../storage/s3'
 import { mapLimit } from '../../lib/translate'
 import {
@@ -136,12 +137,16 @@ export function lintPolicyText(
   return findings
 }
 
-// Scan every active policy for a tenant, cache the results, and return them.
-export async function scanTenantPolicies(tenantId: string): Promise<PolicyLintResult[]> {
+// Scan a tenant's policies, cache the results, and return them. With no policyIds it re-scans
+// every active policy (full refresh); with policyIds it re-scans only those (targeted re-review)
+// and upserts just those rows. Either way it clears the matching "mark as updated" resolutions
+// so anything still flagged re-surfaces.
+export async function scanTenantPolicies(tenantId: string, policyIds?: string[]): Promise<PolicyLintResult[]> {
+  const targeted = Array.isArray(policyIds) && policyIds.length > 0
   const [signals, policies] = await Promise.all([
     loadActiveSignals(),
     (prisma as any).policy.findMany({
-      where: { tenant_id: tenantId, status: 'active' },
+      where: { tenant_id: tenantId, status: 'active', ...(targeted ? { id: { in: policyIds } } : {}) },
       select: { id: true, name: true, last_reviewed_at: true, review_interval_days: true },
     }),
   ])
@@ -156,16 +161,28 @@ export async function scanTenantPolicies(tenantId: string): Promise<PolicyLintRe
 
   const clean = results.filter(Boolean) as Array<{ policy_id: string; policy_name: string; score: number; findings: LintFinding[] }>
 
-  // Replace this tenant's cached results in one transaction.
-  await (prisma as any).$transaction([
-    (prisma as any).policyLintResult.deleteMany({ where: { tenant_id: tenantId } }),
-    (prisma as any).policyLintResult.createMany({
-      data: clean.map(r => ({
-        tenant_id: tenantId, policy_id: r.policy_id, policy_name: r.policy_name,
-        score: r.score, findings: r.findings, scanned_at: new Date(now),
-      })),
-    }),
-  ])
+  if (targeted) {
+    // Upsert only the re-scanned policies, leaving the rest of the cache intact.
+    await (prisma as any).$transaction(clean.map(r => (prisma as any).policyLintResult.upsert({
+      where:  { tenant_id_policy_id: { tenant_id: tenantId, policy_id: r.policy_id } },
+      update: { policy_name: r.policy_name, score: r.score, findings: r.findings, scanned_at: new Date(now) },
+      create: { tenant_id: tenantId, policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: r.findings, scanned_at: new Date(now) },
+    })))
+  } else {
+    // Full refresh: replace this tenant's cached results in one transaction.
+    await (prisma as any).$transaction([
+      (prisma as any).policyLintResult.deleteMany({ where: { tenant_id: tenantId } }),
+      (prisma as any).policyLintResult.createMany({
+        data: clean.map(r => ({
+          tenant_id: tenantId, policy_id: r.policy_id, policy_name: r.policy_name,
+          score: r.score, findings: r.findings, scanned_at: new Date(now),
+        })),
+      }),
+    ])
+  }
+
+  // A fresh scan supersedes any "mark as updated" for the scanned policies.
+  await clearResolutions(tenantId, 'out_of_date', targeted ? policyIds : undefined)
 
   return clean.map(r => ({ ...r, scanned_at: new Date(now).toISOString() }))
 }
@@ -195,8 +212,11 @@ export async function getTenantLint(tenantId: string) {
     return s ? { ...f, detail: s.detail || f.detail, superseded_by: s.superseded_by ?? f.superseded_by, source_urls: s.source_urls } : { ...f, source_urls: f.source_urls ?? [] }
   }
 
+  // Policies the admin has marked updated are hidden until the next scan re-flags them.
+  const resolved = await resolvedPolicyIds(tenantId, 'out_of_date')
+
   const withIssues = (rows as any[])
-    .filter(r => Array.isArray(r.findings) && r.findings.length > 0)
+    .filter(r => Array.isArray(r.findings) && r.findings.length > 0 && !resolved.has(r.policy_id))
     .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
     .sort((a, b) => a.score - b.score)   // worst first
 

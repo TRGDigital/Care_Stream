@@ -38,10 +38,11 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Section-delete flow (COVID): the detected section awaiting the admin's confirmation.
   const [sectionDelete, setSectionDelete] = useState<{ idx: number; n: number; text: string } | null>(null)
   const [detecting, setDetecting] = useState<number | null>(null)
-  // Pandemic-era (COVID) wording is shown one card per occurrence, each with its own actions.
-  const [covidOcc, setCovidOcc] = useState<Array<{ i: number; context: string; term: string }>>([])
-  const [covidSectionDelete, setCovidSectionDelete] = useState<{ occ: number; text: string } | null>(null)
-  const [covidEdit, setCovidEdit] = useState<{ occ: number; original: string; text: string } | null>(null)
+  // Pandemic-era (COVID) wording is grouped by SECTION: a section with several COVID mentions is
+  // one card (delete/edit the whole block); a lone mention in a general paragraph is its own card.
+  const [covidGroups, setCovidGroups] = useState<Array<{ g: number; count: number; context: string; dedicated: boolean; term: string }>>([])
+  const [covidSectionDelete, setCovidSectionDelete] = useState<{ g: number; text: string } | null>(null)
+  const [covidEdit, setCovidEdit] = useState<{ g: number; dedicated: boolean; original: string; text: string } | null>(null)
   const [covidBusy, setCovidBusy] = useState<number | null>(null)
   const [covidDetecting, setCovidDetecting] = useState<number | null>(null)
   const [covidDone, setCovidDone] = useState<Set<number>>(new Set())
@@ -146,17 +147,35 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setMarkCounts(counts)
     cycleRef.current = {}
     setNavPos({})
-    // Pandemic-era wording: tag each highlighted occurrence so it can be its own card + located.
+    // Pandemic-era wording: group highlighted occurrences by the SECTION they sit in (heading to
+    // next heading), so a COVID-heavy section is one card and a lone mention elsewhere is its own.
     const covidPos = replaceable.findIndex(o => o.f.signal_key === 'covid-era')
     if (covidPos >= 0 && num[covidPos] != null) {
       const marks = Array.from(root.querySelectorAll<HTMLElement>(`mark[data-lint="${num[covidPos]}"]`))
-      setCovidOcc(marks.map((m, i) => {
-        m.setAttribute('data-covid-occ', String(i))
-        const block = (m.closest('h1,h2,h3,h4,h5,h6,p,li') as HTMLElement | null) ?? m.parentElement
-        return { i, context: (block?.textContent ?? '').trim().slice(0, 400), term: m.textContent ?? '' }
-      }))
+      const isHeading = (el: Element | null): el is HTMLElement => !!el && /^H[1-6]$/.test(el.tagName)
+      const covidRe = /covid|coronavirus|social distancing|shielding|lockdown/i
+      const topBlock = (m: HTMLElement): HTMLElement => { let b: HTMLElement = m; while (b.parentElement && b.parentElement !== root) b = b.parentElement; return b }
+      const sectionStart = (m: HTMLElement): Element => {
+        let start: Element = topBlock(m)
+        for (let cur: Element | null = start; cur; cur = cur.previousElementSibling) { start = cur; if (isHeading(cur)) break }
+        return start
+      }
+      const byStart = new Map<Element, HTMLElement[]>()
+      for (const m of marks) { const s = sectionStart(m); if (!byStart.has(s)) byStart.set(s, []); byStart.get(s)!.push(m) }
+      let g = 0
+      const built: Array<{ g: number; count: number; context: string; dedicated: boolean; term: string }> = []
+      for (const [start, ms] of byStart) {
+        const gi = g++
+        ms.forEach(m => m.setAttribute('data-covid-grp', String(gi)))
+        const startIsHeading = isHeading(start)
+        const headingText = startIsHeading ? (start.textContent ?? '').trim() : ''
+        const dedicated = ms.length > 1 || (startIsHeading && covidRe.test(headingText))
+        const context = (dedicated && headingText ? headingText : ((ms[0].closest('h1,h2,h3,h4,h5,h6,p,li')?.textContent ?? '').trim()))
+        built.push({ g: gi, count: ms.length, context: context.slice(0, 400), dedicated, term: ms[0].textContent ?? '' })
+      }
+      setCovidGroups(built)
     } else {
-      setCovidOcc([])
+      setCovidGroups([])
     }
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
@@ -256,61 +275,57 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     finally { setBusy(null) }
   }
 
-  // ── Per-occurrence pandemic-era (COVID) actions ────────────────────────────────
-  const occMark = (i: number) => previewRef.current?.querySelector<HTMLElement>(`mark[data-covid-occ="${i}"]`) ?? null
-  function scrollToOcc(i: number) {
-    const el = occMark(i)
+  // ── Per-section pandemic-era (COVID) actions ───────────────────────────────────
+  const grpMark = (g: number) => previewRef.current?.querySelector<HTMLElement>(`mark[data-covid-grp="${g}"]`) ?? null
+  function scrollToGrp(g: number) {
+    const el = grpMark(g)
     if (!el) return
     el.scrollIntoView({ block: 'center', behavior: 'smooth' })
     el.classList.add('ring-2', 'ring-neutral-900', 'ring-offset-1')
     setTimeout(() => el.classList.remove('ring-2', 'ring-neutral-900', 'ring-offset-1'), 1400)
   }
-  async function detectCovidSection(occ: { i: number; context: string; term: string }) {
-    setCovidDetecting(occ.i); setAdoptErr('')
+  async function detectCovidSection(grp: { g: number; context: string; term: string }) {
+    setCovidDetecting(grp.g); setAdoptErr('')
     try {
-      const r = await createApiClient(token).analytics.detectPolicySection(policyId, occ.term, { context: occ.context, granularity: 'section' })
-      if (r.found && r.section_text) setCovidSectionDelete({ occ: occ.i, text: r.section_text })
-      else setAdoptErr('Could not find a clear section around this mention. Use "Edit this mention" instead.')
+      const r = await createApiClient(token).analytics.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: 'section' })
+      if (r.found && r.section_text) setCovidSectionDelete({ g: grp.g, text: r.section_text })
+      else setAdoptErr('Could not find a clear section around this wording. Use the edit option instead.')
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not find the section.') }
     finally { setCovidDetecting(null) }
   }
   async function deleteCovidSection() {
     if (!covidSectionDelete) return
-    const { occ, text } = covidSectionDelete
-    setCovidBusy(occ); setAdoptErr('')
+    const { g, text } = covidSectionDelete
+    setCovidBusy(g); setAdoptErr('')
     try {
       const res = await createApiClient(token).analytics.adoptSuggestion({ policy_id: policyId, reference_key: 'policy-lint:covid-era', requirement: 'Remove pandemic-era section', placement: 'amend', old_text: text, new_text: '' })
       setPending(res.pending); onAdopted?.()
-      if (res.applied) { strikeSectionFromMark(occMark(occ)); setCovidDone(s => new Set(s).add(occ)) }
+      if (res.applied) { strikeSectionFromMark(grpMark(g)); setCovidDone(s => new Set(s).add(g)) }
       else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
       setCovidSectionDelete(null)
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not delete the section.') }
     finally { setCovidBusy(null) }
   }
-  async function detectCovidMention(occ: { i: number; context: string; term: string }) {
-    setCovidDetecting(occ.i); setAdoptErr('')
+  async function detectCovidEdit(grp: { g: number; context: string; term: string; dedicated: boolean }) {
+    setCovidDetecting(grp.g); setAdoptErr('')
     try {
-      const r = await createApiClient(token).analytics.detectPolicySection(policyId, occ.term, { context: occ.context, granularity: 'sentence' })
-      if (r.found && r.section_text) setCovidEdit({ occ: occ.i, original: r.section_text, text: r.section_text })
-      else setAdoptErr('Could not locate this sentence. Try "Delete the whole section".')
-    } catch (e: any) { setAdoptErr(e.message ?? 'Could not locate the sentence.') }
+      const r = await createApiClient(token).analytics.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: grp.dedicated ? 'section' : 'sentence' })
+      if (r.found && r.section_text) setCovidEdit({ g: grp.g, dedicated: grp.dedicated, original: r.section_text, text: r.section_text })
+      else setAdoptErr('Could not locate the text to edit. Try "Delete the whole section".')
+    } catch (e: any) { setAdoptErr(e.message ?? 'Could not locate the text.') }
     finally { setCovidDetecting(null) }
   }
-  async function applyCovidMention() {
+  async function applyCovidEdit() {
     if (!covidEdit) return
-    const { occ, original, text } = covidEdit
-    setCovidBusy(occ); setAdoptErr('')
+    const { g, dedicated, original, text } = covidEdit
+    setCovidBusy(g); setAdoptErr('')
     try {
-      const res = await createApiClient(token).analytics.adoptSuggestion({ policy_id: policyId, reference_key: 'policy-lint:covid-era', requirement: 'Reword pandemic-era mention', placement: 'amend', old_text: original, new_text: text })
+      const res = await createApiClient(token).analytics.adoptSuggestion({ policy_id: policyId, reference_key: 'policy-lint:covid-era', requirement: 'Reword pandemic-era wording', placement: 'amend', old_text: original, new_text: text })
       setPending(res.pending); onAdopted?.()
       if (res.applied) {
-        const m = occMark(occ)
-        if (m) {
-          if (text.trim()) { m.textContent = text; m.className = 'rounded bg-green-200 px-0.5 font-medium' }
-          else { m.style.textDecoration = 'line-through'; m.style.opacity = '0.5' }
-          m.removeAttribute('data-covid-occ')
-        }
-        setCovidDone(s => new Set(s).add(occ))
+        if (dedicated) { strikeSectionFromMark(grpMark(g)) }
+        else { const m = grpMark(g); if (m) { if (text.trim()) { m.textContent = text; m.className = 'rounded bg-green-200 px-0.5 font-medium' } else { m.style.textDecoration = 'line-through'; m.style.opacity = '0.5' } m.removeAttribute('data-covid-grp') } }
+        setCovidDone(s => new Set(s).add(g))
       } else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
       setCovidEdit(null)
     } catch (e: any) { setAdoptErr(e.message ?? 'Could not apply the change.') }
@@ -479,50 +494,52 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               </div>
             )}
 
-            {/* Pandemic-era (COVID-19) wording — one card per occurrence, each with its own actions */}
-            {covidOcc.length > 0 && (
+            {/* Pandemic-era (COVID-19) wording — grouped by section; a lone mention is its own card */}
+            {covidGroups.length > 0 && (
               <div className="space-y-3">
-                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><History size={15} className="text-amber-600" /> Pandemic-era (COVID-19) wording ({covidOcc.length})</p>
-                <p className="text-xs text-neutral-mid">Each mention is shown separately. Delete a whole COVID section, or edit (or clear) just the sentence.</p>
-                {covidOcc.map(occ => {
-                  const done = covidDone.has(occ.i)
+                <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><History size={15} className="text-amber-600" /> Pandemic-era (COVID-19) wording ({covidGroups.length})</p>
+                <p className="text-xs text-neutral-mid">A section that is about COVID is shown as one block to delete or reword; a passing mention elsewhere is its own card.</p>
+                {covidGroups.map(grp => {
+                  const done = covidDone.has(grp.g)
                   return (
-                  <div key={occ.i} className={`rounded-lg border px-4 py-3 ${done ? 'border-green-200 bg-green-50/40' : 'border-gray-200 bg-white'}`}>
+                  <div key={grp.g} className={`rounded-lg border px-4 py-3 ${done ? 'border-green-200 bg-green-50/40' : 'border-gray-200 bg-white'}`}>
                     <div className="flex items-start gap-2.5">
                       <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${done ? 'bg-green-400' : 'bg-amber-400'}`} />
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-neutral-dark">
-                          <span className="rounded bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-rose-700">{occ.term}</span>
-                          <span className="text-xs font-normal text-neutral-mid">mention {occ.i + 1} of {covidOcc.length}</span>
+                          {grp.dedicated
+                            ? <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-700">COVID section</span>
+                            : <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">Passing mention</span>}
+                          {grp.count > 1 && <span className="text-xs font-normal text-neutral-mid">{grp.count} mentions</span>}
                         </p>
-                        {occ.context && <p className="mt-1 text-xs italic text-neutral-mid">&ldquo;{occ.context.slice(0, 150)}{occ.context.length > 150 ? '…' : ''}&rdquo;</p>}
+                        {grp.context && <p className="mt-1 text-xs italic text-neutral-mid">&ldquo;{grp.context.slice(0, 160)}{grp.context.length > 160 ? '…' : ''}&rdquo;</p>}
                         {done ? (
                           <p className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Actioned in your draft</p>
                         ) : (
                           <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                            <button onClick={() => scrollToOcc(occ.i)} className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50"><Locate size={13} /> Show in policy</button>
-                            <button onClick={() => detectCovidSection(occ)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
-                              {covidDetecting === occ.i ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
+                            <button onClick={() => scrollToGrp(grp.g)} className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50"><Locate size={13} /> Show in policy</button>
+                            <button onClick={() => detectCovidSection(grp)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
+                              {covidDetecting === grp.g && !covidEdit ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
                             </button>
-                            <button onClick={() => detectCovidMention(occ)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50"><FilePenLine size={13} /> Edit this mention</button>
+                            <button onClick={() => detectCovidEdit(grp)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50"><FilePenLine size={13} /> {grp.dedicated ? 'Edit the section' : 'Edit this mention'}</button>
                           </div>
                         )}
-                        {covidSectionDelete?.occ === occ.i && (
+                        {covidSectionDelete?.g === grp.g && (
                           <div className="mt-2.5 rounded-lg border border-rose-200 bg-rose-50/60 p-3">
                             <p className="text-xs font-semibold text-rose-700">This will remove the following section from your draft:</p>
                             <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-rose-100 bg-white px-2.5 py-2 text-[11px] leading-relaxed text-neutral-dark">{covidSectionDelete.text.trim()}</pre>
                             <div className="mt-2 flex items-center gap-2">
-                              <button onClick={deleteCovidSection} disabled={covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{covidBusy === occ.i ? <><Loader2 size={13} className="animate-spin" /> Deleting…</> : <><Trash2 size={13} /> Delete section</>}</button>
+                              <button onClick={deleteCovidSection} disabled={covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{covidBusy === grp.g ? <><Loader2 size={13} className="animate-spin" /> Deleting…</> : <><Trash2 size={13} /> Delete section</>}</button>
                               <button onClick={() => setCovidSectionDelete(null)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
                             </div>
                           </div>
                         )}
-                        {covidEdit?.occ === occ.i && (
+                        {covidEdit?.g === grp.g && (
                           <div className="mt-2.5 rounded-lg border border-teal/30 bg-teal-light/20 p-3">
-                            <p className="text-xs font-semibold text-neutral-dark">Edit the sentence (clear it to remove the mention):</p>
-                            <textarea value={covidEdit.text} onChange={e => setCovidEdit(s => (s ? { ...s, text: e.target.value } : s))} rows={3} className="mt-1.5 w-full resize-y rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-neutral-dark focus:border-teal focus:outline-none" />
+                            <p className="text-xs font-semibold text-neutral-dark">{covidEdit.dedicated ? 'Edit the whole section' : 'Edit the sentence'} (clear it to remove):</p>
+                            <textarea value={covidEdit.text} onChange={e => setCovidEdit(s => (s ? { ...s, text: e.target.value } : s))} rows={covidEdit.dedicated ? 6 : 3} className="mt-1.5 w-full resize-y rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-neutral-dark focus:border-teal focus:outline-none" />
                             <div className="mt-2 flex items-center gap-2">
-                              <button onClick={applyCovidMention} disabled={covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{covidBusy === occ.i ? <><Loader2 size={13} className="animate-spin" /> Applying…</> : <><Check size={13} /> {covidEdit.text.trim() ? 'Apply' : 'Remove sentence'}</>}</button>
+                              <button onClick={applyCovidEdit} disabled={covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{covidBusy === grp.g ? <><Loader2 size={13} className="animate-spin" /> Applying…</> : <><Check size={13} /> {covidEdit.text.trim() ? 'Apply' : 'Remove'}</>}</button>
                               <button onClick={() => setCovidEdit(null)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
                             </div>
                           </div>

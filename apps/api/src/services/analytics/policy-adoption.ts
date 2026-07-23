@@ -257,12 +257,25 @@ function sectionPrompt(window: string, phrase: string): string {
   ].join('\n')
 }
 
-// Pick the occurrence of `anchor` whose surrounding text best matches `context` (so we act on the
-// right one when the same wording appears in several places). Falls back to the first occurrence.
+// Pick which occurrence of `anchor` to act on when the same wording repeats. `context` is the text
+// of the block the flagged occurrence sits in (e.g. the section heading), so the most reliable match
+// is the anchor sitting right where that context appears verbatim. Falls back to word-overlap, then
+// to the first occurrence.
 function bestOccurrence(content: string, anchor: string, context?: string): number {
   const first = content.indexOf(anchor)
   if (first < 0 || !context || !context.trim()) return first
-  const ctxWords = [...new Set(context.toLowerCase().split(/\W+/).filter(w => w.length > 3))]
+  const ctx = context.trim()
+  // 1. Exact context match: the anchor at/just after where the context text appears verbatim.
+  for (const probe of [ctx, ctx.slice(0, 60), ctx.slice(0, 40)]) {
+    if (probe.length < 12) continue
+    const cPos = content.indexOf(probe)
+    if (cPos >= 0) {
+      const a = content.indexOf(anchor, cPos)
+      if (a >= 0 && a <= cPos + probe.length + 400) return a
+    }
+  }
+  // 2. Fuzzy: the anchor occurrence whose window shares the most distinctive context words.
+  const ctxWords = [...new Set(ctx.toLowerCase().split(/\W+/).filter(w => w.length > 3))]
   let best = first, bestScore = -1
   for (let i = first; i >= 0; i = content.indexOf(anchor, i + anchor.length)) {
     const win = content.slice(Math.max(0, i - 140), i + anchor.length + 140).toLowerCase()

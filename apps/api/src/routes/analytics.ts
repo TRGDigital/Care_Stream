@@ -792,7 +792,13 @@ analyticsRouter.post('/gaps/adopt', requireAdmin, async (req: Request, res: Resp
     throw e
   }
   const { policy_id, reference_key, requirement, placement, old_text, new_text, section_title } = req.body ?? {}
-  if (!policy_id || !new_text || !placement) { err(res, 'VALIDATION_ERROR', 'policy_id, placement and new_text are required'); return }
+  // An amend may have an empty new_text — that's an explicit "remove this wording / section".
+  if (!policy_id || !placement) { err(res, 'VALIDATION_ERROR', 'policy_id and placement are required'); return }
+  if (String(placement) === 'amend') {
+    if (!old_text) { err(res, 'VALIDATION_ERROR', 'old_text is required for an amend'); return }
+  } else if (!new_text) {
+    err(res, 'VALIDATION_ERROR', 'new_text is required'); return
+  }
   // Confirm the policy belongs to this tenant.
   const policy = await (prisma as any).policy.findFirst({ where: { id: String(policy_id), tenant_id: tenantId }, select: { id: true } })
   if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found', 404); return }

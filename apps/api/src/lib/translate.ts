@@ -560,12 +560,19 @@ export async function getEnglishPolicyHtml(
   if (!raw) return { html: current, cached: !!current }   // can't rebuild without the source text
   const fresh = await formatPolicyHtml(raw, 'eng')
   if (!fresh) return { html: current, cached: !!current }
-  await (prisma as any).policyTranslation.upsert({
-    where:  { policy_id_lang: { policy_id: policyId, lang: 'eng' } },
-    update: { content: fresh },
-    create: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: fresh },
-  }).catch(() => {})
-  return { html: fresh, cached: false }
+  // Only replace the cache with a build that actually formatted (has headings). If formatting is
+  // still failing — fresh is flat escaped <p> blocks — keep any existing cached copy rather than
+  // overwriting it with the flat fallback; only cache a flat build when there is nothing else to
+  // show. It will retry and self-heal on a later open once formatting succeeds.
+  if (looksFormatted(fresh) || !current) {
+    await (prisma as any).policyTranslation.upsert({
+      where:  { policy_id_lang: { policy_id: policyId, lang: 'eng' } },
+      update: { content: fresh },
+      create: { tenant_id: tenantId, policy_id: policyId, lang: 'eng', content: fresh },
+    }).catch(() => {})
+    return { html: fresh, cached: false }
+  }
+  return { html: current, cached: true }
 }
 
 // Translate a full policy document into the target language, chunk by chunk so

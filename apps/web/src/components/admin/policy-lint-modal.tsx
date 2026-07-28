@@ -851,6 +851,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
             )}
 
+            {html && !previewLoad && !previewErr && (
+              <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-neutral-mid">
+                <Info size={12} className="mt-0.5 shrink-0" />
+                <span>
+                  {isDiff
+                    ? 'This is a read-only view that reconstructs the layout (headings, lists and spacing) from your policy’s extracted text to show your changes clearly, so it may not exactly match the formatting of the file you uploaded. Contact details, letterheads and web links are removed for readability. The wording is unchanged, and your original document is not altered.'
+                    : 'This is a read-only view reconstructed from your policy’s extracted text, so the layout may not exactly match the file you uploaded. The wording is unchanged and your original document is not altered.'}
+                </span>
+              </p>
+            )}
+
           </div>
         </div>
       </div>

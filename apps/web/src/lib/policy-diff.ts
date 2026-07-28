@@ -86,7 +86,7 @@ function wordDiffHtml(oldLine: string, newLine: string): string {
 }
 
 type Kind = 'h' | 'p' | 'ol' | 'ul'
-type Item = { kind: Kind; html: string }
+type Item = { kind: Kind; html: string; text: string }
 
 const classify = (text: string): { kind: Kind; rest: string } => {
   const li = listItem(text)
@@ -100,13 +100,30 @@ const mkItem = (text: string, wrap: 'none' | 'del' | 'ins'): Item => {
   const html = wrap === 'del' ? `<del style="${DEL}">${escapeHtml(rest)}</del>`
     : wrap === 'ins' ? `<ins style="${INS}">${escapeHtml(rest)}</ins>`
     : escapeHtml(rest)
-  return { kind, html }
+  return { kind, html, text }
 }
 
 // A single line replaced by another → word-level diff, presented in the NEW line's block kind.
 const mkChanged = (oldText: string, newText: string): Item => {
   const oldC = classify(oldText), newC = classify(newText)
-  return { kind: newC.kind, html: wordDiffHtml(oldC.rest, newC.rest) }
+  return { kind: newC.kind, html: wordDiffHtml(oldC.rest, newC.rest), text: newText }
+}
+
+// Many policy lists lose their bullet characters in text extraction — a lead-in line ending in ":"
+// is followed by the items on their own lines. Promote those following short lines to bullet items
+// until a prose paragraph (or heading) resumes, so the list reads as a list.
+function inferColonLists(items: Item[]): void {
+  let inList = false
+  for (const it of items) {
+    if (it.kind === 'ol' || it.kind === 'ul') { inList = false; continue }   // explicit list handles itself
+    const t = it.text.trim()
+    if (it.kind === 'h') { inList = false; continue }
+    if (t.endsWith(':')) { inList = true; continue }                          // lead-in opens a list
+    if (inList) {
+      if (t.length > 0 && t.length <= 200) it.kind = 'ul'                      // short line → bullet item
+      else inList = false                                                      // long prose → list ended
+    }
+  }
 }
 
 /**
@@ -134,6 +151,8 @@ export function buildPolicyDiffHtml(original: string, draft: string): string {
     }
     items.push(mkItem(op.b as string, 'ins'))
   }
+
+  inferColonLists(items)
 
   // Group consecutive list items of the same type into a single <ul>/<ol>.
   const out: string[] = []

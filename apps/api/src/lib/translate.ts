@@ -546,12 +546,17 @@ export async function getEnglishPolicyHtml(
     where: { policy_id_lang: { policy_id: policyId, lang: 'eng' } }, select: { content: true },
   }).catch(() => null)
   const current: string | null = existing?.content ?? null
-  // Serve the cached copy when it ends on a closing block (i.e. isn't a mid-tag truncated render).
+  // Serve the cached copy when it ends on a closing block (i.e. isn't a mid-tag truncated render)
+  // AND it actually got formatted (has at least one heading). A total formatting failure falls back
+  // to flat escaped <p> blocks with NO headings — which reads like the raw policy; treating that as
+  // incomplete lets it self-heal on the next open instead of sticking forever. A successful format
+  // always emits an <h2> title, so this never re-formats a genuinely-formatted policy.
   // NB: do NOT re-derive completeness from a raw-vs-formatted length ratio here — reads happen on
   // every policy preview, and legitimate letterhead/table removal can trip a ratio check, causing a
   // costly re-format on every open. The chunked formatter never drops a section, so a fresh build is
   // already complete; genuinely truncated old copies are healed by clearing their cached copy.
-  if (current && policyHtmlEndsCleanly(current)) return { html: current, cached: true }
+  const looksFormatted = (h: string) => /<h[1-6][\s>]/i.test(h)
+  if (current && policyHtmlEndsCleanly(current) && looksFormatted(current)) return { html: current, cached: true }
   if (!raw) return { html: current, cached: !!current }   // can't rebuild without the source text
   const fresh = await formatPolicyHtml(raw, 'eng')
   if (!fresh) return { html: current, cached: !!current }

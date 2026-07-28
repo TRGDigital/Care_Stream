@@ -78,6 +78,23 @@ function scoreFromFindings(findings: LintFinding[]): number {
   return Math.max(0, 100 - penalty * 5)
 }
 
+// Is a finding's stale wording still present in the draft? Mirrors detection: phrases match
+// case-insensitively, acronyms/tokens match case-sensitively and word-bounded.
+function termInDraft(draft: string, term: string): boolean {
+  if (!term) return false
+  if (/\s/.test(term)) return draft.toLowerCase().includes(term.toLowerCase())
+  return new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(draft)
+}
+
+// A text finding is resolved in the draft when the admin has adopted a change for it AND none of
+// its stale terms remain in the draft. Requiring an adopted change (not just absence) avoids
+// clearing a finding whose wording simply never appeared in a diverged draft.
+function findingResolvedInDraft(f: LintFinding, draft: string, adoptedRefs: Set<string>): boolean {
+  if (f.kind !== 'text' || !(f.terms?.length)) return false
+  if (!adoptedRefs.has(`policy-lint:${f.signal_key}`)) return false
+  return f.terms.every(t => !termInDraft(draft, t))
+}
+
 // Lint a single policy's text + row. Pure function (no I/O) so it's easy to test.
 export function lintPolicyText(
   text: string,
@@ -215,10 +232,42 @@ export async function getTenantLint(tenantId: string) {
   // Policies the admin has marked updated are hidden until the next scan re-flags them.
   const resolved = await resolvedPolicyIds(tenantId, 'out_of_date')
 
-  const withIssues = (rows as any[])
+  let withIssues = (rows as any[])
     .filter(r => Array.isArray(r.findings) && r.findings.length > 0 && !resolved.has(r.policy_id))
     .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
     .sort((a, b) => a.score - b.score)   // worst first
+
+  // Auto-clear findings the admin has already fixed in the draft: a text finding drops off once a
+  // change is adopted for it and its stale wording is gone from the draft (so a corrected policy no
+  // longer nags), without waiting for a re-scan. A policy with no findings left disappears.
+  if (withIssues.length) {
+    const policyIds = withIssues.map(p => p.policy_id)
+    const docs = await (prisma as any).policyDocument.findMany({
+      where: { tenant_id: tenantId, policy_id: { in: policyIds } },
+      select: { id: true, policy_id: true, draft_content: true },
+    }).catch(() => [])
+    const docByPolicy = new Map<string, { id: string; draft_content: string }>((docs as any[]).map(d => [d.policy_id, d]))
+    const docIds = (docs as any[]).map(d => d.id)
+    const changes = docIds.length
+      ? await (prisma as any).policyDocumentChange.findMany({
+          where: { document_id: { in: docIds }, reverted: false },
+          select: { document_id: true, reference_key: true },
+        }).catch(() => [])
+      : []
+    const refsByDoc = new Map<string, Set<string>>()
+    for (const c of changes as any[]) {
+      if (!refsByDoc.has(c.document_id)) refsByDoc.set(c.document_id, new Set())
+      refsByDoc.get(c.document_id)!.add(c.reference_key)
+    }
+    for (const p of withIssues) {
+      const doc = docByPolicy.get(p.policy_id)
+      if (!doc) continue
+      const adoptedRefs = refsByDoc.get(doc.id) ?? new Set<string>()
+      if (!adoptedRefs.size) continue
+      p.findings = p.findings.filter(f => !findingResolvedInDraft(f, doc.draft_content ?? '', adoptedRefs))
+    }
+    withIssues = withIssues.filter(p => p.findings.length > 0)
+  }
 
   // Count distinct superseded-reference / high signals across the library for the summary.
   let highCount = 0, mediumCount = 0

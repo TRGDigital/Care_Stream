@@ -61,9 +61,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [reviewErr, setReviewErr] = useState('')
   const [numbering, setNumbering] = useState<number[]>([])          // replaceable position → document-order number
   const [markCounts, setMarkCounts] = useState<Record<number, number>>({})  // highlighted occurrences per number
-  // Changes already applied to the draft (from earlier sessions), so a replacement done before
-  // shows as changed on load instead of looking un-done.
-  const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; new_text: string }>>([])
+  // Changes already applied to the draft (any session). Replayed onto the preview so the policy
+  // side shows what's been changed, and listed under a collapsible "already updated" summary.
+  const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; requirement: string; old_text: string; new_text: string; placement: string }>>([])
+  const [showCompleted, setShowCompleted] = useState(false)
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
   const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
 
@@ -96,6 +97,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const locatedFill = fillable.map((r, pos) => ({ ...r, n: numbering[replaceable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
   const locatedNote = noteworthy.map((r, pos) => ({ ...r, n: numbering[replaceable.length + fillable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
 
+  // Completed draft changes grouped by finding, for the collapsible "already updated" summary.
+  const completedGroups = (() => {
+    const m = new Map<string, { requirement: string; swaps: Array<{ old: string; neu: string; placement: string }> }>()
+    for (const c of appliedChanges) {
+      const g = m.get(c.reference_key) ?? { requirement: c.requirement, swaps: [] }
+      g.swaps.push({ old: c.old_text, neu: c.new_text, placement: c.placement })
+      m.set(c.reference_key, g)
+    }
+    return [...m.values()]
+  })()
+
   // Scroll to the NEXT occurrence of a finding each click (1st, 2nd, … then wraps), flashing it.
   function scrollToHighlight(n: number) {
     const marks = previewRef.current?.querySelectorAll<HTMLElement>(`mark[data-lint="${n}"]`)
@@ -112,7 +124,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Reflect an applied change in the right-hand preview so it's visible on the policy side:
   // swap the highlighted wording for the new text and turn it green (an applied change). For a
   // fill, only the marks whose text is the given token are swapped (a finding may have several).
-  function updatePreview(n: number, fromText: string | null, toText: string) {
+  function updatePreview(n: number, fromText: string | null, toText: string, scroll = true) {
     const marks = previewRef.current?.querySelectorAll<HTMLElement>(`mark[data-lint="${n}"]`)
     if (!marks) return
     const from = fromText?.trim().toLowerCase()
@@ -124,7 +136,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       m.removeAttribute('data-lint')
       if (!first) first = m
     })
-    ;(first as HTMLElement | null)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (scroll) (first as HTMLElement | null)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
   // Load the policy preview (right pane).
@@ -136,11 +148,13 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       .finally(() => setPreviewLoad(false))
   }, [token, policyId])
 
-  // Load the draft's already-applied changes, so replacements made in a previous session are
-  // reflected as done (not offered again as if untouched).
+  // Load the draft's already-applied changes, so edits made in any session are reflected on the
+  // policy side (replaced wording green, removals struck) and summarised on the left.
   useEffect(() => {
     createApiClient(token).analytics.policyDocument(policyId)
-      .then(d => setAppliedChanges((d.changes ?? []).map(c => ({ reference_key: c.reference_key, new_text: c.new_text }))))
+      .then(d => setAppliedChanges((d.changes ?? []).map(c => ({
+        reference_key: c.reference_key, requirement: c.requirement, old_text: c.old_text, new_text: c.new_text, placement: c.placement,
+      }))))
       .catch(() => setAppliedChanges([]))
   }, [token, policyId])
 
@@ -150,9 +164,25 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const root = previewRef.current
     if (!root || html == null) return
     root.innerHTML = html
-    const num = highlightStaleTerms(root, highlightList.map(({ f }) => termsOf(f)))
-    setNumbering(num)
-    // Count highlighted occurrences per number and reset the "Show in policy" cycle.
+    const outstanding = highlightList.map(({ f }) => termsOf(f))
+    // Append completed draft changes as extra "terms" so the same matcher locates them: a
+    // replacement is found by its old wording, a deletion by an anchor from the removed section.
+    const completed = appliedChanges
+    const completedTerms = completed.map(c => [c.new_text ? c.old_text : c.old_text.slice(0, 80)].filter(Boolean))
+    const num = highlightStaleTerms(root, [...outstanding, ...completedTerms])
+    setNumbering(num.slice(0, highlightList.length))
+
+    // Replay completed changes onto the preview (no scroll): replaced wording turns green, removed
+    // wording is struck through. Driven by the change log, so the policy side reflects edits from any
+    // session even after auto-clear has dropped those findings from the left panel.
+    completed.forEach((c, k) => {
+      const cn = num[outstanding.length + k]
+      if (cn == null || cn < 0) return
+      if (c.new_text) updatePreview(cn, null, c.new_text, false)
+      else strikeSectionInPreview(cn, false)
+    })
+
+    // Count remaining highlighted occurrences per number and reset the "Show in policy" cycle.
     const counts: Record<number, number> = {}
     root.querySelectorAll<HTMLElement>('mark[data-lint]').forEach(m => { const k = Number(m.dataset.lint); counts[k] = (counts[k] ?? 0) + 1 })
     setMarkCounts(counts)
@@ -188,22 +218,6 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     } else {
       setCovidGroups([])
     }
-    // Reflect replacements already applied to the draft (e.g. in a previous session): mark those
-    // findings done and show their wording as changed (green) so the policy side matches the draft.
-    if (appliedChanges.length) {
-      const doneIdx = new Set<number>()
-      replaceable.forEach(({ f, i }, pos) => {
-        if (f.signal_key === 'covid-era') return           // COVID uses its own section flow
-        const n = num[pos]
-        if (n == null || n < 0) return
-        const change = appliedChanges.find(c => c.reference_key === `policy-lint:${f.signal_key}`)
-        if (!change) return
-        updatePreview(n, null, change.new_text)            // swap highlighted wording → green
-        doneIdx.add(i)
-      })
-      if (doneIdx.size) setAdopted(prev => new Set([...prev, ...doneIdx]))
-    }
-
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -259,7 +273,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
 
   // Strike a section in the right-pane preview (from the heading around `mark` to the next heading),
   // so a deletion shows like a replacement turns green. Best-effort visual; the removal already applied.
-  function strikeSectionFromMark(mark: HTMLElement | null) {
+  function strikeSectionFromMark(mark: HTMLElement | null, scroll = true) {
     const root = previewRef.current
     if (!root || !mark) return
     const isHeading = (el: Element | null): el is HTMLElement => !!el && /^H[1-6]$/.test(el.tagName)
@@ -278,9 +292,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       el.style.textDecoration = 'line-through'; el.style.opacity = '0.5'; el.style.backgroundColor = '#fef2f2'
       if (!firstStruck) firstStruck = el
     }
-    firstStruck?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (scroll) firstStruck?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
-  const strikeSectionInPreview = (n: number) => strikeSectionFromMark(previewRef.current?.querySelector<HTMLElement>(`mark[data-lint="${n}"]`) ?? null)
+  const strikeSectionInPreview = (n: number, scroll = true) => strikeSectionFromMark(previewRef.current?.querySelector<HTMLElement>(`mark[data-lint="${n}"]`) ?? null, scroll)
 
   async function deleteSection() {
     if (!sectionDelete) return
@@ -417,6 +431,35 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
               <p className="-mt-1 flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1.5 text-xs text-teal-900">
                 <FilePenLine size={12} className="shrink-0" /> {pending} change{pending === 1 ? '' : 's'} adopted into your {policyName} draft. Review and publish it from <a href="/policies" className="font-semibold underline hover:no-underline">Policies</a>.
               </p>
+            )}
+
+            {/* Already updated in the draft — hidden by default (auto-cleared), shown on demand. */}
+            {completedGroups.length > 0 && (
+              <div className="rounded-lg border border-green-200 bg-green-50/40 px-3 py-2">
+                <button onClick={() => setShowCompleted(v => !v)} className="flex w-full items-center justify-between gap-2 text-sm font-medium text-green-800">
+                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 size={14} className="shrink-0" /> {completedGroups.length} already updated in your draft</span>
+                  <span className="text-xs font-normal text-green-700 underline hover:no-underline">{showCompleted ? 'Hide' : 'Show'}</span>
+                </button>
+                {showCompleted && (
+                  <ul className="mt-2 space-y-2 border-t border-green-200/70 pt-2">
+                    {completedGroups.map((g, gi) => (
+                      <li key={gi} className="text-xs">
+                        <p className="font-medium text-neutral-dark">{g.requirement}</p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          {g.swaps.map((s, k) => (
+                            <span key={k} className="inline-flex items-center gap-1">
+                              <span className="rounded bg-rose-50 px-1 py-0.5 text-rose-700 line-through">{s.old.length > 40 ? `${s.old.slice(0, 40)}…` : s.old}</span>
+                              {s.neu
+                                ? <><span className="text-neutral-mid">→</span><span className="rounded bg-green-100 px-1 py-0.5 font-medium text-green-800">{s.neu}</span></>
+                                : <span className="italic text-neutral-mid">removed</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
 
             {locatedMain.length > 0 && (

@@ -132,14 +132,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Reflect an applied change in the right-hand preview so it's visible on the policy side:
   // swap the highlighted wording for the new text and turn it green (an applied change). For a
   // fill, only the marks whose text is the given token are swapped (a finding may have several).
-  function updatePreview(n: number, fromText: string | null, toText: string, scroll = true) {
+  // keepText greens the highlighted wording WITHOUT rewriting it — used when the preview already
+  // shows the new wording (e.g. it was formatted from the draft), so we just tint it green in place
+  // rather than swapping the text (which would duplicate a phrase split across markup).
+  function updatePreview(n: number, fromText: string | null, toText: string, scroll = true, keepText = false) {
     const marks = previewRef.current?.querySelectorAll<HTMLElement>(`mark[data-lint="${n}"]`)
     if (!marks) return
     const from = fromText?.trim().toLowerCase()
     let first: HTMLElement | null = null
     marks.forEach(m => {
       if (from != null && (m.textContent ?? '').trim().toLowerCase() !== from) return
-      m.textContent = toText
+      if (!keepText) m.textContent = toText
       m.className = 'rounded bg-green-200 px-0.5 font-medium'
       m.removeAttribute('data-lint')
       if (!first) first = m
@@ -176,21 +179,41 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     if (!root || html == null) return
     root.innerHTML = html
     const outstanding = highlightList.map(({ f }) => termsOf(f))
-    // Append completed draft changes as extra "terms" so the same matcher locates them: a
-    // replacement is found by its old wording, a deletion by an anchor from the removed section.
+    // Append completed draft changes as extra "terms" so the same matcher locates them. A replacement
+    // is matched TWO ways because the formatted preview may show either the old wording (not yet
+    // reflecting the change) or the new wording (formatted from the draft): the old wording is swapped
+    // to the new text and greened; the new wording is greened in place. A deletion is matched by an
+    // anchor from the removed section and struck through.
     const completed = effectiveChanges
-    const completedTerms = completed.map(c => [c.new_text ? c.old_text : c.old_text.slice(0, 80)].filter(Boolean))
-    const num = highlightStaleTerms(root, [...outstanding, ...completedTerms])
+    type Op = { ci: number; term: string; mode: 'replace' | 'green' | 'strike' }
+    const ops: Op[] = []
+    completed.forEach((c, ci) => {
+      if (c.new_text) {
+        if (c.old_text) ops.push({ ci, term: c.old_text, mode: 'replace' })
+        ops.push({ ci, term: c.new_text, mode: 'green' })
+      } else if (c.old_text) {
+        ops.push({ ci, term: c.old_text.slice(0, 80), mode: 'strike' })
+      }
+    })
+    const num = highlightStaleTerms(root, [...outstanding, ...ops.map(o => [o.term].filter(Boolean))])
     setNumbering(num.slice(0, highlightList.length))
 
-    // Replay completed changes onto the preview (no scroll): replaced wording turns green, removed
-    // wording is struck through. Driven by the change log, so the policy side reflects edits from any
-    // session even after auto-clear has dropped those findings from the left panel.
-    completed.forEach((c, k) => {
+    // Replay onto the preview (no scroll). Driven by the change log, so the policy side reflects edits
+    // from any session even after auto-clear has dropped those findings from the left panel.
+    const oldMatched = new Set<number>()
+    ops.forEach((o, k) => {
       const cn = num[outstanding.length + k]
       if (cn == null || cn < 0) return
-      if (c.new_text) updatePreview(cn, null, c.new_text, false)
-      else strikeSectionInPreview(cn, false)
+      if (o.mode === 'replace') { updatePreview(cn, null, completed[o.ci].new_text, false); oldMatched.add(o.ci) }
+      else if (o.mode === 'strike') strikeSectionInPreview(cn, false)
+    })
+    // Green the new wording in place only where the old wording wasn't found (preview already reflects
+    // the change) — avoids greening a coincidental occurrence when the old wording is still shown.
+    ops.forEach((o, k) => {
+      if (o.mode !== 'green' || oldMatched.has(o.ci)) return
+      const cn = num[outstanding.length + k]
+      if (cn == null || cn < 0) return
+      updatePreview(cn, null, '', false, true)
     })
 
     // Count remaining highlighted occurrences per number and reset the "Show in policy" cycle.

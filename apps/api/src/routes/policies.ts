@@ -611,13 +611,17 @@ policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Respo
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
 
     // base=1 renders the PRISTINE original (the Out-of-date drill-in overlays adopted changes on it),
-    // preferring the document's stored original_content and falling back to the extracted text.
+    // preferring the document's stored original_content and falling back to the extracted text. If a
+    // formatted baseline can't be produced, fall through to the normal preview (never a flat baseline).
     if (req.query.base) {
       const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId }, select: { original_content: true } }).catch(() => null)
       const baseText = (doc?.original_content && String(doc.original_content).trim()) ? String(doc.original_content) : raw
-      const { html } = await getPolicyBaselineHtml(tenantId, policyId, baseText)
-      ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached: false, html: html ?? '', raw: baseText ?? '', has_raw: !!baseText })
-      return
+      const { html: baseHtml } = await getPolicyBaselineHtml(tenantId, policyId, baseText)
+      if (baseHtml) {
+        ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached: true, html: baseHtml, raw: baseText ?? '', has_raw: !!baseText })
+        return
+      }
+      // else fall through to the normal formatted preview below
     }
 
     // Self-healing formatted HTML: rebuilds (chunked) if the cache is missing or truncated.

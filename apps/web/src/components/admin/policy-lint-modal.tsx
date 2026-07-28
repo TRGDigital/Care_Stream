@@ -313,20 +313,28 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const root = previewRef.current
     if (!root || !mark) return
     const isHeading = (el: Element | null): el is HTMLElement => !!el && /^H[1-6]$/.test(el.tagName)
+    const strikeEl = (el: HTMLElement) => { el.style.textDecoration = 'line-through'; el.style.opacity = '0.5'; el.style.backgroundColor = '#fef2f2' }
     let block: HTMLElement | null = mark
     while (block && block.parentElement && block.parentElement !== root) block = block.parentElement
     if (!block || block.parentElement !== root) return
-    let start: HTMLElement = block
+    // Find the section's opening heading — but only if the document actually has a heading structure.
+    let start: HTMLElement = block, foundHeading = false
     for (let cur: Element | null = block; cur; cur = cur.previousElementSibling) {
+      if (isHeading(cur)) { start = cur as HTMLElement; foundHeading = true; break }
       start = cur as HTMLElement
-      if (isHeading(cur)) break
+    }
+    // No heading before this block (flat document, or wording sits above the first heading): strike
+    // ONLY the block that holds the removed wording — never walk to the end and strike everything.
+    if (!foundHeading) {
+      strikeEl(block)
+      if (scroll) block.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return
     }
     let firstStruck: HTMLElement | null = null
     for (let node: Element | null = start; node; node = node.nextElementSibling) {
       if (node !== start && isHeading(node)) break
-      const el = node as HTMLElement
-      el.style.textDecoration = 'line-through'; el.style.opacity = '0.5'; el.style.backgroundColor = '#fef2f2'
-      if (!firstStruck) firstStruck = el
+      strikeEl(node as HTMLElement)
+      if (!firstStruck) firstStruck = node as HTMLElement
     }
     if (scroll) firstStruck?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }

@@ -590,18 +590,21 @@ export async function getPolicyBaselineHtml(
   }).catch(() => null)
   const current: string | null = existing?.content ?? null
   if (current && policyHtmlEndsCleanly(current) && looksFormatted(current)) return { html: current }
-  if (!baseText) return { html: current }
-  const fresh = await formatPolicyHtml(baseText, 'eng')
-  if (!fresh) return { html: current }
-  if (looksFormatted(fresh) || !current) {
-    await (prisma as any).policyTranslation.upsert({
-      where:  { policy_id_lang: { policy_id: policyId, lang: LANG } },
-      update: { content: fresh },
-      create: { tenant_id: tenantId, policy_id: policyId, lang: LANG, content: fresh },
-    }).catch(() => {})
-    return { html: fresh }
+  // Only ever return a PROPERLY FORMATTED baseline. If formatting fails (flat, heading-less output),
+  // return null so the caller falls back to the normal preview — never serve the raw/flat baseline,
+  // which reads as an unformatted policy AND would let a section-strike run the whole document.
+  if (baseText) {
+    const fresh = await formatPolicyHtml(baseText, 'eng')
+    if (fresh && looksFormatted(fresh)) {
+      await (prisma as any).policyTranslation.upsert({
+        where:  { policy_id_lang: { policy_id: policyId, lang: LANG } },
+        update: { content: fresh },
+        create: { tenant_id: tenantId, policy_id: policyId, lang: LANG, content: fresh },
+      }).catch(() => {})
+      return { html: fresh }
+    }
   }
-  return { html: current }
+  return { html: current && looksFormatted(current) ? current : null }
 }
 
 // Translate a full policy document into the target language, chunk by chunk so

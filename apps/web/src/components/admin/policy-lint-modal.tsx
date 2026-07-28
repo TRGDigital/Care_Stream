@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
+import { buildPolicyDiffHtml } from '@/lib/policy-diff'
 import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink, SquarePen, CalendarClock, Trash2 } from 'lucide-react'
 
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
@@ -66,6 +67,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; requirement: string; old_text: string; new_text: string; placement: string }>>([])
   const [draftContent, setDraftContent] = useState<string | null>(null)   // the draft, to verify a change actually landed
   const [showCompleted, setShowCompleted] = useState(false)
+  const [isDiff, setIsDiff] = useState(false)   // right panel is the original→draft diff (vs a plain policy)
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
   const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
 
@@ -150,28 +152,41 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     if (scroll) (first as HTMLElement | null)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
-  // Load the policy preview (right pane) from the PRISTINE baseline (original content), so adopted
-  // changes always overlay a stable original — replaced wording is found and greened, and removed
-  // sections are still present to strike through — even if the live preview has drifted to draft.
+  // Load the right pane. When the policy has an editable draft, render a DETERMINISTIC diff of its
+  // original text vs the current draft (replaced wording green, removed wording struck) — no AI, no
+  // fuzzy matching, so tenants see exactly what changed on every policy. With no draft yet, fall back
+  // to the formatted policy so outstanding findings can still be highlighted.
   useEffect(() => {
     setPreviewLoad(true)
-    createApiClient(token).policies.preview(policyId, { base: true })
-      .then(d => setHtml(d.html || ''))
-      .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
-      .finally(() => setPreviewLoad(false))
-  }, [token, policyId])
-
-  // Load the draft's already-applied changes, so edits made in any session are reflected on the
-  // policy side (replaced wording green, removals struck) and summarised on the left.
-  useEffect(() => {
-    createApiClient(token).analytics.policyDocument(policyId)
+    const client = createApiClient(token)
+    client.analytics.policyDocument(policyId)
       .then(d => {
         setAppliedChanges((d.changes ?? []).map(c => ({
           reference_key: c.reference_key, requirement: c.requirement, old_text: c.old_text, new_text: c.new_text, placement: c.placement,
         })))
-        setDraftContent(d.document?.draft_content ?? '')
+        const draft = d.document?.draft_content ?? ''
+        const original = d.document?.original_content ?? null
+        setDraftContent(draft)
+        if (original != null && original.trim()) {
+          setIsDiff(true)
+          setHtml(buildPolicyDiffHtml(original, draft))
+          setPreviewLoad(false)
+          return
+        }
+        // No draft document yet — show the formatted policy for context.
+        setIsDiff(false)
+        client.policies.preview(policyId, { base: true })
+          .then(p => setHtml(p.html || ''))
+          .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
+          .finally(() => setPreviewLoad(false))
       })
-      .catch(() => { setAppliedChanges([]); setDraftContent('') })
+      .catch(() => {
+        setAppliedChanges([]); setDraftContent('')
+        client.policies.preview(policyId, { base: true })
+          .then(p => setHtml(p.html || ''))
+          .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
+          .finally(() => setPreviewLoad(false))
+      })
   }, [token, policyId])
 
   // Re-highlight whenever the policy loads or the search term changes: reset to the original
@@ -180,43 +195,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const root = previewRef.current
     if (!root || html == null) return
     root.innerHTML = html
-    const outstanding = highlightList.map(({ f }) => termsOf(f))
-    // Append completed draft changes as extra "terms" so the same matcher locates them. A replacement
-    // is matched TWO ways because the formatted preview may show either the old wording (not yet
-    // reflecting the change) or the new wording (formatted from the draft): the old wording is swapped
-    // to the new text and greened; the new wording is greened in place. A deletion is matched by an
-    // anchor from the removed section and struck through.
-    const completed = effectiveChanges
-    type Op = { ci: number; term: string; mode: 'replace' | 'green' | 'strike' }
-    const ops: Op[] = []
-    completed.forEach((c, ci) => {
-      if (c.new_text) {
-        if (c.old_text) ops.push({ ci, term: c.old_text, mode: 'replace' })
-        ops.push({ ci, term: c.new_text, mode: 'green' })
-      } else if (c.old_text) {
-        ops.push({ ci, term: c.old_text.slice(0, 80), mode: 'strike' })
-      }
-    })
-    const num = highlightStaleTerms(root, [...outstanding, ...ops.map(o => [o.term].filter(Boolean))])
-    setNumbering(num.slice(0, highlightList.length))
-
-    // Replay onto the preview (no scroll). Driven by the change log, so the policy side reflects edits
-    // from any session even after auto-clear has dropped those findings from the left panel.
-    const oldMatched = new Set<number>()
-    ops.forEach((o, k) => {
-      const cn = num[outstanding.length + k]
-      if (cn == null || cn < 0) return
-      if (o.mode === 'replace') { updatePreview(cn, null, completed[o.ci].new_text, false); oldMatched.add(o.ci) }
-      else if (o.mode === 'strike') strikeSectionInPreview(cn, false)
-    })
-    // Green the new wording in place only where the old wording wasn't found (preview already reflects
-    // the change) — avoids greening a coincidental occurrence when the old wording is still shown.
-    ops.forEach((o, k) => {
-      if (o.mode !== 'green' || oldMatched.has(o.ci)) return
-      const cn = num[outstanding.length + k]
-      if (cn == null || cn < 0) return
-      updatePreview(cn, null, '', false, true)
-    })
+    // Highlight the OUTSTANDING findings (still-to-fix wording). Completed changes are already shown
+    // by the diff itself (green replacements, struck removals), so there's nothing to replay.
+    const num = highlightStaleTerms(root, highlightList.map(({ f }) => termsOf(f)))
+    setNumbering(num)
 
     // Count remaining highlighted occurrences per number and reset the "Show in policy" cycle.
     const counts: Record<number, number> = {}
@@ -260,7 +242,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     } else {
       setMatchCount(null)
     }
-  }, [html, policySearch, appliedChanges, draftContent]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [html, policySearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function replace(f: Finding, idx: number, n: number, newTextOverride?: string) {
     const terms = termsOf(f)
@@ -822,13 +804,20 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
           {/* RIGHT — the policy, with the out-of-date wording highlighted */}
           <div className="overflow-y-auto bg-neutral-light/20 px-6 py-5 lg:max-h-[87vh]">
             <div className="mb-3">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">The policy</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">{isDiff ? 'The policy — your changes' : 'The policy'}</p>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">
                 <FileText size={14} className="shrink-0 text-teal" /> <span className="min-w-0 break-words">{policyName}</span>
               </p>
-              {located.length > 0 || locatedFill.length > 0
+              {isDiff ? (
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-mid">
+                  <span>Showing your draft changes:</span>
+                  <span className="inline-flex items-center gap-1"><span className="rounded px-1" style={{ background: '#dcfce7', color: '#166534' }}>added / replaced</span></span>
+                  <span className="inline-flex items-center gap-1"><span className="rounded px-1 line-through" style={{ background: '#fef2f2', color: '#b91c1c' }}>removed</span></span>
+                  <span>· still-to-fix wording is highlighted.</span>
+                </p>
+              ) : (located.length > 0 || locatedFill.length > 0
                 ? <p className="mt-0.5 text-xs text-neutral-mid">The flagged wording and placeholders are highlighted below. Use <span className="font-medium">Show in policy</span> on the left to jump to each one.</p>
-                : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to find wording in this policy.</p>}
+                : <p className="mt-0.5 text-xs text-neutral-mid">Use the search below to find wording in this policy.</p>)}
             </div>
 
             {/* Search the policy */}

@@ -426,6 +426,25 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
     }
   }
 
+  // Idempotent replace: the SAME amend was already applied in a prior session (the old_text is
+  // gone and this exact new_text is already in the draft). Report success so the UI reflects it as
+  // changed, but don't modify the draft or record a duplicate change. Without this, re-doing an
+  // already-applied replacement reports applied:false and the policy preview never shows the change.
+  let alreadyApplied = false
+  let priorChangeId = ''
+  if (!applied && input.placement === 'amend' && input.old_text) {
+    const already = input.new_text
+      ? doc.draft_content.includes(input.new_text)   // replacement text already present
+      : !doc.draft_content.includes(input.old_text)  // removal: the old wording is already gone
+    if (already) {
+      const prior = await (prisma as any).policyDocumentChange.findFirst({
+        where: { document_id: doc.id, reference_key: input.reference_key, old_text: input.old_text, new_text: input.new_text, reverted: false },
+        orderBy: { applied_at: 'desc' },
+      }).catch(() => null)
+      if (prior) { alreadyApplied = true; priorChangeId = prior.id }
+    }
+  }
+
   if (applied) {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { draft_content: content } })
   }
@@ -446,7 +465,9 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { approval_status: 'draft' } }).catch(() => {})
   }
   const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false, reverted: false } })
-  return { applied, pending, document_id: doc.id, change_id: changeId }
+  // `applied` in the response means "the draft reflects this change" — true whether we applied it
+  // just now or it was already there from a prior identical amend.
+  return { applied: applied || alreadyApplied, pending, document_id: doc.id, change_id: changeId || priorChangeId }
 }
 
 // ─── Approval workflow ────────────────────────────────────────────────────────

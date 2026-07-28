@@ -61,6 +61,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [reviewErr, setReviewErr] = useState('')
   const [numbering, setNumbering] = useState<number[]>([])          // replaceable position → document-order number
   const [markCounts, setMarkCounts] = useState<Record<number, number>>({})  // highlighted occurrences per number
+  // Changes already applied to the draft (from earlier sessions), so a replacement done before
+  // shows as changed on load instead of looking un-done.
+  const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; new_text: string }>>([])
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
   const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
 
@@ -133,6 +136,14 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       .finally(() => setPreviewLoad(false))
   }, [token, policyId])
 
+  // Load the draft's already-applied changes, so replacements made in a previous session are
+  // reflected as done (not offered again as if untouched).
+  useEffect(() => {
+    createApiClient(token).analytics.policyDocument(policyId)
+      .then(d => setAppliedChanges((d.changes ?? []).map(c => ({ reference_key: c.reference_key, new_text: c.new_text }))))
+      .catch(() => setAppliedChanges([]))
+  }, [token, policyId])
+
   // Re-highlight whenever the policy loads or the search term changes: reset to the original
   // HTML, tint + number each stale phrase's block, then apply the search highlights.
   useEffect(() => {
@@ -177,13 +188,29 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     } else {
       setCovidGroups([])
     }
+    // Reflect replacements already applied to the draft (e.g. in a previous session): mark those
+    // findings done and show their wording as changed (green) so the policy side matches the draft.
+    if (appliedChanges.length) {
+      const doneIdx = new Set<number>()
+      replaceable.forEach(({ f, i }, pos) => {
+        if (f.signal_key === 'covid-era') return           // COVID uses its own section flow
+        const n = num[pos]
+        if (n == null || n < 0) return
+        const change = appliedChanges.find(c => c.reference_key === `policy-lint:${f.signal_key}`)
+        if (!change) return
+        updatePreview(n, null, change.new_text)            // swap highlighted wording → green
+        doneIdx.add(i)
+      })
+      if (doneIdx.size) setAdopted(prev => new Set([...prev, ...doneIdx]))
+    }
+
     if (policySearch.trim().length >= 2) {
       setMatchCount(highlightSearch(root, policySearch))
       root.querySelector('mark.bg-teal-200')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     } else {
       setMatchCount(null)
     }
-  }, [html, policySearch]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [html, policySearch, appliedChanges]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function replace(f: Finding, idx: number, n: number, newTextOverride?: string) {
     const terms = termsOf(f)

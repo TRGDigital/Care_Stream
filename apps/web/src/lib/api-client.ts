@@ -264,8 +264,8 @@ export function createApiClient(token: string) {
         apiFetch<{ dismissed: boolean }>(`/policies/${id}/similar-named/dismiss`, token, { method: 'POST' }),
       backfillSignatures: (limit = 40) =>
         apiFetch<{ done: number; remaining: number }>('/policies/backfill-signatures', token, { method: 'POST', body: JSON.stringify({ limit }) }),
-      preview: (id: string) =>
-        apiFetch<{ policy_id: string; name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }>(`/policies/${id}/preview`, token),
+      preview: (id: string, opts?: { base?: boolean }) =>
+        apiFetch<{ policy_id: string; name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }>(`/policies/${id}/preview${opts?.base ? '?base=1' : ''}`, token),
       setReview: (id: string, body: { last_reviewed_at?: string; review_interval_days?: number }) =>
         apiFetch<{ last_reviewed_at: string | null; review_interval_days: number | null }>(`/policies/${id}/review`, token, { method: 'PATCH', body: JSON.stringify(body) }),
     },

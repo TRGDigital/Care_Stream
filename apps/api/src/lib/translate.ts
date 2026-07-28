@@ -575,6 +575,35 @@ export async function getEnglishPolicyHtml(
   return { html: current, cached: true }
 }
 
+// Formatted HTML of a policy's PRISTINE baseline text (its original, pre-change content), cached
+// separately from the live 'eng' preview. The Out-of-date drill-in renders this so adopted changes
+// always overlay a stable original: replaced wording can be found and greened, and removed sections
+// are still present to strike through — regardless of whether the live preview has drifted to draft
+// content. Same self-heal rules as getEnglishPolicyHtml.
+export async function getPolicyBaselineHtml(
+  tenantId: string, policyId: string, baseText: string | null,
+): Promise<{ html: string | null }> {
+  const LANG = 'eng_base'
+  const looksFormatted = (h: string) => /<h[1-6][\s>]/i.test(h)
+  const existing = await (prisma as any).policyTranslation.findUnique({
+    where: { policy_id_lang: { policy_id: policyId, lang: LANG } }, select: { content: true },
+  }).catch(() => null)
+  const current: string | null = existing?.content ?? null
+  if (current && policyHtmlEndsCleanly(current) && looksFormatted(current)) return { html: current }
+  if (!baseText) return { html: current }
+  const fresh = await formatPolicyHtml(baseText, 'eng')
+  if (!fresh) return { html: current }
+  if (looksFormatted(fresh) || !current) {
+    await (prisma as any).policyTranslation.upsert({
+      where:  { policy_id_lang: { policy_id: policyId, lang: LANG } },
+      update: { content: fresh },
+      create: { tenant_id: tenantId, policy_id: policyId, lang: LANG, content: fresh },
+    }).catch(() => {})
+    return { html: fresh }
+  }
+  return { html: current }
+}
+
 // Translate a full policy document into the target language, chunk by chunk so
 // long policies don't blow the token budget. Preserves structure; falls back to
 // the original text on any chunk failure. Caller is responsible for caching the

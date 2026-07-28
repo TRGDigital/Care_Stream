@@ -14,7 +14,7 @@ import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
-import { getEnglishPolicyHtml } from '../lib/translate'
+import { getEnglishPolicyHtml, getPolicyBaselineHtml } from '../lib/translate'
 
 export const policiesRouter = Router()
 
@@ -609,6 +609,16 @@ policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Respo
     if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
 
     const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+
+    // base=1 renders the PRISTINE original (the Out-of-date drill-in overlays adopted changes on it),
+    // preferring the document's stored original_content and falling back to the extracted text.
+    if (req.query.base) {
+      const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId }, select: { original_content: true } }).catch(() => null)
+      const baseText = (doc?.original_content && String(doc.original_content).trim()) ? String(doc.original_content) : raw
+      const { html } = await getPolicyBaselineHtml(tenantId, policyId, baseText)
+      ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached: false, html: html ?? '', raw: baseText ?? '', has_raw: !!baseText })
+      return
+    }
 
     // Self-healing formatted HTML: rebuilds (chunked) if the cache is missing or truncated.
     const { html, cached } = await getEnglishPolicyHtml(tenantId, policyId, raw)

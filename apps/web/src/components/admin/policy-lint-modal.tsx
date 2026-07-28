@@ -150,10 +150,12 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     if (scroll) (first as HTMLElement | null)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
-  // Load the policy preview (right pane).
+  // Load the policy preview (right pane) from the PRISTINE baseline (original content), so adopted
+  // changes always overlay a stable original — replaced wording is found and greened, and removed
+  // sections are still present to strike through — even if the live preview has drifted to draft.
   useEffect(() => {
     setPreviewLoad(true)
-    createApiClient(token).policies.preview(policyId)
+    createApiClient(token).policies.preview(policyId, { base: true })
       .then(d => setHtml(d.html || ''))
       .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
       .finally(() => setPreviewLoad(false))

@@ -64,6 +64,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // Changes already applied to the draft (any session). Replayed onto the preview so the policy
   // side shows what's been changed, and listed under a collapsible "already updated" summary.
   const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; requirement: string; old_text: string; new_text: string; placement: string }>>([])
+  const [draftContent, setDraftContent] = useState<string | null>(null)   // the draft, to verify a change actually landed
   const [showCompleted, setShowCompleted] = useState(false)
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
   const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
@@ -97,10 +98,17 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const locatedFill = fillable.map((r, pos) => ({ ...r, n: numbering[replaceable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
   const locatedNote = noteworthy.map((r, pos) => ({ ...r, n: numbering[replaceable.length + fillable.length + pos] ?? -1 })).filter(o => o.n >= 0).sort(byN)
 
+  // Only reflect changes that ACTUALLY landed in the draft: a replacement whose new text is present,
+  // or a removal whose old wording is gone. This drops stale/superseded records (e.g. a placeholder
+  // re-filled with a different value) so the preview and summary always match the real draft.
+  const effectiveChanges = draftContent == null
+    ? appliedChanges
+    : appliedChanges.filter(c => (c.new_text ? draftContent.includes(c.new_text) : !draftContent.includes(c.old_text)))
+
   // Completed draft changes grouped by finding, for the collapsible "already updated" summary.
   const completedGroups = (() => {
     const m = new Map<string, { requirement: string; swaps: Array<{ old: string; neu: string; placement: string }> }>()
-    for (const c of appliedChanges) {
+    for (const c of effectiveChanges) {
       const g = m.get(c.reference_key) ?? { requirement: c.requirement, swaps: [] }
       g.swaps.push({ old: c.old_text, neu: c.new_text, placement: c.placement })
       m.set(c.reference_key, g)
@@ -152,10 +160,13 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // policy side (replaced wording green, removals struck) and summarised on the left.
   useEffect(() => {
     createApiClient(token).analytics.policyDocument(policyId)
-      .then(d => setAppliedChanges((d.changes ?? []).map(c => ({
-        reference_key: c.reference_key, requirement: c.requirement, old_text: c.old_text, new_text: c.new_text, placement: c.placement,
-      }))))
-      .catch(() => setAppliedChanges([]))
+      .then(d => {
+        setAppliedChanges((d.changes ?? []).map(c => ({
+          reference_key: c.reference_key, requirement: c.requirement, old_text: c.old_text, new_text: c.new_text, placement: c.placement,
+        })))
+        setDraftContent(d.document?.draft_content ?? '')
+      })
+      .catch(() => { setAppliedChanges([]); setDraftContent('') })
   }, [token, policyId])
 
   // Re-highlight whenever the policy loads or the search term changes: reset to the original
@@ -167,7 +178,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     const outstanding = highlightList.map(({ f }) => termsOf(f))
     // Append completed draft changes as extra "terms" so the same matcher locates them: a
     // replacement is found by its old wording, a deletion by an anchor from the removed section.
-    const completed = appliedChanges
+    const completed = effectiveChanges
     const completedTerms = completed.map(c => [c.new_text ? c.old_text : c.old_text.slice(0, 80)].filter(Boolean))
     const num = highlightStaleTerms(root, [...outstanding, ...completedTerms])
     setNumbering(num.slice(0, highlightList.length))
@@ -224,7 +235,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     } else {
       setMatchCount(null)
     }
-  }, [html, policySearch, appliedChanges]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [html, policySearch, appliedChanges, draftContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function replace(f: Finding, idx: number, n: number, newTextOverride?: string) {
     const terms = termsOf(f)

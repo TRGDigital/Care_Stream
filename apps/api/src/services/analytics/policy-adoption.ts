@@ -834,9 +834,29 @@ async function rebuildDraft(documentId: string): Promise<void> {
   const changes = await (prisma as any).policyDocumentChange.findMany({
     where: { document_id: documentId, reverted: false }, orderBy: { applied_at: 'asc' },
   })
+  // When an amend targets the same wording more than once — e.g. a placeholder or term re-filled
+  // with a different value — only the LATEST applies, matching the live adopt path (re-amend). Keep
+  // the last change per (placement, reference_key, old_text) and retire the superseded earlier ones,
+  // so the draft, the pending count and the change history all agree. A naive sequential replay would
+  // instead let the FIRST win (the later one no-ops because its old wording is already gone) and
+  // silently revert the correction.
+  const supersededIds: string[] = []
+  const latestByKey = new Map<string, string>()
+  for (const c of changes as any[]) {
+    if (c.placement !== 'amend' || !c.old_text) continue
+    const key = `${c.placement}|${c.reference_key}|${c.old_text}`
+    const prev = latestByKey.get(key)
+    if (prev) supersededIds.push(prev)   // an earlier fill of the same wording, now superseded
+    latestByKey.set(key, c.id)
+  }
+  const superseded = new Set(supersededIds)
   let content = doc.original_content as string
   for (const c of changes as any[]) {
+    if (superseded.has(c.id)) continue
     content = applyChange(content, c.placement, c.old_text, c.new_text, c.section_title || undefined).content
+  }
+  if (supersededIds.length) {
+    await (prisma as any).policyDocumentChange.updateMany({ where: { id: { in: supersededIds } }, data: { reverted: true } }).catch(() => {})
   }
   await (prisma as any).policyDocument.update({ where: { id: documentId }, data: { draft_content: content } })
 }

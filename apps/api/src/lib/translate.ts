@@ -464,14 +464,33 @@ export async function formatPolicyHtml(rawText: string, langCode: string, langNa
   if (!pre) return null
 
   // Chunk by paragraphs so a long policy is NOT truncated at the model's output limit — the
-  // whole policy is formatted section by section and the HTML is concatenated in order.
+  // whole policy is formatted section by section and the HTML is concatenated in order. A single
+  // paragraph larger than the limit (e.g. a table or list flattened into one block by extraction)
+  // is split on line/sentence boundaries so no chunk is oversized — otherwise that chunk fails to
+  // format and the whole policy falls back to flat, unformatted output.
+  const LIMIT = 5000
   const chunks: string[] = []
   let cur = ''
-  for (const para of pre.split(/\n\n+/)) {
-    if (cur && (cur.length + para.length + 2) > 5000) { chunks.push(cur); cur = para }
+  const flush = () => { if (cur) { chunks.push(cur); cur = '' } }
+  const add = (para: string) => {
+    if (para.length > LIMIT) {
+      flush()
+      let rest = para
+      while (rest.length > LIMIT) {
+        let cut = rest.lastIndexOf('\n', LIMIT)
+        if (cut < LIMIT / 2) cut = rest.lastIndexOf('. ', LIMIT) + 1
+        if (cut < LIMIT / 2) cut = LIMIT
+        chunks.push(rest.slice(0, cut))
+        rest = rest.slice(cut)
+      }
+      if (rest.trim()) cur = rest
+      return
+    }
+    if (cur && (cur.length + para.length + 2) > LIMIT) { flush(); cur = para }
     else cur = cur ? `${cur}\n\n${para}` : para
   }
-  if (cur) chunks.push(cur)
+  for (const para of pre.split(/\n\n+/)) add(para)
+  flush()
 
   const translateLine = name ? `Translate every piece of text into ${name}.` : ''
 

@@ -18,12 +18,32 @@ const JUNK: RegExp[] = [
 ]
 const isJunk = (line: string) => { const t = line.trim(); return !t || JUNK.some(re => re.test(t)) }
 
+// Remove inline URLs / emails and tidy the phrasing left behind ("(available at …)", stray spaces).
+const stripUrls = (l: string) => l
+  .replace(/\(?\s*(?:available (?:at|from)|see|visit|source)?\s*:?\s*(?:https?:\/\/|www\.)\S+\s*\)?/gi, ' ')
+  .replace(/\S+@\S+\.[a-z]{2,}/gi, ' ')
+  .replace(/\s{2,}/g, ' ')
+  .replace(/\s+([.,;:)])/g, '$1')
+  .trim()
+
 // A short line with no ending punctuation reads as a heading in extracted policy text.
 const isHeading = (t: string) =>
   t.length > 0 && t.length <= 90 && t.split(/\s+/).length <= 12 && !/[.,:;]$/.test(t) && /^[A-Z0-9(]/.test(t)
 
-// Normalise a line: strip a stray leading page number glued to a heading ("445Mental"), collapse space.
-const normLine = (l: string) => l.replace(/^\s*\d{1,4}(?=[A-Z])/, '').replace(/\s+/g, ' ').trim()
+// A list item: bullet (•, -, *) or an enumerator (1. / 1) / a) ). Returns whether it's ordered + the
+// text after the marker; null if the line isn't a list item.
+function listItem(t: string): { ordered: boolean; rest: string } | null {
+  let m = t.match(/^\s*\(?(\d{1,3}|[a-z])[.)]\s+(.+)$/i)
+  if (m) return { ordered: /\d/.test(m[1]!), rest: m[2]! }
+  m = t.match(/^\s*[•▪‣◦·*]\s+(.+)$/)
+  if (m) return { ordered: false, rest: m[1]! }
+  m = t.match(/^\s*[-–—]\s+(.+)$/)
+  if (m) return { ordered: false, rest: m[1]! }
+  return null
+}
+
+// Normalise a line: strip URLs, a stray leading page number glued to a heading ("445Mental"), space.
+const normLine = (l: string) => stripUrls(l.replace(/^\s*\d{1,4}(?=[A-Z])/, '').replace(/\s+/g, ' ').trim())
 
 const toLines = (text: string): string[] =>
   (text || '').split(/\r?\n/).map(normLine).filter(l => l && !isJunk(l))
@@ -59,43 +79,74 @@ function wordDiffHtml(oldLine: string, newLine: string): string {
   let html = ''
   for (const op of ops) {
     if (op.type === 'equal') html += escapeHtml(op.a as string)
-    else if (op.type === 'del') { const t = op.a as string; if (t.trim()) html += `<del style="${DEL}">${escapeHtml(t)}</del>`; else html += escapeHtml(t) }
-    else { const t = op.b as string; if (t.trim()) html += `<ins style="${INS}">${escapeHtml(t)}</ins>`; else html += escapeHtml(t) }
+    else if (op.type === 'del') { const t = op.a as string; html += t.trim() ? `<del style="${DEL}">${escapeHtml(t)}</del>` : escapeHtml(t) }
+    else { const t = op.b as string; html += t.trim() ? `<ins style="${INS}">${escapeHtml(t)}</ins>` : escapeHtml(t) }
   }
   return html
 }
 
-const block = (text: string, inner: string) => (isHeading(text) ? `<h3>${inner}</h3>` : `<p>${inner}</p>`)
+type Kind = 'h' | 'p' | 'ol' | 'ul'
+type Item = { kind: Kind; html: string }
+
+const classify = (text: string): { kind: Kind; rest: string } => {
+  const li = listItem(text)
+  if (li) return { kind: li.ordered ? 'ol' : 'ul', rest: li.rest }
+  if (isHeading(text)) return { kind: 'h', rest: text }
+  return { kind: 'p', rest: text }
+}
+
+const mkItem = (text: string, wrap: 'none' | 'del' | 'ins'): Item => {
+  const { kind, rest } = classify(text)
+  const html = wrap === 'del' ? `<del style="${DEL}">${escapeHtml(rest)}</del>`
+    : wrap === 'ins' ? `<ins style="${INS}">${escapeHtml(rest)}</ins>`
+    : escapeHtml(rest)
+  return { kind, html }
+}
+
+// A single line replaced by another → word-level diff, presented in the NEW line's block kind.
+const mkChanged = (oldText: string, newText: string): Item => {
+  const oldC = classify(oldText), newC = classify(newText)
+  return { kind: newC.kind, html: wordDiffHtml(oldC.rest, newC.rest) }
+}
 
 /**
  * Formatted HTML showing the difference between a policy's original text and its current draft:
  * unchanged content rendered normally, removed content struck through, replaced/added content green.
- * Deterministic — the same inputs always produce the same, correct result.
+ * Headings and bullet/numbered lists are rebuilt, URLs stripped. Deterministic.
  */
 export function buildPolicyDiffHtml(original: string, draft: string): string {
   const a = toLines(original), b = toLines(draft)
   const ops = lcsDiff(a, b, (x, y) => x === y)
-  const html: string[] = []
+
+  const items: Item[] = []
   for (let k = 0; k < ops.length; k++) {
     const op = ops[k]!
-    if (op.type === 'equal') { const t = op.a as string; html.push(block(t, escapeHtml(t))); continue }
+    if (op.type === 'equal') { items.push(mkItem(op.a as string, 'none')); continue }
     if (op.type === 'del') {
-      // Collect a run of removals then any immediately-following additions (a replaced region).
       const dels: string[] = []
       while (k < ops.length && ops[k]!.type === 'del') dels.push(ops[k++]!.a as string)
       const inss: string[] = []
       while (k < ops.length && ops[k]!.type === 'ins') inss.push(ops[k++]!.b as string)
-      k-- // the for-loop will re-increment
-      if (dels.length === 1 && inss.length === 1) {
-        html.push(block(inss[0]!, wordDiffHtml(dels[0]!, inss[0]!)))   // single-line change → word-level
-      } else {
-        for (const d of dels) html.push(block(d, `<del style="${DEL}">${escapeHtml(d)}</del>`))
-        for (const s of inss) html.push(block(s, `<ins style="${INS}">${escapeHtml(s)}</ins>`))
-      }
+      k--
+      if (dels.length === 1 && inss.length === 1) items.push(mkChanged(dels[0]!, inss[0]!))
+      else { for (const d of dels) items.push(mkItem(d, 'del')); for (const s of inss) items.push(mkItem(s, 'ins')) }
       continue
     }
-    const t = op.b as string
-    html.push(block(t, `<ins style="${INS}">${escapeHtml(t)}</ins>`))   // pure addition
+    items.push(mkItem(op.b as string, 'ins'))
   }
-  return html.join('\n')
+
+  // Group consecutive list items of the same type into a single <ul>/<ol>.
+  const out: string[] = []
+  let i = 0
+  while (i < items.length) {
+    const kind = items[i]!.kind
+    if (kind === 'ol' || kind === 'ul') {
+      const lis: string[] = []
+      while (i < items.length && items[i]!.kind === kind) lis.push(`<li>${items[i++]!.html}</li>`)
+      out.push(`<${kind}>${lis.join('')}</${kind}>`)
+    } else {
+      out.push(`<${kind === 'h' ? 'h3' : 'p'}>${items[i++]!.html}</${kind === 'h' ? 'h3' : 'p'}>`)
+    }
+  }
+  return out.join('\n')
 }

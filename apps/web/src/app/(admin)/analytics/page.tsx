@@ -177,8 +177,22 @@ function SectionDivider({ title, subtitle }: { title: string; subtitle?: string 
 
 // One updated policy as a collapsible card: header shows the status; opening reveals the
 // full sign-off timeline. Defaults closed so the list stays scannable.
-function PolicyTrailAccordion({ d }: { d: any }) {
+function PolicyTrailAccordion({ d, token }: { d: any; token: string }) {
   const [open, setOpen] = useState(false)
+  const [resyncing, setResyncing] = useState(false)
+  const [resynced, setResynced] = useState(false)
+  const [resyncErr, setResyncErr] = useState('')
+  // A publish that couldn't push the new content live (S3 / preview cache / search index) leaves staff
+  // on the previous version until it's re-synced.
+  const stale = d.approval_status === 'published' && d.content_propagated === false && !resynced
+  async function resync() {
+    setResyncing(true); setResyncErr('')
+    try {
+      const r = await createApiClient(token).analytics.repropagatePolicyDocument(d.policy_id)
+      if (r.ok) setResynced(true); else setResyncErr('Re-sync failed — please try again shortly.')
+    } catch (e: any) { setResyncErr(e?.message ?? 'Re-sync failed.') }
+    finally { setResyncing(false) }
+  }
   const stageLabel = (s: string) => s === 'admin' ? 'Admin' : s === 'manager' ? 'Care manager' : 'External approver'
   const chip = d.approval_status === 'published' ? { label: 'Approved & live', cls: 'border-green-200 bg-green-50 text-green-700' }
     : d.approval_status === 'pending_manager' ? { label: 'With care manager', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
@@ -198,6 +212,26 @@ function PolicyTrailAccordion({ d }: { d: any }) {
         </div>
         <span className="mt-1 flex shrink-0 items-center gap-1 text-xs font-medium text-neutral-mid">{open ? 'Hide' : 'View'}{open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
       </button>
+      {stale && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber-200 bg-amber-50 px-5 py-2.5">
+          <p className="flex items-center gap-1.5 text-xs text-amber-800">
+            <AlertCircle size={13} className="shrink-0" />
+            Published, but updating what staff see didn&rsquo;t complete — staff may still see the previous version.
+          </p>
+          <div className="flex items-center gap-2">
+            {resyncErr && <span className="text-xs text-rose-600">{resyncErr}</span>}
+            <button onClick={resync} disabled={resyncing}
+              className="rounded-btn bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
+              {resyncing ? 'Re-syncing…' : 'Re-sync now'}
+            </button>
+          </div>
+        </div>
+      )}
+      {resynced && (
+        <div className="flex items-center gap-1.5 border-t border-green-200 bg-green-50 px-5 py-2 text-xs font-medium text-green-700">
+          <CheckCircle2 size={13} /> Re-synced — staff now see version {d.version}.
+        </div>
+      )}
       {open && (
         <div className="border-t border-gray-100 px-5 py-4">
           {d.trail.length === 0 ? (
@@ -1611,7 +1645,7 @@ export default function AnalyticsPage() {
             <p className="rounded-xl border border-gray-100 bg-neutral-light/40 px-4 py-6 text-center text-sm text-neutral-mid">No policy updates yet. When you adopt a gap fix and take it through approval, it appears here with its full sign-off timeline.</p>
           ) : (
             policiesOverview.documents.map((d: any) => (
-              <PolicyTrailAccordion key={d.policy_id} d={d} />
+              <PolicyTrailAccordion key={d.policy_id} d={d} token={session?.accessToken ?? ''} />
             ))
           )}
         </>

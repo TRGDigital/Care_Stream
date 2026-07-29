@@ -919,25 +919,48 @@ export async function publishDocument(tenantId: string, policyId: string, publis
     where: { id: policyId },
     data: { last_reviewed_at: new Date(), ...(policy?.review_interval_days ? {} : { review_interval_days: 365 }) },
   }).catch(() => {})
-  // Swap the new content into the live policy (S3 text, format cache, Pinecone) so staff
-  // Q&A and previews use it, and the old version is archived. Best-effort — a re-index
-  // failure does not undo the publish (it is logged and can be retried).
-  let reindexed = false
-  try { await republishPolicyContent(tenantId, policyId, publishedContent); reindexed = true }
-  catch (e: any) { console.error('[publish] republish failed', e?.message) }
+  // Swap the new content into the live policy (S3 text, format cache, Pinecone) so staff Q&A and
+  // previews use it. Retry a couple of times for transient failures, then record whether it landed:
+  // a publish must never silently leave staff on the previous version without a trace.
+  const reindexed = await propagatePublishedContent(tenantId, policyId, publishedContent)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { content_propagated: reindexed } }).catch(() => {})
   return { version: nextVersion, published: res.count ?? 0, reindexed }
+}
+
+// Push published content live (S3 + format cache + search index), retrying transient failures.
+// Returns true if it landed, false if it exhausted its retries (caller records + surfaces this).
+async function propagatePublishedContent(tenantId: string, policyId: string, content: string): Promise<boolean> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try { await republishPolicyContent(tenantId, policyId, content); return true }
+    catch (e: any) {
+      console.error(`[publish] propagation attempt ${attempt}/3 failed for ${policyId}:`, e?.message)
+      if (attempt < 3) await new Promise(r => setTimeout(r, 400 * attempt))
+    }
+  }
+  return false
+}
+
+// Re-run propagation for a policy whose publish left staff on a stale version (content_propagated=false).
+export async function repropagatePolicy(tenantId: string, policyId: string): Promise<{ ok: boolean } | null> {
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  const content = doc.published_content || doc.draft_content
+  if (!content) return { ok: false }
+  const ok = await propagatePublishedContent(tenantId, policyId, content)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { content_propagated: ok } }).catch(() => {})
+  return { ok }
 }
 
 // Every updated policy with its full approval timeline — CQC evidence that policy changes
 // follow one consistent, signed-off process. Most recently active first.
 export async function approvalsOverview(tenantId: string): Promise<{
-  documents: Array<{ policy_id: string; name: string; version: string; approval_status: string; published_at: string | null; updated_at: string | null; pending: number; external_name: string; trail: Array<{ stage: string; decision: string; approver_name: string; created_at: string; comment: string }> }>
+  documents: Array<{ policy_id: string; name: string; version: string; approval_status: string; published_at: string | null; updated_at: string | null; pending: number; external_name: string; content_propagated: boolean; trail: Array<{ stage: string; decision: string; approver_name: string; created_at: string; comment: string }> }>
   summary: { total: number; published: number; in_progress: number }
   health: { policies_total: number; coverage_score: number | null; regs_total: number; regs_covered: number; regs_partial: number; regs_gap: number; review_tracked: number; review_due: number }
 }> {
   const docs = await (prisma as any).policyDocument.findMany({
     where: { tenant_id: tenantId },
-    select: { id: true, policy_id: true, version: true, approval_status: true, published_at: true, updated_at: true, external_name: true },
+    select: { id: true, policy_id: true, version: true, approval_status: true, published_at: true, updated_at: true, external_name: true, content_propagated: true },
   })
   const documents = [] as any[]
   for (const d of docs as any[]) {
@@ -955,6 +978,7 @@ export async function approvalsOverview(tenantId: string): Promise<{
       updated_at: d.updated_at ? new Date(d.updated_at).toISOString() : null,
       pending,
       external_name: d.external_name || '',
+      content_propagated: d.content_propagated !== false,
       trail: (approvals as any[]).map(a => ({ stage: a.stage, decision: a.decision, approver_name: a.approver_name || '', created_at: new Date(a.created_at).toISOString(), comment: a.comment || '' })),
     })
   }

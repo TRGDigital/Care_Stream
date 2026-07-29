@@ -16,7 +16,7 @@ import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-
 import { resolveSection, reopenSection, clearResolutions } from '../services/analytics/review-resolutions'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
-import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
+import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, repropagatePolicy, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
@@ -970,6 +970,19 @@ analyticsRouter.post('/gaps/policy-document/:policyId/publish', requireAdmin, as
     ok(res, r)
   } catch (e: any) {
     err(res, 'PUBLISH_FAILED', e.message ?? 'Could not publish the policy.', 500)
+  }
+})
+
+// POST /analytics/gaps/policy-document/:policyId/repropagate — re-run the publish content sync
+// (S3 + formatted-HTML cache + search index) when a publish left staff on a stale version.
+analyticsRouter.post('/gaps/policy-document/:policyId/repropagate', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const r = await repropagatePolicy(tenantId, String(req.params.policyId))
+    if (!r) { err(res, 'NOT_FOUND', 'No published policy to re-sync', 404); return }
+    ok(res, r)
+  } catch (e: any) {
+    err(res, 'REPROPAGATE_FAILED', e.message ?? 'Could not re-sync the policy.', 500)
   }
 })
 

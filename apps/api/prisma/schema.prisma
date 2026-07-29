@@ -646,6 +646,7 @@ model PolicyDocument {
   original_content String   @default("")   // immutable snapshot of the extracted text at first init
   draft_content    String   @default("")   // working copy adopted changes are applied to
   published_content String  @default("")   // last published snapshot
+  content_propagated Boolean @default(true) // false = publish succeeded but S3/format-cache/index sync failed (staff would see the previous version until re-synced)
   published_at     DateTime?
   published_by     String   @default("")
   version          String   @default("")

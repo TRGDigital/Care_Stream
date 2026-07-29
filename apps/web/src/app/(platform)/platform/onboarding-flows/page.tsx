@@ -10,7 +10,7 @@ import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpe
 const SECTIONS = [
   'Activities', 'Admission management', 'Business procedures', 'Care and health of residents',
   'Complaints and compliments', 'Emergency planning', 'Fees and funding', 'GDPR', 'Governance',
-  'Home Premises', 'Infection control', 'Quality Assurance', 'Safeguarding', 'Staff', 'Training',
+  'Health and Safety', 'Home Premises', 'Infection control', 'Quality Assurance', 'Safeguarding', 'Staff', 'Training',
 ]
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'

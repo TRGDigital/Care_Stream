@@ -11,6 +11,7 @@ export const DEFAULT_POLICY_SECTIONS: string[] = [
   'Fees and funding',
   'GDPR',
   'Governance',
+  'Health and Safety',
   'Home Premises',
   'Infection control',
   'Quality Assurance',

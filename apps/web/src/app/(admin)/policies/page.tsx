@@ -40,6 +40,7 @@ const SECTION_COLOURS: Record<string, string> = {
   'Fees and funding':             'bg-lime-50 text-lime-700',
   'GDPR':                         'bg-indigo-50 text-indigo-700',
   'Governance':                   'bg-violet-50 text-violet-700',
+  'Health and Safety':            'bg-red-50 text-red-700',
   'Home Premises':                'bg-yellow-50 text-yellow-700',
   'Infection control':            'bg-cyan-50 text-cyan-700',
   'Quality Assurance':            'bg-fuchsia-50 text-fuchsia-700',

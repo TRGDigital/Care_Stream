@@ -14,6 +14,7 @@ import { FEATURE_IMAGE_ALT } from '@/lib/feature-images'
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/care-audits' },
   title:       'Care Audits | CareStreamAI',
   description: 'Replace slow manual audits with structured, guided audits in the CareStream hub. Score every section, record your findings and actions, and generate a formatted report with AI recommendations the moment you finish.',
   openGraph: {

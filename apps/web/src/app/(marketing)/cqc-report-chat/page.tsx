@@ -6,6 +6,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CQC_REPORT_CHAT_SLOTS } from '@/lib/page-slots/cqc-report-chat'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/cqc-report-chat' },
   title: 'CQC Report Chat | CareStreamAI',
   description: 'Upload your CQC inspection report and ask it anything. CareStream cross-references it against your policies and the CQC framework to find action points, explain findings, and help you draft a factual-accuracy challenge.',
   openGraph: {

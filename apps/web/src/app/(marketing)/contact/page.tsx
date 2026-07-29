@@ -5,6 +5,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CONTACT_SLOTS } from '@/lib/page-slots/contact'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/contact' },
   title: 'Contact',
   description: 'Reach the CareStreamAI team with questions about pricing, your specific care setting, data security, or anything else. We respond within one business day.',
   openGraph: {

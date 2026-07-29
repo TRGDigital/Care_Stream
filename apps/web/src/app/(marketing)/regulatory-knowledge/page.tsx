@@ -3,6 +3,7 @@ import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/regulatory-knowledge' },
   title: 'Regulatory Knowledge',
   description: 'CareStreamAI includes a built-in knowledge base covering UK care regulations — CQC Fundamental Standards, GDPR, RIDDOR, the Care Act, Mental Capacity Act, and more.',
   openGraph: {

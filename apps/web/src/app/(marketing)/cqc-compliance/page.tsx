@@ -11,6 +11,7 @@ import { CQC_COMPLIANCE_SLOTS } from '@/lib/page-slots/cqc-compliance'
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/cqc-compliance' },
   title: 'CQC & Compliance',
   description: 'CareStream builds your CQC evidence as staff use your policies, checks which regulations your policies cover, and produces an inspection-ready report you can download as a PDF.',
   openGraph: {

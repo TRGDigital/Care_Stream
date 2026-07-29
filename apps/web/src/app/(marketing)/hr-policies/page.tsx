@@ -12,6 +12,7 @@ import { HR_POLICIES_SLOTS } from '@/lib/page-slots/hr-policies'
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/hr-policies' },
   title:       'HR Policies and Staff Handbook | CareStreamAI',
   description: 'Give every member of your team instant answers to HR and employment questions from your actual staff handbook. Available in any language, in the CareStream hub or by email, 24 hours a day.',
   openGraph: {

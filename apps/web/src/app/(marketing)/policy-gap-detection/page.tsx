@@ -10,6 +10,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { POLICY_GAP_DETECTION_SLOTS } from '@/lib/page-slots/policy-gap-detection'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/policy-gap-detection' },
   title: 'Policy Gap Detection',
   description: 'CareStream reads inside your policies, tells you exactly which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add with the legal basis, and tracks changes to the standards. A Professional and Enterprise feature.',
   openGraph: {

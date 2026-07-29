@@ -6,6 +6,7 @@ import { PageHero } from '@/components/marketing/ui'
 export const revalidate = 60
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/blog' },
   title: 'Blog',
   description: 'Insights, regulatory guidance, and practical resources for UK care professionals. Covering CQC compliance, workforce management, AI in care, and more.',
   openGraph: {

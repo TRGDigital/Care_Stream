@@ -8,6 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/cqc-staff-questions' },
   title:       'CQC Staff Preparation Questions | CareStreamAI',
   description: 'Prepare your care staff to answer CQC inspector questions with confidence. CareStream sends open-ended, inspector-style questions in the hub, scores each free-text answer with AI feedback, and lets staff review the model answer and try again.',
   openGraph: {

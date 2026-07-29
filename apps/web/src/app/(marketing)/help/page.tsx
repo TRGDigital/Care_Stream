@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PageHero, SectionLabel } from '@/components/marketing/ui'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/help' },
   title: 'Help Centre',
   description: 'Step-by-step guides for getting the most out of CareStreamAI. Covering account setup, policy uploads, staff access, analytics, and CQC compliance features.',
   openGraph: {

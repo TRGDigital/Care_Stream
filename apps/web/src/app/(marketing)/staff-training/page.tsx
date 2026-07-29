@@ -46,6 +46,7 @@ async function getCatalogue(): Promise<Catalogue> {
 }
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/staff-training' },
   title:       'Staff Training and Compliance | CareStreamAI',
   description: 'Move beyond annual tick-box training. CareStream generates training modules from your own policies, keeps your team engaged in the hub all year, and tracks compliance with automatic renewal reminders.',
   openGraph: {

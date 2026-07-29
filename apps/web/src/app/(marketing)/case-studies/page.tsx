@@ -6,6 +6,7 @@ import { CASE_STUDIES_SLOTS } from '@/lib/page-slots/case-studies'
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/case-studies' },
   title: 'Case Studies',
   description: 'See how UK care providers have used CareStreamAI to reduce out-of-hours manager calls, support international staff, and build stronger CQC inspection evidence.',
   openGraph: {

@@ -5,6 +5,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { DEMO_SLOTS } from '@/lib/page-slots/demo'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/demo' },
   title: 'Book a Demo',
   description: 'Book a 30-minute walkthrough of CareStreamAI using your own policies. See exactly what your team would experience, with multilingual queries and instant, evidence-based answers.',
   openGraph: {

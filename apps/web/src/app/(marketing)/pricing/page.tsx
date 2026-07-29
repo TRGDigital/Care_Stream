@@ -36,6 +36,7 @@ async function getLinkedFeatureSlugs(): Promise<Set<string>> {
 }
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/pricing' },
   title: 'Pricing',
   description: 'Simple, transparent pricing for CareStreamAI. From Starter plans for smaller homes to Enterprise for multi-site providers. 14-day free trial, no charge until day 14.',
   openGraph: {

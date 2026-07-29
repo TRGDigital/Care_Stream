@@ -31,6 +31,17 @@ export async function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').toLowerCase()
   const path = req.nextUrl.pathname
 
+  // ── Canonical host backstop: apex -> www in a single 308 hop, preserving path + query. Vercel
+  // normally handles this at the edge; codifying it here means the canonical host can't silently
+  // regress during a migration. Only fires on the bare apex, so it never loops and never touches
+  // the demos subdomain or *.vercel.app preview hosts.
+  if (host === 'carestreamai.com') {
+    const url = req.nextUrl.clone()
+    url.protocol = 'https'
+    url.host = 'www.carestreamai.com'
+    return NextResponse.redirect(url, 308)
+  }
+
   // ── Landing page subdomain: demos.carestreamai.com/[campaign] -> /lp/[campaign]
   // Query string (UTMs, gclid, fbclid) is preserved by the clone.
   if (host.startsWith('demos.')) {

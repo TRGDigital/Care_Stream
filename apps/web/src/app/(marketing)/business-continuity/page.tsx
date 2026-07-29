@@ -12,6 +12,7 @@ import { BUSINESS_CONTINUITY_SLOTS } from '@/lib/page-slots/business-continuity'
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/business-continuity' },
   title:       'Business Continuity Planning | CareStreamAI',
   description: 'Ensure your care setting can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via the hub, email, and voice, at any time.',
   openGraph: {

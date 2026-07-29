@@ -13,6 +13,7 @@ const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:und
 const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/care-policies' },
   title: 'Care Policies',
   description: 'Upload your policy library once. Your entire team can then query any policy in 60+ languages, instantly, in the hub or by email, with every interaction logged.',
   openGraph: {

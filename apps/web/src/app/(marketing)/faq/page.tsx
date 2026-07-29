@@ -7,6 +7,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { FAQ_SLOTS } from '@/lib/page-slots/faq'
 
 export const metadata = {
+  alternates: { canonical: 'https://www.carestreamai.com/faq' },
   title: 'FAQ',
   description: 'Everything you need to know about CareStreamAI — how the AI works, what it can and cannot do, data security, pricing, and getting started. Answered plainly.',
   openGraph: {

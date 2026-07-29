@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+// Canonical host — must match sitemap.ts, robots.ts, metadataBase and lib/schema SITE_URL. The apex
+// (carestreamai.com) 308-redirects to www, so every emitted URL must use www to avoid GSC
+// "Page with redirect" / canonical drift.
+export const SITE_URL = 'https://www.carestreamai.com'
+// Normalise a route path onto the canonical host: '/' stays as the bare host, others append cleanly.
+export const canonicalUrl = (path: string) => `${SITE_URL}${path === '/' ? '' : path}`
 
 export interface MetaFallback {
   title: string
@@ -47,10 +53,12 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
     // absolute: the stored title already includes the brand suffix, so do not append the template.
     title: { absolute: title },
     description,
+    // Every page declares its own canonical on the www host so signals consolidate to one URL.
+    alternates: { canonical: canonicalUrl(path) },
     openGraph: {
       title: ogTitle || title,
       description: ogDescription || description,
-      url: `https://carestreamai.com${path}`,
+      url: canonicalUrl(path),
       ...(ogImage ? { images: [ogImage] } : {}),
     },
     // Twitter/X card so shares there also show the image.

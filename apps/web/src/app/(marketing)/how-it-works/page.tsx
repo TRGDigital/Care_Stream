@@ -9,6 +9,8 @@ import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { HOW_IT_WORKS_SLOTS } from '@/lib/page-slots/how-it-works'
+import { JsonLd } from '@/components/json-ld'
+import { howToSchema } from '@/lib/schema'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
@@ -141,8 +143,15 @@ function HubMockup() {
 
 export default async function HowItWorksPage() {
   const s = makeSlot(HOW_IT_WORKS_SLOTS, await getContentSlots('/how-it-works'))
+  const howTo = howToSchema({
+    name: 'How to get started with CareStreamAI',
+    description: s('start.intro'),
+    path: '/how-it-works',
+    steps: [1, 2, 3].map(n => ({ name: s(`start.step${n}.title`), text: s(`start.step${n}.body`) })),
+  })
   return (
     <>
+      <JsonLd data={howTo} />
       {/* ── Split hero ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />

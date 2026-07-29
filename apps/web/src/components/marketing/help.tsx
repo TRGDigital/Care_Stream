@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { PageHero, PageCta } from './ui'
+import { JsonLd } from '@/components/json-ld'
+import { articleSchema } from '@/lib/schema'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -392,6 +394,7 @@ export function HelpArticle({
 }) {
   return (
     <>
+      <JsonLd data={articleSchema({ title, description: intro, section: category })} />
       <PageHero label={category} title={title} subtitle={intro} />
 
       <section className="bg-white py-16">

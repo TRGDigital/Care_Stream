@@ -145,6 +145,56 @@ export function hyperTocSchema(slug: string, headings: Array<{ id: string; text:
   }
 }
 
+// A platform capability (policies, training, audits, CQC readiness…) as a Service provided by the org.
+export function serviceSchema(opts: { name: string; description: string; path: string; serviceType?: string }) {
+  return {
+    '@context':    'https://schema.org',
+    '@type':       'Service',
+    '@id':         `${SITE_URL}${opts.path}#service`,
+    name:          opts.name,
+    description:   opts.description,
+    serviceType:   opts.serviceType ?? 'Care compliance software',
+    provider:      { '@id': ORG_ID },
+    areaServed:    { '@type': 'Country', name: 'United Kingdom' },
+    url:           `${SITE_URL}${opts.path}`,
+    audience:      { '@type': 'BusinessAudience', name: 'UK care providers' },
+  }
+}
+
+// A step-by-step process (e.g. the how-it-works flow) as HowTo, for featured-snippet / AIO eligibility.
+export function howToSchema(opts: { name: string; description: string; path: string; steps: Array<{ name: string; text: string }> }) {
+  return {
+    '@context':  'https://schema.org',
+    '@type':     'HowTo',
+    '@id':       `${SITE_URL}${opts.path}#howto`,
+    name:        opts.name,
+    description: opts.description,
+    inLanguage:  'en-GB',
+    step:        opts.steps.map((s, i) => ({
+      '@type':   'HowToStep',
+      position:  i + 1,
+      name:      s.name,
+      text:      s.text,
+    })),
+  }
+}
+
+// A help / guide article. url is optional (the shared HelpArticle component doesn't know its route);
+// headline + section + publisher are enough to be a valid, useful Article.
+export function articleSchema(opts: { title: string; description: string; section?: string; url?: string }) {
+  return {
+    '@context':   'https://schema.org',
+    '@type':      'TechArticle',
+    headline:     opts.title,
+    description:  opts.description,
+    ...(opts.section ? { articleSection: opts.section } : {}),
+    ...(opts.url ? { mainEntityOfPage: opts.url, url: opts.url } : {}),
+    author:       { '@id': ORG_ID },
+    publisher:    { '@id': ORG_ID },
+    inLanguage:   'en-GB',
+  }
+}
+
 export function faqPageSchema(faqs: Array<{ question: string; answer: string }>) {
   return {
     '@context':  'https://schema.org',

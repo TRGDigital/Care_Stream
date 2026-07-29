@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { JsonLd } from '@/components/json-ld'
-import { faqPageSchema, SITE_URL } from '@/lib/schema'
+import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
 import {
   FeatureSimplePage,
   featureContentFromData,
@@ -64,6 +64,11 @@ export default async function DbFeaturePage({ params }: { params: Promise<{ slug
 
   return (
     <>
+      <JsonLd data={serviceSchema({
+        name: fp.title,
+        description: fp.meta_description || `${fp.title} — part of the CareStreamAI compliance platform for UK care providers.`,
+        path: `/features/${slug}`,
+      })} />
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
       <FeatureSimplePage content={content} />
     </>

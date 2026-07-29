@@ -6,6 +6,8 @@ import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 import { FaqAccordion } from '@/components/marketing/home-faq'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { TRUST_SLOTS } from '@/lib/page-slots/trust'
+import { JsonLd } from '@/components/json-ld'
+import { faqPageSchema } from '@/lib/schema'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/trust', {
@@ -15,8 +17,10 @@ export const generateMetadata = () => pageMetadata('/trust', {
 
 export default async function TrustPage() {
   const s = makeSlot(TRUST_SLOTS, await getContentSlots('/trust'))
+  const faqs = [1, 2, 3, 4, 5, 6].map(n => ({ question: s(`faq.q${n}.question`), answer: s(`faq.q${n}.answer`) }))
   return (
     <>
+      <JsonLd data={faqPageSchema(faqs)} />
       <PageHero
         label={s('hero.label')}
         title={s('hero.title')}
@@ -99,14 +103,7 @@ export default async function TrustPage() {
         <div className="mx-auto max-w-2xl px-6">
           <SectionLabel>{s('faq.label')}</SectionLabel>
           <h2 className="mb-12 text-3xl font-extrabold text-neutral-dark">{s('faq.h2')}</h2>
-          <FaqAccordion faqs={[
-            { question: s('faq.q1.question'), answer: s('faq.q1.answer') },
-            { question: s('faq.q2.question'), answer: s('faq.q2.answer') },
-            { question: s('faq.q3.question'), answer: s('faq.q3.answer') },
-            { question: s('faq.q4.question'), answer: s('faq.q4.answer') },
-            { question: s('faq.q5.question'), answer: s('faq.q5.answer') },
-            { question: s('faq.q6.question'), answer: s('faq.q6.answer') },
-          ]} />
+          <FaqAccordion faqs={faqs} />
         </div>
       </section>
 

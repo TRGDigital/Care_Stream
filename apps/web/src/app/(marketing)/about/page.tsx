@@ -5,6 +5,8 @@ import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { ABOUT_SLOTS } from '@/lib/page-slots/about'
+import { JsonLd } from '@/components/json-ld'
+import { aboutPageSchema } from '@/lib/schema'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -128,6 +130,7 @@ export default async function AboutPage() {
   ]
   return (
     <>
+      <JsonLd data={aboutPageSchema()} />
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />

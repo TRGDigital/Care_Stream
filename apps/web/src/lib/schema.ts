@@ -195,6 +195,35 @@ export function articleSchema(opts: { title: string; description: string; sectio
   }
 }
 
+// About / Contact pages as typed WebPages about the publisher entity — helps raters and LLMs resolve
+// "who runs this site" and reconcile the Organization.
+export function aboutPageSchema() {
+  return {
+    '@context':  'https://schema.org',
+    '@type':     'AboutPage',
+    '@id':       `${SITE_URL}/about#webpage`,
+    url:         `${SITE_URL}/about`,
+    name:        `About ${SITE_NAME}`,
+    inLanguage:  'en-GB',
+    isPartOf:    { '@id': SITE_ID },
+    about:       { '@id': ORG_ID },
+    mainEntity:  { '@id': ORG_ID },
+  }
+}
+
+export function contactPageSchema() {
+  return {
+    '@context':  'https://schema.org',
+    '@type':     'ContactPage',
+    '@id':       `${SITE_URL}/contact#webpage`,
+    url:         `${SITE_URL}/contact`,
+    name:        `Contact ${SITE_NAME}`,
+    inLanguage:  'en-GB',
+    isPartOf:    { '@id': SITE_ID },
+    about:       { '@id': ORG_ID },
+  }
+}
+
 export function faqPageSchema(faqs: Array<{ question: string; answer: string }>) {
   return {
     '@context':  'https://schema.org',

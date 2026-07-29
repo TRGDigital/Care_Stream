@@ -3,6 +3,8 @@ import { PageHero } from '@/components/marketing/ui'
 import { ContactForm } from './contact-form'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CONTACT_SLOTS } from '@/lib/page-slots/contact'
+import { JsonLd } from '@/components/json-ld'
+import { contactPageSchema } from '@/lib/schema'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/contact' },
@@ -19,6 +21,7 @@ export default async function ContactPage() {
   const s = makeSlot(CONTACT_SLOTS, await getContentSlots('/contact'))
   return (
     <>
+      <JsonLd data={contactPageSchema()} />
       <PageHero
         label={s('hero.label')}
         title={s('hero.title')}

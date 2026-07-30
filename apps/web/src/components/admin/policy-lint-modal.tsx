@@ -228,16 +228,29 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       }
       const byStart = new Map<Element, HTMLElement[]>()
       for (const m of marks) { const s = sectionStart(m); if (!byStart.has(s)) byStart.set(s, []); byStart.get(s)!.push(m) }
+      const blockOf = (m: HTMLElement): Element => (m.closest('p,li,td,h1,h2,h3,h4,h5,h6') as Element | null) ?? topBlock(m)
       let g = 0
       const built: Array<{ g: number; count: number; context: string; dedicated: boolean; term: string }> = []
       for (const [start, ms] of byStart) {
-        const gi = g++
-        ms.forEach(m => m.setAttribute('data-covid-grp', String(gi)))
         const startIsHeading = isHeading(start)
         const headingText = startIsHeading ? (start.textContent ?? '').trim() : ''
-        const dedicated = ms.length > 1 || (startIsHeading && covidRe.test(headingText))
-        const context = (dedicated && headingText ? headingText : ((ms[0].closest('h1,h2,h3,h4,h5,h6,p,li')?.textContent ?? '').trim()))
-        built.push({ g: gi, count: ms.length, context: context.slice(0, 400), dedicated, term: ms[0].textContent ?? '' })
+        // Only a section whose HEADING is about COVID is treated as one dedicated section to delete/reword
+        // as a block. Otherwise the mentions are just scattered references (e.g. two DNACPR paragraphs that
+        // each cite a COVID-era CQC report) — split them one-card-per-paragraph so each can be edited on its
+        // own, rather than collapsing "2 mentions" into a single card that only ever edited the first.
+        if (startIsHeading && covidRe.test(headingText)) {
+          const gi = g++
+          ms.forEach(m => m.setAttribute('data-covid-grp', String(gi)))
+          built.push({ g: gi, count: ms.length, context: headingText.slice(0, 400), dedicated: true, term: ms[0].textContent ?? '' })
+        } else {
+          const byBlock = new Map<Element, HTMLElement[]>()
+          for (const m of ms) { const b = blockOf(m); if (!byBlock.has(b)) byBlock.set(b, []); byBlock.get(b)!.push(m) }
+          for (const [block, bms] of byBlock) {
+            const gi = g++
+            bms.forEach(m => m.setAttribute('data-covid-grp', String(gi)))
+            built.push({ g: gi, count: bms.length, context: (block.textContent ?? '').trim().slice(0, 400), dedicated: false, term: bms[0].textContent ?? '' })
+          }
+        }
       }
       setCovidGroups(built)
     } else {

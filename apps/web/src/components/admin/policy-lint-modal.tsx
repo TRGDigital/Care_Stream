@@ -46,6 +46,13 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [covidEdit, setCovidEdit] = useState<{ g: number; dedicated: boolean; original: string; text: string } | null>(null)
   const [covidBusy, setCovidBusy] = useState<number | null>(null)
   const [covidDetecting, setCovidDetecting] = useState<number | null>(null)
+  // Which detect a group is running ('edit' vs 'delete'), so each button shows its OWN spinner
+  // instead of the delete button spinning while you clicked edit.
+  const [covidDetectKind, setCovidDetectKind] = useState<'edit' | 'delete' | null>(null)
+  // Per-group inline status/error, shown INSIDE the card. Without this the only feedback was
+  // adoptErr rendered far below the card (off-screen in the scrolled column), so a detect that
+  // found nothing looked like the button did nothing at all.
+  const [covidMsg, setCovidMsg] = useState<{ g: number; text: string } | null>(null)
   const [covidDone, setCovidDone] = useState<Set<number>>(new Set())
 
   // Fill-in placeholders: typed values + which tokens have been filled.
@@ -352,14 +359,14 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setTimeout(() => el.classList.remove('ring-2', 'ring-neutral-900', 'ring-offset-1'), 1400)
   }
   async function detectCovidSection(grp: { g: number; context: string; term: string }) {
-    setCovidDetecting(grp.g); setAdoptErr('')
+    setCovidDetecting(grp.g); setCovidDetectKind('delete'); setCovidMsg(null); setAdoptErr('')
     try {
       const r = await createApiClient(token).analytics.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: 'section' })
       if (r.found && r.section_text) setCovidSectionDelete({ g: grp.g, text: r.section_text })
-      else if (r.reason === 'not-in-draft') setAdoptErr('This section has already been removed or reworded in your draft, so there is nothing left to delete. Re-run the analysis to refresh the list.')
-      else setAdoptErr('Could not find a clear section to delete here. This wording looks like a passing mention rather than a whole section, so use "Edit this mention" instead.')
-    } catch (e: any) { setAdoptErr(e.message ?? 'Could not find the section.') }
-    finally { setCovidDetecting(null) }
+      else if (r.reason === 'not-in-draft') setCovidMsg({ g: grp.g, text: 'This section has already been removed or reworded in your draft, so there is nothing left to delete. Re-run the analysis to refresh the list.' })
+      else setCovidMsg({ g: grp.g, text: 'Could not find a clear section to delete here. This wording looks like a passing mention rather than a whole section, so use "Edit this mention" instead.' })
+    } catch (e: any) { setCovidMsg({ g: grp.g, text: e.message ?? 'Could not find the section.' }) }
+    finally { setCovidDetecting(null); setCovidDetectKind(null) }
   }
   async function deleteCovidSection() {
     if (!covidSectionDelete) return
@@ -369,19 +376,28 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
       const res = await createApiClient(token).analytics.adoptSuggestion({ policy_id: policyId, reference_key: 'policy-lint:covid-era', requirement: 'Remove pandemic-era section', placement: 'amend', old_text: text, new_text: '' })
       setPending(res.pending); onAdopted?.()
       if (res.applied) { strikeSectionFromMark(grpMark(g)); setCovidDone(s => new Set(s).add(g)) }
-      else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      else setCovidMsg({ g, text: 'Recorded, but we could not place it automatically — check the draft when you review.' })
       setCovidSectionDelete(null)
-    } catch (e: any) { setAdoptErr(e.message ?? 'Could not delete the section.') }
+    } catch (e: any) { setCovidMsg({ g, text: e.message ?? 'Could not delete the section.' }) }
     finally { setCovidBusy(null) }
   }
   async function detectCovidEdit(grp: { g: number; context: string; term: string; dedicated: boolean }) {
-    setCovidDetecting(grp.g); setAdoptErr('')
+    setCovidDetecting(grp.g); setCovidDetectKind('edit'); setCovidMsg(null); setAdoptErr('')
     try {
-      const r = await createApiClient(token).analytics.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: grp.dedicated ? 'section' : 'sentence' })
-      if (r.found && r.section_text) setCovidEdit({ g: grp.g, dedicated: grp.dedicated, original: r.section_text, text: r.section_text })
-      else setAdoptErr('Could not locate the text to edit. Try "Delete the whole section".')
-    } catch (e: any) { setAdoptErr(e.message ?? 'Could not locate the text.') }
-    finally { setCovidDetecting(null) }
+      const api = createApiClient(token).analytics
+      let r = await api.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: grp.dedicated ? 'section' : 'sentence' })
+      // If we couldn't isolate a whole section (unclear boundaries / model miss), fall back to the
+      // sentence so the editor still opens and the user can reword the wording, rather than the
+      // button appearing to do nothing.
+      let asSection = grp.dedicated
+      if ((!r.found || !r.section_text) && grp.dedicated) {
+        const s = await api.detectPolicySection(policyId, grp.term, { context: grp.context, granularity: 'sentence' })
+        if (s.found && s.section_text) { r = s; asSection = false }
+      }
+      if (r.found && r.section_text) setCovidEdit({ g: grp.g, dedicated: asSection, original: r.section_text, text: r.section_text })
+      else setCovidMsg({ g: grp.g, text: r.reason === 'not-in-draft' ? 'This wording has already been removed or reworded in your draft — re-run the analysis to refresh the list.' : 'Could not locate this wording to edit automatically. You can still reword it directly in the draft after publishing, or use "Delete the whole section".' })
+    } catch (e: any) { setCovidMsg({ g: grp.g, text: e.message ?? 'Could not locate the text.' }) }
+    finally { setCovidDetecting(null); setCovidDetectKind(null) }
   }
   async function applyCovidEdit() {
     if (!covidEdit) return
@@ -394,9 +410,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
         if (dedicated) { strikeSectionFromMark(grpMark(g)) }
         else { const m = grpMark(g); if (m) { if (text.trim()) { m.textContent = text; m.className = 'rounded bg-green-200 px-0.5 font-medium' } else { m.style.textDecoration = 'line-through'; m.style.opacity = '0.5' } m.removeAttribute('data-covid-grp') } }
         setCovidDone(s => new Set(s).add(g))
-      } else setAdoptErr('Recorded, but we could not place it automatically — check the draft when you review.')
+      } else setCovidMsg({ g, text: 'Recorded, but we could not place it automatically — check the draft when you review.' })
       setCovidEdit(null)
-    } catch (e: any) { setAdoptErr(e.message ?? 'Could not apply the change.') }
+    } catch (e: any) { setCovidMsg({ g, text: e.message ?? 'Could not apply the change.' }) }
     finally { setCovidBusy(null) }
   }
 
@@ -616,9 +632,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                           <div className="mt-2.5 flex flex-wrap items-center gap-2">
                             <button onClick={() => scrollToGrp(grp.g)} className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50"><Locate size={13} /> Show in policy</button>
                             <button onClick={() => detectCovidSection(grp)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
-                              {covidDetecting === grp.g && !covidEdit ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
+                              {covidDetecting === grp.g && covidDetectKind === 'delete' ? <><Loader2 size={13} className="animate-spin" /> Finding section…</> : <><Trash2 size={13} /> Delete the whole section</>}
                             </button>
-                            <button onClick={() => detectCovidEdit(grp)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50"><FilePenLine size={13} /> {grp.dedicated ? 'Edit the section' : 'Edit this mention'}</button>
+                            <button onClick={() => detectCovidEdit(grp)} disabled={covidDetecting !== null || covidBusy !== null} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">{covidDetecting === grp.g && covidDetectKind === 'edit' ? <><Loader2 size={13} className="animate-spin" /> Finding…</> : <><FilePenLine size={13} /> {grp.dedicated ? 'Edit the section' : 'Edit this mention'}</>}</button>
                           </div>
                         )}
                         {covidSectionDelete?.g === grp.g && (
@@ -640,6 +656,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                               <button onClick={() => setCovidEdit(null)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
                             </div>
                           </div>
+                        )}
+                        {covidMsg?.g === grp.g && (
+                          <p className="mt-2 text-xs text-red-600">{covidMsg.text}</p>
                         )}
                       </div>
                     </div>

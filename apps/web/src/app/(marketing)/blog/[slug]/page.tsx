@@ -32,7 +32,18 @@ interface Post {
   cta_text: string | null
   cta_url: string | null
   faqs: Faq[] | null
+  updated_at: string | null
+  sources: Array<{ label: string; url: string }> | null
   author: { name: string; title: string | null; photo_url: string | null; bio: string | null; linkedin_url: string | null } | null
+}
+
+interface RelatedPost {
+  slug: string
+  title: string
+  excerpt: string | null
+  category: string
+  read_time_minutes: number
+  feature_image_url: string | null
 }
 
 async function getPost(slug: string): Promise<Post | null> {
@@ -43,6 +54,17 @@ async function getPost(slug: string): Promise<Post | null> {
     return (body?.data?.post ?? null) as Post | null
   } catch {
     return null
+  }
+}
+
+async function getRelated(slug: string): Promise<RelatedPost[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/blog/posts/${slug}/related`, { next: { revalidate: 60 } })
+    if (!res.ok) return []
+    const body = await res.json()
+    return (body?.data?.posts ?? []) as RelatedPost[]
+  } catch {
+    return []
   }
 }
 
@@ -75,10 +97,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const { slug } = await params
   const post = await getPost(slug)
   if (!post) notFound()
+  const related = await getRelated(slug)
 
-  const date = post.publication_date
-    ? new Date(post.publication_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    : ''
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  const date = post.publication_date ? fmtDate(post.publication_date) : ''
+  // Show a visible "Last updated" only when the post was meaningfully revised
+  // after publication (more than 2 days later), so trivial edits don't churn it.
+  const DAY = 86_400_000
+  const showUpdated = !!(post.updated_at && post.publication_date &&
+    new Date(post.updated_at).getTime() - new Date(post.publication_date).getTime() > 2 * DAY)
+  const updatedDate = post.updated_at ? fmtDate(post.updated_at) : ''
+  const sources = (post.sources ?? []).filter(s => s?.url)
   const faqs = (post.faqs ?? []).filter(f => f?.question?.trim() && f?.answer?.trim())
   const { html: bodyHtml, headings } = buildBlogToc(post.content)
 
@@ -104,6 +133,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         />
       )}
 
+      {showUpdated && (
+        <p className="not-prose -mt-2 mb-8 text-sm text-neutral-mid">
+          Last updated <time dateTime={post.updated_at ?? undefined} className="font-medium text-neutral-dark">{updatedDate}</time>
+        </p>
+      )}
+
       {post.special_message && (
         <div
           className={`not-prose mb-8 rounded-xl border px-5 py-4 text-sm ${MESSAGE_COLORS[post.special_message_color ?? 'teal'] ?? MESSAGE_COLORS.teal}`}
@@ -122,6 +157,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           Contents is generated at render time and injected above the first H2;
           the matching HyperToc structured data is emitted above. */}
       <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+
+      {/* Sources / citations — authoritative references set in the admin. Rendered
+          here and emitted as schema.org "citation" in the article JSON-LD. */}
+      {sources.length > 0 && (
+        <div className="not-prose mt-12 rounded-xl border border-gray-100 bg-neutral-light/50 p-6">
+          <p className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-dark">Sources</p>
+          <ul className="space-y-2">
+            {sources.map((s, i) => (
+              <li key={i} className="text-sm leading-relaxed">
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="text-teal hover:underline"
+                >
+                  {s.label || s.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
 
@@ -167,6 +224,33 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {post.author.bio && (
               <p className="mt-2 text-sm leading-relaxed text-neutral-mid">{post.author.bio}</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Related articles — same-category topic cluster for internal interlinking */}
+      {related.length > 0 && (
+        <div className="not-prose mt-14 border-t border-gray-100 pt-8">
+          <p className="mb-5 text-lg font-extrabold text-neutral-dark">Related articles</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map(r => (
+              <Link
+                key={r.slug}
+                href={`/blog/${r.slug}`}
+                className="group flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-shadow hover:shadow-card"
+              >
+                {r.feature_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={r.feature_image_url} alt={r.title} className="aspect-video w-full object-cover" />
+                )}
+                <div className="flex flex-1 flex-col p-4">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-teal">{r.category}</p>
+                  <p className="font-semibold leading-snug text-neutral-dark group-hover:text-teal">{r.title}</p>
+                  {r.excerpt && <p className="mt-1.5 line-clamp-2 text-sm text-neutral-mid">{r.excerpt}</p>}
+                  <p className="mt-3 text-xs text-neutral-mid">{r.read_time_minutes} min read</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       )}

@@ -304,6 +304,7 @@ const EMPTY_POST = {
   special_message: '', special_message_color: 'blue',
   key_info_title: '', key_info_content: '',
   faqs: EMPTY_FAQS,
+  sources: [] as Array<{ label: string; url: string }>,
 }
 
 // Resize/compress an image in the browser before upload so it stays well under
@@ -369,11 +370,17 @@ function PostForm({
     merged.faqs = (initial?.faqs && Array.isArray(initial.faqs) && initial.faqs.length > 0)
       ? initial.faqs
       : EMPTY_FAQS
+    merged.sources = Array.isArray(initial?.sources) ? initial.sources : []
     return merged
   })
   const set    = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
   const setFaq = (i: number, field: 'question' | 'answer', val: string) =>
     set('faqs', (form.faqs as any[]).map((f, idx) => idx === i ? { ...f, [field]: val } : f))
+  const sources: Array<{ label: string; url: string }> = form.sources ?? []
+  const setSource = (i: number, field: 'label' | 'url', val: string) =>
+    set('sources', sources.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
+  const addSource    = () => set('sources', [...sources, { label: '', url: '' }])
+  const removeSource = (i: number) => set('sources', sources.filter((_, idx) => idx !== i))
 
   const [imgUploading, setImgUploading] = useState(false)
   const [imgError,     setImgError]     = useState('')
@@ -690,6 +697,41 @@ function PostForm({
               </div>
             </div>
           ))}
+        </div>
+      </AccordionSection>
+
+      {/* ── Sources ───────────────────────────────────────── */}
+      <AccordionSection title="Sources" description="Authoritative references (CQC, gov.uk, NICE…) shown at the end of the post and added to its structured data">
+        <div className="space-y-3">
+          {sources.length === 0 && (
+            <p className="text-xs text-neutral-mid">No sources yet. Add citations to strengthen the article&rsquo;s credibility (E-E-A-T).</p>
+          )}
+          {sources.map((src, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
+                <input
+                  value={src.label}
+                  onChange={e => setSource(i, 'label', e.target.value)}
+                  placeholder="Label, e.g. CQC — Fundamental standards"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+                />
+                <input
+                  value={src.url}
+                  onChange={e => setSource(i, 'url', e.target.value)}
+                  placeholder="https://www.cqc.org.uk/…"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+                />
+              </div>
+              <button type="button" onClick={() => removeSource(i)}
+                className="mt-1 shrink-0 rounded-md border border-red-200 p-2 text-red-500 hover:bg-red-50">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addSource}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light">
+            <Plus size={14} /> Add source
+          </button>
         </div>
       </AccordionSection>
 

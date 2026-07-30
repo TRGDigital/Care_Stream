@@ -1188,6 +1188,7 @@ model BlogPost {
   key_info_title        String?
   key_info_content      String?
   faqs                  Json?
+  sources               Json?                             // [{ label, url }] authoritative citations rendered + emitted as schema.org citation
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt
   author                BlogAuthor? @relation(fields: [author_id], references: [id])

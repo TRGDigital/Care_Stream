@@ -128,9 +128,11 @@ export function authorPersonSchema(author: {
 
 export function blogPostingSchema(post: {
   slug: string; title: string; excerpt: string | null; meta_description?: string | null
-  feature_image_url: string | null; publication_date: string | null
+  feature_image_url: string | null; publication_date: string | null; updated_at?: string | null
+  sources?: Array<{ label: string; url: string }> | null
   author?: { name: string; title?: string | null; photo_url?: string | null; bio?: string | null; linkedin_url?: string | null } | null
 }, hasToc = false) {
+  const citations = (post.sources ?? []).filter(s => s?.url)
   return {
     '@context':          'https://schema.org',
     '@type':             'BlogPosting',
@@ -139,6 +141,8 @@ export function blogPostingSchema(post: {
     description:         post.excerpt || post.meta_description || '',
     ...(post.feature_image_url ? { image: [post.feature_image_url] } : {}),
     ...(post.publication_date ? { datePublished: post.publication_date } : {}),
+    ...(post.updated_at ? { dateModified: post.updated_at } : {}),
+    ...(citations.length ? { citation: citations.map(s => ({ '@type': 'CreativeWork', name: s.label || s.url, url: s.url })) } : {}),
     author:              post.author?.name
       ? authorPersonSchema(post.author)
       : { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },

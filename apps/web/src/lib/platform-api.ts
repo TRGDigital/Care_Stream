@@ -277,6 +277,7 @@ export interface BlogPost {
   key_info_title:        string | null
   key_info_content:      string | null
   faqs:                  Array<{ question: string; answer: string }> | null
+  sources:               Array<{ label: string; url: string }> | null
   created_at:            string
   updated_at:            string
   author:                { id: string; name: string; photo_url: string | null } | null

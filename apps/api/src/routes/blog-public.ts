@@ -48,6 +48,43 @@ publicBlogRouter.get('/posts/:slug', async (req: Request, res: Response) => {
   ok(res, { post })
 })
 
+// GET /public/blog/posts/:slug/related — up to 3 published posts in the same
+// category (topic cluster), newest first, back-filled with other recent posts
+// so the section is never empty. Powers internal interlinking on the article page.
+publicBlogRouter.get('/posts/:slug/related', async (req: Request, res: Response) => {
+  const CARD = {
+    slug: true, title: true, excerpt: true, category: true,
+    read_time_minutes: true, feature_image_url: true, publication_date: true,
+  }
+  const current = await (prisma as any).blogPost.findFirst({
+    where: { slug: req.params.slug, status: 'published' },
+    select: { category: true },
+  })
+  if (!current) { ok(res, { posts: [] }); return }
+
+  const sameCategory = await (prisma as any).blogPost.findMany({
+    where:   { status: 'published', category: current.category, slug: { not: req.params.slug } },
+    orderBy: [{ publication_date: 'desc' }, { created_at: 'desc' }],
+    take:    3,
+    select:  CARD,
+  })
+
+  let posts = sameCategory
+  if (posts.length < 3) {
+    const seen = new Set([req.params.slug, ...posts.map((p: any) => p.slug)])
+    const fillers = await (prisma as any).blogPost.findMany({
+      where:   { status: 'published', slug: { notIn: [...seen] } },
+      orderBy: [{ publication_date: 'desc' }, { created_at: 'desc' }],
+      take:    3 - posts.length,
+      select:  CARD,
+    })
+    posts = [...posts, ...fillers]
+  }
+
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
+  ok(res, { posts })
+})
+
 // GET /public/blog/image/:file — streams a blog image from private storage.
 // Filenames are uuid.ext (set at upload), so the strict pattern blocks traversal.
 // Long immutable cache lets Vercel's edge serve repeats without hitting the function.

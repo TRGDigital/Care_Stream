@@ -3263,7 +3263,7 @@ function buildPostData(body: any) {
     content, author_id, category, publication_date, status,
     is_featured, read_time_minutes, cta_text, cta_url,
     special_message, special_message_color, key_info_title, key_info_content,
-    faqs,
+    faqs, sources,
   } = body ?? {}
 
   return {
@@ -3289,6 +3289,7 @@ function buildPostData(body: any) {
     ...(key_info_title       !== undefined && { key_info_title:        key_info_title?.trim() || null }),
     ...(key_info_content     !== undefined && { key_info_content:      key_info_content?.trim() || null }),
     ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
+    ...(sources              !== undefined && { sources:               Array.isArray(sources) ? sources.map((s: any) => ({ label: (s.label ?? '').trim(), url: (s.url ?? '').trim() })).filter((s: any) => s.url) : null }),
   }
 }
 

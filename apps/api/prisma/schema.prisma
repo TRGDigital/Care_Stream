@@ -1152,13 +1152,14 @@ model AuditLog {
 // ─── Blog ─────────────────────────────────────────────────────────────────────
 
 model BlogAuthor {
-  id         String     @id @default(uuid())
-  name       String
-  title      String?
-  photo_url  String?
-  bio        String?
-  created_at DateTime   @default(now())
-  posts      BlogPost[]
+  id           String     @id @default(uuid())
+  name         String
+  title        String?
+  photo_url    String?
+  bio          String?
+  linkedin_url String?
+  created_at   DateTime   @default(now())
+  posts        BlogPost[]
 
   @@map("blog_authors")
 }

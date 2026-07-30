@@ -27,12 +27,26 @@ export function organizationSchema() {
     '@type':      'Organization',
     '@id':        ORG_ID,
     name:         SITE_NAME,
-    legalName:    'CareStreamAI Limited',
+    // CareStreamAI is the brand/product; the operating company is TRG Digital Ltd.
+    legalName:    'TRG Digital Ltd',
     url:          SITE_URL,
     logo:         `${SITE_URL}/logo-color.png`,
     email:        'hello@carestreamai.com',
     description:  'AI-powered policy access and compliance platform for UK care providers: instant, multilingual access to your own policies and training, in the hub or by email.',
-    // sameAs / address / telephone added once the real values are supplied.
+    sameAs:       ['https://www.linkedin.com/company/carestreamai/'],
+    address: {
+      '@type':         'PostalAddress',
+      streetAddress:   'Suite Ra01, 195-197 Wood Street',
+      addressLocality: 'London',
+      addressRegion:   'England',
+      postalCode:      'E17 3NU',
+      addressCountry:  'GB',
+    },
+    identifier: {
+      '@type':      'PropertyValue',
+      propertyID:   'Companies House',
+      value:        '11731704',
+    },
     contactPoint: {
       '@type':       'ContactPoint',
       contactType:   'customer support',
@@ -95,10 +109,27 @@ export function breadcrumbSchema(items: Array<{ name: string; path: string }>) {
   }
 }
 
+// Build a Person entity from a blog author, including credentials the schema
+// can vouch for: job title, photo, bio and a verifiable LinkedIn sameAs.
+export function authorPersonSchema(author: {
+  name: string; title?: string | null; photo_url?: string | null
+  bio?: string | null; linkedin_url?: string | null
+}) {
+  return {
+    '@type':        'Person',
+    name:           author.name,
+    ...(author.title      ? { jobTitle:    author.title } : {}),
+    ...(author.photo_url  ? { image:       author.photo_url } : {}),
+    ...(author.bio        ? { description: author.bio } : {}),
+    ...(author.linkedin_url ? { sameAs: [author.linkedin_url] } : {}),
+    worksFor:       { '@id': ORG_ID },
+  }
+}
+
 export function blogPostingSchema(post: {
   slug: string; title: string; excerpt: string | null; meta_description?: string | null
   feature_image_url: string | null; publication_date: string | null
-  author?: { name: string } | null
+  author?: { name: string; title?: string | null; photo_url?: string | null; bio?: string | null; linkedin_url?: string | null } | null
 }, hasToc = false) {
   return {
     '@context':          'https://schema.org',
@@ -109,7 +140,7 @@ export function blogPostingSchema(post: {
     ...(post.feature_image_url ? { image: [post.feature_image_url] } : {}),
     ...(post.publication_date ? { datePublished: post.publication_date } : {}),
     author:              post.author?.name
-      ? { '@type': 'Person', name: post.author.name }
+      ? authorPersonSchema(post.author)
       : { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },
     publisher:           { '@id': ORG_ID },
     mainEntityOfPage:    `${SITE_URL}/blog/${post.slug}`,

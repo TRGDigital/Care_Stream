@@ -35,18 +35,39 @@ const STATUS_COLOURS: Record<string, string> = {
 
 // ─── Author form ──────────────────────────────────────────────────────────────
 
-const EMPTY_AUTHOR = { name: '', title: '', photo_url: '', bio: '' }
+const EMPTY_AUTHOR = { name: '', title: '', photo_url: '', bio: '', linkedin_url: '' }
 
 function AuthorForm({
-  initial, onSave, onCancel, saving,
+  initial, onSave, onCancel, saving, token,
 }: {
   initial?: Partial<BlogAuthor> | null
   onSave:   (data: any) => void
   onCancel: () => void
   saving:   boolean
+  token:    string | null
 }) {
   const [form, setForm] = useState({ ...EMPTY_AUTHOR, ...initial })
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !token) return
+    setPhotoUploading(true); setPhotoError('')
+    try {
+      const prepared = await resizeImageForUpload(file, 640, 0.85)
+      const url = await uploadBlogImage(token, prepared)
+      set('photo_url', url)
+    } catch (err: any) {
+      setPhotoError(err?.message ?? 'Upload failed')
+    } finally {
+      setPhotoUploading(false)
+      if (photoInputRef.current) photoInputRef.current.value = ''
+    }
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 bg-neutral-light p-5 space-y-4">
@@ -62,7 +83,7 @@ function AuthorForm({
             className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Photo URL</label>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">Photo</label>
           <div className="flex items-center gap-3">
             <div className="shrink-0">
               {form.photo_url ? (
@@ -79,9 +100,24 @@ function AuthorForm({
                 </div>
               )}
             </div>
-            <input value={form.photo_url ?? ''} onChange={e => set('photo_url', e.target.value)} placeholder="Paste image URL…"
-              className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <div className="flex-1 space-y-1.5">
+              <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              <button type="button" onClick={() => photoInputRef.current?.click()} disabled={photoUploading || !token}
+                className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
+                {photoUploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                {photoUploading ? 'Uploading…' : (form.photo_url ? 'Replace photo' : 'Upload photo')}
+              </button>
+              <input value={form.photo_url ?? ''} onChange={e => set('photo_url', e.target.value)} placeholder="…or paste an image URL"
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+              {photoError && <p className="text-xs text-red-500">{photoError}</p>}
+            </div>
           </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">LinkedIn profile URL</label>
+          <input value={form.linkedin_url ?? ''} onChange={e => set('linkedin_url', e.target.value)} placeholder="https://www.linkedin.com/in/…"
+            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          <p className="mt-1 text-xs text-neutral-mid">Adds a verified author link to the article's structured data (helps E-E-A-T).</p>
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-semibold text-neutral-mid">Short bio</label>
@@ -2226,6 +2262,7 @@ export default function BlogPage() {
                 onSave={saveAuthor}
                 onCancel={() => setShowAuthor(false)}
                 saving={savingAuthor}
+                token={token}
               />
             )}
 
@@ -2247,6 +2284,7 @@ export default function BlogPage() {
                             onSave={saveAuthor}
                             onCancel={() => setEditAuthor(null)}
                             saving={savingAuthor}
+                            token={token}
                           />
                         </div>
                       ) : (

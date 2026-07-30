@@ -32,7 +32,7 @@ interface Post {
   cta_text: string | null
   cta_url: string | null
   faqs: Faq[] | null
-  author: { name: string; title: string | null; photo_url: string | null; bio: string | null } | null
+  author: { name: string; title: string | null; photo_url: string | null; bio: string | null; linkedin_url: string | null } | null
 }
 
 async function getPost(slug: string): Promise<Post | null> {

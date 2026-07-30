@@ -128,7 +128,10 @@ export async function MarketingFooter() {
         {/* Bottom row */}
         <div className="flex flex-col gap-4 text-xs text-gray-500 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-1">
-            <p>© 2026 CareStreamAI Limited. All rights reserved.</p>
+            <p>© 2026 CareStreamAI. All rights reserved.</p>
+            <p>
+              CareStreamAI is a product of TRG Digital Ltd, registered in England &amp; Wales (company no. 11731704). Registered office: Suite Ra01, 195-197 Wood Street, London, England, E17 3NU.
+            </p>
             <p>
               CareStreamAI is not a registered legal or compliance advisor. CQC Readiness Reports provide factual audit data and do not constitute a guarantee of any inspection rating or regulatory outcome.
             </p>

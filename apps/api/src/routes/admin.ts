@@ -2934,23 +2934,24 @@ adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {
 })
 
 adminRouter.post('/blog/authors', async (req: Request, res: Response) => {
-  const { name, title, photo_url, bio } = req.body ?? {}
+  const { name, title, photo_url, bio, linkedin_url } = req.body ?? {}
   if (!name?.trim()) { err(res, 'VALIDATION_ERROR', 'Author name is required.'); return }
   const author = await (prisma as any).blogAuthor.create({
-    data: { name: name.trim(), title: title?.trim() || null, photo_url: photo_url || null, bio: bio?.trim() || null },
+    data: { name: name.trim(), title: title?.trim() || null, photo_url: photo_url || null, bio: bio?.trim() || null, linkedin_url: linkedin_url?.trim() || null },
   })
   ok(res, { author })
 })
 
 adminRouter.patch('/blog/authors/:id', async (req: Request, res: Response) => {
-  const { name, title, photo_url, bio } = req.body ?? {}
+  const { name, title, photo_url, bio, linkedin_url } = req.body ?? {}
   const author = await (prisma as any).blogAuthor.update({
     where: { id: req.params.id },
     data:  {
-      ...(name      !== undefined && { name:      name.trim()        }),
-      ...(title     !== undefined && { title:     title?.trim() || null }),
-      ...(photo_url !== undefined && { photo_url: photo_url || null  }),
-      ...(bio       !== undefined && { bio:       bio?.trim() || null  }),
+      ...(name         !== undefined && { name:         name.trim()          }),
+      ...(title        !== undefined && { title:        title?.trim() || null }),
+      ...(photo_url    !== undefined && { photo_url:    photo_url || null     }),
+      ...(bio          !== undefined && { bio:          bio?.trim() || null    }),
+      ...(linkedin_url !== undefined && { linkedin_url: linkedin_url?.trim() || null }),
     },
   })
   ok(res, { author })

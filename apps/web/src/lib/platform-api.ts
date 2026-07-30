@@ -244,12 +244,13 @@ export interface TenantAuditStats {
 }
 
 export interface BlogAuthor {
-  id:         string
-  name:       string
-  title:      string | null
-  photo_url:  string | null
-  bio:        string | null
-  created_at: string
+  id:           string
+  name:         string
+  title:        string | null
+  photo_url:    string | null
+  bio:          string | null
+  linkedin_url: string | null
+  created_at:   string
 }
 
 export interface BlogPost {

@@ -756,7 +756,7 @@ export function createApiClient(token: string) {
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
       getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
-      saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
+      saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; answer_na?: boolean; no_compliant?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
       complete: (id: string) => apiFetch<{ run: any; recommendations: string; approval_required?: boolean }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       actionPlan: (id: string) => apiFetch<{ status: string; actions: Array<{ id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }> }>(`/audits/runs/${id}/action-plan`, token),

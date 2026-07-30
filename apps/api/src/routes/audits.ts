@@ -14,7 +14,7 @@ import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
-import { extractDraftActions, createDraftActionPlan, generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary, listActionPlans } from '../services/audits/action-plan'
+import { generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary, listActionPlans } from '../services/audits/action-plan'
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../services/email/outbound'
 
 export const auditsRouter = Router()
@@ -1652,26 +1652,32 @@ auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, 
   // Upsert all answers in a single transaction — one round-trip, atomic
   // (no half-saved audit state) instead of N sequential awaits.
   await (prisma as any).$transaction(
-    answers.map((a: any) =>
-      (prisma as any).auditAnswer.upsert({
+    answers.map((a: any) => {
+      // no_compliant only applies to a "No" answer (was it the correct/compliant answer,
+      // or a genuine gap?). For Yes / N/A / unanswered it's always cleared to null.
+      const noCompliant = a.answer_yn === false ? (a.no_compliant ?? null) : null
+      return (prisma as any).auditAnswer.upsert({
         where:  { run_id_question_id: { run_id: run.id, question_id: a.question_id } },
         create: {
           run_id:       run.id,
           question_id:  a.question_id,
           answer_yn:    a.answer_yn    ?? null,
           answer_na:    a.answer_na    ?? false,
+          no_compliant: noCompliant,
           outcome_text: a.outcome_text ?? null,
           actions_text: a.actions_text ?? null,
         },
         update: {
           ...(a.answer_yn    !== undefined && { answer_yn:    a.answer_yn }),
           ...(a.answer_na    !== undefined && { answer_na:    a.answer_na }),
+          // Reset no_compliant whenever the yes/no/na answer is touched, then set it for a No.
+          ...((a.answer_yn !== undefined || a.answer_na !== undefined || a.no_compliant !== undefined) && { no_compliant: noCompliant }),
           ...(a.outcome_text !== undefined && { outcome_text: a.outcome_text }),
           ...(a.actions_text !== undefined && { actions_text: a.actions_text }),
           answered_at: new Date(),
         },
       })
-    )
+    })
   )
 
   ok(res, { saved: answers.length })
@@ -1804,7 +1810,9 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
         let yn: string
         if (a?.answer_na)                yn = 'N/A'
         else if (a?.answer_yn === true)  yn = 'YES'
-        else if (a?.answer_yn === false) yn = 'NO'
+        else if (a?.answer_yn === false) yn = a?.no_compliant === true
+          ? 'NO (this is the correct/compliant answer for this question — NOT a gap, no action required)'
+          : 'NO (a gap — the control is not in place or has not been completed)'
         else                             yn = 'NOT ANSWERED'
         lines.push(`  - ${q.question_text}: ${yn}`)
         if (a?.outcome_text) lines.push(`    Outcome: ${a.outcome_text}`)
@@ -1848,10 +1856,15 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     filledPrompt += `\n\nCQC SINGLE ASSESSMENT FRAMEWORK — QUALITY STATEMENTS (reference)\n${qsBlock}\n\nWhen writing the CQC COMPLIANCE NOTES section, link each failed or weak item to the most relevant quality statement above, naming it exactly (for example "Safe environments"). Use only statements from this list and do not invent others.`
   }
 
-  // In parallel with the recommendations: score the CQC domains (Readiness Score) and extract a
-  // draft action plan. Both never throw.
+  // Always-applied rule (independent of the editable prompt): honour how each NO is labelled.
+  // The auditor has classified every NO as either the correct/compliant answer or a genuine gap.
+  filledPrompt += `\n\nIMPORTANT — how to read "NO" answers: each NO above is labelled. A NO marked "(this is the correct/compliant answer...)" is the RIGHT answer for that question and is NOT a gap — do NOT raise a risk, recommendation or action for it, and do NOT let it lower your assessment. Only treat a NO marked "(a gap...)", plus weak or missing findings, as gaps to address.`
+
+  // Alongside the recommendations, score the CQC domains (Readiness Score). Never throws.
+  // NOTE: the draft action plan is deliberately NOT generated here — it is an explicit,
+  // opt-in second step (POST /runs/:id/action-plan/generate) that builds from these finished
+  // recommendations, so completing an audit only ever produces the AI recommendations first.
   const scoresP  = scoreAuditDomains(run.template.name, auditResultsText)
-  const actionsP = extractDraftActions(run.template.name, auditResultsText)
 
   let recommendations: string
   try {
@@ -1861,7 +1874,6 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
   }
   const scores = await scoresP
   await (prisma as any).auditRun.update({ where: { id: runId }, data: { ai_recommendations: recommendations, ...(scores ? { readiness_scores: scores } : {}) } })
-  await createDraftActionPlan(tenantId, runId, await actionsP).catch(e => console.error('[audits] draft action plan:', e))
   trackAiAction(tenantId, 'audit_recs', runId)
   return recommendations
 }

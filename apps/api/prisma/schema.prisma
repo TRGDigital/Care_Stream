@@ -2061,6 +2061,10 @@ model AuditAnswer {
   question_id  String
   answer_yn    Boolean?
   answer_na    Boolean       @default(false)
+  // For a "No" answer only: is the No the correct/compliant answer (true = not a gap,
+  // scores as a pass) or a genuine gap / not-in-place (false = a failure point)? Null
+  // when the answer isn't No. Required to be set for a No before the audit can complete.
+  no_compliant Boolean?
   outcome_text String?
   actions_text String?
   answered_at  DateTime      @default(now())

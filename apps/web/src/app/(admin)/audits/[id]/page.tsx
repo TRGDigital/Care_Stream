@@ -166,7 +166,7 @@ export default function AuditRunPage() {
   const { id }                      = useParams<{ id: string }>()
   const router                      = useRouter()
   const [run,       setRun]         = useState<any>(null)
-  const [answers,   setAnswers]     = useState<Map<string, { answer_yn: boolean|null; answer_na: boolean; outcome_text: string; actions_text: string }>>(new Map())
+  const [answers,   setAnswers]     = useState<Map<string, { answer_yn: boolean|null; answer_na: boolean; no_compliant: boolean|null; outcome_text: string; actions_text: string }>>(new Map())
   const [summary,   setSummary]     = useState({ strengths: '', improvements: '', actions_deadline: '' })
   const [loading,   setLoading]     = useState(true)
   const [section,   setSection]     = useState(0)
@@ -180,6 +180,21 @@ export default function AuditRunPage() {
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
+  // A yes/no question is only "fully answered" once a No has also been classified as compliant
+  // (correct answer) or a gap — that classification is required before the audit can complete.
+  const ynFullyAnswered = (a: any): boolean => {
+    if (!a) return false
+    if (a.answer_na === true) return true
+    if (a.answer_yn === true) return true
+    if (a.answer_yn === false) return a.no_compliant === true || a.no_compliant === false
+    return false
+  }
+
+  // A "pass" for the section score: a Yes, or a No the auditor confirmed is the correct/compliant
+  // answer (not a gap). N/A is excluded from the score elsewhere.
+  const ynPass = (a: any): boolean =>
+    !!a && !a.answer_na && (a.answer_yn === true || (a.answer_yn === false && a.no_compliant === true))
+
   // Load run
   useEffect(() => {
     if (!api) return
@@ -192,6 +207,7 @@ export default function AuditRunPage() {
         map.set(a.question_id, {
           answer_yn:    a.answer_yn    ?? null,
           answer_na:    a.answer_na    ?? false,
+          no_compliant: a.no_compliant ?? null,
           outcome_text: a.outcome_text ?? '',
           actions_text: a.actions_text ?? '',
         })
@@ -222,14 +238,15 @@ export default function AuditRunPage() {
     }, 600)
   }, [id, api]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function updateAnswer(qId: string, field: 'answer_yn' | 'answer_na' | 'outcome_text' | 'actions_text', value: any) {
+  function updateAnswer(qId: string, field: 'answer_yn' | 'answer_na' | 'no_compliant' | 'outcome_text' | 'actions_text', value: any) {
     setAnswers(prev => {
-      const existing = prev.get(qId) ?? { answer_yn: null, answer_na: false, outcome_text: '', actions_text: '' }
-      // Selecting Yes/No clears N/A; selecting N/A clears Yes/No
+      const existing = prev.get(qId) ?? { answer_yn: null, answer_na: false, no_compliant: null, outcome_text: '', actions_text: '' }
+      // Selecting Yes/No clears N/A; selecting N/A clears Yes/No. no_compliant only applies to a
+      // "No" answer, so it's cleared whenever the answer becomes Yes / N/A (or is unset).
       const patch = field === 'answer_yn'
-        ? { answer_yn: value, answer_na: false }
+        ? { answer_yn: value, answer_na: false, no_compliant: value === false ? existing.no_compliant : null }
         : field === 'answer_na'
-          ? { answer_na: value, answer_yn: null }
+          ? { answer_na: value, answer_yn: null, no_compliant: null }
           : { [field]: value }
       const updated = { ...existing, ...patch }
       const next    = new Map(prev)
@@ -272,15 +289,12 @@ export default function AuditRunPage() {
   const allQuestions  = sections.flatMap((s: any) => s.questions)
   // Only yes/no questions are mandatory for progress — findings/free_text are always considered answered
   const ynQuestions   = allQuestions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
-  const answeredCount = ynQuestions.filter((q: any) => {
-    const a = answers.get(q.id)
-    return a?.answer_na === true || (a?.answer_yn !== null && a?.answer_yn !== undefined)
-  }).length
+  const answeredCount = ynQuestions.filter((q: any) => ynFullyAnswered(answers.get(q.id))).length
   const totalQ   = ynQuestions.length
   const progress = totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 100
 
   const currentSection = sections[section]
-  const yesCount = currentSection?.questions.filter((q: any) => answers.get(q.id)?.answer_yn === true && !answers.get(q.id)?.answer_na).length ?? 0
+  const yesCount = currentSection?.questions.filter((q: any) => ynPass(answers.get(q.id))).length ?? 0
   const ynCount  = currentSection?.questions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na').length ?? 0
 
   return (
@@ -366,12 +380,11 @@ export default function AuditRunPage() {
         {/* Section tabs */}
         <div className="mb-4 flex flex-wrap gap-2">
           {sections.map((s: any, i: number) => {
-            const sectionYes   = s.questions.filter((q: any) => answers.get(q.id)?.answer_yn === true && !answers.get(q.id)?.answer_na).length
+            const sectionYes   = s.questions.filter((q: any) => ynPass(answers.get(q.id))).length
             const sectionTotal = s.questions.length
             const sectionDone  = s.questions.filter((q: any) => {
-              const a = answers.get(q.id)
               if (q.question_type === 'findings' || q.question_type === 'free_text') return true
-              return a?.answer_na === true || (a?.answer_yn !== null && a?.answer_yn !== undefined)
+              return ynFullyAnswered(answers.get(q.id))
             }).length
             return (
               <button
@@ -419,14 +432,14 @@ export default function AuditRunPage() {
 
             <div className="divide-y divide-gray-50">
               {currentSection.questions.map((q: any, qi: number) => {
-                const ans = answers.get(q.id) ?? { answer_yn: null, answer_na: false, outcome_text: '', actions_text: '' }
+                const ans = answers.get(q.id) ?? { answer_yn: null, answer_na: false, no_compliant: null, outcome_text: '', actions_text: '' }
                 const isYN = q.question_type === 'yes_no' || q.question_type === 'yes_no_na'
                 const showFields = isYN
                   ? (ans.answer_yn !== null || ans.answer_na)
                   : true
 
                 return (
-                  <div key={q.id} className={clsx('px-6 py-5', isYN && ans.answer_yn === false && !ans.answer_na && 'bg-red-50/30')}>
+                  <div key={q.id} className={clsx('px-6 py-5', isYN && ans.answer_yn === false && !ans.answer_na && (ans.no_compliant === false ? 'bg-red-50/30' : ans.no_compliant === null ? 'bg-amber-50/40' : ''))}>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-neutral-dark">
@@ -445,6 +458,44 @@ export default function AuditRunPage() {
                         />
                       )}
                     </div>
+
+                    {/* When the answer is No, the auditor must say whether No is the correct answer
+                        (compliant, scores as a pass) or a genuine gap (a failure point). Required. */}
+                    {isYN && ans.answer_yn === false && !ans.answer_na && (
+                      <div className={clsx('mt-3 rounded-lg border p-3', ans.no_compliant === null ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-gray-50')}>
+                        <p className="mb-2 text-xs font-medium text-neutral-dark">
+                          Is &ldquo;No&rdquo; the correct answer, or a gap?
+                          {ans.no_compliant === null && <span className="ml-1 font-semibold text-amber-700">Please choose one to continue.</span>}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={isCompleted}
+                            onClick={() => updateAnswer(q.id, 'no_compliant', true)}
+                            className={clsx('rounded-btn border px-3 py-1.5 text-xs font-medium disabled:opacity-50',
+                              ans.no_compliant === true ? 'border-green-600 bg-green-600 text-white' : 'border-gray-300 text-neutral-mid hover:border-green-500 hover:text-green-700')}
+                          >
+                            No is the correct answer
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isCompleted}
+                            onClick={() => updateAnswer(q.id, 'no_compliant', false)}
+                            className={clsx('rounded-btn border px-3 py-1.5 text-xs font-medium disabled:opacity-50',
+                              ans.no_compliant === false ? 'border-rose-600 bg-rose-600 text-white' : 'border-gray-300 text-neutral-mid hover:border-rose-500 hover:text-rose-700')}
+                          >
+                            No — we don&rsquo;t have this / haven&rsquo;t done it
+                          </button>
+                        </div>
+                        <p className="mt-2 text-[11px] text-neutral-mid">
+                          {ans.no_compliant === true
+                            ? 'Recorded as compliant — this won’t count against the section score.'
+                            : ans.no_compliant === false
+                              ? 'Recorded as a gap — it’ll be included in the AI recommendations.'
+                              : ''}
+                        </p>
+                      </div>
+                    )}
 
                     {showFields && (
                       <div className={clsx('mt-3 grid grid-cols-1 gap-3', !isYN || q.question_type === 'free_text' ? '' : 'sm:grid-cols-2')}>

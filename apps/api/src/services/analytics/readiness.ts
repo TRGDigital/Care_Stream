@@ -31,7 +31,7 @@ const bandOf = (s: number | null): string =>
 
 // ── Audit signal: AI-score one audit's domains (called when recommendations are generated) ──
 export async function scoreAuditDomains(auditName: string, auditResultsText: string): Promise<Record<string, number | null> | null> {
-  const system = 'You score how ready a UK care service looks against the CQC Single Assessment Framework, based on one completed audit. Score strictly from the evidence: NO answers, gaps and weak findings lower the score.'
+  const system = 'You score how ready a UK care service looks against the CQC Single Assessment Framework, based on one completed audit. Score strictly from the evidence. Each NO answer is labelled: a NO marked "(this is the correct/compliant answer...)" is the right answer and must NOT lower the score; only NO answers marked "(a gap...)", together with weak or missing findings, lower the score.'
   const user = [
     `Below is a completed "${auditName}" audit. For each CQC key question this audit gives evidence about, give a readiness score from 0 to 100 (higher is better). If the audit gives no evidence about a key question, use null. Also give an overall score (0-100) for what this audit shows.`,
     'Return ONLY JSON with these keys: {"overall": <0-100>, "safe": <0-100 or null>, "effective": <0-100 or null>, "caring": <0-100 or null>, "responsive": <0-100 or null>, "well_led": <0-100 or null>}',

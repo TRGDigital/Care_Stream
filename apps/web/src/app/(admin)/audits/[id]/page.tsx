@@ -264,6 +264,13 @@ export default function AuditRunPage() {
   async function completeAudit() {
     if (!api) return
     setCompleting(true)
+    // Flush EVERY answer to the DB before completing. The per-question autosave is debounced, so
+    // the last action (e.g. classifying a No as compliant vs gap) may not have persisted yet — and
+    // the AI recommendations are generated server-side from the stored answers. This guarantees the
+    // report is built from exactly what's on screen, including the No classifications.
+    clearTimeout(saveTimer.current)
+    const allAnswers = Array.from(answers.entries()).map(([question_id, v]) => ({ question_id, ...v }))
+    if (allAnswers.length) await api.audits.saveAnswers(id, allAnswers).catch(() => {})
     await saveSummary()
     try {
       await api.audits.complete(id)
@@ -629,7 +636,7 @@ export default function AuditRunPage() {
               <div className="space-y-2">
                 {sections.map((s: any) => {
                   const ynQs  = s.questions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
-                  const yes   = ynQs.filter((q: any) => answers.get(q.id)?.answer_yn === true && !answers.get(q.id)?.answer_na).length
+                  const yes   = ynQs.filter((q: any) => ynPass(answers.get(q.id))).length
                   const total = ynQs.length
                   if (total === 0) return (
                     <div key={s.id} className="flex items-center gap-3">

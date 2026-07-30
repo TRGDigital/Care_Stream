@@ -701,7 +701,7 @@ function PostForm({
       </AccordionSection>
 
       {/* ── Sources ───────────────────────────────────────── */}
-      <AccordionSection title="Sources" description="Authoritative references (CQC, gov.uk, NICE…) shown at the end of the post and added to its structured data">
+      <AccordionSection title="Source links" description="Add authoritative references (CQC, gov.uk, NICE…). These appear as a 'Sources' list at the end of the post and are added to its structured data." defaultOpen>
         <div className="space-y-3">
           {sources.length === 0 && (
             <p className="text-xs text-neutral-mid">No sources yet. Add citations to strengthen the article&rsquo;s credibility (E-E-A-T).</p>

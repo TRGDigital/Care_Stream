@@ -94,7 +94,16 @@ export default function PoliciesPage() {
 
   function loadReviewSummary() {
     if (!session?.accessToken) return
-    createApiClient(session.accessToken).analytics.policyDocumentsSummary().then(d => setReviewSummary(d?.documents ?? [])).catch(() => {})
+    createApiClient(session.accessToken).analytics.policyDocumentsSummary()
+      .then(d => {
+        const list = d?.documents ?? []
+        persistentCache.set(`admin-policies-review-${userId}`, list)
+        // Only replace state when the data actually changed, so the periodic refresh (every few
+        // seconds while a policy is processing) doesn't re-render and flicker the "Adopted changes
+        // to review" panel. Same cache-and-hydrate treatment as the policies list and due-review.
+        setReviewSummary(prev => (JSON.stringify(prev) === JSON.stringify(list) ? prev : list))
+      })
+      .catch(() => {})
   }
 
   // Policies due for review — fetched on its own (not tangled with the heavy list load), cached
@@ -153,6 +162,13 @@ export default function PoliciesPage() {
     loadDueReview()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken, userId])
+
+  // Adopted-changes-to-review panel: hydrate from cache instantly so it doesn't blank/flicker on load.
+  useEffect(() => {
+    const cached = persistentCache.get<typeof reviewSummary>(`admin-policies-review-${userId}`)
+    if (cached) setReviewSummary(cached)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // While any policy is still processing, refresh the list + duplicate flags every
   // few seconds so a newly-detected duplicate surfaces without a manual reload.

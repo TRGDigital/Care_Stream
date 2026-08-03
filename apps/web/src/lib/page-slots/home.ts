@@ -7,10 +7,9 @@ import type { SlotDef } from './types'
 // marquee, imported settings/blog/FAQ) are intentionally NOT slotted.
 export const HOME_SLOTS: SlotDef[] = [
   // Hero
-  { key: 'hero.h1.lead', group: 'Hero', label: 'Headline — lead word', default: 'Your' },
-  { key: 'hero.h1.mid', group: 'Hero', label: 'Headline — after animated word', default: 'are written in English.' },
-  { key: 'hero.h1.emphasis', group: 'Hero', label: 'Headline — emphasis', default: "Your workforce isn't." },
-  { key: 'hero.sub', group: 'Hero', label: 'Sub-paragraph', multiline: true, default: 'CareStream gives every member of your team instant, accurate answers from your own policies, training, audits and CQC tools, in the language they think in. Powered by your documents. Never the internet.' },
+  { key: 'hero.h1.lead', group: 'Hero', label: 'Headline — before animated word', default: 'Your policies, turned into' },
+  { key: 'hero.h1.emphasis', group: 'Hero', label: 'Headline — emphasis', default: 'In any language.' },
+  { key: 'hero.sub', group: 'Hero', label: 'Sub-paragraph', multiline: true, default: 'Upload your policies once. CareStream turns them into answers your staff can use at 3am, training modules, audits and inspection evidence. Grounded in your documents. Never the internet.' },
   { key: 'hero.cta.primary', group: 'Hero', label: 'Primary CTA', default: 'Book a Free Demo' },
   { key: 'hero.cta.secondary', group: 'Hero', label: 'Secondary CTA', default: 'See how it works' },
   { key: 'hero.trust1', group: 'Hero', label: 'Trust chip 1', default: '14-day free trial' },

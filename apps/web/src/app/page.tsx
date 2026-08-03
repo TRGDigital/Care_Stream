@@ -80,10 +80,10 @@ function Hero({ s }: { s: Slot }) {
               {/* Invisible sizer — reserves the tallest layout (longest phrase) so the image
                   and all the text around the hero never shift while the word animates. */}
               <span aria-hidden="true" className="invisible">
-                Your Risk Assessments are written in English. Your workforce isn&apos;t.
+                Your policies, turned into instant answers. In any language.
               </span>
               <span className="absolute inset-x-0 bottom-0">
-                {s('hero.h1.lead')} <Typewriter words={['Care Policies', 'HR Policies', 'Care Plans', 'Procedures', 'Risk Assessments']} rounds={2} /> {s('hero.h1.mid')}{' '}
+                {s('hero.h1.lead')} <Typewriter words={['instant answers.', 'staff training.', 'care audits.', 'CQC evidence.']} rounds={2} />{' '}
                 <span style={{ color: '#E8850A' }}>{s('hero.h1.emphasis')}</span>
               </span>
             </h1>

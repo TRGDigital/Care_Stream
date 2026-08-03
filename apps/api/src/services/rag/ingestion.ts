@@ -245,6 +245,29 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
       })
 
       console.log(`[ingestion] Superseded previous version: ${previous_version_policy_id}`)
+
+      // f. Carry the /gaps policy-review over to the new version. The review document (the
+      // editable content the tenant works on in /gaps) and the cached lint result are keyed by
+      // policy_id, so on a version swap they stay pinned to the now-superseded record and /gaps
+      // keeps serving the OLD text. Drop the old version's review document (its cascade removes
+      // the adopted changes, which only applied to the previous text) plus its stale lint result,
+      // then seed a fresh review document from the newly extracted text so the tenant can edit the
+      // new version immediately. The lint findings repopulate when the tenant re-runs the analysis.
+      try {
+        await (prisma as any).policyDocument.deleteMany({ where: { policy_id: { in: [previous_version_policy_id, policy_id] } } })
+        await (prisma as any).policyLintResult.deleteMany({ where: { tenant_id, policy_id: previous_version_policy_id } })
+        await (prisma as any).policyDocument.create({
+          data: {
+            tenant_id, policy_id,
+            original_content: cleanText, draft_content: cleanText,
+            version: `${version}.0`, approval_status: 'draft',
+          },
+        })
+        console.log(`[ingestion] Reset /gaps review document onto new version ${policy_id}`)
+      } catch (e) {
+        // Non-fatal — the review document is lazily created on first open as a fallback.
+        console.warn(`[ingestion] Could not reset review document for ${policy_id}: ${String(e)}`)
+      }
     }
 
     // e. Mark new policy active

@@ -6,7 +6,7 @@
 // cached per policy (policy_lint_results) so we don't re-read every document from S3 each time.
 
 import { prisma } from '../../db/client'
-import { resolvedPolicyIds, clearResolutions } from './review-resolutions'
+import { resolvedPolicyIds } from './review-resolutions'
 import { downloadExtractedText } from '../storage/s3'
 import { mapLimit } from '../../lib/translate'
 import {
@@ -198,8 +198,8 @@ export async function scanTenantPolicies(tenantId: string, policyIds?: string[])
     ])
   }
 
-  // A fresh scan supersedes any "mark as updated" for the scanned policies.
-  await clearResolutions(tenantId, 'out_of_date', targeted ? policyIds : undefined)
+  // NOTE: "mark as updated" resolutions survive a re-scan — they lapse on their own
+  // when the policy content changes or the review interval passes (review-resolutions.ts).
 
   return clean.map(r => ({ ...r, scanned_at: new Date(now).toISOString() }))
 }

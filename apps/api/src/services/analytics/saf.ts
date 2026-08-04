@@ -3,7 +3,7 @@
 // crosswalk (never re-matched). Grouped by key question. This is the SAF readiness data layer.
 
 import { prisma } from '../../db/client'
-import { resolvedPolicyIds, clearResolutions } from './review-resolutions'
+import { resolvedPolicyIds } from './review-resolutions'
 import { callClaude } from '../ai/claude'
 import { downloadExtractedText } from '../storage/s3'
 import { checkAiCreditLimit, logAiCredit } from '../../lib/plan-limits'
@@ -229,8 +229,8 @@ async function statementsForPolicy(tenantId: string, policyId: string): Promise<
 // (active policies) so the frontend can drive a progress bar over the batches.
 export async function startPolicyWordingAlignment(tenantId: string): Promise<{ total: number }> {
   await (prisma as any).policyWordingAlignment.deleteMany({ where: { tenant_id: tenantId } })
-  // A fresh wording run supersedes any "mark as updated" for this section.
-  await clearResolutions(tenantId, 'wording')
+  // NOTE: "mark as updated" resolutions survive a fresh run — they lapse on their own
+  // when the policy content changes or the review interval passes (review-resolutions.ts).
   const total = await (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } })
   return { total }
 }

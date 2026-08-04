@@ -1895,7 +1895,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
         },
       },
       answers: true,
-      tenant:  { select: { name: true } },
+      tenant:  { select: { name: true, logo_url: true } },
     },
   })
   if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
@@ -1969,7 +1969,7 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
         },
       },
       answers: true,
-      tenant:  { select: { name: true } },
+      tenant:  { select: { name: true, logo_url: true } },
     },
   })
   if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
@@ -1978,6 +1978,7 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
 
   const report = {
     organisation:      run.tenant.name,
+    logo_url:          run.tenant.logo_url ?? null,
     audit_name:        run.template.name,
     subject:           run.room_number,
     subject_room:      run.subject_room,

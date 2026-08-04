@@ -172,16 +172,23 @@ a, button { transition: all 0.18s ease; }
    before window.print() — the height/overflow reset is what stops the app's
    fixed-height shell clipping the print to a single page. */
 @media print {
+  /* Print in NORMAL flow (the app chrome is print:hidden) rather than an
+     absolutely-positioned overlay — Chrome ignores break-inside rules inside
+     absolute positioning, which sliced rows mid-line at page breaks. Un-clip
+     the app shell's nested fixed-height scroll containers so the report
+     paginates naturally. */
   body.printing-audit, html:has(body.printing-audit) { height: auto !important; overflow: visible !important; }
-  body.printing-audit * { visibility: hidden !important; }
-  body.printing-audit #audit-print-area,
-  body.printing-audit #audit-print-area * { visibility: visible !important; }
+  body.printing-audit div, body.printing-audit main {
+    height: auto !important; max-height: none !important; overflow: visible !important;
+  }
+  body.printing-audit main { padding: 0 !important; }
   body.printing-audit #audit-print-area {
-    position: absolute; left: 0; top: 0; width: 100%; margin: 0;
     -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
   }
-  /* Keep table rows and section blocks whole across page breaks. */
+  /* Keep table rows and the summary/sign-off boxes whole across page breaks;
+     repeat the column headers on every page. */
   body.printing-audit #audit-print-area tr { page-break-inside: avoid; break-inside: avoid; }
+  body.printing-audit #audit-print-area .avoid-break { page-break-inside: avoid; break-inside: avoid; }
   body.printing-audit #audit-print-area thead { display: table-header-group; }
 }
 

@@ -608,11 +608,37 @@ export default function SettingsPage() {
     setPolicyCategories(updated); saveCategories(updated)
   }
 
+  // Downscale big logos in the browser first (max 800px, PNG keeps transparency).
+  // Phone/AI exports are often 5MB+, which the hosting platform rejects before our
+  // API can respond — the user just sees "Failed to fetch". The server re-encodes
+  // to 400px WebP anyway, so nothing is lost. SVGs pass through untouched.
+  async function optimiseLogo(file: File): Promise<File> {
+    if (file.type === 'image/svg+xml' || file.size < 512 * 1024) return file
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      const scale = Math.min(1, 800 / Math.max(bmp.width, bmp.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bmp.width * scale))
+      canvas.height = Math.max(1, Math.round(bmp.height * scale))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return file
+      ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+      bmp.close()
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
+      if (!blob || blob.size >= file.size) return file
+      return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.png', { type: 'image/png' })
+    } catch { return file }
+  }
+
   async function uploadLogo(file: File) {
     if (!session?.accessToken) return
     setLogoError(''); setLogoUploading(true)
     try {
-      const data = await createApiClient(session.accessToken).settings.uploadLogo(file)
+      const optimised = await optimiseLogo(file)
+      if (optimised.size > 2 * 1024 * 1024) {
+        throw new Error('That image is too large even after optimising — please use an image under 2 MB.')
+      }
+      const data = await createApiClient(session.accessToken).settings.uploadLogo(optimised)
       setLogoUrl(data.logo_url)
     } catch (e: any) { setLogoError(e.message ?? 'Failed to upload logo.') }
     finally { setLogoUploading(false) }

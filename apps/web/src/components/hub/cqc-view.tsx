@@ -22,11 +22,22 @@ type Delivery = {
   sent_at:     string
   answered_at: string | null
   attempts?:   number
-  question:    { domain: string; model_answer?: string | null }
+  question:    { domain: string; model_answer?: string | null; job_role?: string | null }
   source_en?:  { question: string; model_answer: string; feedback: string }
 }
 
 const RETRY_BELOW = 60
+
+// Tag so staff can tell role-specific questions from the general set everyone gets.
+function RoleTag({ jobRole }: { jobRole?: string | null }) {
+  return (
+    <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+      jobRole ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-gray-200 bg-gray-50 text-gray-500'
+    }`}>
+      {jobRole ? `${jobRole} question` : 'General question'}
+    </span>
+  )
+}
 
 const DOMAIN_LABELS: Record<string, string> = {
   safe: 'Safe', effective: 'Effective', caring: 'Caring',
@@ -434,7 +445,10 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                         {items.map(d => (
                           <div key={d.id} className="border-b border-gray-50 last:border-0">
                             <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 py-3.5 text-left">
-                              <p className="flex-1 min-w-0 text-sm font-medium text-gray-900 leading-snug">{viewD(d).rephrased_q}</p>
+                              <div className="flex-1 min-w-0">
+                                <RoleTag jobRole={d.question.job_role} />
+                                <p className="mt-1 text-sm font-medium text-gray-900 leading-snug">{viewD(d).rephrased_q}</p>
+                              </div>
                               {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}
                             </button>
                             {expanded === d.id && (
@@ -485,11 +499,14 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
                           <div key={d.id} className="border-b border-gray-50 last:border-0">
                             <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="w-full flex items-start justify-between gap-3 py-3.5 text-left">
                               <div className="flex-1 min-w-0">
-                                {d.score !== null && (
-                                  <span className={`mb-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${scoreBadge(d.score)}`}>
-                                    {d.score}/100 — {scoreLabel(d.score)}
-                                  </span>
-                                )}
+                                <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                                  <RoleTag jobRole={d.question.job_role} />
+                                  {d.score !== null && (
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${scoreBadge(d.score)}`}>
+                                      {d.score}/100 — {scoreLabel(d.score)}
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-sm font-medium text-gray-900 leading-snug">{viewD(d).rephrased_q}</p>
                               </div>
                               {expanded === d.id ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" /> : <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />}

@@ -137,7 +137,7 @@ function PrintReport({ report }: { report: any }) {
         )
       })}
 
-      <div className="mt-6 border border-gray-300 p-3">
+      <div className="avoid-break mt-6 border border-gray-300 p-3">
         <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Audit Summary</h2>
         <p className="font-semibold">Strengths identified:</p>
         <p className="mb-3 min-h-[40px]">{report.strengths ?? ''}</p>
@@ -147,15 +147,8 @@ function PrintReport({ report }: { report: any }) {
         <p>{report.actions_deadline ?? ''}</p>
       </div>
 
-      {report.ai_recommendations && (
-        <div className="mt-6 border border-gray-300 p-3">
-          <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">AI Recommendations</h2>
-          <AuditRecs text={report.ai_recommendations} className="!text-xs" />
-        </div>
-      )}
-
       {report.approved_by_name && (
-        <div className="mt-6 border border-gray-300 p-3">
+        <div className="avoid-break mt-6 border border-gray-300 p-3">
           <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Manager sign-off</h2>
           <p className="text-xs">
             Approved by <strong>{report.approved_by_name}</strong>{report.approved_by_role ? ` (${report.approved_by_role})` : ''}

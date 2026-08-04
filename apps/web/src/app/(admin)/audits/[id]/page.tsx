@@ -73,19 +73,21 @@ const AUDIT_SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staf
 function PrintReport({ report }: { report: any }) {
   return (
     <div id="audit-print-area" className="hidden print:block p-8 font-sans text-sm text-black">
-      <h1 className="mb-1 text-2xl font-bold">
-        {report.audit_name}
-        {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
-      </h1>
-      <p className="mb-0.5 text-base">{report.organisation}</p>
+      <div className="mb-3 border-b-4 border-teal pb-2">
+        <h1 className="mb-1 text-2xl font-bold text-neutral-dark">
+          {report.audit_name}
+          {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
+        </h1>
+        <p className="text-base font-semibold text-teal-dark">{report.organisation}</p>
+      </div>
       <table className="mb-4 w-full border-collapse text-xs">
         <tbody>
           <tr>
-            <td className="border border-gray-300 px-2 py-1 font-semibold">Auditor</td>
+            <td className="border border-gray-300 bg-teal-light px-2 py-1 font-semibold">Auditor</td>
             <td className="border border-gray-300 px-2 py-1">{report.auditor_name ?? ''}</td>
-            <td className="border border-gray-300 px-2 py-1 font-semibold">Position</td>
+            <td className="border border-gray-300 bg-teal-light px-2 py-1 font-semibold">Position</td>
             <td className="border border-gray-300 px-2 py-1">{report.auditor_role ?? ''}</td>
-            <td className="border border-gray-300 px-2 py-1 font-semibold">Audit date</td>
+            <td className="border border-gray-300 bg-teal-light px-2 py-1 font-semibold">Audit date</td>
             <td className="border border-gray-300 px-2 py-1">
               {new Date(report.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             </td>
@@ -97,16 +99,16 @@ function PrintReport({ report }: { report: any }) {
         const hasYN = section.questions.some((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
         return (
           <div key={section.title} className="mb-4">
-            <h2 className="mb-1 bg-gray-100 px-2 py-1 text-sm font-bold uppercase">{section.title}</h2>
+            <h2 className="mb-1 bg-teal px-2 py-1.5 text-sm font-bold uppercase text-white">{section.title}</h2>
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 px-2 py-1 text-left">Auditing task</th>
-                  {hasYN && <th className="w-8 border border-gray-300 px-2 py-1 text-center">Yes</th>}
-                  {hasYN && <th className="w-8 border border-gray-300 px-2 py-1 text-center">No</th>}
-                  {hasYN && <th className="w-8 border border-gray-300 px-2 py-1 text-center">N/A</th>}
-                  <th className="border border-gray-300 px-2 py-1 text-left">{hasYN ? 'Outcome of audit' : 'Findings'}</th>
-                  <th className="border border-gray-300 px-2 py-1 text-left">Actions to be taken</th>
+                  <th className="border border-gray-300 bg-teal-light px-2 py-1 text-left">Auditing task</th>
+                  {hasYN && <th className="w-8 border border-gray-300 bg-teal-light px-2 py-1 text-center">Yes</th>}
+                  {hasYN && <th className="w-8 border border-gray-300 bg-teal-light px-2 py-1 text-center">No</th>}
+                  {hasYN && <th className="w-8 border border-gray-300 bg-teal-light px-2 py-1 text-center">N/A</th>}
+                  <th className="border border-gray-300 bg-teal-light px-2 py-1 text-left">{hasYN ? 'Outcome of audit' : 'Findings'}</th>
+                  <th className="border border-gray-300 bg-teal-light px-2 py-1 text-left">Actions to be taken</th>
                 </tr>
               </thead>
               <tbody>
@@ -114,7 +116,7 @@ function PrintReport({ report }: { report: any }) {
                   const isYN = q.question_type === 'yes_no' || q.question_type === 'yes_no_na'
                   return (
                     <tr key={q.id}>
-                      <td className="border border-gray-300 px-2 py-1">{q.question}</td>
+                      <td className="border border-gray-300 bg-gray-50 px-2 py-1 font-medium">{q.question}</td>
                       {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === true  && !q.answer_na ? '✓' : ''}</td>}
                       {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === false && !q.answer_na ? '✓' : ''}</td>}
                       {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_na ? '✓' : ''}</td>}
@@ -130,7 +132,7 @@ function PrintReport({ report }: { report: any }) {
       })}
 
       <div className="mt-6 border border-gray-300 p-3">
-        <h2 className="mb-2 text-sm font-bold uppercase">Audit Summary</h2>
+        <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Audit Summary</h2>
         <p className="font-semibold">Strengths identified:</p>
         <p className="mb-3 min-h-[40px]">{report.strengths ?? ''}</p>
         <p className="font-semibold">Areas requiring improvement:</p>
@@ -141,14 +143,14 @@ function PrintReport({ report }: { report: any }) {
 
       {report.ai_recommendations && (
         <div className="mt-6 border border-gray-300 p-3">
-          <h2 className="mb-2 text-sm font-bold uppercase">AI Recommendations</h2>
+          <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">AI Recommendations</h2>
           <AuditRecs text={report.ai_recommendations} className="!text-xs" />
         </div>
       )}
 
       {report.approved_by_name && (
         <div className="mt-6 border border-gray-300 p-3">
-          <h2 className="mb-2 text-sm font-bold uppercase">Manager sign-off</h2>
+          <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Manager sign-off</h2>
           <p className="text-xs">
             Approved by <strong>{report.approved_by_name}</strong>{report.approved_by_role ? ` (${report.approved_by_role})` : ''}
             {report.approved_at ? ` on ${new Date(report.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.

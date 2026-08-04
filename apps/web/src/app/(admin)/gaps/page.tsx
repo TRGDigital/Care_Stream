@@ -546,6 +546,8 @@ export default function GapsPage() {
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
       {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} />}
 
+      {session?.accessToken && <RecentlyUpdatedSection token={session.accessToken} />}
+
       {/* ── Policy update matrix ──────────────────────────────────────────── */}
       {session?.accessToken && <PolicyMatrixSection token={session.accessToken} userId={userId} />}
 
@@ -672,6 +674,75 @@ export default function GapsPage() {
 // Deterministic, zero-AI scan of the whole policy library against the stale-signal catalogue.
 // Reads the cached result instantly; "Scan policies" re-runs it. Sits under Regulation coverage.
 type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyLint']>>
+
+// "Recently updated" — the policies the team has marked as updated (out-of-date and
+// CQC-wording sections). Attestations survive re-scans and lapse automatically when a
+// policy's content changes or its review interval passes; Undo puts one straight back.
+function RecentlyUpdatedSection({ token }: { token: string }) {
+  type Row = { policy_id: string; policy_name: string; section: 'out_of_date' | 'wording'; resolved_by: string | null; resolved_at: string }
+  const [open, setOpen] = useState(false)
+  const [rows, setRows] = useState<Row[]>([])
+  const [busy, setBusy] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    try { const r = await createApiClient(token).analytics.reviewResolutions(); setRows(r.resolutions) } catch { /* quiet */ }
+  }, [token])
+  useEffect(() => { load() }, [load])
+
+  async function undo(row: Row) {
+    setBusy(`${row.policy_id}:${row.section}`)
+    try {
+      const api = createApiClient(token)
+      if (row.section === 'out_of_date') await api.analytics.lintReopen(row.policy_id)
+      else await api.analytics.wordingReopen(row.policy_id)
+      setRows(rs => rs.filter(r => !(r.policy_id === row.policy_id && r.section === row.section)))
+    } catch { /* quiet */ }
+    finally { setBusy(null) }
+  }
+
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  return (
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
+        <CheckCircle2 size={16} className="shrink-0 text-green-600" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Recently updated</h2>
+        {rows.length > 0 && (
+          <span className="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">{rows.length}</span>
+        )}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 px-6 py-4">
+          <p className="mb-3 text-xs text-neutral-mid">
+            Policies your team has marked as updated. They stay off the lists — even after a re-scan — until the
+            policy&apos;s content changes or its review interval passes. Use Undo to put one back for review.
+          </p>
+          {rows.length === 0 ? (
+            <p className="text-sm text-neutral-mid">Nothing marked as updated yet.</p>
+          ) : (
+            <ul className="divide-y divide-gray-50">
+              {rows.map(r => (
+                <li key={`${r.policy_id}:${r.section}`} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{r.policy_name}</p>
+                    <p className="text-xs text-neutral-mid">
+                      {r.section === 'out_of_date' ? 'Out-of-date content' : 'CQC wording'} · marked by {r.resolved_by ?? 'admin'} on {fmt(r.resolved_at)}
+                    </p>
+                  </div>
+                  <button onClick={() => undo(r)} disabled={busy === `${r.policy_id}:${r.section}`}
+                    className="shrink-0 rounded-btn border border-gray-200 px-2.5 py-1 text-[11px] font-semibold text-neutral-mid hover:border-amber-400 hover:text-amber-700 disabled:opacity-50">
+                    {busy === `${r.policy_id}:${r.section}` ? 'Undoing…' : 'Undo'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function PolicyHealthSection({ token, userId }: { token: string; userId: string }) {
   const [data, setData] = useState<LintData | null>(null)

@@ -13,7 +13,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
-import { resolveSection, reopenSection, clearResolutions } from '../services/analytics/review-resolutions'
+import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, repropagatePolicy, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
@@ -624,6 +624,12 @@ analyticsRouter.post('/gaps/detect-section', requireAdmin, async (req: Request, 
     const r = await detectPolicySection(tenantId, policyId, anchor, { context, granularity })
     ok(res, { section_text: r.section ?? '', found: !!r.section, reason: r.reason ?? null })
   } catch (e: any) { err(res, 'DETECT_FAILED', e.message ?? 'Could not detect the section.', 500) }
+})
+
+// "Recently updated" — the still-active mark-as-updated attestations, so admins can
+// verify what they've already dealt with (and undo one if needed).
+analyticsRouter.get('/review-resolutions', requireAdmin, async (_req: Request, res: Response) => {
+  ok(res, { resolutions: await listResolutions(getTenantId()) })
 })
 
 // "Mark as updated" — hide a policy from the out-of-date list until the next scan re-flags it.

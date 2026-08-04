@@ -1036,6 +1036,8 @@ export function createApiClient(token: string) {
       policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
       // "Mark as updated" — hide a policy from a section list until the next scan re-flags it.
       lintResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
+      reviewResolutions: () =>
+        apiFetch<{ resolutions: Array<{ policy_id: string; policy_name: string; section: 'out_of_date' | 'wording'; resolved_by: string | null; resolved_at: string }> }>('/analytics/review-resolutions', token),
       lintReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),
       wordingResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
       wordingReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),

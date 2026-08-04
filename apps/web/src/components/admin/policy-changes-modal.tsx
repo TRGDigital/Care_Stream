@@ -79,6 +79,40 @@ function findBlock(root: HTMLElement, anchor: string): HTMLElement | null {
   return target
 }
 
+// A change's old_text often spans a heading plus several paragraphs (a whole section).
+// Match a run of consecutive blocks whose combined text contains the anchor, so amends
+// and removals land on the right content instead of falling back to append-at-end.
+function findBlockRange(root: HTMLElement, anchor: string): HTMLElement[] | null {
+  const single = findBlock(root, anchor)
+  if (single) return [single]
+  const needle = norm(anchor)
+  if (needle.length < 12) return null
+  const blocks = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,td,blockquote')) as HTMLElement[]
+  for (let i = 0; i < blocks.length; i++) {
+    const startText = norm(blocks[i].textContent || '')
+    if (!startText || !needle.startsWith(startText.slice(0, Math.min(24, startText.length)))) continue
+    let acc = ''
+    const range: HTMLElement[] = []
+    for (let j = i; j < blocks.length && range.length < 40; j++) {
+      const t = norm(blocks[j].textContent || '')
+      range.push(blocks[j])
+      if (t) acc = acc ? `${acc} ${t}` : t
+      if (acc.includes(needle)) return range
+      if (acc.length > needle.length + 400) break
+    }
+  }
+  return null
+}
+
+// A visible record of removed content when the original blocks can't be located
+// (tracked mode only): the reviewer still sees WHAT was removed.
+function removalNotice(oldText: string): HTMLElement {
+  const p = document.createElement('p')
+  p.textContent = oldText
+  p.className = 'rounded bg-red-50 px-1 py-0.5 whitespace-pre-line line-through text-red-400'
+  return p
+}
+
 function findHeading(root: HTMLElement, anchor: string): HTMLElement | null {
   const q = norm(anchor)
   if (!q) return null
@@ -140,11 +174,25 @@ function applyChanges(root: HTMLElement, changes: Change[], tracked: boolean) {
   stripSourceUrl(root)
   for (const c of changes) {
     if (c.placement === 'amend' && c.old_text) {
-      const block = findBlock(root, c.old_text)
-      if (block) {
-        block.textContent = c.new_text
-        if (tracked) block.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
-        block.classList.add('whitespace-pre-line')
+      const range = findBlockRange(root, c.old_text)
+      const isRemoval = !norm(c.new_text)
+      if (range) {
+        if (isRemoval) {
+          // Tracked: show the removed content struck through in red so the reviewer can
+          // see exactly what goes. Clean: it is simply gone.
+          if (tracked) range.forEach(b => b.classList.add('bg-red-50', 'rounded', 'px-1', 'py-0.5', 'line-through', 'text-red-400'))
+          else range.forEach(b => b.remove())
+        } else {
+          const first = range[0]
+          first.textContent = c.new_text
+          if (tracked) first.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
+          first.classList.add('whitespace-pre-line')
+          range.slice(1).forEach(b => b.remove())
+        }
+      } else if (isRemoval) {
+        // Original blocks not found (formatting differences): in tracked mode still show
+        // what was removed; in clean mode there is nothing to render.
+        if (tracked) insertBeforeEndMatter(root, removalNotice(c.old_text))
       } else {
         insertBeforeEndMatter(root, contentBlock(c.new_text, tracked))
       }

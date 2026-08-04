@@ -649,7 +649,7 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
     const [deliveries, user, tenant] = await Promise.all([
       (prisma as any).cqcStaffDelivery.findMany({
         where:   { user_id: userId },
-        include: { question: { select: { domain: true, model_answer: true } } },
+        include: { question: { select: { domain: true, job_role: true, model_answer: true } } },
         orderBy: [{ status: 'asc' }, { sent_at: 'desc' }],
       }),
       (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true } }),
@@ -659,7 +659,7 @@ cqcQuestionsRouter.get('/my-deliveries', async (req: Request, res: Response) => 
     // Hide the model answer until the question has been answered.
     let safe = (deliveries as any[]).map(d => ({
       ...d,
-      question: { domain: d.question.domain, model_answer: d.status === 'evaluated' ? d.question.model_answer : null },
+      question: { domain: d.question.domain, job_role: d.question.job_role ?? null, model_answer: d.status === 'evaluated' ? d.question.model_answer : null },
     }))
     // English source of each field, snapshotted before translation for the hub's
     // "suggest a better translation" control.

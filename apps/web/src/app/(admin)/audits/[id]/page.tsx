@@ -73,12 +73,18 @@ const AUDIT_SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staf
 function PrintReport({ report }: { report: any }) {
   return (
     <div id="audit-print-area" className="hidden print:block p-8 font-sans text-sm text-black">
-      <div className="mb-3 border-b-4 border-teal pb-2">
-        <h1 className="mb-1 text-2xl font-bold text-neutral-dark">
-          {report.audit_name}
-          {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
-        </h1>
-        <p className="text-base font-semibold text-teal-dark">{report.organisation}</p>
+      <div className="mb-3 flex items-start justify-between gap-6 border-b-4 border-teal pb-2">
+        <div className="min-w-0">
+          <h1 className="mb-1 text-2xl font-bold text-neutral-dark">
+            {report.audit_name}
+            {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
+          </h1>
+          <p className="text-base font-semibold text-teal-dark">{report.organisation}</p>
+        </div>
+        {report.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={report.logo_url} alt={`${report.organisation} logo`} className="h-14 w-auto max-w-[180px] shrink-0 object-contain" />
+        )}
       </div>
       <table className="mb-4 w-full border-collapse text-xs">
         <tbody>

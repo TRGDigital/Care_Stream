@@ -11,6 +11,7 @@ import {
   Info, Loader2, Plus, Sparkles, Trash2, Users, UserPlus,
 } from 'lucide-react'
 import { DOMAINS, type Delivery, type Question, type StaffUser } from '@/components/admin/cqc-questions/cqc-shared'
+import { RoleBasedSend } from '@/components/admin/cqc-questions/role-based-send'
 
 // Modals are lazy-loaded — only fetched when a dialog is opened.
 const AddQuestionModal = dynamic(() => import('@/components/admin/cqc-questions/cqc-modals').then(m => m.AddQuestionModal), { ssr: false })
@@ -193,7 +194,12 @@ function QuestionBankTab({
                   <p className="px-5 py-4 text-sm text-neutral-mid">No questions in this domain yet.</p>
                 ) : qs.map(q => (
                   <div key={q.id} className="px-5 py-4 space-y-2.5">
-                    <p className="text-sm font-medium text-neutral-dark">{q.question}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium text-neutral-dark">{q.question}</p>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${q.job_role ? 'bg-teal-light text-teal' : 'bg-gray-100 text-neutral-mid'}`}>
+                        {q.job_role ?? 'All roles'}
+                      </span>
+                    </div>
 
                     {/* Model answer — the factual standard the AI scores staff answers against. */}
                     <div className="rounded-lg border border-teal/15 bg-teal-light/15 px-3 py-2.5">
@@ -623,11 +629,13 @@ export default function CqcQuestionsPage() {
         <>
           <HelpAccordion title="How CQC Staff Prep works">
             <p><strong className="text-neutral-dark">Question Bank</strong> — 21 pre-loaded CQC inspector-style questions are organised across five domains: Safe, Effective, Caring, Responsive, and Well-led. Each question shows its <strong className="text-neutral-dark">model answer</strong> and a tracking line (how many staff it&apos;s been assigned to, how many answered, and their average score). Add your own with <strong className="text-neutral-dark">Add question</strong>, or use <strong className="text-neutral-dark">Generate with AI</strong> to create a whole batch at once (1 AI credit per question generated).</p>
+            <p><strong className="text-neutral-dark">Role-matched sending</strong> — the quickest way to run a prep round: pick the staff first in <strong className="text-neutral-dark">Send role-matched questions</strong> and the AI generates questions that fit each person&apos;s job (the chef gets food safety, nurses get medicines) plus a core set everyone should be able to answer, then sends them in one step.</p>
             <p><strong className="text-neutral-dark">Assigning questions</strong> — use <strong className="text-neutral-dark">Assign to all staff</strong> to send a question to everyone, or <strong className="text-neutral-dark">Assign to specific staff</strong> to pick individuals. The system automatically rephrases the question before delivery so staff cannot memorise the exact wording.</p>
             <p><strong className="text-neutral-dark">How staff answer</strong> — staff write free-text answers in their portal (not multiple choice). There are no trick questions; they are assessed on whether they demonstrate the right knowledge and approach.</p>
             <p><strong className="text-neutral-dark">AI scoring</strong> — each answer is evaluated by AI against the model answer and given a score from 0 to 100 with constructive feedback. Scores appear in the Performance tab straight away.</p>
             <p><strong className="text-neutral-dark">Review &amp; retry</strong> — after answering, staff see the model answer. If they scored below 60 they can review it and <strong className="text-neutral-dark">try again</strong> in their own words; the new attempt is re-scored and replaces the old one, so weak answers get a built-in follow-up automatically.</p>
           </HelpAccordion>
+          <RoleBasedSend staff={staff} token={token} onSent={() => load()} />
           <QuestionBankTab
             questions={questions} staff={staff} deliveries={deliveries} token={token}
             onDeactivate={id => setQuestions(qs => qs.filter(q => q.id !== id))}

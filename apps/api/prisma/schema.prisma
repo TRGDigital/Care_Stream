@@ -1838,6 +1838,7 @@ model CqcStaffQuestion {
   id           String             @id @default(uuid())
   tenant_id    String
   domain       String             // 'safe' | 'effective' | 'caring' | 'responsive' | 'well_led'
+  job_role     String?            // role the question was generated for (matches users.job_role); null = suitable for all staff
   question     String
   model_answer String
   is_active    Boolean            @default(true)

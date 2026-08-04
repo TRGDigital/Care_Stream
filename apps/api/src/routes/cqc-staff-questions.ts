@@ -236,6 +236,56 @@ async function ensureSeeded(tenantId: string) {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // GET /cqc-questions — list all active questions (auto-seeds on first call)
+// ─── Role-aware generation ─────────────────────────────────────────────────────
+// Appended AFTER the (possibly tenant-customised) prompt template so role
+// targeting works even when a tenant saved their own prompt years ago.
+function audienceBlock(jobRole: string | null): string {
+  return jobRole
+    ? `\n\nCRITICAL — AUDIENCE: every question will be sent to a member of staff whose job is: ${jobRole}. Only ask questions a CQC inspector would realistically ask someone in that job about THEIR OWN daily work and responsibilities (for example: a Chef gets food safety, allergens, IDDSI textures and kitchen hygiene; a Domestic gets COSHH, cleaning schedules and infection control; a Nurse gets medicines management and clinical care; an Activities Coordinator gets meaningful engagement and person-centred activity). Never ask about duties this role does not perform. Write every model answer from that role's perspective.`
+    : `\n\nAUDIENCE: these questions go to ALL staff regardless of role — nurses, carers, kitchen, domestic, maintenance and admin alike. Only ask universal questions that every employee in a care home must be able to answer: safeguarding, whistleblowing, fire and emergency procedures, dignity and respect, basic infection control, and how to raise concerns. Model answers must make sense for any role.`
+}
+
+// Generate a batch of questions for one audience and save them to the bank.
+// Returns the created rows. Charges one AI credit per question (same as
+// generate-batch). Used by /generate-for-staff once per role group.
+async function generateRoleBatch(
+  tenantId: string,
+  count: number,
+  jobRole: string | null,
+  avoid: string,
+): Promise<any[]> {
+  const promptTemplate = await getPrompt('cqc_question_batch_generation', DEFAULT_QUESTION_BATCH_PROMPT)
+  const userMessage = promptTemplate
+    .replace('{{count}}', String(count))
+    .replace('{{domain_instruction}}', `Spread the ${count} questions as evenly as possible across the five CQC domains (safe, effective, caring, responsive, well_led).`)
+    .replace('{{topic_instruction}}', '')
+    .replace('{{avoid_list}}', avoid)
+    + audienceBlock(jobRole)
+
+  const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, feature: 'cqc' })
+  const start = text.indexOf('['), end = text.lastIndexOf(']')
+  let parsed: Array<{ domain: string; question: string; model_answer: string }> = []
+  try { parsed = JSON.parse(text.slice(start, end + 1)) } catch { return [] }
+
+  const VALID = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+  const clean = (Array.isArray(parsed) ? parsed : [])
+    .filter(q => q && typeof q.question === 'string' && q.question.trim() && typeof q.model_answer === 'string' && q.model_answer.trim())
+    .map(q => ({
+      domain:       VALID.includes(q.domain) ? q.domain : 'safe',
+      question:     q.question.trim(),
+      model_answer: q.model_answer.trim(),
+    }))
+    .slice(0, count)
+
+  const created = await Promise.all(clean.map(q =>
+    (prisma as any).cqcStaffQuestion.create({
+      data: { tenant_id: tenantId, domain: q.domain, job_role: jobRole, question: q.question, model_answer: q.model_answer },
+    })
+  ))
+  await Promise.all(created.map((q: any) => logAiCredit(tenantId, 'cqc_questions', q.id)))
+  return created
+}
+
 cqcQuestionsRouter.get('/', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
@@ -301,6 +351,105 @@ cqcQuestionsRouter.post('/generate', requireAdmin, async (req: Request, res: Res
   }
 })
 
+// POST /cqc-questions/generate-for-staff — the role-based flow: pick WHO first,
+// then generate questions matched to each recipient's job role (plus a small
+// core set every role must be able to answer) and deliver in one step.
+cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const body = req.body ?? {}
+  const userIds: string[] = Array.isArray(body.user_ids) ? body.user_ids : []
+  const perRole = Math.max(1, Math.min(5, parseInt(body.per_role, 10) || 3))
+  const coreCount = Math.max(0, Math.min(3, parseInt(body.core, 10) ?? 2))
+  const channel = typeof body.channel === 'string' ? body.channel : 'portal'
+  if (userIds.length === 0) return err(res, 'MISSING_FIELDS', 'user_ids array required', 400)
+
+  try {
+    try { await checkAiCreditLimit(tenantId) }
+    catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+
+    // Tenant-scoped recipients, grouped by their job role.
+    const members = await (prisma as any).user.findMany({
+      where:  { id: { in: userIds }, tenant_id: tenantId },
+      select: { id: true, name: true, job_role: true },
+    })
+    if (members.length === 0) return err(res, 'NO_VALID_RECIPIENTS', 'No recipients belong to this organisation.', 400)
+
+    const groups = new Map<string, string[]>()
+    for (const m of members as any[]) {
+      const role = (m.job_role ?? '').trim() || 'General care staff'
+      if (!groups.has(role)) groups.set(role, [])
+      groups.get(role)!.push(m.id)
+    }
+
+    // Existing bank feeds the avoid-list so we do not regenerate near-duplicates.
+    const existing = await (prisma as any).cqcStaffQuestion.findMany({
+      where: { tenant_id: tenantId, is_active: true }, select: { question: true }, take: 60,
+    }).catch(() => [])
+    let avoid = ((existing as any[]).map((q: any) => `- ${q.question}`).join('\n') || '(none yet)').slice(0, 4000)
+
+    // Generate per role (sequentially so each batch avoids the previous one's questions),
+    // then the core set for everyone.
+    const roleResults: Array<{ role: string; users: string[]; questions: any[] }> = []
+    for (const [role, uids] of groups) {
+      const qs = await generateRoleBatch(tenantId, perRole, role, avoid)
+      avoid = (avoid + '\n' + qs.map((q: any) => `- ${q.question}`).join('\n')).slice(-4000)
+      roleResults.push({ role, users: uids, questions: qs })
+    }
+    const allUserIds = (members as any[]).map((m: any) => m.id)
+    const coreQuestions = coreCount > 0 ? await generateRoleBatch(tenantId, coreCount, null, avoid) : []
+
+    // Deliver: each question is rephrased once (anti-rote, same as single deliver)
+    // and sent to its audience. Existing copies are never duplicated.
+    let delivered = 0
+    const perUserCount = new Map<string, number>()
+    const deliverQuestion = async (q: any, uids: string[]) => {
+      const rephrased = await callClaude(
+        'You are a CQC interview preparation assistant. Rephrase questions slightly to test the same knowledge without allowing rote memorisation.',
+        `Rephrase the following CQC inspector question in a slightly different way that tests the same knowledge and competency. Keep it open-ended and realistic. Return only the rephrased question, nothing else.\n\nOriginal: ${q.question}`,
+        { maxTokens: 200, feature: 'cqc' },
+      ).catch(() => q.question as string)
+      const resDel = await (prisma as any).cqcStaffDelivery.createMany({
+        data: uids.map((uid: string) => ({ tenant_id: tenantId, question_id: q.id, user_id: uid, rephrased_q: rephrased, channel })),
+        skipDuplicates: true,
+      })
+      delivered += resDel.count
+      for (const uid of uids) perUserCount.set(uid, (perUserCount.get(uid) ?? 0) + 1)
+    }
+    for (const r of roleResults) for (const q of r.questions) await deliverQuestion(q, r.users)
+    for (const q of coreQuestions) await deliverQuestion(q, allUserIds)
+
+    ok(res, {
+      delivered,
+      roles: roleResults.map(r => ({ role: r.role, recipients: r.users.length, questions: r.questions.length })),
+      core_questions: coreQuestions.length,
+      credits_used: roleResults.reduce((n, r) => n + r.questions.length, 0) + coreQuestions.length,
+    }, 201)
+
+    // One notification per person, with their total question count.
+    if (delivered > 0) {
+      const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+      const portalUrl = siteUrl()
+      const notifyIds = allUserIds.filter(uid => (perUserCount.get(uid) ?? 0) > 0)
+      // notifyUsers doesn't expose the user id to the send callback, so group
+      // recipients by how many questions they received and notify per group.
+      const byCount = new Map<number, string[]>()
+      for (const uid of notifyIds) {
+        const c = perUserCount.get(uid) ?? 1
+        if (!byCount.has(c)) byCount.set(c, [])
+        byCount.get(c)!.push(uid)
+      }
+      for (const [count, ids] of byCount) {
+        notifyUsers(tenantId, 'cqc_staff_prep', ids, (email, name) =>
+          sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: count, portalUrl })
+        ).catch(e => console.error('[cqc/generate-for-staff] Notify error:', e))
+      }
+      sendPushToUsers(notifyIds, { title: 'New CQC practice questions', body: 'Tap to answer your CQC inspector-style practice questions.', url: '/cqc', tag: 'cqc-prep' }).catch(() => {})
+    }
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e.message, 500)
+  }
+})
+
 // POST /cqc-questions/generate-batch — AI generates a batch of NEW questions and
 // saves them to the bank. Charges one AI credit per question generated.
 cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, res: Response) => {
@@ -313,6 +462,7 @@ cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, re
   const count = Math.max(1, Math.min(10, parseInt(body.count, 10) || 5))
   const specificDomain = typeof body.domain === 'string' && VALID.includes(body.domain) ? body.domain : null
   const topic = typeof body.topic === 'string' ? body.topic.trim() : ''
+  const jobRole = typeof body.job_role === 'string' && body.job_role.trim() ? body.job_role.trim() : null
 
   try {
     try { await checkAiCreditLimit(tenantId) }
@@ -335,6 +485,7 @@ cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, re
       .replace('{{domain_instruction}}', domainInstruction)
       .replace('{{topic_instruction}}', topicInstruction)
       .replace('{{avoid_list}}', avoid)
+      + (jobRole !== null || body.for_all_roles ? audienceBlock(jobRole) : '')
 
     const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 4000, feature: 'cqc' })
     let parsed: Array<{ domain: string; question: string; model_answer: string }>
@@ -357,7 +508,7 @@ cqcQuestionsRouter.post('/generate-batch', requireAdmin, async (req: Request, re
     if (clean.length === 0) return err(res, 'GENERATE_FAILED', 'No questions were generated — please try again', 500)
 
     const created = await Promise.all(clean.map(q =>
-      (prisma as any).cqcStaffQuestion.create({ data: { tenant_id: tenantId, domain: q.domain, question: q.question, model_answer: q.model_answer } })
+      (prisma as any).cqcStaffQuestion.create({ data: { tenant_id: tenantId, domain: q.domain, job_role: jobRole, question: q.question, model_answer: q.model_answer } })
     ))
     // One AI credit per question generated (consistent with the single-question generate).
     await Promise.all(created.map((q: any) => logAiCredit(tenantId, 'cqc_questions', q.id)))

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { CheckCircle2, ChevronDown, Loader2, Sparkles, Users } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
-import type { StaffUser } from './cqc-shared'
+import { DOMAINS, type Domain, type StaffUser } from './cqc-shared'
 
 // Role-matched CQC prep: pick WHO first, then the AI generates questions that fit
 // each person's job (chef → food safety, nurse → medicines…) plus a small core
@@ -12,6 +12,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
   const [open, setOpen]         = useState(true)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [perRole, setPerRole]   = useState(3)
+  const [domains, setDomains]   = useState<Set<Domain>>(new Set(DOMAINS.map(d => d.key)))
   const [core, setCore]         = useState(2)
   const [sending, setSending]   = useState(false)
   const [error, setError]       = useState('')
@@ -57,6 +58,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
     try {
       const res = await createApiClient(token).cqcQuestions.generateForStaff({
         user_ids: Array.from(selected), per_role: perRole, core,
+        domains: domains.size === DOMAINS.length ? undefined : Array.from(domains),
       })
       setResult(res)
       setSelected(new Set())
@@ -115,6 +117,38 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
             })}
           </div>
 
+          {/* Domain scope */}
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-medium text-neutral-dark">CQC domains to draw questions from</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDomains(prev => (prev.size === DOMAINS.length ? new Set() : new Set(DOMAINS.map(d => d.key))))}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  domains.size === DOMAINS.length ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-mid hover:border-teal hover:text-teal'
+                }`}
+              >
+                All 5 domains
+              </button>
+              {DOMAINS.map(d => {
+                const on = domains.has(d.key)
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setDomains(prev => { const next = new Set(prev); next.has(d.key) ? next.delete(d.key) : next.add(d.key); return next })}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      on ? `${d.bg} ${d.color} border-current` : 'border-gray-200 text-neutral-mid hover:text-neutral-dark'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                )
+              })}
+            </div>
+            {domains.size === 0 && <p className="mt-1 text-xs text-red-600">Pick at least one domain.</p>}
+          </div>
+
           {/* Options */}
           <div className="mb-4 flex flex-wrap items-end gap-4">
             <label className="text-xs font-medium text-neutral-dark">
@@ -137,7 +171,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
               )}
               <button
                 onClick={send}
-                disabled={sending || selected.size === 0}
+                disabled={sending || selected.size === 0 || domains.size === 0}
                 className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
               >
                 {sending ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />}

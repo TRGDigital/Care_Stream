@@ -253,11 +253,19 @@ async function generateRoleBatch(
   count: number,
   jobRole: string | null,
   avoid: string,
+  domains: string[] | null = null,
 ): Promise<any[]> {
+  const DOMAIN_LABEL: Record<string, string> = { safe: 'Safe', effective: 'Effective', caring: 'Caring', responsive: 'Responsive', well_led: 'Well-led' }
+  const scope = domains && domains.length > 0 && domains.length < 5 ? domains : null
+  const domainInstruction = scope
+    ? scope.length === 1
+      ? `All ${count} questions must be for the ${DOMAIN_LABEL[scope[0]]} domain. Set every "domain" field to "${scope[0]}".`
+      : `Only use these CQC domains: ${scope.map(d => `${DOMAIN_LABEL[d]} ("${d}")`).join(', ')}. Spread the ${count} questions across them and set each "domain" field accordingly.`
+    : `Spread the ${count} questions as evenly as possible across the five CQC domains (safe, effective, caring, responsive, well_led).`
   const promptTemplate = await getPrompt('cqc_question_batch_generation', DEFAULT_QUESTION_BATCH_PROMPT)
   const userMessage = promptTemplate
     .replace('{{count}}', String(count))
-    .replace('{{domain_instruction}}', `Spread the ${count} questions as evenly as possible across the five CQC domains (safe, effective, caring, responsive, well_led).`)
+    .replace('{{domain_instruction}}', domainInstruction)
     .replace('{{topic_instruction}}', '')
     .replace('{{avoid_list}}', avoid)
     + audienceBlock(jobRole)
@@ -271,7 +279,9 @@ async function generateRoleBatch(
   const clean = (Array.isArray(parsed) ? parsed : [])
     .filter(q => q && typeof q.question === 'string' && q.question.trim() && typeof q.model_answer === 'string' && q.model_answer.trim())
     .map(q => ({
-      domain:       VALID.includes(q.domain) ? q.domain : 'safe',
+      domain:       scope
+        ? (scope.includes(q.domain) ? q.domain : scope[0])
+        : (VALID.includes(q.domain) ? q.domain : 'safe'),
       question:     q.question.trim(),
       model_answer: q.model_answer.trim(),
     }))
@@ -361,6 +371,10 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
   const perRole = Math.max(1, Math.min(5, parseInt(body.per_role, 10) || 3))
   const coreCount = Math.max(0, Math.min(3, parseInt(body.core, 10) ?? 2))
   const channel = typeof body.channel === 'string' ? body.channel : 'portal'
+  const VALID_DOMAINS = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+  const domains: string[] | null = Array.isArray(body.domains)
+    ? body.domains.filter((d: any) => typeof d === 'string' && VALID_DOMAINS.includes(d))
+    : null
   if (userIds.length === 0) return err(res, 'MISSING_FIELDS', 'user_ids array required', 400)
 
   try {
@@ -391,12 +405,12 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
     // then the core set for everyone.
     const roleResults: Array<{ role: string; users: string[]; questions: any[] }> = []
     for (const [role, uids] of groups) {
-      const qs = await generateRoleBatch(tenantId, perRole, role, avoid)
+      const qs = await generateRoleBatch(tenantId, perRole, role, avoid, domains)
       avoid = (avoid + '\n' + qs.map((q: any) => `- ${q.question}`).join('\n')).slice(-4000)
       roleResults.push({ role, users: uids, questions: qs })
     }
     const allUserIds = (members as any[]).map((m: any) => m.id)
-    const coreQuestions = coreCount > 0 ? await generateRoleBatch(tenantId, coreCount, null, avoid) : []
+    const coreQuestions = coreCount > 0 ? await generateRoleBatch(tenantId, coreCount, null, avoid, domains) : []
 
     // Deliver: each question is rephrased once (anti-rote, same as single deliver)
     // and sent to its audience. Existing copies are never duplicated.

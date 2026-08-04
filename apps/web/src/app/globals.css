@@ -167,6 +167,24 @@ a, button { transition: all 0.18s ease; }
   body.print-staff-record #staff-record-print .info-tip { display: none !important; }
 }
 
+/* Audit report -> native print-to-PDF: print ONLY the report, full width, on as
+   many pages as it needs. Toggled by adding 'printing-audit' to <body> just
+   before window.print() — the height/overflow reset is what stops the app's
+   fixed-height shell clipping the print to a single page. */
+@media print {
+  body.printing-audit, html:has(body.printing-audit) { height: auto !important; overflow: visible !important; }
+  body.printing-audit * { visibility: hidden !important; }
+  body.printing-audit #audit-print-area,
+  body.printing-audit #audit-print-area * { visibility: visible !important; }
+  body.printing-audit #audit-print-area {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  /* Keep table rows and section blocks whole across page breaks. */
+  body.printing-audit #audit-print-area tr { page-break-inside: avoid; break-inside: avoid; }
+  body.printing-audit #audit-print-area thead { display: table-header-group; }
+}
+
 /* Annual-training certificate: print only the certificate sheet. */
 @media print {
   body.printing-cert, html:has(body.printing-cert) { height: auto !important; overflow: visible !important; }

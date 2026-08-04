@@ -72,7 +72,7 @@ const AUDIT_SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staf
 
 function PrintReport({ report }: { report: any }) {
   return (
-    <div className="hidden print:block p-8 font-sans text-sm text-black">
+    <div id="audit-print-area" className="hidden print:block p-8 font-sans text-sm text-black">
       <h1 className="mb-1 text-2xl font-bold">
         {report.audit_name}
         {report.subject ? ` — ${AUDIT_SUBJECT_LABEL[report.subject_scope ?? 'none'] ?? ''} ${report.subject}${report.subject_room ? ` (Room ${report.subject_room})` : ''}` : ''}
@@ -227,6 +227,20 @@ export default function AuditRunPage() {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [id, session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cover browser-menu / Cmd+P printing too: without the body class the app's
+  // fixed-height shell clips the report to a single page.
+  useEffect(() => {
+    const on  = () => document.body.classList.add('printing-audit')
+    const off = () => document.body.classList.remove('printing-audit')
+    window.addEventListener('beforeprint', on)
+    window.addEventListener('afterprint', off)
+    return () => {
+      window.removeEventListener('beforeprint', on)
+      window.removeEventListener('afterprint', off)
+      off()
+    }
+  }, [])
+
   // Debounced auto-save
   const scheduleAutoSave = useCallback((qId: string, value: any) => {
     if (!api) return
@@ -344,7 +358,20 @@ export default function AuditRunPage() {
             )}
             {isCompleted && (
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  // Un-clip the fixed-height app shell so the report prints on
+                  // as many pages as it needs (matches the staff-record flow).
+                  const prevTitle = document.title
+                  document.title = `${(report?.audit_name ?? 'audit').replace(/\s+/g, '-').toLowerCase()}-report`
+                  document.body.classList.add('printing-audit')
+                  const cleanup = () => {
+                    document.body.classList.remove('printing-audit')
+                    document.title = prevTitle
+                    window.removeEventListener('afterprint', cleanup)
+                  }
+                  window.addEventListener('afterprint', cleanup)
+                  window.print()
+                }}
                 className="flex items-center gap-2 rounded-btn border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal hover:text-teal"
               >
                 <Printer size={14} /> Print / save

@@ -5,6 +5,7 @@ export type Domain = 'safe' | 'effective' | 'caring' | 'responsive' | 'well_led'
 export type Question = {
   id:           string
   domain:       Domain
+  job_role?:    string | null
   question:     string
   model_answer: string
   is_active:    boolean

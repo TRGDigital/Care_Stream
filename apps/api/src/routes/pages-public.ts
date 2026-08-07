@@ -19,6 +19,19 @@ publicPagesRouter.get('/footer', async (_req: Request, res: Response) => {
   ok(res, { pages })
 })
 
+// GET /public/site-pages/index — every published CMS content page (those with a
+// body, rendered by the [...slug] catch-all, e.g. /client-services-agreement).
+// Used by the web sitemap so DB-driven content pages are discoverable without a
+// per-page code change.
+publicPagesRouter.get('/index', async (_req: Request, res: Response) => {
+  const pages = await (prisma as any).sitePage.findMany({
+    where:  { status: 'published', NOT: { content: '' } },
+    select: { path: true, updated_at: true },
+  })
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  ok(res, { pages })
+})
+
 // GET /public/site-pages?path=/help/... — SEO meta for a single published page
 publicPagesRouter.get('/', async (req: Request, res: Response) => {
   const path = String(req.query.path ?? '').trim()

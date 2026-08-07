@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { SETTINGS_LIST } from '@/lib/settings/list'
+import { HELP_ARTICLE_PATHS } from '@/lib/help-articles'
 
 // Canonical host is www (the apex 308-redirects to it). The sitemap MUST use www
 // or Google reports every entry as "Page with redirect".
@@ -41,7 +42,20 @@ const MARKETING: Entry[] = [
   { url: '/demo',                                  changeFrequency: 'monthly', priority: 0.8 },
   { url: '/contact',                               changeFrequency: 'monthly', priority: 0.6 },
   { url: '/help',                                  changeFrequency: 'monthly', priority: 0.5 },
+  // Legal pages (static routes) — indexable, so they belong in the sitemap.
+  { url: '/privacy',                               changeFrequency: 'yearly',  priority: 0.3 },
+  { url: '/terms',                                 changeFrequency: 'yearly',  priority: 0.3 },
+  { url: '/cookies',                               changeFrequency: 'yearly',  priority: 0.3 },
+  { url: '/dpa',                                   changeFrequency: 'yearly',  priority: 0.3 },
 ]
+
+// Every Help Centre article, derived from the shared manifest so the sitemap
+// stays in lockstep with the pages that actually exist.
+const HELP: Entry[] = HELP_ARTICLE_PATHS.map((url) => ({
+  url,
+  changeFrequency: 'monthly' as const,
+  priority: 0.4,
+}))
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -133,12 +147,30 @@ async function featurePages(): Promise<Entry[]> {
   return []
 }
 
+// CMS content pages are DB-driven (managed in the platform Pages tab) and rendered
+// by the [...slug] catch-all — e.g. /client-services-agreement. Pull the published
+// ones from the API so they appear in the sitemap without a per-page code change.
+async function cmsPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/site-pages/index`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const pages = (await res.json())?.data?.pages ?? []
+      return (pages as Array<{ path?: string }>)
+        .filter((p) => p.path && p.path.startsWith('/'))
+        .map((p) => ({ url: p.path as string, changeFrequency: 'monthly' as const, priority: 0.4 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, buy, blog, collections, features] = await Promise.all([trainingPages(), buyPages(), blogPages(), collectionPages(), featurePages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features].filter((e) => {
+  const [training, buy, blog, collections, features, cms] = await Promise.all([trainingPages(), buyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
+  const entries = [...MARKETING, ...HELP, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features, ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

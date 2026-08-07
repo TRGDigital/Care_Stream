@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://www.carestreamai.com' },
   title:       'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes',
   description: 'Give your entire care team instant access to your policies, training, audits and CQC tools in any language, 24/7. CareStream delivers grounded answers in the hub or by email, never the internet.',
-  openGraph:   { title: 'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes', description: 'One platform for UK care providers: policy access, staff training, audits and CQC preparation. Powered by your documents. Never the internet.', url: 'https://www.carestreamai.com' },
+  openGraph:   {
+    images: ['/og-image.png'], title: 'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes', description: 'One platform for UK care providers: policy access, staff training, audits and CQC preparation. Powered by your documents. Never the internet.', url: 'https://www.carestreamai.com' },
 }
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Mockup } from '@/components/marketing/mockup'

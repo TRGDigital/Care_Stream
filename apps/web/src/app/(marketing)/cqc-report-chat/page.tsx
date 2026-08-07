@@ -10,6 +10,7 @@ export const metadata = {
   title: 'CQC Report Chat | CareStreamAI',
   description: 'Upload your CQC inspection report and ask it anything. CareStream cross-references it against your policies and the CQC framework to find action points, explain findings, and help you draft a factual-accuracy challenge.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'CQC Report Chat | CareStreamAI',
     description: 'Chat with your CQC inspection report, cross-referenced against your policies and the CQC framework.',
     url: 'https://www.carestreamai.com/cqc-report-chat',

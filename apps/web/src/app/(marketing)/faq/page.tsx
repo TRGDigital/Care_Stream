@@ -11,6 +11,7 @@ export const metadata = {
   title: 'FAQ',
   description: 'Everything you need to know about CareStreamAI — how the AI works, what it can and cannot do, data security, pricing, and getting started. Answered plainly.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'CareStreamAI FAQ',
     description: 'Answers to the most common questions about CareStreamAI — plain and direct.',
     url: 'https://www.carestreamai.com/faq',

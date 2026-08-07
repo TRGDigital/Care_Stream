@@ -6,6 +6,7 @@ export const metadata = {
   title: 'Help Centre',
   description: 'Step-by-step guides for getting the most out of CareStreamAI. Covering account setup, policy uploads, staff access, analytics, and CQC compliance features.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'CareStreamAI Help Centre',
     description: 'Guides and support articles for CareStreamAI users.',
     url: 'https://www.carestreamai.com/help',

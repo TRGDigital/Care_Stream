@@ -50,6 +50,7 @@ export const metadata = {
   title:       'Staff Training and Compliance | CareStreamAI',
   description: 'Move beyond annual tick-box training. CareStream generates training modules from your own policies, keeps your team engaged in the hub all year, and tracks compliance with automatic renewal reminders.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'Staff Training and Compliance | CareStreamAI',
     description: 'Training modules built from your own policies, delivered in the hub all year, with a full compliance dashboard.',
     url: 'https://www.carestreamai.com/staff-training',

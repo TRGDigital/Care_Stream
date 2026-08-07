@@ -17,6 +17,7 @@ export const metadata = {
   title: 'Care Policies',
   description: 'Upload your policy library once. Your entire team can then query any policy in 60+ languages, instantly, in the hub or by email, with every interaction logged.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'Care Policies | CareStreamAI',
     description: 'Digital policy access for your entire team, in 60+ languages, in the hub or by email.',
     url: 'https://www.carestreamai.com/care-policies',

@@ -11,6 +11,7 @@ export const metadata = {
   title: 'Contact',
   description: 'Reach the CareStreamAI team with questions about pricing, your specific care setting, data security, or anything else. We respond within one business day.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'Contact CareStreamAI',
     description: 'Get in touch — we respond to every message within one business day.',
     url: 'https://www.carestreamai.com/contact',

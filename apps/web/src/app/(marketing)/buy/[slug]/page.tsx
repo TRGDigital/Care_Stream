@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, GraduationCap, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { BuyForm } from '@/components/marketing/buy-form'
+import { pageMetadata } from '@/lib/page-meta'
 
 export const revalidate = 60
 
@@ -27,7 +28,13 @@ async function getUnitPence(): Promise<number> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const m = await getModule(slug)
-  return { title: m ? `Buy ${m.title} training | CareStreamAI` : 'Buy training | CareStreamAI', robots: { index: false, follow: true } }
+  if (!m) return { title: 'Buy training | CareStreamAI' }
+  // Indexable transactional page: buy training licences for one module without a
+  // full subscription. pageMetadata adds the self-canonical on the www host and
+  // og tags, and defaults to indexable (site_pages can override the copy).
+  const title = `Buy ${m.title} Training for Your Team | CareStreamAI`
+  const description = `Buy CareStream ${m.title} training licences for just your team — no full subscription needed. One licence per staff member, delivered in our hub in any language.`
+  return pageMetadata(`/buy/${slug}`, { title, description })
 }
 
 export default async function BuyPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -62,6 +62,24 @@ async function trainingPages(): Promise<Entry[]> {
   return []
 }
 
+// The per-module purchase pages mirror the staff-training slugs, so derive their
+// /buy/<slug> paths from the same seo-index feed. Falls back to none on error.
+async function buyPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/seo-index`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const pages = (await res.json())?.data?.pages ?? []
+      return (pages as Array<{ path?: string }>)
+        .map((p) => p.path?.match(/^\/staff-training\/(.+)$/)?.[1])
+        .filter((slug): slug is string => !!slug)
+        .map((slug) => ({ url: `/buy/${slug}`, changeFrequency: 'monthly' as const, priority: 0.6 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 // Blog posts are DB-driven (published in the platform admin), so pull their slugs
 // from the public API rather than hard-coding them. Falls back to none on error.
 async function blogPages(): Promise<Entry[]> {
@@ -119,8 +137,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, blog, collections, features] = await Promise.all([trainingPages(), blogPages(), collectionPages(), featurePages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...blog, ...collections, ...features].filter((e) => {
+  const [training, buy, blog, collections, features] = await Promise.all([trainingPages(), buyPages(), blogPages(), collectionPages(), featurePages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

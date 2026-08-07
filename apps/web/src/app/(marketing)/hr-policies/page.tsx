@@ -16,6 +16,7 @@ export const metadata = {
   title:       'HR Policies and Staff Handbook | CareStreamAI',
   description: 'Give every member of your team instant answers to HR and employment questions from your actual staff handbook. Available in any language, in the CareStream hub or by email, 24 hours a day.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'HR Policies and Staff Handbook | CareStreamAI',
     description: 'Instant HR and employment answers from your actual staff handbook, in any language, in the hub or by email, 24/7.',
     url: 'https://www.carestreamai.com/hr-policies',

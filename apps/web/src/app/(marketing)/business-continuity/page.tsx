@@ -16,6 +16,7 @@ export const metadata = {
   title:       'Business Continuity Planning | CareStreamAI',
   description: 'Ensure your care setting can maintain safe operations during any disruption. CareStreamAI makes your business continuity plan instantly queryable by all staff via the hub, email, and voice, at any time.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'Business Continuity Planning | CareStreamAI',
     description: 'Your business continuity plan, instantly queryable by every staff member, any time.',
     url: 'https://www.carestreamai.com/business-continuity',

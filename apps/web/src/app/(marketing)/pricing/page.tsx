@@ -40,6 +40,7 @@ export const metadata = {
   title: 'Pricing',
   description: 'Simple, transparent pricing for CareStreamAI. From Starter plans for smaller homes to Enterprise for multi-site providers. 14-day free trial, no charge until day 14.',
   openGraph: {
+    images: ['/og-image.png'],
     title: 'CareStreamAI Pricing',
     description: 'Simple, transparent pricing. 14-day free trial, no charge until day 14.',
     url: 'https://www.carestreamai.com/pricing',

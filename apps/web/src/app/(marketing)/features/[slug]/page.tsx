@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
+import { DEFAULT_OG_IMAGE } from '@/lib/page-meta'
 import {
   FeatureSimplePage,
   featureContentFromData,
@@ -50,9 +51,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: `${SITE_URL}/features/${fp.slug}`,
-      ...(fp.og_image_url ? { images: [fp.og_image_url] } : {}),
+      images: [fp.og_image_url || DEFAULT_OG_IMAGE],
     },
-    ...(fp.og_image_url ? { twitter: { card: 'summary_large_image', title, description, images: [fp.og_image_url] } } : {}),
+    twitter: { card: 'summary_large_image', title, description, images: [fp.og_image_url || DEFAULT_OG_IMAGE] },
   }
 }
 

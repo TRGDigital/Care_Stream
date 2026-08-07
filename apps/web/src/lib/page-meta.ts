@@ -7,6 +7,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 export const SITE_URL = 'https://www.carestreamai.com'
 // Normalise a route path onto the canonical host: '/' stays as the bare host, others append cleanly.
 export const canonicalUrl = (path: string) => `${SITE_URL}${path === '/' ? '' : path}`
+// Site-wide social sharing fallback — the branded CareStream card, used whenever a
+// page has no hero/OG image of its own.
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
 export interface MetaFallback {
   title: string
@@ -59,9 +62,10 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
       title: ogTitle || title,
       description: ogDescription || description,
       url: canonicalUrl(path),
-      ...(ogImage ? { images: [ogImage] } : {}),
+      // Hero/OG image when the page has one, else the branded CareStream card.
+      images: [ogImage || DEFAULT_OG_IMAGE],
     },
     // Twitter/X card so shares there also show the image.
-    ...(ogImage ? { twitter: { card: 'summary_large_image', title: ogTitle || title, description: ogDescription || description, images: [ogImage] } } : {}),
+    twitter: { card: 'summary_large_image', title: ogTitle || title, description: ogDescription || description, images: [ogImage || DEFAULT_OG_IMAGE] },
   }
 }

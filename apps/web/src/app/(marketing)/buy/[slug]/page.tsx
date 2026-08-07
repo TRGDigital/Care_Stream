@@ -9,7 +9,7 @@ export const revalidate = 60
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-async function getModule(slug: string): Promise<{ title: string } | null> {
+async function getModule(slug: string): Promise<{ title: string; illustration_url?: string | null } | null> {
   try {
     const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } })
     if (res.ok) return (await res.json())?.data?.module ?? null
@@ -34,7 +34,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // og tags, and defaults to indexable (site_pages can override the copy).
   const title = `Buy ${m.title} Training for Your Team | CareStreamAI`
   const description = `Buy CareStream ${m.title} training licences for just your team — no full subscription needed. One licence per staff member, delivered in our hub in any language.`
-  return pageMetadata(`/buy/${slug}`, { title, description })
+  // Use the module's own illustration for the social image; pageMetadata falls back to the CareStream card if absent.
+  const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
+  return pageMetadata(`/buy/${slug}`, { title, description, image })
 }
 
 export default async function BuyPage({ params }: { params: Promise<{ slug: string }> }) {

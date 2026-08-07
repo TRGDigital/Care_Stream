@@ -27,6 +27,13 @@ const nextConfig = {
       },
     ]
   },
+  // Legacy path that never had a page — the real page is /trust. 301 so any
+  // external link or stale index consolidates onto the canonical URL.
+  async redirects() {
+    return [
+      { source: '/trust-security', destination: '/trust', permanent: true },
+    ]
+  },
 }
 
 export default nextConfig

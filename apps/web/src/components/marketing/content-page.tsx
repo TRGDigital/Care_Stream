@@ -21,7 +21,9 @@ async function getPage(path: string): Promise<{ content?: string } | null> {
 
 export async function ContentPage({ path, title }: { path: string; title: string }) {
   const page = await getPage(path)
-  const content = page?.content ?? ''
+  // The PageHero already renders the single <h1>; demote any <h1> in the DB body
+  // to <h2> so the page never has multiple H1 tags.
+  const content = (page?.content ?? '').replace(/<(\/?)h1(\s|>)/gi, '<$1h2$2')
 
   return (
     <>

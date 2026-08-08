@@ -129,30 +129,34 @@ export default async function GoLandingPage({
         </div>
       </header>
 
-      {/* Hero — copy left, interactive demo as the focal card right */}
-      <section className="relative overflow-hidden bg-hero-gradient">
-        <div className="absolute inset-0 dot-mesh" />
-        <div className="pointer-events-none absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-white/5" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-[360px] w-[360px] rounded-full bg-teal/20" />
+      {/* Hero — copy left, interactive demo focal card right, care photo bled into the white */}
+      <section className="relative overflow-hidden bg-white">
+        {/* Real care photo bleeding into the white from the right (desktop only) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-y-0 right-0 h-full w-[58%] object-cover object-[center_20%]" />
+          {/* Fade the photo into the white so the left copy stays on solid white */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white to-white/25" />
+        </div>
         <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
-          <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
+          <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white ring-1 ring-white/20">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
                 <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
               </div>
-              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-5xl lg:text-6xl">
+              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
                 {headline}
               </h1>
               <ul className="mb-8 space-y-3">
                 {bullets.map((b) => (
-                  <li key={b} className="flex items-start gap-3 text-white/90">
-                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-white" />
+                  <li key={b} className="flex items-start gap-3 text-neutral-dark">
+                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
               </ul>
               <CtaRow buyHref={buyHref} />
-              <div className="mt-6 flex items-center gap-2 text-sm text-white/70">
+              <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">
                 <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
                 Trusted by UK care providers
               </div>

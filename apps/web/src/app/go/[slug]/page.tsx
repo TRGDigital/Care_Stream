@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, GraduationCap } from 'lucide-react'
-import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
+import { type TrainingDemoData } from '@/components/marketing/training-demo'
+import { GoDemoWithQuiz } from '@/components/go/go-demo-with-quiz'
 import { GoQuiz, type QuizQuestion } from '@/components/go/go-quiz'
 import { GoExitIntent } from '@/components/go/go-exit-intent'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
@@ -230,9 +231,9 @@ export default async function GoLandingPage({
               </div>
             </div>
 
-            {/* Interactive demo as the hero focal element */}
+            {/* Interactive demo as the hero focal element (with its gap-check quiz overlay) */}
             {demo ? (
-              <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
+              <GoDemoWithQuiz demo={demo} buyHref={buyHref} slug={slug} moduleTitle={m.title} questions={quizQuestions} />
             ) : (
               <div className="rounded-2xl bg-white p-8 shadow-elevated">
                 <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>

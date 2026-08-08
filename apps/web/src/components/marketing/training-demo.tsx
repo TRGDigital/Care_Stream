@@ -32,10 +32,12 @@ export function TrainingDemo({
   demo,
   buyHref,
   variant = 'full',
+  onTakeQuiz,
 }: {
   demo: TrainingDemoData
   buyHref: string
   variant?: 'full' | 'card'
+  onTakeQuiz?: () => void
 }) {
   const [step, setStep] = useState<Step>('lesson')
   const [selected, setSelected] = useState<number | null>(null)
@@ -204,13 +206,36 @@ export function TrainingDemo({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => { setSelected(null); setStep('lesson'); setShowInfo(false) }}
-          className="mt-7 inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-mid hover:text-teal"
-        >
-          <RotateCcw size={15} /> Try the demo again
-        </button>
+        {/* Completion CTA — buy now, or open the free gap-check quiz */}
+        <div className="mt-6 border-t border-gray-100 pt-6">
+          <p className="mb-4 font-semibold text-neutral-dark">
+            That is how the training works. Give your whole team the full {demo.title} module.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href={buyHref}
+              className="flex-1 rounded-btn bg-blue-600 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700"
+            >
+              Buy now for your team
+            </Link>
+            {onTakeQuiz && (
+              <button
+                type="button"
+                onClick={onTakeQuiz}
+                className="flex-1 rounded-btn border-2 border-gray-200 px-6 py-3.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal"
+              >
+                Not ready? Free gap check
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSelected(null); setStep('lesson'); setShowInfo(false) }}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-mid hover:text-teal"
+          >
+            <RotateCcw size={15} /> Try the demo again
+          </button>
+        </div>
       </div>
     </div>
   )

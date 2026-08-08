@@ -11,6 +11,7 @@ import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
+import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 
 export const revalidate = 60
 
@@ -98,6 +99,15 @@ async function getRelatedModules(groupKey: string, currentSlug: string): Promise
     .map((m) => ({ slug: m.slug, title: m.title, group_label: m.group_label }))
 }
 
+// Live one-lesson + one-question taster for this module (null if not yet built).
+async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo`, { next: { revalidate: 300 } })
+    if (res.ok) return (await res.json())?.data?.demo ?? null
+  } catch { /* fall through */ }
+  return null
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const m = await getModule(slug)
@@ -114,7 +124,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) notFound()
-  const related = await getRelatedModules(m.group_key, slug)
+  const [related, demo] = await Promise.all([getRelatedModules(m.group_key, slug), getModuleDemo(slug)])
 
   const summary = careSetting(m.summary ?? m.description) || `What ${m.title.toLowerCase()} training covers, who needs it and how often, and how CareStream delivers it to your whole team in any language.`
   const outcomes = m.outcomes.map(careSetting)
@@ -209,6 +219,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
           </div>
         </div>
       </section>
+
+      {/* ── Live demo: one lesson + one question from this module ──────────── */}
+      {demo && <TrainingDemo demo={demo} buyHref={buyHref} />}
 
       {/* ── What it covers ────────────────────────────────────────────────── */}
       <section className="bg-white py-24">

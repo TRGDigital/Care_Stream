@@ -167,6 +167,61 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
   }
 })
 
+// GET /standard-modules/:slug/demo — one real lesson section + one real question
+// so the public training + PPC landing pages can show a live, interactive taster of
+// how the module works. Questions are otherwise private; exposing a single sample
+// question (with its answer) is intentional for the demo.
+publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.params.slug ?? '')
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true } })
+    const topic = (topics as any[]).find(t => slugify(t.title) === slug)
+    if (!topic) { res.status(404).json({ error: 'not found' }); return }
+
+    const modules = await (prisma as any).trainingModule.findMany({
+      where:   { tenant_id: null, source: 'ai_generated', topic_id: topic.id },
+      select:  { learning_content: true, questions: true },
+      orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
+    })
+    const m = (modules as any[])[0]
+    const lc = (m?.learning_content ?? {}) as any
+    const secs = Array.isArray(lc.sections) ? lc.sections : []
+
+    // First teaching section that has real content.
+    const firstIdx = secs.findIndex((s: any) => s?.heading && s?.body)
+    const firstSec = firstIdx >= 0 ? secs[firstIdx] : null
+    let sectionImage: string | null = firstSec?.image_key ? illustrationUrl(firstSec.image_key) : null
+    if (firstSec && !sectionImage) {
+      for (const mod of modules as any[]) {
+        const ss = (mod?.learning_content as any)?.sections
+        if (Array.isArray(ss) && ss[firstIdx]?.image_key) { sectionImage = illustrationUrl(ss[firstIdx].image_key); break }
+      }
+    }
+    const lesson = firstSec
+      ? { heading: String(firstSec.heading), body: String(firstSec.body), image_url: sectionImage }
+      : null
+
+    // First assessment question with usable options + a correct index.
+    const qs = Array.isArray(m?.questions) ? m.questions : []
+    const q = qs.find((x: any) => x?.text && Array.isArray(x?.options) && x.options.length >= 2 && typeof x?.correct === 'number') ?? null
+    const question = q
+      ? { text: String(q.text), options: q.options.map(String), correct: q.correct as number, explanation: q.explanation ? String(q.explanation) : null }
+      : null
+
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=86400')
+    res.json({ data: { demo: {
+      slug,
+      title:          topic.title,
+      lesson,
+      question,
+      total_sections: secs.length,
+      total_questions: qs.length,
+    } } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
+
 // ─── Password-protected module share (external validation) ───────────────────
 // GET returns just the module name (to render the unlock prompt). POST checks the
 // password and returns the full module, including questions + correct answers, for review.

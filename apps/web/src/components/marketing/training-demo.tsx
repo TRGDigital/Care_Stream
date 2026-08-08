@@ -59,11 +59,11 @@ export function TrainingDemo({
           const done = i < stepIdx
           return (
             <div key={s.key} className="flex items-center gap-2 sm:gap-3">
-              <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${active ? 'bg-teal text-white' : done ? 'bg-teal/15 text-teal' : 'bg-gray-100 text-gray-400'}`}>
-                {done ? <CheckCircle2 size={14} /> : i + 1}
+              <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${active ? 'bg-teal text-white' : done ? 'bg-teal/15 text-teal' : 'bg-gray-100 text-gray-400'}`}>
+                {done ? <CheckCircle2 size={16} /> : i + 1}
               </span>
-              <span className={`text-xs font-semibold ${active ? 'text-neutral-dark' : 'text-gray-400'}`}>{s.label}</span>
-              {i < STEPS.length - 1 && <span className="h-px w-5 bg-gray-200 sm:w-8" />}
+              <span className={`text-sm font-bold ${active ? 'text-neutral-dark' : 'text-gray-400'}`}>{s.label}</span>
+              {i < STEPS.length - 1 && <span className="h-px w-4 bg-gray-200 sm:w-7" />}
             </div>
           )
         })}

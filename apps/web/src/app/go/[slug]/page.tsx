@@ -130,9 +130,10 @@ export default async function GoLandingPage({
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
       {/* Slim header — no nav, one goal */}
       <header className="border-b border-gray-100">
-        <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-content items-center justify-between px-6 py-1.5">
+          {/* Larger logo, but the bar stays slim via reduced vertical padding */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.svg" alt="CareStream" className="h-12 w-auto md:h-16" />
+          <img src="/logo-color.svg" alt="CareStream" className="h-14 w-auto md:h-[4.75rem]" />
           <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-5 py-2.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
             Get team pricing
           </a>
@@ -176,11 +177,11 @@ export default async function GoLandingPage({
               </ul>
               <CtaRow buyHref={buyHref} />
               {/* Directional cue pointing across to the live demo (desktop) */}
-              <div className="mt-4 hidden items-center gap-2 lg:flex">
-                <span className="text-sm font-extrabold text-teal">Try it — a real lesson &amp; question</span>
-                <svg width="62" height="22" viewBox="0 0 62 22" fill="none" className="text-teal" aria-hidden>
-                  <path d="M2 12 C 20 12, 38 13, 56 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                  <path d="M49 3 L 58 9 L 49 15" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              <div className="mt-5 hidden items-center gap-3 lg:flex">
+                <span className="text-lg font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">

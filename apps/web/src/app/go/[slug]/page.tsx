@@ -144,9 +144,10 @@ export default async function GoLandingPage({
             the right sits on clean white (desktop only) */}
         <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-y-0 left-0 h-full w-1/2 object-cover object-[62%_20%]" />
-          {/* Fade the photo into the white; the right half (demo) stays clean white */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/35 via-white/90 to-white" />
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[40%_15%]" />
+          {/* Fade the photo smoothly into the white (no hard edge); the right side
+              where the demo sits stays clean white */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/70 to-white" />
         </div>
         <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
@@ -166,6 +167,14 @@ export default async function GoLandingPage({
                 ))}
               </ul>
               <CtaRow buyHref={buyHref} />
+              {/* Directional cue pointing across to the live demo (desktop) */}
+              <div className="mt-4 hidden items-center gap-2 lg:flex">
+                <span className="text-sm font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="44" height="30" viewBox="0 0 44 30" fill="none" className="text-teal" aria-hidden>
+                  <path d="M2 22 C 15 27, 30 21, 38 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <path d="M31 6 L 39 7 L 36 15" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
               <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">
                 <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
                 Trusted by UK care providers
@@ -192,31 +201,21 @@ export default async function GoLandingPage({
             </div>
 
             {/* Interactive demo as the hero focal element */}
-            <div className="relative">
-              {/* Directional cue pointing at the live demo (desktop) */}
-              <div className="pointer-events-none absolute -top-8 left-4 z-10 hidden -rotate-6 items-end gap-1.5 lg:flex">
-                <span className="text-sm font-extrabold text-teal">Try it — a real lesson &amp; question</span>
-                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" className="text-teal" aria-hidden>
-                  <path d="M4 4 C 6 20, 15 27, 27 27" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                  <path d="M21 23 L 28 28 L 22 32" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            {demo ? (
+              <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
+            ) : (
+              <div className="rounded-2xl bg-white p-8 shadow-elevated">
+                <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
+                <ul className="space-y-4">
+                  {bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-3">
+                      <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                      <span className="leading-relaxed text-neutral-dark">{b}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              {demo ? (
-                <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
-              ) : (
-                <div className="rounded-2xl bg-white p-8 shadow-elevated">
-                  <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
-                  <ul className="space-y-4">
-                    {bullets.map((b) => (
-                      <li key={b} className="flex items-start gap-3">
-                        <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
-                        <span className="leading-relaxed text-neutral-dark">{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </section>

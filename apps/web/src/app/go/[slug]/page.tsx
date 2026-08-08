@@ -66,15 +66,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 // Repeated conversion CTA row: buy now (primary) + get pricing form (secondary).
-function CtaRow({ buyHref, className = '' }: { buyHref: string; className?: string }) {
+function CtaRow({ buyHref, className = '', showSecondary = true }: { buyHref: string; className?: string; showSecondary?: boolean }) {
   return (
     <div className={`flex flex-col gap-3 sm:flex-row ${className}`}>
       <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
         Buy now for your team
       </Link>
-      <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
-        Get team pricing
-      </a>
+      {showSecondary && (
+        <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
+          Get team pricing
+        </a>
+      )}
     </div>
   )
 }
@@ -152,9 +154,6 @@ export default async function GoLandingPage({
           {/* Larger logo, but the bar stays slim via reduced vertical padding */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-color.svg" alt="CareStream" className="h-14 w-auto md:h-[4.75rem]" />
-          <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-5 py-2.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
-            Get team pricing
-          </a>
         </div>
       </header>
 
@@ -195,7 +194,7 @@ export default async function GoLandingPage({
                   </li>
                 ))}
               </ul>
-              <CtaRow buyHref={buyHref} />
+              <CtaRow buyHref={buyHref} showSecondary={false} />
               <p className="mt-3 text-sm text-neutral-mid">
                 From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.
               </p>
@@ -210,6 +209,15 @@ export default async function GoLandingPage({
               <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">
                 <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
                 Trusted by UK care providers
+              </div>
+
+              {/* Mobile: the demo is below the copy, so prompt visitors to scroll down to it */}
+              <div className="mt-5 flex items-center gap-2 lg:hidden">
+                <span className="text-base font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
 
               {/* The technology behind it all */}

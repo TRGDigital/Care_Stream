@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, GraduationCap } from 'lucide-react'
+import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, GraduationCap, ArrowRight } from 'lucide-react'
 import { type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoDemoWithQuiz } from '@/components/go/go-demo-with-quiz'
 import { GoQuiz, type QuizQuestion } from '@/components/go/go-quiz'
@@ -162,10 +162,11 @@ export default async function GoLandingPage({
         {/* Real care photo bleeding into the white from the LEFT, so the demo card on
             the right sits on clean white (desktop only) */}
         <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
-          {/* Fixed-height, top-anchored so the photo never re-crops when the demo
-              card changes height — the hero just reveals more/less of the same image */}
+          {/* Fixed, generous height + top-anchored: tall enough to always cover the
+              full hero (down to the tech strip), yet fixed so it never re-crops when
+              the demo card changes height — the hero just reveals more of the same image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[48rem] w-full object-cover object-[40%_15%]" />
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[72rem] w-full object-cover object-[40%_12%]" />
           {/* Fade the photo smoothly into the white (no hard edge); kept faint so the
               copy stays clearly readable, and clean white where the demo sits */}
           <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />
@@ -408,6 +409,21 @@ export default async function GoLandingPage({
             </div>
             <GoQuiz slug={slug} moduleTitle={m.title} questions={quizQuestions} />
           </div>
+        </div>
+      </section>
+
+      {/* Bottom banner — route non-converters to the main CareStream site */}
+      <section className="bg-hero-gradient py-14">
+        <div className="mx-auto max-w-content px-6 text-center">
+          <h2 className="mb-3 text-2xl font-extrabold text-white md:text-3xl">
+            There&apos;s more to CareStream than {tLc} training.
+          </h2>
+          <p className="mx-auto mb-7 max-w-xl leading-relaxed text-white/80">
+            Policies, staff training, audits and CQC tools for your whole service — one platform, in any language.
+          </p>
+          <a href="https://www.carestreamai.com" className="inline-flex items-center gap-2 rounded-btn bg-white px-8 py-4 text-sm font-semibold text-neutral-dark transition-colors hover:bg-neutral-light">
+            Explore the full CareStream platform <ArrowRight size={16} />
+          </a>
         </div>
       </section>
 

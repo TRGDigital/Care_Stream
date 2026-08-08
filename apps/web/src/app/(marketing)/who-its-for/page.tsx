@@ -17,6 +17,7 @@ export const metadata = {
   title: "Who It's For",
   description: 'CareStreamAI is built for every care setting — residential, nursing, domiciliary, supported living, hospice, and more. See how it fits your specific service.',
   openGraph: {
+    type: 'website',
     title: "Who CareStreamAI Is For",
     description: 'Built for residential, nursing, domiciliary, supported living, hospice, and every regulated UK care setting.',
     url: 'https://www.carestreamai.com/who-its-for',

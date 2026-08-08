@@ -14,6 +14,7 @@ export const metadata = {
   title: 'Policy Gap Detection',
   description: 'CareStream reads inside your policies, tells you exactly which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add with the legal basis, and tracks changes to the standards. A Professional and Enterprise feature.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'Policy Gap Detection | CareStreamAI',
     description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects — with the legal basis, the wording, and person-centred alternatives.',

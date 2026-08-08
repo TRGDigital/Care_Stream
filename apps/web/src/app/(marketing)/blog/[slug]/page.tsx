@@ -85,6 +85,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     alternates: { canonical: `https://www.carestreamai.com/blog/${post.slug}` },
     openGraph: {
+    type: 'article',
       title,
       description,
       url: `https://www.carestreamai.com/blog/${post.slug}`,

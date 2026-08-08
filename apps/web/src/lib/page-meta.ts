@@ -59,6 +59,9 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
     // Every page declares its own canonical on the www host so signals consolidate to one URL.
     alternates: { canonical: canonicalUrl(path) },
     openGraph: {
+      // og:type is a required Open Graph property; without it crawlers flag the
+      // tag set as incomplete. 'website' suits all pageMetadata-driven pages.
+      type: 'website',
       title: ogTitle || title,
       description: ogDescription || description,
       url: canonicalUrl(path),

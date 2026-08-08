@@ -9,6 +9,7 @@ export const metadata = {
   title: 'Book a Demo',
   description: 'Book a 30-minute walkthrough of CareStreamAI using your own policies. See exactly what your team would experience, with multilingual queries and instant, evidence-based answers.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'Book a CareStreamAI Demo',
     description: 'A 30-minute walkthrough using your own policies. No pressure, just the product.',

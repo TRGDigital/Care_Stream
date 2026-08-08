@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react'
+import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -39,6 +39,7 @@ export function TrainingDemo({
 }) {
   const [step, setStep] = useState<Step>('lesson')
   const [selected, setSelected] = useState<number | null>(null)
+  const [showInfo, setShowInfo] = useState(false)
   const { lesson, question } = demo
   if (!lesson || !question) return null
 
@@ -171,9 +172,35 @@ export function TrainingDemo({
           </p>
         </div>
 
+        {/* When wrong, mirror what the hub does: send a follow-up, with an info bubble. */}
+        {answered && !isCorrect && (
+          <div className="mt-3 rounded-xl border border-teal/20 bg-teal-light/40 p-4">
+            <div className="flex items-center gap-2">
+              <Send size={16} className="flex-shrink-0 text-teal" />
+              <span className="font-semibold text-neutral-dark">A follow-up question has been sent.</span>
+              <button
+                type="button"
+                onClick={() => setShowInfo((v) => !v)}
+                aria-label="How follow-up questions work in the CareStream hub"
+                aria-expanded={showInfo}
+                className="ml-0.5 text-teal/70 transition-colors hover:text-teal"
+              >
+                <Info size={15} />
+              </button>
+            </div>
+            {showInfo && (
+              <p className="mt-2 text-sm leading-relaxed text-neutral-mid">
+                In the CareStream hub, getting a question wrong automatically sends the staff member a short
+                follow-up lesson and a fresh question on the same point. They close the gap before they can
+                finish the module, and every attempt is recorded for your CQC evidence.
+              </p>
+            )}
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={() => { setSelected(null); setStep('lesson') }}
+          onClick={() => { setSelected(null); setStep('lesson'); setShowInfo(false) }}
           className="mt-7 inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-mid hover:text-teal"
         >
           <RotateCcw size={15} /> Try the demo again

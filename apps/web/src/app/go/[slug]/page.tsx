@@ -7,6 +7,7 @@ import { GoLeadForm } from '@/components/go/go-lead-form'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { SiteImage } from '@/components/site-image'
+import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -99,7 +100,15 @@ export default async function GoLandingPage({
     { value: '24/7', label: 'Access in the hub, any device' },
   ]
 
-  const techPills = ['Anthropic Claude', 'OpenAI', 'AWS', 'Supabase', 'Pinecone']
+  const techLogos = [
+    { name: 'Google Cloud', Icon: GoogleCloud },
+    { name: 'OpenAI', Icon: OpenAI },
+    { name: 'Claude', Icon: Claude },
+    { name: 'Supabase', Icon: Supabase },
+    { name: 'Pinecone', Icon: Pinecone },
+    { name: 'Google Ads', Icon: GoogleAds },
+    { name: 'AWS', Icon: Aws },
+  ]
 
   const sections = (m.sections ?? []).filter((s) => s.body)
 
@@ -122,7 +131,7 @@ export default async function GoLandingPage({
       <header className="border-b border-gray-100">
         <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.svg" alt="CareStream" className="h-8 w-auto" />
+          <img src="/logo-color.svg" alt="CareStream" className="h-11 w-auto" />
           <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-5 py-2.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
             Get team pricing
           </a>
@@ -131,12 +140,13 @@ export default async function GoLandingPage({
 
       {/* Hero — copy left, interactive demo focal card right, care photo bled into the white */}
       <section className="relative overflow-hidden bg-white">
-        {/* Real care photo bleeding into the white from the right (desktop only) */}
+        {/* Real care photo bleeding into the white from the LEFT, so the demo card on
+            the right sits on clean white (desktop only) */}
         <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-y-0 right-0 h-full w-[58%] object-cover object-[center_20%]" />
-          {/* Fade the photo into the white so the left copy stays on solid white */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white to-white/25" />
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-y-0 left-0 h-full w-1/2 object-cover object-[62%_20%]" />
+          {/* Fade the photo into the white; the right half (demo) stays clean white */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/35 via-white/90 to-white" />
         </div>
         <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
@@ -160,24 +170,53 @@ export default async function GoLandingPage({
                 <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
                 Trusted by UK care providers
               </div>
+
+              {/* The technology behind it all */}
+              <div className="mt-8 border-t border-gray-200/70 pt-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">
+                  Specialists in the technology behind it all
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {techLogos.map(({ name, Icon }) => (
+                    <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark shadow-sm">
+                      <span className="h-3.5 w-3.5"><Icon /></span>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
+                  From AI chat and search to rock-solid hosting and secure data, CareStream is built on the
+                  same platforms the world&apos;s best products use.
+                </p>
+              </div>
             </div>
 
             {/* Interactive demo as the hero focal element */}
-            {demo ? (
-              <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
-            ) : (
-              <div className="rounded-2xl bg-white p-8 shadow-elevated">
-                <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
-                <ul className="space-y-4">
-                  {bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-3">
-                      <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
-                      <span className="leading-relaxed text-neutral-dark">{b}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="relative">
+              {/* Directional cue pointing at the live demo (desktop) */}
+              <div className="pointer-events-none absolute -top-8 left-4 z-10 hidden -rotate-6 items-end gap-1.5 lg:flex">
+                <span className="text-sm font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" className="text-teal" aria-hidden>
+                  <path d="M4 4 C 6 20, 15 27, 27 27" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <path d="M21 23 L 28 28 L 22 32" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-            )}
+              {demo ? (
+                <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
+              ) : (
+                <div className="rounded-2xl bg-white p-8 shadow-elevated">
+                  <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
+                  <ul className="space-y-4">
+                    {bullets.map((b) => (
+                      <li key={b} className="flex items-start gap-3">
+                        <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                        <span className="leading-relaxed text-neutral-dark">{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -191,22 +230,6 @@ export default async function GoLandingPage({
               <div className="mt-1 text-xs leading-snug text-white/60">{s.label}</div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Borrowed-authority tech strip */}
-      <section className="bg-white py-10">
-        <div className="mx-auto max-w-content px-6 text-center">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-neutral-mid">
-            Built on the technology behind the world&apos;s best products
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {techPills.map((t) => (
-              <span key={t} className="rounded-full border border-gray-200 bg-neutral-light px-4 py-1.5 text-sm font-semibold text-neutral-dark">
-                {t}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 

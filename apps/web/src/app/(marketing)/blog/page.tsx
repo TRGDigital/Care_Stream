@@ -10,6 +10,7 @@ export const metadata = {
   title: 'Blog',
   description: 'Insights, regulatory guidance, and practical resources for UK care professionals. Covering CQC compliance, workforce management, AI in care, and more.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'CareStreamAI Blog',
     description: 'Regulatory guidance and practical resources for everyone working in UK health and social care.',

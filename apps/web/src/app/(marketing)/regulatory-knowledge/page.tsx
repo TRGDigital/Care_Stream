@@ -7,6 +7,7 @@ export const metadata = {
   title: 'Regulatory Knowledge',
   description: 'CareStreamAI includes a built-in knowledge base covering UK care regulations — CQC Fundamental Standards, GDPR, RIDDOR, the Care Act, Mental Capacity Act, and more.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'Regulatory Knowledge | CareStreamAI',
     description: 'A built-in UK regulatory knowledge base: CQC, GDPR, RIDDOR, Care Act, Mental Capacity Act, and more.',

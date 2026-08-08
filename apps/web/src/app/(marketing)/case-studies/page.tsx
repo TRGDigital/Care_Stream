@@ -10,6 +10,7 @@ export const metadata = {
   title: 'Case Studies',
   description: 'See how UK care providers have used CareStreamAI to reduce out-of-hours manager calls, support international staff, and build stronger CQC inspection evidence.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'CareStreamAI Case Studies',
     description: 'Real results from UK care providers using CareStreamAI.',

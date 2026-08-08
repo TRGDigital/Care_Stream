@@ -18,6 +18,7 @@ export const metadata = {
   title:       'Care Audits | CareStreamAI',
   description: 'Replace slow manual audits with structured, guided audits in the CareStream hub. Score every section, record your findings and actions, and generate a formatted report with AI recommendations the moment you finish.',
   openGraph: {
+    type: 'website',
     title: 'Care Audits | CareStreamAI',
     description: 'Guided, structured audits in the hub with section scoring, recorded findings and actions, and AI recommendations on completion.',
     url: 'https://www.carestreamai.com/care-audits',

@@ -10,11 +10,14 @@ export async function generateMetadata({ params }: { params: Promise<{ campaign:
   const { campaign } = await params
   const page = await getLandingPage(campaign)
   if (!page) return { title: 'CareStream' }
+  const title = page.meta_title ?? page.content.hero.headline
+  const description = page.meta_description ?? page.content.hero.subheadline
   return {
-    title:       { absolute: page.meta_title ?? page.content.hero.headline },
-    description: page.meta_description ?? page.content.hero.subheadline,
+    title:       { absolute: title },
+    description,
     robots:      page.noindex ? { index: false, follow: false } : { index: true, follow: true },
-    openGraph:   page.og_image_url ? { images: [page.og_image_url] } : undefined,
+    // Complete OG set (type is required, else crawlers flag it incomplete).
+    openGraph:   { type: 'website', title, description, images: [page.og_image_url || 'https://www.carestreamai.com/og-image.png'] },
   }
 }
 

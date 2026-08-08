@@ -15,6 +15,7 @@ export const metadata = {
   title: 'CQC & Compliance',
   description: 'CareStream builds your CQC evidence as staff use your policies, checks which regulations your policies cover, and produces an inspection-ready report you can download as a PDF.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'CQC & Compliance | CareStreamAI',
     description: 'Always-on CQC readiness: evidence tracking, regulation coverage analysis, and a downloadable inspection report.',

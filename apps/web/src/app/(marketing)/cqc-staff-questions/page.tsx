@@ -12,6 +12,7 @@ export const metadata = {
   title:       'CQC Staff Preparation Questions | CareStreamAI',
   description: 'Prepare your care staff to answer CQC inspector questions with confidence. CareStream sends open-ended, inspector-style questions in the hub, scores each free-text answer with AI feedback, and lets staff review the model answer and try again.',
   openGraph: {
+    type: 'website',
     images: ['/og-image.png'],
     title: 'CQC Staff Preparation Questions | CareStreamAI',
     description: 'Open-ended, inspector-style practice questions across the five key questions, AI-scored with feedback, completed in the CareStream hub.',

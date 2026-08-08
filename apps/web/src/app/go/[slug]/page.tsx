@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, GraduationCap } from 'lucide-react'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
-import { GoLeadForm } from '@/components/go/go-lead-form'
+import { GoQuiz, type QuizQuestion } from '@/components/go/go-quiz'
+import { GoExitIntent } from '@/components/go/go-exit-intent'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { SiteImage } from '@/components/site-image'
@@ -44,6 +45,14 @@ async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   return null
 }
 
+async function getUnitPence(): Promise<number> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/licence-price`, { next: { revalidate: 300 } })
+    if (res.ok) return Number((await res.json())?.data?.unit_pence) || 2599
+  } catch { /* fall through */ }
+  return 2599
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const m = await getModule(slug)
@@ -78,11 +87,19 @@ export default async function GoLandingPage({
 }) {
   const { slug } = await params
   const sp = await searchParams
-  const [m, demo] = await Promise.all([getModule(slug), getModuleDemo(slug)])
+  const [m, demo, unitPence] = await Promise.all([getModule(slug), getModuleDemo(slug), getUnitPence()])
   if (!m) notFound()
 
   const buyHref = `/buy/${encodeURIComponent(slug)}`
+  const unitPrice = (unitPence / 100).toFixed(2)
   const tLc = m.title.toLowerCase()
+
+  const quizQuestions: QuizQuestion[] = [
+    { q: `How does your team do ${tLc} training now?`, options: ['Online e-learning', 'In-person sessions', 'A mix of both', "We're not sure it's up to date"] },
+    { q: 'How do you track who has completed it?', options: ['A training system', 'Spreadsheets', 'Paper records', 'We struggle to keep track'] },
+    { q: `When did your team last refresh ${tLc} training?`, options: ['In the last 6 months', '6 to 12 months ago', 'Over a year ago', 'Not sure'] },
+    { q: `How many staff need ${m.title} training?`, options: ['1–10', '11–25', '26–50', '50+'] },
+  ]
   // Message-match: an ad group can override the headline via ?h= to mirror its ad.
   const hParam = Array.isArray(sp.h) ? sp.h[0] : sp.h
   const headline = (hParam ? hParam.slice(0, 90) : '') || `${m.title} training that gets your team CQC-ready`
@@ -122,7 +139,7 @@ export default async function GoLandingPage({
   const faqs = [
     { question: `Does ${m.title} training count for CQC?`, answer: `Yes. CareStream ${m.title} training is aligned to CQC expectations and the Care Certificate framework, and every completion produces a certificate you can use as evidence.` },
     { question: 'Can staff complete it on their phones, in their own language?', answer: 'Yes. The whole module runs in the hub on any device, in over 60 languages. Staff read and answer in the language they are most confident in, while your records stay in English.' },
-    { question: 'Do I need a full CareStream subscription?', answer: `No. You can buy ${m.title} training licences for just your team — one licence per staff member — without a full subscription. You can also start a free trial to see everything first.` },
+    { question: 'Do I need a full CareStream subscription?', answer: `No. You can buy ${m.title} training licences for just your team — one licence per staff member — without a full subscription. It is a simple one-off cost per staff member.` },
     { question: 'How quickly can I roll it out?', answer: 'Straight away. Buy licences, invite your team, and they can start the module immediately. Renewal reminders are then handled automatically.' },
   ]
 
@@ -176,6 +193,9 @@ export default async function GoLandingPage({
                 ))}
               </ul>
               <CtaRow buyHref={buyHref} />
+              <p className="mt-3 text-sm text-neutral-mid">
+                From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.
+              </p>
               {/* Directional cue pointing across to the live demo (desktop) */}
               <div className="mt-5 hidden items-center gap-3 lg:flex">
                 <span className="text-lg font-extrabold text-teal">Try it — a real lesson &amp; question</span>
@@ -344,18 +364,18 @@ export default async function GoLandingPage({
       {/* FAQ */}
       <HomeFaq faqs={faqs} />
 
-      {/* Lead capture */}
+      {/* Secondary capture — gamified training gap check for visitors not ready to buy */}
       <section id="enquire" className="scroll-mt-8 bg-white py-20">
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">Get team pricing</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">Not ready to buy yet?</p>
               <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
-                Get pricing and a rollout plan for {m.title} training.
+                Get a free {m.title} training gap check.
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
-                Tell us a little about your team and we will reply personally with pricing and how to roll
-                out {m.title} training. Or skip the wait and buy licences for your team now.
+                Answer a few quick questions and we&apos;ll send a personalised plan for your team&apos;s {m.title}
+                {' '}training, within one working day. Or buy licences for your team now.
               </p>
               <ul className="space-y-3">
                 {[
@@ -375,9 +395,7 @@ export default async function GoLandingPage({
                 </Link>
               </div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-neutral-light p-7 shadow-card md:p-9">
-              <GoLeadForm slug={slug} moduleTitle={m.title} />
-            </div>
+            <GoQuiz slug={slug} moduleTitle={m.title} questions={quizQuestions} />
           </div>
         </div>
       </section>
@@ -396,6 +414,7 @@ export default async function GoLandingPage({
       </footer>
 
       <GoStickyCta buyHref={buyHref} />
+      <GoExitIntent slug={slug} moduleTitle={m.title} questions={quizQuestions} />
     </div>
   )
 }

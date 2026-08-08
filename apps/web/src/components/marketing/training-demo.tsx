@@ -47,6 +47,12 @@ export function TrainingDemo({
   const answered = selected !== null
   const isCorrect = selected === question.correct
 
+  const track = (event: string, extra?: Record<string, unknown>) => {
+    try {
+      ;(window as any).gtag?.('event', event, { event_category: 'training-demo', event_label: demo.slug, ...extra })
+    } catch { /* tracking must never break the demo */ }
+  }
+
   // The interactive card. Every step is rendered into the DOM (visibility toggled
   // with CSS) so the full lesson, question and answer are server-rendered and
   // crawlable by Googlebot, while the click-through wizard drives what's shown.
@@ -84,7 +90,7 @@ export function TrainingDemo({
           <p className="mb-8 whitespace-pre-line leading-relaxed text-neutral-mid">{lesson.body}</p>
           <button
             type="button"
-            onClick={() => setStep('question')}
+            onClick={() => { setStep('question'); track('demo_started') }}
             className="inline-flex items-center gap-2 rounded-btn bg-teal px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-dark"
           >
             Next: answer a question <ArrowRight size={16} />
@@ -125,7 +131,7 @@ export function TrainingDemo({
           <button
             type="button"
             disabled={!answered}
-            onClick={() => setStep('result')}
+            onClick={() => { setStep('result'); track('demo_completed', { correct: isCorrect }) }}
             className="inline-flex items-center gap-2 rounded-btn bg-teal px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-dark disabled:cursor-not-allowed disabled:opacity-40"
           >
             See result <ArrowRight size={16} />

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users } from 'lucide-react'
+import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, GraduationCap } from 'lucide-react'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoLeadForm } from '@/components/go/go-lead-form'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
 import { HomeFaq } from '@/components/marketing/home-faq'
+import { SiteImage } from '@/components/site-image'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -14,12 +15,14 @@ export const revalidate = 60
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+type Section = { heading: string; body: string; image_url: string | null }
 type Module = {
   title: string
   group_label?: string
   frequency?: string | null
   summary?: string | null
   outcomes?: string[]
+  sections?: Section[]
   standards?: string[]
   illustration_url?: string | null
 }
@@ -51,6 +54,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title, description, robots: { index: false, follow: false } }
 }
 
+// Repeated conversion CTA row: buy now (primary) + get pricing form (secondary).
+function CtaRow({ buyHref, className = '' }: { buyHref: string; className?: string }) {
+  return (
+    <div className={`flex flex-col gap-3 sm:flex-row ${className}`}>
+      <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
+        Buy now for your team
+      </Link>
+      <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
+        Get team pricing
+      </a>
+    </div>
+  )
+}
+
 export default async function GoLandingPage({
   params,
   searchParams,
@@ -64,16 +81,27 @@ export default async function GoLandingPage({
   if (!m) notFound()
 
   const buyHref = `/buy/${encodeURIComponent(slug)}`
+  const tLc = m.title.toLowerCase()
   // Message-match: an ad group can override the headline via ?h= to mirror its ad.
   const hParam = Array.isArray(sp.h) ? sp.h[0] : sp.h
   const headline = (hParam ? hParam.slice(0, 90) : '') || `${m.title} training that gets your team CQC-ready`
 
-  const trust = [
-    { Icon: ShieldCheck, text: 'CQC-aligned, mapped to the Care Certificate framework' },
-    { Icon: Globe, text: 'Completed in the hub in over 60 languages' },
-    { Icon: Award, text: 'A certificate for every staff member, for your CQC evidence' },
-    { Icon: RefreshCw, text: 'A wrong answer triggers a follow-up lesson, so gaps are closed' },
+  const bullets = [
+    'CQC-aligned, mapped to the Care Certificate framework',
+    'Completed in the hub in over 60 languages',
+    'A certificate for every staff member, for your CQC evidence',
   ]
+
+  const stats = [
+    { value: '60+', label: 'Languages your staff can learn in' },
+    { value: '90+', label: 'CQC-aligned training modules' },
+    { value: '100%', label: 'Mapped to the Care Certificate' },
+    { value: '24/7', label: 'Access in the hub, any device' },
+  ]
+
+  const techPills = ['Anthropic Claude', 'OpenAI', 'AWS', 'Supabase', 'Pinecone']
+
+  const sections = (m.sections ?? []).filter((s) => s.body)
 
   // NB: placeholder testimonials — replace with real quotes (will be admin-editable).
   const testimonials = [
@@ -101,63 +129,139 @@ export default async function GoLandingPage({
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero — copy left, interactive demo as the focal card right */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="relative mx-auto max-w-content px-6 py-16 md:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-[360px] w-[360px] rounded-full bg-teal/20" />
+        <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
+          <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white ring-1 ring-white/20">
                 <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
               </div>
-              <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
+              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-5xl lg:text-6xl">
                 {headline}
               </h1>
-              <p className="mb-8 max-w-lg text-lg leading-relaxed text-white/80">
-                Give your whole team the {m.title} module — one licence per staff member, completed in the
-                hub in over 60 languages, with a certificate for your CQC evidence. No full subscription needed.
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                  Buy now for your team
-                </Link>
-                <a href="#enquire" className="btn-ghost-white rounded-btn border-2 border-white/30 px-8 py-4 text-center text-sm font-semibold text-white">
-                  Get team pricing
-                </a>
-              </div>
+              <ul className="mb-8 space-y-3">
+                {bullets.map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-white/90">
+                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-white" />
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <CtaRow buyHref={buyHref} />
               <div className="mt-6 flex items-center gap-2 text-sm text-white/70">
                 <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
                 Trusted by UK care providers
               </div>
             </div>
 
-            {/* Trust card */}
-            <div className="rounded-2xl bg-white p-8 shadow-elevated">
-              <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
-              <ul className="space-y-4">
-                {trust.map(({ Icon, text }) => (
-                  <li key={text} className="flex items-start gap-3">
-                    <Icon size={20} className="mt-0.5 flex-shrink-0 text-teal" />
-                    <span className="leading-relaxed text-neutral-dark">{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Interactive demo as the hero focal element */}
+            {demo ? (
+              <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
+            ) : (
+              <div className="rounded-2xl bg-white p-8 shadow-elevated">
+                <p className="mb-5 text-sm font-bold uppercase tracking-wide text-teal">What your team gets</p>
+                <ul className="space-y-4">
+                  {bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-3">
+                      <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                      <span className="leading-relaxed text-neutral-dark">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Live interactive demo — the engagement hook */}
-      {demo && <TrainingDemo demo={demo} buyHref={buyHref} />}
+      {/* Key numbers banner */}
+      <section className="border-b border-gray-100 bg-neutral-dark">
+        <div className="mx-auto grid max-w-content grid-cols-2 gap-8 px-6 py-10 md:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="text-3xl font-extrabold text-white md:text-4xl">{s.value}</div>
+              <div className="mt-1 text-xs leading-snug text-white/60">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* What they will be able to do */}
+      {/* Borrowed-authority tech strip */}
+      <section className="bg-white py-10">
+        <div className="mx-auto max-w-content px-6 text-center">
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.12em] text-neutral-mid">
+            Built on the technology behind the world&apos;s best products
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {techPills.map((t) => (
+              <span key={t} className="rounded-full border border-gray-200 bg-neutral-light px-4 py-1.5 text-sm font-semibold text-neutral-dark">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* What your team will learn — section by section, with images */}
+      {sections.length > 0 && (
+        <section className="bg-neutral-light py-24">
+          <div className="mx-auto max-w-content px-6">
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">What Your Team Will Learn</p>
+            <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
+              A closer look at the {tLc} module.
+            </h2>
+            <p className="mb-14 max-w-2xl text-lg leading-relaxed text-neutral-mid">
+              The module is built in short, practical sections. Each one teaches a part of the topic, then
+              applies it to a real care scenario and checks understanding before moving on.
+            </p>
+            <div className="space-y-14 lg:space-y-20">
+              {sections.map((s, i) => {
+                const flip = i % 2 === 1
+                return (
+                  <div key={s.heading} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+                    <div className={flip ? 'lg:order-2' : ''}>
+                      <div className="mb-4 flex items-center gap-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <h3 className="text-2xl font-bold text-neutral-dark">{s.heading}</h3>
+                      </div>
+                      <p className="text-lg leading-relaxed text-neutral-mid">{s.body}</p>
+                    </div>
+                    <div className={flip ? 'lg:order-1' : ''}>
+                      {s.image_url ? (
+                        <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-gray-100">
+                          <SiteImage src={`${API_URL}${s.image_url}`} alt={`${m.title} training: ${s.heading}`} className="aspect-[4/3] w-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-white ring-1 ring-gray-100">
+                          <GraduationCap size={56} className="text-teal/30" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="mt-14 flex flex-col items-center gap-5 rounded-2xl bg-hero-gradient p-8 text-center sm:flex-row sm:justify-between sm:text-left">
+              <p className="text-lg font-semibold text-white">Give your whole team the full {m.title} module.</p>
+              <CtaRow buyHref={buyHref} className="flex-shrink-0 [&_a:last-child]:border-white/30 [&_a:last-child]:text-white" />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Outcomes */}
       {m.outcomes && m.outcomes.length > 0 && (
         <section className="bg-white py-20">
           <div className="mx-auto max-w-content px-6">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">What your team will be able to do</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">By the end, your team can</p>
             <h2 className="mb-10 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
-              Confident, compliant {m.title.toLowerCase()}.
+              Confident, compliant {tLc}.
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {m.outcomes.slice(0, 6).map((o) => (

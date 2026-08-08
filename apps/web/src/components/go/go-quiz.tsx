@@ -112,7 +112,7 @@ export function GoQuiz({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card md:p-8">
+    <div className="rounded-2xl border border-gray-200 bg-white p-7 shadow-elevated ring-1 ring-teal/10 md:p-8">
       {/* Progress */}
       {step >= 0 && (
         <div className="mb-6">

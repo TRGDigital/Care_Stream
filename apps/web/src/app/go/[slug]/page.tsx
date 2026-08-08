@@ -365,7 +365,7 @@ export default async function GoLandingPage({
       <HomeFaq faqs={faqs} />
 
       {/* Secondary capture — gamified training gap check for visitors not ready to buy */}
-      <section id="enquire" className="scroll-mt-8 bg-white py-20">
+      <section id="enquire" className="scroll-mt-8 bg-neutral-light py-20">
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>

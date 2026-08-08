@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'], title: 'CareStreamAI · Policies, Training and CQC Tools for UK Care Homes', description: 'One platform for UK care providers: policy access, staff training, audits and CQC preparation. Powered by your documents. Never the internet.', url: 'https://www.carestreamai.com' },
 }
 import { MarketingFooter } from '@/components/marketing/footer'
+import { HomeBlogSection, type HomeBlogPost } from '@/components/marketing/home-blog-section'
 import { Mockup } from '@/components/marketing/mockup'
 import { MOCKUPS } from '@/components/marketing/mockup-data'
 import { LogoMarquee } from '@/components/marketing/logo-marquee'
@@ -949,8 +950,50 @@ async function getHomeFaqs(): Promise<Faq[]> {
   return DEFAULT_HOME_FAQS
 }
 
+// Featured blog posts for the "From the Blog" carousel at the foot of the page.
+// DB-driven; HomeBlogSection falls back to its static list if this returns none.
+async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+  const COLORS: Record<string, string> = {
+    'CQC & Compliance':     'bg-teal-light text-teal',
+    'Regulatory Knowledge': 'bg-amber-50 text-amber-brand',
+    'Workforce':            'bg-green-50 text-green-700',
+    'Technology':           'bg-purple-50 text-purple-700',
+    'Registered Manager':   'bg-neutral-light text-neutral-mid',
+  }
+  const fmtDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+  try {
+    const res = await fetch(`${API_URL}/public/blog/posts`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const body = await res.json()
+      const posts = (body?.data?.posts ?? []) as Array<{
+        slug: string; title: string; excerpt: string | null; category: string
+        publication_date: string | null; read_time_minutes: number; is_featured: boolean
+        feature_image_url: string | null
+      }>
+      const mapped = posts
+        .filter(p => p.is_featured)
+        .map(p => ({
+          slug:          p.slug,
+          date:          fmtDate(p.publication_date),
+          category:      p.category,
+          categoryColor: COLORS[p.category] ?? 'bg-teal-light text-teal',
+          title:         p.title,
+          summary:       p.excerpt ?? '',
+          readTime:      `${p.read_time_minutes} min read`,
+          image:         p.feature_image_url ?? null,
+        }))
+      if (mapped.length > 0) return mapped
+    }
+  } catch {
+    // fall back to the static featured list inside HomeBlogSection
+  }
+  return []
+}
+
 export default async function HomePage() {
-  const [faqs, slots] = await Promise.all([getHomeFaqs(), getContentSlots('/')])
+  const [faqs, slots, featuredPosts] = await Promise.all([getHomeFaqs(), getContentSlots('/'), getFeaturedPosts()])
   const s = makeSlot(HOME_SLOTS, slots)
   return (
     <div className="flex min-h-screen flex-col">
@@ -971,6 +1014,7 @@ export default async function HomePage() {
         <HomeFaq faqs={faqs} />
         <FreeTrialBand s={s} />
         <FinalCta s={s} />
+        <HomeBlogSection posts={featuredPosts} />
       </main>
       <MarketingFooter />
     </div>

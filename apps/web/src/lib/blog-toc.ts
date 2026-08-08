@@ -17,6 +17,10 @@ export type TocHeading = { level: number; id: string; text: string }
 export function buildBlogToc(html: string): { html: string; headings: TocHeading[] } {
   if (!html) return { html, headings: [] }
 
+  // The page renders the post title as the single <h1>; demote any stray <h1> in
+  // the body to <h2> (it then becomes a normal section, picked up by the ToC).
+  html = html.replace(/<(\/?)h1(\s|>)/gi, '<$1h2$2')
+
   const used = new Set<string>()
   const headings: TocHeading[] = []
 

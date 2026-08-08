@@ -63,7 +63,11 @@ async function getRelatedFeatures(currentSlug: string): Promise<Array<{ slug: st
     const res = await fetch(`${API_URL}/public/feature-pages`, { next: { revalidate: 900 } })
     if (!res.ok) return []
     const items = ((await res.json())?.data?.featurePages ?? []) as Array<{ slug: string; title: string }>
-    const list = items.filter((f) => f.slug)
+    // Include static (non-DB) feature pages in the pool so they also receive
+    // dofollow links rather than being orphaned with a single incoming link.
+    const STATIC_FEATURES = [{ slug: 'web-chat-interface', title: 'Web chat interface' }]
+    const known = new Set(items.map((f) => f.slug))
+    const list = [...items.filter((f) => f.slug), ...STATIC_FEATURES.filter((f) => !known.has(f.slug))]
     const i = list.findIndex((f) => f.slug === currentSlug)
     // Take the next 6 after this page, wrapping — so links distribute across the set.
     const start = i >= 0 ? i + 1 : 0

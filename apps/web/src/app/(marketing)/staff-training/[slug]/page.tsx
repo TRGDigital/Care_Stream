@@ -10,6 +10,7 @@ import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
+import { fetchModules, relatedModules } from '@/lib/related-modules'
 
 export const revalidate = 60
 
@@ -88,23 +89,13 @@ function freqWord(f: string): string {
 
 type RelatedModule = { slug: string; title: string; group_label?: string }
 
-// Related modules for internal linking: prefer the same training group, top up
-// with others so every module gets several contextual dofollow links.
+// Related modules for internal linking. Uses the shared rotating-window helper so
+// every module page receives several dofollow links (never just one), with
+// same-group siblings surfaced first for relevance.
 async function getRelatedModules(groupKey: string, currentSlug: string): Promise<RelatedModule[]> {
-  try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 900 } })
-    if (!res.ok) return []
-    const body = await res.json()
-    const topics = (body?.data?.topics ?? []) as Array<{ slug: string; title: string; group_key: string }>
-    const groups = (body?.data?.groups ?? {}) as Record<string, string>
-    const others = topics.filter((t) => t.slug && t.slug !== currentSlug)
-    const sameGroup = others.filter((t) => t.group_key === groupKey)
-    const rest = others.filter((t) => t.group_key !== groupKey)
-    const picked = [...sameGroup, ...rest].slice(0, 6)
-    return picked.map((t) => ({ slug: t.slug, title: t.title, group_label: groups[t.group_key] }))
-  } catch {
-    return []
-  }
+  const all = await fetchModules()
+  return relatedModules(all, currentSlug, { sameGroup: 3, windowCount: 4 })
+    .map((m) => ({ slug: m.slug, title: m.title, group_label: m.group_label }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

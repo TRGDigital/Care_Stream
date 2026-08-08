@@ -35,6 +35,7 @@ export default function Page() {
         { type: 'note', text: 'The hub, email and voice are included on every plan. Your team can use whichever channels suit them best.' },
       ]}
       related={[
+        { title: 'Asking questions by email', href: '/help/languages/email' },
         { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },
         { title: 'Setting up email access', href: '/help/getting-started/email-setup' },
         { title: 'How multilingual support works', href: '/help/languages/how-it-works' },

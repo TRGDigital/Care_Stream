@@ -37,6 +37,7 @@ export default function Page() {
         { type: 'note', text: 'You can upload as many policies as you like on any plan. There is no limit on documents.' },
       ]}
       related={[
+        { title: 'Setting up your account', href: '/help/getting-started/account-setup' },
         { title: 'Supported document formats', href: '/help/policies/formats' },
         { title: 'Organising your policy library', href: '/help/policies/organising' },
         { title: 'Inviting staff to use CareStreamAI', href: '/help/getting-started/invite-staff' },

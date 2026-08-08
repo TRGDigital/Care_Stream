@@ -58,14 +58,36 @@ async function getPost(slug: string): Promise<Post | null> {
 }
 
 async function getRelated(slug: string): Promise<RelatedPost[]> {
+  // Same-category cluster from the API (topical relevance)…
+  let apiRelated: RelatedPost[] = []
   try {
     const res = await fetch(`${API_URL}/public/blog/posts/${slug}/related`, { next: { revalidate: 60 } })
-    if (!res.ok) return []
-    const body = await res.json()
-    return (body?.data?.posts ?? []) as RelatedPost[]
-  } catch {
-    return []
+    if (res.ok) apiRelated = ((await res.json())?.data?.posts ?? []) as RelatedPost[]
+  } catch { /* fall through */ }
+
+  // …topped up with a rotating window over ALL posts, so every post is linked
+  // from several others (even in-degree, no post orphaned with a single link).
+  let all: RelatedPost[] = []
+  try {
+    const res = await fetch(`${API_URL}/public/blog/posts`, { next: { revalidate: 900 } })
+    if (res.ok) all = ((await res.json())?.data?.posts ?? []) as RelatedPost[]
+  } catch { /* fall through */ }
+
+  const idx = all.findIndex((p) => p.slug === slug)
+  const windowPosts: RelatedPost[] = []
+  if (idx >= 0 && all.length > 1) {
+    const take = Math.min(4, all.length - 1)
+    for (let k = 1; k <= take; k++) windowPosts.push(all[(idx + k) % all.length])
   }
+
+  const seen = new Set<string>([slug])
+  const merged: RelatedPost[] = []
+  // Relevance first (cap same-category so the window is never fully squeezed out),
+  // then the coverage window.
+  for (const p of [...apiRelated.slice(0, 2), ...windowPosts, ...apiRelated.slice(2)]) {
+    if (p?.slug && !seen.has(p.slug)) { seen.add(p.slug); merged.push(p) }
+  }
+  return merged.slice(0, 6)
 }
 
 const MESSAGE_COLORS: Record<string, string> = {

@@ -35,6 +35,7 @@ export default function Page() {
         { type: 'note', text: 'Staff do not need to download anything. They can use CareStreamAI from any phone, tablet or computer.' },
       ]}
       related={[
+        { title: 'Setting up your account', href: '/help/getting-started/account-setup' },
         { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },
         { title: 'Setting up email access', href: '/help/getting-started/email-setup' },
         { title: 'Email versus web chat, which to use', href: '/help/languages/channels' },

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, GraduationCap, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, GraduationCap, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { BuyForm } from '@/components/marketing/buy-form'
 import { pageMetadata } from '@/lib/page-meta'
+import { fetchModules, relatedModules } from '@/lib/related-modules'
 
 export const revalidate = 60
 
@@ -41,10 +42,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BuyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const [m, unitPence] = await Promise.all([getModule(slug), getUnitPence()])
+  const [m, unitPence, allModules] = await Promise.all([getModule(slug), getUnitPence(), fetchModules()])
   if (!m) notFound()
 
+  // Cross-links to other buy pages so every module's purchase page has several
+  // dofollow internal links, not just the single one from its training page.
+  const related = relatedModules(allModules, slug, { sameGroup: 3, windowCount: 4 })
+
   return (
+    <>
     <section className="bg-neutral-light py-16 md:py-24">
       <div className="mx-auto max-w-content px-6">
         <Link href={`/staff-training/${slug}`} className="mb-8 inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-teal-dark">
@@ -84,5 +90,31 @@ export default async function BuyPage({ params }: { params: Promise<{ slug: stri
         </div>
       </div>
     </section>
+
+    {/* Other modules — internal linking with module titles as anchor text. */}
+    {related.length > 0 && (
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-content px-6">
+          <h2 className="mb-2 text-2xl font-extrabold text-neutral-dark md:text-3xl">Buy other training modules</h2>
+          <p className="mb-8 text-neutral-mid">Licence any of these for your team the same way, no full subscription needed.</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/buy/${r.slug}`}
+                className="group flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-teal"
+              >
+                <span>
+                  {r.group_label && <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-teal">{r.group_label}</span>}
+                  <span className="font-semibold text-neutral-dark group-hover:text-teal">Buy {r.title} training</span>
+                </span>
+                <ArrowRight size={16} className="shrink-0 text-neutral-mid group-hover:text-teal" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+    </>
   )
 }

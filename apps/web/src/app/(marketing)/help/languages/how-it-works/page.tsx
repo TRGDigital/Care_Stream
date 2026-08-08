@@ -31,6 +31,7 @@ export default function Page() {
         { type: 'note', text: 'This helps overseas and international staff follow your policies accurately from their first day.' },
       ]}
       related={[
+        { title: 'Asking questions by email', href: '/help/languages/email' },
         { title: 'Which languages are supported', href: '/help/languages/supported-languages' },
         { title: 'How staff access CareStreamAI', href: '/help/languages/staff-access' },
         { title: 'Email versus web chat, which to use', href: '/help/languages/channels' },

@@ -132,7 +132,7 @@ export default async function GoLandingPage({
       <header className="border-b border-gray-100">
         <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.svg" alt="CareStream" className="h-11 w-auto" />
+          <img src="/logo-color.svg" alt="CareStream" className="h-12 w-auto md:h-16" />
           <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-5 py-2.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
             Get team pricing
           </a>
@@ -202,8 +202,9 @@ export default async function GoLandingPage({
                   ))}
                 </div>
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
-                  From AI chat and search to rock-solid hosting and secure data, CareStream is built on the
-                  same platforms the world&apos;s best products use.
+                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  team&apos;s {tLc} training stays accurate, always up to date with the latest guidance, and is
+                  delivered in over 60 languages.
                 </p>
               </div>
             </div>
@@ -305,6 +306,11 @@ export default async function GoLandingPage({
                 </div>
               ))}
             </div>
+            <div className="mt-12 text-center">
+              <Link href={buyHref} className="inline-flex items-center gap-2 rounded-btn bg-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
+                Buy {m.title} training for your team
+              </Link>
+            </div>
           </div>
         </section>
       )}
@@ -325,6 +331,11 @@ export default async function GoLandingPage({
                 </figcaption>
               </figure>
             ))}
+          </div>
+          <div className="mt-12 text-center">
+            <Link href={buyHref} className="inline-flex items-center gap-2 rounded-btn bg-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
+              Buy {m.title} training for your team
+            </Link>
           </div>
         </div>
       </section>

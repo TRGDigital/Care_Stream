@@ -89,6 +89,7 @@ export default async function GoLandingPage({
 
   const bullets = [
     'CQC-aligned, mapped to the Care Certificate framework',
+    'CPD approved — recognised professional development for your team',
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
   ]
@@ -145,15 +146,22 @@ export default async function GoLandingPage({
         <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[40%_15%]" />
-          {/* Fade the photo smoothly into the white (no hard edge); the right side
-              where the demo sits stays clean white */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/70 to-white" />
+          {/* Fade the photo smoothly into the white (no hard edge); kept faint so the
+              copy stays clearly readable, and clean white where the demo sits */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />
         </div>
         <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
-                <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
+              <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
+                  <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
+                </span>
+                {/* CPD badge — swap in the official CPD Certified logo once approval lands */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
+                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
+                  Approved
+                </span>
               </div>
               <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
                 {headline}
@@ -170,9 +178,9 @@ export default async function GoLandingPage({
               {/* Directional cue pointing across to the live demo (desktop) */}
               <div className="mt-4 hidden items-center gap-2 lg:flex">
                 <span className="text-sm font-extrabold text-teal">Try it — a real lesson &amp; question</span>
-                <svg width="44" height="30" viewBox="0 0 44 30" fill="none" className="text-teal" aria-hidden>
-                  <path d="M2 22 C 15 27, 30 21, 38 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                  <path d="M31 6 L 39 7 L 36 15" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="62" height="22" viewBox="0 0 62 22" fill="none" className="text-teal" aria-hidden>
+                  <path d="M2 12 C 20 12, 38 13, 56 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <path d="M49 3 L 58 9 L 49 15" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">

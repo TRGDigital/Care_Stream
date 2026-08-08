@@ -162,9 +162,11 @@ export default async function GoLandingPage({
       <section className="relative overflow-hidden bg-white">
         {/* Real care photo bleeding into the white from the LEFT, so the demo card on
             the right sits on clean white (desktop only) */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
+          {/* Fixed-height, top-anchored so the photo never re-crops when the demo
+              card changes height — the hero just reveals more/less of the same image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[40%_15%]" />
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[48rem] w-full object-cover object-[40%_15%]" />
           {/* Fade the photo smoothly into the white (no hard edge); kept faint so the
               copy stays clearly readable, and clean white where the demo sits */}
           <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />

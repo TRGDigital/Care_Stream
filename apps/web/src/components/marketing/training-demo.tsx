@@ -59,7 +59,7 @@ export function TrainingDemo({
   // with CSS) so the full lesson, question and answer are server-rendered and
   // crawlable by Googlebot, while the click-through wizard drives what's shown.
   const card = (
-    <div className={`overflow-hidden rounded-2xl border border-gray-100 bg-white lg:min-h-[37rem] ${variant === 'card' ? 'shadow-elevated' : 'shadow-card'}`}>
+    <div className={`overflow-hidden rounded-2xl border border-gray-100 bg-white ${variant === 'card' ? 'shadow-elevated' : 'shadow-card'}`}>
       {/* Stepper */}
       <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4 sm:gap-3 sm:px-8">
         {STEPS.map((s, i) => {

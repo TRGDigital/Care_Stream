@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
   GraduationCap, ShieldCheck, Globe, RefreshCw, CheckCircle2, Calendar,
-  Users, MessageSquare, ArrowRight,
+  Users, MessageSquare, ArrowRight, Star,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
@@ -12,6 +12,7 @@ import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
+import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 
 export const revalidate = 60
 
@@ -108,6 +109,14 @@ async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   return null
 }
 
+async function getUnitPence(): Promise<number> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/licence-price`, { next: { revalidate: 300 } })
+    if (res.ok) return Number((await res.json())?.data?.unit_pence) || 2599
+  } catch { /* fall through */ }
+  return 2599
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const m = await getModule(slug)
@@ -124,7 +133,24 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) notFound()
-  const [related, demo] = await Promise.all([getRelatedModules(m.group_key, slug), getModuleDemo(slug)])
+  const [related, demo, unitPence] = await Promise.all([getRelatedModules(m.group_key, slug), getModuleDemo(slug), getUnitPence()])
+  const unitPrice = (unitPence / 100).toFixed(2)
+
+  const heroBullets = [
+    'CQC-aligned, mapped to the Care Certificate framework',
+    'CPD approved — recognised professional development for your team',
+    'Completed in the hub in over 60 languages',
+    'A certificate for every staff member, for your CQC evidence',
+  ]
+  const techLogos = [
+    { name: 'Google Cloud', Icon: GoogleCloud },
+    { name: 'OpenAI', Icon: OpenAI },
+    { name: 'Claude', Icon: Claude },
+    { name: 'Supabase', Icon: Supabase },
+    { name: 'Pinecone', Icon: Pinecone },
+    { name: 'Google Ads', Icon: GoogleAds },
+    { name: 'AWS', Icon: Aws },
+  ]
 
   const summary = careSetting(m.summary ?? m.description) || `What ${m.title.toLowerCase()} training covers, who needs it and how often, and how CareStream delivers it to your whole team in any language.`
   const outcomes = m.outcomes.map(careSetting)
@@ -169,44 +195,100 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
   return (
     <>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-hero-gradient">
-        <div className="absolute inset-0 dot-mesh" />
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
-        <div className="absolute bottom-0 left-0 right-0 h-16" style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }} />
-        <div className="relative mx-auto max-w-content px-6 pb-24 pt-20 md:pb-28 md:pt-24">
-          <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]">
+      {/* ── Hero — care photo bled into the white, interactive demo focal card ── */}
+      <section className="relative overflow-hidden bg-white">
+        {/* Real care photo bleeding into the white (desktop); fixed height so it
+            never re-crops when the demo card changes height */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[72rem] w-full object-cover object-[40%_12%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />
+        </div>
+        <div className="relative mx-auto max-w-content px-6 py-14 md:py-20">
+          <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
             <div>
-              <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-white/60">
-                <Link href="/staff-training" className="hover:text-white">Staff Training</Link>
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-mid">
+                <Link href="/staff-training" className="hover:text-teal">Staff Training</Link>
                 <span>/</span>
-                <span className="text-white/80">{m.group_label}</span>
+                <span className="text-neutral-dark">{m.group_label}</span>
               </div>
-              <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                {m.title} training
+              <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
+                  <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
+                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
+                  Approved
+                </span>
+              </div>
+              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
+                {m.title} training that gets your team CQC-ready
               </h1>
-              <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">{summary}</p>
-              <div className="mb-8 flex flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white"><Calendar size={13} /> {freqLabel(m.frequency)}</span>
-                <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white"><Users size={13} /> For your care team</span>
-                {m.requires_practical && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white"><CheckCircle2 size={13} /> Practical sign-off</span>
-                )}
-                {!m.built && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-amber-brand/90 px-3 py-1.5 text-xs font-semibold text-white"><RefreshCw size={13} /> In preparation</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <ul className="mb-8 space-y-3">
+                {heroBullets.map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-neutral-dark">
+                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                  Buy Training Module
+                  Buy now for your team
                 </Link>
-                <Link href="/demo" className="btn-amber rounded-btn px-8 py-4 text-sm">Book a Demo</Link>
-                <Link href="/register" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">Start Free Trial</Link>
+                <Link href="/demo" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
+                  Book a demo
+                </Link>
+              </div>
+              <p className="mt-3 text-sm text-neutral-mid">
+                From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.
+              </p>
+              {/* Directional cue to the live demo (desktop) */}
+              <div className="mt-5 hidden items-center gap-3 lg:flex">
+                <span className="text-lg font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="mt-6 flex items-center gap-2 text-sm text-neutral-mid">
+                <span className="flex gap-0.5">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} className="fill-amber-brand text-amber-brand" />)}</span>
+                Trusted by UK care providers
+              </div>
+              {/* Mobile: prompt to scroll to the demo below */}
+              <div className="mt-5 flex items-center gap-2 lg:hidden">
+                <span className="text-base font-extrabold text-teal">Try it — a real lesson &amp; question</span>
+                <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              {/* The technology behind it all */}
+              <div className="mt-8 border-t border-gray-200/70 pt-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">
+                  Specialists in the technology behind it all
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {techLogos.map(({ name, Icon }) => (
+                    <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark shadow-sm">
+                      <span className="h-3.5 w-3.5"><Icon /></span>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
+                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  team&apos;s {m.title.toLowerCase()} training stays accurate, always up to date with the latest
+                  guidance, and is delivered in over 60 languages.
+                </p>
               </div>
             </div>
-            <div>
-              <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-white/10">
+
+            {/* Interactive demo as the hero focal element (illustration fallback if not built) */}
+            {demo ? (
+              <TrainingDemo demo={demo} buyHref={buyHref} variant="card" />
+            ) : (
+              <div className="overflow-hidden rounded-2xl shadow-elevated ring-1 ring-gray-100">
                 {m.illustration_url ? (
                   <SiteImage src={`${API_URL}${m.illustration_url}`} alt={`${m.title} training`} className="aspect-[16/10] w-full object-cover" />
                 ) : (
@@ -215,13 +297,10 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
-
-      {/* ── Live demo: one lesson + one question from this module ──────────── */}
-      {demo && <TrainingDemo demo={demo} buyHref={buyHref} />}
 
       {/* ── What it covers ────────────────────────────────────────────────── */}
       <section className="bg-white py-24">

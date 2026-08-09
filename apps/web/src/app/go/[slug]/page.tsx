@@ -5,6 +5,7 @@ import { ShieldCheck, Globe, Award, CheckCircle2, Star, RefreshCw, Users, Gradua
 import { type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoDemoWithQuiz } from '@/components/go/go-demo-with-quiz'
 import { GoQuiz, type QuizQuestion } from '@/components/go/go-quiz'
+import { GoCountdown } from '@/components/go/go-countdown'
 import { GoExitIntent } from '@/components/go/go-exit-intent'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
 import { HomeFaq } from '@/components/marketing/home-faq'
@@ -96,6 +97,17 @@ export default async function GoLandingPage({
   const buyHref = `/buy/${encodeURIComponent(slug)}`
   const unitPrice = (unitPence / 100).toFixed(2)
   const tLc = m.title.toLowerCase()
+
+  // ── Launch offer ────────────────────────────────────────────────────────────
+  // STANDARD_PENCE is the genuine standard price (being set to £35.99 in Stripe);
+  // the live API price (unitPence) is the current offer price. OFFER_ENDS_ISO is a
+  // FIXED deadline shared by all visitors — set it to a real date; never compute it
+  // per-visitor (that would be a misleading rolling countdown).
+  const STANDARD_PENCE = 3599
+  const OFFER_ENDS_ISO = '2026-08-09T23:59:59'
+  const promoActive = STANDARD_PENCE > unitPence
+  const standardPrice = (STANDARD_PENCE / 100).toFixed(2)
+  const savePct = Math.round((1 - unitPence / STANDARD_PENCE) * 100)
 
   const quizQuestions: QuizQuestion[] = [
     { q: `How does your team do ${tLc} training now?`, options: ['Online e-learning', 'In-person sessions', 'A mix of both', "We're not sure it's up to date"] },
@@ -196,9 +208,19 @@ export default async function GoLandingPage({
                 ))}
               </ul>
               <CtaRow buyHref={buyHref} showSecondary={false} />
-              <p className="mt-3 text-sm text-neutral-mid">
-                From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.
-              </p>
+              <div className="mt-4">
+                <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                  {promoActive && <span className="text-base text-neutral-mid line-through [font-variant-numeric:tabular-nums]">£{standardPrice}</span>}
+                  <span className="text-2xl font-extrabold text-neutral-dark [font-variant-numeric:tabular-nums]">£{unitPrice}</span>
+                  <span className="text-sm text-neutral-mid">per staff member, one-off</span>
+                  {promoActive && <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-bold text-green-700">Save {savePct}%</span>}
+                </div>
+                {promoActive && (
+                  <div className="mt-2">
+                    <GoCountdown endsAt={OFFER_ENDS_ISO} />
+                  </div>
+                )}
+              </div>
               {/* Directional cue pointing across to the live demo (desktop) */}
               <div className="mt-5 hidden items-center gap-3 lg:flex">
                 <span className="text-lg font-extrabold text-teal">Try it — a real lesson &amp; question</span>

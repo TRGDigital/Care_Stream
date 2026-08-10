@@ -227,10 +227,13 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       if (String(req.query.gen ?? '') === '1' && lesson && question) {
         for (const lang of ['pol', 'hin'] as const) {
           // gen=1 always (re)generates so a warm-up run refreshes stale/broken rows.
-          // Translate heading and body separately so a long body never bleeds into the heading.
-          const headingT = (await translateTextsBatch([lesson.heading], lang))[0] ?? lesson.heading
-          const bodyT = (await translateTextsBatch([lesson.body], lang))[0] ?? lesson.body
-          const explT = question.explanation ? (await translateTextsBatch([question.explanation], lang))[0] : null
+          // One parallel batch translates heading + body + explanation independently
+          // (each aligned to its input); the question keeps its option order.
+          const [headingT, bodyT, explT0] = await translateTextsBatch(
+            [lesson.heading, lesson.body, question.explanation ?? ''],
+            lang,
+          )
+          const explT = question.explanation ? explT0 : null
           const [qT] = await translateQuestionsBatch([{ text: question.text, options: question.options }], lang)
           const lessonT = { heading: headingT, body: bodyT }
           const questionT = { text: qT.text, options: qT.options, explanation: explT }

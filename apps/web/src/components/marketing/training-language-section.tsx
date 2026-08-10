@@ -30,8 +30,8 @@ export function TrainingLanguageSection({
     <section className="bg-neutral-light py-24">
       <div className="mx-auto max-w-content px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Copy */}
-          <div>
+          {/* Copy (right on desktop, so it alternates with the section above) */}
+          <div className="lg:order-2">
             <p className="section-label mb-3 text-teal">In every language</p>
             <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
               Any step, in their language, in one tap.
@@ -61,8 +61,8 @@ export function TrainingLanguageSection({
             </p>
           </div>
 
-          {/* Hub lesson mock with the live language toggle */}
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
+          {/* Hub lesson mock with the live language toggle (left on desktop) */}
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated lg:order-1">
             <div className="flex items-center gap-1.5 border-b border-gray-100 bg-neutral-light px-4 py-2.5">
               <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />

@@ -9,6 +9,8 @@ import { GoCountdown } from '@/components/go/go-countdown'
 import { GoExitIntent } from '@/components/go/go-exit-intent'
 import { GoStickyCta } from '@/components/go/go-sticky-cta'
 import { HomeFaq } from '@/components/marketing/home-faq'
+import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
+import { TrainingLanguageSection } from '@/components/marketing/training-language-section'
 import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 
@@ -395,6 +397,12 @@ export default async function GoLandingPage({
           </div>
         </div>
       </section>
+
+      {/* How your team gets trained — hub delivery preview */}
+      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
+
+      {/* In every language — the language-toggle USP */}
+      <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} />
 
       {/* FAQ */}
       <HomeFaq faqs={faqs} />

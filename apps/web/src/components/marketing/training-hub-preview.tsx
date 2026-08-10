@@ -8,9 +8,9 @@ import { SiteImage } from '@/components/site-image'
 // current module is featured as a row so it ties to the page.
 export function TrainingHubPreview({ moduleTitle, illustrationUrl }: { moduleTitle: string; illustrationUrl?: string }) {
   const steps = [
-    { n: '01', title: 'Buy & allocate', body: `Assign ${moduleTitle} to each staff member in seconds — no course-builder, no per-person setup.` },
-    { n: '02', title: 'They complete it in the hub', body: 'Staff work through the module on any device, in over 60 languages. Teach, then check — a wrong answer sends a short follow-up lesson.' },
-    { n: '03', title: 'You track it', body: 'See live completion status and a certificate for every person — audit-ready evidence for CQC.' },
+    { n: '01', title: 'Buy and allocate', body: `Assign ${moduleTitle} to each staff member in seconds. No course builder and no setup for each person.` },
+    { n: '02', title: 'They complete it in the hub', body: 'Staff work through the module on any device, in over 60 languages, teaching then checking understanding. A wrong answer sends a short follow up lesson.' },
+    { n: '03', title: 'You track it', body: 'See live completion status and a certificate for every person, ready as evidence for CQC.' },
   ]
 
   const rows = [
@@ -38,7 +38,7 @@ export function TrainingHubPreview({ moduleTitle, illustrationUrl }: { moduleTit
           <p className="text-lg leading-relaxed text-neutral-mid">
             Training is delivered in the hub each staff member logs into. You allocate the modules, they
             complete them in their own language, and you get the completion records and certificates for
-            your CQC evidence — with any gaps closed by automatic follow-up training.
+            your CQC evidence, with any gaps closed by automatic follow up training.
           </p>
         </div>
 

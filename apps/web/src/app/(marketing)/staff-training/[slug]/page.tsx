@@ -108,7 +108,7 @@ async function getRelatedModules(groupKey: string, currentSlug: string): Promise
 // Live one-lesson + one-question taster for this module (null if not yet built).
 async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo`, { next: { revalidate: 300 } })
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=2`, { next: { revalidate: 300 } })
     if (res.ok) return (await res.json())?.data?.demo ?? null
   } catch { /* fall through */ }
   return null

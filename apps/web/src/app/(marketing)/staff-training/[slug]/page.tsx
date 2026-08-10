@@ -138,9 +138,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
   const heroBullets = [
     'CQC-aligned, mapped to the Care Certificate framework',
-    'CPD approved — recognised professional development for your team',
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
+    'A wrong answer triggers a follow-up lesson, so gaps are closed',
   ]
   const techLogos = [
     { name: 'Google Cloud', Icon: GoogleCloud },
@@ -215,10 +215,6 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
               <div className="mb-5 flex flex-wrap items-center gap-2.5">
                 <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
                   <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
-                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
-                  Approved
                 </span>
               </div>
               <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">

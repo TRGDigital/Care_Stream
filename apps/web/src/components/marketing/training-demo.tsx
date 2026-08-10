@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info } from 'lucide-react'
+import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -14,6 +14,9 @@ export type TrainingDemoData = {
   question: { text: string; options: string[]; correct: number; explanation: string | null } | null
   total_sections: number
   total_questions: number
+  // Saved translations of the demo (English stays canonical; option order preserved
+  // so the `correct` index is unchanged). Present only for languages that exist.
+  translations?: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }>
 }
 
 type Step = 'lesson' | 'question' | 'result'
@@ -42,12 +45,19 @@ export function TrainingDemo({
   const [step, setStep] = useState<Step>('lesson')
   const [selected, setSelected] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
+  const [lang, setLang] = useState<'eng' | 'pol' | 'hin'>('eng')
   const { lesson, question } = demo
   if (!lesson || !question) return null
 
+  // Swap in the saved translation when a language is selected (English is canonical).
+  const availableLangs = (['pol', 'hin'] as const).filter((l) => demo.translations?.[l])
+  const tr = lang !== 'eng' ? demo.translations?.[lang] : undefined
+  const L = tr ? { heading: tr.lesson.heading, body: tr.lesson.body, image_url: lesson.image_url } : lesson
+  const Q = tr ? { text: tr.question.text, options: tr.question.options, correct: question.correct, explanation: tr.question.explanation } : question
+
   const stepIdx = STEPS.findIndex((s) => s.key === step)
   const answered = selected !== null
-  const isCorrect = selected === question.correct
+  const isCorrect = selected === Q.correct
 
   const track = (event: string, extra?: Record<string, unknown>) => {
     try {
@@ -60,6 +70,25 @@ export function TrainingDemo({
   // crawlable by Googlebot, while the click-through wizard drives what's shown.
   const card = (
     <div className={`overflow-hidden rounded-2xl border border-gray-100 bg-white ${variant === 'card' ? 'shadow-elevated' : 'shadow-card'}`}>
+      {/* Language toggle — saved Polish + Hindi translations, no runtime cost */}
+      {availableLangs.length > 0 && (
+        <div className="flex items-center gap-1.5 border-b border-gray-100 px-4 py-2.5 sm:px-6">
+          <span className="mr-auto flex items-center gap-1.5 text-xs font-semibold text-neutral-mid"><Globe size={13} /> This lesson in</span>
+          {(([['eng', 'English'], ['pol', 'Polski'], ['hin', '\u0939\u093f\u0928\u094d\u0926\u0940']]) as [string, string][])
+            .filter(([c]) => c === 'eng' || availableLangs.includes(c as 'pol' | 'hin'))
+            .map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLang(code as 'eng' | 'pol' | 'hin')}
+                className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${lang === code ? 'bg-purple-600 text-white' : 'border border-gray-200 text-neutral-mid hover:border-purple-300 hover:text-purple-700'}`}
+              >
+                {label}
+              </button>
+            ))}
+        </div>
+      )}
+
       {/* Stepper */}
       <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4 sm:gap-3 sm:px-8">
         {STEPS.map((s, i) => {
@@ -79,17 +108,17 @@ export function TrainingDemo({
 
       {/* Step: Lesson */}
       <div className={step === 'lesson' ? '' : 'hidden'}>
-        {lesson.image_url && (
+        {L.image_url && (
           <SiteImage
-            src={`${API_URL}${lesson.image_url}`}
-            alt={`${demo.title} training: ${lesson.heading}`}
+            src={`${API_URL}${L.image_url}`}
+            alt={`${demo.title} training: ${L.heading}`}
             className="aspect-[16/7] w-full object-cover"
           />
         )}
         <div className="p-7 md:p-9">
           <span className="mb-4 inline-block text-xs font-bold uppercase tracking-wide text-teal">Lesson 1 of {demo.total_sections}</span>
-          <h3 className="mb-3 text-2xl font-bold text-neutral-dark">{lesson.heading}</h3>
-          <p className="mb-8 whitespace-pre-line leading-relaxed text-neutral-mid">{lesson.body}</p>
+          <h3 className="mb-3 text-2xl font-bold text-neutral-dark">{L.heading}</h3>
+          <p className="mb-8 whitespace-pre-line leading-relaxed text-neutral-mid">{L.body}</p>
           <button
             type="button"
             onClick={() => { setStep('question'); track('demo_started') }}
@@ -103,9 +132,9 @@ export function TrainingDemo({
       {/* Step: Question */}
       <div className={step === 'question' ? 'p-7 md:p-9' : 'hidden'}>
         <span className="mb-4 inline-block text-xs font-bold uppercase tracking-wide text-amber-brand">Quick check</span>
-        <p className="mb-6 text-lg font-semibold text-neutral-dark">{question.text}</p>
+        <p className="mb-6 text-lg font-semibold text-neutral-dark">{Q.text}</p>
         <div className="space-y-3">
-          {question.options.map((opt, i) => {
+          {Q.options.map((opt, i) => {
             const chosen = selected === i
             return (
               <button
@@ -154,9 +183,9 @@ export function TrainingDemo({
         )}
 
         <div className="space-y-3">
-          {question.options.map((opt, i) => {
-            const showCorrect = i === question.correct
-            const showWrong = answered && i === selected && i !== question.correct
+          {Q.options.map((opt, i) => {
+            const showCorrect = i === Q.correct
+            const showWrong = answered && i === selected && i !== Q.correct
             return (
               <div
                 key={i}
@@ -173,9 +202,9 @@ export function TrainingDemo({
 
         <div className="mt-5 rounded-xl bg-neutral-light p-4 text-sm leading-relaxed text-neutral-dark">
           <p>
-            <span className="font-bold">The correct answer is “{question.options[question.correct]}”.</span>{' '}
-            {question.explanation
-              ? question.explanation
+            <span className="font-bold">The correct answer is “{Q.options[Q.correct]}”.</span>{' '}
+            {Q.explanation
+              ? Q.explanation
               : 'In the full module, a wrong answer triggers a short follow-up lesson and a fresh question, so the gap is always closed before completion.'}
           </p>
         </div>

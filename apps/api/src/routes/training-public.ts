@@ -6,6 +6,7 @@ import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { createTrainingCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
+import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
 import { sendStaffLoginLinkEmail } from '../services/email/outbound'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
@@ -208,6 +209,41 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       ? { text: String(q.text), options: q.options.map(String), correct: q.correct as number, explanation: q.explanation ? String(q.explanation) : null }
       : null
 
+    // Saved Polish + Hindi translations of the demo. Generated once (call with
+    // ?gen=1), then read from cache on every render — zero runtime translation cost.
+    const translations: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }> = {}
+    try {
+      const rows: any[] = await (prisma as any).$queryRawUnsafe(
+        `select lang, lesson, question from demo_translations where topic_slug = $1 and lang in ('pol','hin')`,
+        slug,
+      )
+      for (const r of rows) {
+        translations[r.lang] = {
+          lesson:   typeof r.lesson === 'string' ? JSON.parse(r.lesson) : r.lesson,
+          question: typeof r.question === 'string' ? JSON.parse(r.question) : r.question,
+        }
+      }
+      // Generate + cache any missing language on demand (used to pre-warm all modules).
+      if (String(req.query.gen ?? '') === '1' && lesson && question) {
+        for (const lang of ['pol', 'hin'] as const) {
+          if (translations[lang]) continue
+          const [headingT, bodyT] = await translateTextsBatch([lesson.heading, lesson.body], lang)
+          const explT = question.explanation ? (await translateTextsBatch([question.explanation], lang))[0] : null
+          const [qT] = await translateQuestionsBatch([{ text: question.text, options: question.options }], lang)
+          const lessonT = { heading: headingT, body: bodyT }
+          const questionT = { text: qT.text, options: qT.options, explanation: explT }
+          await (prisma as any).$executeRawUnsafe(
+            `insert into demo_translations (topic_slug, lang, lesson, question) values ($1, $2, $3::jsonb, $4::jsonb)
+             on conflict (topic_slug, lang) do update set lesson = excluded.lesson, question = excluded.question, created_at = now()`,
+            slug, lang, JSON.stringify(lessonT), JSON.stringify(questionT),
+          )
+          translations[lang] = { lesson: lessonT, question: questionT }
+        }
+      }
+    } catch {
+      // Translations are a progressive enhancement — never fail the demo on them.
+    }
+
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=86400')
     res.json({ data: { demo: {
       slug,
@@ -216,6 +252,7 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       question,
       total_sections: secs.length,
       total_questions: qs.length,
+      translations,
     } } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })

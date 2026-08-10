@@ -259,7 +259,8 @@ export default async function GoLandingPage({
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
                   The same AI and technology behind the world&apos;s best products powers CareStream, so your
                   team&apos;s {tLc} training stays accurate, always up to date with the latest guidance, and is
-                  delivered in over 60 languages.
+                  delivered in{' '}
+                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.
                 </p>
               </div>
             </div>

@@ -41,6 +41,7 @@ const MARKETING: Entry[] = [
   { url: '/faq',                                   changeFrequency: 'monthly', priority: 0.6 },
   { url: '/demo',                                  changeFrequency: 'monthly', priority: 0.8 },
   { url: '/contact',                               changeFrequency: 'monthly', priority: 0.6 },
+  { url: '/languages',                             changeFrequency: 'monthly', priority: 0.6 },
   { url: '/help',                                  changeFrequency: 'monthly', priority: 0.5 },
   // Legal pages (static routes) — indexable, so they belong in the sitemap.
   { url: '/privacy',                               changeFrequency: 'yearly',  priority: 0.3 },

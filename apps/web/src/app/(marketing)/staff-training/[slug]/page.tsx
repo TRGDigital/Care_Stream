@@ -13,6 +13,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
 import { JsonLd } from '@/components/json-ld'
 import { courseSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
@@ -482,6 +483,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
           </div>
         </div>
       </section>
+
+      {/* How your team gets trained — hub delivery preview */}
+      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
 
       <HomeFaq faqs={faqs} />
 

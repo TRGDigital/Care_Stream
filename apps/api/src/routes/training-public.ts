@@ -227,7 +227,9 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       if (String(req.query.gen ?? '') === '1' && lesson && question) {
         for (const lang of ['pol', 'hin'] as const) {
           if (translations[lang]) continue
-          const [headingT, bodyT] = await translateTextsBatch([lesson.heading, lesson.body], lang)
+          // Translate heading and body separately so a long body never bleeds into the heading.
+          const headingT = (await translateTextsBatch([lesson.heading], lang))[0] ?? lesson.heading
+          const bodyT = (await translateTextsBatch([lesson.body], lang))[0] ?? lesson.body
           const explT = question.explanation ? (await translateTextsBatch([question.explanation], lang))[0] : null
           const [qT] = await translateQuestionsBatch([{ text: question.text, options: question.options }], lang)
           const lessonT = { heading: headingT, body: bodyT }

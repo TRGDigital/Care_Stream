@@ -223,19 +223,21 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
           question: typeof r.question === 'string' ? JSON.parse(r.question) : r.question,
         }
       }
-      // Generate + cache any missing language on demand (used to pre-warm all modules).
-      if (String(req.query.gen ?? '') === '1' && lesson && question) {
-        for (const lang of ['pol', 'hin'] as const) {
-          // gen=1 always (re)generates so a warm-up run refreshes stale/broken rows.
-          // One parallel batch translates heading + body + explanation independently
-          // (each aligned to its input); the question keeps its option order.
+      // Generate + cache translations. Warm ONE language per request (?gen=pol /
+      // ?gen=hin) so each finishes within the function limit; ?gen=1 does both.
+      const genParam = String(req.query.gen ?? '')
+      const genLangs: Array<'pol' | 'hin'> =
+        genParam === '1' ? ['pol', 'hin'] : genParam === 'pol' || genParam === 'hin' ? [genParam] : []
+      if (genLangs.length && lesson && question) {
+        for (const lang of genLangs) {
           const [headingT, bodyT, explT0] = await translateTextsBatch(
             [lesson.heading, lesson.body, question.explanation ?? ''],
             lang,
           )
           const explT = question.explanation ? explT0 : null
           const [qT] = await translateQuestionsBatch([{ text: question.text, options: question.options }], lang)
-          const lessonT = { heading: headingT, body: bodyT }
+          // Defensive: keep only the heading line (a long body occasionally bleeds in).
+          const lessonT = { heading: (headingT || lesson.heading).split('\n\n')[0].trim(), body: bodyT }
           const questionT = { text: qT.text, options: qT.options, explanation: explT }
           await (prisma as any).$executeRawUnsafe(
             `insert into demo_translations (topic_slug, lang, lesson, question) values ($1, $2, $3::jsonb, $4::jsonb)

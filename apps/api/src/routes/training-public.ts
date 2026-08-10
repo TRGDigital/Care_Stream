@@ -226,7 +226,7 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       // Generate + cache any missing language on demand (used to pre-warm all modules).
       if (String(req.query.gen ?? '') === '1' && lesson && question) {
         for (const lang of ['pol', 'hin'] as const) {
-          if (translations[lang]) continue
+          // gen=1 always (re)generates so a warm-up run refreshes stale/broken rows.
           // Translate heading and body separately so a long body never bleeds into the heading.
           const headingT = (await translateTextsBatch([lesson.heading], lang))[0] ?? lesson.heading
           const bodyT = (await translateTextsBatch([lesson.body], lang))[0] ?? lesson.body

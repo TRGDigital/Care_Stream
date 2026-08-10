@@ -270,3 +270,47 @@ export function faqPageSchema(faqs: Array<{ question: string; answer: string }>)
     })),
   }
 }
+
+// A purchasable, self-paced online training module as schema.org/Course, with a
+// nested CourseInstance + Offer so it's eligible for Google's Course rich results
+// (and read accurately by LLM/AI search). Populate from the module's own data.
+export function courseSchema(opts: {
+  name: string
+  description: string
+  path: string          // e.g. /staff-training/care-certificate
+  buyPath: string       // e.g. /buy/care-certificate
+  teaches: string[]
+  languages: string[]   // BCP-47 codes
+  pricePence: number
+  workloadMinutes?: number
+}) {
+  const price = (opts.pricePence / 100).toFixed(2)
+  const minutes = Math.max(15, Math.round(opts.workloadMinutes ?? 60))
+  return {
+    '@context':                   'https://schema.org',
+    '@type':                      'Course',
+    '@id':                        `${SITE_URL}${opts.path}#course`,
+    name:                         opts.name,
+    description:                  opts.description,
+    url:                          `${SITE_URL}${opts.path}`,
+    provider:                     { '@type': 'Organization', name: SITE_NAME, url: SITE_URL, '@id': ORG_ID },
+    educationalCredentialAwarded: 'Certificate of completion',
+    ...(opts.teaches.length ? { teaches: opts.teaches } : {}),
+    inLanguage:                   opts.languages,
+    audience:                     { '@type': 'EducationalAudience', educationalRole: 'UK care staff' },
+    offers: {
+      '@type':        'Offer',
+      category:       'Paid',
+      price,
+      priceCurrency:  'GBP',
+      availability:   'https://schema.org/InStock',
+      url:            `${SITE_URL}${opts.buyPath}`,
+    },
+    hasCourseInstance: {
+      '@type':         'CourseInstance',
+      courseMode:      'online',
+      courseWorkload:  `PT${minutes}M`,
+      instructor:      { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },
+    },
+  }
+}

@@ -13,6 +13,9 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { JsonLd } from '@/components/json-ld'
+import { courseSchema } from '@/lib/schema'
+import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
 
 export const revalidate = 60
 
@@ -193,8 +196,29 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
     { question: `Does the training include an assessment?`, answer: `Yes. Each module teaches the topic, applies it to a real care scenario, and finishes with an assessment. If a question is answered incorrectly, CareStream gives a short follow-up lesson and a fresh question to close the gap.` },
   ]
 
+  // ── Course (schema.org) ─────────────────────────────────────────────────────
+  // Detailed, self-contained course facts for the Course JSON-LD.
+  const courseTeaches = Array.from(new Set([...outcomesToShow, ...keyPointsToShow].map((t) => t.trim()).filter(Boolean))).slice(0, 12)
+  const courseDescription = [
+    `${m.title} training for UK care staff, delivered by CareStream. ${summary}`,
+    `The module is built as ${sectionsToShow.length} short, practical sections: each teaches part of the topic, applies it to a real care scenario, then checks understanding with an assessment before moving on. If a staff member answers incorrectly they receive a short follow-up lesson and a fresh question, so knowledge gaps are always closed before completion.`,
+    `Staff complete it in the CareStream hub on any device, in over 60 languages, reading and answering in the language they are most confident in while your records stay in English. Every completion produces a dated certificate you can use as evidence for CQC inspections.`,
+    `Most services refresh it ${freqWord(m.frequency)}, with renewal reminders handled automatically. Buy one licence per staff member, with no full subscription required.`,
+  ].join(' ')
+  const courseJson = courseSchema({
+    name: `${m.title} Training`,
+    description: courseDescription,
+    path: `/staff-training/${m.slug}`,
+    buyPath: buyHref,
+    teaches: courseTeaches,
+    languages: COURSE_LANGUAGE_CODES,
+    pricePence: unitPence,
+    workloadMinutes: Math.min(120, Math.max(30, sectionsToShow.length * 10)),
+  })
+
   return (
     <>
+      <JsonLd data={courseJson} />
       {/* ── Hero — care photo bled into the white, interactive demo focal card ── */}
       <section className="relative overflow-hidden bg-white">
         {/* Real care photo bleeding into the white (desktop); fixed height so it

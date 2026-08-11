@@ -160,15 +160,20 @@ function AuthorForm({
 // A visual editor: you see formatted text, not HTML. Stores HTML via the
 // browser's contentEditable so the public site (which renders HTML) is unchanged.
 
-function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
+function RichEditor({ value, onChange, rows = 6, placeholder = '', token }: {
   value:       string
   onChange:    (v: string) => void
   rows?:       number
   placeholder?: string
+  // When a token is supplied, an "Image" button is shown that uploads and inserts
+  // an image inline. Left off elsewhere (FAQ answers, etc.) so it stays uncluttered.
+  token?:      string | null
 }) {
   const ref       = useRef<HTMLDivElement>(null)
   const lastHtml  = useRef<string>('')
   const savedRange = useRef<Range | null>(null)
+  const imgInputRef = useRef<HTMLInputElement>(null)
+  const [imgBusy, setImgBusy] = useState(false)
 
   // Push external value changes into the div WITHOUT resetting on our own edits
   // (which would jump the caret to the start mid-typing).
@@ -214,6 +219,24 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
     if (url) exec('createLink', url)
   }
 
+  // Upload the chosen image (resized/compressed client-side) and insert it inline
+  // at the caret as a responsive <img>. Prompts for alt text (accessibility + SEO).
+  async function handleImagePick(file: File) {
+    if (!token) return
+    setImgBusy(true)
+    try {
+      const prepared = await resizeImageForUpload(file)
+      const url = await uploadBlogImage(token, prepared)
+      const raw = window.prompt('Image description (alt text, for accessibility and SEO) — optional:', '') ?? ''
+      const alt = raw.replace(/"/g, '&quot;')
+      exec('insertHTML', `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:8px;" />`)
+    } catch (err: any) {
+      window.alert(err?.message ?? 'Image upload failed. Please try a smaller image.')
+    } finally {
+      setImgBusy(false)
+    }
+  }
+
   // mousedown-preventDefault keeps the editor's selection while clicking a button
   const btn = 'rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark'
   const minHeight = `${Math.max(rows, 3) * 1.6}rem`
@@ -237,6 +260,16 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '' }: {
         <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('italic')} title="Italic" className={`${btn} italic`}>I</button>
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
         <button type="button" onMouseDown={e => e.preventDefault()} onClick={insertLink} title="Insert link" className={btn}>Link</button>
+        {token ? (
+          <>
+            <button type="button" onMouseDown={e => e.preventDefault()} disabled={imgBusy}
+              onClick={() => imgInputRef.current?.click()} title="Insert image" className={btn}>
+              {imgBusy ? 'Uploading…' : '🖼 Image'}
+            </button>
+            <input ref={imgInputRef} type="file" accept="image/*" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) void handleImagePick(f); e.currentTarget.value = '' }} />
+          </>
+        ) : null}
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
         <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('insertUnorderedList')} title="Bullet list"   className={btn}>• List</button>
         <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => exec('insertOrderedList')}   title="Numbered list" className={btn}>1. List</button>
@@ -741,6 +774,7 @@ function PostForm({
           value={form.content}
           onChange={v => { set('content', v); set('read_time_minutes', calcReadTime(v)) }}
           rows={22}
+          token={token}
           placeholder="Write your post content here. HTML is supported — headings, paragraphs, lists, bold, links etc."
         />
         <p className="text-xs text-neutral-mid">Read time auto-calculates as you type.</p>

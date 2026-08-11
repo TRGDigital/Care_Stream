@@ -3,6 +3,7 @@ import Link from 'next/link'
 import {
   Check, Home, Heart, Car, Users, Building2, Sunrise, Brain,
   Star, RefreshCw, Moon, ClipboardList, Camera,
+  GraduationCap, Globe, Award, BarChart3, ArrowRight,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
@@ -249,10 +250,146 @@ function CareSettingsMockup() {
   )
 }
 
+// ─── Training managers: live module library showcase ─────────────────────────
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+type TrainingCatalogue = {
+  groups: Record<string, string>
+  topics: Array<{ title: string; group_key: string }>
+}
+
+async function getTrainingCatalogue(): Promise<TrainingCatalogue> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 300 } })
+    if (res.ok) {
+      const d = (await res.json())?.data
+      if (Array.isArray(d?.topics)) return { groups: d.groups ?? {}, topics: d.topics }
+    }
+  } catch {
+    // fall through to a sensible static showcase
+  }
+  return { groups: {}, topics: [] }
+}
+
+const FALLBACK_MODULES = [
+  'Safeguarding Adults and Children', 'Moving and Handling of People', 'Fire Safety',
+  'First Aid / Basic Life Support', 'Infection Prevention and Control', 'Medication Management',
+  'Mental Capacity Act and DoLS', 'Health and Safety', 'Food Hygiene', 'Dementia Awareness',
+  'Equality, Diversity and Inclusion', 'Data Protection and GDPR',
+]
+
+const FALLBACK_CATEGORIES = [
+  'Core mandatory', 'Health & safety / statutory', 'Care & clinical',
+  'Conduct & governance', 'Data & technology', 'Role- or resident-specific',
+]
+
+const TM_BENEFITS: Array<{ Icon: React.ElementType; title: string; body: string }> = [
+  { Icon: GraduationCap, title: 'Ready to assign', body: 'Roll out CQC-aligned annual training in a click, or generate new modules from your own policies.' },
+  { Icon: BarChart3,     title: 'Compliance at a glance', body: 'Track completion across your whole team on one dashboard, with automatic renewal reminders.' },
+  { Icon: Globe,         title: 'In 50+ languages', body: 'Staff learn in the language they think in, so training lands with every member of your team.' },
+  { Icon: Award,         title: 'Evidence, gathered for you', body: 'Every module ends with a knowledge check and a certificate — your CQC evidence, captured automatically.' },
+]
+
+function TrainingManagersSection({ catalogue }: { catalogue: TrainingCatalogue }) {
+  const { groups, topics } = catalogue
+  const moduleCount = topics.length || 98
+  const categoryEntries = Object.keys(groups).length
+    ? Object.entries(groups).map(([key, label]) => ({
+        label,
+        count: topics.filter(t => t.group_key === key).length,
+      }))
+    : FALLBACK_CATEGORIES.map(label => ({ label, count: 0 }))
+  const categoryCount = categoryEntries.length
+  const sampleModules = (topics.length ? topics.map(t => t.title).filter(Boolean) : FALLBACK_MODULES).slice(0, 12)
+
+  return (
+    <section id="training-managers" className="scroll-mt-28 bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:items-start">
+          {/* Sticky intro */}
+          <div className="lg:sticky lg:top-28">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-pill bg-teal px-5 py-2">
+              <GraduationCap size={15} className="text-white" />
+              <span className="text-sm font-bold text-white">Training Managers</span>
+            </div>
+            <h2 className="text-2xl font-extrabold leading-snug text-neutral-dark md:text-3xl">
+              Assign, track and prove training — from one library, in every language
+            </h2>
+            <p className="mt-4 leading-relaxed text-neutral-mid">
+              Move beyond the annual tick-box. Roll out ready-built modules or generate new ones
+              from your own policies, then watch completion and compliance across your whole team
+              on a single dashboard.
+            </p>
+            <Link href="/staff-training" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:underline">
+              Explore staff training <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          {/* Benefits + live module library */}
+          <div className="space-y-8">
+            <ul className="grid gap-5 sm:grid-cols-2">
+              {TM_BENEFITS.map(({ Icon, title, body }) => (
+                <li key={title} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-teal-light">
+                    <Icon size={17} className="text-teal" />
+                  </span>
+                  <p className="mb-1 font-bold text-neutral-dark">{title}</p>
+                  <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
+                </li>
+              ))}
+            </ul>
+
+            {/* The training library */}
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated">
+              <div className="flex items-center justify-between bg-teal px-6 py-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">The training library</p>
+                  <p className="text-sm font-bold text-white">{moduleCount} ready-built modules</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-extrabold leading-none text-white">{categoryCount}</p>
+                  <p className="text-[10px] text-white/60">categories</p>
+                </div>
+              </div>
+
+              <div className="border-b border-gray-100 px-6 py-4">
+                <div className="flex flex-wrap gap-2">
+                  {categoryEntries.map(({ label, count }) => (
+                    <span key={label} className="rounded-full bg-teal-light px-3 py-1.5 text-xs font-semibold text-teal">
+                      {label}{count ? ` · ${count}` : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-px bg-gray-100 sm:grid-cols-2">
+                {sampleModules.map(name => (
+                  <div key={name} className="flex items-center gap-2.5 bg-white px-6 py-3">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />
+                    <span className="text-sm leading-tight text-neutral-dark">{name}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="px-6 py-3 text-center">
+                <Link href="/staff-training" className="text-xs font-semibold text-teal hover:underline">
+                  See the full training library →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function WhoItsForPage() {
   const s = makeSlot(WHO_ITS_FOR_SLOTS, await getContentSlots('/who-its-for'))
+  const trainingCatalogue = await getTrainingCatalogue()
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -403,6 +540,9 @@ export default async function WhoItsForPage() {
           </section>
         ))}
       </div>
+
+      {/* Training managers — showcase of the ready-built training library */}
+      <TrainingManagersSection catalogue={trainingCatalogue} />
 
       <EditableContentBlock path="/who-its-for" />
 

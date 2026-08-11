@@ -31,6 +31,7 @@ const SERVICES: MenuItem[] = [
 
 const WHO_FOR: MenuItem[] = [
   { href: '/staff-training',       label: 'Care Workers',          desc: 'Policy answers in seconds, in any language',            Icon: Heart },
+  { href: '/who-its-for#training-managers', label: 'Training Managers', desc: 'Assign, track and prove training from one library', Icon: GraduationCap },
   { href: '/care-audits',          label: 'Registered Managers',   desc: 'Run audits and get instant AI recommendations',         Icon: UserCheck },
   { href: '/hr-policies',          label: 'HR and Admin Teams',    desc: 'Handbook queries answered 24/7 in any language',        Icon: Users },
   { href: '/cqc-compliance',       label: 'Compliance Leads',      desc: 'Track CQC readiness and gather evidence easily',        Icon: CheckCircle2 },

@@ -6,6 +6,9 @@ import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
 import { blogPostingSchema, faqPageSchema, hyperTocSchema } from '@/lib/schema'
 import { buildBlogToc } from '@/lib/blog-toc'
+import { Fragment } from 'react'
+import { splitHtmlForCtas } from '@/lib/blog-cta'
+import { BlogCta, BLOG_CTA_TYPES } from '@/components/marketing/blog-cta'
 
 export const revalidate = 60
 
@@ -31,6 +34,7 @@ interface Post {
   key_info_content: string | null
   cta_text: string | null
   cta_url: string | null
+  cta_type: string | null
   faqs: Faq[] | null
   updated_at: string | null
   sources: Array<{ label: string; url: string }> | null
@@ -178,8 +182,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {/* Main body — stored as HTML in the admin editor. A linked Table of
           Contents is generated at render time and injected above the first H2;
-          the matching HyperToc structured data is emitted above. */}
-      <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          the matching HyperToc structured data is emitted above. When a CTA type
+          is set on the post, that CTA is woven in evenly at paragraph boundaries. */}
+      {post.cta_type && (BLOG_CTA_TYPES as string[]).includes(post.cta_type) ? (
+        splitHtmlForCtas(bodyHtml, 2).map((part, idx, parts) => (
+          <Fragment key={idx}>
+            <div dangerouslySetInnerHTML={{ __html: part }} />
+            {idx < parts.length - 1 ? <BlogCta type={post.cta_type!} variant={idx} /> : null}
+          </Fragment>
+        ))
+      ) : (
+        <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+      )}
 
       {/* Sources / citations — authoritative references set in the admin. Rendered
           here and emitted as schema.org "citation" in the article JSON-LD. */}

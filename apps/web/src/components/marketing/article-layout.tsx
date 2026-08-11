@@ -22,7 +22,7 @@ export function ArticleLayout({
           className="absolute bottom-0 left-0 right-0 h-14"
           style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
         />
-        <div className="relative mx-auto max-w-4xl px-6 pb-8">
+        <div className="relative mx-auto max-w-5xl px-6 pb-8">
           <div className="mb-5 flex flex-wrap items-center gap-3">
             <span className="rounded-pill bg-white/20 px-3 py-1.5 text-xs font-bold text-white">{category}</span>
             <span className="text-xs text-white/50">{date} · {readTime}</span>
@@ -32,7 +32,7 @@ export function ArticleLayout({
       </section>
 
       <section className="bg-white py-16">
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-5xl px-6">
           <article className="prose prose-neutral max-w-none prose-headings:font-extrabold prose-headings:text-neutral-dark prose-p:text-neutral-mid prose-li:text-neutral-mid prose-a:text-teal prose-a:no-underline hover:prose-a:underline prose-strong:text-neutral-dark">
             {children}
           </article>

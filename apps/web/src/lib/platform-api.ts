@@ -272,6 +272,7 @@ export interface BlogPost {
   read_time_minutes:     number
   cta_text:              string | null
   cta_url:               string | null
+  cta_type:              string | null
   special_message:       string | null
   special_message_color: string | null
   key_info_title:        string | null

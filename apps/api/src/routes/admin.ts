@@ -3261,7 +3261,7 @@ function buildPostData(body: any) {
     title, slug, excerpt, meta_title, meta_description,
     feature_image_url, feature_image_alt, og_image_url,
     content, author_id, category, publication_date, status,
-    is_featured, read_time_minutes, cta_text, cta_url,
+    is_featured, read_time_minutes, cta_text, cta_url, cta_type,
     special_message, special_message_color, key_info_title, key_info_content,
     faqs, sources,
   } = body ?? {}
@@ -3284,6 +3284,7 @@ function buildPostData(body: any) {
     ...(read_time_minutes    !== undefined && { read_time_minutes:     Number(read_time_minutes) || 1 }),
     ...(cta_text             !== undefined && { cta_text:              cta_text?.trim() || null }),
     ...(cta_url              !== undefined && { cta_url:               cta_url?.trim() || null  }),
+    ...(cta_type             !== undefined && { cta_type:              cta_type?.trim() || null }),
     ...(special_message      !== undefined && { special_message:       special_message?.trim() || null }),
     ...(special_message_color !== undefined && { special_message_color: special_message_color || null }),
     ...(key_info_title       !== undefined && { key_info_title:        key_info_title?.trim() || null }),

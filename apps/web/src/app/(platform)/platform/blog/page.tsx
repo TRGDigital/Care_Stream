@@ -333,7 +333,7 @@ const EMPTY_POST = {
   content: '', author_id: '', category: 'advice',
   publication_date: new Date().toISOString().split('T')[0],
   status: 'draft', is_featured: false, read_time_minutes: 1,
-  cta_text: '', cta_url: '',
+  cta_text: '', cta_url: '', cta_type: '',
   special_message: '', special_message_color: 'blue',
   key_info_title: '', key_info_content: '',
   faqs: EMPTY_FAQS,
@@ -630,8 +630,22 @@ function PostForm({
       </AccordionSection>
 
       {/* ── CTA ──────────────────────────────────────────── */}
-      <AccordionSection title="CTA Button" description="Optional call-to-action displayed at the end of the post">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AccordionSection title="CTAs" description="CTAs woven through the post, plus an optional end-of-post button">
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-neutral-mid">In-content CTA (spread evenly through the article)</label>
+          <select value={form.cta_type ?? ''} onChange={e => set('cta_type', e.target.value)}
+            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal">
+            <option value="">None</option>
+            <option value="book_demo">Book a demo</option>
+            <option value="buy_training">Buy training module</option>
+            <option value="discuss_training">Discuss training module</option>
+          </select>
+          <p className="mt-1 text-xs text-neutral-mid">Automatically inserts this CTA at two evenly-spaced points inside the article body.</p>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <p className="text-xs font-semibold text-neutral-mid">Optional end-of-post button</p>
+          </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Button text</label>
             <input value={form.cta_text} onChange={e => set('cta_text', e.target.value)}

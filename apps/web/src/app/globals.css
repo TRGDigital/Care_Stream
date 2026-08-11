@@ -265,7 +265,15 @@ a, button { transition: all 0.18s ease; }
   color: #7A3D9A;
 }
 .cs-toc-list { margin: 0; padding: 0; list-style: none; }
-.cs-toc-item { margin: 0.3rem 0; line-height: 1.4; }
+.cs-toc-item { position: relative; margin: 0.3rem 0; padding-left: 1.1rem; line-height: 1.4; }
+/* Top-level (h2) sections get a filled bullet. */
+.cs-toc-item::before {
+  content: "•";
+  position: absolute;
+  left: 0.15rem;
+  color: #9B52B5;
+  font-weight: 700;
+}
 .cs-toc-item a {
   color: #5E4D70;
   text-decoration: none;
@@ -276,8 +284,11 @@ a, button { transition: all 0.18s ease; }
   color: #9B52B5;
   border-bottom-color: #9B52B5;
 }
-.cs-toc-l1 { padding-left: 1rem; font-size: 0.95em; }
-.cs-toc-l2 { padding-left: 2rem; font-size: 0.9em; }
+/* Sub-bullets: h3 = hollow circle, h4 = dash, each indented under its parent. */
+.cs-toc-l1 { padding-left: 2.2rem; font-size: 0.95em; }
+.cs-toc-l1::before { content: "◦"; left: 1.25rem; color: #B07FCB; font-weight: 400; }
+.cs-toc-l2 { padding-left: 3.3rem; font-size: 0.9em; }
+.cs-toc-l2::before { content: "–"; left: 2.35rem; color: #B07FCB; font-weight: 400; }
 /* Offset anchored headings so they don't hide under the sticky nav. */
 .prose :is(h2, h3, h4)[id] { scroll-margin-top: 6rem; }
 html { scroll-behavior: smooth; }

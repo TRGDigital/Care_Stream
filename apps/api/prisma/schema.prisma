@@ -1183,6 +1183,7 @@ model BlogPost {
   read_time_minutes     Int         @default(1)
   cta_text              String?
   cta_url               String?
+  cta_type              String?                           // in-content CTA woven through the post: book_demo|buy_training|discuss_training
   special_message       String?
   special_message_color String?
   key_info_title        String?

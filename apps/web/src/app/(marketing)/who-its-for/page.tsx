@@ -10,6 +10,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { SiteImage } from '@/components/site-image'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { WHO_ITS_FOR_SLOTS } from '@/lib/page-slots/who-its-for'
+import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -272,6 +273,20 @@ async function getTrainingCatalogue(): Promise<TrainingCatalogue> {
   return { groups: {}, topics: [] }
 }
 
+// The module we surface as the live, interactive taster in the Training Managers
+// section — a universally relevant one that every care setting must train on.
+const FEATURED_DEMO_SLUG = 'safeguarding-adults-and-children'
+
+async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=2`, { next: { revalidate: 300 } })
+    if (res.ok) return (await res.json())?.data?.demo ?? null
+  } catch {
+    // fall through — the section renders without the demo card
+  }
+  return null
+}
+
 const FALLBACK_MODULES = [
   'Safeguarding Adults and Children', 'Moving and Handling of People', 'Fire Safety',
   'First Aid / Basic Life Support', 'Infection Prevention and Control', 'Medication Management',
@@ -291,7 +306,7 @@ const TM_BENEFITS: Array<{ Icon: React.ElementType; title: string; body: string 
   { Icon: Award,         title: 'Evidence, gathered for you', body: 'Every module ends with a knowledge check and a certificate — your CQC evidence, captured automatically.' },
 ]
 
-function TrainingManagersSection({ catalogue }: { catalogue: TrainingCatalogue }) {
+function TrainingManagersSection({ catalogue, demo }: { catalogue: TrainingCatalogue; demo: TrainingDemoData | null }) {
   const { groups, topics } = catalogue
   const moduleCount = topics.length || 98
   const categoryEntries = Object.keys(groups).length
@@ -326,8 +341,21 @@ function TrainingManagersSection({ catalogue }: { catalogue: TrainingCatalogue }
             </Link>
           </div>
 
-          {/* Benefits + live module library */}
+          {/* Live interactive taster + benefits + module library */}
           <div className="space-y-8">
+            {demo && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal">
+                  Try a lesson — the exact experience your team gets
+                </p>
+                <TrainingDemo demo={demo} buyHref={`/buy/${FEATURED_DEMO_SLUG}`} variant="card" />
+                <p className="mt-3 text-sm leading-relaxed text-neutral-mid">
+                  Read the lesson, answer the question, then tap the language button to flip the whole
+                  step into another language — the same flow, in over 50 languages, that your staff use in the hub.
+                </p>
+              </div>
+            )}
+
             <ul className="grid gap-5 sm:grid-cols-2">
               {TM_BENEFITS.map(({ Icon, title, body }) => (
                 <li key={title} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -389,7 +417,10 @@ function TrainingManagersSection({ catalogue }: { catalogue: TrainingCatalogue }
 
 export default async function WhoItsForPage() {
   const s = makeSlot(WHO_ITS_FOR_SLOTS, await getContentSlots('/who-its-for'))
-  const trainingCatalogue = await getTrainingCatalogue()
+  const [trainingCatalogue, trainingDemo] = await Promise.all([
+    getTrainingCatalogue(),
+    getModuleDemo(FEATURED_DEMO_SLUG),
+  ])
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
@@ -541,8 +572,8 @@ export default async function WhoItsForPage() {
         ))}
       </div>
 
-      {/* Training managers — showcase of the ready-built training library */}
-      <TrainingManagersSection catalogue={trainingCatalogue} />
+      {/* Training managers — live demo + showcase of the ready-built training library */}
+      <TrainingManagersSection catalogue={trainingCatalogue} demo={trainingDemo} />
 
       <EditableContentBlock path="/who-its-for" />
 

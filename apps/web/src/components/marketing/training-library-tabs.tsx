@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { GraduationCap, ArrowRight } from 'lucide-react'
+import { GraduationCap, ArrowRight, Search, X } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -91,14 +91,53 @@ function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accent?: boo
 // (in a distinct blue accent), then the shared core below.
 export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
   const [active, setActive] = useState<string | null>(null) // null = All settings (universal core)
+  const [query, setQuery] = useState('')
 
   const activeLabel = settings.find((s) => s.key === active)?.label ?? null
-  const universal = topics.filter((t) => !t.care_setting)
-  const settingSpecific = active ? topics.filter((t) => t.care_setting === active) : []
+  const q = query.trim().toLowerCase()
+  const matchesQuery = (t: LibraryTopic) =>
+    !q || t.title.toLowerCase().includes(q) || (t.description ?? '').toLowerCase().includes(q)
+  const universal = topics.filter((t) => !t.care_setting && matchesQuery(t))
+  const settingSpecific = (active ? topics.filter((t) => t.care_setting === active) : []).filter(matchesQuery)
   const hasSpecific = !!activeLabel && settingSpecific.length > 0
+  const totalMatches = universal.length + settingSpecific.length
 
   return (
     <div>
+      {/* Search */}
+      <div className="mb-8">
+        <div className="relative max-w-xl">
+          <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-mid" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search training modules, e.g. safeguarding, moving and handling…"
+            aria-label="Search training modules"
+            className="w-full rounded-full border border-gray-200 bg-white py-3.5 pl-12 pr-11 text-sm text-neutral-dark shadow-card placeholder:text-neutral-mid/70 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-mid transition-colors hover:text-neutral-dark"
+            >
+              <X size={17} />
+            </button>
+          )}
+        </div>
+        {q && (
+          <p className="mt-3 text-sm text-neutral-mid" role="status" aria-live="polite">
+            {totalMatches === 0 ? (
+              <>No modules match &ldquo;<strong className="text-neutral-dark">{query}</strong>&rdquo; — try a broader term.</>
+            ) : (
+              <>{totalMatches} module{totalMatches === 1 ? '' : 's'} match &ldquo;<strong className="text-neutral-dark">{query}</strong>&rdquo;.</>
+            )}
+          </p>
+        )}
+      </div>
+
       {/* Setting tabs */}
       <div className="mb-10 flex flex-wrap gap-2">
         {[{ key: null as string | null, label: 'All settings' }, ...settings].map((tab) => {
@@ -116,8 +155,8 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
         })}
       </div>
 
-      {/* Intro copy */}
-      <p className="mb-10 -mt-4 max-w-3xl text-sm leading-relaxed text-neutral-mid">
+      {/* Intro copy — hidden while searching so results lead */}
+      <p className={`mb-10 -mt-4 max-w-3xl text-sm leading-relaxed text-neutral-mid ${q ? 'hidden' : ''}`}>
         {activeLabel ? (
           <>
             <strong>{activeLabel}</strong> teams get the full core library that every CQC-regulated service needs,

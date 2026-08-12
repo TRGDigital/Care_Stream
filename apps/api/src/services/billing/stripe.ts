@@ -196,6 +196,60 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   return session.url
 }
 
+// ─── Basket checkout (multiple modules in one order) ──────────────────────────
+// Volume discount is applied to the TOTAL number of licences in the order (mixed
+// courses count together), as a computed unit price. Highest qualifying tier wins.
+const TRAINING_DISCOUNT_TIERS = [
+  { min: 100, pct: 40 }, { min: 50, pct: 30 }, { min: 20, pct: 20 }, { min: 10, pct: 10 },
+]
+export function trainingDiscountPct(totalQty: number): number {
+  for (const t of TRAINING_DISCOUNT_TIERS) if (totalQty >= t.min) return t.pct
+  return 0
+}
+
+export interface TrainingBasketItem { moduleSlug: string; moduleName: string; quantity: number }
+export interface TrainingBasketCheckoutInput { items: TrainingBasketItem[]; email: string; orgName: string }
+
+// Hosted one-off Checkout for a basket of training licences across several modules.
+// One line item at the discounted unit price × total licences; the per-module
+// breakdown travels in metadata and is provisioned on return (reconcile).
+export async function createTrainingBasketCheckoutSession(input: TrainingBasketCheckoutInput): Promise<string> {
+  const productId = process.env.STRIPE_TRAINING_PRODUCT_ID
+  if (!productId) throw new Error('STRIPE_TRAINING_PRODUCT_ID is not configured')
+  const stripe = getStripe()
+
+  const items = input.items
+    .map(i => ({ ...i, quantity: Math.max(1, Math.min(500, Math.floor(i.quantity || 1))) }))
+    .filter(i => i.moduleSlug)
+    .slice(0, 25)
+  if (!items.length) throw new Error('Basket is empty')
+
+  const totalQty = items.reduce((s, i) => s + i.quantity, 0)
+  const pct = trainingDiscountPct(totalQty)
+  const unit = Math.round(TRAINING_LICENCE_PENCE * (1 - pct / 100))
+
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode:       'payment',
+    line_items: [{ price_data: { currency: 'gbp', product: productId, unit_amount: unit }, quantity: totalQty }],
+    customer_email: input.email,
+    metadata: {
+      kind:         'training_basket',
+      basket:       JSON.stringify(items.map(i => ({ s: i.moduleSlug, q: i.quantity }))).slice(0, 480),
+      total_qty:    String(totalQty),
+      discount_pct: String(pct),
+      org_name:     input.orgName.slice(0, 250),
+      email:        input.email,
+    },
+    billing_address_collection: 'required',
+    success_url: `${webUrl()}/buy/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/basket?buy=cancelled`,
+  }
+  if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
+  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  if (!session.url) throw new Error('Stripe did not return a checkout URL')
+  return session.url
+}
+
 export interface TrainingCheckoutResult {
   paid:         boolean
   paymentId:    string | null

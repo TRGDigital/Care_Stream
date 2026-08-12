@@ -4,7 +4,7 @@ import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
-import { createTrainingCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
+import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
 import { sendStaffLoginLinkEmail } from '../services/email/outbound'
@@ -427,6 +427,39 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
   }
 })
 
+// POST /public/training/checkout-basket — start a one-off purchase of a BASKET of
+// licences across several modules. The volume discount is applied to the total
+// number of licences. Provisioning happens on return (same reconcile endpoint).
+publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response) => {
+  try {
+    const { items, email, org_name } = req.body ?? {}
+    const mail = String(email ?? '').trim().toLowerCase()
+    const org  = String(org_name ?? '').trim()
+    if (!Array.isArray(items) || items.length === 0) { res.status(400).json({ error: 'items are required' }); return }
+    if (!org) { res.status(400).json({ error: 'org_name is required' }); return }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { res.status(400).json({ error: 'A valid email is required' }); return }
+
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { title: true } })
+    const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t.title] as const))
+
+    const built: { moduleSlug: string; moduleName: string; quantity: number }[] = []
+    for (const it of items) {
+      const slug = String(it?.module_slug ?? '').trim()
+      const qty  = Math.floor(Number(it?.quantity))
+      if (!slug || !Number.isFinite(qty) || qty < 1) continue
+      const name = bySlug.get(slug)
+      if (!name) { res.status(404).json({ error: `Unknown training module: ${slug}` }); return }
+      built.push({ moduleSlug: slug, moduleName: name, quantity: qty })
+    }
+    if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
+
+    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org })
+    res.json({ data: { url } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'checkout failed' })
+  }
+})
+
 // A URL-safe, unique tenant slug from an org name (mirrors auth.ts registration).
 async function uniqueTrainingSlug(orgName: string): Promise<string> {
   const base = (orgName || 'service').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'service'
@@ -454,16 +487,30 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const existing = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: s.paymentId }, select: { id: true } })
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email } }); return }
 
-    const moduleSlug = s.metadata.module_slug || ''
-    const moduleName = s.metadata.module_name || moduleSlug
-    const qty        = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
-    const orgName    = s.metadata.org_name || 'Your service'
-    const email      = (s.email || s.metadata.email || '').toLowerCase()
-    const adminName  = s.customerName || orgName
+    const orgName   = s.metadata.org_name || 'Your service'
+    const email     = (s.email || s.metadata.email || '').toLowerCase()
+    const adminName = s.customerName || orgName
     if (!email) { res.status(400).json({ error: 'No email on the payment' }); return }
 
+    // Build the list of {slug, qty} to provision — from the basket metadata for a
+    // multi-course order, otherwise the single module.
+    let items: { slug: string; qty: number }[] = []
+    if (s.metadata.kind === 'training_basket' && s.metadata.basket) {
+      try {
+        items = (JSON.parse(s.metadata.basket) as Array<{ s: string; q: number }>)
+          .map(b => ({ slug: String(b.s), qty: Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))) }))
+          .filter(b => b.slug)
+      } catch { items = [] }
+    }
+    if (!items.length) {
+      const slug = s.metadata.module_slug || ''
+      const qty  = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
+      if (slug) items = [{ slug, qty }]
+    }
+    if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
+
     const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true } })
-    const topicId = (topics as any[]).find(t => slugify(t.title) === moduleSlug)?.id ?? null
+    const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t] as const))
     const renewalDue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 
     // Attach to an existing account if the email is already known, else create a
@@ -486,17 +533,23 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       tenantId = tenant.id
     }
 
-    await (prisma as any).trainingLicense.createMany({
-      data: Array.from({ length: qty }, () => ({
-        tenant_id: tenantId, topic_id: topicId, module_slug: moduleSlug, module_name: moduleName,
-        price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
-      })),
-    })
+    // One pooled licence per seat, per module, all tagged with the Stripe payment id.
+    let totalLicences = 0
+    for (const it of items) {
+      const topic = bySlug.get(it.slug)
+      await (prisma as any).trainingLicense.createMany({
+        data: Array.from({ length: it.qty }, () => ({
+          tenant_id: tenantId, topic_id: topic?.id ?? null, module_slug: it.slug, module_name: topic?.title ?? it.slug,
+          price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
+        })),
+      })
+      totalLicences += it.qty
+    }
 
     const link = await createLoginLink(user.id, tenantId, 14 * 24 * 60 * 60 * 1000)
     await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
 
-    res.json({ data: { provisioned: true, email, licences: qty, module: moduleName } })
+    res.json({ data: { provisioned: true, email, licences: totalLicences, modules: items.length } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'reconcile failed' })
   }

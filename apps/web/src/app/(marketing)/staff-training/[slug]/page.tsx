@@ -18,6 +18,8 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { JsonLd } from '@/components/json-ld'
 import { courseSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
+import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
+import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 
 export const revalidate = 60
 
@@ -490,6 +492,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
       {/* In every language — the language-toggle USP */}
       <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={summary} />
+
+      {/* Why choose CareStream */}
+      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key))} />
 
       <HomeFaq faqs={faqs} />
 

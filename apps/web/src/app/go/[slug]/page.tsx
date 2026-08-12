@@ -13,6 +13,8 @@ import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
 import { TrainingLanguageSection } from '@/components/marketing/training-language-section'
 import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
+import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -24,6 +26,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 type Section = { heading: string; body: string; image_url: string | null }
 type Module = {
   title: string
+  group_key?: string
   group_label?: string
   frequency?: string | null
   summary?: string | null
@@ -403,6 +406,9 @@ export default async function GoLandingPage({
 
       {/* In every language — the language-toggle USP */}
       <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} />
+
+      {/* Why choose CareStream */}
+      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key))} />
 
       {/* FAQ */}
       <HomeFaq faqs={faqs} />

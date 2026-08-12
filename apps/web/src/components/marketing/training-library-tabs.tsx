@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { GraduationCap, ArrowRight, Search, X } from 'lucide-react'
+import { GraduationCap, ArrowRight, Search, X, ShoppingCart, Plus, Minus, Clock, ShieldCheck } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
+import { useCart } from '@/lib/cart-store'
+import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED } from '@/lib/training-commerce'
+import { CartButton } from './cart-button'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -37,6 +40,7 @@ export type LibraryTopic = {
   built: boolean
   description: string | null
   illustration_url: string | null
+  duration_minutes?: number | null
 }
 
 type Props = {
@@ -46,43 +50,80 @@ type Props = {
 }
 
 // One library card. `accent` gives setting-specific modules a distinct blue
-// treatment so they stand out from the universal core.
+// treatment so they stand out from the universal core. Cards now show price,
+// estimated time to complete, and an add-to-basket control.
 function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accent?: boolean; settingLabel?: string | null }) {
+  const { items, cart } = useCart()
+  const inCart = items.find((i) => i.slug === t.slug)
+  const duration = formatDuration(estimatedMinutes(t.group_key, t.duration_minutes))
+  const ring = accent ? 'border-2 border-blue-300' : 'border border-gray-100'
+  const brand = accent ? 'text-blue-700' : 'text-teal'
+
   return (
-    <Link
-      href={`/staff-training/${t.slug}`}
-      className={`card-lift group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition ${accent ? 'border-2 border-blue-300 hover:border-blue-500' : 'border border-gray-100 hover:border-teal/40'}`}
-    >
-      <div className="relative aspect-[16/10] overflow-hidden bg-teal-light">
-        {t.illustration_url ? (
-          <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-        ) : (
-          <div className={`absolute inset-0 flex items-center justify-center ${accent ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-teal-gradient'}`}>
-            <GraduationCap size={40} className="text-white/80" />
-          </div>
-        )}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
-          {frequencyLabel(t.frequency)}
-        </span>
-        {accent && settingLabel && (
-          <span className="absolute right-3 top-3 rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
-            For {settingLabel}
+    <div className={`card-lift group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition ${ring}`}>
+      <Link href={`/staff-training/${t.slug}`} className="block">
+        <div className="relative aspect-[16/9] overflow-hidden bg-teal-light">
+          {t.illustration_url ? (
+            <SiteImage src={`${API_URL}${t.illustration_url}`} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+          ) : (
+            <div className={`absolute inset-0 flex items-center justify-center ${accent ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-teal-gradient'}`}>
+              <GraduationCap size={40} className="text-white/80" />
+            </div>
+          )}
+          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
+            {frequencyLabel(t.frequency)}
           </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-5">
-        <h4 className={`mb-2 font-bold leading-snug text-neutral-dark ${accent ? 'group-hover:text-blue-700' : 'group-hover:text-teal'}`}>{t.title}</h4>
-        <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">
+          {TRAINING_ACCREDITED && (
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
+              <ShieldCheck size={11} /> CPD Certified
+            </span>
+          )}
+          {accent && settingLabel && !TRAINING_ACCREDITED && (
+            <span className="absolute right-3 top-3 rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
+              For {settingLabel}
+            </span>
+          )}
+        </div>
+      </Link>
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <Link href={`/staff-training/${t.slug}`}>
+          <h4 className="mb-2 text-lg font-bold leading-snug text-neutral-dark transition group-hover:text-teal">{t.title}</h4>
+        </Link>
+        <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-neutral-mid">
           {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
         </p>
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-neutral-mid">
-          {t.requires_practical ? <span>Practical sign-off</span> : <span />}
-          <span className={`inline-flex items-center gap-1 font-semibold ${accent ? 'text-blue-700' : 'text-teal'}`}>
-            Read guide <ArrowRight size={13} className="transition group-hover:translate-x-0.5" />
-          </span>
+
+        {/* Meta row: price + duration */}
+        <div className="mb-4 flex items-center gap-4 border-t border-gray-100 pt-4 text-sm">
+          <span className="text-xl font-extrabold text-neutral-dark">{gbp(UNIT_PENCE)}</span>
+          <span className="inline-flex items-center gap-1 text-neutral-mid"><Clock size={14} /> {duration}</span>
+          <Link href={`/staff-training/${t.slug}`} className={`ml-auto inline-flex items-center gap-1 text-xs font-semibold ${brand}`}>
+            Details <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
+          </Link>
         </div>
+
+        {/* Add to basket / quantity stepper */}
+        {inCart ? (
+          <div className="flex items-center justify-between rounded-xl border border-teal/40 bg-teal-light/50 p-1.5">
+            <div className="flex items-center">
+              <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty - 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="Fewer"><Minus size={15} /></button>
+              <span className="w-10 text-center text-sm font-bold text-neutral-dark">{inCart.qty}</span>
+              <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty + 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="More"><Plus size={15} /></button>
+            </div>
+            <span className="pr-2 text-xs font-semibold text-teal">In basket</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => cart.add({ slug: t.slug, title: t.title, unitPence: UNIT_PENCE })}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-700"
+          >
+            <ShoppingCart size={15} /> Add to basket
+          </button>
+        )}
+        <p className="mt-2 text-center text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -182,7 +223,7 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
           <p className="mb-6 max-w-2xl text-sm leading-relaxed text-neutral-mid">
             These modules cover the topics and regulations unique to {activeLabel}. They are written for this setting, not adapted from a generic course.
           </p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2">
             {settingSpecific.map((t) => <ModuleCard key={t.slug} t={t} accent settingLabel={activeLabel} />)}
           </div>
         </div>
@@ -196,12 +237,13 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
         {GROUP_ORDER.filter((g) => universal.some((t) => t.group_key === g)).map((g) => (
           <div key={g}>
             <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-teal">{groups[g] ?? g}</h3>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2">
               {universal.filter((t) => t.group_key === g).map((t) => <ModuleCard key={t.slug} t={t} />)}
             </div>
           </div>
         ))}
       </div>
+      <CartButton />
     </div>
   )
 }

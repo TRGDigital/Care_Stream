@@ -52,7 +52,7 @@ type Props = {
 // One library card. `accent` gives setting-specific modules a distinct blue
 // treatment so they stand out from the universal core. Cards now show price,
 // estimated time to complete, and an add-to-basket control.
-function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accent?: boolean; settingLabel?: string | null }) {
+export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accent?: boolean; settingLabel?: string | null }) {
   const { items, cart } = useCart()
   const inCart = items.find((i) => i.slug === t.slug)
   const duration = formatDuration(estimatedMinutes(t.group_key, t.duration_minutes))

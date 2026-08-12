@@ -10,7 +10,9 @@ import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
-import { fetchModules, relatedModules } from '@/lib/related-modules'
+import { relatedModules } from '@/lib/related-modules'
+import { ModuleCard, type LibraryTopic } from '@/components/marketing/training-library-tabs'
+import { CartButton } from '@/components/marketing/cart-button'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
@@ -96,15 +98,24 @@ function freqWord(f: string): string {
     : f === 'once' ? 'once, usually at induction' : 'regularly'
 }
 
-type RelatedModule = { slug: string; title: string; group_label?: string }
-
-// Related modules for internal linking. Uses the shared rotating-window helper so
-// every module page receives several dofollow links (never just one), with
-// same-group siblings surfaced first for relevance.
-async function getRelatedModules(groupKey: string, currentSlug: string): Promise<RelatedModule[]> {
-  const all = await fetchModules()
-  return relatedModules(all, currentSlug, { sameGroup: 3, windowCount: 4 })
-    .map((m) => ({ slug: m.slug, title: m.title, group_label: m.group_label }))
+// Related modules as full, buyable catalogue cards. Keeps the rotating-window +
+// same-group selection (so every module page still gets several dofollow internal
+// links) but enriches each pick with its full catalogue data so we can render the
+// same add-to-basket cards as the /staff-training library.
+async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 900 } })
+    if (!res.ok) return []
+    const topics = ((await res.json())?.data?.topics ?? []) as LibraryTopic[]
+    const links = topics.map((t) => ({ slug: t.slug, title: t.title, group_key: t.group_key }))
+    const bySlug = new Map(topics.map((t) => [t.slug, t]))
+    return relatedModules(links, currentSlug, { sameGroup: 3, windowCount: 6 })
+      .slice(0, 6)
+      .map((r) => bySlug.get(r.slug))
+      .filter((t): t is LibraryTopic => !!t)
+  } catch {
+    return []
+  }
 }
 
 // Live one-lesson + one-question taster for this module (null if not yet built).
@@ -140,7 +151,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) notFound()
-  const [related, demo, unitPence] = await Promise.all([getRelatedModules(m.group_key, slug), getModuleDemo(slug), getUnitPence()])
+  const [related, demo, unitPence] = await Promise.all([getRelatedTopics(slug), getModuleDemo(slug), getUnitPence()])
   const unitPrice = (unitPence / 100).toFixed(2)
 
   const heroBullets = [
@@ -498,30 +509,20 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
       <HomeFaq faqs={faqs} />
 
-      {/* Related modules — internal linking with the module titles as anchor text. */}
+      {/* Related modules — buyable cards so visitors can add more courses to their basket. */}
       {related.length > 0 && (
         <section className="bg-neutral-light py-16">
           <div className="mx-auto max-w-content px-6">
             <h2 className="mb-2 text-2xl font-extrabold text-neutral-dark md:text-3xl">Related training modules</h2>
-            <p className="mb-8 max-w-2xl text-neutral-mid">More mandatory and role-specific training CareStream delivers to your team, in the hub, in any language.</p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/staff-training/${r.slug}`}
-                  className="group flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-teal"
-                >
-                  <span>
-                    {r.group_label && <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-teal">{r.group_label}</span>}
-                    <span className="font-semibold text-neutral-dark group-hover:text-teal">{r.title} training</span>
-                  </span>
-                  <ArrowRight size={16} className="shrink-0 text-neutral-mid group-hover:text-teal" />
-                </Link>
-              ))}
+            <p className="mb-8 max-w-2xl text-neutral-mid">More mandatory and role-specific training CareStream delivers to your team, in the hub, in any language. Add any of these to your basket.</p>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {related.map((r) => <ModuleCard key={r.slug} t={r} />)}
             </div>
           </div>
         </section>
       )}
+
+      <CartButton />
 
       {/* CMS-editable content + FAQs (platform Blog → Training pages). */}
       <EditableContentBlock path={`/staff-training/${slug}`} />

@@ -14,6 +14,7 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
+import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
@@ -406,6 +407,9 @@ export default async function GoLandingPage({
 
       {/* In every language — the language-toggle USP */}
       <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} />
+
+      {/* Master explainer video (appears once a video URL is configured) */}
+      <TrainingVideo />
 
       {/* Why choose CareStream */}
       <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key))} />

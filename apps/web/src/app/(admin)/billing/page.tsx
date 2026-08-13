@@ -156,6 +156,9 @@ export default function BillingPage() {
   useEffect(() => {
     const cached = persistentCache.get<{ summary: any; invoices: any[] }>(`admin-billing-${userId}`)
     if (cached) { setSummary(cached.summary); setInvoices(cached.invoices); setLoading(false) }
+    // Training-only clients load purchases instead — same instant-paint treatment.
+    const cachedPurchases = persistentCache.get<any[]>(`admin-billing-purchases-${userId}`)
+    if (cachedPurchases) { setPurchases(cachedPurchases); setLoading(false) }
   }, [userId])
 
   useEffect(() => {
@@ -163,7 +166,7 @@ export default function BillingPage() {
     const api = createApiClient(session.accessToken)
     if (trainingOnly) {
       api.training.purchases()
-        .then(d => setPurchases(d.purchases))
+        .then(d => { setPurchases(d.purchases); persistentCache.set(`admin-billing-purchases-${userId}`, d.purchases) })
         .catch((e: any) => setError(e.message ?? 'Failed to load your purchases.'))
         .finally(() => setLoading(false))
       return

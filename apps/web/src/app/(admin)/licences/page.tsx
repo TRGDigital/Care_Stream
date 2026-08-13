@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { KeyRound, CheckCircle2, Circle, Loader2, UserPlus, X, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 
@@ -18,6 +19,7 @@ type Staff = { id: string; name: string; email: string }
 export default function LicencesPage() {
   const { data: session } = useSession()
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
+  const userId = session?.user?.email ?? 'guest'
   const [licences, setLicences] = useState<Licence[]>([])
   const [staff, setStaff] = useState<Staff[]>([])
   const [summary, setSummary] = useState({ total: 0, allocated: 0, available: 0, spent_pence: 0 })
@@ -25,10 +27,23 @@ export default function LicencesPage() {
   const [busy, setBusy] = useState<string | null>(null)
   const [picking, setPicking] = useState<string | null>(null) // licence id being allocated
 
+  // Stale-while-revalidate: paint the last snapshot instantly (no spinner on
+  // re-navigation), then refresh from the API in the background.
+  useEffect(() => {
+    const cached = persistentCache.get<{ licences: Licence[]; staff: Staff[]; summary: typeof summary }>(`admin-licences-${userId}`)
+    if (cached) { setLicences(cached.licences); setStaff(cached.staff); setSummary(cached.summary); setLoading(false) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
+
   function load() {
     if (!api) return
-    setLoading(true)
-    api.training.licences().then(d => { setLicences(d.licences); setStaff(d.staff); setSummary(d.summary) }).catch(() => {}).finally(() => setLoading(false))
+    api.training.licences()
+      .then(d => {
+        setLicences(d.licences); setStaff(d.staff); setSummary(d.summary)
+        persistentCache.set(`admin-licences-${userId}`, { licences: d.licences, staff: d.staff, summary: d.summary })
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 

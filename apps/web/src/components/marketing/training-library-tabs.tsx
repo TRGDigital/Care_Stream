@@ -89,7 +89,8 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
         <Link href={`/staff-training/${t.slug}`}>
           <h4 className="mb-2 text-lg font-bold leading-snug text-neutral-dark transition group-hover:text-teal">{t.title}</h4>
         </Link>
-        <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-neutral-mid">
+        {/* Full description, never truncated — buyers need to read what the course covers. */}
+        <p className="mb-4 flex-1 text-sm leading-relaxed text-neutral-mid">
           {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
         </p>
 

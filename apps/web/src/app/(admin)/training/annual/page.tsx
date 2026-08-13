@@ -158,7 +158,8 @@ export default function AnnualTrainingPage() {
               <div className="overflow-hidden rounded-card border border-gray-100 bg-white shadow-card">
                 {group.items.map((t, i) => {
                   const m = t.module
-                  const hero = m?.illustration_url ?? t.standard_module?.illustration_url ?? null
+                  const hero = m?.illustration_url ?? t.standard_module?.illustration_url ?? t.thumb_url ?? null
+                  const cpdApproved = !!t.standard_module?.cpd_accredited
                   return (
                     <div key={t.id} className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
                       {m?.approved ? <CheckCircle2 size={16} className="shrink-0 text-green-500" />
@@ -176,6 +177,13 @@ export default function AnnualTrainingPage() {
                           {m && <span className={`rounded-full px-1.5 py-0.5 font-medium ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>}
                           {m && <span>· {m.question_count} questions</span>}
                           {!m && t.standard_module && <span className="rounded-full bg-teal/10 px-1.5 py-0.5 font-medium text-teal">Standard available — free</span>}
+                          {cpdApproved && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-1.5 py-0.5 font-semibold text-violet-700">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src="/cpd-approved.png" alt="" className="h-3.5 w-auto" onError={e => { e.currentTarget.style.display = 'none' }} />
+                              CPD approved
+                            </span>
+                          )}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -201,9 +209,12 @@ export default function AnnualTrainingPage() {
                                     <Users size={12} /> Assign standard
                                   </button>
                                 )}
-                                <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
-                                  {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
-                                </Button>
+                                {/* Annual (CPD) topics are fixed, externally-reviewed content — no tailored generation. */}
+                                {!t.is_annual && (
+                                  <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
+                                    {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
+                                  </Button>
+                                )}
                               </>
                             )}
                             {m && (

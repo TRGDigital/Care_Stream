@@ -75,7 +75,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true, share_enabled: true, share_token: true, share_password: true },
+        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true, share_enabled: true, share_token: true, share_password: true },
       }),
     ])
     // Latest external review status per module (so the catalogue can flag reviewer changes).
@@ -102,7 +102,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       byTopic.set(m.topic_id, {
         id: m.id, name: m.name, topic_id: m.topic_id, approved: m.approved, approved_at: m.approved_at, created_at: m.created_at,
         frequency: m.frequency, requires_practical: m.requires_practical, pass_mark: m.pass_mark, duration_minutes: m.duration_minutes,
-        group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key),
+        group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key), cpd_accredited: !!m.cpd_accredited,
         image_count: (m.illustration_key ? 1 : 0) + sectionImages, image_slots: 1 + secs.length,
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,
         standards_count: Array.isArray(m.standards) ? m.standards.length : 0,

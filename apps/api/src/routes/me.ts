@@ -190,7 +190,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const meUser = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null)
   const [tEnr, induction, cqc, tWrong, oWrong, actions] = await Promise.all([
     // Split into My Training (manual modules) vs Annual Training (AI modules).
-    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true } } } }).catch(() => []),
+    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true, approved: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
     (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
     // Direct counts of outstanding wrong answers (was fetch-all-rows-and-sum).
@@ -200,7 +200,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   ])
   const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
   const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
-  const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && outstanding(e)).length
+  const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && e.module?.approved && outstanding(e)).length
   const followup = (tWrong as number) + (oWrong as number)
   // Audits badge: admins see all due audits; "Staff + Audits" members see only
   // those due among their allocated templates.
@@ -707,8 +707,9 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   ])
   const ratedAnnual = new Set((ratings as any[]).map(r => r.ref))
   let items = (enrollments as any[])
-    // Reviewers (CPD assessors) also see modules pending approval — that's the point of the review.
-    .filter(e => e.module?.source === 'ai_generated' && (user?.is_reviewer || e.module?.approved))
+    // Only approved (published) modules appear — including for CPD reviewers, who see
+    // exactly what the platform has approved in the Annual tab, nothing earlier.
+    .filter(e => e.module?.source === 'ai_generated' && e.module?.approved)
     .map(e => ({
       enrollment_id: e.id, module_id: e.module.id, name: e.module.name,
       frequency: e.module.frequency, requires_practical: e.module.requires_practical,

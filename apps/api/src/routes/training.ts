@@ -77,12 +77,14 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
     const setting = facilityTypeToSetting(tenant?.facility_type)
     const settingOr = [{ care_setting: null }, { care_setting: setting }]
-    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, questions: true, created_at: true }
+    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, created_at: true }
     const [topics, modules, standard, hidden] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
-      // Platform standard library — published modules shared to all tenants, scoped to this tenant's setting (+ universal).
-      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', approved: true, OR: settingOr }, select: sel }),
+      // Platform standard library — scoped to this tenant's setting (+ universal). Fetched
+      // regardless of approval so unapproved modules can still lend the topic a thumbnail;
+      // only APPROVED ones are shared as assignable standard modules below.
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', OR: settingOr }, select: sel }),
       // This tenant's archived topics — hidden from their Annual list, restorable anytime.
       (prisma as any).trainingTopicHidden.findMany({ where: { tenant_id: tenantId }, select: { topic_id: true } }),
     ])
@@ -90,11 +92,16 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     const moduleByTopic = new Map<string, any>()
     for (const m of (modules as any[])) { if (m.topic_id) moduleByTopic.set(m.topic_id, slim(m)) }
     const standardByTopic = new Map<string, any>()
-    for (const m of (standard as any[])) { if (m.topic_id) standardByTopic.set(m.topic_id, slim(m)) }
+    const thumbByTopic    = new Map<string, string | null>()
+    for (const m of (standard as any[])) {
+      if (!m.topic_id) continue
+      if (m.approved) standardByTopic.set(m.topic_id, slim(m))
+      if (m.approved || !thumbByTopic.has(m.topic_id)) thumbByTopic.set(m.topic_id, illustrationUrl(m.illustration_key))
+    }
     const hiddenIds = new Set((hidden as any[]).map(h => h.topic_id))
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
-      topics: (topics as any[]).map(t => ({ ...t, archived: hiddenIds.has(t.id), module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, archived: hiddenIds.has(t.id), module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null, thumb_url: thumbByTopic.get(t.id) ?? null })),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -141,6 +148,10 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
   try {
     const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
     if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
+
+    // The Annual (CPD) set is fixed content that goes through external CPD review —
+    // tenants assign the standard module and cannot generate their own version of it.
+    if (!topic.tenant_id && topic.is_annual) { err(res, 'CPD_LOCKED', 'This topic uses a CPD-reviewed standard module, so tailored generation is disabled. Assign the standard version instead.', 403); return }
 
     // Tailored generation consumes an AI credit.
     try { await checkAiCreditLimit(tenantId) }

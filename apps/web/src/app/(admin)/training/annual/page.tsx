@@ -9,7 +9,7 @@ import { ModulePreviewPlayer } from '@/components/training/module-preview-player
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users, Eye,
-  Plus, Trash2, RefreshCw, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
+  Plus, Trash2, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
   Archive, RotateCcw,
 } from 'lucide-react'
 
@@ -24,9 +24,7 @@ export default function AnnualTrainingPage() {
   const [topics,  setTopics]  = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
-  const [busy,    setBusy]    = useState<string | null>(null)   // topic id being generated
   const [helpOpen, setHelpOpen] = useState(false)
-  const [usage,   setUsage]   = useState<{ used: number; limit: number | null; remaining: number | null; resets_at: string } | null>(null)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
   const [topicView,     setTopicView]     = useState<'live' | 'archived'>('live')
   const [archivingTopic, setArchivingTopic] = useState<string | null>(null)
@@ -44,21 +42,8 @@ export default function AnnualTrainingPage() {
     if (!api) return
     setLoading(true); setError('')
     api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
-    api.training.aiUsage().then(d => setUsage(d.credits)).catch(() => {})
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const outOfCredits = !!usage && usage.limit !== null && (usage.remaining ?? 0) <= 0
-
-  async function generate(topicId: string) {
-    if (!api || busy) return
-    setBusy(topicId); setError('')
-    try {
-      const { module } = await api.training.generateModule(topicId)
-      load()
-      setView({ mode: 'review', id: module.id })
-    } catch (e: any) { setError(e?.message ?? 'Generation failed'); load() } finally { setBusy(null) }
-  }
 
   if (view.mode === 'review' && api) return <ReviewModule api={api} id={view.id} onBack={() => { load(); setView({ mode: 'list' }) }} onAssign={(id, name) => setView({ mode: 'assign', id, name })} />
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
@@ -75,17 +60,8 @@ export default function AnnualTrainingPage() {
       <Link href="/training" className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ArrowLeft size={14} /> Training</Link>
       <h1 className="text-2xl font-bold text-neutral-dark">Annual training modules</h1>
       <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
-        Annual training your staff complete in the hub, in their first language. Assign a ready-made <strong>standard</strong> module, or generate one <strong>tailored to your own policies</strong>.
+        Annual training your staff complete in the hub, in their first language. Assign a ready-made <strong>standard</strong> module — professionally maintained for you, free to assign.
       </p>
-
-      {usage && usage.limit !== null && (
-        <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${outOfCredits ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-neutral-mid'}`}>
-          <Sparkles size={14} className={outOfCredits ? 'text-amber-500' : 'text-teal'} />
-          <span><strong className="text-neutral-dark">{usage.used}</strong> of <strong className="text-neutral-dark">{usage.limit}</strong> AI credits used this month{usage.remaining !== null ? ` · ${usage.remaining} left` : ''}.</span>
-          <span className="text-xs">Resets {new Date(usage.resets_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</span>
-          {outOfCredits && <span className="text-xs font-medium">Assign standard modules (free) or upgrade your plan.</span>}
-        </div>
-      )}
 
       {/* How this works — explainer accordion */}
       <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-teal-light/10">
@@ -98,13 +74,12 @@ export default function AnnualTrainingPage() {
           <div className="space-y-3 border-t border-teal/20 px-4 py-3 text-sm text-neutral-mid">
             <p>Each module <strong>teaches</strong> the topic (a short lesson) then <strong>assesses</strong> it (multiple-choice). Staff take it in the hub in their first language, and <strong>pass = a certificate</strong> on their record (and in your CQC evidence). Renewals resurface automatically based on the module&apos;s frequency.</p>
             <div>
-              <p className="font-medium text-neutral-dark">Two ways to add a module to a topic:</p>
+              <p className="font-medium text-neutral-dark">Adding a module to a topic:</p>
               <ul className="mt-1 space-y-1.5">
-                <li className="flex gap-2"><Users size={14} className="mt-0.5 shrink-0 text-teal" /><span><strong>Assign standard</strong> — a ready-made module we maintain for you, <strong>free</strong> (no AI generation). Just assign it to staff. Best for getting going quickly.</span></li>
-                <li className="flex gap-2"><Sparkles size={14} className="mt-0.5 shrink-0 text-teal" /><span><strong>Tailor to our policies</strong> — generate a version built from <strong>your own policy documents</strong> for content specific to your home. You review and approve it before staff see it.</span></li>
+                <li className="flex gap-2"><Users size={14} className="mt-0.5 shrink-0 text-teal" /><span><strong>Assign standard</strong> — a ready-made module we maintain and quality-review for you, <strong>free</strong> to assign. Use <strong>View training</strong> to see exactly what your staff will see first.</span></li>
               </ul>
             </div>
-            <p>A topic shows <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-xs font-medium text-teal">Standard available — free</span> when a ready-made module exists. If you tailor your own, your version is used instead.</p>
+            <p>A topic shows <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-xs font-medium text-teal">Standard available — free</span> when its ready-made module has been published. Modules marked <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-xs font-semibold text-violet-700">CPD approved</span> have been externally approved for CPD — their content is fixed, and completing them earns CPD hours on the certificate.</p>
             <p><strong className="text-neutral-dark">Live &amp; Archived</strong> — the <strong className="text-neutral-dark">Live / Archived</strong> toggle lets you keep only the topics relevant to your service in view. Click the <span className="inline-flex items-center gap-1 align-middle"><Archive size={13} /></span> archive icon on any topic to tuck it away. Archiving is per service, it only affects your list, never the shared catalogue or other services, and any modules you&apos;ve already generated or assigned are untouched. Switch to <strong className="text-neutral-dark">Archived</strong> and click <span className="inline-flex items-center gap-1 align-middle"><RotateCcw size={13} /> Restore</span> to bring a topic back into Live whenever you need it.</p>
             <p className="flex items-start gap-2 text-xs"><ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-500" /><span>Topics marked <strong>&ldquo;practical also required&rdquo;</strong> (e.g. Moving &amp; Handling, Medication) — the module is the knowledge part only; record the observed/practical assessment on the staff record.</span></p>
           </div>
@@ -209,11 +184,9 @@ export default function AnnualTrainingPage() {
                                     <Users size={12} /> Assign standard
                                   </button>
                                 )}
-                                {/* Annual (CPD) topics are fixed, externally-reviewed content — no tailored generation. */}
-                                {!t.is_annual && (
-                                  <Button size="sm" variant={t.standard_module ? 'secondary' : 'primary'} onClick={() => generate(t.id)} disabled={busy === t.id || outOfCredits} title={outOfCredits ? 'No tailored generations left this month' : undefined}>
-                                    {busy === t.id ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Sparkles size={13} /> {t.standard_module ? 'Tailor to our policies' : 'Generate'}</>}
-                                  </Button>
+                                {/* Standard modules are fixed, quality-reviewed content — no self-generation. */}
+                                {!t.standard_module && (
+                                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-neutral-mid">Coming soon</span>
                                 )}
                               </>
                             )}
@@ -258,7 +231,6 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
   const [m, setM] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [regenerating, setRegenerating] = useState(false)
   const [imgBusy, setImgBusy] = useState(false)
   const [savedNote, setSavedNote] = useState('')
   const [ackOpen, setAckOpen] = useState(false)
@@ -286,11 +258,6 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
       const { module } = await api.training.approveModule(id, val)
       setM(module); setAckOpen(false); setAck1(false)
     } catch { /* ignore */ } finally { setSaving(false) }
-  }
-  async function regenerate() {
-    if (!confirm('Regenerate this module from your policies? Your current edits will be replaced and it will return to draft.')) return
-    setRegenerating(true)
-    try { await api.training.generateModule(m.topic_id); load() } catch (e: any) { alert(e?.message ?? 'Regeneration failed') } finally { setRegenerating(false) }
   }
   async function generateImage() {
     if (!m.illustration_url && !confirm('Generating a cover image uses 1 AI credit. Continue?')) return
@@ -429,9 +396,6 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
               <Button onClick={() => onAssign(m.id, m.name)} size="md"><Users size={14} /> Assign to staff</Button>
               <button onClick={() => approve(false)} disabled={saving} className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-amber-300 hover:text-amber-600">Unpublish</button>
             </>}
-        <button onClick={regenerate} disabled={regenerating} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50">
-          {regenerating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Regenerate
-        </button>
         {savedNote && <span className="text-sm font-medium text-green-600">{savedNote}</span>}
       </div>
 

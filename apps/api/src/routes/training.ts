@@ -149,9 +149,10 @@ trainingRouter.post('/catalogue/generate', requireAdmin, async (req: Request, re
     const topic = await (prisma as any).trainingTopic.findFirst({ where: { id: topicId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
     if (!topic) { err(res, 'NOT_FOUND', 'Topic not found', 404); return }
 
-    // The Annual (CPD) set is fixed content that goes through external CPD review —
-    // tenants assign the standard module and cannot generate their own version of it.
-    if (!topic.tenant_id && topic.is_annual) { err(res, 'CPD_LOCKED', 'This topic uses a CPD-reviewed standard module, so tailored generation is disabled. Assign the standard version instead.', 403); return }
+    // Standard modules are fixed, quality-reviewed content (the Annual/CPD set goes
+    // through external CPD review) — tenants assign the standard module and cannot
+    // generate their own version. Tenant self-generation is disabled platform-wide.
+    err(res, 'GENERATION_DISABLED', 'Training modules are professionally maintained standard courses. Assign the standard version instead — tailored generation is disabled.', 403); return
 
     // Tailored generation consumes an AI credit.
     try { await checkAiCreditLimit(tenantId) }

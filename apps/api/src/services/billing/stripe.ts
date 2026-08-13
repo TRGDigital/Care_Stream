@@ -152,14 +152,36 @@ export async function createCheckoutSession(tenantId: string, planId: string, in
 // real-money smoke test of the basket checkout before launch. Unset = £25.99.
 export const TRAINING_LICENCE_PENCE = Math.max(50, parseInt(process.env.TRAINING_LICENCE_PENCE ?? '', 10) || 2599)
 
+// Resolve the Stripe product for training licences: the configured id when set,
+// otherwise find (or lazily create) the well-known product by name — so checkout
+// works with zero manual Stripe setup. (STRIPE_TRAINING_PRODUCT_ID was never set
+// in production, which silently blocked every training purchase.)
+let _trainingProductId: string | null = null
+export async function trainingProductId(): Promise<string> {
+  const configured = process.env.STRIPE_TRAINING_PRODUCT_ID
+  if (configured) return configured
+  if (_trainingProductId) return _trainingProductId
+  const stripe = getStripe()
+  const opts = managedPaymentsRequestOptions()
+  const name = 'CareStream Training Licence'
+  try {
+    const found = await stripe.products.search({ query: `active:'true' AND name:'${name}'`, limit: 1 }, opts)
+    if (found.data[0]) { _trainingProductId = found.data[0].id; return _trainingProductId }
+  } catch { /* search unavailable on this API version — fall through to create */ }
+  const product = await stripe.products.create({ name, tax_code: PLAN_TAX_CODE, metadata: { kind: 'training_licence' } }, opts)
+  _trainingProductId = product.id
+  return product.id
+}
+
 async function trainingPriceId(): Promise<string> {
-  const productId = process.env.STRIPE_TRAINING_PRODUCT_ID
-  if (!productId) throw new Error('STRIPE_TRAINING_PRODUCT_ID is not configured')
+  const productId = await trainingProductId()
   const stripe = getStripe()
   const prices = await stripe.prices.list({ product: productId, active: true, limit: 20 }, managedPaymentsRequestOptions())
   const price = prices.data.find(p => p.currency === 'gbp' && p.type === 'one_time') ?? prices.data[0]
-  if (!price) throw new Error('No active price on the training product — add a £25.99 one-off GBP price in Stripe')
-  return price.id
+  if (price) return price.id
+  // No stored price yet (e.g. the product was just auto-created) — create the standard one-off.
+  const created = await stripe.prices.create({ product: productId, currency: 'gbp', unit_amount: TRAINING_LICENCE_PENCE }, managedPaymentsRequestOptions())
+  return created.id
 }
 
 export interface TrainingCheckoutInput {
@@ -216,8 +238,7 @@ export interface TrainingBasketCheckoutInput { items: TrainingBasketItem[]; emai
 // One line item at the discounted unit price × total licences; the per-module
 // breakdown travels in metadata and is provisioned on return (reconcile).
 export async function createTrainingBasketCheckoutSession(input: TrainingBasketCheckoutInput): Promise<string> {
-  const productId = process.env.STRIPE_TRAINING_PRODUCT_ID
-  if (!productId) throw new Error('STRIPE_TRAINING_PRODUCT_ID is not configured')
+  const productId = await trainingProductId()
   const stripe = getStripe()
 
   const items = input.items

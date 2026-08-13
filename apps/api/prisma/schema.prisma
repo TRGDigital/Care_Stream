@@ -1844,6 +1844,7 @@ model CqcStaffQuestion {
   model_answer String
   is_active    Boolean            @default(true)
   is_seed      Boolean            @default(false)  // true = pre-loaded default question
+  is_standard  Boolean            @default(false)  // true = one of the 4 standard CQC inspector themes (tagged in the hub)
   created_at   DateTime           @default(now())
   updated_at   DateTime           @updatedAt
   tenant       Tenant             @relation(fields: [tenant_id], references: [id])

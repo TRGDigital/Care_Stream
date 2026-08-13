@@ -30,6 +30,7 @@ import { detectRegulations } from './regulation-detector'
 import { detectLanguage, resolveLanguagePattern } from '../language/detector'
 import { callClaude, callClaudeWithHistory, callClaudeStream } from '../ai/claude'
 import { buildPromptA, appendLanguageInstruction, PROMPT_B } from '../ai/prompts'
+import { getEnglishPolicyHtml } from '../../lib/translate'
 import type { DocumentCategory, IntentType, QueryChannel } from '../../types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -263,17 +264,69 @@ function classifyIntent(queryText: string): 'full_policy' | 'summary' {
   return FULL_POLICY_SIGNALS.some(s => lower.includes(s)) ? 'full_policy' : 'summary'
 }
 
-// ─── Policy name extraction (for full-policy requests without a policyId) ────
+// ─── Fuzzy policy-name matching ──────────────────────────────────────────────
+// Staff type policy names loosely: different dashes ("-" for "–"), quotes, extra
+// filler ("please can you send me…"). A naive `contains` lookup on the raw hint
+// silently failed for those, dropping the request into the summary path — which
+// then presented retrieved excerpts as "the full policy" (REF-672D5B). Instead:
+// normalise both sides and score every active policy by how many of its
+// significant name tokens appear in the query. All tokens present → confident
+// match; partial overlap → "did you mean" suggestions.
 
-function extractPolicyNameHint(queryText: string): string {
-  let hint = queryText
-  for (const sig of FULL_POLICY_SIGNALS) {
-    hint = hint.replace(new RegExp(sig, 'gi'), '').trim()
-  }
-  // Strip "the", "our", "your", "a/an" from start
-  hint = hint.replace(/^(the|our|your|a|an)\s+/i, '').trim()
-  return hint || queryText
+const NAME_MATCH_STOP = new Set([
+  'policy', 'policies', 'procedure', 'procedures', 'the', 'a', 'an', 'of', 'and',
+  'for', 'in', 'on', 'to', 'at', 'care', 'home', 'homes',
+])
+
+function normaliseForMatch(s: string): string {
+  return s.toLowerCase()
+    .replace(/[‐-―−]/g, '-')            // every dash variant → hyphen
+    .replace(/[‘’“”'"`]/g, '')      // strip quotes/apostrophes
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
+
+function significantNameTokens(name: string): string[] {
+  return normaliseForMatch(name).split(' ').filter(t => t && !NAME_MATCH_STOP.has(t))
+}
+
+// Fraction of the policy name's significant tokens present in the text.
+// Singular/plural tolerant: "risk assessment" matches "Risk Assessments".
+function scoreNameAgainst(tokens: string[], textTokens: Set<string>): number {
+  if (!tokens.length) return 0
+  const has = (t: string) => textTokens.has(t) || textTokens.has(`${t}s`) || (t.endsWith('s') && textTokens.has(t.slice(0, -1)))
+  const hit = tokens.filter(has).length
+  return hit / tokens.length
+}
+
+function matchPolicyByName(
+  policies: Array<{ id: string; name: string }>,
+  text: string,
+): { match: { id: string; name: string } | null; suggestions: Array<{ id: string; name: string }> } {
+  const textTokens = new Set(normaliseForMatch(text).split(' ').filter(Boolean))
+  const scored = policies
+    .map(p => {
+      const tokens = significantNameTokens(p.name)
+      return { p, tokens: tokens.length, score: scoreNameAgainst(tokens, textTokens) }
+    })
+    .filter(s => s.tokens > 0 && s.score >= 0.4)
+    // Best score first; on ties prefer the more specific (longer) name.
+    .sort((a, b) => b.score - a.score || b.tokens - a.tokens)
+
+  const top = scored[0]
+  if (top && top.score >= 0.8) {
+    // Ambiguous only when another policy matches equally well with the same specificity.
+    const rival = scored[1]
+    if (!(rival && rival.score === top.score && rival.tokens === top.tokens)) {
+      return { match: top.p, suggestions: [] }
+    }
+  }
+  return { match: null, suggestions: scored.slice(0, 3).map(s => s.p) }
+}
+
+const escHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 // ─── Chunk retrieval ──────────────────────────────────────────────────────────
 
@@ -513,43 +566,66 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
   // ─── Full policy path ──────────────────────────────────────────────────────
   if (rawIntent === 'full_policy') {
     let targetPolicyId = policyId
+    let didYouMean: Array<{ id: string; name: string }> = []
 
-    // Find policy by ID or by name if not explicitly provided
+    // Resolve the policy by fuzzy name match against every active policy — tolerant of
+    // dash variants ("-" typed for "–"), quotes, and polite filler around the name.
+    // Falls back to the conversation history ("send me the full policy" after a summary).
     if (!targetPolicyId) {
-      const nameHint = extractPolicyNameHint(queryText)
-      const match    = await (prisma as any).policy.findFirst({
-        where: {
-          tenant_id: tenantId,
-          status:    'active',
-          name:      { contains: nameHint, mode: 'insensitive' },
-        },
-        select: { id: true },
-      })
-      targetPolicyId = match?.id
-    }
-
-    // If still not resolved, scan prior user messages to find any policy name
-    // mentioned in them — handles "send me the full policy" after a summary.
-    if (!targetPolicyId && conversationHistory) {
       const activePolicies = await (prisma as any).policy.findMany({
         where:  { tenant_id: tenantId, status: 'active' },
         select: { id: true, name: true },
       })
-      const priorUserMessages = conversationHistory.filter(m => m.role === 'user').reverse()
-      outer: for (const msg of priorUserMessages) {
-        const msgLower = msg.content.toLowerCase()
-        for (const policy of activePolicies) {
-          if (msgLower.includes((policy.name as string).toLowerCase())) {
-            targetPolicyId = policy.id as string
-            break outer
-          }
+      const res = matchPolicyByName(activePolicies as Array<{ id: string; name: string }>, queryText)
+      targetPolicyId = res.match?.id
+      didYouMean = res.suggestions
+      if (!targetPolicyId && conversationHistory) {
+        const priorUserMessages = conversationHistory.filter(m => m.role === 'user').reverse()
+        for (const msg of priorUserMessages) {
+          const prior = matchPolicyByName(activePolicies as Array<{ id: string; name: string }>, msg.content)
+          if (prior.match) { targetPolicyId = prior.match.id; didYouMean = []; break }
         }
       }
     }
 
+    // A full-policy request naming a policy we can't confidently match: say so and offer
+    // the closest names — never silently answer with retrieved excerpts presented as
+    // "the full policy" (that was REF-672D5B).
+    if (!targetPolicyId && didYouMean.length) {
+      const firstName = (staffName ?? '').trim().split(/\s+/)[0]
+      const signoff = await getTenantBrandingSignoff(tenantId)
+      const responseHtml =
+        `<p>Hi ${escHtml(firstName || 'there')},</p>` +
+        `<p>I couldn't find a policy that exactly matches your request. Did you mean one of these?</p>` +
+        `<ul>${didYouMean.map(p => `<li><strong>${escHtml(p.name)}</strong></li>`).join('')}</ul>` +
+        `<p>Just reply with the one you'd like and I'll send you the full, current copy.</p>` +
+        `<h4>Thanks again,</h4>\n<h4>${escHtml(signoff)}</h4>`
+      const savedQueryId = await saveQueryRecord({
+        tenantId, userId, channel, queryText,
+        responseHtml,
+        intentType: 'full_policy',
+        documentCategoryQueried: null,
+        policyIdsCited: [],
+        noMatch: true,
+        languageDetected: langDetection.code,
+        responseTimeMs: Date.now() - start,
+        chatSessionId,
+      })
+      return {
+        responseHtml,
+        intentType:         'full_policy',
+        citations:          [],
+        noMatch:            true,
+        languageDetected:   langDetection.code,
+        responseTimeMs:     Date.now() - start,
+        suggestedQuestions: didYouMean.map(p => `Send me the full policy for "${p.name}"`),
+        queryId:            savedQueryId,
+      }
+    }
+
     if (!targetPolicyId) {
-      // No matching policy found — fall through to summary pipeline so Claude
-      // can give a polite "not found" response
+      // No name hint and nothing in the history — fall through to the summary pipeline
+      // so Claude can ask which policy they mean.
     } else {
       const policyRow = await (prisma as any).policy.findFirst({
         where:  { id: targetPolicyId, tenant_id: tenantId, status: 'active' },
@@ -557,17 +633,41 @@ async function runQueryPipelineInner(input: QueryInput): Promise<QueryOutput> {
       })
 
       if (policyRow) {
-        const rawText  = await downloadExtractedText(tenantId, policyRow.id)
-        const bodyText = rawText ? stripDocumentHeader(rawText, policyRow.name as string) : null
-        const userMsg  = bodyText
-          ? `Please format the following policy document as clean HTML:\n\n${bodyText}`
-          : `The policy "${policyRow.name}" was requested but its text could not be retrieved.`
+        const rawText = await downloadExtractedText(tenantId, policyRow.id)
 
-        let responseHtml = await callClaude(PROMPT_B, userMsg, {
-          maxTokens:   16_384,
-          temperature: 0,
-        })
-        responseHtml = stripMarkdownFence(responseHtml)
+        // English requests: serve the hub's own cached formatted HTML — the exact same
+        // render as the hub full-copy view, regenerated whenever the policy is
+        // republished. Chat therefore always sends the CURRENT version, formatted
+        // identically to the rest of the hub (no model re-formatting, no <pre> dumps).
+        let responseHtml: string | null = null
+        if (langResolution.pattern === 1) {
+          try {
+            const { html } = await getEnglishPolicyHtml(tenantId, policyRow.id, rawText)
+            if (html) {
+              const firstName = (staffName ?? '').trim().split(/\s+/)[0]
+              const signoff = await getTenantBrandingSignoff(tenantId)
+              responseHtml =
+                `<p>Hi ${escHtml(firstName || 'there')},</p>` +
+                `<p>Here is the full, current copy of <strong>${escHtml(policyRow.name as string)}</strong> (version ${escHtml(String(policyRow.version))}).</p>` +
+                html +
+                `<p>You can continue this chat if you would like a summary, a translation, or anything in the policy explained.</p>` +
+                `<h4>Thanks again,</h4>\n<h4>${escHtml(signoff)}</h4>`
+            }
+          } catch { /* fall back to the Prompt B formatter below */ }
+        }
+
+        // Non-English requests, or no cached render available: format via Prompt B.
+        if (!responseHtml) {
+          const bodyText = rawText ? stripDocumentHeader(rawText, policyRow.name as string) : null
+          const userMsg  = bodyText
+            ? `Please format the following policy document as clean HTML:\n\n${bodyText}`
+            : `The policy "${policyRow.name}" was requested but its text could not be retrieved.`
+          responseHtml = await callClaude(PROMPT_B, userMsg, {
+            maxTokens:   16_384,
+            temperature: 0,
+          })
+          responseHtml = stripMarkdownFence(responseHtml)
+        }
 
         const savedQueryId = await saveQueryRecord({
           tenantId, userId, channel, queryText,

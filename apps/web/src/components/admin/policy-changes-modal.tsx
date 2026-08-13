@@ -194,15 +194,26 @@ function applyChanges(root: HTMLElement, changes: Change[], tracked: boolean) {
         // what was removed; in clean mode there is nothing to render.
         if (tracked) insertBeforeEndMatter(root, removalNotice(c.old_text))
       } else {
-        insertBeforeEndMatter(root, contentBlock(c.new_text, tracked))
+        // Anchor not found. If the replacement text is ALREADY in the rendering (e.g. the
+        // base render fell back to the live copy, where a published change is baked in),
+        // highlight it in place rather than appending a duplicate at the end.
+        const present = findBlockRange(root, c.new_text)
+        if (present) { if (tracked) present.forEach(b => b.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')) }
+        else insertBeforeEndMatter(root, contentBlock(c.new_text, tracked))
       }
     } else if (c.placement === 'add_under_heading' && c.old_text) {
-      const heading = findHeading(root, c.old_text)
-      const node = contentBlock(c.new_text, tracked)
-      if (heading) heading.after(node)
-      else insertBeforeEndMatter(root, node)
+      const present = findBlockRange(root, c.new_text)
+      if (present) { if (tracked) present.forEach(b => b.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')) }
+      else {
+        const heading = findHeading(root, c.old_text)
+        const node = contentBlock(c.new_text, tracked)
+        if (heading) heading.after(node)
+        else insertBeforeEndMatter(root, node)
+      }
     } else {
-      insertBeforeEndMatter(root, sectionBlock(c.section_title, c.new_text, tracked))
+      const present = c.new_text ? findBlockRange(root, c.new_text) : null
+      if (present) { if (tracked) present.forEach(b => b.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')) }
+      else insertBeforeEndMatter(root, sectionBlock(c.section_title, c.new_text, tracked))
     }
   }
 }
@@ -238,7 +249,12 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     const api = createApiClient(token)
     api.analytics.policyApprovals(policyId).then(a => { setApproval(a); if (a?.external_name) setExtName(a.external_name); if (a?.external_email) setExtEmail(a.external_email) }).catch(() => {})
     api.analytics.policyVersions(policyId).then(v => setVersions(v.versions)).catch(() => {})
-    Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId).catch(() => ({ html: '' }))])
+    // base:true renders the PRISTINE ORIGINAL policy, not the live copy. The change overlay
+    // below re-applies every adopted change on top, so the view is identical before AND after
+    // publishing. (Against the live copy, published changes are already baked in: their
+    // old-text anchors no longer exist, and the overlay used to duplicate them at the end —
+    // the intermittent "Tracked" breakage.)
+    Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId, { base: true }).catch(() => ({ html: '' }))])
       .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
       .catch(e => setError(e.message ?? 'Could not load the document.'))
       .finally(() => setLoading(false))
@@ -385,8 +401,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button onClick={() => setTracked(t => !t)}
+              title={tracked ? 'Hide the highlights and preview the finished policy' : 'Highlight exactly what changed in this version'}
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">
-              <GitCompare size={13} /> {tracked ? 'Tracked' : 'Clean'}
+              <GitCompare size={13} /> {tracked ? 'Hide changes' : 'View changes'}
             </button>
             <button onClick={downloadPolicy} disabled={!doc?.document}
               title="Download the clean policy for print / PDF (letterhead + sign-off)"
@@ -443,8 +460,8 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
             {/* Left — the formatted policy with changes applied */}
             <div className="overflow-y-auto px-6 py-5 lg:max-h-[86vh]">
               {tracked
-                ? <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are the adopted changes. Toggle <strong>Clean</strong> to preview the finished policy.</p>
-                : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied.</p>}
+                ? <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are what changed in this version: <span className="rounded bg-green-100 px-1">green</span> = added or replaced wording, <span className="rounded bg-red-50 px-1 text-red-400 line-through">red</span> = removed. Click <strong>Hide changes</strong> to preview the finished policy.</p>
+                : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied. Click <strong>View changes</strong> to highlight exactly what changed.</p>}
               <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             </div>
 

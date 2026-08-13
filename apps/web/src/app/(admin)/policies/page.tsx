@@ -81,6 +81,8 @@ export default function PoliciesPage() {
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
   const [resolvingDup,   setResolvingDup]   = useState<string | null>(null)
   const [similarNamed,   setSimilarNamed]   = useState<Array<{ id: string; name: string; matched_name: string; content_pct: number | null }>>([])
+  const [reviewError,    setReviewError]    = useState(false)   // the adopted-changes summary failed to load
+  const reviewRetryRef = useRef(0)
 
   function load() {
     if (!session?.accessToken) return
@@ -98,12 +100,23 @@ export default function PoliciesPage() {
       .then(d => {
         const list = d?.documents ?? []
         persistentCache.set(`admin-policies-review-${userId}`, list)
+        reviewRetryRef.current = 0
+        setReviewError(false)
         // Only replace state when the data actually changed, so the periodic refresh (every few
         // seconds while a policy is processing) doesn't re-render and flicker the "Adopted changes
         // to review" panel. Same cache-and-hydrate treatment as the policies list and due-review.
         setReviewSummary(prev => (JSON.stringify(prev) === JSON.stringify(list) ? prev : list))
       })
-      .catch(() => {})
+      .catch(() => {
+        // Never fail silently: one automatic retry, then surface a visible retry bar instead of
+        // an empty panel (adopted changes "disappearing" was exactly this fetch failing quietly).
+        if (reviewRetryRef.current < 1) {
+          reviewRetryRef.current += 1
+          setTimeout(loadReviewSummary, 2500)
+        } else {
+          setReviewError(true)
+        }
+      })
   }
 
   // Policies due for review — fetched on its own (not tangled with the heavy list load), cached
@@ -453,7 +466,20 @@ export default function PoliciesPage() {
       {/* Adopted changes to review (Policy Change Adoption) */}
       {(() => {
         const toReview = reviewSummary.filter(d => d.pending > 0)
-        if (!toReview.length) return null
+        if (!toReview.length) {
+          // The summary fetch failed (after a retry) and we have nothing cached to show —
+          // surface it instead of silently hiding adopted changes.
+          if (!reviewError) return null
+          return (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-card border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-sm text-amber-800">We couldn&apos;t check for adopted changes waiting for review just now.</p>
+              <button onClick={() => { reviewRetryRef.current = 0; loadReviewSummary() }}
+                className="shrink-0 rounded-btn border border-amber-300 bg-white px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100">
+                Retry
+              </button>
+            </div>
+          )
+        }
         return (
           <div className="mb-4 rounded-card border border-teal-200 bg-teal-50/50 p-4">
             <p className="flex items-center gap-2 text-sm font-semibold text-teal-900"><FilePenLine size={15} /> Adopted changes to review</p>

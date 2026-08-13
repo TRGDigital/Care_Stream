@@ -14,9 +14,10 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
   const [perRole, setPerRole]   = useState(3)
   const [domains, setDomains]   = useState<Set<Domain>>(new Set(DOMAINS.map(d => d.key)))
   const [core, setCore]         = useState(2)
+  const [standard, setStandard] = useState(4)   // the 4 standard CQC inspector themes
   const [sending, setSending]   = useState(false)
   const [error, setError]       = useState('')
-  const [result, setResult]     = useState<{ delivered: number; roles: Array<{ role: string; recipients: number; questions: number }>; core_questions: number; credits_used: number } | null>(null)
+  const [result, setResult]     = useState<{ delivered: number; roles: Array<{ role: string; recipients: number; questions: number }>; core_questions: number; standard_questions: number; credits_used: number } | null>(null)
 
   // Group staff by job role — the whole point of the flow.
   const groups = useMemo(() => {
@@ -35,7 +36,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
     return roles
   }, [groups, selected])
 
-  const creditEstimate = selectedRoles.size * perRole + (selected.size > 0 ? core : 0)
+  const creditEstimate = selectedRoles.size * perRole + (selected.size > 0 ? core + standard : 0)
 
   function toggle(id: string) {
     setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
@@ -57,7 +58,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
     setSending(true); setError(''); setResult(null)
     try {
       const res = await createApiClient(token).cqcQuestions.generateForStaff({
-        user_ids: Array.from(selected), per_role: perRole, core,
+        user_ids: Array.from(selected), per_role: perRole, core, standard,
         domains: domains.size === DOMAINS.length ? undefined : Array.from(domains),
       })
       setResult(res)
@@ -86,8 +87,11 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
           <p className="mb-4 text-sm text-neutral-mid">
             Pick who should practise, and the AI generates questions matched to each person&rsquo;s job — the chef gets
             food safety and allergens, nurses get medicines and clinical care — plus a small core set (safeguarding,
-            whistleblowing, fire) that every member of staff should be able to answer. Questions are generated fresh,
-            saved to your bank, and sent in one step.
+            whistleblowing, fire) that every member of staff should be able to answer, and the <strong>standard CQC
+            question set</strong>: the four themes inspectors raise with staff in almost every inspection (what you enjoy
+            about your role, raising concerns, day-to-day support, and the support you receive) — reworded freshly every
+            time so staff practise the substance, not a script. Questions are generated fresh, saved to your bank, and
+            sent in one step.
           </p>
 
           {/* Staff picker, grouped by role */}
@@ -163,6 +167,12 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
                 {[0, 1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
+            <label className="text-xs font-medium text-neutral-dark" title="The four themes CQC inspectors raise with staff in almost every inspection: what you enjoy about your role, your experience of raising concerns, how you support people day-to-day, and the support you get in your role. Reworded freshly every time they're sent.">
+              Standard CQC question set
+              <select value={standard} onChange={e => setStandard(Number(e.target.value))} className="ml-2 rounded-md border border-gray-200 px-2 py-1.5 text-sm">
+                {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n === 4 ? 'All 4' : n}</option>)}
+              </select>
+            </label>
             <div className="ml-auto flex items-center gap-3">
               {selected.size > 0 && (
                 <span className="text-xs text-neutral-mid">
@@ -193,6 +203,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
                   <li key={r.role}>{r.role}: {r.questions} tailored question{r.questions === 1 ? '' : 's'} → {r.recipients} staff</li>
                 ))}
                 {result.core_questions > 0 && <li>Core (all selected staff): {result.core_questions} question{result.core_questions === 1 ? '' : 's'}</li>}
+                {result.standard_questions > 0 && <li>Standard CQC set (all selected staff): {result.standard_questions} question{result.standard_questions === 1 ? '' : 's'}</li>}
               </ul>
             </div>
           )}

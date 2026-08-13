@@ -704,8 +704,8 @@ export function createApiClient(token: string) {
         apiFetch<{ question: string; model_answer: string; domain: string }>('/cqc-questions/generate', token, { method: 'POST', body: JSON.stringify(data) }),
       generateBatch: (data: { domain?: string; count: number; topic?: string; job_role?: string }) =>
         apiFetch<{ questions: any[]; credits_used: number }>('/cqc-questions/generate-batch', token, { method: 'POST', body: JSON.stringify(data) }),
-      generateForStaff: (data: { user_ids: string[]; per_role?: number; core?: number; domains?: string[] }) =>
-        apiFetch<{ delivered: number; roles: Array<{ role: string; recipients: number; questions: number }>; core_questions: number; credits_used: number }>('/cqc-questions/generate-for-staff', token, { method: 'POST', body: JSON.stringify(data) }),
+      generateForStaff: (data: { user_ids: string[]; per_role?: number; core?: number; standard?: number; domains?: string[] }) =>
+        apiFetch<{ delivered: number; roles: Array<{ role: string; recipients: number; questions: number }>; core_questions: number; standard_questions: number; credits_used: number }>('/cqc-questions/generate-for-staff', token, { method: 'POST', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ success: boolean }>(`/cqc-questions/${id}`, token, { method: 'DELETE' }),
       deliver: (id: string, data: { user_ids: string[]; channel?: string }) =>

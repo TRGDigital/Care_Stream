@@ -296,6 +296,76 @@ async function generateRoleBatch(
   return created
 }
 
+// ─── The four standard CQC staff-interview themes ─────────────────────────────
+// The classic areas inspectors raise with frontline staff in almost every
+// inspection. Sent as a fixed set (the admin picks how many, 1–4) but REWORDED
+// freshly on every generation — staff practise the substance, not a script.
+const STANDARD_CQC_THEMES = [
+  {
+    key: 'enjoy_role', domain: 'caring', title: 'What you enjoy about your role',
+    guidance: "Inspectors want to hear what the staff member loves about working at the service and how their work has made a positive difference to people's lives. A strong answer shares a real, specific story of meaningful impact they are proud of — inspectors value real examples.",
+  },
+  {
+    key: 'raising_concerns', domain: 'safe', title: 'Your experience of raising concerns',
+    guidance: 'Inspectors want to understand what happened when the staff member raised a concern about the quality of care: were they listened to, and what actions were taken? Needing improvement does not automatically mean a service is poor — inspectors look at how issues are raised and how the provider responds. A strong answer shows they know how to raise concerns and that the provider acts.',
+  },
+  {
+    key: 'day_to_day_support', domain: 'responsive', title: 'How you support people day-to-day',
+    guidance: 'Inspectors want to know about the people the staff member cares for, how they understand and meet their needs, and how the service shares information within the team to achieve the best outcomes for the people they support.',
+  },
+  {
+    key: 'support_in_role', domain: 'well_led', title: 'The support you get in your role',
+    guidance: 'Inspectors want to know the staff member is supported by their line managers, knows where to go when they need help, and has had the training and support they need in their role.',
+  },
+]
+
+// Generate N of the four standard themes as freshly-worded inspector questions
+// (all four when N=4, a random selection otherwise) with model answers. Saved
+// with job_role null — like the core set, they go to every selected staff member.
+async function generateStandardBatch(tenantId: string, count: number): Promise<any[]> {
+  const themes = [...STANDARD_CQC_THEMES].sort(() => Math.random() - 0.5).slice(0, Math.max(1, Math.min(4, count)))
+  const themeBlock = themes.map((t, i) => `${i + 1}. [domain: ${t.domain}] ${t.title} — ${t.guidance}`).join('\n')
+  const userMessage = `You are a CQC (Care Quality Commission) inspection expert. Below are ${themes.length} standard interview themes that CQC inspectors raise with frontline care staff in almost every inspection.
+
+For EACH theme, write ONE open-ended inspector-style question and a comprehensive model answer.
+
+CRITICAL — FRESH WORDING: these themes are asked again and again, so your phrasing must feel newly written every time. Vary the sentence structure, opener and vocabulary; do not use a stock opener like "Can you tell me…" for more than one question. Each question must still clearly test its theme.
+
+Requirements for each question: open-ended, realistic, phrased naturally as if the inspector is speaking directly to the staff member, and answerable by ANY member of staff regardless of role.
+
+Requirements for each model answer: 3–6 sentences, written first person from the staff member's perspective, practical and specific, covering the points in the theme guidance.
+
+Themes:
+${themeBlock}
+
+Respond with ONLY a valid JSON array — no markdown, no code block, no preamble — one item per theme in the same order:
+[{"domain":"caring","question":"...","model_answer":"..."}]
+Each "domain" must be copied from that theme's [domain: …] tag.`
+
+  const text = await callClaude('Respond only with a valid JSON array.', userMessage, { maxTokens: 3000, temperature: 0.9, feature: 'cqc' })
+  const start = text.indexOf('['), end = text.lastIndexOf(']')
+  let parsed: Array<{ domain: string; question: string; model_answer: string }> = []
+  try { parsed = JSON.parse(text.slice(start, end + 1)) } catch { return [] }
+
+  const VALID = ['safe', 'effective', 'caring', 'responsive', 'well_led']
+  const clean = (Array.isArray(parsed) ? parsed : [])
+    .filter(q => q && typeof q.question === 'string' && q.question.trim() && typeof q.model_answer === 'string' && q.model_answer.trim())
+    .slice(0, themes.length)
+    .map((q, i) => ({
+      domain:       VALID.includes(q.domain) ? q.domain : themes[i].domain,
+      question:     q.question.trim(),
+      model_answer: q.model_answer.trim(),
+    }))
+
+  const created = await Promise.all(clean.map(q =>
+    (prisma as any).cqcStaffQuestion.create({
+      data: { tenant_id: tenantId, domain: q.domain, job_role: null, question: q.question, model_answer: q.model_answer },
+    })
+  ))
+  await Promise.all(created.map((q: any) => logAiCredit(tenantId, 'cqc_questions', q.id)))
+  return created
+}
+
 cqcQuestionsRouter.get('/', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
@@ -370,6 +440,7 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
   const userIds: string[] = Array.isArray(body.user_ids) ? body.user_ids : []
   const perRole = Math.max(1, Math.min(5, parseInt(body.per_role, 10) || 3))
   const coreCount = Math.max(0, Math.min(3, parseInt(body.core, 10) ?? 2))
+  const standardCount = Math.max(0, Math.min(4, parseInt(body.standard, 10) || 0))
   const channel = typeof body.channel === 'string' ? body.channel : 'portal'
   const VALID_DOMAINS = ['safe', 'effective', 'caring', 'responsive', 'well_led']
   const domains: string[] | null = Array.isArray(body.domains)
@@ -411,6 +482,9 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
     }
     const allUserIds = (members as any[]).map((m: any) => m.id)
     const coreQuestions = coreCount > 0 ? await generateRoleBatch(tenantId, coreCount, null, avoid, domains) : []
+    // The four standard inspector themes (enjoy your role / raising concerns /
+    // day-to-day support / support you receive) — freshly worded every run.
+    const standardQuestions = standardCount > 0 ? await generateStandardBatch(tenantId, standardCount) : []
 
     // Deliver: each question is rephrased once (anti-rote, same as single deliver)
     // and sent to its audience. Existing copies are never duplicated.
@@ -431,12 +505,14 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
     }
     for (const r of roleResults) for (const q of r.questions) await deliverQuestion(q, r.users)
     for (const q of coreQuestions) await deliverQuestion(q, allUserIds)
+    for (const q of standardQuestions) await deliverQuestion(q, allUserIds)
 
     ok(res, {
       delivered,
       roles: roleResults.map(r => ({ role: r.role, recipients: r.users.length, questions: r.questions.length })),
       core_questions: coreQuestions.length,
-      credits_used: roleResults.reduce((n, r) => n + r.questions.length, 0) + coreQuestions.length,
+      standard_questions: standardQuestions.length,
+      credits_used: roleResults.reduce((n, r) => n + r.questions.length, 0) + coreQuestions.length + standardQuestions.length,
     }, 201)
 
     // One notification per person, with their total question count.

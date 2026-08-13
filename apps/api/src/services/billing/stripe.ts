@@ -148,7 +148,9 @@ export async function createCheckoutSession(tenantId: string, planId: string, in
 // ─── Training licence checkout (one-off, training-only gateway tier) ───────────
 // One row of the cart = one staff seat × one module (£25.99). The price is resolved
 // from the configured training Product so there's no separate price-id to manage.
-export const TRAINING_LICENCE_PENCE = 2599
+// TRAINING_LICENCE_PENCE env overrides the unit price — used to run a £1-per-licence
+// real-money smoke test of the basket checkout before launch. Unset = £25.99.
+export const TRAINING_LICENCE_PENCE = Math.max(50, parseInt(process.env.TRAINING_LICENCE_PENCE ?? '', 10) || 2599)
 
 async function trainingPriceId(): Promise<string> {
   const productId = process.env.STRIPE_TRAINING_PRODUCT_ID

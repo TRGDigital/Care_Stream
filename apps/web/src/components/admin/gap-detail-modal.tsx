@@ -519,7 +519,11 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       setAdoptedContent(m => ({ ...m, [r.requirement]: { new_text: adoptText.trim(), section_title: adoptTitle.trim() || undefined } }))
       setPendingCount(res.pending)
       setAdoptingReq(null)
-      if (!res.applied) setAdoptErr('Adopted and logged, but we could not auto-place it exactly — check the draft when you review.')
+      // Honest outcomes: placed_at_end = it IS adopted and pending, just added as its own
+      // section rather than in situ. applied:false now only happens when there was genuinely
+      // nothing to change (e.g. a removal whose wording is already gone) — nothing is pending.
+      if (res.placed_at_end) setAdoptErr('Adopted. We could not find the exact passage it amends, so it has been added as its own section at the end of the policy — tidy the wording when you review it.')
+      else if (!res.applied) setAdoptErr('That wording is no longer in the policy, so there was nothing to change — no pending change was recorded.')
     } catch (e: any) {
       setAdoptErr(e.message ?? 'Could not adopt this change.')
     } finally {
@@ -558,13 +562,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     if (!safResult?.target_policy) return
     setSafBusy(idx); setSafErr('')
     try {
-      await createApiClient(token).analytics.adoptSuggestion({
+      const res = await createApiClient(token).analytics.adoptSuggestion({
         policy_id: safResult.target_policy.id, reference_key: detail?.reference_key ?? referenceKey, requirement: a.focus,
         // amend: replace the passage. add_under_heading: add under the anchor heading. new_section: brand-new.
         placement: a.placement, old_text: (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.anchor : '',
         new_text: a.wording, section_title: a.placement === 'new_section' ? (a.section_title || undefined) : undefined,
       })
       setSafAdopted(s => new Set(s).add(idx))
+      if (res.placed_at_end) setSafErr('Adopted. We could not find the exact passage, so it was added as its own section at the end of the policy — tidy it when you review.')
+      else if (!res.applied) setSafErr('That wording is no longer in the policy, so there was nothing to change.')
     } catch (e: any) { setSafErr(e.message ?? 'Could not adopt this.') }
     finally { setSafBusy(null) }
   }

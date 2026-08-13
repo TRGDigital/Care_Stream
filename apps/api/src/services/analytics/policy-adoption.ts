@@ -399,7 +399,7 @@ function applyChange(content: string, placement: string, oldText: string, newTex
 
 export async function adoptSuggestion(tenantId: string, policyId: string, input: {
   reference_key: string; requirement: string; placement: string; old_text: string; new_text: string; section_title?: string; applied_by: string
-}): Promise<{ applied: boolean; pending: number; document_id: string; change_id: string }> {
+}): Promise<{ applied: boolean; pending: number; document_id: string; change_id: string; placed_at_end: boolean }> {
   const doc = await getOrInitDocument(tenantId, policyId)
   let { content, applied } = applyChange(doc.draft_content, input.placement, input.old_text, input.new_text, input.section_title)
 
@@ -445,6 +445,21 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
     }
   }
 
+  // Last-resort placement: an amend / add-under-heading whose anchor passage can no longer be
+  // found (the suggestion was generated against an older analysis, or the wording has since
+  // changed). Previously this returned applied:false and recorded NOTHING — while the /gaps UI
+  // told the user it had been "adopted and logged", so the change silently never reached
+  // "Adopted changes to review". Instead, place the new wording as its own block at the end of
+  // the body so it genuinely lands in the draft and is reviewable (and repositionable) there.
+  let placedAtEnd = false
+  if (!applied && !alreadyApplied && input.new_text &&
+      (input.placement === 'amend' || input.placement === 'add_under_heading')) {
+    const block = [input.section_title ? `## ${input.section_title}` : '', input.new_text].filter(Boolean).join('\n\n')
+    content = insertBeforeEndMatter(doc.draft_content, block)
+    applied = true
+    placedAtEnd = true
+  }
+
   if (applied) {
     await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { draft_content: content } })
   }
@@ -455,8 +470,10 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
     const change = await (prisma as any).policyDocumentChange.create({
       data: {
         document_id: doc.id, tenant_id: tenantId, reference_key: input.reference_key,
-        requirement: input.requirement.slice(0, 500), placement: input.placement,
-        old_text: input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000),
+        // A fallback placement landed as its own end-of-body block, so record it as new_section —
+        // the review/tracked views then render it exactly where it actually sits.
+        requirement: input.requirement.slice(0, 500), placement: placedAtEnd ? 'new_section' : input.placement,
+        old_text: placedAtEnd ? '' : input.old_text.slice(0, 8000), new_text: input.new_text.slice(0, 8000),
         section_title: (input.section_title ?? '').slice(0, 200), applied_by: input.applied_by,
       },
     })
@@ -467,7 +484,7 @@ export async function adoptSuggestion(tenantId: string, policyId: string, input:
   const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, published: false, reverted: false } })
   // `applied` in the response means "the draft reflects this change" — true whether we applied it
   // just now or it was already there from a prior identical amend.
-  return { applied: applied || alreadyApplied, pending, document_id: doc.id, change_id: changeId || priorChangeId }
+  return { applied: applied || alreadyApplied, pending, document_id: doc.id, change_id: changeId || priorChangeId, placed_at_end: placedAtEnd }
 }
 
 // ─── Approval workflow ────────────────────────────────────────────────────────
@@ -1021,15 +1038,28 @@ export async function approvalsOverview(tenantId: string): Promise<{
 
 // Per-policy summary for the Policies list: how many changes are waiting to be published.
 export async function summariseDocuments(tenantId: string): Promise<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>> {
-  const docs = await (prisma as any).policyDocument.findMany({
-    where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true, external_name: true, external_email: true, external_sent_at: true },
-  })
-  const out: Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }> = []
-  for (const d of docs as any[]) {
-    const pending = await (prisma as any).policyDocumentChange.count({ where: { document_id: d.id, published: false, reverted: false } })
-    out.push({ policy_id: d.policy_id, pending, version: d.version ?? '', published_at: d.published_at ? new Date(d.published_at).toISOString() : null, approval_status: d.approval_status ?? 'draft', external_name: d.external_name || d.external_email || '', external_sent_at: d.external_sent_at ? new Date(d.external_sent_at).toISOString() : null })
-  }
-  return out
+  // Two queries total (docs + one grouped count), NOT one count per document — the
+  // previous per-doc loop issued ~50 sequential queries for a large tenant, which
+  // intermittently timed out under DB connection pressure and left the "Adopted
+  // changes to review" panel silently empty.
+  const [docs, counts] = await Promise.all([
+    (prisma as any).policyDocument.findMany({
+      where: { tenant_id: tenantId }, select: { id: true, policy_id: true, version: true, published_at: true, approval_status: true, external_name: true, external_email: true, external_sent_at: true },
+    }),
+    (prisma as any).policyDocumentChange.groupBy({
+      by: ['document_id'],
+      where: { tenant_id: tenantId, published: false, reverted: false },
+      _count: { _all: true },
+    }),
+  ])
+  const pendingByDoc = new Map<string, number>((counts as any[]).map(c => [c.document_id, c._count?._all ?? 0]))
+  return (docs as any[]).map(d => ({
+    policy_id: d.policy_id, pending: pendingByDoc.get(d.id) ?? 0, version: d.version ?? '',
+    published_at: d.published_at ? new Date(d.published_at).toISOString() : null,
+    approval_status: d.approval_status ?? 'draft',
+    external_name: d.external_name || d.external_email || '',
+    external_sent_at: d.external_sent_at ? new Date(d.external_sent_at).toISOString() : null,
+  }))
 }
 
 export async function getPolicyDocument(tenantId: string, policyId: string): Promise<{ document: any; changes: any[] } | null> {

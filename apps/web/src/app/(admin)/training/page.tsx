@@ -1420,13 +1420,22 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
           {purchased.map(m => {
             const o = owned.get(m.slug)!
+            const available = o.total - o.allocated
             return (
               <div key={m.slug} className="overflow-hidden rounded-xl border-2 border-blue-600 bg-white shadow-card">
                 {img(m.illustration_url) && /* eslint-disable-next-line @next/next/no-img-element */ <img src={img(m.illustration_url)!} alt="" className="aspect-[16/9] w-full object-cover" />}
                 <div className="p-4">
                   <div className="mb-1 flex items-center gap-2"><ShieldCheck size={15} className="text-blue-600" /><p className="font-semibold text-neutral-dark">{m.title}</p></div>
-                  <p className="text-xs text-neutral-mid">{o.total} licence{o.total === 1 ? '' : 's'} &middot; {o.allocated} allocated &middot; {o.total - o.allocated} available</p>
-                  <Link href="/licences" className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
+                  <p className="text-xs text-neutral-mid">{o.total} licence{o.total === 1 ? '' : 's'} &middot; {o.allocated} allocated &middot; {available} available</p>
+                  {/* All licences used → the action is buying more, not allocating. */}
+                  {available > 0 ? (
+                    <Link href="/licences" className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
+                  ) : (
+                    <div className="mt-3 flex items-center gap-2">
+                      <Link href={`/buy/${m.slug}`} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Buy more licences</Link>
+                      <span className="text-[11px] text-neutral-mid">All licences allocated</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )

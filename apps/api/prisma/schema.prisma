@@ -986,6 +986,7 @@ model TrainingTopic {
 
   @@index([tenant_id])
   @@map("training_topics")
+  is_annual           Boolean  @default(false) // one of the Annual (CPD) set sold in the training shop
 }
 
 // Per-tenant archived annual-training topics — hides a catalogue topic from THIS

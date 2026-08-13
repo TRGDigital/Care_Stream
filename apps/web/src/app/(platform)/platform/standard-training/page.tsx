@@ -53,7 +53,10 @@ export default function StandardTrainingPage() {
   const api = token ? createPlatformClient(token) : null
   const [groups, setGroups] = useState<Record<string, string>>({})
   const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
-  const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base
+  const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base; 'ANNUAL' = the CPD set
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'annual') setActiveSetting('ANNUAL')
+  }, [])
   const [topics, setTopics] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
@@ -106,7 +109,7 @@ export default function StandardTrainingPage() {
 
   // Universal (care_setting = null) topics form the cross-over base shown under every
   // setting; a setting tab shows only that setting's own topics. Count both for tabs.
-  const settingCount = (key: string | null) => topics.filter(t => key ? t.care_setting === key : !t.care_setting).length
+  const settingCount = (key: string | null) => topics.filter(t => key === 'ANNUAL' ? t.is_annual : key ? t.care_setting === key : !t.care_setting).length
 
   // Library-wide governance summary (across every setting).
   const allModules = topics.map(t => t.module).filter(Boolean) as any[]
@@ -117,9 +120,11 @@ export default function StandardTrainingPage() {
   const renewalModules = allModules.filter(m => m.approved && m.approved_at && renewalDueMs(m.approved_at) <= renewalHorizonMs)
   const overdueCount = renewalModules.filter(m => renewalDueMs(m.approved_at) <= Date.now()).length
 
-  const visibleTopics = topics.filter(t => activeSetting ? t.care_setting === activeSetting : !t.care_setting)
+  // 'ANNUAL' = the Annual (CPD) tab: the 10 modules sold in the training shop, across all settings.
+  const visibleTopics = topics.filter(t =>
+    activeSetting === 'ANNUAL' ? t.is_annual : activeSetting ? t.care_setting === activeSetting : !t.care_setting)
   const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: visibleTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
-  const activeLabel = settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
+  const activeLabel = activeSetting === 'ANNUAL' ? 'Annual training' : settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
 
   return (
     <PlatformShell>
@@ -148,7 +153,7 @@ export default function StandardTrainingPage() {
           tab holds only that setting's specific modules. */}
       {!loading && (
         <div className="mb-5 flex flex-wrap gap-1.5 border-b border-gray-200 pb-3">
-          {[{ key: null as string | null, label: 'All settings' }, ...settings].map(tab => {
+          {[{ key: null as string | null, label: 'All settings' }, { key: 'ANNUAL' as string | null, label: 'Annual training' }, ...settings].map(tab => {
             const active = activeSetting === tab.key
             const count = settingCount(tab.key)
             return (

@@ -30,6 +30,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
   {
     title: 'Training Shop',
     items: [
+      { href: '/platform/standard-training?tab=annual', label: 'Annual Training (CPD)', Icon: Award },
       { href: '/platform/basket-analytics', label: 'Basket Analytics', Icon: ShoppingCart   },
       { href: '/platform/standard-training', label: 'Standard Training', Icon: GraduationCap },
       { href: '/platform/cpd-review',       label: 'CPD Review',       Icon: Award           },

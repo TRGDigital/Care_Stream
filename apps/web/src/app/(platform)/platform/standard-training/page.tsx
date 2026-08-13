@@ -55,7 +55,14 @@ export default function StandardTrainingPage() {
   const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
   const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base; 'ANNUAL' = the CPD set
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'annual') setActiveSetting('ANNUAL')
+    const applyFromUrl = () => {
+      if (window.location.hash === '#annual' || new URLSearchParams(window.location.search).get('tab') === 'annual') {
+        setActiveSetting('ANNUAL')
+      }
+    }
+    applyFromUrl()
+    window.addEventListener('hashchange', applyFromUrl)
+    return () => window.removeEventListener('hashchange', applyFromUrl)
   }, [])
   const [topics, setTopics] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

@@ -369,15 +369,21 @@ async function ensureAnnualTopicsAsAdhoc(tenantId: string): Promise<void> {
   const tenant  = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
   const setting = facilityTypeToSetting(tenant?.facility_type)
   const settingOr = [{ care_setting: null }, { care_setting: setting }]
-  const [existing, topics] = await Promise.all([
+  const [existing, topics, hidden] = await Promise.all([
     (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: { not: 'ai_generated' } }, select: { name: true, topic_id: true } }),
     (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, select: { id: true, title: true, group_key: true, image_key: true, requires_practical: true } }),
+    // Topics this tenant has archived must NOT be materialised as adhoc modules —
+    // otherwise a tenant restricted to a subset (e.g. the CPD assessor account)
+    // still sees the whole library resurrected in the modules grid.
+    (prisma as any).trainingTopicHidden.findMany({ where: { tenant_id: tenantId }, select: { topic_id: true } }),
   ])
+  const hiddenTopicIds = new Set((hidden as any[]).map((h: any) => String(h.topic_id)))
   const haveNames  = new Set((existing as any[]).map(m => normName(m.name)))
   const haveTopics = new Set((existing as any[]).map(m => m.topic_id).filter(Boolean))
   const seen = new Set<string>()
   const rows: any[] = []
   for (const t of (topics as any[])) {
+    if (t.id && hiddenTopicIds.has(String(t.id))) continue
     const key = normName(t.title)
     if (!key || seen.has(key) || haveNames.has(key)) continue
     if (t.id && haveTopics.has(t.id)) continue

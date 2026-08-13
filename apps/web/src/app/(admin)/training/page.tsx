@@ -1376,6 +1376,23 @@ function DeliveryTab({ api, modules, staff }: {
 const PUBLIC_API = process.env.NEXT_PUBLIC_API_URL ?? ''
 type CatalogueModule = { slug: string; title: string; description: string | null; illustration_url: string | null }
 
+// Quiet add-to-basket: adds the module without opening the overlay, so admins can
+// stack several modules and pay once (bigger baskets also unlock volume discounts).
+function AddToBasketButton({ slug, title, outline = false }: { slug: string; title: string; outline?: boolean }) {
+  const [added, setAdded] = useState(false)
+  return (
+    <button
+      onClick={() => { cart.add({ slug, title, unitPence: UNIT_PENCE }); setAdded(true); setTimeout(() => setAdded(false), 1400) }}
+      className={outline
+        ? 'inline-flex items-center gap-1.5 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50'
+        : 'inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-neutral-mid hover:border-blue-600 hover:text-blue-600'}
+    >
+      {added ? <CheckCircle2 size={12} className="text-green-600" /> : <ShoppingCart size={12} />}
+      {added ? 'Added' : 'Add to basket'}
+    </button>
+  )
+}
+
 function TrainingOnlyTraining({ token }: { token: string | null }) {
   const [licences,  setLicences]  = useState<any[]>([])
   const [catalogue, setCatalogue] = useState<CatalogueModule[]>([])
@@ -1476,13 +1493,17 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
                   <p className="text-xs text-neutral-mid">{o.total} licence{o.total === 1 ? '' : 's'} &middot; {o.allocated} allocated &middot; {available} available</p>
                   {/* All licences used → the action is buying more, not allocating. */}
                   {available > 0 ? (
-                    <Link href="/licences" className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Link href="/licences" className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
+                      <AddToBasketButton slug={m.slug} title={m.title} />
+                    </div>
                   ) : (
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <button onClick={() => { cart.add({ slug: m.slug, title: m.title, unitPence: UNIT_PENCE }); setBasketOpen(true) }}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
                         <ShoppingCart size={12} /> Buy more licences
                       </button>
+                      <AddToBasketButton slug={m.slug} title={m.title} />
                       <span className="text-[11px] text-neutral-mid">All licences allocated</span>
                     </div>
                   )}
@@ -1506,10 +1527,13 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
                 <div className="p-4">
                   <div className="mb-1 flex items-center gap-2"><Lock size={13} className="text-gray-400" /><p className="font-semibold text-neutral-mid">{m.title}</p></div>
                   {m.description && <p className="mb-3 line-clamp-2 text-xs text-gray-400">{m.description}</p>}
-                  <button onClick={() => { cart.add({ slug: m.slug, title: m.title, unitPence: UNIT_PENCE }); setBasketOpen(true) }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-600 hover:text-white">
-                    <ShoppingCart size={12} /> Add to basket
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button onClick={() => { cart.add({ slug: m.slug, title: m.title, unitPence: UNIT_PENCE }); setBasketOpen(true) }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                      Buy now
+                    </button>
+                    <AddToBasketButton slug={m.slug} title={m.title} outline />
+                  </div>
                 </div>
               </div>
             ))}

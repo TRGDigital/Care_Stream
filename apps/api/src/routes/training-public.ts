@@ -506,7 +506,8 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const orgName   = s.metadata.org_name || 'Your service'
     const email     = (s.email || s.metadata.email || '').toLowerCase()
     const adminName = s.customerName || orgName
-    if (!email) { res.status(400).json({ error: 'No email on the payment' }); return }
+    const consoleTenantId = String(s.metadata.tenant_id || '')
+    if (!email && !consoleTenantId) { res.status(400).json({ error: 'No email on the payment' }); return }
 
     // Build the list of {slug, qty} to provision — from the basket metadata for a
     // multi-course order, otherwise the single module.
@@ -529,13 +530,19 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t] as const))
     const renewalDue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 
-    // Attach to an existing account if the email is already known, else create a
-    // new training-only tenant + admin.
-    let user = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } })
-    let tenantId: string
-    if (user) {
+    // In-console purchase by a signed-in tenant (metadata.tenant_id): attach the
+    // licences straight to that tenant — no provisioning, no sign-in/password emails.
+    let user = email ? await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } }) : null
+    let tenantId = ''
+    if (consoleTenantId) {
+      const t = await (prisma as any).tenant.findUnique({ where: { id: consoleTenantId }, select: { id: true } })
+      if (t) tenantId = t.id
+    }
+    // Otherwise: attach to an existing account if the email is already known, else
+    // create a new training-only tenant + admin.
+    if (!tenantId && user) {
       tenantId = user.tenant_id
-    } else {
+    } else if (!tenantId) {
       const slug = await uniqueTrainingSlug(orgName)
       const tenant = await (prisma as any).tenant.create({
         data: { name: orgName, slug, email_domain: slug, tier: 'training_only', subscription_status: 'active', branding_signoff: 'The CareStream Team' },
@@ -573,8 +580,11 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       totalLicences += it.qty
     }
 
-    const link = await createLoginLink(user.id, tenantId, 14 * 24 * 60 * 60 * 1000)
-    await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
+    // Sign-in email only for shop purchases — a console buyer is already signed in.
+    if (!consoleTenantId && user) {
+      const link = await createLoginLink(user.id, tenantId, 14 * 24 * 60 * 60 * 1000)
+      await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
+    }
 
     res.json({ data: { provisioned: true, email, licences: totalLicences, modules: items.length } })
   } catch (e: any) {

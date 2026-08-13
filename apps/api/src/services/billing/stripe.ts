@@ -232,7 +232,17 @@ export function trainingDiscountPct(totalQty: number): number {
 }
 
 export interface TrainingBasketItem { moduleSlug: string; moduleName: string; quantity: number }
-export interface TrainingBasketCheckoutInput { items: TrainingBasketItem[]; email: string; orgName: string }
+export interface TrainingBasketCheckoutInput {
+  items: TrainingBasketItem[]
+  email: string
+  orgName: string
+  // In-console purchase by an existing, signed-in tenant: licences attach straight to
+  // this tenant on reconcile (no account provisioning, no sign-in emails) and Stripe
+  // returns the buyer to the console rather than the public success page.
+  tenantId?: string
+  successPath?: string
+  cancelPath?: string
+}
 
 // Hosted one-off Checkout for a basket of training licences across several modules.
 // One line item at the discounted unit price × total licences; the per-module
@@ -262,10 +272,11 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
       discount_pct: String(pct),
       org_name:     input.orgName.slice(0, 250),
       email:        input.email,
+      ...(input.tenantId ? { tenant_id: input.tenantId } : {}),
     },
     billing_address_collection: 'required',
-    success_url: `${webUrl()}/buy/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${webUrl()}/basket?buy=cancelled`,
+    success_url: `${webUrl()}${input.successPath ?? '/buy/success?session_id={CHECKOUT_SESSION_ID}'}`,
+    cancel_url:  `${webUrl()}${input.cancelPath ?? '/basket?buy=cancelled'}`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
   const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())

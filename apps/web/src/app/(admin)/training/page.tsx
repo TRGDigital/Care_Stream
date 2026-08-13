@@ -7,10 +7,12 @@ import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { AiCreditsBar } from '@/components/ai-usage'
 import { persistentCache } from '@/lib/page-cache'
+import { useCart, cart } from '@/lib/cart-store'
+import { gbp, UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
-  Search, X, Archive, RotateCcw,
+  Search, X, Archive, RotateCcw, ShoppingCart, Minus,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
@@ -1378,6 +1380,16 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
   const [licences,  setLicences]  = useState<any[]>([])
   const [catalogue, setCatalogue] = useState<CatalogueModule[]>([])
   const [loading,   setLoading]   = useState(true)
+  const [basketOpen, setBasketOpen] = useState(false)
+  const [banner, setBanner] = useState<'success' | 'cancelled' | null>(null)
+  const { items: basketItems, totalQty } = useCart()
+  const [payBusy, setPayBusy] = useState(false)
+  const [payErr, setPayErr] = useState('')
+
+  function loadLicences() {
+    if (!token) return
+    createApiClient(token).training.licences().then(l => setLicences((l as any)?.licences ?? [])).catch(() => {})
+  }
 
   useEffect(() => {
     if (!token) return
@@ -1389,6 +1401,28 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
       if (l.status === 'fulfilled') setLicences((l.value as any)?.licences ?? [])
       if (c.status === 'fulfilled') setCatalogue(((c.value as any)?.data?.topics ?? []) as CatalogueModule[])
     }).finally(() => setLoading(false))
+  }, [token])
+
+  // Returned from an in-console Stripe purchase: reconcile the session (attaches the
+  // licences to this tenant), clear the basket, refresh, and confirm.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    if (sp.get('purchase') === 'cancelled') {
+      setBanner('cancelled')
+      window.history.replaceState({}, '', '/training')
+      return
+    }
+    const sid = sp.get('purchase_session')
+    if (!sid) return
+    window.history.replaceState({}, '', '/training')
+    fetch(`${PUBLIC_API}/public/training/checkout/reconcile`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sid }),
+    }).then(r => r.json()).then(() => {
+      cart.clear()
+      setBanner('success')
+      loadLicences()
+    }).catch(() => setBanner('success'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   const owned = new Map<string, { name: string; total: number; allocated: number }>()
@@ -1414,6 +1448,19 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
         <p className="mt-1 text-sm text-neutral-mid">The modules you&rsquo;ve purchased, plus the rest of the library you can add.</p>
       </div>
 
+      {banner === 'success' && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <CheckCircle2 size={15} /> Payment complete — your new licences have been added and are ready to allocate.
+          <button onClick={() => setBanner(null)} className="ml-auto text-green-700 hover:text-green-900"><X size={14} /></button>
+        </div>
+      )}
+      {banner === 'cancelled' && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <Info size={15} /> Checkout cancelled — your basket is saved if you want to try again.
+          <button onClick={() => setBanner(null)} className="ml-auto text-amber-700 hover:text-amber-900"><X size={14} /></button>
+        </div>
+      )}
+
       {purchased.length === 0 ? (
         <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 text-sm text-neutral-mid">You haven&rsquo;t purchased any training yet. Choose a module below to get started.</div>
       ) : (
@@ -1432,7 +1479,10 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
                     <Link href="/licences" className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Allocate to staff</Link>
                   ) : (
                     <div className="mt-3 flex items-center gap-2">
-                      <Link href={`/buy/${m.slug}`} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Buy more licences</Link>
+                      <button onClick={() => { cart.add({ slug: m.slug, title: m.title, unitPence: UNIT_PENCE }); setBasketOpen(true) }}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                        <ShoppingCart size={12} /> Buy more licences
+                      </button>
                       <span className="text-[11px] text-neutral-mid">All licences allocated</span>
                     </div>
                   )}
@@ -1456,12 +1506,88 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
                 <div className="p-4">
                   <div className="mb-1 flex items-center gap-2"><Lock size={13} className="text-gray-400" /><p className="font-semibold text-neutral-mid">{m.title}</p></div>
                   {m.description && <p className="mb-3 line-clamp-2 text-xs text-gray-400">{m.description}</p>}
-                  <Link href={`/buy/${m.slug}`} className="inline-flex items-center gap-1 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-600 hover:text-white">Buy now</Link>
+                  <button onClick={() => { cart.add({ slug: m.slug, title: m.title, unitPence: UNIT_PENCE }); setBasketOpen(true) }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-600 hover:text-white">
+                    <ShoppingCart size={12} /> Add to basket
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </>
+      )}
+
+      {/* Floating basket button — in-console purchases stay in the account. */}
+      {totalQty > 0 && !basketOpen && (
+        <button onClick={() => setBasketOpen(true)}
+          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/30 hover:bg-blue-700">
+          <span className="relative"><ShoppingCart size={18} /><span className="absolute -right-2 -top-2 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-blue-700">{totalQty}</span></span>
+          Basket
+        </button>
+      )}
+
+      {/* Basket overlay — review, adjust and pay without leaving the console. */}
+      {basketOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setBasketOpen(false)}>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <p className="flex items-center gap-2 font-semibold text-neutral-dark"><ShoppingCart size={16} className="text-blue-600" /> Your basket</p>
+              <button onClick={() => setBasketOpen(false)} className="text-neutral-mid hover:text-neutral-dark"><X size={16} /></button>
+            </div>
+            <div className="max-h-[50vh] overflow-y-auto px-5 py-4">
+              {basketItems.length === 0 && <p className="py-6 text-center text-sm text-neutral-mid">Your basket is empty — add licences from the modules below.</p>}
+              {basketItems.map(i => (
+                <div key={i.slug} className="mb-3 flex items-center gap-3 rounded-xl border border-gray-100 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-neutral-dark">{i.title}</p>
+                    <p className="text-xs text-neutral-mid">{gbp(i.unitPence)} per licence</p>
+                  </div>
+                  <div className="flex items-center rounded-lg border border-gray-200">
+                    <button onClick={() => cart.setQty(i.slug, i.qty - 1)} className="flex h-8 w-8 items-center justify-center text-neutral-mid hover:bg-gray-50" aria-label="Fewer"><Minus size={13} /></button>
+                    <span className="w-9 text-center text-sm font-bold">{i.qty}</span>
+                    <button onClick={() => cart.setQty(i.slug, i.qty + 1)} className="flex h-8 w-8 items-center justify-center text-neutral-mid hover:bg-gray-50" aria-label="More"><Plus size={13} /></button>
+                  </div>
+                  <button onClick={() => cart.remove(i.slug)} className="text-neutral-mid hover:text-red-500" aria-label="Remove"><Trash2 size={15} /></button>
+                </div>
+              ))}
+              {basketItems.length > 0 && (() => {
+                const gross = basketItems.reduce((t, i) => t + i.qty * i.unitPence, 0)
+                const pct = discountPctForQty(totalQty)
+                const discount = Math.round(gross * (pct / 100))
+                const nextTier = DISCOUNT_TIERS.slice().reverse().find(t => totalQty < t.min)
+                return (
+                  <div className="mt-1 rounded-xl bg-blue-50/60 p-3 text-sm">
+                    <div className="flex justify-between text-neutral-mid"><span>{totalQty} licence{totalQty === 1 ? '' : 's'}</span><span>{gbp(gross)}</span></div>
+                    {discount > 0 && <div className="flex justify-between font-medium text-blue-700"><span>Volume discount ({pct}%)</span><span>-{gbp(discount)}</span></div>}
+                    <div className="mt-1 flex justify-between border-t border-blue-100 pt-2 font-bold text-neutral-dark"><span>Total</span><span>{gbp(gross - discount)}</span></div>
+                    {nextTier && <p className="mt-1.5 text-xs text-neutral-mid">Add {nextTier.min - totalQty} more licence{nextTier.min - totalQty === 1 ? '' : 's'} for {nextTier.pct}% off.</p>}
+                  </div>
+                )
+              })()}
+            </div>
+            <div className="border-t border-gray-100 px-5 py-4">
+              {payErr && <p className="mb-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{payErr}</p>}
+              <button
+                disabled={payBusy || basketItems.length === 0}
+                onClick={async () => {
+                  if (!token) return
+                  setPayBusy(true); setPayErr('')
+                  try {
+                    const { url } = await createApiClient(token).training.checkoutBasket(basketItems.map(i => ({ module_slug: i.slug, quantity: i.qty })))
+                    window.location.href = url
+                  } catch (e: any) {
+                    setPayErr(e.message ?? 'Could not start checkout — please try again.')
+                    setPayBusy(false)
+                  }
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                {payBusy ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                {payBusy ? 'Opening secure payment…' : 'Pay securely with Stripe'}
+              </button>
+              <p className="mt-2 text-center text-[11px] text-neutral-mid">One-off payment. You&rsquo;ll return straight to this page and the licences attach to your account automatically.</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

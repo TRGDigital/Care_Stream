@@ -557,6 +557,8 @@ export function createApiClient(token: string) {
         staff: Array<{ id: string; name: string; email: string }>
         summary: { total: number; allocated: number; available: number; spent_pence: number }
       }>('/training/licences', token),
+      checkoutBasket: (items: Array<{ module_slug: string; quantity: number }>) =>
+        apiFetch<{ url: string }>('/training/checkout-basket', token, { method: 'POST', body: JSON.stringify({ items }) }),
       purchases: () => apiFetch<{
         purchases: Array<{ stripe_payment_id: string | null; module_slug: string; module_name: string; currency: string; unit_pence: number; quantity: number; total_pence: number; purchased_at: string; renewal_due_at: string; status: string; receipt_url: string | null }>
       }>('/training/purchases', token),

@@ -8,7 +8,7 @@ import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
 import { notifyAdmin, notifyStaffAllocation, notifyFollowUp } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
-import { getTrainingReceiptUrl } from '../services/billing/stripe'
+import { getTrainingReceiptUrl, createTrainingBasketCheckoutSession } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
@@ -644,6 +644,49 @@ trainingRouter.get('/purchases', requireAdmin, async (req: Request, res: Respons
     await Promise.all(purchases.map(async p => { p.receipt_url = await getTrainingReceiptUrl(p.stripe_payment_id) }))
     ok(res, { purchases })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
+})
+
+// POST /training/checkout-basket — in-console purchase of more licences by a signed-in
+// tenant admin. The Stripe session carries tenant_id so reconcile attaches the licences
+// straight to this tenant (no provisioning, no sign-in emails) and returns the buyer to
+// the console /training page.
+trainingRouter.post('/checkout-basket', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const items = Array.isArray(req.body?.items) ? req.body.items : []
+    if (!items.length) { err(res, 'VALIDATION_ERROR', 'items are required', 400); return }
+
+    const [tenant, admin, topics] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+      (prisma as any).user.findFirst({ where: { tenant_id: tenantId, role: 'admin', is_active: true }, orderBy: { created_at: 'asc' }, select: { email: true } }),
+      (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { title: true } }),
+    ])
+    const slugOf = (t: string) => t.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    const nameBySlug = new Map((topics as any[]).map((t: any) => [slugOf(t.title), t.title] as const))
+
+    const built: Array<{ moduleSlug: string; moduleName: string; quantity: number }> = []
+    for (const it of items) {
+      const slug = String(it?.module_slug ?? '').trim()
+      const qty  = Math.floor(Number(it?.quantity))
+      if (!slug || !Number.isFinite(qty) || qty < 1) continue
+      const name = nameBySlug.get(slug)
+      if (!name) { err(res, 'UNKNOWN_MODULE', `Unknown training module: ${slug}`, 404); return }
+      built.push({ moduleSlug: slug, moduleName: name, quantity: Math.min(500, qty) })
+    }
+    if (!built.length) { err(res, 'VALIDATION_ERROR', 'No valid items in the basket', 400); return }
+
+    const url = await createTrainingBasketCheckoutSession({
+      items:       built,
+      email:       admin?.email ?? (req as any).user.email ?? '',
+      orgName:     tenant?.name ?? 'Your service',
+      tenantId,
+      successPath: '/training?purchase_session={CHECKOUT_SESSION_ID}',
+      cancelPath:  '/training?purchase=cancelled',
+    })
+    ok(res, { url })
+  } catch (e: any) {
+    err(res, 'CHECKOUT_FAILED', e.message ?? 'Could not start checkout.', 500)
+  }
 })
 
 // POST /training/licences/:id/allocate { user_id } — allocate a pooled licence to a

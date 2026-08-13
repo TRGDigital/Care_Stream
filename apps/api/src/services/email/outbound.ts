@@ -492,6 +492,56 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
   })
 }
 
+// ─── Password set-up (new training buyers) ───────────────────────────────────
+// Sent alongside the magic sign-in link when a purchase provisions a NEW account,
+// so the buyer always has a second way in if the one-time link is lost or consumed.
+export async function sendPasswordSetupEmail(to: string, name: string, setupUrl: string): Promise<void> {
+  ensureInitialised()
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping password setup email')
+    return
+  }
+
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = name.split(' ')[0] ?? name
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Welcome to CareStreamAI! Your account is ready. To make sure you can always sign in,
+      set a password for your account now — it only takes a moment.
+    </p>
+
+    <div style="text-align:center;margin:0 0 32px">
+      <a href="${setupUrl}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        Set up my password
+      </a>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+      This link expires in <strong>7 days</strong>. Once set, sign in any time at carestreamai.com/login
+      with your email address and password.
+    </p>
+
+    <p style="color:#9ca3af;font-size:12px;margin:0">
+      If the button above does not work, copy and paste this link into your browser:<br>
+      <span style="color:${PURPLE}">${setupUrl}</span>
+    </p>
+
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to,
+    from,
+    subject: 'Set up your CareStreamAI password',
+    html,
+  })
+}
+
 // ─── Training update notification ────────────────────────────────────────────
 
 export interface SendTrainingUpdateOptions {

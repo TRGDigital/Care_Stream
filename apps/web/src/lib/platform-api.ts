@@ -651,6 +651,8 @@ export function createPlatformClient(token: string) {
       setShare: (id: string, data: { enabled: boolean; password?: string }) => adminFetch<{ share_enabled: boolean; share_token: string | null; share_password: string | null; share_url: string | null }>(`/standard-training/modules/${id}/share`, token, { method: 'POST', body: JSON.stringify(data) }),
     },
 
+    basketAnalytics: () =>
+      adminFetch<{ modules: Array<{ module_slug: string; adds: number; adds_30d: number; add_qty: number; checkouts: number; purchased: number; revenue_pence: number }>; totals: { adds: number; adds_30d: number; checkouts: number; purchased: number; revenue_pence: number } }>('/basket-analytics', token),
     tenants: {
       list: () =>
         adminFetch<{ tenants: TenantSummary[]; total: number }>('/tenants', token),

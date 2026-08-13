@@ -6,8 +6,9 @@ import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
+import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
-import { sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { sendStaffLoginLinkEmail, sendPasswordSetupEmail } from '../services/email/outbound'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
 
@@ -394,6 +395,21 @@ publicTrainingRouter.get('/seo-index', async (_req: Request, res: Response) => {
   }
 })
 
+// POST /public/training/basket-event — anonymous add-to-basket / checkout-started
+// counter for the public shop (powers platform Basket Analytics). Fire-and-forget
+// from the web cart; no personal data stored, always responds ok.
+publicTrainingRouter.post('/basket-event', async (req: Request, res: Response) => {
+  try {
+    const kind = String(req.body?.kind ?? 'add')
+    const slug = String(req.body?.module_slug ?? '').trim().slice(0, 120)
+    const qty  = Math.max(1, Math.min(500, Math.floor(Number(req.body?.quantity)) || 1))
+    if ((kind === 'add' || kind === 'checkout') && slug) {
+      await (prisma as any).basketEvent.create({ data: { kind, module_slug: slug, quantity: qty } }).catch(() => {})
+    }
+  } catch { /* never fail the shop over analytics */ }
+  res.json({ data: { ok: true } })
+})
+
 // GET /public/training/licence-price — unit price (pence) for the buy page total.
 publicTrainingRouter.get('/licence-price', (_req: Request, res: Response) => {
   res.json({ data: { unit_pence: TRAINING_LICENCE_PENCE, currency: 'gbp' } })
@@ -531,6 +547,17 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
         data: { tenant_id: tenant.id, email, name: adminName, role: 'admin', email_verified: true, password_hash: tempHash },
       })
       tenantId = tenant.id
+
+      // New account: alongside the magic sign-in link, send a set-your-password email
+      // (7-day token via the standard reset flow) so the buyer always has a second way
+      // in — one-time magic links can be consumed by email security scanners.
+      const setupToken = crypto.randomBytes(24).toString('base64url')
+      await (prisma as any).user.update({
+        where: { id: user.id },
+        data:  { password_reset_token: setupToken, password_reset_token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+      }).catch(() => {})
+      await sendPasswordSetupEmail(email, adminName, `${siteUrl()}/reset-password?token=${setupToken}`)
+        .catch((e: any) => console.error('[training-checkout] password setup email failed:', e?.message ?? e))
     }
 
     // One pooled licence per seat, per module, all tagged with the Stripe payment id.

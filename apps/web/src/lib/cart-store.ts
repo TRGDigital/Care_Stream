@@ -33,12 +33,27 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => { if (e.key === KEY) { load(); listeners.forEach((l) => l()) } })
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// Fire-and-forget shop analytics (platform Basket Analytics). Never blocks the UI.
+export function trackBasketEvent(kind: 'add' | 'checkout', moduleSlug: string, quantity = 1) {
+  try {
+    fetch(`${API_URL}/public/training/basket-event`, {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, module_slug: moduleSlug, quantity }),
+    }).catch(() => {})
+  } catch { /* analytics must never break the shop */ }
+}
+
 export const cart = {
   add(item: Omit<CartItem, 'qty'> & { qty?: number }) {
     const qty = Math.max(1, Math.min(500, item.qty ?? 1))
     const existing = items.find((i) => i.slug === item.slug)
     if (existing) items = items.map((i) => (i.slug === item.slug ? { ...i, qty: Math.min(500, i.qty + qty) } : i))
     else items = [...items, { slug: item.slug, title: item.title, qty, unitPence: item.unitPence ?? UNIT_PENCE }]
+    trackBasketEvent('add', item.slug, qty)
     persist()
   },
   setQty(slug: string, qty: number) {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingCart, ShieldCheck, Loader2, ArrowLeft } from 'lucide-react'
-import { useCart } from '@/lib/cart-store'
+import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { gbp, DISCOUNT_TIERS, discountPctForQty, TRAINING_ACCREDITED } from '@/lib/training-commerce'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -23,6 +23,7 @@ export default function BasketPage() {
     if (!org.trim()) { setError('Please enter your organisation name.'); return }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
+    items.forEach((i) => trackBasketEvent('checkout', i.slug, i.qty))
     try {
       const res = await fetch(`${API_URL}/public/training/checkout-basket`, {
         method: 'POST',

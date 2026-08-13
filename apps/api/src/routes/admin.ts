@@ -421,6 +421,46 @@ adminRouter.post('/tenants/:id/policies/reset', async (req: Request, res: Respon
 // ─── GET /admin/tenants ───────────────────────────────────────────────────────
 // List root tenants (parent_tenant_id IS NULL) with per-tenant stats + sub-tenant count.
 
+// ─── GET /admin/basket-analytics ─────────────────────────────────────────────
+// Public training-shop funnel: adds to basket → checkouts started → licences sold,
+// per module and in total (router-level requirePlatformAdmin applies).
+adminRouter.get('/basket-analytics', async (_req: Request, res: Response) => {
+  try {
+    const d30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const [events, licences] = await Promise.all([
+      (prisma as any).basketEvent.findMany({ select: { kind: true, module_slug: true, quantity: true, created_at: true }, orderBy: { created_at: 'desc' }, take: 20000 }),
+      (prisma as any).trainingLicense.findMany({ select: { module_slug: true, created_at: true, price_pence: true } }),
+    ])
+    type Row = { module_slug: string; adds: number; adds_30d: number; add_qty: number; checkouts: number; purchased: number; revenue_pence: number }
+    const byModule = new Map<string, Row>()
+    const row = (slug: string): Row => {
+      if (!byModule.has(slug)) byModule.set(slug, { module_slug: slug, adds: 0, adds_30d: 0, add_qty: 0, checkouts: 0, purchased: 0, revenue_pence: 0 })
+      return byModule.get(slug)!
+    }
+    for (const e of events as any[]) {
+      const r = row(e.module_slug)
+      if (e.kind === 'add') {
+        r.adds++; r.add_qty += e.quantity ?? 1
+        if (new Date(e.created_at) >= d30) r.adds_30d++
+      } else if (e.kind === 'checkout') r.checkouts++
+    }
+    for (const l of licences as any[]) {
+      if (!l.module_slug) continue
+      const r = row(l.module_slug)
+      r.purchased++
+      r.revenue_pence += l.price_pence ?? 0
+    }
+    const modules = Array.from(byModule.values()).sort((a, b) => b.adds - a.adds || b.purchased - a.purchased)
+    const totals = modules.reduce((t, m) => ({
+      adds: t.adds + m.adds, adds_30d: t.adds_30d + m.adds_30d, checkouts: t.checkouts + m.checkouts,
+      purchased: t.purchased + m.purchased, revenue_pence: t.revenue_pence + m.revenue_pence,
+    }), { adds: 0, adds_30d: 0, checkouts: 0, purchased: 0, revenue_pence: 0 })
+    ok(res, { modules, totals })
+  } catch (e: any) {
+    err(res, 'BASKET_ANALYTICS_FAILED', e.message ?? 'Could not load basket analytics.', 500)
+  }
+})
+
 adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const tenants = await (prisma as any).tenant.findMany({
     where:   { parent_tenant_id: null },

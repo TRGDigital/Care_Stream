@@ -2327,3 +2327,17 @@ model ModuleReview {
   @@index([module_id])
   @@map("module_reviews")
 }
+
+// Anonymous add-to-basket / checkout-started events from the public training shop,
+// powering the platform "Basket Analytics" view. No personal data.
+model BasketEvent {
+  id          String   @id @default(uuid())
+  kind        String   @default("add") // 'add' | 'checkout'
+  module_slug String
+  quantity    Int      @default(1)
+  created_at  DateTime @default(now())
+
+  @@index([kind, created_at])
+  @@index([module_slug])
+  @@map("basket_events")
+}

@@ -220,6 +220,14 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   const [evalUsefulness, setEvalUsefulness] = useState<number | null>(null)
   const [evalComment, setEvalComment] = useState('')
   const [evalDone, setEvalDone] = useState(false)
+  const [baselineSel, setBaselineSel] = useState<Record<string, number>>({})  // pre-lesson knowledge check
+  const [baselineResult, setBaselineResult] = useState<{ score: number; total: number } | null>(null)
+  const baselineSubmittedRef = useRef(false)
+  const [termsOpen, setTermsOpen] = useState(false)      // "Key terms" accordion on the overview
+  const [refsOpen, setRefsOpen] = useState(false)        // "References" accordion on the overview
+  const [reflectionText, setReflectionText] = useState('')
+  const [reflectionSaving, setReflectionSaving] = useState(false)
+  const [reflectionSaved, setReflectionSaved] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const learnSecondsRef = useRef(0)
   const phaseRef = useRef<'learn' | 'assess'>('learn')
@@ -246,6 +254,21 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
     setEvalDone(true)
     api.me.annualTraining.evaluate(id, { confidence: evalConfidence, usefulness: evalUsefulness, comment: evalComment.trim() || undefined }).catch(() => {})
   }
+  // Fire-and-forget: the learner always moves on to the lesson, even if the
+  // baseline submission fails. The returned score powers the learning-gain line.
+  function submitBaselineAnswers() {
+    if (baselineSubmittedRef.current) return
+    baselineSubmittedRef.current = true
+    api.me.annualTraining.submitBaseline(id, baselineSel)
+      .then(r => { if (typeof r?.score === 'number' && typeof r?.total === 'number') setBaselineResult({ score: r.score, total: r.total }) })
+      .catch(() => {})
+  }
+  function saveReflection() {
+    const text = reflectionText.trim()
+    if (!text || reflectionSaving) return
+    setReflectionSaving(true); setReflectionSaved(false)
+    api.me.annualTraining.saveReflection(id, text).then(() => setReflectionSaved(true)).catch(() => {}).finally(() => setReflectionSaving(false))
+  }
 
   useEffect(() => {
     api.me.annualTraining.get(id).then(d => {
@@ -253,6 +276,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
       const s: Record<string, number> = {}
       for (const a of (d.answers ?? [])) { const idx = OPTION_LETTERS.indexOf(a.answer_text); if (idx >= 0) s[a.question_id] = idx }
       setSel(s)
+      if (d.reflection) setReflectionText(d.reflection)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -295,6 +319,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
 
   // Result
   if (result) {
+    // Baseline score for the learning-gain line: prefer the score returned when the
+    // learner submitted this session, else the one already stored on the enrollment.
+    const gain = baselineResult ?? ((data.baseline && data.baseline.score != null && data.baseline.total != null) ? { score: data.baseline.score as number, total: data.baseline.total as number } : null)
     return (
       <div className="flex-1 overflow-y-auto px-4 py-10">
         <div className="mx-auto max-w-md text-center">
@@ -303,6 +330,11 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               <Award size={44} className="mx-auto mb-3 text-green-500" />
               <h2 className="text-xl font-bold text-neutral-dark">Passed — {result.score}%</h2>
               <p className="mt-1 text-sm text-neutral-mid">You scored {result.correct}/{result.total}. Your certificate is ready.</p>
+              {gain && (
+                <div className="mx-auto mt-3 max-w-sm rounded-lg border border-teal/20 bg-teal-light/20 p-2.5 text-xs text-neutral-dark">
+                  <span className="font-semibold text-teal">Learning gain: </span>before this course you scored {gain.score} of {gain.total} on the quick check. You have just passed with {result.score}%.
+                </div>
+              )}
               {data.requires_practical && <p className="mx-auto mt-3 max-w-sm rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">Remember: this topic also needs a practical/observed assessment with your manager.</p>}
 
               {/* Post-completion evaluation */}
@@ -320,6 +352,26 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               ) : (
                 <p className="mx-auto mt-4 max-w-sm text-xs text-neutral-mid">Thanks for your feedback.</p>
               )}
+
+              {/* Reflective practice — optional, non-blocking */}
+              <div className="mx-auto mt-4 max-w-sm rounded-xl border border-gray-200 bg-white p-4 text-left">
+                <p className="mb-1 text-sm font-semibold text-neutral-dark">Reflective practice</p>
+                <p className="mb-2 text-xs text-neutral-mid">What will you do differently in your day to day work after this course?</p>
+                <textarea
+                  value={reflectionText}
+                  onChange={e => { setReflectionText(e.target.value); setReflectionSaved(false) }}
+                  rows={3}
+                  maxLength={1500}
+                  placeholder="A sentence or two is plenty (optional)"
+                  className="w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none"
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <button onClick={saveReflection} disabled={reflectionSaving || !reflectionText.trim()} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+                    {reflectionSaving ? 'Saving…' : 'Save reflection'}
+                  </button>
+                  {reflectionSaved && <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600"><CheckCircle2 size={13} /> Saved</span>}
+                </div>
+              </div>
 
               <div className="mt-5 flex justify-center gap-2">
                 <button onClick={() => onExit(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Award size={14} /> View certificate</button>
@@ -397,8 +449,12 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
         {phase === 'learn' && (() => {
           // Flat list of lesson steps. Each section becomes a teaching step and, if it
           // has one, a separate quick-check step (keeping the same section image).
-          type LStep = { type: 'overview' } | { type: 'teach'; i: number } | { type: 'check'; i: number }
+          // A pre-lesson baseline check (if set on the module and not yet done) sits
+          // between the overview and the first section.
+          type LStep = { type: 'overview' } | { type: 'baseline' } | { type: 'teach'; i: number } | { type: 'check'; i: number }
+          const baselineQs: any[] = (data.status !== 'complete' && data.baseline?.done === false && Array.isArray(data.baseline?.questions)) ? data.baseline.questions : []
           const lessonSteps: LStep[] = [{ type: 'overview' }]
+          if (baselineQs.length > 0) lessonSteps.push({ type: 'baseline' })
           sections.forEach((sc: any, i: number) => {
             lessonSteps.push({ type: 'teach', i })
             if (sc.check?.question && Array.isArray(sc.check.options) && sc.check.options.length > 0) lessonSteps.push({ type: 'check', i })
@@ -408,12 +464,15 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
           const cur         = lessonSteps[idx]
           const isLastLearn = idx >= lessonSteps.length - 1
           const progressPct = Math.round((idx / totalStages) * 100)
-          const sec         = cur.type === 'overview' ? null : sections[cur.i]
+          const sec         = (cur.type === 'teach' || cur.type === 'check') ? sections[cur.i] : null
           const picked      = sec ? checkSel[sec.id] : undefined
           // On a quick-check step, the learner must answer before they can move on.
-          const needsAnswer = cur.type === 'check' && picked === undefined
+          // On the baseline step, every question needs an answer first.
+          const baselineAnswered = baselineQs.filter((q: any) => baselineSel[q.id] != null).length
+          const needsAnswer = (cur.type === 'check' && picked === undefined) || (cur.type === 'baseline' && baselineAnswered < baselineQs.length)
           const isRight     = sec ? picked === sec.check?.correct : false
           const label       = cur.type === 'overview' ? 'Overview'
+            : cur.type === 'baseline' ? 'Before you start'
             : cur.type === 'teach' ? `Section ${cur.i + 1} of ${sections.length}`
             : `Section ${cur.i + 1} — quick check`
 
@@ -430,6 +489,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
 
               {cur.type === 'overview' ? (
                 /* ── Overview ── */
+                <>
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   {learnActive.illustration_url && <img src={apiAssetUrl(learnActive.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
                   <div className="p-5">
@@ -462,6 +522,72 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                         )}
                       </>)
                     })()}
+                  </div>
+                </div>
+
+                {/* Key terms — collapsed by default */}
+                {Array.isArray(data.glossary) && data.glossary.length > 0 && (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <button onClick={() => setTermsOpen(o => !o)} className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-neutral-light/40">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><BookOpen size={15} className="text-teal" /> Key terms</span>
+                      {termsOpen ? <ChevronUp size={15} className="text-neutral-mid" /> : <ChevronDown size={15} className="text-neutral-mid" />}
+                    </button>
+                    {termsOpen && (
+                      <div className="space-y-3 border-t border-gray-100 px-4 py-3">
+                        {data.glossary.map((g: any, i: number) => (
+                          <div key={i}>
+                            <p className="text-sm font-semibold text-neutral-dark">{g.term}</p>
+                            <p className="mt-0.5 text-sm text-neutral-mid">{g.definition}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* References and further reading — collapsed by default */}
+                {Array.isArray(data.references) && data.references.length > 0 && (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <button onClick={() => setRefsOpen(o => !o)} className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-neutral-light/40">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><FileText size={15} className="text-teal" /> References and further reading</span>
+                      {refsOpen ? <ChevronUp size={15} className="text-neutral-mid" /> : <ChevronDown size={15} className="text-neutral-mid" />}
+                    </button>
+                    {refsOpen && (
+                      <div className="space-y-3 border-t border-gray-100 px-4 py-3">
+                        {data.references.map((r: any, i: number) => (
+                          <div key={i}>
+                            {r.url
+                              ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-teal hover:underline">{r.title}</a>
+                              : <p className="text-sm font-medium text-neutral-dark">{r.title}</p>}
+                            <p className="mt-0.5 text-xs text-neutral-mid">{r.source}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                </>
+              ) : cur.type === 'baseline' ? (
+                /* ── Baseline knowledge check (before the lesson) ── */
+                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Lightbulb size={13} /> Before you start</p>
+                  <p className="text-base font-bold text-neutral-dark">A quick knowledge check</p>
+                  <p className="mb-4 mt-1 text-sm text-neutral-mid">{baselineQs.length} quick questions before the lesson. They do not affect your result; they help show how much this course teaches you.</p>
+                  <div className="space-y-4">
+                    {baselineQs.map((q: any, qi: number) => (
+                      <div key={q.id}>
+                        <p className="mb-2 text-sm font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
+                        <div className="space-y-1.5">
+                          {q.options.map((opt: string, oi: number) => (
+                            <button key={oi} onClick={() => setBaselineSel(s => ({ ...s, [q.id]: oi }))}
+                              className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${baselineSel[q.id] === oi ? 'border-teal bg-teal-light/30 text-neutral-dark' : 'border-gray-200 text-neutral-dark hover:border-teal/50'}`}>
+                              {baselineSel[q.id] === oi ? <CheckCircle2 size={14} className="shrink-0 text-teal" /> : <Circle size={14} className="shrink-0 text-gray-300" />}
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : sec ? (
@@ -541,7 +667,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                 <button onClick={() => step === 0 ? onExit(false) : setStep(step - 1)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                   <ChevronLeft size={15} /> {step === 0 ? 'Exit' : 'Back'}
                 </button>
-                {isLastLearn
+                {cur.type === 'baseline'
+                  ? <button onClick={() => { submitBaselineAnswers(); if (isLastLearn) { flushLearnTime(); setPhase('assess') } else setStep(step + 1) }} disabled={needsAnswer} title={needsAnswer ? 'Answer every question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Continue to the lesson →</button>
+                  : isLastLearn
                   ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Start assessment ({qs.length}) →</button>
                   : <button onClick={() => setStep(step + 1)} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Next →</button>}
               </div>
@@ -655,6 +783,23 @@ export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: {
           cpdProviderNumber={c.cpd?.provider_number}
           independentlyReviewed={c.independently_reviewed}
         />
+
+        {/* Learning gain + reflection — subtle, sits under the certificate */}
+        {(c.baseline || c.reflection) && (
+          <div className="mt-4 space-y-3">
+            {c.baseline && (
+              <div className="rounded-lg border border-teal/20 bg-teal-light/20 p-3 text-sm text-neutral-dark">
+                <span className="font-semibold text-teal">Learning gain: </span>before this course you scored {c.baseline.score} of {c.baseline.total} on the quick knowledge check. Final result: {c.score}%.
+              </div>
+            )}
+            {c.reflection && (
+              <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-teal">Your reflection</p>
+                <p className="whitespace-pre-wrap text-sm text-neutral-dark">{c.reflection}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

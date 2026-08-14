@@ -817,11 +817,20 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     if (translated) { summary = translated.summary; outcomes = translated.outcomes; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
   }
 
+  // CPD enrichment: references, glossary and the pre-course baseline check
+  // (correct answers stripped; graded server-side). Shown in English for now.
+  const references = Array.isArray(learn.references) ? learn.references : []
+  const glossary   = Array.isArray(learn.glossary)   ? learn.glossary   : []
+  const baselineQs = (Array.isArray(learn.baseline) ? learn.baseline : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
+
   ok(res, {
     name: m.name, pass_mark: m.pass_mark ?? 80, requires_practical: m.requires_practical, frequency: m.frequency,
     duration_minutes: m.duration_minutes ?? null,
     illustration_url: illustrationUrl(m.illustration_key),
     learning: { summary, outcomes, key_points: keyPoints, sections },
+    references, glossary,
+    baseline: { questions: baselineQs, done: enr.baseline_at != null, score: enr.baseline_score ?? null, total: enr.baseline_total ?? null },
+    reflection: enr.reflection ?? null,
     questions,
     policies,
     answers: (enr.answers ?? []).map((a: any) => ({ question_id: a.question_id, answer_text: a.answer_text, is_correct: a.is_correct })),
@@ -898,6 +907,49 @@ meRouter.post('/annual-training/:enrollmentId/evaluate', async (req: Request, re
   ok(res, { saved: true })
 })
 
+// POST /me/annual-training/:enrollmentId/baseline — grade the pre-course knowledge
+// check server-side and store the score (learning-gain evidence for CPD). First
+// submission wins; repeats return the stored result.
+meRouter.post('/annual-training/:enrollmentId/baseline', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const enr = await (prisma as any).trainingEnrollment.findFirst({
+    where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    include: { module: { select: { learning_content: true } } },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  if (enr.baseline_at) { ok(res, { score: enr.baseline_score, total: enr.baseline_total, already_done: true }); return }
+  const bank = Array.isArray((enr.module?.learning_content as any)?.baseline) ? (enr.module.learning_content as any).baseline : []
+  if (!bank.length) { err(res, 'VALIDATION_ERROR', 'This module has no baseline check.'); return }
+  const answers = req.body?.answers ?? {}
+  let score = 0
+  for (const q of bank) {
+    const choice = Number((answers as any)[q.id])
+    if (Number.isInteger(choice) && choice === Number(q.correct)) score++
+  }
+  await (prisma as any).trainingEnrollment.update({
+    where: { id: enr.id },
+    data:  { baseline_score: score, baseline_total: bank.length, baseline_at: new Date() },
+  })
+  ok(res, { score, total: bank.length, already_done: false })
+})
+
+// POST /me/annual-training/:enrollmentId/reflection — reflective-practice note
+// captured after completion ("what will you do differently?"). CPD evidence.
+meRouter.post('/annual-training/:enrollmentId/reflection', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const text = String(req.body?.text ?? '').trim().slice(0, 1500)
+  if (!text) { err(res, 'VALIDATION_ERROR', 'Reflection text is required.'); return }
+  const enr = await (prisma as any).trainingEnrollment.findFirst({
+    where:  { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    select: { id: true },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  await (prisma as any).trainingEnrollment.update({ where: { id: enr.id }, data: { reflection: text, reflection_at: new Date() } })
+  ok(res, { saved: true })
+})
+
 // GET /me/annual-training/:enrollmentId/certificate — certificate data for a passed module
 meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
@@ -921,6 +973,8 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
     requires_practical: enr.module.requires_practical, score: total ? Math.round((correct / total) * 100) : 0,
     independently_reviewed: !!enr.module.independently_reviewed,
     cpd: { accredited: !!enr.module.cpd_accredited, hours: cpdHours, provider_number: process.env.CPD_PROVIDER_NUMBER ?? null },
+    baseline: enr.baseline_at ? { score: enr.baseline_score, total: enr.baseline_total } : null,
+    reflection: enr.reflection ?? null,
   })
 })
 

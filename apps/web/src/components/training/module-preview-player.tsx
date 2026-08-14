@@ -11,6 +11,10 @@ import { ChevronLeft } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 
+export type PreviewReference = { title: string; source?: string | null; url?: string | null }
+export type PreviewGlossaryEntry = { term: string; definition: string }
+export type PreviewBaselineQuestion = { id: string; text: string; options: string[]; correct: number }
+
 export type PreviewModule = {
   name: string
   frequency: string | null
@@ -24,6 +28,17 @@ export type PreviewModule = {
   questions: Array<{ text: string; options: string[]; correct: number | null; explanation: string | null }>
   standards: string[]
   illustration_url: string | null
+  // Optional CPD extras (top-level or nested under learning_content depending on the endpoint)
+  references?: PreviewReference[] | null
+  glossary?: PreviewGlossaryEntry[] | null
+  baseline?: PreviewBaselineQuestion[] | null
+  practical_checklist?: string[] | null
+  learning_content?: {
+    references?: PreviewReference[] | null
+    glossary?: PreviewGlossaryEntry[] | null
+    baseline?: PreviewBaselineQuestion[] | null
+    practical_checklist?: string[] | null
+  } | null
 }
 
 export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; name: string; onBack: () => void }) {
@@ -32,6 +47,11 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
 
   const sections = m.sections ?? []
   const questions = m.questions ?? []
+  const lc = m.learning_content ?? {}
+  const glossary = lc?.glossary ?? m.glossary ?? []
+  const references = lc?.references ?? m.references ?? []
+  const baseline = lc?.baseline ?? m.baseline ?? []
+  const practicalChecklist = lc?.practical_checklist ?? m.practical_checklist ?? []
   type StepT = { type: 'overview' } | { type: 'section'; i: number } | { type: 'question'; i: number } | { type: 'done' }
   const steps: StepT[] = [{ type: 'overview' }]
   sections.forEach((_, i) => steps.push({ type: 'section', i }))
@@ -71,6 +91,8 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
             {m.pass_mark != null && <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-neutral-mid">Pass mark {m.pass_mark}%</span>}
             {m.duration_minutes != null && <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-neutral-mid">~{m.duration_minutes} min</span>}
             {m.requires_practical && <span className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-amber-700">Practical assessment also required</span>}
+            {baseline.length > 0 && <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Includes a {baseline.length} question pre-course knowledge check</span>}
+            {practicalChecklist.length > 0 && <span className="rounded-full bg-violet-50 px-2.5 py-1 font-medium text-violet-700">Includes an observed competency checklist for managers</span>}
           </div>
           {m.illustration_url && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -85,6 +107,34 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
           )}
           {m.key_points?.length > 0 && (
             <ul className="mt-4 space-y-1.5">{m.key_points.map((p, i) => <li key={i} className="flex gap-2 text-sm text-neutral-dark"><span className="text-teal">✓</span>{p}</li>)}</ul>
+          )}
+          {glossary.length > 0 && (
+            <details className="mt-4 rounded-lg border border-gray-100 bg-neutral-light/40">
+              <summary className="cursor-pointer select-none px-4 py-2.5 text-sm font-semibold text-neutral-dark hover:text-teal">Key terms ({glossary.length})</summary>
+              <dl className="space-y-2 px-4 pb-3 pt-1">
+                {glossary.map((g, i) => (
+                  <div key={i} className="text-sm">
+                    <dt className="font-medium text-neutral-dark">{g.term}</dt>
+                    <dd className="text-neutral-mid">{g.definition}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
+          {references.length > 0 && (
+            <details className="mt-3 rounded-lg border border-gray-100 bg-neutral-light/40">
+              <summary className="cursor-pointer select-none px-4 py-2.5 text-sm font-semibold text-neutral-dark hover:text-teal">References and further reading ({references.length})</summary>
+              <ul className="space-y-1.5 px-4 pb-3 pt-1">
+                {references.map((r, i) => (
+                  <li key={i} className="text-sm text-neutral-dark">
+                    {r.url
+                      ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="font-medium text-teal hover:underline">{r.title}</a>
+                      : <span className="font-medium">{r.title}</span>}
+                    {r.source && <span className="text-neutral-mid"> · {r.source}</span>}
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
         </div>
       )}

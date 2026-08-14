@@ -6,11 +6,12 @@ import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
+import { CourseSummarySheet, PracticalChecklistSheet } from '@/components/training/course-printables'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, Circle, FileText, Pencil, Users, Eye,
   Plus, Trash2, ShieldAlert, ChevronLeft, ChevronDown, ChevronUp, BookOpen, Info, Image as ImageIcon,
-  Archive, RotateCcw,
+  Archive, RotateCcw, ClipboardCheck,
 } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
@@ -28,6 +29,17 @@ export default function AnnualTrainingPage() {
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
   const [topicView,     setTopicView]     = useState<'live' | 'archived'>('live')
   const [archivingTopic, setArchivingTopic] = useState<string | null>(null)
+  const [sheet, setSheet] = useState<null | { kind: 'summary' | 'practical'; module: any }>(null)
+  const [sheetLoading, setSheetLoading] = useState<string | null>(null)
+
+  // Fetch the full standard module content, then open the printable sheet.
+  async function openSheet(kind: 'summary' | 'practical', moduleId: string) {
+    if (!api || sheetLoading) return
+    setSheetLoading(`${kind}:${moduleId}`)
+    try { const { module } = await api.training.standardModuleFull(moduleId); setSheet({ kind, module }) }
+    catch { /* ignore */ }
+    finally { setSheetLoading(null) }
+  }
 
   async function setTopicArchived(topicId: string, archived: boolean) {
     if (!api) return
@@ -180,6 +192,24 @@ export default function AnnualTrainingPage() {
                                   </button>
                                 )}
                                 {t.standard_module && (
+                                  <button
+                                    onClick={() => openSheet('summary', t.standard_module!.id)}
+                                    disabled={!!sheetLoading}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50"
+                                  >
+                                    {sheetLoading === `summary:${t.standard_module.id}` ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />} Course summary
+                                  </button>
+                                )}
+                                {t.standard_module && t.requires_practical && (
+                                  <button
+                                    onClick={() => openSheet('practical', t.standard_module!.id)}
+                                    disabled={!!sheetLoading}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50"
+                                  >
+                                    {sheetLoading === `practical:${t.standard_module.id}` ? <Loader2 size={12} className="animate-spin" /> : <ClipboardCheck size={12} />} Practical checklist
+                                  </button>
+                                )}
+                                {t.standard_module && (
                                   <button onClick={() => setView({ mode: 'assign', id: t.standard_module!.id, name: t.standard_module!.name })} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
                                     <Users size={12} /> Assign standard
                                   </button>
@@ -221,6 +251,9 @@ export default function AnnualTrainingPage() {
           ))}
         </div>
       )}
+
+      {sheet?.kind === 'summary'   && <CourseSummarySheet m={sheet.module} onClose={() => setSheet(null)} />}
+      {sheet?.kind === 'practical' && <PracticalChecklistSheet m={sheet.module} onClose={() => setSheet(null)} />}
     </div>
   )
 }

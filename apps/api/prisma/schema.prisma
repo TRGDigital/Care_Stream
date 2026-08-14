@@ -1763,6 +1763,11 @@ model TrainingEnrollment {
   eval_usefulness     Int?                        // post-completion learner evaluation: 1–5 usefulness/relevance
   eval_comment        String?
   eval_at             DateTime?
+  baseline_score      Int?                        // pre-course knowledge check: correct answers (learning gain evidence)
+  baseline_total      Int?
+  baseline_at         DateTime?
+  reflection          String?                     // post-completion reflective practice ("what will you do differently?")
+  reflection_at       DateTime?
   created_at      DateTime        @default(now())
   updated_at      DateTime        @updatedAt
   tenant          Tenant          @relation(fields: [tenant_id], references: [id])

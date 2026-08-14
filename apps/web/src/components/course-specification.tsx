@@ -30,6 +30,10 @@ export function CourseSpecification({ m, qa, onClose }: { m: any; qa: any; onClo
   const questions: any[] = Array.isArray(m.questions) ? m.questions : []
   const refs: any[] = Array.isArray(m.policy_refs) ? m.policy_refs : []
   const standards: any[] = Array.isArray(m.standards) ? m.standards : []
+  const courseRefs: any[] = Array.isArray(lc.references) ? lc.references : []
+  const glossary: any[] = Array.isArray(lc.glossary) ? lc.glossary : []
+  const baseline: any[] = Array.isArray(lc.baseline) ? lc.baseline : []
+  const checklist: any[] = Array.isArray(lc.practical_checklist) ? lc.practical_checklist : []
   const hours = m.duration_minutes ? (m.duration_minutes / 60).toFixed(1) : null
 
   function print() { document.body.classList.add('printing-spec'); window.print(); setTimeout(() => document.body.classList.remove('printing-spec'), 600) }
@@ -83,6 +87,29 @@ export function CourseSpecification({ m, qa, onClose }: { m: any; qa: any; onClo
           <Section title="Evidence base (grounding sources)">
             {refs.length ? <ul className="list-disc space-y-0.5 pl-5 text-sm text-neutral-dark">{refs.map((r, i) => <li key={i}>{r.title}{r.section ? ` — ${r.section}` : ''}</li>)}</ul> : <p className="text-sm text-neutral-mid">None recorded.</p>}
           </Section>
+
+          {courseRefs.length > 0 && (
+            <Section title="References and evidence base">
+              <ul className="list-disc space-y-0.5 pl-5 text-sm text-neutral-dark">
+                {courseRefs.map((r, i) => (
+                  <li key={i}>{r.title}{r.source ? `, ${r.source}` : ''}{r.url ? <span className="text-xs text-neutral-mid"> ({r.url})</span> : null}</li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {glossary.length > 0 && (
+            <Section title="Glossary">
+              <p className="text-sm text-neutral-dark">{glossary.length} key term{glossary.length === 1 ? '' : 's'} defined for learners: <span className="text-neutral-mid">{glossary.map((g: any) => g.term).join(', ')}</span></p>
+            </Section>
+          )}
+
+          {(baseline.length > 0 || checklist.length > 0) && (
+            <Section title="Additional components">
+              {baseline.length > 0 && <Row label="Pre-course baseline check">{baseline.length} question{baseline.length === 1 ? '' : 's'} (learning gain measured against final assessment)</Row>}
+              {checklist.length > 0 && <Row label="Observed competency checklist">{checklist.length} item{checklist.length === 1 ? '' : 's'} (manager sign-off)</Row>}
+            </Section>
+          )}
 
           <Section title="Quality assurance & governance">
             {qa && (

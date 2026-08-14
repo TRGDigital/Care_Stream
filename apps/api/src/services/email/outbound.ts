@@ -709,6 +709,75 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
   await sgMail.send({ to: opts.to, from, subject: `New ${c.noun} assigned to you — ${opts.orgName}`, html })
 }
 
+// ─── Training-only onboarding guide (sent to new training clients) ────────────
+// A fully branded walkthrough of the three-step setup: add staff, allocate the
+// purchased modules, staff complete them in the hub, plus how to track progress.
+// Screenshots are hosted on the web app at /email/training-setup/step-N.jpg.
+
+export async function sendTrainingOnboardingGuideEmail(opts: { to: string; name: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping training onboarding guide'); return }
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const img = (n: number, alt: string) =>
+    `<img src="${WEB_URL}/email/training-setup/step-${n}.jpg" alt="${alt}" width="536" style="display:block;width:100%;max-width:536px;border:1px solid #e5e7eb;border-radius:8px;margin:0 0 14px">`
+  const stepHeading = (label: string, title: string) => `
+    <p style="margin:32px 0 4px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${PURPLE}">${label}</p>
+    <h2 style="margin:0 0 12px;font-size:19px;color:${NEUTRAL_DARK}">${title}</h2>`
+  const bullet = (text: string) => `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px"><tr>
+      <td style="vertical-align:top;padding-right:10px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PURPLE};margin-top:7px"></span></td>
+      <td style="font-size:15px;line-height:1.6;color:#374151">${text}</td>
+    </tr></table>`
+  const para = (text: string) => `<p style="color:#374151;font-size:15px;line-height:1.65;margin:0 0 14px">${text}</p>`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    ${para(`Welcome to CareStream Training. Your account and training licences are ready to go, so here is a simple walkthrough of how to get your team training. There are just three steps: <strong>add your staff</strong>, <strong>allocate the training</strong>, and your staff <strong>complete it in their own training hub</strong>. Setup usually takes less than five minutes.`)}
+
+    ${stepHeading('Step 1', 'Set up your staff members')}
+    ${bullet(`In your admin portal, click <strong>Staff</strong> in the left-hand menu.`)}
+    ${bullet(`Click <strong>Add staff member</strong> and complete their details.`)}
+    ${img(1, 'The Staff page in the CareStream admin portal')}
+    ${img(2, 'The Add staff member form')}
+    ${para(`Pay close attention to the <strong>language settings</strong>. You have complete control over the language each staff member receives their training in: English, or any other language as their first language. You can also set a second language and <strong>allow switching</strong>, so they can flip an individual question or lesson into their second language whenever it helps their understanding. It is a simple way to make sure nothing is lost in translation.`)}
+    ${para(`As soon as you save, the staff member receives an email with their personal login details for their own <strong>training hub</strong>, which is where all their training modules and follow-up questions will appear.`)}
+
+    ${stepHeading('Step 2', 'Allocate the training')}
+    ${bullet(`Click <strong>Training</strong> in the left-hand menu and press <strong>Allocate to staff</strong> on any of your purchased modules, or`)}
+    ${bullet(`Click <strong>Licences</strong> to see every licence you own and allocate any available one to a staff member.`)}
+    ${img(3, 'Allocating a module from the Training page')}
+    ${img(4, 'Allocating from the Training Licences page')}
+    ${para(`Each licence covers one staff member on one training module. The moment you allocate, the staff member automatically receives an email letting them know a new training module has been assigned and is ready to complete. Nothing else for you to do.`)}
+
+    ${stepHeading('Step 3', 'Staff complete the training in their hub')}
+    ${img(5, 'The staff training hub showing assigned modules')}
+    ${para(`Once logged in, your staff can add the CareStream training hub to their phone or computer home screen so it opens just like an app, and they are notified whenever a new module is available to them. Each module teaches a short lesson first, then checks understanding with a set of questions. When they pass, a certificate is stored on their record automatically, and anything they got wrong resurfaces later as follow-up questions until they have mastered it.`)}
+
+    ${stepHeading('Track progress', 'Training analytics')}
+    ${bullet(`Click <strong>Staff</strong> in the left-hand menu.`)}
+    ${bullet(`Click <strong>View</strong> next to any staff member to open their personal record and analytics.`)}
+    ${img(6, 'A staff member&rsquo;s personal training analytics')}
+    ${para(`You can track exactly how each staff member is performing across their training modules: what has been completed, assessment scores, and their certificates, with a team-wide view under <strong>Analytics</strong>. Everything is stored in one place, ready whenever you need evidence of training.`)}
+
+    <div style="text-align:center;margin:32px 0 8px">
+      <a href="${WEB_URL}/login"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        Sign in and set up your staff
+      </a>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:16px 0 0;text-align:center">
+      Questions? Just reply to this email and we will help you get set up.
+    </p>
+
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: 'Getting started with your CareStream training', html })
+}
+
 // ─── Face-to-face session reminder (admin-triggered) ─────────────────────────
 
 export async function sendFaceToFaceReminderEmail(opts: { to: string; name: string; orgName: string; title: string; dateLabel: string; trainerLabel?: string | null }): Promise<void> {

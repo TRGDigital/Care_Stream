@@ -313,6 +313,81 @@ function exportLanguageCsv(langRows: Array<{ language: string; month: string; co
 
 type TabId = 'overview' | 'engagement' | 'staff' | 'gaps' | 'training' | 'compliance' | 'actions' | 'cqc' | 'advanced' | 'effectiveness' | 'impact' | 'policies'
 
+// ─── Training matrix (training-only tenants) ──────────────────────────────────
+// Staff × purchased modules grid: who has been allocated what, and where each
+// person is up to. Same compact matrix design as the enterprise compliance grids
+// (sticky staff column, glyph cells, legend).
+
+function TrainingOnlyMatrix({ token, userId }: { token: string; userId: string }) {
+  const [data, setData] = useState<any>(() => persistentCache.get<any>(`admin-training-matrix-${userId}`) ?? null)
+  useEffect(() => {
+    if (!token) return
+    createApiClient(token).training.compliance()
+      .then(d => { setData(d); persistentCache.set(`admin-training-matrix-${userId}`, d) })
+      .catch(() => {})
+  }, [token, userId])
+  if (!data) return null
+
+  const enrollments: any[] = data.enrollments ?? []
+  const users: any[] = data.users ?? []
+  // Columns = every module with at least one allocation, stable order by name.
+  const moduleById = new Map<string, any>()
+  for (const e of enrollments) { if (e.module?.id) moduleById.set(e.module.id, e.module) }
+  const modules = [...moduleById.values()].sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
+  if (!modules.length || !users.length) return (
+    <div className="mb-8 rounded-card border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-neutral-mid">
+      The training matrix appears here once you allocate modules to staff. Add staff on the Staff page, then allocate licences from the Training page.
+    </div>
+  )
+  const byUserModule = new Map(enrollments.map((e: any) => [`${e.user_id}:${e.module_id}`, e]))
+
+  const cell = (e: any) => {
+    if (!e) return <span title="Not allocated" className="text-sm font-bold text-gray-300">—</span>
+    if (e.status === 'complete')
+      return <span title={`Complete${e.completed_at ? ` · ${new Date(e.completed_at).toLocaleDateString('en-GB')}` : ''}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={14} /></span>
+    if (e.status === 'expired')
+      return <span title="Expired — needs renewing" className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-500"><AlertCircle size={14} /></span>
+    if (e.status === 'in_progress')
+      return <span title="In progress" className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-teal bg-teal/10 text-teal"><Clock size={12} /></span>
+    return <span title="Allocated — not started" className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={12} /></span>
+  }
+
+  return (
+    <div className="mb-8">
+      <div className="mb-2 flex items-center gap-2">
+        <Users size={16} className="text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Training matrix</h2>
+        <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">{users.length} staff · {modules.length} module{modules.length === 1 ? '' : 's'}</span>
+      </div>
+      <div className="overflow-x-auto rounded-card border border-gray-100 bg-white shadow-card">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-gray-100">
+            <th className="sticky left-0 z-10 min-w-[180px] bg-white px-5 py-3 text-left text-xs font-medium text-neutral-mid">Staff member</th>
+            {modules.map((m: any) => (
+              <th key={m.id} className="min-w-[90px] max-w-[130px] px-3 py-3 text-center text-xs font-medium text-neutral-mid"><span className="block leading-tight">{String(m.name).length > 18 ? String(m.name).slice(0, 16) + '…' : m.name}</span></th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {users.map((u: any) => (
+              <tr key={u.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
+                <td className="sticky left-0 z-10 bg-white px-5 py-3"><p className="font-medium text-neutral-dark">{u.name}</p><p className="text-xs text-neutral-mid">{u.job_role ?? 'Staff'}</p></td>
+                {modules.map((m: any) => <td key={m.id} className="px-3 py-3 text-center">{cell(byUserModule.get(`${u.id}:${m.id}`))}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="flex flex-wrap items-center gap-4 border-t border-gray-100 px-5 py-3 text-xs text-neutral-mid">
+          <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={11} /></span> Complete</span>
+          <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-teal bg-teal/10 text-teal"><Clock size={10} /></span> In progress</span>
+          <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-50 text-gray-300"><Clock size={10} /></span> Allocated, not started</span>
+          <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-500"><AlertCircle size={11} /></span> Expired</span>
+          <span className="flex items-center gap-1.5"><span className="font-bold text-gray-300">—</span> Not allocated</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const TABS: { id: TabId; label: string; premium?: 'has_effectiveness' | 'has_training_impact' }[] = [
   { id: 'overview',   label: 'Overview' },
   { id: 'engagement', label: 'Engagement' },
@@ -1000,6 +1075,11 @@ export default function AnalyticsPage() {
       )}
 
       {/* ── Training compliance ─────────────────────────────────────────────── */}
+      {/* Training matrix — training-only tenants: allocation + completion per staff × module */}
+      {tab === 'training' && trainingOnly && session?.accessToken && (
+        <TrainingOnlyMatrix token={session.accessToken} userId={userId} />
+      )}
+
       {tab === 'training' && trainingData && (
         <>
           <SectionDivider
@@ -1838,7 +1918,7 @@ export default function AnalyticsPage() {
       {tab === 'gaps' && !((inductionPerf?.summary?.total_answered) || (kgaps && (kgaps.summary.open_gaps > 0 || kgaps.summary.learn + kgaps.summary.retry > 0)) || (gapsData && (gapsData.question_gaps.length > 0 || gapsData.module_summary.length > 0))) && (
         <EmptyTab>No knowledge gaps yet. Once staff start answering training and induction questions, missed questions and remediation will show here.</EmptyTab>
       )}
-      {tab === 'training' && !trainingData && (
+      {tab === 'training' && !trainingData && !trainingOnly && (
         <EmptyTab>No training data yet. Assign modules from the Staff page to start tracking completion and compliance.</EmptyTab>
       )}
     </div>

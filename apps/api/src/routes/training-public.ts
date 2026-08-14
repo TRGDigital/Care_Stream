@@ -8,7 +8,7 @@ import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRA
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
-import { sendStaffLoginLinkEmail, sendPasswordSetupEmail } from '../services/email/outbound'
+import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail } from '../services/email/outbound'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
 
@@ -565,6 +565,11 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       }).catch(() => {})
       await sendPasswordSetupEmail(email, adminName, `${siteUrl()}/reset-password?token=${setupToken}`)
         .catch((e: any) => console.error('[training-checkout] password setup email failed:', e?.message ?? e))
+
+      // Branded getting-started walkthrough: add staff, allocate licences, staff
+      // train in their hub, track progress. Sent once, alongside the account emails.
+      await sendTrainingOnboardingGuideEmail({ to: email, name: adminName })
+        .catch((e: any) => console.error('[training-checkout] onboarding guide email failed:', e?.message ?? e))
     }
 
     // One pooled licence per seat, per module, all tagged with the Stripe payment id.

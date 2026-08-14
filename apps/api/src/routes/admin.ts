@@ -87,6 +87,22 @@ adminRouter.post('/login', authLimiter, (req: Request, res: Response) => {
 // All routes below require the platform admin Bearer token.
 adminRouter.use(requirePlatformAdmin)
 
+// ─── POST /admin/training-onboarding-email/test ──────────────────────────────
+// Send a copy of the training-client onboarding guide email to any address, so
+// the platform owner can review the exact email new training clients receive.
+
+adminRouter.post('/training-onboarding-email/test', async (req: Request, res: Response) => {
+  const to = String(req.body?.to ?? '').trim()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { res.status(400).json({ error: 'A valid "to" email address is required' }); return }
+  try {
+    const { sendTrainingOnboardingGuideEmail } = await import('../services/email/outbound')
+    await sendTrainingOnboardingGuideEmail({ to, name: String(req.body?.name ?? 'there') })
+    res.json({ data: { sent: true, to } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'send failed' })
+  }
+})
+
 // ─── POST /admin/regulations/sync ────────────────────────────────────────────
 // Trigger a manual Google Sheets sync of the external regulations knowledge base.
 

@@ -16,6 +16,38 @@ async function viewEmail(token: string, id: string) {
 
 type EmailRow = Awaited<ReturnType<ReturnType<typeof createPlatformClient>['onboarding']['emails']>>['emails'][number]
 
+// One-off transactional emails (not part of the drip): send yourself a review copy.
+function TrainingGuideTest({ token }: { token: string }) {
+  const [to, setTo] = useState('lenny@trgdigital.co.uk')
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  async function send() {
+    if (state === 'sending') return
+    setState('sending')
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/training-onboarding-email/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ to, name: 'Len' }),
+      })
+      setState(res.ok ? 'sent' : 'error')
+    } catch { setState('error') }
+  }
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Send size={14} className="text-teal" /> Training client welcome guide</p>
+      <p className="mt-1 text-xs text-neutral-mid">The branded getting-started walkthrough (add staff, allocate licences, staff hub, analytics) sent automatically to every new training-shop client. Send yourself a copy to review the exact email.</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <input value={to} onChange={e => { setTo(e.target.value); setState('idle') }} className="w-72 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
+        <button onClick={send} disabled={state === 'sending'} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+          {state === 'sending' ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Send test copy
+        </button>
+        {state === 'sent' && <span className="flex items-center gap-1 text-xs font-medium text-green-600"><Check size={13} /> Sent</span>}
+        {state === 'error' && <span className="text-xs font-medium text-red-500">Send failed — try again</span>}
+      </div>
+    </div>
+  )
+}
+
 const PLANS = [
   { key: 'starter',      label: 'Starter' },
   { key: 'professional', label: 'Professional' },
@@ -226,6 +258,8 @@ export default function EmailMarketingPage() {
         </div>
 
         <RunDripNow token={token} />
+
+        <TrainingGuideTest token={token} />
 
         <div className="flex gap-2">
           {PLANS.map(p => (

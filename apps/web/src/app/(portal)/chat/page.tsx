@@ -359,15 +359,20 @@ function ChatPageInner() {
   // Supervisions & appraisals is an Enterprise feature — staff see their own.
   // Until the plan loads, fall back to the cached flag so the nav item is stable.
   const canSupervisions                                = planFeatures ? planFeatures.has_workforce_compliance === true : superCached
-  // Training-only tenants have no compliance surface — audits never apply to them.
+  // Training-only tenants: Annual Training + Follow-up are their working areas; the
+  // rest of the hub stays visible but greyed out (locked) so they can see the full
+  // product without being able to open sections that don't apply to their package.
   const trainingOnly                                   = (session?.user as any)?.tier === 'training_only'
+  const hubLocked                                      = (v: string) => trainingOnly && v !== 'annual' && v !== 'followup'
+  const lockedCls                                      = 'cursor-not-allowed opacity-40'
+  const LOCKED_TITLE                                   = 'Not included in your training package'
   // Admins + "Staff + Audits" members can see the hub Audits section.
-  const canAudit                                       = !trainingOnly && (isAdmin || (session?.user as any)?.auditAccess === true)
+  const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
   const isReviewer                                     = (session?.user as any)?.isReviewer === true
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
-  // Reviewers land straight on Annual Training (the rest of the hub is hidden).
-  useEffect(() => { if (isReviewer) setView(v => (v === 'chat' ? 'annual' : v)) }, [isReviewer])
+  // Reviewers and training-only users land straight on Annual Training.
+  useEffect(() => { if (isReviewer || trainingOnly) setView(v => (v === 'chat' ? 'annual' : v)) }, [isReviewer, trainingOnly])
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
   const [messages, setMessages]                        = useState<ChatMessage[]>([])
@@ -435,8 +440,10 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') setView(v)
-  }, [searchParams])
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') {
+      if (!hubLocked(v)) setView(v)
+    }
+  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Care manager: policies awaiting their approval (drives the Policies sidebar item).
   // Fetched once per session load (not on every view switch) and cached, so the
@@ -575,7 +582,7 @@ function ChatPageInner() {
       warm('induction',   () => api.onboarding.myEnrollments().then(d => d.enrollments))
       warm('my-training', () => api.training.myEnrollments().then(d => d.enrollments))
       warm('annual',      () => api.me.annualTraining.list().then(d => d.items))
-      if (canAudit) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
+      if (canAudit && !trainingOnly) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
     }, 500)
     return () => clearTimeout(t)
   }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -888,8 +895,9 @@ function ChatPageInner() {
         {!isReviewer && (
         <div className="flex-shrink-0 border-b border-gray-100 p-3">
           <button
-            onClick={() => { setView('chat'); startNewChat(); setNavOpen(false) }}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-teal px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal/90"
+            onClick={() => { if (hubLocked('chat')) return; setView('chat'); startNewChat(); setNavOpen(false) }}
+            title={hubLocked('chat') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center justify-center gap-2 rounded-md bg-teal px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal/90 ${hubLocked('chat') ? lockedCls : ''}`}
           >
             <Plus size={15} />
             New chat
@@ -900,8 +908,9 @@ function ChatPageInner() {
           <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Learning</p>
           {!isReviewer && (
           <button
-            onClick={() => setView('chat')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('chat') && setView('chat')}
+            title={hubLocked('chat') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('chat') ? lockedCls : ''}`}
           >
             <MessageSquare size={15} />
             Chat
@@ -909,22 +918,24 @@ function ChatPageInner() {
           )}
           {!isReviewer && (
           <button
-            onClick={() => setView('induction')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'induction' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('induction') && setView('induction')}
+            title={hubLocked('induction') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'induction' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('induction') ? lockedCls : ''}`}
           >
             <GraduationCap size={15} />
             My Induction
-            {navCounts.induction > 0 && <NavBadge count={navCounts.induction} className="bg-indigo-500" />}
+            {navCounts.induction > 0 && !hubLocked('induction') && <NavBadge count={navCounts.induction} className="bg-indigo-500" />}
           </button>
           )}
           {!isReviewer && (
           <button
-            onClick={() => setView('training')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'training' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('training') && setView('training')}
+            title={hubLocked('training') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'training' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('training') ? lockedCls : ''}`}
           >
             <Brain size={15} />
             My Training
-            {navCounts.training > 0 && <NavBadge count={navCounts.training} className="bg-amber-500" />}
+            {navCounts.training > 0 && !hubLocked('training') && <NavBadge count={navCounts.training} className="bg-amber-500" />}
           </button>
           )}
           <button
@@ -948,18 +959,20 @@ function ChatPageInner() {
           )}
           {canAudit && (
             <button
-              onClick={() => setView('audits')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audits' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+              onClick={() => !hubLocked('audits') && setView('audits')}
+              title={hubLocked('audits') ? LOCKED_TITLE : undefined}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audits' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('audits') ? lockedCls : ''}`}
             >
               <ClipboardCheck size={15} />
               Audits
-              {navCounts.audits > 0 && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
+              {navCounts.audits > 0 && !hubLocked('audits') && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
             </button>
           )}
           {canF2F && (
             <button
-              onClick={() => setView('f2f')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'f2f' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+              onClick={() => !hubLocked('f2f') && setView('f2f')}
+              title={hubLocked('f2f') ? LOCKED_TITLE : undefined}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'f2f' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('f2f') ? lockedCls : ''}`}
             >
               <CalendarDays size={15} />
               F2F Training
@@ -967,8 +980,9 @@ function ChatPageInner() {
           )}
           {canSupervisions && !isReviewer && (
             <button
-              onClick={() => setView('supervisions')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'supervisions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+              onClick={() => !hubLocked('supervisions') && setView('supervisions')}
+              title={hubLocked('supervisions') ? LOCKED_TITLE : undefined}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'supervisions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('supervisions') ? lockedCls : ''}`}
             >
               <CalendarDays size={15} />
               Supervisions
@@ -976,12 +990,13 @@ function ChatPageInner() {
           )}
           {!isReviewer && (
           <button
-            onClick={() => setView('cqc')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'cqc' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('cqc') && setView('cqc')}
+            title={hubLocked('cqc') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'cqc' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('cqc') ? lockedCls : ''}`}
           >
             <ShieldCheck size={15} />
             CQC Prep
-            {navCounts.cqc > 0 && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
+            {navCounts.cqc > 0 && !hubLocked('cqc') && <NavBadge count={navCounts.cqc} className="bg-rose-500" />}
           </button>
           )}
           {(policyApprovals.is_manager || dueReviewCount > 0) && (
@@ -1009,18 +1024,20 @@ function ChatPageInner() {
           )}
           {!isReviewer && (
           <button
-            onClick={() => setView('actions')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'actions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('actions') && setView('actions')}
+            title={hubLocked('actions') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'actions' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('actions') ? lockedCls : ''}`}
           >
             <ListChecks size={15} />
             My actions
-            {navCounts.actions > 0 && <NavBadge count={navCounts.actions} className="bg-orange-500" />}
+            {navCounts.actions > 0 && !hubLocked('actions') && <NavBadge count={navCounts.actions} className="bg-orange-500" />}
           </button>
           )}
           {!isReviewer && (
           <button
-            onClick={() => setView('progress')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'progress' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            onClick={() => !hubLocked('progress') && setView('progress')}
+            title={hubLocked('progress') ? LOCKED_TITLE : undefined}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'progress' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('progress') ? lockedCls : ''}`}
           >
             <TrendingUp size={15} />
             My Progress

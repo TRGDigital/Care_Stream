@@ -359,8 +359,10 @@ function ChatPageInner() {
   // Supervisions & appraisals is an Enterprise feature — staff see their own.
   // Until the plan loads, fall back to the cached flag so the nav item is stable.
   const canSupervisions                                = planFeatures ? planFeatures.has_workforce_compliance === true : superCached
+  // Training-only tenants have no compliance surface — audits never apply to them.
+  const trainingOnly                                   = (session?.user as any)?.tier === 'training_only'
   // Admins + "Staff + Audits" members can see the hub Audits section.
-  const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
+  const canAudit                                       = !trainingOnly && (isAdmin || (session?.user as any)?.auditAccess === true)
   // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
   const isReviewer                                     = (session?.user as any)?.isReviewer === true
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
@@ -457,10 +459,10 @@ function ChatPageInner() {
   const refreshPolicyStuff = useCallback(() => { refreshPolicyApprovals(); refreshDueReview() }, [refreshPolicyApprovals, refreshDueReview])
 
   const refreshAuditApprovals = useCallback(() => {
-    if (!session?.accessToken) return
+    if (!session?.accessToken || trainingOnly) return
     createApiClient(session.accessToken).me.auditApprovals()
       .then(r => { const v = { is_manager: r.is_manager, count: r.audits.length }; setAuditApprovals(v); try { localStorage.setItem(`cs_audappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
-  }, [session?.accessToken, userId])
+  }, [session?.accessToken, userId, trainingOnly])
   useEffect(() => { refreshAuditApprovals() }, [refreshAuditApprovals])
 
   // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
@@ -992,7 +994,7 @@ function ChatPageInner() {
             {policyApprovals.count + dueReviewCount > 0 && <NavBadge count={policyApprovals.count + dueReviewCount} className="bg-rose-500" />}
           </button>
           )}
-          {auditApprovals.is_manager && (
+          {!trainingOnly && auditApprovals.is_manager && (
           <button
             onClick={() => setView('audit-approvals')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audit-approvals' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -1178,7 +1180,7 @@ function ChatPageInner() {
         )}
 
         {/* Audits to approve (care manager) */}
-        {view === 'audit-approvals' && session?.accessToken && (
+        {view === 'audit-approvals' && !trainingOnly && session?.accessToken && (
           <AuditApprovalsView token={session.accessToken} userId={userId} onChange={refreshAuditApprovals} />
         )}
 

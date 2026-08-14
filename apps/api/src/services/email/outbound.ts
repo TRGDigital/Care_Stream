@@ -775,7 +775,7 @@ export async function sendTrainingOnboardingGuideEmail(opts: { to: string; name:
     ${emailFooter()}
   `)
 
-  await sgMail.send({ to: opts.to, from, subject: 'Getting started with your CareStream training', html })
+  await sgMail.send({ to: opts.to, from: { email: from, name: 'Welcome to CareStream' }, subject: 'Getting started with your CareStream training', html })
 }
 
 // ─── Face-to-face session reminder (admin-triggered) ─────────────────────────

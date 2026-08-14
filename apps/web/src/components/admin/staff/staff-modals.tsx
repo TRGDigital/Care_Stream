@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -464,6 +465,10 @@ export function InviteModal({
   onInvited:       () => void
 }) {
   const [step,      setStep]      = useState<ModalStep>('form')
+  // Training-only tenants allocate their purchased licences from the Training page —
+  // the statutory/adhoc assignment step does not apply to them, so skip it entirely.
+  const { data: session } = useSession()
+  const trainingOnly = (session?.user as any)?.tier === 'training_only'
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
   const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', training_hourly_rate: '', first_language: 'eng', second_language: '', staff_type: 'existing' })
@@ -736,7 +741,7 @@ export function InviteModal({
               password={creds.password}
               contact={creds.contact}
               token={token}
-              onDone={() => setStep('training')}
+              onDone={() => trainingOnly ? onClose() : setStep('training')}
             />
           </>
         ) : step === 'training' ? (
@@ -1040,6 +1045,10 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
   const [data,        setData]        = useState<{ user: any; training: any[]; onboarding: any[] } | null>(null)
   const [loading,     setLoading]     = useState(true)
   const [view,        setView]        = useState<'detail' | 'assign' | 'onboard'>('detail')
+  // Training-only tenants allocate purchased licences from the Training page — the
+  // adhoc/statutory assignment picker does not apply to them.
+  const { data: session } = useSession()
+  const trainingOnly = (session?.user as any)?.tier === 'training_only'
   const [savingComms, setSavingComms] = useState(false)
   const [savingSwitch, setSavingSwitch] = useState(false)
   const [savingSuggest, setSavingSuggest] = useState(false)
@@ -1195,9 +1204,11 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><GraduationCap size={15} className="text-teal" /> Training <span className="text-xs font-normal text-neutral-mid">({data!.training.length})</span></p>
-                <button onClick={() => setView('assign')} className="flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-xs font-medium text-white hover:bg-teal/90">
-                  <Plus size={12} /> Assign training
-                </button>
+                {!trainingOnly && (
+                  <button onClick={() => setView('assign')} className="flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-xs font-medium text-white hover:bg-teal/90">
+                    <Plus size={12} /> Assign training
+                  </button>
+                )}
               </div>
               {data!.training.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-gray-200 px-3 py-3 text-xs text-neutral-mid">No training assigned yet.</p>

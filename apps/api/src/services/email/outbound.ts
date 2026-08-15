@@ -778,6 +778,50 @@ export async function sendTrainingOnboardingGuideEmail(opts: { to: string; name:
   await sgMail.send({ to: opts.to, from: { email: from, name: 'Welcome to CareStream' }, subject: 'Getting started with your CareStream training', html })
 }
 
+// ─── Training completion notification (to tenant admins) ─────────────────────
+// Sent when a staff member passes a training module: their certificate is on
+// their record, ready to view/download from the staff record page.
+
+export async function sendTrainingCompletionEmail(opts: {
+  to: string; adminName: string; staffName: string; moduleName: string; orgName: string
+  score: number; cpdHours: number | null
+  learningGain: { before: number; total: number } | null
+  staffId: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.adminName || '').split(' ')[0] || 'there'
+  const recordUrl = `${WEB_URL}/staff/${opts.staffId}`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      Good news: <strong>${opts.staffName}</strong> has just completed
+      <strong>${opts.moduleName}</strong> with a score of <strong>${opts.score}%</strong>.
+      Their certificate has been added to their training record and is ready to view and download.
+    </p>
+
+    <div style="background:#f8f6fb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin:0 0 24px">
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>Module:</strong> ${opts.moduleName}</p>
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>Score:</strong> ${opts.score}%${opts.cpdHours ? ` &middot; <strong>CPD time:</strong> ${opts.cpdHours} hours` : ''}</p>
+      ${opts.learningGain ? `<p style="margin:0;font-size:13px;color:#374151"><strong>Learning gain:</strong> scored ${opts.learningGain.before} of ${opts.learningGain.total} on the pre-course check, passed with ${opts.score}%</p>` : ''}
+    </div>
+
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${recordUrl}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        View their record and certificate
+      </a>
+    </div>
+
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from: { email: from, name: 'CareStream Training' }, subject: `${opts.staffName} has completed ${opts.moduleName} — certificate ready`, html })
+}
+
 // ─── Face-to-face session reminder (admin-triggered) ─────────────────────────
 
 export async function sendFaceToFaceReminderEmail(opts: { to: string; name: string; orgName: string; title: string; dateLabel: string; trainerLabel?: string | null }): Promise<void> {

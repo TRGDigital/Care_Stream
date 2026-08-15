@@ -38,6 +38,7 @@ type ModuleDetail = {
   built: boolean
   frequency: string
   requires_practical: boolean
+  duration_minutes?: number | null
   description: string | null
   summary: string | null
   outcomes: string[]
@@ -509,7 +510,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
       <TrainingVideo />
 
       {/* Why choose CareStream */}
-      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key))} />
+      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))} />
 
       <HomeFaq faqs={faqs} />
 

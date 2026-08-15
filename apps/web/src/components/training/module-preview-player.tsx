@@ -153,7 +153,8 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-700">Before you start</p>
           <p className="mb-1 text-base font-bold text-neutral-dark">A quick knowledge check</p>
-          <p className="mb-4 text-sm text-neutral-mid">Staff answer these {baseline.length} questions before the lesson with no right or wrong feedback shown. Their score is compared with the final assessment to evidence learning gain. Correct answers are highlighted here for your review only.</p>
+          <p className="mb-1 text-sm text-neutral-mid">You answer these {baseline.length} quick questions before the lesson begins. There is no right or wrong feedback and they do not affect your result; your score is simply compared with your final assessment to show how much this course has taught you.</p>
+          <p className="mb-4 text-xs italic text-neutral-mid/70">Correct answers are highlighted in this preview only.</p>
           <div className="space-y-4">
             {baseline.map((q, qi) => (
               <div key={q.id ?? qi}>
@@ -241,11 +242,11 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
           <h2 className="mt-2 text-lg font-bold text-neutral-dark">End of module</h2>
           <p className="mt-1 text-sm text-neutral-mid">That&rsquo;s the full <span className="font-medium">{m.name || name}</span> module — {sections.length} section{sections.length === 1 ? '' : 's'} and {questions.length} assessment question{questions.length === 1 ? '' : 's'}.</p>
 
-          {/* What happens for staff after passing — reviewers see the reflective step here */}
+          {/* Reflective step shown in the learner's voice — the preview mirrors the staff view */}
           <div className="mx-auto mt-5 max-w-lg rounded-xl border border-teal/20 bg-teal-light/20 p-4 text-left">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-teal">After passing, staff are asked</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-teal">After you pass, you are asked</p>
             <p className="text-sm font-medium text-neutral-dark">&ldquo;What will you do differently in your day to day work after this course?&rdquo;</p>
-            <p className="mt-1.5 text-xs text-neutral-mid">Their reflection is saved to their training record and shown with their certificate, alongside their learning gain (pre-course check score vs final assessment result).</p>
+            <p className="mt-1.5 text-xs text-neutral-mid">Your reflection is saved to your training record and shown with your certificate, alongside your learning gain (your pre-course check score compared with your final result).</p>
           </div>
 
           {m.standards?.length > 0 && (

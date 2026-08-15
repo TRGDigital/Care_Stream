@@ -18,6 +18,7 @@ import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
+import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
@@ -851,7 +852,7 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
   const userId   = (req as any).user.sub
   const enr = await (prisma as any).trainingEnrollment.findFirst({
     where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-    include: { module: { select: { source: true, questions: true, pass_mark: true, renewal_months: true, learning_content: true } }, answers: { select: { question_id: true, is_correct: true } } },
+    include: { module: { select: { name: true, source: true, questions: true, pass_mark: true, renewal_months: true, duration_minutes: true, learning_content: true } }, answers: { select: { question_id: true, is_correct: true } } },
   })
   if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
@@ -871,6 +872,25 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
       where: { id: enr.id },
       data:  { status: 'complete', completed_at: now, expires_at: expiresAt, certificate_url: 'issued', updated_at: now },
     })
+
+    // Notify the tenant admins that the certificate is ready — fire and forget,
+    // never blocks the learner's result. Skips the completer's own admin account.
+    ;(async () => {
+      const [staff, admins, tenant] = await Promise.all([
+        (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true } }),
+        (prisma as any).user.findMany({ where: { tenant_id: tenantId, role: 'admin', is_active: true }, select: { name: true, email: true } }),
+        (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+      ])
+      const cpdHours = enr.module.duration_minutes ? Math.round((enr.module.duration_minutes / 60) * 10) / 10 : null
+      const gain = enr.baseline_at && enr.baseline_total ? { before: enr.baseline_score ?? 0, total: enr.baseline_total } : null
+      for (const admin of (admins as any[])) {
+        if (!admin.email || admin.email === staff?.email) continue
+        await sendTrainingCompletionEmail({
+          to: admin.email, adminName: admin.name ?? '', staffName: staff?.name ?? 'A staff member',
+          moduleName: enr.module.name, orgName: tenant?.name ?? '', score, cpdHours, learningGain: gain, staffId: userId,
+        }).catch((e: any) => console.error('[annual-training/submit] completion email failed:', e?.message ?? e))
+      }
+    })().catch((e: any) => console.error('[annual-training/submit] completion notify failed:', e?.message ?? e))
   }
   ok(res, { passed, score, correct, total, pass_mark: passMark })
 })

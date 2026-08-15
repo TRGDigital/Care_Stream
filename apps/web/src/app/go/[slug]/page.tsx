@@ -30,6 +30,7 @@ type Module = {
   group_key?: string
   group_label?: string
   frequency?: string | null
+  duration_minutes?: number | null
   summary?: string | null
   outcomes?: string[]
   sections?: Section[]
@@ -412,7 +413,7 @@ export default async function GoLandingPage({
       <TrainingVideo />
 
       {/* Why choose CareStream */}
-      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key))} />
+      <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))} />
 
       {/* FAQ */}
       <HomeFaq faqs={faqs} />

@@ -15,11 +15,12 @@ type MenuItem = {
   desc: string
   Icon: LucideIcon
   badge?: string
+  highlight?: boolean   // stand-out entry (blue) — used for CPD Annual Training
 }
 
 const SERVICES: MenuItem[] = [
   { href: '/training-platform',     label: 'Training',              desc: 'Adhoc modules built from your own policies, face to face sessions and the full training matrix', Icon: GraduationCap },
-  { href: '/staff-training',        label: 'CPD Annual Training',   desc: 'Ready made annual courses to buy and complete in the staff hub', Icon: BookOpen },
+  { href: '/staff-training',        label: 'CPD Annual Training',   desc: 'Ready made annual courses to buy and complete in the staff hub', Icon: BookOpen, highlight: true },
   { href: '/hr-policies',           label: 'HR Policies',           desc: 'Staff handbook access in any language',                  Icon: Users },
   { href: '/care-audits',           label: 'Care Audits',           desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
   { href: '/cqc-compliance',        label: 'CQC & Compliance',      desc: 'Readiness tracking and evidence management',             Icon: Shield },
@@ -45,19 +46,19 @@ const WHO_FOR: MenuItem[] = [
 function MegaMenuGrid({ items, onClose }: { items: MenuItem[]; onClose: () => void }) {
   return (
     <div className="grid grid-cols-2 gap-1">
-      {items.map(({ href, label, desc, Icon, badge }) => (
+      {items.map(({ href, label, desc, Icon, badge, highlight }) => (
         <Link
           key={href}
           href={href}
           onClick={onClose}
-          className="group flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-neutral-light"
+          className={`group flex items-start gap-3 rounded-lg p-3 transition-colors ${highlight ? 'bg-blue-50 ring-1 ring-inset ring-blue-200 hover:bg-blue-100' : 'hover:bg-neutral-light'}`}
         >
-          <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-teal/10 text-teal transition-colors group-hover:bg-teal group-hover:text-white">
+          <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md transition-colors ${highlight ? 'bg-blue-600 text-white group-hover:bg-blue-700' : 'bg-teal/10 text-teal group-hover:bg-teal group-hover:text-white'}`}>
             <Icon size={15} />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              <p className="text-sm font-semibold text-neutral-dark">{label}</p>
+              <p className={`text-sm font-semibold ${highlight ? 'text-blue-700' : 'text-neutral-dark'}`}>{label}</p>
               {badge && <span className="whitespace-nowrap rounded-full bg-amber-brand/15 px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-wide text-amber-brand">{badge}</span>}
             </div>
             <p className="mt-0.5 text-xs leading-snug text-neutral-mid">{desc}</p>
@@ -81,14 +82,14 @@ function MobileAccordion({ label, items, onClose }: { label: string; items: Menu
       </button>
       {expanded && (
         <div className="ml-4 mt-1 flex flex-col gap-0.5">
-          {items.map(({ href, label: itemLabel, Icon }) => (
+          {items.map(({ href, label: itemLabel, Icon, highlight }) => (
             <Link
               key={href}
               href={href}
               onClick={onClose}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${highlight ? 'bg-blue-50 font-semibold text-blue-700 hover:bg-blue-100' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
             >
-              <Icon size={14} className="text-teal" />
+              <Icon size={14} className={highlight ? 'text-blue-600' : 'text-teal'} />
               {itemLabel}
             </Link>
           ))}

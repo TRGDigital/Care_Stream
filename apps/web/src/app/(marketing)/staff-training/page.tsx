@@ -279,49 +279,6 @@ export default async function StaffTrainingPage() {
         </div>
       </section>
 
-      {/* ── Two kinds of training ─────────────────────────────────────────── */}
-      <section className="bg-white py-24">
-        <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('two.label')}</SectionLabel>
-          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('two.h2')}
-          </h2>
-          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('two.intro')}
-          </p>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
-                <MessageSquare size={22} className="text-teal" />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card1.title')}</h3>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                {s('two.card1.body')}
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[s('two.card1.li1'), s('two.card1.li2'), s('two.card1.li3')].map((p) => (
-                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-teal/20 bg-teal/5 p-8 shadow-card">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-teal-glow">
-                <GraduationCap size={22} />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card2.title')}</h3>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                {s('two.card2.body')}
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[s('two.card2.li1'), s('two.card2.li2'), s('two.card2.li3')].map((p) => (
-                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── Annual mandatory training library ─────────────────────────────── */}
       {catalogue.topics.length > 0 && (
         <section className="bg-neutral-light py-24">
@@ -347,71 +304,21 @@ export default async function StaffTrainingPage() {
       {/* ── The follow up loop: wrong answers become lessons ──────────────── */}
       <TrainingFollowUpLoop className="bg-neutral-light" />
 
-      {/* ── Built from your policies ──────────────────────────────────────── */}
+      {/* ── Reporting that runs itself ─────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('policies.label')}</SectionLabel>
-          <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('policies.h2')}
+          <SectionLabel>Reporting</SectionLabel>
+          <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
+            Reporting that runs itself
           </h2>
-          <div className="grid items-start gap-12 lg:grid-cols-2">
-            <div>
-              <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                {s('policies.h3')}
-              </h3>
-              <div
-                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
-                dangerouslySetInnerHTML={{ __html: s('policies.p1') }}
-              />
-              <div
-                className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
-                dangerouslySetInnerHTML={{ __html: s('policies.p2') }}
-              />
-              <div className="space-y-3">
-                {POLICY_FEATURES.map(({ Icon, key }) => (
-                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
-                    <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Generated module mockup */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
-                <div className="relative h-24 bg-teal-gradient">
-                  <span className="absolute left-3 top-3 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">Draft, awaiting approval</span>
-                  <span className="absolute right-3 top-3 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-white">Tailored, 1 credit</span>
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-white">
-                    <Sparkles size={13} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">AI-generated module</span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h4 className="mb-3 text-sm font-bold text-neutral-dark">Annual Refresher: Medication Management</h4>
-                  <div className="space-y-2">
-                    {[
-                      { tag: 'Teach',    text: 'Safe administration and the five rights' },
-                      { tag: 'Scenario', text: 'A resident refuses their prescribed medication' },
-                      { tag: 'Check',    text: 'One quick knowledge check' },
-                    ].map(({ tag, text }) => (
-                      <div key={tag} className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                        <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-teal">{tag}</span>
-                        <span className="text-[11px] text-neutral-dark">{text}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 rounded-lg border border-teal/20 bg-teal/5 px-3 py-2">
-                    <p className="text-[11px] font-semibold text-teal">Assessment: 20 questions, four options each</p>
-                  </div>
-                  <p className="mt-3 text-[10px] text-neutral-mid">Grounded in your medicines policy and 5 more sources.</p>
-                </div>
-              </div>
-            </div>
+          <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">
+            Every completion updates the record automatically: scores, learning gain, learning time,
+            certificates and learner feedback, all in one place. You are emailed the moment a staff
+            member passes, and every record is ready for inspection without any admin.
+          </p>
+          <div className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-teal-light/20 text-center">
+            <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
+            <p className="max-w-md px-6 text-xs text-neutral-mid">Screenshot: the training analytics dashboard showing completion, scores and learner feedback</p>
           </div>
         </div>
       </section>
@@ -713,40 +620,6 @@ export default async function StaffTrainingPage() {
         </div>
       </section>
 
-      {/* ── Face-to-face training tracking ────────────────────────────────── */}
-      <section className="bg-neutral-light py-24">
-        <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('f2f.label')}</SectionLabel>
-          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('f2f.h2')}
-          </h2>
-          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('f2f.intro')}
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {F2F_STEPS.map(({ step, Icon, key }) => (
-              <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
-                    {step}
-                  </span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light">
-                    <Icon size={18} className="text-teal" />
-                  </div>
-                </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
-            {s('f2f.footnote')}
-          </p>
-        </div>
-      </section>
-
       {/* ── Training matrix ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
@@ -761,16 +634,9 @@ export default async function StaffTrainingPage() {
                 <div dangerouslySetInnerHTML={{ __html: s('matrix.p2') }} />
               </div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">{s('matrix.listLabel')}</p>
-              <ul className="space-y-3">
-                {[s('matrix.li1'), s('matrix.li2'), s('matrix.li3'), s('matrix.li4'), s('matrix.li5')].map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-neutral-dark">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-teal" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
+            <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-white text-center">
+              <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
+              <p className="max-w-md px-6 text-xs text-neutral-mid">Screenshot: the training matrix showing every staff member against every course with status at a glance</p>
             </div>
           </div>
         </div>

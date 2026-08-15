@@ -1,10 +1,9 @@
-import { BookOpen, BookA, TrendingUp, PenLine, FileText, ClipboardCheck, Image as ImageIcon } from 'lucide-react'
+import Image from 'next/image'
+import { BookOpen, BookA, TrendingUp, PenLine, FileText, ClipboardCheck } from 'lucide-react'
 
 // "Inside every course" — the six learning features that come as standard on
 // every CareStream training course. Shown on /staff-training, each course page
-// and the /go PPC landings. The image slot below the grid is a placeholder
-// until the final artwork is supplied (swap the placeholder block for a
-// next/image once /public/cpd-course-features.jpg exists).
+// and the /go PPC landings.
 
 const FEATURES = [
   {
@@ -64,14 +63,16 @@ export function TrainingCpdFeatures({ className = '' }: { className?: string }) 
           ))}
         </div>
 
-        {/* Image slot — placeholder until the final artwork is supplied */}
-        <div className="mt-10 flex aspect-[21/9] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-teal-light/20 text-center">
-          <ImageIcon size={32} className="text-teal/50" />
-          <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
-          <p className="max-w-md px-6 text-xs text-neutral-mid">
-            Final artwork to follow. Suggested: the learning gain result, reflection card and printable
-            checklist shown side by side around a course certificate.
-          </p>
+        {/* The learner journey in one view: the training hub, the end of module
+            screen with reflection and mapped standards, and the printable course summary */}
+        <div className="mt-10">
+          <Image
+            src="/cpd-course-features.jpg"
+            alt="The CareStream training hub, the end of module screen with reflective practice and mapped standards, and the printable course summary"
+            width={2860}
+            height={1240}
+            className="h-auto w-full rounded-3xl border border-gray-100 shadow-card"
+          />
         </div>
       </div>
     </section>

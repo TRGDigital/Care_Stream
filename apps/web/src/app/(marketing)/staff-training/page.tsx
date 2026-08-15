@@ -8,6 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
+import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 
@@ -342,6 +343,9 @@ export default async function StaffTrainingPage() {
 
       {/* ── Inside every course: the six learning features ────────────────── */}
       <TrainingCpdFeatures className="bg-white" />
+
+      {/* ── The follow up loop: wrong answers become lessons ──────────────── */}
+      <TrainingFollowUpLoop className="bg-neutral-light" />
 
       {/* ── Built from your policies ──────────────────────────────────────── */}
       <section className="bg-white py-24">

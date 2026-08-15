@@ -15,6 +15,7 @@ import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
+import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 
@@ -418,6 +419,9 @@ export default async function GoLandingPage({
 
       {/* Inside every course: the six learning features */}
       <TrainingCpdFeatures className="bg-white" />
+
+      {/* The follow up loop: wrong answers become lessons */}
+      <TrainingFollowUpLoop className="bg-neutral-light" />
 
       {/* FAQ */}
       <HomeFaq faqs={faqs} />

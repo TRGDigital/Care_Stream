@@ -103,6 +103,27 @@ adminRouter.post('/training-onboarding-email/test', async (req: Request, res: Re
   }
 })
 
+// ─── POST /admin/training-completion-email/test ──────────────────────────────
+// Send a sample of the staff-completion notification (sent to tenant admins when
+// a staff member passes a module) so the platform owner can review it.
+
+adminRouter.post('/training-completion-email/test', async (req: Request, res: Response) => {
+  const to = String(req.body?.to ?? '').trim()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { res.status(400).json({ error: 'A valid "to" email address is required' }); return }
+  try {
+    const { sendTrainingCompletionEmail } = await import('../services/email/outbound')
+    await sendTrainingCompletionEmail({
+      to, adminName: String(req.body?.name ?? 'Len'),
+      staffName: 'Lalana Burgess', moduleName: 'Care Certificate Annual Training',
+      orgName: 'Lalanas Care Home Org', score: 93, cpdHours: 1.5,
+      learningGain: { before: 1, total: 4 }, staffId: 'sample-staff-id',
+    })
+    res.json({ data: { sent: true, to } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'send failed' })
+  }
+})
+
 // ─── POST /admin/regulations/sync ────────────────────────────────────────────
 // Trigger a manual Google Sheets sync of the external regulations knowledge base.
 

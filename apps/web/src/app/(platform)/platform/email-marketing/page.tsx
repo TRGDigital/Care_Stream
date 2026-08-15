@@ -17,14 +17,14 @@ async function viewEmail(token: string, id: string) {
 type EmailRow = Awaited<ReturnType<ReturnType<typeof createPlatformClient>['onboarding']['emails']>>['emails'][number]
 
 // One-off transactional emails (not part of the drip): send yourself a review copy.
-function TrainingGuideTest({ token }: { token: string }) {
+function TransactionalEmailTest({ token, title, description, endpoint }: { token: string; title: string; description: string; endpoint: string }) {
   const [to, setTo] = useState('lenny@trgdigital.co.uk')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   async function send() {
     if (state === 'sending') return
     setState('sending')
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/training-onboarding-email/test`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ to, name: 'Len' }),
@@ -34,8 +34,8 @@ function TrainingGuideTest({ token }: { token: string }) {
   }
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Send size={14} className="text-teal" /> Training client welcome guide</p>
-      <p className="mt-1 text-xs text-neutral-mid">The branded getting-started walkthrough (add staff, allocate licences, staff hub, analytics) sent automatically to every new training-shop client. Send yourself a copy to review the exact email.</p>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Send size={14} className="text-teal" /> {title}</p>
+      <p className="mt-1 text-xs text-neutral-mid">{description}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <input value={to} onChange={e => { setTo(e.target.value); setState('idle') }} className="w-72 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none" />
         <button onClick={send} disabled={state === 'sending'} className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
@@ -259,7 +259,18 @@ export default function EmailMarketingPage() {
 
         <RunDripNow token={token} />
 
-        <TrainingGuideTest token={token} />
+        <TransactionalEmailTest
+          token={token}
+          title="Training client welcome guide"
+          description="The branded getting-started walkthrough (add staff, allocate licences, staff hub, analytics) sent automatically to every new training-shop client. Send yourself a copy to review the exact email."
+          endpoint="/admin/training-onboarding-email/test"
+        />
+        <TransactionalEmailTest
+          token={token}
+          title="Staff completion notification"
+          description="Sent to tenant admins the moment a staff member passes a training module: name, module, score, CPD hours and learning gain, with a link to the record where the certificate is ready to download. The test uses sample data."
+          endpoint="/admin/training-completion-email/test"
+        />
 
         <div className="flex gap-2">
           {PLANS.map(p => (

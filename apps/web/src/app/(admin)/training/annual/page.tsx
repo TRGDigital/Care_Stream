@@ -200,7 +200,7 @@ export default function AnnualTrainingPage() {
                                     {sheetLoading === `summary:${t.standard_module.id}` ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />} Course summary
                                   </button>
                                 )}
-                                {t.standard_module && t.requires_practical && (
+                                {t.standard_module && (t.requires_practical || t.is_annual) && (
                                   <button
                                     onClick={() => openSheet('practical', t.standard_module!.id)}
                                     disabled={!!sheetLoading}

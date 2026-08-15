@@ -6,6 +6,7 @@ import { fetchTrainingSeoIndex, platformAssetUrl } from '@/lib/platform-api'
 import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
 import { CUSTOMER_LOGOS } from '@/lib/customer-logos'
 import { FEATURE_IMAGES } from '@/lib/feature-images'
+import { TRAINING_MARKETING_IMAGES } from '@/lib/training-marketing-images'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -27,8 +28,14 @@ export function AltTagsPanel({ token }: { token: string }) {
           fetchTrainingSeoIndex(),
         ])
         const body = await res.json()
-        const dbImgs: ImageAlt[] = body?.data?.images ?? []
-        const haveSrc = new Set(dbImgs.map(i => i.src))
+        const allDbImgs: ImageAlt[] = body?.data?.images ?? []
+        // The newest marketing screenshots stay pinned to the top of the list
+        // (using the saved DB row when one exists, else the page's default alt).
+        const dbBySrc = new Map(allDbImgs.map(i => [i.src, i]))
+        const pinnedSrcs = new Set(TRAINING_MARKETING_IMAGES.map(f => f.src))
+        const pinned: ImageAlt[] = TRAINING_MARKETING_IMAGES.map(f => dbBySrc.get(f.src) ?? { id: '', src: f.src, alt: f.alt })
+        const dbImgs = allDbImgs.filter(i => !pinnedSrcs.has(i.src))
+        const haveSrc = new Set(allDbImgs.map(i => i.src))
         // Training module images (cover + section illustrations) as virtual rows —
         // editing one creates its site_image_alts record. The suggested alt already
         // shows live on the site, so a row is only "dirty" once you change it.
@@ -47,7 +54,7 @@ export function AltTagsPanel({ token }: { token: string }) {
         const featureVirtual: ImageAlt[] = FEATURE_IMAGES
           .map(f => ({ id: '', src: f.src, alt: f.alt }))
           .filter(im => !haveSrc.has(im.src))
-        const merged = [...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual, ...featureVirtual]
+        const merged = [...pinned, ...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual, ...featureVirtual]
         setImages(merged)
         setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {

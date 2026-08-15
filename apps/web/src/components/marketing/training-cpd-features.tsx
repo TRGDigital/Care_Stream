@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { SiteImage } from '@/components/site-image'
 import { BookOpen, BookA, TrendingUp, PenLine, FileText, ClipboardCheck } from 'lucide-react'
 
 // "Inside every course" — the six learning features that come as standard on
@@ -68,35 +68,35 @@ export function TrainingCpdFeatures({ className = '' }: { className?: string }) 
 
           {/* The learner journey, screenshot by screenshot */}
           <div className="space-y-5">
-            <Image
+            <SiteImage
               src="/cpd-training-hub.jpg"
               alt="The staff training hub showing assigned courses, progress and follow up questions"
               width={1600}
               height={848}
               className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
             />
-            <Image
+            <SiteImage
               src="/cpd-module-complete.jpg"
               alt="The end of module screen with the reflective practice prompt, mapped standards and the printable course summary and competency checklist"
               width={1400}
               height={1110}
               className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
             />
-            <Image
+            <SiteImage
               src="/cpd-course-summary.jpg"
               alt="The printable one page course summary with learning outcomes, key points, key terms and references"
               width={754}
               height={1189}
               className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
             />
-            <Image
+            <SiteImage
               src="/cpd-observation-checklist.jpg"
               alt="The printable observed competency checklist with tick boxes and a manager sign off section"
               width={1123}
               height={1276}
               className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
             />
-            <Image
+            <SiteImage
               src="/follow-up-hub.jpg"
               alt="The Follow-up section of the staff hub listing the questions a staff member got wrong, each with Learn and retry options"
               width={1400}

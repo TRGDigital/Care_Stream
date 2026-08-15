@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { SiteImage } from '@/components/site-image'
 import { Zap, MessageSquareText, Award } from 'lucide-react'
 
 // "The follow up loop" — how CareStream turns wrong answers into targeted
@@ -37,7 +37,7 @@ export function TrainingFollowUpLoop({ className = '' }: { className?: string })
         </div>
 
         <div className="mt-10 grid items-start gap-8 lg:grid-cols-2">
-          <Image
+          <SiteImage
             src="/follow-up-hub.jpg"
             alt="The Follow-up section of the staff hub listing the questions a staff member got wrong, each with Learn and retry and Just retry options and a second language button"
             width={1400}

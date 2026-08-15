@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
   MessageSquare, Mic, Smartphone, Sparkles, GraduationCap, BadgeCheck, CalendarDays,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { SiteImage } from '@/components/site-image'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
@@ -408,21 +408,21 @@ export default async function StaffTrainingPage() {
               </p>
             </div>
             <div className="space-y-5">
-              <Image
+              <SiteImage
                 src="/reporting-staff-record.jpg"
                 alt="A staff member's training record: completion, comparison to the team, statutory training record and annual training with scores, renewals and certificates"
                 width={1600}
                 height={1213}
                 className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
               />
-              <Image
+              <SiteImage
                 src="/reporting-completion-email.jpg"
                 alt="The completion email sent to admins the moment a staff member passes, showing score, CPD time, learning gain and a link to the certificate"
                 width={1100}
                 height={1025}
                 className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
               />
-              <Image
+              <SiteImage
                 src="/reporting-training-matrix.jpg"
                 alt="The whole team training matrix showing every staff member against every module with completion status at a glance"
                 width={1600}
@@ -746,14 +746,14 @@ export default async function StaffTrainingPage() {
               </div>
             </div>
             <div className="space-y-5">
-              <Image
+              <SiteImage
                 src="/matrix-training-calendar.jpg"
                 alt="The training calendar showing face to face sessions, adhoc training and annual training allocations and completions across the month"
                 width={1600}
                 height={745}
                 className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
               />
-              <Image
+              <SiteImage
                 src="/matrix-f2f-matrix.jpg"
                 alt="The face to face training matrix showing each staff member's latest attended session per topic with renewal status"
                 width={1600}

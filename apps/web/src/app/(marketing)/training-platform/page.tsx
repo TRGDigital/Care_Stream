@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
+import { SiteImage } from '@/components/site-image'
 import {
   Sparkles, BadgeCheck, Globe, CalendarDays, Bell, Banknote,
   BarChart2, Clock, Users, FileCheck2, LayoutGrid, CheckCircle2,
@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // Product screenshot with the shared card styling.
 function Shot({ src, alt, width, height }: { src: string; alt: string; width: number; height: number }) {
   return (
-    <Image
+    <SiteImage
       src={src}
       alt={alt}
       width={width}

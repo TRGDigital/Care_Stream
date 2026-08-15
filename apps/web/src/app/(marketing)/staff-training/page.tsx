@@ -199,7 +199,7 @@ export default async function StaffTrainingPage() {
         </div>
         <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
-            <div className="lg:sticky lg:top-24">
+            <div>
               <div className="mb-5 flex flex-wrap items-center gap-2.5">
                 <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
                   <ShieldCheck size={14} /> CQC-aligned training for care teams

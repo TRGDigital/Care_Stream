@@ -212,7 +212,12 @@ trainingRouter.get('/standard-modules/:id/full', requireAdmin, async (req: Reque
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
   const lc = (module.learning_content ?? {}) as any
   const sections = Array.isArray(lc.sections)
-    ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: s?.image_key ? illustrationUrl(s.image_key) : null })).filter((s: any) => s.heading)
+    ? lc.sections.map((s: any) => ({
+        heading: String(s?.heading ?? ''), body: String(s?.body ?? ''),
+        image_url: s?.image_key ? illustrationUrl(s.image_key) : null,
+        scenario: s?.scenario ? { situation: String(s.scenario.situation ?? ''), prompt: String(s.scenario.prompt ?? ''), answer: String(s.scenario.answer ?? '') } : null,
+        check: s?.check ? { question: String(s.check.question ?? ''), options: Array.isArray(s.check.options) ? s.check.options.map(String) : [], correct: typeof s.check.correct === 'number' ? s.check.correct : null } : null,
+      })).filter((s: any) => s.heading)
     : []
   const questions = Array.isArray(module.questions)
     ? (module.questions as any[]).map(q => ({ text: String(q?.text ?? ''), options: Array.isArray(q?.options) ? q.options.map(String) : [], correct: typeof q?.correct === 'number' ? q.correct : null, explanation: q?.explanation ?? null }))
@@ -230,6 +235,12 @@ trainingRouter.get('/standard-modules/:id/full', requireAdmin, async (req: Reque
     questions,
     standards:          Array.isArray(module.standards) ? (module.standards as any[]).map(s => s?.label).filter(Boolean) : [],
     illustration_url:   illustrationUrl(module.illustration_key),
+    // CPD extras — surfaced so previews and the course-summary / practical
+    // checklist printables can render them (empty arrays when not authored).
+    references:          Array.isArray(lc.references) ? lc.references : [],
+    glossary:            Array.isArray(lc.glossary) ? lc.glossary : [],
+    baseline:            Array.isArray(lc.baseline) ? lc.baseline : [],
+    practical_checklist: Array.isArray(lc.practical_checklist) ? lc.practical_checklist : [],
   } })
 })
 
@@ -242,7 +253,12 @@ trainingRouter.get('/modules/:id/preview', requireAdmin, async (req: Request, re
   if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
   const lc = (module.learning_content ?? {}) as any
   const sections = Array.isArray(lc.sections)
-    ? lc.sections.map((s: any) => ({ heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: s?.image_key ? illustrationUrl(s.image_key) : null })).filter((s: any) => s.heading)
+    ? lc.sections.map((s: any) => ({
+        heading: String(s?.heading ?? ''), body: String(s?.body ?? ''),
+        image_url: s?.image_key ? illustrationUrl(s.image_key) : null,
+        scenario: s?.scenario ? { situation: String(s.scenario.situation ?? ''), prompt: String(s.scenario.prompt ?? ''), answer: String(s.scenario.answer ?? '') } : null,
+        check: s?.check ? { question: String(s.check.question ?? ''), options: Array.isArray(s.check.options) ? s.check.options.map(String) : [], correct: typeof s.check.correct === 'number' ? s.check.correct : null } : null,
+      })).filter((s: any) => s.heading)
     : []
   const questions = Array.isArray(module.questions)
     ? (module.questions as any[]).map(q => ({ text: String(q?.text ?? ''), options: Array.isArray(q?.options) ? q.options.map(String) : [], correct: typeof q?.correct === 'number' ? q.correct : null, explanation: q?.explanation ?? null }))
@@ -260,6 +276,12 @@ trainingRouter.get('/modules/:id/preview', requireAdmin, async (req: Request, re
     questions,
     standards:          Array.isArray(module.standards) ? (module.standards as any[]).map(s => s?.label).filter(Boolean) : [],
     illustration_url:   illustrationUrl(module.illustration_key),
+    // CPD extras — surfaced so previews and the course-summary / practical
+    // checklist printables can render them (empty arrays when not authored).
+    references:          Array.isArray(lc.references) ? lc.references : [],
+    glossary:            Array.isArray(lc.glossary) ? lc.glossary : [],
+    baseline:            Array.isArray(lc.baseline) ? lc.baseline : [],
+    practical_checklist: Array.isArray(lc.practical_checklist) ? lc.practical_checklist : [],
   } })
 })
 

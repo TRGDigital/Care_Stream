@@ -24,7 +24,13 @@ export type PreviewModule = {
   summary: string | null
   outcomes: string[]
   key_points: string[]
-  sections: Array<{ heading: string; body: string; image_url: string | null }>
+  sections: Array<{
+    heading: string
+    body: string
+    image_url: string | null
+    scenario?: { situation: string; prompt: string; answer: string } | null
+    check?: { question: string; options: string[]; correct: number | null } | null
+  }>
   questions: Array<{ text: string; options: string[]; correct: number | null; explanation: string | null }>
   standards: string[]
   illustration_url: string | null
@@ -148,6 +154,38 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
           <div className="p-6">
             {sections[cur.i].heading && <p className="mb-2 text-base font-bold text-neutral-dark">{sections[cur.i].heading}</p>}
             <div className="prose prose-sm max-w-none text-neutral-dark" dangerouslySetInnerHTML={{ __html: sections[cur.i].body }} />
+
+            {/* Scenario — shown as staff see it, with the model answer revealed for reviewers */}
+            {sections[cur.i].scenario?.situation && (
+              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">Scenario</p>
+                <p className="text-sm text-neutral-dark">{sections[cur.i].scenario!.situation}</p>
+                {sections[cur.i].scenario!.prompt && <p className="mt-2 text-sm font-medium text-neutral-dark">{sections[cur.i].scenario!.prompt}</p>}
+                {sections[cur.i].scenario!.answer && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-white p-3">
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Model answer (shown to staff after they respond)</p>
+                    <p className="text-sm text-neutral-dark">{sections[cur.i].scenario!.answer}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick check — correct option highlighted for reviewers */}
+            {sections[cur.i].check?.options?.length ? (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-neutral-light/40 p-4">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Quick check</p>
+                {sections[cur.i].check!.question && <p className="mb-2 text-sm font-medium text-neutral-dark">{sections[cur.i].check!.question}</p>}
+                <ul className="space-y-1.5">
+                  {sections[cur.i].check!.options.map((opt, oi) => (
+                    <li key={oi} className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${oi === sections[cur.i].check!.correct ? 'border-green-300 bg-green-50 font-medium text-green-800' : 'border-gray-200 bg-white text-neutral-dark'}`}>
+                      <span>{String.fromCharCode(65 + oi)}.</span>
+                      <span>{opt}</span>
+                      {oi === sections[cur.i].check!.correct && <span className="ml-auto text-xs font-semibold text-green-600">Correct</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

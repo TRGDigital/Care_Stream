@@ -8,8 +8,9 @@ import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { CourseSpecification } from '@/components/course-specification'
+import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2 } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -70,6 +71,37 @@ export default function StandardTrainingPage() {
   const [reviewId, setReviewId] = useState<string | null>(null)
   const [neutralising, setNeutralising] = useState<string | null>(null) // a module id, or 'all'
   const [neutProgress, setNeutProgress] = useState<{ done: number; total: number } | null>(null)
+  const [preview, setPreview] = useState<any | null>(null)       // normalised module for the staff-view player
+  const [previewLoading, setPreviewLoading] = useState<string | null>(null)
+
+  // Open the module exactly as tenant staff see it (stepped lesson player with
+  // scenarios, quick checks, glossary, references and the assessment).
+  async function openPreview(moduleId: string) {
+    if (!api || previewLoading) return
+    setPreviewLoading(moduleId)
+    try {
+      const { module: raw } = await api.standardTraining.moduleFull(moduleId)
+      const lc = (raw.learning_content ?? {}) as any
+      const img = (key?: string | null) => key ? `/public/training/image/${String(key).split('/').pop()}` : null
+      setPreview({
+        name: raw.name, frequency: raw.frequency ?? null, pass_mark: raw.pass_mark ?? null,
+        requires_practical: !!raw.requires_practical, duration_minutes: raw.duration_minutes ?? null,
+        summary: typeof lc.summary === 'string' ? lc.summary : null,
+        outcomes: Array.isArray(lc.outcomes) ? lc.outcomes : [],
+        key_points: Array.isArray(lc.key_points) ? lc.key_points : [],
+        sections: (Array.isArray(lc.sections) ? lc.sections : []).map((s: any) => ({
+          heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: img(s?.image_key),
+          scenario: s?.scenario ?? null,
+          check: s?.check ? { question: String(s.check.question ?? ''), options: Array.isArray(s.check.options) ? s.check.options : [], correct: typeof s.check.correct === 'number' ? s.check.correct : null } : null,
+        })),
+        questions: (Array.isArray(raw.questions) ? raw.questions : []).map((q: any) => ({ text: String(q?.text ?? ''), options: Array.isArray(q?.options) ? q.options : [], correct: typeof q?.correct === 'number' ? q.correct : null, explanation: q?.explanation ?? null })),
+        standards: (Array.isArray(raw.standards) ? raw.standards : []).map((s: any) => s?.label).filter(Boolean),
+        illustration_url: raw.illustration_url ?? null,
+        learning_content: lc,
+      })
+    } catch (e: any) { alert(e?.message ?? 'Could not load the module preview.') }
+    finally { setPreviewLoading(null) }
+  }
 
   function load() {
     if (!api) return
@@ -111,6 +143,12 @@ export default function StandardTrainingPage() {
   if (reviewId && token) return (
     <PlatformShell>
       <Review token={token} id={reviewId} onBack={() => { load(); setReviewId(null) }} />
+    </PlatformShell>
+  )
+
+  if (preview) return (
+    <PlatformShell>
+      <ModulePreviewPlayer m={preview} name={preview.name} onBack={() => setPreview(null)} />
     </PlatformShell>
   )
 
@@ -248,6 +286,16 @@ export default function StandardTrainingPage() {
                             className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50"
                           >
                             {neutralising === m.id ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                          </button>
+                        )}
+                        {m && (
+                          <button
+                            onClick={() => openPreview(m.id)}
+                            disabled={!!previewLoading}
+                            title="Open the course exactly as tenant staff see it — lessons, scenarios, quick checks, glossary, references and the assessment."
+                            className="flex items-center gap-1 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-50"
+                          >
+                            {previewLoading === m.id ? <Loader2 size={13} className="animate-spin" /> : <Eye size={13} />} Preview as staff
                           </button>
                         )}
                         {!m

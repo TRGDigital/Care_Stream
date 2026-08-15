@@ -36,26 +36,25 @@ export function TrainingFollowUpLoop({ className = '' }: { className?: string })
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          {STEPS.map(({ Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-light text-teal">
-                <Icon size={20} />
-              </span>
-              <h3 className="mt-4 text-base font-bold text-neutral-dark">{title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-neutral-mid">{body}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10">
+        <div className="mt-10 grid items-start gap-8 lg:grid-cols-2">
           <Image
-            src="/training-follow-up-loop.jpg"
-            alt="The CareStream automatic follow up loop: a wrong answer triggers an instant lesson and a targeted follow up question, a correct answer progresses to the next module and the certificate"
-            width={1600}
-            height={878}
+            src="/follow-up-hub.jpg"
+            alt="The Follow-up section of the staff hub listing the questions a staff member got wrong, each with Learn and retry and Just retry options and a second language button"
+            width={1400}
+            height={902}
             className="h-auto w-full rounded-3xl border border-gray-100 shadow-card"
           />
+          <div className="space-y-4">
+            {STEPS.map(({ Icon, title, body }) => (
+              <div key={title} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-light text-teal">
+                  <Icon size={20} />
+                </span>
+                <h3 className="mt-4 text-base font-bold text-neutral-dark">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-neutral-mid">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

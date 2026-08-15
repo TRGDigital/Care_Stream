@@ -189,40 +189,67 @@ export default async function StaffTrainingPage() {
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-hero-gradient">
-        <div className="absolute inset-0 dot-mesh" />
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
-        />
-        <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <SectionLabel light>CPD Annual Training</SectionLabel>
-              <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
+      {/* Hero — copy left, interactive demo focal card right, care photo bled into the white (mirrors /go) */}
+      <section className="relative overflow-hidden bg-white">
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[72rem] w-full object-cover object-[40%_12%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />
+        </div>
+        <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
+          <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
+            <div className="lg:sticky lg:top-24">
+              <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
+                  <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
+                </span>
+              </div>
+              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
                 Annual training your team completes, not just ticks off
               </h1>
-              <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                Ready made courses for every mandatory subject, built for real learning. Buy a licence per
-                staff member, allocate in one click, and your team completes the course in their own hub,
-                in their own language, with certificates and CQC ready evidence handled for you.
-              </p>
+              <ul className="mb-8 space-y-3">
+                {[
+                  'Ready made courses for every mandatory subject, built for real learning',
+                  'One licence per staff member, allocated in one click',
+                  'Completed in the hub in over 60 languages',
+                  'Certificates and CQC ready evidence handled for you',
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-neutral-dark">
+                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <a href="#course-library" className="btn-amber rounded-btn px-8 py-4 text-sm">
+                <a href="#course-library" className="btn-amber rounded-btn px-8 py-4 text-center text-sm">
                   Browse the courses
                 </a>
-                <Link href="/demo" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">
+                <Link href="/demo" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
                   Book a Demo
                 </Link>
               </div>
+              {/* Directional cue pointing across to the live demo (desktop) */}
+              <div className="mt-6 hidden items-center gap-3 lg:flex">
+                <span className="text-lg font-extrabold text-teal">Try it: a real lesson and question</span>
+                <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              {/* Mobile: the demo is below the copy */}
+              <div className="mt-5 flex items-center gap-2 lg:hidden">
+                <span className="text-base font-extrabold text-teal">Try it: a real lesson and question</span>
+                <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </div>
-            <div className="flex justify-center lg:justify-end">
-              {heroDemo
-                ? <div className="w-full max-w-[440px]"><TrainingDemo demo={heroDemo} buyHref="/buy/care-certificate" variant="card" /></div>
-                : <TrainingDashboardMockup />}
-            </div>
+
+            {/* Interactive demo as the hero focal element */}
+            {heroDemo
+              ? <TrainingDemo demo={heroDemo} buyHref="/buy/care-certificate" variant="card" />
+              : <div className="flex justify-center lg:justify-end"><TrainingDashboardMockup /></div>}
           </div>
         </div>
       </section>
@@ -232,34 +259,38 @@ export default async function StaffTrainingPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>{s('problem.label')}</SectionLabel>
+              <SectionLabel>The problem with annual training</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                {s('problem.h2')}
+                Staff forget most of what they learn within days
               </h2>
-              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
-                <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
-                <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
+              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
+                <p>
+                  Most annual training is a long slideshow and a quiz, completed once and forgotten by
+                  the weekend. It ticks the compliance box but does little for the person being
+                  supported on Monday morning.
+                </p>
+                <p>
+                  CareStream&apos;s CPD annual training courses are built for retention: short lessons, real
+                  care scenarios, quick checks along the way, and a follow up loop that returns to
+                  anything a learner got wrong until they truly know it.
+                </p>
               </div>
             </div>
             <div className="grid gap-4">
-              {PROBLEM_CARDS.map(({ icon, key, dim }) => (
-                <div
-                  key={key}
-                  className={`card-lift rounded-2xl p-6 ${
-                    dim
-                      ? 'border border-gray-100 bg-white shadow-card'
-                      : 'bg-teal-gradient shadow-teal-glow'
-                  }`}
-                >
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="text-2xl">{icon}</span>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>
-                      {s(`${key}.label`)}
-                    </p>
-                  </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.text`)}</p>
+              <div className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="text-2xl">📅</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">Traditional annual training</p>
                 </div>
-              ))}
+                <p className="leading-relaxed text-neutral-mid">One long session a year, a certificate, and no way of knowing what actually stuck. Renewal dates chased through a spreadsheet.</p>
+              </div>
+              <div className="card-lift rounded-2xl bg-teal-gradient p-6 shadow-teal-glow">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="text-2xl">🎓</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">CPD annual training with CareStream</p>
+                </div>
+                <p className="leading-relaxed text-white">Bitesize lessons with scenarios and checks, measured learning gain, automatic renewals, and certificates and evidence that build themselves.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -268,16 +299,21 @@ export default async function StaffTrainingPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('how.label')}</SectionLabel>
+          <SectionLabel>How it works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('how.h2')}
+            Buy a course, allocate it, and track every answer
           </h2>
           <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('how.intro')}
+            From choosing a course to a certificate on the staff record, the whole journey takes
+            minutes of your time. Your staff do the learning; CareStream does the rest.
           </p>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {HOW_STEPS.map(({ step, Icon, key }) => (
+            {[
+              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made CPD annual training courses below and buy a licence for each staff member who needs one. Volume discounts apply automatically.' },
+              { step: '02', Icon: Users, title: 'Allocate in one click', body: 'Assign the course from your console. Your staff member is emailed straight away and the course appears in their own hub, in their first language.' },
+              { step: '03', Icon: BarChart2, title: 'Track completion and evidence', body: 'Watch completion, scores and learning gain as they happen. Certificates land on the staff record automatically and you are emailed the moment each course is passed.' },
+            ].map(({ step, Icon, title, body }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -287,8 +323,8 @@ export default async function StaffTrainingPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
               </div>
             ))}
           </div>
@@ -323,17 +359,19 @@ export default async function StaffTrainingPage() {
       {/* ── Reporting that runs itself ─────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>Reporting</SectionLabel>
-          <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Reporting that runs itself
-          </h2>
-          <p className="mb-12 max-w-3xl text-lg leading-relaxed text-neutral-mid">
-            Every completion updates the record automatically: scores, learning gain, learning time,
-            certificates and learner feedback, all in one place. You are emailed the moment a staff
-            member passes, and every record is ready for inspection without any admin.
-          </p>
-          <div className="grid gap-5 lg:grid-cols-5">
-            <div className="lg:col-span-3">
+          <div className="grid items-start gap-14 lg:grid-cols-2">
+            <div className="lg:sticky lg:top-24">
+              <SectionLabel>Reporting</SectionLabel>
+              <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
+                Reporting that runs itself
+              </h2>
+              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
+                Every completion updates the record automatically: scores, learning gain, learning time,
+                certificates and learner feedback, all in one place. You are emailed the moment a staff
+                member passes, and every record is ready for inspection without any admin.
+              </p>
+            </div>
+            <div className="space-y-5">
               <Image
                 src="/reporting-staff-record.jpg"
                 alt="A staff member's training record: completion, comparison to the team, statutory training record and annual training with scores, renewals and certificates"
@@ -341,9 +379,6 @@ export default async function StaffTrainingPage() {
                 height={1213}
                 className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
               />
-              <p className="mt-2 text-center text-xs text-neutral-mid">Every staff member has a live record: completion, scores, renewals and certificates</p>
-            </div>
-            <div className="lg:col-span-2">
               <Image
                 src="/reporting-completion-email.jpg"
                 alt="The completion email sent to admins the moment a staff member passes, showing score, CPD time, learning gain and a link to the certificate"
@@ -351,18 +386,14 @@ export default async function StaffTrainingPage() {
                 height={1025}
                 className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
               />
-              <p className="mt-2 text-center text-xs text-neutral-mid">You are emailed the moment a course is passed, certificate ready to download</p>
+              <Image
+                src="/reporting-training-matrix.jpg"
+                alt="The whole team training matrix showing every staff member against every module with completion status at a glance"
+                width={1600}
+                height={866}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
             </div>
-          </div>
-          <div className="mt-6">
-            <Image
-              src="/reporting-training-matrix.jpg"
-              alt="The whole team training matrix showing every staff member against every module with completion status at a glance"
-              width={1600}
-              height={866}
-              className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
-            />
-            <p className="mt-2 text-center text-xs text-neutral-mid">The whole team at a glance: who has completed what, and what is outstanding</p>
           </div>
         </div>
       </section>
@@ -667,8 +698,8 @@ export default async function StaffTrainingPage() {
       {/* ── Training matrix ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
-            <div>
+          <div className="grid items-start gap-14 lg:grid-cols-2">
+            <div className="lg:sticky lg:top-24">
               <SectionLabel>{s('matrix.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
                 {s('matrix.h2')}

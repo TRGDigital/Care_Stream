@@ -23,6 +23,7 @@ const MARKETING: Entry[] = [
   { url: '/features/web-chat-interface',           changeFrequency: 'monthly', priority: 0.7 },
   { url: '/who-its-for',                           changeFrequency: 'monthly', priority: 0.8 },
   { url: '/staff-training',                        changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/training-platform',                     changeFrequency: 'monthly', priority: 0.9 },
   { url: '/hr-policies',                           changeFrequency: 'monthly', priority: 0.9 },
   { url: '/care-audits',                           changeFrequency: 'monthly', priority: 0.9 },
   { url: '/cqc-compliance',                        changeFrequency: 'monthly', priority: 0.9 },

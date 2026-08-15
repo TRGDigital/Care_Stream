@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
@@ -7,6 +8,10 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
+import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
+import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
+import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 
@@ -43,6 +48,16 @@ async function getCatalogue(): Promise<Catalogue> {
     // fall through to an empty catalogue
   }
   return { groups: {}, settings: [], topics: [] }
+}
+
+// Live one-lesson taster for the hero — a real lesson from the Care Certificate
+// course, the same interactive demo card the /go landing pages lead with.
+async function getHeroDemo(): Promise<TrainingDemoData | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules/care-certificate/demo?v=2`, { next: { revalidate: 300 } })
+    if (res.ok) return (await res.json())?.data?.demo ?? null
+  } catch { /* fall through */ }
+  return null
 }
 
 export const metadata = {
@@ -125,7 +140,7 @@ function TrainingDashboardMockup() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function StaffTrainingPage() {
-  const catalogue = await getCatalogue()
+  const [catalogue, heroDemo] = await Promise.all([getCatalogue(), getHeroDemo()])
   const s = makeSlot(STAFF_TRAINING_SLOTS, await getContentSlots('/staff-training'))
 
   const PROBLEM_CARDS = [
@@ -175,36 +190,102 @@ export default async function StaffTrainingPage() {
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-hero-gradient">
-        <div className="absolute inset-0 dot-mesh" />
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="absolute -bottom-24 -left-16 h-[280px] w-[280px] rounded-full bg-teal/30" />
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: 'linear-gradient(to bottom right, transparent 49.5%, #fff 50%)' }}
-        />
-        <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+      {/* Hero — copy left, interactive demo focal card right, care photo bled into the white (mirrors /go) */}
+      <section className="relative overflow-hidden bg-white">
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/care-provider-hero.jpg" alt="" className="absolute inset-x-0 top-0 h-[72rem] w-full object-cover object-[40%_12%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/90 to-white" />
+        </div>
+        <div className="relative mx-auto max-w-content px-6 py-16 md:py-20">
+          <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
             <div>
-              <SectionLabel light>{s('hero.label')}</SectionLabel>
-              <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                {s('hero.h1')}
+              <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
+                  <ShieldCheck size={14} /> CQC-aligned training for care teams
+                </span>
+                {/* CPD badge — swap in the official CPD Certified logo once approval lands */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
+                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
+                  Approved
+                </span>
+              </div>
+              <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
+                Annual training your team completes, not just ticks off
               </h1>
-              <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                {s('hero.intro')}
-              </p>
+              <ul className="mb-8 space-y-3">
+                {[
+                  'CPD approved courses, recognised professional development for your team',
+                  'Ready made courses for every mandatory subject, built for real learning',
+                  'One licence per staff member, allocated in one click',
+                  'Completed in the hub in over 60 languages',
+                  'Certificates and CQC ready evidence handled for you',
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-neutral-dark">
+                    <CheckCircle2 size={20} className="mt-0.5 flex-shrink-0 text-teal" />
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
-                  Start Free Trial
-                </Link>
-                <Link href="/demo" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">
+                <a href="#course-library" className="btn-amber rounded-btn px-8 py-4 text-center text-sm">
+                  Browse the courses
+                </a>
+                <Link href="/demo" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
                   Book a Demo
                 </Link>
               </div>
+              {/* Directional cue pointing across to the live demo (desktop) */}
+              <div className="mt-6 hidden items-center gap-3 lg:flex">
+                <span className="text-lg font-extrabold text-teal">Try it: a real lesson and question</span>
+                <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              {/* Mobile: the demo is below the copy */}
+              <div className="mt-5 flex items-center gap-2 lg:hidden">
+                <span className="text-base font-extrabold text-teal">Try it: a real lesson and question</span>
+                <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="flex-shrink-0 text-teal" aria-hidden>
+                  <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              {/* The technology behind it all */}
+              <div className="mt-8 border-t border-gray-200/70 pt-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">
+                  Specialists in the technology behind it all
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {[
+                    { name: 'Google Cloud', Icon: GoogleCloud },
+                    { name: 'OpenAI', Icon: OpenAI },
+                    { name: 'Claude', Icon: Claude },
+                    { name: 'Supabase', Icon: Supabase },
+                    { name: 'Pinecone', Icon: Pinecone },
+                    { name: 'Google Ads', Icon: GoogleAds },
+                    { name: 'AWS', Icon: Aws },
+                  ].map(({ name, Icon }) => (
+                    <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark shadow-sm">
+                      <span className="h-3.5 w-3.5"><Icon /></span>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
+                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  team&apos;s care certificate training stays accurate, always up to date with the latest
+                  guidance, and is delivered in{' '}
+                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.
+                </p>
+              </div>
             </div>
-            <div className="flex justify-center lg:justify-end">
-              <TrainingDashboardMockup />
-            </div>
+
+            {/* Interactive demo as the hero focal element */}
+            {heroDemo
+              ? <TrainingDemo demo={heroDemo} buyHref="/buy/care-certificate" variant="card" />
+              : <div className="flex justify-center lg:justify-end"><TrainingDashboardMockup /></div>}
           </div>
         </div>
       </section>
@@ -214,34 +295,38 @@ export default async function StaffTrainingPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <div>
-              <SectionLabel>{s('problem.label')}</SectionLabel>
+              <SectionLabel>The problem with annual training</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
-                {s('problem.h2')}
+                Staff forget most of what they learn within days
               </h2>
-              <div className={`space-y-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}>
-                <div dangerouslySetInnerHTML={{ __html: s('problem.p1') }} />
-                <div dangerouslySetInnerHTML={{ __html: s('problem.p2') }} />
+              <div className="space-y-4 text-lg leading-relaxed text-neutral-mid">
+                <p>
+                  Most annual training is a long slideshow and a quiz, completed once and forgotten by
+                  the weekend. It ticks the compliance box but does little for the person being
+                  supported on Monday morning.
+                </p>
+                <p>
+                  CareStream&apos;s CPD annual training courses are built for retention: short lessons, real
+                  care scenarios, quick checks along the way, and a follow up loop that returns to
+                  anything a learner got wrong until they truly know it.
+                </p>
               </div>
             </div>
             <div className="grid gap-4">
-              {PROBLEM_CARDS.map(({ icon, key, dim }) => (
-                <div
-                  key={key}
-                  className={`card-lift rounded-2xl p-6 ${
-                    dim
-                      ? 'border border-gray-100 bg-white shadow-card'
-                      : 'bg-teal-gradient shadow-teal-glow'
-                  }`}
-                >
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="text-2xl">{icon}</span>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${dim ? 'text-neutral-mid' : 'text-white/60'}`}>
-                      {s(`${key}.label`)}
-                    </p>
-                  </div>
-                  <p className={`leading-relaxed ${dim ? 'text-neutral-mid' : 'text-white'}`}>{s(`${key}.text`)}</p>
+              <div className="card-lift rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="text-2xl">📅</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">Traditional annual training</p>
                 </div>
-              ))}
+                <p className="leading-relaxed text-neutral-mid">One long session a year, a certificate, and no way of knowing what actually stuck. Renewal dates chased through a spreadsheet.</p>
+              </div>
+              <div className="card-lift rounded-2xl bg-teal-gradient p-6 shadow-teal-glow">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="text-2xl">🎓</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">CPD annual training with CareStream</p>
+                </div>
+                <p className="leading-relaxed text-white">Bitesize lessons with scenarios and checks, measured learning gain, automatic renewals, and certificates and evidence that build themselves.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -250,16 +335,21 @@ export default async function StaffTrainingPage() {
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('how.label')}</SectionLabel>
+          <SectionLabel>How it works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('how.h2')}
+            Buy a course, allocate it, and track every answer
           </h2>
           <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('how.intro')}
+            From choosing a course to a certificate on the staff record, the whole journey takes
+            minutes of your time. Your staff do the learning; CareStream does the rest.
           </p>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {HOW_STEPS.map(({ step, Icon, key }) => (
+            {[
+              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made CPD annual training courses below and buy a licence for each staff member who needs one. Volume discounts apply automatically.' },
+              { step: '02', Icon: Users, title: 'Allocate in one click', body: 'Assign the course from your console. Your staff member is emailed straight away and the course appears in their own hub, in their first language.' },
+              { step: '03', Icon: BarChart2, title: 'Track completion and evidence', body: 'Watch completion, scores and learning gain as they happen. Certificates land on the staff record automatically and you are emailed the moment each course is passed.' },
+            ].map(({ step, Icon, title, body }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
@@ -269,60 +359,17 @@ export default async function StaffTrainingPage() {
                     <Icon size={18} className="text-teal" />
                   </div>
                 </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
+                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{title}</h3>
+                <p className="text-sm leading-relaxed text-neutral-mid">{body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Two kinds of training ─────────────────────────────────────────── */}
-      <section className="bg-white py-24">
-        <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('two.label')}</SectionLabel>
-          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('two.h2')}
-          </h2>
-          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('two.intro')}
-          </p>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
-                <MessageSquare size={22} className="text-teal" />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card1.title')}</h3>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                {s('two.card1.body')}
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[s('two.card1.li1'), s('two.card1.li2'), s('two.card1.li3')].map((p) => (
-                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-teal/20 bg-teal/5 p-8 shadow-card">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-teal-glow">
-                <GraduationCap size={22} />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-neutral-dark">{s('two.card2.title')}</h3>
-              <p className="mb-4 leading-relaxed text-neutral-mid">
-                {s('two.card2.body')}
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-mid">
-                {[s('two.card2.li1'), s('two.card2.li2'), s('two.card2.li3')].map((p) => (
-                  <li key={p} className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />{p}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── Annual mandatory training library ─────────────────────────────── */}
       {catalogue.topics.length > 0 && (
-        <section className="bg-neutral-light py-24">
+        <section id="course-library" className="scroll-mt-20 bg-neutral-light py-24">
           <div className="mx-auto max-w-content px-6">
             <SectionLabel>{s('library.label')}</SectionLabel>
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
@@ -339,70 +386,49 @@ export default async function StaffTrainingPage() {
         </section>
       )}
 
-      {/* ── Built from your policies ──────────────────────────────────────── */}
+      {/* ── Inside every course: the six learning features ────────────────── */}
+      <TrainingCpdFeatures className="bg-white" />
+
+      {/* ── The follow up loop: wrong answers become lessons ──────────────── */}
+      <TrainingFollowUpLoop className="bg-neutral-light" />
+
+      {/* ── Reporting that runs itself ─────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('policies.label')}</SectionLabel>
-          <h2 className="mb-10 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('policies.h2')}
-          </h2>
-          <div className="grid items-start gap-12 lg:grid-cols-2">
-            <div>
-              <h3 className="mb-4 text-2xl font-extrabold leading-tight text-neutral-dark">
-                {s('policies.h3')}
-              </h3>
-              <div
-                className={`mb-4 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
-                dangerouslySetInnerHTML={{ __html: s('policies.p1') }}
-              />
-              <div
-                className={`mb-6 text-lg leading-relaxed text-neutral-mid ${RICH_LINK}`}
-                dangerouslySetInnerHTML={{ __html: s('policies.p2') }}
-              />
-              <div className="space-y-3">
-                {POLICY_FEATURES.map(({ Icon, key }) => (
-                  <div key={key} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <Icon size={18} className="mt-0.5 flex-shrink-0 text-teal" />
-                    <div>
-                      <p className="mb-0.5 text-sm font-semibold text-neutral-dark">{s(`${key}.label`)}</p>
-                      <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.text`)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="grid items-start gap-14 lg:grid-cols-2">
+            <div className="lg:sticky lg:top-24">
+              <SectionLabel>Reporting</SectionLabel>
+              <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
+                Reporting that runs itself
+              </h2>
+              <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
+                Every completion updates the record automatically: scores, learning gain, learning time,
+                certificates and learner feedback, all in one place. You are emailed the moment a staff
+                member passes, and every record is ready for inspection without any admin.
+              </p>
             </div>
-
-            {/* Generated module mockup */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[380px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
-                <div className="relative h-24 bg-teal-gradient">
-                  <span className="absolute left-3 top-3 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">Draft, awaiting approval</span>
-                  <span className="absolute right-3 top-3 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-white">Tailored, 1 credit</span>
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-white">
-                    <Sparkles size={13} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">AI-generated module</span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h4 className="mb-3 text-sm font-bold text-neutral-dark">Annual Refresher: Medication Management</h4>
-                  <div className="space-y-2">
-                    {[
-                      { tag: 'Teach',    text: 'Safe administration and the five rights' },
-                      { tag: 'Scenario', text: 'A resident refuses their prescribed medication' },
-                      { tag: 'Check',    text: 'One quick knowledge check' },
-                    ].map(({ tag, text }) => (
-                      <div key={tag} className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                        <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-teal">{tag}</span>
-                        <span className="text-[11px] text-neutral-dark">{text}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 rounded-lg border border-teal/20 bg-teal/5 px-3 py-2">
-                    <p className="text-[11px] font-semibold text-teal">Assessment: 20 questions, four options each</p>
-                  </div>
-                  <p className="mt-3 text-[10px] text-neutral-mid">Grounded in your medicines policy and 5 more sources.</p>
-                </div>
-              </div>
+            <div className="space-y-5">
+              <Image
+                src="/reporting-staff-record.jpg"
+                alt="A staff member's training record: completion, comparison to the team, statutory training record and annual training with scores, renewals and certificates"
+                width={1600}
+                height={1213}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
+              <Image
+                src="/reporting-completion-email.jpg"
+                alt="The completion email sent to admins the moment a staff member passes, showing score, CPD time, learning gain and a link to the certificate"
+                width={1100}
+                height={1025}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
+              <Image
+                src="/reporting-training-matrix.jpg"
+                alt="The whole team training matrix showing every staff member against every module with completion status at a glance"
+                width={1600}
+                height={866}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
             </div>
           </div>
         </div>
@@ -705,45 +731,11 @@ export default async function StaffTrainingPage() {
         </div>
       </section>
 
-      {/* ── Face-to-face training tracking ────────────────────────────────── */}
-      <section className="bg-neutral-light py-24">
-        <div className="mx-auto max-w-content px-6">
-          <SectionLabel>{s('f2f.label')}</SectionLabel>
-          <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            {s('f2f.h2')}
-          </h2>
-          <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
-            {s('f2f.intro')}
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {F2F_STEPS.map(({ step, Icon, key }) => (
-              <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal text-sm font-extrabold text-white shadow-teal-glow">
-                    {step}
-                  </span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-light">
-                    <Icon size={18} className="text-teal" />
-                  </div>
-                </div>
-                <h3 className="mb-3 text-lg font-bold text-neutral-dark">{s(`${key}.title`)}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{s(`${key}.body`)}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-10 max-w-2xl text-base leading-relaxed text-neutral-mid">
-            {s('f2f.footnote')}
-          </p>
-        </div>
-      </section>
-
       {/* ── Training matrix ───────────────────────────────────────────────── */}
       <section className="bg-neutral-light py-24">
         <div className="mx-auto max-w-content px-6">
-          <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
-            <div>
+          <div className="grid items-start gap-14 lg:grid-cols-2">
+            <div className="lg:sticky lg:top-24">
               <SectionLabel>{s('matrix.label')}</SectionLabel>
               <h2 className="mb-6 text-4xl font-extrabold leading-tight text-neutral-dark">
                 {s('matrix.h2')}
@@ -753,16 +745,21 @@ export default async function StaffTrainingPage() {
                 <div dangerouslySetInnerHTML={{ __html: s('matrix.p2') }} />
               </div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-card">
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-mid">{s('matrix.listLabel')}</p>
-              <ul className="space-y-3">
-                {[s('matrix.li1'), s('matrix.li2'), s('matrix.li3'), s('matrix.li4'), s('matrix.li5')].map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-neutral-dark">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-teal" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-5">
+              <Image
+                src="/matrix-training-calendar.jpg"
+                alt="The training calendar showing face to face sessions, adhoc training and annual training allocations and completions across the month"
+                width={1600}
+                height={745}
+                className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+              />
+              <Image
+                src="/matrix-f2f-matrix.jpg"
+                alt="The face to face training matrix showing each staff member's latest attended session per topic with renewal status"
+                width={1600}
+                height={574}
+                className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+              />
             </div>
           </div>
         </div>

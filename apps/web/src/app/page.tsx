@@ -25,7 +25,7 @@ import { HOME_SLOTS } from '@/lib/page-slots/home'
 import {
   Zap, ClipboardCheck, Upload, MessageSquare, Mic,
   BookOpen, Shield, ArrowRight, Check, ShieldAlert,
-  GraduationCap, HelpCircle, FileText,
+  GraduationCap, HelpCircle, FileText, CheckCircle2, Sparkles,
 } from 'lucide-react'
 
 type Slot = (key: string) => string
@@ -229,11 +229,91 @@ function TheProblem({ s }: { s: Slot }) {
   )
 }
 
+// ── Two kinds of training: the platform product and the CPD course shop ───────
+function TwoKindsOfTraining() {
+  return (
+    <section className="bg-neutral-light py-24">
+      <div className="mx-auto max-w-content px-6">
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+          <SectionLabel>Training</SectionLabel>
+          <h2 className="mb-5 text-4xl font-extrabold leading-tight text-neutral-dark md:text-5xl">
+            Two kinds of training, one hub
+          </h2>
+          <p className="text-lg leading-relaxed text-neutral-mid">
+            Training your service builds from its own policies, and ready made CPD annual training
+            courses your team can start today. Both are completed in the same staff hub, in each
+            learner&apos;s first language, with certificates and evidence handled for you.
+          </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Platform training */}
+          <div className="flex flex-col rounded-2xl border border-gray-100 bg-white p-8 shadow-card">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-light">
+              <Sparkles size={22} className="text-teal" />
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-neutral-dark">Training</h3>
+            <p className="mb-5 leading-relaxed text-neutral-mid">
+              Adhoc training modules generated from your own policies, so staff learn your agreed
+              ways of working, not generic content.
+            </p>
+            <ul className="mb-6 space-y-2.5 text-sm text-neutral-dark">
+              {[
+                'Built from your policies and approved by you before staff see it',
+                'Face to face sessions organised, with a payroll ready report',
+                'One training matrix across annual, adhoc and face to face',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-2.5">
+                  <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-teal" />
+                  <span className="leading-relaxed">{b}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/training-platform" className="mt-auto inline-flex items-center justify-center gap-2 rounded-btn bg-teal px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-dark">
+              Explore Training <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* CPD Annual Training — the blue stand-out, matching its menu tile */}
+          <div className="flex flex-col rounded-2xl border border-blue-200 bg-blue-50 p-8 shadow-card">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                <BookOpen size={22} />
+              </div>
+              <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white">CPD</span>
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-blue-900">CPD Annual Training</h3>
+            <p className="mb-5 leading-relaxed text-neutral-mid">
+              Ready made annual courses for every mandatory subject, built for real learning and
+              measured learning gain.
+            </p>
+            <ul className="mb-6 space-y-2.5 text-sm text-neutral-dark">
+              {[
+                'Buy a licence per staff member and allocate in one click',
+                'Completed in the hub in over 60 languages',
+                'Certificates and CQC ready evidence build themselves',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-2.5">
+                  <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-blue-600" />
+                  <span className="leading-relaxed">{b}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/staff-training" className="mt-auto inline-flex items-center justify-center gap-2 rounded-btn bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
+              Browse the courses <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── The centrepiece: policies in, everything out ──────────────────────────────
 function PolicyEngine({ s }: { s: Slot }) {
   const spokes = [
     { Icon: MessageSquare,  href: '/care-policies',  title: s('engine.spoke1.title'), body: s('engine.spoke1.body') },
-    { Icon: GraduationCap,  href: '/staff-training', title: s('engine.spoke2.title'), body: s('engine.spoke2.body') },
+    { Icon: GraduationCap,  href: '/training-platform', title: s('engine.spoke2.title'), body: s('engine.spoke2.body') },
     { Icon: ClipboardCheck, href: '/care-audits',    title: s('engine.spoke3.title'), body: s('engine.spoke3.body') },
     { Icon: Shield,         href: '/cqc-compliance', title: s('engine.spoke4.title'), body: s('engine.spoke4.body') },
   ]
@@ -476,7 +556,7 @@ function OurServices({ s }: { s: Slot }) {
   const services = [
     { Icon: FileText,      title: s('services.s1.title'), href: '/care-policies',       desc: s('services.s1.desc') },
     { Icon: BookOpen,      title: s('services.s2.title'), href: '/hr-policies',         desc: s('services.s2.desc') },
-    { Icon: GraduationCap, title: s('services.s3.title'), href: '/staff-training',      desc: s('services.s3.desc') },
+    { Icon: GraduationCap, title: s('services.s3.title'), href: '/training-platform',   desc: s('services.s3.desc') },
     { Icon: ClipboardCheck,title: s('services.s4.title'), href: '/care-audits',         desc: s('services.s4.desc') },
     { Icon: Shield,        title: s('services.s5.title'), href: '/cqc-compliance',      desc: s('services.s5.desc') },
     { Icon: HelpCircle,    title: s('services.s6.title'), href: '/cqc-staff-questions', desc: s('services.s6.desc') },
@@ -1005,6 +1085,7 @@ export default async function HomePage() {
         <TheProblem s={s} />
         <LogoMarquee />
         <PolicyEngine s={s} />
+        <TwoKindsOfTraining />
         <RegulationLayerSection s={s} />
         <OurServices s={s} />
         <MultilingualSection s={s} />

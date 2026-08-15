@@ -9,6 +9,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
+import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 
@@ -45,6 +46,16 @@ async function getCatalogue(): Promise<Catalogue> {
     // fall through to an empty catalogue
   }
   return { groups: {}, settings: [], topics: [] }
+}
+
+// Live one-lesson taster for the hero — a real lesson from the Care Certificate
+// course, the same interactive demo card the /go landing pages lead with.
+async function getHeroDemo(): Promise<TrainingDemoData | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules/care-certificate/demo?v=2`, { next: { revalidate: 300 } })
+    if (res.ok) return (await res.json())?.data?.demo ?? null
+  } catch { /* fall through */ }
+  return null
 }
 
 export const metadata = {
@@ -127,7 +138,7 @@ function TrainingDashboardMockup() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function StaffTrainingPage() {
-  const catalogue = await getCatalogue()
+  const [catalogue, heroDemo] = await Promise.all([getCatalogue(), getHeroDemo()])
   const s = makeSlot(STAFF_TRAINING_SLOTS, await getContentSlots('/staff-training'))
 
   const PROBLEM_CARDS = [
@@ -188,24 +199,28 @@ export default async function StaffTrainingPage() {
         <div className="relative mx-auto max-w-content px-6 pb-20 pt-20 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <SectionLabel light>{s('hero.label')}</SectionLabel>
+              <SectionLabel light>CPD Annual Training</SectionLabel>
               <h1 className="mb-5 max-w-xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
-                {s('hero.h1')}
+                Annual training your team completes, not just ticks off
               </h1>
               <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/75">
-                {s('hero.intro')}
+                Ready made courses for every mandatory subject, built for real learning. Buy a licence per
+                staff member, allocate in one click, and your team completes the course in their own hub,
+                in their own language, with certificates and CQC ready evidence handled for you.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="btn-amber rounded-btn px-8 py-4 text-sm">
-                  Start Free Trial
-                </Link>
+                <a href="#course-library" className="btn-amber rounded-btn px-8 py-4 text-sm">
+                  Browse the courses
+                </a>
                 <Link href="/demo" className="btn-ghost-white rounded-btn px-8 py-4 text-sm">
                   Book a Demo
                 </Link>
               </div>
             </div>
             <div className="flex justify-center lg:justify-end">
-              <TrainingDashboardMockup />
+              {heroDemo
+                ? <div className="w-full max-w-[440px]"><TrainingDemo demo={heroDemo} buyHref="/buy/care-certificate" variant="card" /></div>
+                : <TrainingDashboardMockup />}
             </div>
           </div>
         </div>
@@ -281,7 +296,7 @@ export default async function StaffTrainingPage() {
 
       {/* ── Annual mandatory training library ─────────────────────────────── */}
       {catalogue.topics.length > 0 && (
-        <section className="bg-neutral-light py-24">
+        <section id="course-library" className="scroll-mt-20 bg-neutral-light py-24">
           <div className="mx-auto max-w-content px-6">
             <SectionLabel>{s('library.label')}</SectionLabel>
             <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">

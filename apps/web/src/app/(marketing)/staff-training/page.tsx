@@ -8,6 +8,7 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
+import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
@@ -201,7 +202,12 @@ export default async function StaffTrainingPage() {
             <div className="lg:sticky lg:top-24">
               <div className="mb-5 flex flex-wrap items-center gap-2.5">
                 <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
-                  <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
+                  <ShieldCheck size={14} /> CQC-aligned training for care teams
+                </span>
+                {/* CPD badge — swap in the official CPD Certified logo once approval lands */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
+                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
+                  Approved
                 </span>
               </div>
               <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
@@ -209,6 +215,7 @@ export default async function StaffTrainingPage() {
               </h1>
               <ul className="mb-8 space-y-3">
                 {[
+                  'CPD approved courses, recognised professional development for your team',
                   'Ready made courses for every mandatory subject, built for real learning',
                   'One licence per staff member, allocated in one click',
                   'Completed in the hub in over 60 languages',
@@ -243,6 +250,35 @@ export default async function StaffTrainingPage() {
                   <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                   <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
+              </div>
+
+              {/* The technology behind it all */}
+              <div className="mt-8 border-t border-gray-200/70 pt-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-neutral-mid">
+                  Specialists in the technology behind it all
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {[
+                    { name: 'Google Cloud', Icon: GoogleCloud },
+                    { name: 'OpenAI', Icon: OpenAI },
+                    { name: 'Claude', Icon: Claude },
+                    { name: 'Supabase', Icon: Supabase },
+                    { name: 'Pinecone', Icon: Pinecone },
+                    { name: 'Google Ads', Icon: GoogleAds },
+                    { name: 'AWS', Icon: Aws },
+                  ].map(({ name, Icon }) => (
+                    <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark shadow-sm">
+                      <span className="h-3.5 w-3.5"><Icon /></span>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
+                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  team&apos;s care certificate training stays accurate, always up to date with the latest
+                  guidance, and is delivered in{' '}
+                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.
+                </p>
               </div>
             </div>
 

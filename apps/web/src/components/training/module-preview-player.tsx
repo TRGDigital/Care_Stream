@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { apiAssetUrl } from '@/lib/api-client'
 import { ChevronLeft } from 'lucide-react'
+import { CourseSummarySheet, PracticalChecklistSheet } from '@/components/training/course-printables'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 
@@ -49,6 +50,7 @@ export type PreviewModule = {
 
 export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; name: string; onBack: () => void }) {
   const [step, setStep] = useState(0)
+  const [sheet, setSheet] = useState<'summary' | 'practical' | null>(null)
   useEffect(() => { if (typeof window !== 'undefined') window.scrollTo({ top: 0 }) }, [step])
 
   const sections = m.sections ?? []
@@ -58,8 +60,9 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
   const references = lc?.references ?? m.references ?? []
   const baseline = lc?.baseline ?? m.baseline ?? []
   const practicalChecklist = lc?.practical_checklist ?? m.practical_checklist ?? []
-  type StepT = { type: 'overview' } | { type: 'section'; i: number } | { type: 'question'; i: number } | { type: 'done' }
+  type StepT = { type: 'overview' } | { type: 'baseline' } | { type: 'section'; i: number } | { type: 'question'; i: number } | { type: 'done' }
   const steps: StepT[] = [{ type: 'overview' }]
+  if (baseline.length) steps.push({ type: 'baseline' })
   sections.forEach((_, i) => steps.push({ type: 'section', i }))
   questions.forEach((_, i) => steps.push({ type: 'question', i }))
   steps.push({ type: 'done' })
@@ -70,6 +73,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
   const label =
     !cur ? '' :
     cur.type === 'overview' ? 'Overview' :
+    cur.type === 'baseline' ? 'Before you start' :
     cur.type === 'section' ? `Section ${cur.i + 1} of ${sections.length}` :
     cur.type === 'question' ? `Question ${cur.i + 1} of ${questions.length}` :
     'Complete'
@@ -145,6 +149,30 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
         </div>
       )}
 
+      {cur?.type === 'baseline' && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-700">Before you start</p>
+          <p className="mb-1 text-base font-bold text-neutral-dark">A quick knowledge check</p>
+          <p className="mb-4 text-sm text-neutral-mid">Staff answer these {baseline.length} questions before the lesson with no right or wrong feedback shown. Their score is compared with the final assessment to evidence learning gain. Correct answers are highlighted here for your review only.</p>
+          <div className="space-y-4">
+            {baseline.map((q, qi) => (
+              <div key={q.id ?? qi}>
+                <p className="mb-1.5 text-sm font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
+                <ul className="space-y-1.5">
+                  {(q.options ?? []).map((opt, oi) => (
+                    <li key={oi} className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${oi === q.correct ? 'border-green-300 bg-green-50 font-medium text-green-800' : 'border-gray-200 text-neutral-dark'}`}>
+                      <span>{String.fromCharCode(65 + oi)}.</span>
+                      <span>{opt}</span>
+                      {oi === q.correct && <span className="ml-auto text-xs font-semibold text-green-600">Correct</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {cur?.type === 'section' && sections[cur.i] && (
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
           {sections[cur.i].image_url && (
@@ -212,14 +240,33 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
           <div className="text-3xl">✅</div>
           <h2 className="mt-2 text-lg font-bold text-neutral-dark">End of module</h2>
           <p className="mt-1 text-sm text-neutral-mid">That&rsquo;s the full <span className="font-medium">{m.name || name}</span> module — {sections.length} section{sections.length === 1 ? '' : 's'} and {questions.length} assessment question{questions.length === 1 ? '' : 's'}.</p>
+
+          {/* What happens for staff after passing — reviewers see the reflective step here */}
+          <div className="mx-auto mt-5 max-w-lg rounded-xl border border-teal/20 bg-teal-light/20 p-4 text-left">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-teal">After passing, staff are asked</p>
+            <p className="text-sm font-medium text-neutral-dark">&ldquo;What will you do differently in your day to day work after this course?&rdquo;</p>
+            <p className="mt-1.5 text-xs text-neutral-mid">Their reflection is saved to their training record and shown with their certificate, alongside their learning gain (pre-course check score vs final assessment result).</p>
+          </div>
+
           {m.standards?.length > 0 && (
             <div className="mt-4">
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Mapped standards</p>
               <div className="flex flex-wrap justify-center gap-2">{m.standards.map((s, i) => <span key={i} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-neutral-mid">{s}</span>)}</div>
             </div>
           )}
+
+          {/* Printable artefacts that ship with the course */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <button onClick={() => setSheet('summary')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Course summary (print)</button>
+            {practicalChecklist.length > 0 && (
+              <button onClick={() => setSheet('practical')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Observed competency checklist (print)</button>
+            )}
+          </div>
         </div>
       )}
+
+      {sheet === 'summary' && <CourseSummarySheet m={m} onClose={() => setSheet(null)} />}
+      {sheet === 'practical' && <PracticalChecklistSheet m={m} onClose={() => setSheet(null)} />}
 
       <div className="mt-6 flex items-center justify-between">
         <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-neutral-mid transition-colors hover:bg-gray-100 disabled:opacity-40">← Back</button>

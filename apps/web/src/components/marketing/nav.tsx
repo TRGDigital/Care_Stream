@@ -18,7 +18,8 @@ type MenuItem = {
 }
 
 const SERVICES: MenuItem[] = [
-  { href: '/staff-training',        label: 'Staff Training',        desc: 'Policy answers for care staff, instantly',              Icon: GraduationCap },
+  { href: '/training-platform',     label: 'Training',              desc: 'Adhoc modules built from your own policies, face to face sessions and the full training matrix', Icon: GraduationCap },
+  { href: '/staff-training',        label: 'CPD Annual Training',   desc: 'Ready made annual courses to buy and complete in the staff hub', Icon: BookOpen },
   { href: '/hr-policies',           label: 'HR Policies',           desc: 'Staff handbook access in any language',                  Icon: Users },
   { href: '/care-audits',           label: 'Care Audits',           desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
   { href: '/cqc-compliance',        label: 'CQC & Compliance',      desc: 'Readiness tracking and evidence management',             Icon: Shield },

@@ -7,6 +7,7 @@ import {
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
+import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 
@@ -338,6 +339,9 @@ export default async function StaffTrainingPage() {
           </div>
         </section>
       )}
+
+      {/* ── Inside every course: the six learning features ────────────────── */}
+      <TrainingCpdFeatures className="bg-white" />
 
       {/* ── Built from your policies ──────────────────────────────────────── */}
       <section className="bg-white py-24">

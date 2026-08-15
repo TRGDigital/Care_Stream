@@ -17,6 +17,7 @@ import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/trai
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
 import { TrainingLanguageSection } from '@/components/marketing/training-language-section'
+import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { JsonLd } from '@/components/json-ld'
 import { courseSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
@@ -508,6 +509,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
       {/* Master explainer video (appears once a video URL is configured) */}
       <TrainingVideo />
+
+      {/* Inside every course: the six learning features */}
+      <TrainingCpdFeatures className="bg-white" />
 
       {/* Why choose CareStream */}
       <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))} />

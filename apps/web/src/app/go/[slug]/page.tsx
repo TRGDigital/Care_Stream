@@ -14,6 +14,7 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
+import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 
@@ -414,6 +415,9 @@ export default async function GoLandingPage({
 
       {/* Why choose CareStream */}
       <WhyChooseCareStream className="bg-neutral-light" durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))} />
+
+      {/* Inside every course: the six learning features */}
+      <TrainingCpdFeatures className="bg-white" />
 
       {/* FAQ */}
       <HomeFaq faqs={faqs} />

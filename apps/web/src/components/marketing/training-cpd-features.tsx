@@ -42,37 +42,68 @@ export function TrainingCpdFeatures({ className = '' }: { className?: string }) 
   return (
     <section className={`px-6 py-16 sm:py-20 ${className}`}>
       <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-teal">Inside every course</span>
-          <h2 className="mt-2 text-3xl font-extrabold text-neutral-dark sm:text-4xl">Built for real learning, not box ticking</h2>
-          <p className="mt-3 text-neutral-mid">
-            Every CareStream course goes further than a lesson and a quiz. These features come as standard on
-            every course, giving your staff a richer way to learn and giving you the evidence to prove it.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-light text-teal">
-                <Icon size={20} />
-              </span>
-              <h3 className="mt-4 text-base font-bold text-neutral-dark">{title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-neutral-mid">{body}</p>
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
+          {/* Sticky text: heading + the six features stay in view while the screenshots scroll */}
+          <div className="lg:sticky lg:top-24">
+            <span className="text-xs font-bold uppercase tracking-widest text-teal">Inside every course</span>
+            <h2 className="mt-2 text-3xl font-extrabold text-neutral-dark sm:text-4xl">Built for real learning, not box ticking</h2>
+            <p className="mt-3 text-neutral-mid">
+              Every CareStream course goes further than a lesson and a quiz. These features come as standard on
+              every course, giving your staff a richer way to learn and giving you the evidence to prove it.
+            </p>
+            <div className="mt-6 space-y-3">
+              {FEATURES.map(({ Icon, title, body }) => (
+                <div key={title} className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-card">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal-light text-teal">
+                    <Icon size={18} />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-dark">{title}</h3>
+                    <p className="mt-0.5 text-sm leading-relaxed text-neutral-mid">{body}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* The learner journey in one view: the training hub, the end of module
-            screen with reflection and mapped standards, and the printable course summary */}
-        <div className="mt-10">
-          <Image
-            src="/cpd-course-features.jpg"
-            alt="The CareStream training hub, the end of module screen with reflective practice and mapped standards, and the printable course summary"
-            width={2860}
-            height={1240}
-            className="h-auto w-full rounded-3xl border border-gray-100 shadow-card"
-          />
+          {/* The learner journey, screenshot by screenshot */}
+          <div className="space-y-5">
+            <Image
+              src="/cpd-training-hub.jpg"
+              alt="The staff training hub showing assigned courses, progress and follow up questions"
+              width={1600}
+              height={848}
+              className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+            />
+            <Image
+              src="/cpd-module-complete.jpg"
+              alt="The end of module screen with the reflective practice prompt, mapped standards and the printable course summary and competency checklist"
+              width={1400}
+              height={1110}
+              className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+            />
+            <Image
+              src="/cpd-course-summary.jpg"
+              alt="The printable one page course summary with learning outcomes, key points, key terms and references"
+              width={754}
+              height={1189}
+              className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+            />
+            <Image
+              src="/cpd-observation-checklist.jpg"
+              alt="The printable observed competency checklist with tick boxes and a manager sign off section"
+              width={1123}
+              height={1276}
+              className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+            />
+            <Image
+              src="/follow-up-hub.jpg"
+              alt="The Follow-up section of the staff hub listing the questions a staff member got wrong, each with Learn and retry options"
+              width={1400}
+              height={902}
+              className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+            />
+          </div>
         </div>
       </div>
     </section>

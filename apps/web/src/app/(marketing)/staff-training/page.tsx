@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   CheckCircle2, Mail, Globe, BarChart2,
   Bell, RefreshCw, Brain, ShieldCheck, Zap, Users,
@@ -331,9 +332,37 @@ export default async function StaffTrainingPage() {
             certificates and learner feedback, all in one place. You are emailed the moment a staff
             member passes, and every record is ready for inspection without any admin.
           </p>
-          <div className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-teal-light/20 text-center">
-            <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
-            <p className="max-w-md px-6 text-xs text-neutral-mid">Screenshot: the training analytics dashboard showing completion, scores and learner feedback</p>
+          <div className="grid gap-5 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <Image
+                src="/reporting-staff-record.jpg"
+                alt="A staff member's training record: completion, comparison to the team, statutory training record and annual training with scores, renewals and certificates"
+                width={1600}
+                height={1213}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
+              <p className="mt-2 text-center text-xs text-neutral-mid">Every staff member has a live record: completion, scores, renewals and certificates</p>
+            </div>
+            <div className="lg:col-span-2">
+              <Image
+                src="/reporting-completion-email.jpg"
+                alt="The completion email sent to admins the moment a staff member passes, showing score, CPD time, learning gain and a link to the certificate"
+                width={1100}
+                height={1025}
+                className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+              />
+              <p className="mt-2 text-center text-xs text-neutral-mid">You are emailed the moment a course is passed, certificate ready to download</p>
+            </div>
+          </div>
+          <div className="mt-6">
+            <Image
+              src="/reporting-training-matrix.jpg"
+              alt="The whole team training matrix showing every staff member against every module with completion status at a glance"
+              width={1600}
+              height={866}
+              className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"
+            />
+            <p className="mt-2 text-center text-xs text-neutral-mid">The whole team at a glance: who has completed what, and what is outstanding</p>
           </div>
         </div>
       </section>
@@ -649,9 +678,21 @@ export default async function StaffTrainingPage() {
                 <div dangerouslySetInnerHTML={{ __html: s('matrix.p2') }} />
               </div>
             </div>
-            <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-white text-center">
-              <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
-              <p className="max-w-md px-6 text-xs text-neutral-mid">Screenshot: the training matrix showing every staff member against every course with status at a glance</p>
+            <div className="space-y-5">
+              <Image
+                src="/matrix-training-calendar.jpg"
+                alt="The training calendar showing face to face sessions, adhoc training and annual training allocations and completions across the month"
+                width={1600}
+                height={745}
+                className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+              />
+              <Image
+                src="/matrix-f2f-matrix.jpg"
+                alt="The face to face training matrix showing each staff member's latest attended session per topic with renewal status"
+                width={1600}
+                height={574}
+                className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+              />
             </div>
           </div>
         </div>

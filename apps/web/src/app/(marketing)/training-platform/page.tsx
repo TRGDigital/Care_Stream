@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Sparkles, BadgeCheck, Globe, CalendarDays, Bell, Banknote,
   BarChart2, Clock, Users, FileCheck2, LayoutGrid, CheckCircle2,
@@ -22,13 +23,16 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-// Dashed placeholder for the product screenshots being supplied later.
-function ImagePlaceholder({ description }: { description: string }) {
+// Product screenshot with the shared card styling.
+function Shot({ src, alt, width, height }: { src: string; alt: string; width: number; height: number }) {
   return (
-    <div className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-teal/30 bg-teal-light/20 text-center">
-      <p className="text-sm font-semibold text-teal/70">Image placeholder</p>
-      <p className="max-w-md px-6 text-xs text-neutral-mid">{description}</p>
-    </div>
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-card"
+    />
   )
 }
 
@@ -118,7 +122,10 @@ export default function TrainingPlatformPage() {
                 />
               </div>
             </div>
-            <ImagePlaceholder description="Screenshot: generating an adhoc module from a policy" />
+            <div className="space-y-5">
+              <Shot src="/platform-adhoc-modules.jpg" alt="The adhoc training library in the admin console, with statutory modules and generated question sets" width={1600} height={939} />
+              <Shot src="/platform-policy-preview.jpg" alt="A policy preview in the admin console, the source document a training module is generated from" width={1600} height={930} />
+            </div>
           </div>
         </div>
       </section>
@@ -128,7 +135,10 @@ export default function TrainingPlatformPage() {
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-center gap-14 lg:grid-cols-2">
             <div className="order-2 lg:order-1">
-              <ImagePlaceholder description="Screenshot: the face to face training planner" />
+              <div className="space-y-5">
+                <Shot src="/platform-f2f-new-session.jpg" alt="Creating a new face to face session: topic, date, length, capacity, renewal period and allocated staff" width={1400} height={1084} />
+                <Shot src="/platform-f2f-session-detail.jpg" alt="A face to face session with attendance, competency, sign in sheet evidence and the option to send the digital module to those who missed" width={1100} height={1224} />
+              </div>
             </div>
             <div className="order-1 lg:order-2">
               <SectionLabel>Practical sessions</SectionLabel>
@@ -194,7 +204,10 @@ export default function TrainingPlatformPage() {
                 />
               </div>
             </div>
-            <ImagePlaceholder description="Screenshot: the training analytics dashboard" />
+            <div className="space-y-5">
+              <Shot src="/reporting-staff-record.jpg" alt="A staff member's training record: completion, comparison to the team, statutory record and annual training with scores and certificates" width={1600} height={1213} />
+              <Shot src="/reporting-completion-email.jpg" alt="The completion email sent to admins the moment a staff member passes, with score, CPD time and learning gain" width={1100} height={1025} />
+            </div>
           </div>
         </div>
       </section>
@@ -235,7 +248,10 @@ export default function TrainingPlatformPage() {
                 />
               </div>
             </div>
-            <ImagePlaceholder description="Screenshot: the training matrix across annual, adhoc and face to face" />
+            <div className="space-y-5">
+              <Shot src="/reporting-training-matrix.jpg" alt="The whole team training matrix covering adhoc, statutory, specialist and annual training with status per staff member" width={1600} height={866} />
+              <Shot src="/matrix-training-calendar.jpg" alt="The training calendar showing face to face sessions, adhoc and annual training allocations and completions across the month" width={1600} height={745} />
+            </div>
           </div>
         </div>
       </section>

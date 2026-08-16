@@ -1,9 +1,22 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CheckCircle2, ChevronDown, Loader2, Sparkles, Users } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Info, Loader2, Sparkles, Users } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { DOMAINS, type Domain, type StaffUser } from './cqc-shared'
+
+// Hover explainer for the option dropdowns. Same pattern as the gaps page's
+// StepInfoDot; `wide` fits the standard-set tooltip, which lists four themes.
+function InfoDot({ wide, children }: { wide?: boolean; children: React.ReactNode }) {
+  return (
+    <span className="group relative ml-1 inline-flex shrink-0 align-middle">
+      <Info size={13} className="cursor-help text-neutral-mid/50 group-hover:text-teal" />
+      <span className={`pointer-events-none absolute left-1/2 bottom-full z-30 mb-1.5 hidden ${wide ? 'w-96' : 'w-72'} -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-left text-[11px] font-normal normal-case leading-relaxed text-neutral-dark shadow-lg group-hover:block`}>
+        {children}
+      </span>
+    </span>
+  )
+}
 
 // Role-matched CQC prep: pick WHO first, then the AI generates questions that fit
 // each person's job (chef → food safety, nurse → medicines…) plus a small core
@@ -72,7 +85,8 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
   }
 
   return (
-    <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-white shadow-card">
+    // No overflow-hidden on the card: the InfoDot tooltips must be able to escape it.
+    <div className="mb-6 rounded-card border border-teal/30 bg-white shadow-card">
       <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between px-5 py-4 text-left">
         <span className="flex items-center gap-2.5">
           <Sparkles size={16} className="text-teal" />
@@ -157,18 +171,33 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
           <div className="mb-4 flex flex-wrap items-end gap-4">
             <label className="text-xs font-medium text-neutral-dark">
               Role-specific questions each
+              <InfoDot>
+                How many tailored questions each <span className="font-semibold">job role</span> receives, generated to fit that role&rsquo;s day-to-day work: the chef gets food safety and allergens, nurses get medicines and clinical care. Everyone in the same role receives the same set, so colleagues can practise together.
+              </InfoDot>
               <select value={perRole} onChange={e => setPerRole(Number(e.target.value))} className="ml-2 rounded-md border border-gray-200 px-2 py-1.5 text-sm">
                 {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
             <label className="text-xs font-medium text-neutral-dark">
               Core questions for everyone
+              <InfoDot>
+                How many questions <span className="font-semibold">every selected member of staff</span> receives regardless of their role, drawn from the topics all staff must be able to answer in an inspection: safeguarding, whistleblowing and fire safety. Set to 0 to skip them.
+              </InfoDot>
               <select value={core} onChange={e => setCore(Number(e.target.value))} className="ml-2 rounded-md border border-gray-200 px-2 py-1.5 text-sm">
                 {[0, 1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
-            <label className="text-xs font-medium text-neutral-dark" title="The four themes CQC inspectors raise with staff in almost every inspection: what you enjoy about your role, your experience of raising concerns, how you support people day-to-day, and the support you get in your role. Reworded freshly every time they're sent.">
+            <label className="text-xs font-medium text-neutral-dark">
               Standard CQC question set
+              <InfoDot wide>
+                <span className="mb-1.5 block">The four themes CQC inspectors raise with staff in almost every inspection, reworded freshly each time they are sent so staff practise the substance, not a script:</span>
+                <span className="block space-y-1.5">
+                  <span className="block"><span className="font-semibold">1. What you enjoy about your role.</span> Inspectors want to hear what you love about working at the service and how your work has made a positive difference to people&rsquo;s lives. If there is something you are particularly proud of, share the story: inspectors value real examples of meaningful impact.</span>
+                  <span className="block"><span className="font-semibold">2. Your experience of raising concerns.</span> If you have ever raised a concern about the quality of care, inspectors want to understand what happened next. Were you listened to? What actions were taken? The need for improvement does not automatically mean a service is poor, and inspectors look at how issues are raised and how the provider responds.</span>
+                  <span className="block"><span className="font-semibold">3. How you support people day-to-day.</span> Inspectors want to know about the people you care for, how you understand and meet their needs, and how the service shares information within the team to achieve the best outcomes for those you support.</span>
+                  <span className="block"><span className="font-semibold">4. The support you get in your role.</span> Inspectors want to know that you are supported by your line managers, that you know where to go when you need help, and that you have had the training and support you need in your role.</span>
+                </span>
+              </InfoDot>
               <select value={standard} onChange={e => setStandard(Number(e.target.value))} className="ml-2 rounded-md border border-gray-200 px-2 py-1.5 text-sm">
                 {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n === 4 ? 'All 4' : n}</option>)}
               </select>

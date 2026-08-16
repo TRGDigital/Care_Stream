@@ -145,7 +145,9 @@ async function apiFetch<T>(
   })
   const body = await res.json()
   if (res.status === 401) {
-    if (typeof window !== 'undefined') window.location.href = '/login'
+    // Carry the current location so signing back in returns the user to exactly
+    // where they were working, instead of dumping them on the dashboard.
+    if (typeof window !== 'undefined') window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`
     throw new Error('Session expired. Please sign in again.')
   }
   if (!res.ok || !body.success) {
@@ -193,7 +195,7 @@ export function createApiClient(token: string) {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify(data),
         })
-        if (res.status === 401) { if (typeof window !== 'undefined') window.location.href = '/login'; throw new Error('Session expired.') }
+        if (res.status === 401) { if (typeof window !== 'undefined') window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`; throw new Error('Session expired.') }
         if (!res.ok || !res.body) { handlers.onError('Could not start the answer.'); return }
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
@@ -1000,6 +1002,7 @@ export function createApiClient(token: string) {
       acknowledgeRemediation: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-remediation', token, { method: 'POST' }),
       completeGap: (referenceKey: string) => apiFetch<{ completed: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/complete`, token, { method: 'POST' }),
       reopenGap: (referenceKey: string) => apiFetch<{ reopened: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/reopen`, token, { method: 'POST' }),
+      gapsPipeline: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'out_of_date' | 'wording' | 'consistency'; ran_at: string | null; stale_policy_count: number; stale: boolean }>; pending_changes: number; last_publish_at: string | null }>('/analytics/gaps/pipeline', token),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
       analyseGapsStart: () => apiFetch<{ total: number }>('/analytics/gaps/analyse/start', token, { method: 'POST' }),
       analyseGapsBatch: () => apiFetch<{ done: number; analysed: number; total: number; remaining: number }>('/analytics/gaps/analyse/batch', token, { method: 'POST' }),

@@ -201,6 +201,11 @@ export const authOptions: NextAuthOptions = {
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ refresh_token: token.refreshToken }),
         })
+        // Transient failures (API restart, network blip, pool exhaustion) must NOT
+        // log the user out: keep the token and let the next request retry the
+        // refresh. Only an explicit rejection (4xx = the refresh token really is
+        // invalid or consumed) ends the session.
+        if (res.status >= 500) return token
         const body = await res.json()
         if (!res.ok || !body.success) throw new Error('Refresh failed')
 
@@ -214,8 +219,11 @@ export const authOptions: NextAuthOptions = {
         if (typeof body.data.audit_access === 'boolean') token.auditAccess = body.data.audit_access
         if (typeof body.data.is_reviewer === 'boolean') token.isReviewer = body.data.is_reviewer
         if (typeof body.data.tier === 'string') token.tier = body.data.tier
-      } catch {
-        // Refresh failed — force re-login by clearing the token
+      } catch (e: any) {
+        // A network-level failure (fetch threw, no HTTP response) is transient —
+        // keep the session and retry on the next request.
+        if (e?.message !== 'Refresh failed') return token
+        // The API explicitly rejected the refresh token — force re-login.
         return { ...token, error: 'RefreshAccessTokenError' }
       }
       return token

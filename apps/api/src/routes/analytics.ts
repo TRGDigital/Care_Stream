@@ -487,6 +487,47 @@ analyticsRouter.get('/gaps', requireAdmin, async (req: Request, res: Response) =
 // deliberately thorough (semantic floor + requirements-grounded judge + adversarial
 // skeptic), so it can take a few minutes overall — batching keeps every single
 // request short so the gateway never times out mid-analysis.
+// Record when a /gaps analysis section runs (per tenant) — drives the guided
+// pipeline: step states and "policies have changed since this ran" staleness.
+async function stampSectionRun(tenantId: string, section: 'coverage' | 'out_of_date' | 'wording' | 'consistency'): Promise<void> {
+  await (prisma as any).gapsSectionRun.upsert({
+    where:  { tenant_id_section: { tenant_id: tenantId, section } },
+    update: { ran_at: new Date() },
+    create: { tenant_id: tenantId, section },
+  }).catch((e: any) => console.error('[gaps] section run stamp failed', section, e?.message))
+}
+
+// ─── GET /analytics/gaps/pipeline ────────────────────────────────────────────
+// The guided-pipeline state: when each section last ran, whether policies have
+// been published since (stale results), and how many adopted changes are still
+// awaiting review (analyses read the PUBLISHED version, so those changes are
+// invisible to a run until published).
+analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const [runs, docs, pendingChanges] = await Promise.all([
+      (prisma as any).gapsSectionRun.findMany({ where: { tenant_id: tenantId } }),
+      (prisma as any).policyDocument.findMany({
+        where:  { tenant_id: tenantId, published_at: { not: null } },
+        select: { policy_id: true, published_at: true },
+      }),
+      (prisma as any).policyDocumentChange.count({
+        where: { published: false, reverted: false, document: { tenant_id: tenantId } },
+      }).catch(() => 0),
+    ])
+    const ranAt = new Map((runs as any[]).map(r => [r.section, r.ran_at as Date]))
+    const lastPublish = (docs as any[]).reduce<Date | null>((m, d) => (!m || d.published_at > m ? d.published_at : m), null)
+    const sections = (['coverage', 'out_of_date', 'wording', 'consistency'] as const).map(section => {
+      const ran = ranAt.get(section) ?? null
+      const staleCount = ran ? (docs as any[]).filter(d => d.published_at > ran).length : 0
+      return { section, ran_at: ran, stale_policy_count: staleCount, stale: !!ran && staleCount > 0 }
+    })
+    ok(res, { sections, pending_changes: pendingChanges, last_publish_at: lastPublish })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
 analyticsRouter.post('/gaps/analyse/start', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
@@ -497,6 +538,7 @@ analyticsRouter.post('/gaps/analyse/start', requireAdmin, async (_req: Request, 
   }
   try {
     const { total } = await startCoverageAnalysis(tenantId)
+    await stampSectionRun(tenantId, 'coverage')
     ok(res, { total })
   } catch (e: any) {
     err(res, 'ANALYSIS_FAILED', e.message, 500)
@@ -535,6 +577,7 @@ analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: R
   }
   try {
     const rows = await analyseRegulationCoverage(tenantId)
+    await stampSectionRun(tenantId, 'coverage')
     ok(res, {
       analysed_at: new Date(),
       regulations_total:   rows.length,
@@ -603,6 +646,7 @@ analyticsRouter.post('/policy-lint/scan', requireAdmin, async (_req: Request, re
   }
   try {
     const results = await scanTenantPolicies(tenantId)
+    await stampSectionRun(tenantId, 'out_of_date')
     ok(res, { scanned: results.length, with_issues: results.filter(r => r.findings.length > 0).length })
   } catch (e: any) {
     err(res, 'LINT_SCAN_FAILED', e.message ?? 'Could not scan policies.', 500)
@@ -660,6 +704,7 @@ analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Reque
   try {
     const sets = await buildAndCacheSets(tenantId)
     const pending = await pendingClaimPolicies(tenantId)
+    await stampSectionRun(tenantId, 'consistency')
     ok(res, { sets: sets.length, duplicate_sets: sets.filter(s => s.type === 'duplicate').length, topic_sets: sets.filter(s => s.type === 'topic').length, to_extract: pending.length })
   } catch (e: any) {
     err(res, 'CONSISTENCY_START_FAILED', e.message ?? 'Could not build comparison sets.', 500)
@@ -854,7 +899,9 @@ analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (
 analyticsRouter.post('/wording-alignment/start', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
-  ok(res, await startPolicyWordingAlignment(tenantId))
+  const started = await startPolicyWordingAlignment(tenantId)
+  await stampSectionRun(tenantId, 'wording')
+  ok(res, started)
 })
 
 // POST /analytics/wording-alignment/batch — analyse the next batch of policies (loop until remaining === 0).

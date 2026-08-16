@@ -115,6 +115,12 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   // Close the mobile nav drawer whenever the route changes.
   useEffect(() => { setMobileNav(false) }, [pathname])
 
+  // Remember the last console page visited so that, if the session ever expires,
+  // signing back in returns the user here instead of the dashboard.
+  useEffect(() => {
+    try { if (pathname && pathname !== '/login') localStorage.setItem('cs_last_page', pathname) } catch { /* ignore */ }
+  }, [pathname])
+
   // Close the mobile nav drawer on Escape.
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setMobileNav(false) }

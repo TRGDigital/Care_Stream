@@ -901,6 +901,17 @@ model GapDetailCache {
   @@map("gap_detail_cache")
 }
 
+// When each /gaps analysis section last ran, per tenant — drives the guided
+// pipeline (step states + "policies changed since this ran" staleness banners).
+model GapsSectionRun {
+  tenant_id String
+  section   String   // coverage | out_of_date | wording | consistency
+  ran_at    DateTime @default(now())
+
+  @@id([tenant_id, section])
+  @@map("gaps_section_runs")
+}
+
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.

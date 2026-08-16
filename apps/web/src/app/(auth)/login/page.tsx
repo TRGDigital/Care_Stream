@@ -6,6 +6,17 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
+// Where to land after signing in: the page the user was on when their session
+// expired (?callbackUrl=), else the last console page they visited (stored by
+// the admin shell), else the dashboard. Only same-site relative paths.
+function postLoginTarget(): string {
+  try {
+    const cb = new URLSearchParams(window.location.search).get('callbackUrl')
+    const safe = (p: string | null) => (p && p.startsWith('/') && !p.startsWith('//') && !p.startsWith('/login') ? p : null)
+    return safe(cb) ?? safe(localStorage.getItem('cs_last_page')) ?? '/dashboard'
+  } catch { return '/dashboard' }
+}
+
 export default function LoginPage() {
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -48,8 +59,9 @@ export default function LoginPage() {
       return
     }
 
-    // Reload so the server layout picks up the new session
-    window.location.href = '/dashboard'
+    // Reload so the server layout picks up the new session — straight back to
+    // wherever the user was working, not the dashboard.
+    window.location.href = postLoginTarget()
   }
 
   return (

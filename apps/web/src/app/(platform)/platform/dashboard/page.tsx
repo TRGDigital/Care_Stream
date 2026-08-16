@@ -2418,6 +2418,24 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Gaps guided pipeline */}
+      <RefSection icon={BookOpen} title="Gaps Guided Pipeline (/gaps sequencing)">
+        <p className="leading-relaxed text-neutral-mid">
+          The four /gaps analyses are framed as a soft-gated pipeline: Step 1 Regulation coverage,
+          Step 2 Out-of-date content, Step 3 Cross-policy consistency, Step 4 CQC wording. Nothing is
+          locked; the UI recommends the order, tracks freshness, and warns before wasted runs.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Why sequenced"        value="Each step's adopted fixes improve the policies; later steps give better results when they run on the updated PUBLISHED versions. Analyses always read the published copy (S3/Pinecone), never pending drafts." />
+          <RefRow label="Run tracking"         value="gaps_section_runs (tenant_id, section, ran_at) — stamped by /gaps/analyse[/start], /policy-lint/scan, /consistency/scan/start, /wording-alignment/start" />
+          <RefRow label="Pipeline state"       value="GET /analytics/gaps/pipeline — per-section ran_at + stale flag (any policy_documents.published_at > ran_at) + pending_changes (adopted, unpublished) + last_publish_at" />
+          <RefRow label="Staleness banners"    value="Amber 'X policies published since this ran' banner per stale section; status pills Not run / Up to date / Policies changed since this ran" />
+          <RefRow label="Pre-run warning"      value="If pending_changes > 0 when a run is clicked: dialog explains the run reads the published version and N adopted changes will not be seen — Run anyway / Go to review (/policies)" />
+          <RefRow label="Recommended cycle"    value="Run step → adopt changes → manager reviews + publishes in /policies (Adopted changes to review) → next step. One publish round between steps is the intended rhythm." />
+          <RefRow label="Primary target fix"   value="gap-detail promotes the most-routed target_policies entry to primary when strict title matching fails, so the preview pane always shows the matched policy (2026-08-16)" />
+        </div>
+      </RefSection>
+
       {/* Prompt Management */}
       <RefSection icon={Bot} title="AI Prompt Management">
         <p className="leading-relaxed text-neutral-mid">

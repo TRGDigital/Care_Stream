@@ -41,6 +41,58 @@ function HelpAccordion({ title, children }: { title: string; children: React.Rea
   )
 }
 
+// ── Guided pipeline (step framing) ──────────────────────────────────────────────
+// One page-level fetch of /analytics/gaps/pipeline drives the step chips, status
+// pills, staleness banners and the pre-run "pending changes" warning across all
+// four analysis sections. Steps are framing only — the sections keep their
+// physical order and content.
+type PipelineData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapsPipeline']>>
+type PipelineSection = PipelineData['sections'][number]
+
+const PIPELINE_STEPS: Array<{ key: PipelineSection['section']; step: number; name: string }> = [
+  { key: 'coverage',    step: 1, name: 'Regulation coverage' },
+  { key: 'out_of_date', step: 2, name: 'Out-of-date content' },
+  { key: 'consistency', step: 3, name: 'Cross-policy consistency' },
+  { key: 'wording',     step: 4, name: 'CQC wording' },
+]
+
+function fmtDay(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+// Compact teal circle with the step number — sits next to each section heading.
+function StepChip({ step }: { step: number }) {
+  return (
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal text-[10px] font-bold text-white">{step}</span>
+  )
+}
+
+// Status pill for a pipeline step: not run / up to date / stale.
+function StepStatusPill({ info }: { info?: PipelineSection }) {
+  if (!info || !info.ran_at) {
+    return <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">Not run yet</span>
+  }
+  if (info.stale) {
+    return <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Policies changed since this ran</span>
+  }
+  return <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">Up to date · ran {fmtDay(info.ran_at)}</span>
+}
+
+// Amber banner shown above a section's content when policies have been published
+// since that section's analysis last ran.
+function StaleBanner({ info }: { info?: PipelineSection }) {
+  if (!info?.stale || !info.ran_at) return null
+  const n = info.stale_policy_count
+  return (
+    <div className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+      <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
+      <p className="text-xs leading-relaxed text-amber-800">
+        {n === 1 ? '1 policy has' : `${n} policies have`} been published since this last ran on {fmtDay(info.ran_at)}. Re-run to refresh these results.
+      </p>
+    </div>
+  )
+}
+
 export default function GapsPage() {
   const { data: session } = useSession()
   const { features, loading: planLoading } = usePlanFeatures()
@@ -63,6 +115,41 @@ export default function GapsPage() {
   const [orgDetails, setOrgDetails] = useState<Record<string, string> | null>(null)
   const [orgSkipped, setOrgSkipped] = useState(false)
   const [firstRunStep, setFirstRunStep] = useState<'org' | 'disclaimer' | 'credits' | null>(null)
+  // Guided pipeline: per-step run/stale status + adopted changes still awaiting review.
+  const [pipeline, setPipeline] = useState<PipelineData | null>(null)
+  // When a run button is clicked while adopted changes are pending, the run is parked
+  // here until the tenant confirms (Run anyway) or cancels.
+  const [pendingRun, setPendingRun] = useState<{ run: () => void } | null>(null)
+
+  // Hydrate the pipeline strip from the persistent cache for instant paint, then revalidate.
+  useEffect(() => {
+    const cached = persistentCache.get<PipelineData>(`admin-gaps-pipeline-${userId}`)
+    if (cached) setPipeline(cached)
+  }, [userId])
+
+  const loadPipeline = useCallback(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).analytics.gapsPipeline()
+      .then(d => { setPipeline(d); persistentCache.set(`admin-gaps-pipeline-${userId}`, d) })
+      .catch(() => { /* the strip just keeps its last snapshot */ })
+  }, [session?.accessToken, userId])
+
+  useEffect(() => {
+    if (planLoading || locked) return
+    loadPipeline()
+  }, [planLoading, locked, loadPipeline])
+
+  const stepInfo = useCallback(
+    (key: PipelineSection['section']) => pipeline?.sections.find(s => s.section === key),
+    [pipeline]
+  )
+
+  // Gate any of the four analysis runs behind a warning when adopted changes are still
+  // awaiting review — analyses read the published version, so those drafts are invisible.
+  const confirmRun = useCallback((run: () => void) => {
+    if (pipeline && pipeline.pending_changes > 0) setPendingRun({ run })
+    else run()
+  }, [pipeline])
 
   async function reopenGap(referenceKey: string) {
     setCompletedOverride(prev => { const n = new Set(prev); n.delete(referenceKey); return n })
@@ -147,6 +234,7 @@ export default function GapsPage() {
       setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
+      loadPipeline()
     }
   }
 
@@ -345,6 +433,33 @@ export default function GapsPage() {
         </div>
       )}
 
+      {/* Pre-run warning: adopted changes are still awaiting review, so this run cannot see them. */}
+      {pendingRun && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={22} className="mt-0.5 shrink-0 text-amber-500" />
+              <div>
+                <h2 className="text-lg font-bold text-neutral-dark">Adopted changes are still awaiting review</h2>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">
+                  This analysis reads the published version of your policies. {pipeline?.pending_changes === 1
+                    ? '1 adopted change is waiting'
+                    : `${pipeline?.pending_changes ?? 0} adopted changes are waiting`} in Adopted changes to review and will not be seen by this run. For the best results, review and publish them first, then run the analysis.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+              <button onClick={() => setPendingRun(null)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
+              <a href="/policies" className="rounded-btn border border-teal/30 bg-white px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/30">Go to review</a>
+              <button
+                onClick={() => { const r = pendingRun.run; setPendingRun(null); r() }}
+                className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Run anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Blocking overlay while a coverage analysis runs — the run is client-side, so leaving the
           page stops it, and restarting re-analyses from scratch (extra AI credits). */}
       {analysing && (
@@ -380,7 +495,7 @@ export default function GapsPage() {
           </p>
           {analysedWhen && <p className="mt-1 text-xs text-neutral-mid">Coverage last analysed {analysedWhen}</p>}
         </div>
-        <button onClick={beginAnalysis} disabled={analysing}
+        <button onClick={() => confirmRun(beginAnalysis)} disabled={analysing}
           className="flex shrink-0 items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
           {analysing
             ? <><Loader2 size={15} className="animate-spin" /> {analyseProgress && analyseProgress.total > 0 ? `Analysing… ${analyseProgress.done}/${analyseProgress.total}` : 'Analysing…'}</>
@@ -388,14 +503,38 @@ export default function GapsPage() {
         </button>
       </div>
 
-      <HelpAccordion title="How Policy Gap Detection works">
-        <p><strong className="text-neutral-dark">What this page is for</strong> — it shows where your policies may not meet the regulations that apply to a registered care setting, and what staff are asking that your policies don&apos;t answer. Use it to find and close gaps before a CQC inspection.</p>
-        <p><strong className="text-neutral-dark">Coverage is read from your policy content, not titles</strong> — for each regulation, CareStream finds the most relevant passages across <em>all</em> your uploaded policies (using the same search that powers the staff chat) and an AI auditor judges, from that content alone, whether your policies substantively address it. So a regulation is only flagged when your documents genuinely don&apos;t cover it — not just because no policy happens to be named after it.</p>
-        <p><strong className="text-neutral-dark">The three results</strong> — <strong className="text-green-600">Covered</strong>: a policy clearly addresses it (the evidence policy is named). <strong className="text-amber-700">Partial</strong>: it&apos;s touched on but incomplete — the policy that partly covers it is named. <strong className="text-red-600">Gap</strong>: nothing in your policies addresses it.</p>
-        <p><strong className="text-neutral-dark">Running it</strong> — click <strong className="text-neutral-dark">Run coverage analysis</strong> to check all regulations. It reads through your policies (about a minute), then quietly prepares each &ldquo;what to add&rdquo; recommendation in the background so drill-ins open instantly. You can start reviewing gaps straight away. <strong className="text-neutral-dark">Re-run it whenever you upload or update policies</strong> to refresh the picture.</p>
-        <p><strong className="text-neutral-dark">Unanswered questions</strong> — separately, this page clusters questions staff asked (in chat, email or by voice) that the assistant couldn&apos;t answer from your policies over the last 90 days. Recurring themes are real-world evidence of a missing or unclear policy.</p>
-        <p><strong className="text-neutral-dark">Coverage score</strong> — the headline percentage counts fully-covered regulations, plus partials at half weight, out of the total. It appears once you&apos;ve run the analysis and <strong className="text-neutral-dark">updates as you close gaps</strong>: as soon as you adopt a fix or mark a regulation complete, the score, the &ldquo;fully&rdquo; count and the gaps figure all move to match.</p>
+      <HelpAccordion title="How the guided pipeline works">
+        <p><strong className="text-neutral-dark">Four steps, in a recommended order.</strong> This page runs four analyses on your policies: <strong className="text-neutral-dark">Step 1 Regulation coverage</strong>, <strong className="text-neutral-dark">Step 2 Out-of-date content</strong>, <strong className="text-neutral-dark">Step 3 Cross-policy consistency</strong> and <strong className="text-neutral-dark">Step 4 CQC wording</strong>. Work through them in that order. Each step&apos;s fixes improve your policies, so later steps give better results when they run on the updated versions: coverage fills the biggest holes first, then out-of-date content removes stale references, then consistency irons out contradictions, and CQC wording polishes how the finished policies read.</p>
+        <p><strong className="text-neutral-dark">The cycle for each step.</strong> Run the analysis, adopt the suggested changes, then review and publish them in <a href="/policies" className="font-semibold text-teal hover:underline">Policies</a> under Adopted changes to review. Analyses always read the published version of each policy, so a step&apos;s results only reflect your changes once they are published. Adopted changes that are still waiting for review are invisible to a new run.</p>
+        <p><strong className="text-neutral-dark">What the status pills mean.</strong> <strong className="text-neutral-mid">Not run yet</strong> means that step has never been run. <strong className="text-green-600">Up to date</strong> means it has run and no policy has been published since. <strong className="text-amber-700">Policies changed since this ran</strong> means at least one policy was published after the step last ran, so its results may be out of date and a re-run is recommended.</p>
+        <p><strong className="text-neutral-dark">Nothing is locked.</strong> You can run any step at any time, in any order. If adopted changes are still waiting for review when you start a run, the page warns you first so you do not analyse stale text by mistake. You can always choose to run anyway.</p>
       </HelpAccordion>
+
+      {/* ── Guided pipeline overview strip ─────────────────────────────────── */}
+      {pipeline && (
+        <div className="mb-6 rounded-card border border-gray-100 bg-white px-5 py-3 shadow-card">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            {PIPELINE_STEPS.map(s => (
+              <div key={s.key} className="flex items-center gap-2">
+                <StepChip step={s.step} />
+                <span className="text-xs font-semibold text-neutral-dark">{s.name}</span>
+                <StepStatusPill info={stepInfo(s.key)} />
+              </div>
+            ))}
+          </div>
+          {pipeline.pending_changes > 0 && (
+            <div className="mt-2.5 flex items-start gap-2 border-t border-gray-50 pt-2.5">
+              <AlertCircle size={13} className="mt-0.5 shrink-0 text-amber-500" />
+              <p className="text-xs leading-relaxed text-amber-800">
+                {pipeline.pending_changes === 1
+                  ? '1 adopted change is awaiting review in'
+                  : `${pipeline.pending_changes} adopted changes are awaiting review in`}{' '}
+                <a href="/policies" className="font-semibold text-teal hover:underline">/policies</a>. Analyses read the published version, so publish them before re-running to get credit for them.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Prompt to run the (content-based) analysis if it's never been run */}
       {!data.analysed && (
@@ -435,8 +574,10 @@ export default function GapsPage() {
       <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
         <button onClick={() => setShowCoverage(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
           <ShieldAlert size={16} className="shrink-0 text-red-500" />
-          <h2 className="flex-1 text-sm font-semibold text-neutral-dark">Regulation coverage{data.analysed && (gapRegs.length + partialRegs.length) > 0 && <span className="ml-1.5 font-normal text-neutral-mid">({gapRegs.length + partialRegs.length})</span>}</h2>
-          <ChevronDown size={15} className={`shrink-0 text-neutral-mid transition-transform ${showCoverage ? 'rotate-180' : ''}`} />
+          <StepChip step={1} />
+          <h2 className="text-sm font-semibold text-neutral-dark">Regulation coverage{data.analysed && (gapRegs.length + partialRegs.length) > 0 && <span className="ml-1.5 font-normal text-neutral-mid">({gapRegs.length + partialRegs.length})</span>}</h2>
+          <StepStatusPill info={stepInfo('coverage')} />
+          <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${showCoverage ? 'rotate-180' : ''}`} />
         </button>
 
         {showCoverage && (!data.analysed ? (
@@ -446,6 +587,7 @@ export default function GapsPage() {
           </div>
         ) : (
           <div className="border-t border-gray-100">
+            <StaleBanner info={stepInfo('coverage')} />
             <div className="divide-y divide-gray-50">
               {gapRegs.length === 0 && partialRegs.length === 0 ? (
                 <div className="flex items-center gap-3 px-6 py-5">
@@ -538,13 +680,13 @@ export default function GapsPage() {
       </div>
 
       {/* ── Out-of-date content (policy lint) — under Regulation coverage ─── */}
-      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} />}
+      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} stepInfo={stepInfo('out_of_date')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
 
       {/* ── Cross-policy consistency ──────────────────────────────────────── */}
-      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} />}
+      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} stepInfo={stepInfo('consistency')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
 
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
-      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} />}
+      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
 
       {session?.accessToken && <RecentlyUpdatedSection token={session.accessToken} />}
 
@@ -744,7 +886,7 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
   )
 }
 
-function PolicyHealthSection({ token, userId }: { token: string; userId: string }) {
+function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
   const [data, setData] = useState<LintData | null>(null)
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
@@ -769,7 +911,7 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
     setScanning(true)
     try { await createApiClient(token).analytics.policyLintScan(); load() }
     catch { /* surfaced as no change */ }
-    finally { setScanning(false) }
+    finally { setScanning(false); onRunComplete() }
   }
 
   // "Mark as updated" — hide this policy from the list (until the next scan re-flags it).
@@ -785,18 +927,21 @@ function PolicyHealthSection({ token, userId }: { token: string; userId: string 
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
         <FileClock size={16} className="shrink-0 text-amber-600" />
+        <StepChip step={2} />
         <h2 className="text-sm font-semibold text-neutral-dark">Out-of-date content</h2>
         {data?.scanned && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">
             {data.policies_with_issues} {data.policies_with_issues === 1 ? 'policy' : 'policies'}
           </span>
         )}
+        <StepStatusPill info={stepInfo} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (<div className="border-t border-gray-100">
+      <StaleBanner info={stepInfo} />
       <div className="flex items-center justify-end px-6 pt-4">
-        <button onClick={scan} disabled={scanning}
+        <button onClick={() => confirmRun(scan)} disabled={scanning}
           className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
           {scanning ? <><Loader2 size={13} className="animate-spin" /> Scanning…</> : <><RefreshCw size={13} /> {data?.scanned ? 'Re-scan policies' : 'Scan policies'}</>}
         </button>
@@ -1092,7 +1237,7 @@ type Conflict = ConsistencyData['conflicts'][number]
 
 const CSEV: Record<string, string> = { high: 'bg-rose-50 text-rose-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-100 text-slate-600' }
 
-function PolicyConsistencySection({ token, userId }: { token: string; userId: string }) {
+function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
   const [data, setData] = useState<ConsistencyData | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
@@ -1133,7 +1278,7 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
       load()
     } catch (e: any) {
       setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
-    } finally { setRunning(false); setProgress(null) }
+    } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
 
   // "Mark as updated" — dismiss this conflict (until the next check re-detects it).
@@ -1150,17 +1295,20 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
         <ShieldAlert size={16} className="shrink-0 text-indigo-500" />
+        <StepChip step={3} />
         <h2 className="text-sm font-semibold text-neutral-dark">Cross-policy consistency</h2>
         {data?.analysed && conflicts.length > 0 && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{conflicts.length} conflict{conflicts.length === 1 ? '' : 's'}</span>
         )}
+        <StepStatusPill info={stepInfo} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (<div className="border-t border-gray-100">
+        <StaleBanner info={stepInfo} />
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
           <p className="text-xs text-neutral-mid">Finds where two policies contradict each other on the same point — conflicting timeframes, routes, roles or definitions, and drift between near-duplicate policies.</p>
-          <button onClick={run} disabled={running}
+          <button onClick={() => confirmRun(run)} disabled={running}
             className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
             {running ? <><Loader2 size={13} className="animate-spin" /> {progress ?? 'Running…'}</> : <><RefreshCw size={13} /> {data?.analysed ? 'Re-run check' : 'Run consistency check'}</>}
           </button>
@@ -1230,7 +1378,7 @@ function PolicyConsistencySection({ token, userId }: { token: string; userId: st
 // ── CQC wording alignment: its own analysis, checked per policy over the whole library ──
 type WordingData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['wordingAlignment']>>
 
-function PolicyWordingAlignmentSection({ token, userId }: { token: string; userId: string }) {
+function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
   const [data, setData]       = useState<WordingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
@@ -1266,7 +1414,7 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
     } catch (e: any) {
       setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
       load()
-    } finally { setRunning(false); setProgress(null) }
+    } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
 
   // "Mark as updated" — hide this policy from the wording list (until the next run re-flags it).
@@ -1285,17 +1433,20 @@ function PolicyWordingAlignmentSection({ token, userId }: { token: string; userI
     <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left">
         <Sparkles size={16} className="shrink-0 text-indigo-500" />
+        <StepChip step={4} />
         <h2 className="text-sm font-semibold text-neutral-dark">CQC wording alignment</h2>
         {analysed > 0 && withSuggestions.length > 0 && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{data!.total_suggestions} suggestion{data!.total_suggestions === 1 ? '' : 's'} · {withSuggestions.length} polic{withSuggestions.length === 1 ? 'y' : 'ies'}</span>
         )}
+        <StepStatusPill info={stepInfo} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (<div className="border-t border-gray-100">
+        <StaleBanner info={stepInfo} />
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
           <p className="max-w-2xl text-xs text-neutral-mid">Checks whether each policy <strong>reads</strong> the person-centred, outcomes-focused way the CQC Single Assessment Framework expects, and drafts a rewrite you can adopt. Re-running checks every policy and uses AI credits, so it runs only when you ask.</p>
-          <button onClick={run} disabled={running}
+          <button onClick={() => confirmRun(run)} disabled={running}
             className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
             {running ? <><Loader2 size={13} className="animate-spin" /> {progress ?? 'Running…'}</> : <><RefreshCw size={13} /> {analysed > 0 ? 'Re-run analysis' : 'Run wording analysis'}</>}
           </button>

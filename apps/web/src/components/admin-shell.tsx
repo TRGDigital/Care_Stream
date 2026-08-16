@@ -12,8 +12,9 @@ import { clsx } from 'clsx'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen, Languages,
+  PanelLeftClose, PanelLeftOpen, Languages, Compass,
 } from 'lucide-react'
+import { GuidedTour } from '@/components/admin/guided-tour'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache } from '@/lib/page-cache'
@@ -94,6 +95,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
 
   const [sites,      setSites]      = useState<any[]>([])
+  const [tourSignal, setTourSignal] = useState(0)
   const [dropOpen,   setDropOpen]   = useState(false)
   const [switching,  setSwitching]  = useState<string | null>(null)
   const [mobileNav,  setMobileNav]  = useState(false)
@@ -179,7 +181,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         'hidden flex-shrink-0 flex-col bg-[#1A0830] transition-[width] duration-200 md:flex print:hidden',
         collapsed ? 'w-16' : 'w-60',
       )}>
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -194,7 +196,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
           </aside>
         </div>
       )}
@@ -300,12 +302,23 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         </main>
       </div>
 
+      {/* Guided tour: auto-opens once for brand-new tenants, replayable via the
+          sidebar "Take the tour" button on any page. */}
+      {session?.accessToken && (session.user as any)?.tenantId && (
+        <GuidedTour
+          token={session.accessToken}
+          tenantId={(session.user as any).tenantId}
+          tier={session.user?.tier}
+          openSignal={tourSignal}
+        />
+      )}
+
     </div>
   )
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, collapsed, onNavigate }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -411,6 +424,14 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
 
       {/* Back to portal */}
       <div className="border-t border-white/10 px-3 py-3">
+        <button
+          onClick={() => { setTip(null); onTour?.() }}
+          {...tipProps('Take the tour')}
+          className={clsx('mb-0.5 flex w-full items-center rounded-md py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
+        >
+          <Compass size={16} className="text-white/50" />
+          {!collapsed && 'Take the tour'}
+        </button>
         <Link
           href="/chat"
           onClick={() => { setTip(null); onNavigate?.() }}

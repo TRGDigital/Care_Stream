@@ -294,7 +294,8 @@ export function CsvImportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="flex max-h-full w-full max-w-3xl flex-col rounded-card bg-white shadow-xl">
+      {/* The review step needs the full width so every person fits on one line. */}
+      <div className={`flex max-h-full w-full ${step === 'review' ? 'max-w-6xl' : 'max-w-3xl'} flex-col rounded-card bg-white shadow-xl`}>
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div className="flex items-center gap-2.5">
             <FileSpreadsheet size={18} className="text-teal" />
@@ -388,38 +389,54 @@ export function CsvImportModal({
                   leave that person out, you can always add them individually later.
                 </p>
               )}
-              <div className="max-h-[45vh] space-y-2 overflow-y-auto pr-1">
-                {drafts.map((d, i) => {
-                  const errs = rowErrors(d, taken)
-                  const problem = d.include && errs.length > 0
-                  return (
-                    <div key={i} className={`rounded-lg border px-3 py-2.5 ${!d.include ? 'border-gray-100 bg-gray-50 opacity-60' : problem ? 'border-amber-300 bg-amber-50/60' : 'border-gray-100'}`}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input type="checkbox" checked={d.include} onChange={e => patchDraft(i, { include: e.target.checked })} className="h-4 w-4 accent-[#9B52B5]" title={d.include ? 'Untick to skip this person' : 'Tick to include this person'} />
-                        <input value={d.name} onChange={e => patchDraft(i, { name: e.target.value })} placeholder="Full name"
-                          className={`w-44 rounded-md border px-2 py-1 text-sm ${d.include && !d.name.trim() ? 'border-amber-400' : 'border-gray-200'}`} />
-                        <input value={d.email} onChange={e => patchDraft(i, { email: e.target.value })} placeholder="Email address"
-                          className={`w-60 rounded-md border px-2 py-1 text-sm ${d.include && (!d.email.trim() || !EMAIL_RE.test(d.email.trim()) || taken.has(d.email.trim().toLowerCase())) ? 'border-amber-400' : 'border-gray-200'}`} />
-                        <input value={d.job_role} onChange={e => patchDraft(i, { job_role: e.target.value })} placeholder="Job role (optional)"
-                          className="w-40 rounded-md border border-gray-200 px-2 py-1 text-sm" />
-                        <select value={d.shift} onChange={e => patchDraft(i, { shift: e.target.value as Draft['shift'] })} className="rounded-md border border-gray-200 px-1.5 py-1 text-sm">
-                          <option value="any">Flexible</option><option value="day">Day</option><option value="night">Night</option>
-                        </select>
-                        <select value={d.language} onChange={e => patchDraft(i, { language: e.target.value })} className="w-28 rounded-md border border-gray-200 px-1.5 py-1 text-sm">
-                          {!langByCode.has(d.language) && <option value={d.language}>{d.language}</option>}
-                          {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                        </select>
-                        {d.access === 'admin' && <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-bold text-teal">Admin</span>}
-                      </div>
-                      {d.include && (errs.length > 0 || d.notes.length > 0) && (
-                        <ul className="mt-1.5 ml-6 space-y-0.5 text-xs">
-                          {errs.map((e, j) => <li key={`e${j}`} className="text-amber-800">{e}</li>)}
-                          {d.notes.map((n, j) => <li key={`n${j}`} className="text-neutral-mid">{n}</li>)}
-                        </ul>
-                      )}
-                    </div>
-                  )
-                })}
+              <div className="overflow-x-auto">
+                <div className="min-w-[880px]">
+                  {/* Column headers */}
+                  <div className="flex items-center gap-2 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
+                    <span className="w-4 shrink-0" />
+                    <span className="w-[19%]">Full name</span>
+                    <span className="flex-1">Email address</span>
+                    <span className="w-[17%]">Job role</span>
+                    <span className="w-24 shrink-0">Shift</span>
+                    <span className="w-32 shrink-0">Language</span>
+                    <span className="w-12 shrink-0" />
+                  </div>
+                  <div className="max-h-[48vh] space-y-1.5 overflow-y-auto pr-1">
+                    {drafts.map((d, i) => {
+                      const errs = rowErrors(d, taken)
+                      const problem = d.include && errs.length > 0
+                      return (
+                        <div key={i} className={`rounded-lg border px-3 py-2 ${!d.include ? 'border-gray-100 bg-gray-50 opacity-60' : problem ? 'border-amber-300 bg-amber-50/60' : 'border-gray-100'}`}>
+                          <div className="flex flex-nowrap items-center gap-2">
+                            <input type="checkbox" checked={d.include} onChange={e => patchDraft(i, { include: e.target.checked })} className="h-4 w-4 shrink-0 accent-[#9B52B5]" title={d.include ? 'Untick to skip this person' : 'Tick to include this person'} />
+                            <input value={d.name} onChange={e => patchDraft(i, { name: e.target.value })} placeholder="Full name"
+                              className={`w-[19%] min-w-0 rounded-md border px-2 py-1 text-sm ${d.include && !d.name.trim() ? 'border-amber-400' : 'border-gray-200'}`} />
+                            <input value={d.email} onChange={e => patchDraft(i, { email: e.target.value })} placeholder="Email address"
+                              className={`min-w-0 flex-1 rounded-md border px-2 py-1 text-sm ${d.include && (!d.email.trim() || !EMAIL_RE.test(d.email.trim()) || taken.has(d.email.trim().toLowerCase())) ? 'border-amber-400' : 'border-gray-200'}`} />
+                            <input value={d.job_role} onChange={e => patchDraft(i, { job_role: e.target.value })} placeholder="Job role (optional)"
+                              className="w-[17%] min-w-0 rounded-md border border-gray-200 px-2 py-1 text-sm" />
+                            <select value={d.shift} onChange={e => patchDraft(i, { shift: e.target.value as Draft['shift'] })} className="w-24 shrink-0 rounded-md border border-gray-200 px-1.5 py-1 text-sm">
+                              <option value="any">Flexible</option><option value="day">Day</option><option value="night">Night</option>
+                            </select>
+                            <select value={d.language} onChange={e => patchDraft(i, { language: e.target.value })} className="w-32 shrink-0 rounded-md border border-gray-200 px-1.5 py-1 text-sm">
+                              {!langByCode.has(d.language) && <option value={d.language}>{d.language}</option>}
+                              {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                            </select>
+                            <span className="w-12 shrink-0 text-center">
+                              {d.access === 'admin' && <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-bold text-teal">Admin</span>}
+                            </span>
+                          </div>
+                          {d.include && (errs.length > 0 || d.notes.length > 0) && (
+                            <ul className="ml-6 mt-1 space-y-0.5 text-xs">
+                              {errs.map((e, j) => <li key={`e${j}`} className="text-amber-800">{e}</li>)}
+                              {d.notes.map((n, j) => <li key={`n${j}`} className="text-neutral-mid">{n}</li>)}
+                            </ul>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
               <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-neutral-dark">
                 <input type="checkbox" checked={emailCreds} onChange={e => setEmailCreds(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#9B52B5]" />

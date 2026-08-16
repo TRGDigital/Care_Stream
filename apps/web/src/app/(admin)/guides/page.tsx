@@ -417,6 +417,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
               The easiest way to get a care assistant signed in on their phone is a <strong>passwordless sign-in link</strong>: no password to type or remember. On a staff member&apos;s detail card, click <strong>Sign-in link</strong>. You&apos;ll get a <strong>QR code</strong> they can scan, a link you can <strong>copy</strong>, or an <strong>Email it to them</strong> button. It works once and lasts 14 days; signing in this way also keeps them logged in on that phone for a long time.
             </p>
             <p className="text-sm text-neutral-mid">
+              To invite <strong>many staff at once</strong> (for example right after a CSV import), click <strong>Hub invites</strong> at the top of the Staff page. Pick who to invite (people who have never signed in are ticked for you), then either <strong>email everyone their own sign-in link</strong> in one go, or <strong>print a QR sheet</strong> with a personal code per person for the staff room. Each code signs its owner straight in, works once, and lasts 14 days.
+            </p>
+            <p className="text-sm text-neutral-mid">
               Staff can also get themselves in: on the sign-in page there&apos;s an <strong>“Email me a sign-in link”</strong> option, so they never need to remember a password.
             </p>
             <p className="text-sm text-neutral-mid">

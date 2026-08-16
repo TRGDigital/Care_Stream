@@ -16,6 +16,7 @@ const InviteModal      = dynamic(() => import('@/components/admin/staff/staff-mo
 const EditModal        = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.EditModal),        { ssr: false })
 const StaffDetailModal = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.StaffDetailModal), { ssr: false })
 const CsvImportModal   = dynamic(() => import('@/components/admin/staff/staff-csv-import').then(m => m.CsvImportModal), { ssr: false })
+const HubInviteModal   = dynamic(() => import('@/components/admin/staff/staff-hub-invites').then(m => m.HubInviteModal), { ssr: false })
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,7 @@ export default function StaffPage() {
   const [loading,      setLoading]     = useState(true)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showImport,   setShowImport]  = useState(false)
+  const [showHubInvite, setShowHubInvite] = useState(false)
   const [tab,          setTab]         = useState<'active' | 'archived'>('active')
   const [editUser,     setEditUser]    = useState<any | null>(null)
   const [detailUserId, setDetailUserId] = useState<string | null>(null)
@@ -235,6 +237,10 @@ export default function StaffPage() {
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-dark">Staff</h1>
         <div className="flex items-center gap-2">
+          <Button onClick={() => setShowHubInvite(true)} size="md" variant="secondary">
+            <Mail size={15} className="mr-2" />
+            Hub invites
+          </Button>
           <Button onClick={() => setShowImport(true)} size="md" variant="secondary">
             <FileSpreadsheet size={15} className="mr-2" />
             Import from CSV
@@ -286,6 +292,15 @@ export default function StaffPage() {
           onSpecialistRolesChange={setSpecialistRoles}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
+        />
+      )}
+
+      {/* Bulk passwordless hub invites */}
+      {showHubInvite && (
+        <HubInviteModal
+          token={session?.accessToken ?? ''}
+          staff={activeUsers.map(u => ({ id: u.id, name: u.name, email: u.email, first_login_at: u.first_login_at }))}
+          onClose={() => setShowHubInvite(false)}
         />
       )}
 

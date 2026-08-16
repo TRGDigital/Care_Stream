@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart,
+  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
 } from 'lucide-react'
 
 // Grouped so related tools sit together: business first, then the training shop,
@@ -21,6 +21,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
     title: 'Clients & Revenue',
     items: [
       { href: '/platform/clients',         label: 'Clients',          Icon: Building2       },
+      { href: '/platform/adoption',        label: 'Adoption',         Icon: Milestone       },
       { href: '/platform/revenue',         label: 'Revenue',          Icon: PoundSterling   },
       { href: '/platform/usage',           label: 'Usage',            Icon: BarChart2       },
       { href: '/platform/analytics',       label: 'AI Analytics',     Icon: LineChart       },

@@ -498,6 +498,68 @@ adminRouter.get('/basket-analytics', async (_req: Request, res: Response) => {
   }
 })
 
+// ─── GET /admin/adoption ──────────────────────────────────────────────────────
+// Onboarding adoption funnel: for every tenant, when each stage was FIRST
+// achieved (null = not yet): policies uploaded → staff added → first gaps
+// analysis → first policy publish → first staff hub login. One grouped query
+// per stage across ALL tenants (no per-tenant round-trips), stitched in JS.
+
+adminRouter.get('/adoption', async (_req: Request, res: Response) => {
+  try {
+    const [tenants, policyDocs, staffUsers, gapsRuns, coverage, publishes, staffLogins] = await Promise.all([
+      (prisma as any).tenant.findMany({
+        orderBy: { created_at: 'desc' },
+        select:  { id: true, name: true, account_number: true, tier: true, created_at: true, plan: { select: { name: true } } },
+      }),
+      // Earliest editable policy document per tenant (any status) = policies uploaded.
+      (prisma as any).policyDocument.groupBy({ by: ['tenant_id'], _min: { created_at: true } }),
+      // Earliest staff user per tenant (admins don't count).
+      (prisma as any).user.groupBy({ by: ['tenant_id'], where: { role: 'staff' }, _min: { created_at: true } }),
+      // First gaps analysis = earliest of a /gaps section run or a coverage analysis.
+      (prisma as any).gapsSectionRun.groupBy({ by: ['tenant_id'], _min: { ran_at: true } }),
+      (prisma as any).regulationCoverage.groupBy({ by: ['tenant_id'], _min: { analysed_at: true } }),
+      // PolicyDocumentVersion is the snapshot written on publish; its timestamp is published_at.
+      (prisma as any).policyDocumentVersion.groupBy({ by: ['tenant_id'], _min: { published_at: true } }),
+      // Earliest first hub login among staff users.
+      (prisma as any).user.groupBy({ by: ['tenant_id'], where: { role: 'staff', first_login_at: { not: null } }, _min: { first_login_at: true } }),
+    ])
+
+    const toMap = (rows: any[], field: string) =>
+      new Map<string, Date | null>(rows.map((r: any) => [r.tenant_id, r._min?.[field] ?? null]))
+
+    const policiesMap = toMap(policyDocs as any[],  'created_at')
+    const staffMap    = toMap(staffUsers as any[],  'created_at')
+    const gapsMap     = toMap(gapsRuns as any[],    'ran_at')
+    const coverageMap = toMap(coverage as any[],    'analysed_at')
+    const publishMap  = toMap(publishes as any[],   'published_at')
+    const loginMap    = toMap(staffLogins as any[], 'first_login_at')
+
+    const iso = (d: Date | null | undefined): string | null => (d ? new Date(d).toISOString() : null)
+    const earliest = (a: Date | null | undefined, b: Date | null | undefined): Date | null =>
+      a && b ? (a < b ? a : b) : (a ?? b ?? null)
+
+    const result = tenants.map((t: any) => ({
+      id:             t.id,
+      name:           t.name,
+      account_number: t.account_number,
+      tier:           t.tier,
+      plan_name:      t.plan?.name ?? null,
+      created_at:     new Date(t.created_at).toISOString(),
+      stages: {
+        policies:    iso(policiesMap.get(t.id)),
+        staff:       iso(staffMap.get(t.id)),
+        analysis:    iso(earliest(gapsMap.get(t.id), coverageMap.get(t.id))),
+        publish:     iso(publishMap.get(t.id)),
+        staff_login: iso(loginMap.get(t.id)),
+      },
+    }))
+
+    ok(res, { tenants: result })
+  } catch (e: any) {
+    err(res, 'ADOPTION_FAILED', e.message ?? 'Could not load the adoption funnel.', 500)
+  }
+})
+
 adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const tenants = await (prisma as any).tenant.findMany({
     where:   { parent_tenant_id: null },

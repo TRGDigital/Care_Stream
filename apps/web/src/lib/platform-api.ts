@@ -132,6 +132,22 @@ export interface PlanLimits {
   has_training_impact?:         boolean
 }
 
+export interface AdoptionTenant {
+  id:             string
+  name:           string
+  account_number: string
+  tier:           string   // "full" | "training_only"
+  plan_name:      string | null
+  created_at:     string
+  stages: {
+    policies:    string | null   // earliest policy document uploaded
+    staff:       string | null   // earliest staff user added
+    analysis:    string | null   // first gaps analysis run
+    publish:     string | null   // first policy publish
+    staff_login: string | null   // first staff hub login
+  }
+}
+
 export interface TenantSummary {
   id:                  string
   account_number:      string
@@ -653,6 +669,8 @@ export function createPlatformClient(token: string) {
 
     basketAnalytics: () =>
       adminFetch<{ modules: Array<{ module_slug: string; adds: number; adds_30d: number; add_qty: number; checkouts: number; purchased: number; revenue_pence: number }>; totals: { adds: number; adds_30d: number; checkouts: number; purchased: number; revenue_pence: number } }>('/basket-analytics', token),
+    adoption: () =>
+      adminFetch<{ tenants: AdoptionTenant[] }>('/adoption', token),
     tenants: {
       list: () =>
         adminFetch<{ tenants: TenantSummary[]; total: number }>('/tenants', token),

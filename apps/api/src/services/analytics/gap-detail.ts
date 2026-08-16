@@ -428,6 +428,20 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }).catch((e: any) => { console.error('[gap-detail] cache read failed', referenceKey, e?.message); return null })
     if (cached?.payload) {
       const payload = cached.payload as GapDetail
+      // Self-heal payloads cached before the primary-target promotion: if the
+      // per-requirement routing found a real policy but target_policy is null,
+      // promote it so the preview pane stops claiming there is no policy.
+      if (!payload.target_policy && Array.isArray(payload.target_policies)) {
+        const primary = payload.target_policies.find((t: any) => t?.id)
+        if (primary?.id) {
+          payload.target_policy = { id: primary.id, name: primary.name }
+          payload.suggested_new_policy_title = null
+          await (prisma as any).gapDetailCache.update({
+            where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
+            data:  { payload },
+          }).catch(() => {})
+        }
+      }
       // Backfill the overlay synopsis for payloads cached before it existed, and
       // generate the short display summaries once (persisted back to cache), so we
       // never re-summarise on subsequent reads. No re-analysis of coverage.
@@ -515,8 +529,8 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     if (best) targetPolicy = { id: best.id, name: best.name }
     else suggestedNewPolicyTitle = (reg.expected_policy_titles?.[0] as string) ?? `${reg.official_name} Policy`
   }
-  const targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
-  const voiceSample = buildVoiceSample(targetText)
+  let targetText = evidenceText ?? (targetPolicy ? await downloadExtractedText(tenantId, targetPolicy.id).catch(() => null) : null)
+  let voiceSample = buildVoiceSample(targetText)
 
   // 2. Verify the rest against the whole corpus, and draft wording for the truly-missing.
   //    The key-terminology glossary keeps the correct terms; the voice sample makes drafts
@@ -584,6 +598,22 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }
     return [...map.values()].sort((a, b) => b.count - a.count)
   })()
+
+  // The strict title match can miss (e.g. "Adult safeguarding under the Care Act 2014"
+  // vs "Safeguarding Residents From Abuse Or Harm Policy") while the per-requirement
+  // corpus routing still lands every fix in a real policy. Promote the most-routed
+  // policy to primary so the preview pane has a policy to check against and the
+  // highlight anchors below are located inside it — otherwise the list says
+  // "Relevant policy: X" while the panel claims there is no policy at all.
+  if (!targetPolicy) {
+    const primary = targetPolicies.find(t => t.id)
+    if (primary?.id) {
+      targetPolicy = { id: primary.id, name: primary.name }
+      suggestedNewPolicyTitle = null
+      targetText  = await downloadExtractedText(tenantId, primary.id).catch(() => null)
+      voiceSample = buildVoiceSample(targetText)
+    }
+  }
 
   const requirements = [...inPolicy, ...verifiedReqs]
   const missingReqs = requirements.filter(r => r.status === 'missing')

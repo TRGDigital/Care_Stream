@@ -102,13 +102,14 @@ function PublishTicker({ count }: { count: number }) {
   )
 }
 
-// The full status cluster next to each step heading: pill + info hover + ticker.
-function StepMeta({ info, pendingPolicies }: { info?: PipelineSection; pendingPolicies: number }) {
+// The status cluster next to each step heading: pill + info hover. The single
+// "policies to publish" ticker lives in the pipeline overview strip, not on
+// every step (it was visually noisy repeated eight times).
+function StepMeta({ info }: { info?: PipelineSection; pendingPolicies?: number }) {
   return (
     <span className="flex shrink-0 items-center gap-1.5">
       <StepStatusPill info={info} />
       <StepInfoDot />
-      <PublishTicker count={pendingPolicies} />
     </span>
   )
 }
@@ -122,7 +123,7 @@ function StaleBanner({ info }: { info?: PipelineSection }) {
     <div className="mx-6 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
       <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
       <p className="text-xs leading-relaxed text-amber-800">
-        {n === 1 ? '1 policy has' : `${n} policies have`} been published since this last ran on {fmtDay(info.ran_at)}. Re-run to refresh these results.
+        {n === 1 ? '1 policy has' : `${n} policies have`} been published or newly added since this last ran on {fmtDay(info.ran_at)}. Re-run to refresh these results.
       </p>
     </div>
   )
@@ -578,12 +579,13 @@ export default function GapsPage() {
           {pipeline.pending_changes > 0 && (
             <div className="mt-2.5 flex items-start gap-2 border-t border-gray-50 pt-2.5">
               <AlertCircle size={13} className="mt-0.5 shrink-0 text-amber-500" />
-              <p className="text-xs leading-relaxed text-amber-800">
+              <p className="flex-1 text-xs leading-relaxed text-amber-800">
                 {pipeline.pending_changes === 1
                   ? '1 adopted change is awaiting review in'
                   : `${pipeline.pending_changes} adopted changes are awaiting review in`}{' '}
                 <a href="/policies" className="font-semibold text-teal hover:underline">/policies</a>. Analyses read the published version, so publish them before re-running to get credit for them.
               </p>
+              <PublishTicker count={pipeline.pending_policies ?? 0} />
             </div>
           )}
         </div>

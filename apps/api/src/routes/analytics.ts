@@ -505,7 +505,7 @@ async function stampSectionRun(tenantId: string, section: 'coverage' | 'out_of_d
 analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    const [runs, docs, pendingRows] = await Promise.all([
+    const [runs, docs, pendingRows, policyRows] = await Promise.all([
       (prisma as any).gapsSectionRun.findMany({ where: { tenant_id: tenantId } }),
       (prisma as any).policyDocument.findMany({
         where:  { tenant_id: tenantId, published_at: { not: null } },
@@ -515,12 +515,19 @@ analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: R
         where:  { published: false, reverted: false, document: { tenant_id: tenantId } },
         select: { document_id: true },
       }).catch(() => []),
+      // Newly uploaded policies also invalidate a run — the analysis never saw them.
+      (prisma as any).policy.findMany({
+        where:  { tenant_id: tenantId, status: 'active' },
+        select: { created_at: true },
+      }).catch(() => []),
     ])
     const ranAt = new Map((runs as any[]).map(r => [r.section, r.ran_at as Date]))
     const lastPublish = (docs as any[]).reduce<Date | null>((m, d) => (!m || d.published_at > m ? d.published_at : m), null)
     const sections = (['coverage', 'out_of_date', 'wording', 'consistency'] as const).map(section => {
       const ran = ranAt.get(section) ?? null
-      const staleCount = ran ? (docs as any[]).filter(d => d.published_at > ran).length : 0
+      const publishedSince = ran ? (docs as any[]).filter(d => d.published_at > ran).length : 0
+      const addedSince     = ran ? (policyRows as any[]).filter(p => p.created_at > ran).length : 0
+      const staleCount = publishedSince + addedSince
       return { section, ran_at: ran, stale_policy_count: staleCount, stale: !!ran && staleCount > 0 }
     })
     const pendingChanges  = (pendingRows as any[]).length

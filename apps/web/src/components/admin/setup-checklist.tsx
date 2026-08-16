@@ -11,7 +11,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { CheckCircle2, Circle, X, FileText, Users, GraduationCap, MessageSquare, ArrowRight, ScanSearch } from 'lucide-react'
 
-type Status = { policies: boolean; gaps: boolean; staff: boolean; training: boolean; query: boolean; allocated: boolean }
+type Status = { policies: boolean; gaps: boolean; staff: boolean; training: boolean; onboarding: boolean; query: boolean; allocated: boolean }
 type Step = { done: boolean; Icon: typeof FileText; title: string; desc: string; href: string; cta: string }
 
 export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: string; tenantId: string; tier?: string }) {
@@ -35,7 +35,7 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
       Promise.allSettled([api.users.list(), api.training.licences()]).then(([u, l]) => {
         const lic = l.status === 'fulfilled' ? ((l.value as any)?.licences ?? []) : []
         save({
-          policies: false, gaps: false, training: false, query: false,
+          policies: false, gaps: false, training: false, onboarding: false, query: false,
           staff:     u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
           allocated: Array.isArray(lic) && lic.some((x: any) => x?.user_id),
         })
@@ -48,13 +48,15 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
       api.query.list({ limit: '1' }),
       api.training.compliance(),
       api.analytics.gapsPipeline(),
-    ]).then(([p, u, q, t, g]) => {
+      api.onboarding.listFlows(),
+    ]).then(([p, u, q, t, g, o]) => {
       save({
         policies: p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
         gaps:     g.status === 'fulfilled' && (((g.value as any)?.sections ?? []) as any[]).some((s: any) => s?.ran_at),
         staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
         query:    q.status === 'fulfilled' && Number((q.value as any)?.total ?? 0) > 0,
         training: t.status === 'fulfilled' && (((t.value as any)?.enrollments ?? []).length > 0),
+        onboarding: o.status === 'fulfilled' && (((o.value as any)?.flows ?? []).length > 0),
         allocated: false,
       })
     }).catch(() => {})
@@ -67,13 +69,14 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
         { done: status.staff,     Icon: Users,         title: 'Add your team',                   desc: 'Invite the staff who need to complete this training.',                  href: '/staff',    cta: 'Add staff' },
         { done: status.allocated, Icon: GraduationCap, title: 'Allocate your training licences', desc: 'Assign the licences you bought to staff so they can start the module.', href: '/licences', cta: 'Allocate licences' },
       ]
-    // Order matches the guided tour: policies → gaps → training → staff.
+    // Order matches the guided tour: policies → gaps → training → onboarding → staff.
     : [
-        { done: status.policies, Icon: FileText,      title: 'Upload your policies',    desc: 'Add your policies & procedures so the AI answers from your own content.',  href: '/policies', cta: 'Upload policies' },
-        { done: status.gaps,     Icon: ScanSearch,    title: 'Run your Gap Analysis',   desc: 'See how your policies cover the regulations and fix what is missing.',     href: '/gaps',     cta: 'Open Gaps' },
-        { done: status.training, Icon: GraduationCap, title: 'Set up staff training',   desc: 'Assign statutory & specialist training and build onboarding flows.',       href: '/training', cta: 'Assign training' },
-        { done: status.staff,    Icon: Users,         title: 'Add your team',           desc: 'Add staff individually or import everyone from a CSV, then invite them to the hub.', href: '/staff', cta: 'Add staff' },
-        { done: status.query,    Icon: MessageSquare, title: 'Ask your first question', desc: 'Try it out — ask a policy question in the staff hub.',                     href: '/chat',     cta: 'Open the hub' },
+        { done: status.policies,   Icon: FileText,      title: 'Upload your policies',    desc: 'Add your policies & procedures so the AI answers from your own content.',  href: '/policies',   cta: 'Upload policies' },
+        { done: status.gaps,       Icon: ScanSearch,    title: 'Run your Gap Analysis',   desc: 'See how your policies cover the regulations and fix what is missing.',     href: '/gaps',       cta: 'Open Gaps' },
+        { done: status.training,   Icon: GraduationCap, title: 'Set up staff training',   desc: 'Assign statutory modules and create ad hoc training from your policies.',  href: '/training',   cta: 'Assign training' },
+        { done: status.onboarding, Icon: GraduationCap, title: 'Set up onboarding',       desc: 'Build induction flows for each job role; new starters enrol automatically.', href: '/onboarding', cta: 'Open Onboarding' },
+        { done: status.staff,      Icon: Users,         title: 'Add your team',           desc: 'Add staff individually or import everyone from a CSV, then invite them to the hub.', href: '/staff', cta: 'Add staff' },
+        { done: status.query,      Icon: MessageSquare, title: 'Ask your first question', desc: 'Try it out — ask a policy question in the staff hub.',                     href: '/chat',       cta: 'Open the hub' },
       ]
   const doneCount = steps.filter(s => s.done).length
   if (doneCount === steps.length) return null // fully set up — hide automatically

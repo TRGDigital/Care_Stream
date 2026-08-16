@@ -19,7 +19,7 @@ import { CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch, Users, X }
 import { createApiClient } from '@/lib/api-client'
 
 type TourStep = {
-  key:    'policies' | 'gaps' | 'training' | 'staff' | 'licences'
+  key:    'policies' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences'
   title:  string
   desc:   string
   how:    string[]     // "how it works" bullets — the extra detail Len asked for
@@ -51,14 +51,24 @@ const FULL_STEPS: TourStep[] = [
     href: '/gaps', cta: 'Open Gaps', Icon: ScanSearch, img: '/tour/step-2.png',
   },
   {
-    key: 'training', title: 'Create training and onboarding',
-    desc: 'Turn your policies into training your team actually completes, and build role-based onboarding for new starters.',
+    key: 'training', title: 'Create your training',
+    desc: 'Turn your policies into training your team actually completes, delivered as short questions in the hub.',
     how: [
-      'Statutory modules are ready to assign out of the box; create ad hoc training straight from your policies.',
-      'Build onboarding flows per job role on the Staff Onboarding page.',
-      'New starters enrol in their role’s onboarding automatically when you add them.',
+      'Statutory modules are ready to assign out of the box.',
+      'Create ad hoc training modules straight from your own policies.',
+      'Questions arrive in each person’s first language, and completions are tracked for CQC evidence.',
     ],
     href: '/training', cta: 'Set up training', Icon: GraduationCap, img: '/tour/step-3.png',
+  },
+  {
+    key: 'onboarding', title: 'Set up onboarding',
+    desc: 'Build step-by-step induction flows so every new starter learns your way of working from day one.',
+    how: [
+      'Adopt a ready-made flow for each job role, or build your own from policy reads and check questions.',
+      'New starters enrol in their role’s flow automatically when you add them.',
+      'Track everyone’s progress step by step from the Staff Onboarding page.',
+    ],
+    href: '/onboarding', cta: 'Open Onboarding', Icon: GraduationCap, img: '/tour/step-4.png',
   },
   {
     key: 'staff', title: 'Add your staff',
@@ -68,7 +78,7 @@ const FULL_STEPS: TourStep[] = [
       'Each person’s job role drives the training and onboarding they receive.',
       'Use Hub invites to email everyone a passwordless sign-in link, or print a QR sheet for the staff room.',
     ],
-    href: '/staff', cta: 'Go to Staff', Icon: Users, img: '/tour/step-4.png',
+    href: '/staff', cta: 'Go to Staff', Icon: Users, img: '/tour/step-5.png',
   },
 ]
 
@@ -145,13 +155,15 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
       api.policies.list({ limit: '1' }),
       api.analytics.gapsPipeline(),
       api.training.compliance(),
+      api.onboarding.listFlows(),
       api.users.list(),
-    ]).then(([p, g, t, u]) => {
+    ]).then(([p, g, t, o, u]) => {
       setDone({
-        policies: p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
-        gaps:     g.status === 'fulfilled' && ((g.value as any)?.sections ?? []).some((s: any) => s?.ran_at),
-        training: t.status === 'fulfilled' && (((t.value as any)?.enrollments ?? []).length > 0),
-        staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
+        policies:   p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
+        gaps:       g.status === 'fulfilled' && ((g.value as any)?.sections ?? []).some((s: any) => s?.ran_at),
+        training:   t.status === 'fulfilled' && (((t.value as any)?.enrollments ?? []).length > 0),
+        onboarding: o.status === 'fulfilled' && (((o.value as any)?.flows ?? []).length > 0),
+        staff:      u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
       })
     })
   }, [token, trainingOnly])

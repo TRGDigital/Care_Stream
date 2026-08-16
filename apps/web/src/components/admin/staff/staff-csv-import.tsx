@@ -6,7 +6,8 @@
 // and training-only plans alike (the invite endpoint is shared).
 
 import { useMemo, useRef, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, GraduationCap, Loader2, Upload, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 
@@ -133,8 +134,8 @@ function rowErrors(d: Draft, takenEmails: Set<string>): string[] {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-type Step = 'upload' | 'map' | 'review' | 'import' | 'done'
-type Cred = { name: string; email: string; password: string }
+type Step = 'upload' | 'map' | 'review' | 'import' | 'done' | 'training'
+type Cred = { id: string; name: string; email: string; password: string }
 type Fail = { name: string; email: string; reason: string }
 
 export function CsvImportModal({
@@ -153,12 +154,24 @@ export function CsvImportModal({
   const [mapping,  setMapping]  = useState<Record<FieldKey, number>>({} as any)
   const [drafts,   setDrafts]   = useState<Draft[]>([])
   const [emailCreds, setEmailCreds] = useState(false)
+  const [staffType, setStaffType] = useState<'existing' | 'new'>('existing')
+  const [onboarded, setOnboarded] = useState(0)    // total onboarding flow enrolments across the import
   const [progress, setProgress] = useState(0)
   const [creds,    setCreds]    = useState<Cred[]>([])
   const [fails,    setFails]    = useState<Fail[]>([])
   const [stopped,  setStopped]  = useState('')     // plan-limit abort message
   const [parseErr, setParseErr] = useState('')
+  // Post-import bulk training assignment (mirrors the individual flow's step).
+  const [modules,       setModules]       = useState<any[]>([])
+  const [modulesBusy,   setModulesBusy]   = useState(false)
+  const [selModules,    setSelModules]    = useState<Set<string>>(new Set())
+  const [assigning,     setAssigning]     = useState(false)
+  const [assignedCount, setAssignedCount] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  // Training-only tenants allocate purchased licences from the Training page
+  // instead of assigning modules, exactly as the individual add-staff flow does.
+  const { data: session } = useSession()
+  const trainingOnly = (session?.user as any)?.tier === 'training_only'
 
   const taken = useMemo(() => new Set(existingEmails.map(e => e.toLowerCase())), [existingEmails])
   const langByCode = useMemo(() => new Map(languages.map(l => [l.code, l.name])), [languages])
@@ -243,9 +256,10 @@ export function CsvImportModal({
   // ── Step 4: import ──
   async function runImport() {
     setStep('import')
-    setProgress(0); setCreds([]); setFails([]); setStopped('')
+    setProgress(0); setCreds([]); setFails([]); setStopped(''); setOnboarded(0)
     const api = createApiClient(token)
     const ok: Cred[] = [], bad: Fail[] = []
+    let flows = 0
     for (let i = 0; i < importable.length; i++) {
       const d = importable[i]
       try {
@@ -254,8 +268,10 @@ export function CsvImportModal({
           job_role: d.job_role.trim() || undefined,
           phone_number: d.phone || undefined,
           shift_type: d.shift, first_language: d.language,
+          new_starter: staffType === 'new',
         })
-        ok.push({ name: d.name.trim(), email: d.email.trim(), password: res.temp_password })
+        flows += res.onboarding_enrolled ?? 0
+        ok.push({ id: res.user.id, name: d.name.trim(), email: d.email.trim(), password: res.temp_password })
         if (emailCreds) {
           try { await api.users.sendCredentials(res.user.id, res.temp_password) } catch { /* creds still shown + downloadable */ }
         }
@@ -272,9 +288,34 @@ export function CsvImportModal({
       setProgress(i + 1)
       setCreds([...ok])
     }
-    setCreds(ok); setFails(bad)
+    setCreds(ok); setFails(bad); setOnboarded(flows)
     setStep('done')
     if (ok.length > 0) onImported()
+  }
+
+  // Load the module catalogue and open the bulk training step. Statutory
+  // modules come pre-selected, matching the individual add-staff flow.
+  async function openTraining() {
+    setModulesBusy(true)
+    try {
+      const d = await createApiClient(token).training.modules()
+      setModules(d.modules)
+      setSelModules(new Set(d.modules.filter((m: any) => m.category === 'statutory').map((m: any) => m.id)))
+      setStep('training')
+    } catch { alert('Could not load the training modules. Please try again.') } finally { setModulesBusy(false) }
+  }
+
+  async function assignTraining() {
+    if (selModules.size === 0) { setStep('done'); return }
+    setAssigning(true)
+    try {
+      await createApiClient(token).training.enroll({ user_ids: creds.map(c => c.id), module_ids: [...selModules] })
+      setAssignedCount(selModules.size)
+      setStep('done')
+      onImported()
+    } catch (e: any) {
+      alert(e?.message ?? 'Could not assign the training. Please try again.')
+    } finally { setAssigning(false) }
   }
 
   function downloadCreds() {
@@ -289,7 +330,7 @@ export function CsvImportModal({
 
   const stepLabel: Record<Step, string> = {
     upload: 'Upload your staff list', map: 'Match your columns', review: 'Check the details',
-    import: 'Creating accounts…', done: 'Import complete',
+    import: 'Creating accounts…', done: 'Import complete', training: 'Assign training to your new staff',
   }
 
   return (
@@ -438,7 +479,26 @@ export function CsvImportModal({
                   </div>
                 </div>
               </div>
-              <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-neutral-dark">
+              {/* Onboarding: mirrors the individual form's Staff type field, applied to the whole file. */}
+              <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5">
+                <p className="text-sm font-medium text-neutral-dark">Staff type for this import</p>
+                <div className="mt-1.5 flex flex-col gap-1.5 sm:flex-row sm:gap-6">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-dark">
+                    <input type="radio" name="csv-staff-type" checked={staffType === 'existing'} onChange={() => setStaffType('existing')} className="h-4 w-4 accent-[#9B52B5]" />
+                    Existing staff members
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-dark">
+                    <input type="radio" name="csv-staff-type" checked={staffType === 'new'} onChange={() => setStaffType('new')} className="h-4 w-4 accent-[#9B52B5]" />
+                    New starters
+                  </label>
+                </div>
+                <p className="mt-1 text-xs text-neutral-mid">
+                  {staffType === 'new'
+                    ? 'Each person is automatically enrolled in the onboarding flows matching their job role.'
+                    : 'No onboarding is assigned automatically. You can enrol anyone later from their staff record.'}
+                </p>
+              </div>
+              <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm text-neutral-dark">
                 <input type="checkbox" checked={emailCreds} onChange={e => setEmailCreds(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#9B52B5]" />
                 <span>Email each new staff member their login details as their account is created<span className="block text-xs text-neutral-mid">You will also get every login shown on screen and downloadable as a file either way.</span></span>
               </label>
@@ -477,6 +537,18 @@ export function CsvImportModal({
               <p className="flex items-center gap-2 text-sm font-semibold text-green-700">
                 <CheckCircle2 size={16} /> {creds.length} staff account{creds.length === 1 ? '' : 's'} created{emailCreds && creds.length > 0 ? ', login details emailed' : ''}
               </p>
+              {staffType === 'new' && creds.length > 0 && (
+                <p className="mt-1 text-xs text-neutral-mid">
+                  {onboarded > 0
+                    ? `Enrolled in ${onboarded} onboarding flow${onboarded === 1 ? '' : 's'} matched to their job roles.`
+                    : 'No onboarding flows matched their job roles yet. Create flows on the Onboarding page and new starters will auto-enrol next time.'}
+                </p>
+              )}
+              {assignedCount !== null && (
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-green-700">
+                  <GraduationCap size={13} /> {assignedCount} training module{assignedCount === 1 ? '' : 's'} assigned to each of the {creds.length} new staff.
+                </p>
+              )}
               {stopped && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">{stopped}</p>}
               {fails.length > 0 && (
                 <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -511,8 +583,63 @@ export function CsvImportModal({
                   </Button>
                 </>
               )}
-              <div className="mt-5 flex justify-end">
-                <Button onClick={onClose}>Done</Button>
+              {creds.length > 0 && trainingOnly && (
+                <p className="mt-4 rounded-md bg-teal-light/30 px-3 py-2 text-xs text-neutral-dark">
+                  Next step: allocate your purchased training licences to these staff on the <a href="/licences" className="font-semibold text-teal hover:underline">Training page</a> so they can start their module.
+                </p>
+              )}
+              <div className="mt-5 flex items-center justify-end gap-2">
+                {creds.length > 0 && !trainingOnly && assignedCount === null && (
+                  <Button onClick={openTraining} disabled={modulesBusy}>
+                    {modulesBusy ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <GraduationCap size={14} className="mr-1.5" />}
+                    Assign training to all {creds.length}
+                  </Button>
+                )}
+                <Button variant={creds.length > 0 && !trainingOnly && assignedCount === null ? 'secondary' : 'primary'} onClick={onClose}>Done</Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Bulk training assignment ── */}
+          {step === 'training' && (
+            <div>
+              <div className="mb-4 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
+                <p className="text-sm font-medium text-teal">Assign training to all {creds.length} imported staff</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  Tick the modules that apply. Statutory modules are pre-selected, untick any that do not apply. Everyone in this import receives the same set; you can fine-tune individuals from their staff record afterwards.
+                </p>
+              </div>
+              <p className="mb-2 text-right text-xs text-neutral-mid">{selModules.size} of {modules.length} selected</p>
+              <div className="max-h-[45vh] space-y-2 overflow-y-auto pr-1">
+                {modules.map(m => {
+                  const isStatutory = m.category === 'statutory'
+                  const checked = selModules.has(m.id)
+                  return (
+                    <label key={m.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 transition-colors ${
+                      checked ? (isStatutory ? 'border-teal bg-teal-light/20' : 'border-indigo-300 bg-indigo-50') : 'border-gray-100 bg-gray-50 hover:border-gray-200'
+                    }`}>
+                      <input type="checkbox" checked={checked}
+                        onChange={() => setSelModules(prev => { const n = new Set(prev); n.has(m.id) ? n.delete(m.id) : n.add(m.id); return n })}
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${isStatutory ? 'accent-teal' : 'accent-indigo-500'}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-neutral-dark">{m.name}</p>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isStatutory ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>
+                            {isStatutory ? 'Statutory' : 'Specialist'}
+                          </span>
+                        </div>
+                        {m.description && <p className="mt-0.5 text-xs leading-relaxed text-neutral-mid">{m.description}</p>}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <Button variant="secondary" onClick={() => setStep('done')} disabled={assigning}>Back</Button>
+                <Button onClick={assignTraining} disabled={assigning || selModules.size === 0}>
+                  {assigning ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <GraduationCap size={14} className="mr-1.5" />}
+                  Assign {selModules.size} module{selModules.size === 1 ? '' : 's'} to {creds.length} staff
+                </Button>
               </div>
             </div>
           )}

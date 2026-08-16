@@ -2442,6 +2442,21 @@ function SystemReference() {
         </div>
       </RefSection>
 
+      {/* Tenant adoption tooling */}
+      <RefSection icon={BookOpen} title="Tenant Adoption Tooling (staff import, hub invites, funnel)">
+        <p className="leading-relaxed text-neutral-mid">
+          Tools that shorten a new tenant&apos;s time to value, added 2026-08-16. The tenant-facing pieces are
+          documented for tenants in Help &amp; Guides under Managing staff.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="Staff CSV import"     value="/staff 'Import from CSV': upload → auto column mapping (fuzzy header aliases; 'Role'/'Position' map to job role, never access level) → review overlay (one line per person, amber rows fixed inline or unticked to skip; UK phones normalised to E.164, unknown shift→Flexible, unknown language→English, in-file duplicates unticked) → sequential POST /users/invite (plan seat limits apply; limit errors stop the run gracefully). Temp passwords shown once + downloadable CSV + optional email per new starter. All tiers." />
+          <RefRow label="Bulk hub invites"     value="/staff 'Hub invites': pick staff (never-signed-in preselected) then email each their single-use 14-day passwordless sign-in link, or print a QR sheet (personal code per person, 3 cards per row) for the staff room. Loops the existing per-user /users/:id/login-link endpoint." />
+          <RefRow label="Adoption funnel"      value="/platform/adoption (nav: Adoption, under Clients): one row per tenant with first-achieved timestamps for Policies → Staff → First analysis → First publish → Staff in hub. Amber highlight = current stall stage; training_only tenants show n/a on policy stages; 'Stalled 7+ days' filter. GET /admin/adoption, 7 grouped queries, no per-tenant round-trips." />
+          <RefRow label="Already in place"     value="SetupChecklist dashboard card (tier-aware get-set-up steps), /policies Bulk upload, and the new-tenant welcome drip (register → onboarding dispatch, skipped for training_only) predate this batch — check before rebuilding." />
+          <RefRow label="Open ideas"           value="CQC register API prefill of org details + registered regulated activities at signup (Settings holds manual cqc_location_id / cqc_provider_id only); SetupChecklist tweaks (point 'Add your team' at CSV import, add a first-gaps-analysis step)" />
+        </div>
+      </RefSection>
+
       {/* Prompt Management */}
       <RefSection icon={Bot} title="AI Prompt Management">
         <p className="leading-relaxed text-neutral-mid">

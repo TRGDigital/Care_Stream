@@ -1658,6 +1658,30 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={8}>Track progress across your whole team in the <strong>Performance</strong> tab, scores are shown per staff member and per CQC domain so you can see exactly where to focus.</Step>
           </div>
         </SectionBlock>
+        <SectionBlock title="Send role-matched questions (recommended)">
+          <p className="text-sm text-neutral-mid">
+            The quickest way to prepare the whole team is the <strong>Send role-matched questions</strong> panel at the top of the page. Pick who should practise and CareStream generates and sends everything in one step. Three dropdowns control what each person receives (each has an <strong>(i)</strong> hover on the page as a reminder):
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Role-specific questions each</strong>: questions tailored to each person&apos;s job, the chef gets food safety and allergens, nurses get medicines and clinical care. Everyone in the same role receives the same set, so colleagues can practise together.</li>
+            <li><strong>Core questions for everyone</strong>: topics every member of staff must be able to answer in an inspection, safeguarding, whistleblowing and fire safety, sent to all selected staff regardless of role.</li>
+            <li><strong>Standard CQC question set</strong>: the four themes inspectors raise with staff in almost every inspection, reworded freshly each time so staff practise the substance, not a script.</li>
+          </ul>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['What you enjoy about your role', 'Inspectors want to hear what you love about working at the service and how your work has made a positive difference to people’s lives. If there is something you are particularly proud of, share the story: inspectors value real examples of meaningful impact.'],
+              ['Your experience of raising concerns', 'If you have ever raised a concern about the quality of care, inspectors want to understand what happened next. Were you listened to? What actions were taken? The need for improvement does not automatically mean a service is poor; inspectors look at how issues are raised and how the provider responds.'],
+              ['How you support people day-to-day', 'Inspectors want to know about the people you care for, how you understand and meet their needs, and how the service shares information within the team to achieve the best outcomes for those you support.'],
+              ['The support you get in your role', 'Inspectors want to know that you are supported by your line managers, that you know where to go when you need help, and that you have had the training and support you need in your role.'],
+            ].map(([theme, desc], i) => (
+              <div key={theme} className="grid grid-cols-[11rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{i + 1}. {theme}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3"><Tip>You can also scope the send to particular CQC domains with the domain chips. The estimated AI credit cost is shown before you press Generate &amp; send.</Tip></div>
+        </SectionBlock>
         <SectionBlock title="The five CQC domains">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[

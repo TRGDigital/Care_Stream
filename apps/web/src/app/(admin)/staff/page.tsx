@@ -8,13 +8,14 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
+import { FileSpreadsheet, KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
 import { LANGUAGES, CredentialsPanel, InitialAvatar, fmtDate } from '@/components/admin/staff/staff-shared'
 
 // Staff modals are lazy-loaded — only fetched when a dialog is opened.
 const InviteModal      = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.InviteModal),      { ssr: false })
 const EditModal        = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.EditModal),        { ssr: false })
 const StaffDetailModal = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.StaffDetailModal), { ssr: false })
+const CsvImportModal   = dynamic(() => import('@/components/admin/staff/staff-csv-import').then(m => m.CsvImportModal), { ssr: false })
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -180,6 +181,7 @@ export default function StaffPage() {
   const [catalog,      setCatalog]     = useState<{ code: string; name: string }[]>([])
   const [loading,      setLoading]     = useState(true)
   const [showInvite,   setShowInvite]  = useState(false)
+  const [showImport,   setShowImport]  = useState(false)
   const [tab,          setTab]         = useState<'active' | 'archived'>('active')
   const [editUser,     setEditUser]    = useState<any | null>(null)
   const [detailUserId, setDetailUserId] = useState<string | null>(null)
@@ -232,10 +234,16 @@ export default function StaffPage() {
     <div>
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-dark">Staff</h1>
-        <Button onClick={() => setShowInvite(true)} size="md">
-          <UserPlus size={15} className="mr-2" />
-          Add staff member
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowImport(true)} size="md" variant="secondary">
+            <FileSpreadsheet size={15} className="mr-2" />
+            Import from CSV
+          </Button>
+          <Button onClick={() => setShowInvite(true)} size="md">
+            <UserPlus size={15} className="mr-2" />
+            Add staff member
+          </Button>
+        </div>
       </div>
 
       {/* Active / Archived tabs */}
@@ -278,6 +286,17 @@ export default function StaffPage() {
           onSpecialistRolesChange={setSpecialistRoles}
           onClose={() => setShowInvite(false)}
           onInvited={() => { setLoading(true); load() }}
+        />
+      )}
+
+      {/* Bulk CSV import */}
+      {showImport && (
+        <CsvImportModal
+          token={session?.accessToken ?? ''}
+          languages={languages}
+          existingEmails={users.map(u => u.email).filter(Boolean)}
+          onClose={() => setShowImport(false)}
+          onImported={() => { setLoading(true); load() }}
         />
       )}
 

@@ -664,7 +664,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'Regulation coverage, what to add, out-of-date content, cross-policy consistency, the policy update matrix, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
+    summary: 'The guided four-step pipeline, regulation coverage, what to add, out-of-date content, cross-policy consistency, CQC wording, resumable runs, the policy update matrix, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -675,6 +675,42 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <p className="text-sm text-neutral-mid">
           Policy Gap Detection reads inside your uploaded policies and tells you exactly which regulations you cover and where the gaps are — then shows what to add, why it&rsquo;s required, and which policy to put it in. It only assesses the regulations that apply to <em>your</em> service, tracks changes to the standards, and can turn any change into staff training. Find it under <strong>Gaps</strong> in the menu.
         </p>
+
+        <SectionBlock title="The guided pipeline: run the four checks in order">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            The Gaps page is a <strong>guided pipeline</strong> of four numbered steps, and the order matters. Every analysis reads the <strong>published</strong> version of your policies, so if you adopt fixes but never publish them, the next run will report the same issues again.
+          </p>
+          <div className="space-y-2">
+            <Step n={1}><strong>Regulation coverage</strong>: find missing and partial regulations, and adopt the suggested additions.</Step>
+            <Step n={2}><strong>Out-of-date content</strong>: scan for stale terminology and superseded guidance in what you now hold.</Step>
+            <Step n={3}><strong>Cross-policy consistency</strong>: check your policies against each other for contradictions.</Step>
+            <Step n={4}><strong>CQC wording alignment</strong>: polish the surviving text into the person-centred voice CQC looks for.</Step>
+          </div>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Between steps, go to <strong>Policies</strong>, open <strong>Adopted changes to review</strong>, and <strong>approve and publish</strong> what you adopted. That one publish round between steps is the intended rhythm: run, adopt, publish, next step. The page keeps you on track with:
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Step status pills</strong> showing when each step last ran, with an <strong>(i)</strong> hover explaining the cycle.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>An amber &ldquo;policies to publish&rdquo; counter</strong> in the overview strip whenever adopted changes are waiting, which links straight to the Policies page.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>A pre-run check</strong> every time you press a run button: if changes are still unpublished it warns you the run will not see them, and offers to take you to Policies first.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Stale flags</strong> when policies have been published or newly uploaded since a step last ran, a nudge that its results are now out of date.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>A publish reminder</strong> on the Policies page itself: after you publish, a banner suggests re-running your Gaps analyses so the results reflect the new version.</span></li>
+          </ul>
+          <Tip>Seeing the same findings after adopting fixes? That almost always means the changes are adopted but not yet <strong>published</strong>. Publish them on the Policies page, then re-run.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Interrupted runs resume where they stopped">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            The longer analyses (coverage, consistency and wording) work through your policies in small batches and <strong>save progress on our servers as they go</strong>. It is fastest to keep the page open while a run works, but if your connection drops, you close the tab or you are signed out mid-run, nothing is lost.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span>When you come back, an amber <strong>Resume</strong> banner on the affected section shows how much was already done (for example &ldquo;18 of 24 analysed&rdquo;).</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span>Pressing <strong>Resume</strong> continues from where it stopped. Items already analysed are <strong>not re-processed and cost no extra AI credits</strong>.</span></li>
+          </ul>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            If a section ever fails to load you will see a clear &ldquo;Couldn&rsquo;t load this section&rdquo; message with a <strong>Retry</strong> button rather than an empty panel. Retrying is free, it simply reloads the saved results.
+          </p>
+        </SectionBlock>
 
         <SectionBlock title="Regulation coverage, read from your policy content">
           <p className="text-sm text-neutral-dark leading-relaxed">

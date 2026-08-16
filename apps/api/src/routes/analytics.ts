@@ -10,14 +10,14 @@ import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
-import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch } from '../services/analytics/regulation-coverage'
+import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
-import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, repropagatePolicy, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
-import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment } from '../services/analytics/saf'
+import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment, wordingRunState } from '../services/analytics/saf'
 import { mapLimit } from '../lib/translate'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
@@ -533,6 +533,31 @@ analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: R
     const pendingChanges  = (pendingRows as any[]).length
     const pendingPolicies = new Set((pendingRows as any[]).map(r => r.document_id)).size
     ok(res, { sections, pending_changes: pendingChanges, pending_policies: pendingPolicies, last_publish_at: lastPublish })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// ─── GET /analytics/gaps/run-state ───────────────────────────────────────────
+// Cheap, read-only "done vs remaining" for each resumable batch analysis, derived
+// entirely from stored state (counts only — never triggers AI work). Lets the /gaps
+// page offer "Resume" after an interrupted client-driven run instead of the
+// destructive start endpoint, which wipes the finished work.
+analyticsRouter.get('/gaps/run-state', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    const [coverage, consistency, wording] = await Promise.all([
+      coverageRunState(tenantId),
+      consistencyRunState(tenantId),
+      wordingRunState(tenantId),
+    ])
+    ok(res, {
+      sections: [
+        { section: 'coverage',    ...coverage },
+        { section: 'consistency', ...consistency },
+        { section: 'wording',     ...wording },
+      ],
+    })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }

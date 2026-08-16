@@ -225,6 +225,18 @@ async function statementsForPolicy(tenantId: string, policyId: string): Promise<
   })
 }
 
+// Read-only progress snapshot for resumable runs: how many active policies already have
+// a wording result row. Counts only — never triggers any AI work. Used by
+// GET /analytics/gaps/run-state so an interrupted run can offer "Resume" instead of a
+// destructive fresh start.
+export async function wordingRunState(tenantId: string): Promise<{ total: number; analysed: number; remaining: number }> {
+  const [total, analysed] = await Promise.all([
+    (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } }),
+    (prisma as any).policyWordingAlignment.count({ where: { tenant_id: tenantId } }),
+  ])
+  return { total, analysed: Math.min(analysed, total), remaining: Math.max(0, total - analysed) }
+}
+
 // Start a fresh per-policy wording run: clear this tenant's results, return the total
 // (active policies) so the frontend can drive a progress bar over the batches.
 export async function startPolicyWordingAlignment(tenantId: string): Promise<{ total: number }> {

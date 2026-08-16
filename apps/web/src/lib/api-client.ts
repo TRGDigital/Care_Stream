@@ -1003,6 +1003,7 @@ export function createApiClient(token: string) {
       completeGap: (referenceKey: string) => apiFetch<{ completed: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/complete`, token, { method: 'POST' }),
       reopenGap: (referenceKey: string) => apiFetch<{ reopened: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/reopen`, token, { method: 'POST' }),
       gapsPipeline: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'out_of_date' | 'wording' | 'consistency'; ran_at: string | null; stale_policy_count: number; stale: boolean }>; pending_changes: number; pending_policies: number; last_publish_at: string | null }>('/analytics/gaps/pipeline', token),
+      gapsRunState: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'consistency' | 'wording'; total: number; analysed: number; remaining: number }> }>('/analytics/gaps/run-state', token),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
       analyseGapsStart: () => apiFetch<{ total: number }>('/analytics/gaps/analyse/start', token, { method: 'POST' }),
       analyseGapsBatch: () => apiFetch<{ done: number; analysed: number; total: number; remaining: number }>('/analytics/gaps/analyse/batch', token, { method: 'POST' }),

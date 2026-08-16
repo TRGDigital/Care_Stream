@@ -249,6 +249,24 @@ export async function extractClaimsBatch(tenantId: string, batch: Array<{ id: st
   await mapLimit(batch, 3, (p) => extractPolicyClaims(tenantId, p).catch(() => []))
 }
 
+// Read-only progress snapshot for resumable runs: of the policies in the cached
+// comparison sets, how many already have extracted claims. Counts only — no AI. Used by
+// GET /analytics/gaps/run-state so an interrupted run can offer "Resume" without
+// rebuilding the sets or re-extracting cached claims.
+export async function consistencyRunState(tenantId: string): Promise<{ total: number; analysed: number; remaining: number }> {
+  const sets = await getCachedSets(tenantId)
+  const ids = new Set<string>()
+  for (const s of sets) for (const p of s.policies) ids.add(p.id)
+  const total = ids.size
+  if (!total) return { total: 0, analysed: 0, remaining: 0 }
+  const cached = await (prisma as any).policyClaim.findMany({
+    where: { tenant_id: tenantId, policy_id: { in: [...ids] } }, select: { policy_id: true },
+  })
+  const have = new Set((cached as any[]).map((c: any) => c.policy_id))
+  const analysed = [...ids].filter(id => have.has(id)).length
+  return { total, analysed, remaining: total - analysed }
+}
+
 // ── Conflict detection (Phase 4c) ────────────────────────────────────────────────
 
 export interface ConflictPosition { policy_id: string; policy_name: string; statement: string; quote: string }

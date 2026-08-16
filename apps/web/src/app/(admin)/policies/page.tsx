@@ -76,6 +76,9 @@ export default function PoliciesPage() {
   const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>>([])
   const [dueReview,      setDueReview]       = useState<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)
+  // Set when a policy is published from the review modal — drives the "re-run
+  // your Gaps analyses" nudge so the loop back to /gaps closes itself.
+  const [justPublished,  setJustPublished]  = useState(false)
   const [sections,       setSections]       = useState<string[]>([])
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
@@ -429,8 +432,24 @@ export default function PoliciesPage() {
           policyId={reviewTarget.id}
           policyName={reviewTarget.name}
           onClose={() => { setReviewTarget(null); loadReviewSummary() }}
-          onPublished={() => loadReviewSummary()}
+          onPublished={() => { loadReviewSummary(); setJustPublished(true) }}
         />
+      )}
+
+      {/* Post-publish nudge: the new version is live — point back at /gaps so the
+          analyses are re-run against it (results are stale until then). */}
+      {justPublished && (
+        <div className="mb-4 flex items-start gap-3 rounded-card border border-green-200 bg-green-50 p-4">
+          <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-green-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-green-900">Published. Your policy is now live for staff and the AI.</p>
+            <p className="mt-0.5 text-xs text-green-800/90">
+              Re-run your Gaps analyses so they see the new version — until then their results are based on the old text.
+            </p>
+          </div>
+          <a href="/gaps" className="shrink-0 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">Go to Gaps</a>
+          <button onClick={() => setJustPublished(false)} aria-label="Dismiss" className="shrink-0 rounded p-1 text-green-700/60 hover:text-green-900"><X size={14} /></button>
+        </div>
       )}
 
       {/* Archived notice */}

@@ -129,6 +129,47 @@ function StaleBanner({ info }: { info?: PipelineSection }) {
   )
 }
 
+// ── Resumable runs ──────────────────────────────────────────────────────────────
+// One cheap page-level fetch of /analytics/gaps/run-state (counts only, no AI work)
+// tells us whether a batch analysis was interrupted mid-run — the server keeps the
+// finished items, so the section can offer Resume (batch loop only, never the
+// destructive start endpoint) instead of a fresh run that wastes credits.
+type RunStateData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapsRunState']>>
+type SectionRunState = RunStateData['sections'][number]
+
+// Amber banner inside a section when a run was interrupted part-way. Resume continues
+// from where it stopped — already-analysed items are never re-run, so they cost nothing.
+function ResumeBanner({ state, resuming, onResume }: { state?: SectionRunState; resuming: boolean; onResume: () => void }) {
+  if (!state || state.total <= 0 || state.remaining <= 0 || state.analysed <= 0) return null
+  return (
+    <div className="mx-6 my-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+      <AlertCircle size={15} className="shrink-0 text-amber-500" />
+      <p className="min-w-0 flex-1 text-xs leading-relaxed text-amber-800">
+        An analysis was interrupted: {state.analysed} of {state.total} done. Resume to finish without re-running what is already complete (no extra credits for finished items).
+      </p>
+      <button onClick={onResume} disabled={resuming}
+        className="shrink-0 rounded-btn bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
+        {resuming ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Resuming…</span> : 'Resume'}
+      </button>
+    </div>
+  )
+}
+
+// Small inline error box with a Retry — shown when a section's data fails to load,
+// instead of silently rendering an empty panel that reads as "nothing to show".
+function LoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-3">
+      <AlertCircle size={15} className="shrink-0 text-red-500" />
+      <p className="flex-1 text-xs text-red-700">Couldn&apos;t load this section.</p>
+      <button onClick={onRetry}
+        className="shrink-0 rounded-btn border border-red-200 bg-white px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-100">
+        Retry
+      </button>
+    </div>
+  )
+}
+
 export default function GapsPage() {
   const { data: session } = useSession()
   const { features, loading: planLoading } = usePlanFeatures()
@@ -170,13 +211,32 @@ export default function GapsPage() {
       .catch(() => { /* the strip just keeps its last snapshot */ })
   }, [session?.accessToken, userId])
 
+  // Resumable runs: did a previous batch analysis stop part-way? Fetched once on load
+  // (alongside the pipeline) and refreshed after every run, so each section can offer
+  // Resume instead of a destructive fresh start.
+  const [runState, setRunState] = useState<RunStateData | null>(null)
+  const loadRunState = useCallback(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).analytics.gapsRunState()
+      .then(setRunState)
+      .catch(() => { /* the resume offer is best-effort */ })
+  }, [session?.accessToken])
+  const runStateFor = useCallback(
+    (section: SectionRunState['section']) => runState?.sections.find(s => s.section === section),
+    [runState]
+  )
+  // Sections call this when a run finishes: refresh the pipeline strip AND the run-state
+  // (so a completed or resumed run clears its resume banner).
+  const onRunComplete = useCallback(() => { loadPipeline(); loadRunState() }, [loadPipeline, loadRunState])
+
   useEffect(() => {
     if (planLoading || locked) return
     loadPipeline()
+    loadRunState()
     // Keep the "policies to publish" ticker live while the page is open.
     const t = setInterval(loadPipeline, 60_000)
     return () => clearInterval(t)
-  }, [planLoading, locked, loadPipeline])
+  }, [planLoading, locked, loadPipeline, loadRunState])
 
   const stepInfo = useCallback(
     (key: PipelineSection['section']) => pipeline?.sections.find(s => s.section === key),
@@ -248,6 +308,18 @@ export default function GapsPage() {
     load()
   }, [planLoading, locked, load])
 
+  // The batch phase of a coverage run: loop the (idempotent, resumable) batch endpoint
+  // until nothing remains. Shared by a fresh run (after the destructive start) and by
+  // Resume, which never calls start — so already-analysed regulations are kept and cost
+  // no further credits.
+  async function driveCoverageBatches(api: ReturnType<typeof createApiClient>) {
+    for (let i = 0; i < 200; i++) {   // guard; each batch does ~12 regulations
+      const p = await api.analytics.analyseGapsBatch()
+      setAnalyseProgress({ done: p.analysed, total: p.total })
+      if (p.remaining <= 0) break
+    }
+  }
+
   // Run the analysis in batches so no single request is held open for minutes. The
   // per-regulation matching is deliberately thorough (semantic floor + requirements
   // grounding + adversarial confirm), so the whole run can take a few minutes — we
@@ -259,11 +331,7 @@ export default function GapsPage() {
     try {
       const { total } = await api.analytics.analyseGapsStart()
       setAnalyseProgress({ done: 0, total })
-      for (let i = 0; i < 200; i++) {   // guard; each batch does ~12 regulations
-        const p = await api.analytics.analyseGapsBatch()
-        setAnalyseProgress({ done: p.analysed, total: p.total })
-        if (p.remaining <= 0) break
-      }
+      await driveCoverageBatches(api)
       load()
       // Deep-dive "what to add" detail is generated LAZILY, only when a gap is opened
       // (then cached). We deliberately do NOT pre-generate every gap here: that was ~5
@@ -274,7 +342,27 @@ export default function GapsPage() {
       setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
-      loadPipeline()
+      onRunComplete()
+    }
+  }
+
+  // Resume an interrupted coverage run: the batch loop only — NEVER the start endpoint
+  // (which wipes the finished rows), and no first-run gates or pre-run confirm, because
+  // this simply continues a run the tenant already began and confirmed.
+  async function resumeCoverage() {
+    if (!session?.accessToken) return
+    const st = runStateFor('coverage')
+    setAnalysing(true); setError('')
+    setAnalyseProgress(st ? { done: st.analysed, total: st.total } : null)
+    const api = createApiClient(session.accessToken)
+    try {
+      await driveCoverageBatches(api)
+      load()
+    } catch (e: any) {
+      setError(e.message ?? 'Coverage analysis failed — please try again.')
+    } finally {
+      setAnalysing(false); setAnalyseProgress(null)
+      onRunComplete()
     }
   }
 
@@ -322,8 +410,8 @@ export default function GapsPage() {
     runAnalysis()
   }
 
-  // While an analysis is running, warn before the tab is closed or refreshed: leaving stops the
-  // run part-way, and starting again re-analyses from scratch and uses more AI credits.
+  // While an analysis is running, warn before the tab is closed or refreshed: leaving pauses the
+  // run part-way (progress is kept server-side and can be resumed, but staying is fastest).
   useEffect(() => {
     if (!analysing) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
@@ -361,8 +449,13 @@ export default function GapsPage() {
 
   if (error) {
     return (
-      <div className="rounded-card border border-red-100 bg-red-50 px-6 py-5 text-sm text-red-700">
-        {error}
+      <div className="flex flex-wrap items-center gap-3 rounded-card border border-red-100 bg-red-50 px-6 py-5 text-sm text-red-700">
+        <span className="min-w-0 flex-1">{error}</span>
+        <button
+          onClick={() => { setError(''); setLoading(true); load() }}
+          className="shrink-0 rounded-btn border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100">
+          Retry
+        </button>
       </div>
     )
   }
@@ -459,7 +552,7 @@ export default function GapsPage() {
               <Coins size={22} className="mt-0.5 shrink-0 text-teal" />
               <div>
                 <h2 className="text-lg font-bold text-neutral-dark">A full re-run uses AI credits</h2>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">Running the coverage analysis reads through all of your policies and can take a few minutes. Please keep this page open until it finishes. If you leave or refresh, it stops and starting again re-runs the whole check and uses more AI credits.</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">Running the coverage analysis reads through all of your policies and can take a few minutes. It is fastest to keep this page open until it finishes. If you do leave or refresh, your progress is saved and you can resume the run from where it stopped, without re-running what is already complete.</p>
               </div>
             </div>
             <div className="mt-5 flex items-center justify-end gap-3">
@@ -514,8 +607,8 @@ export default function GapsPage() {
         </div>
       )}
 
-      {/* Blocking overlay while a coverage analysis runs — the run is client-side, so leaving the
-          page stops it, and restarting re-analyses from scratch (extra AI credits). */}
+      {/* Blocking overlay while a coverage analysis runs — the batch loop is client-driven, so
+          leaving the page pauses it. Finished work is kept server-side and can be resumed. */}
       {analysing && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
@@ -534,7 +627,7 @@ export default function GapsPage() {
             <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-left">
               <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
               <p className="text-xs leading-relaxed text-amber-800">
-                Please keep this page open. If you leave or refresh, the analysis stops, and starting it again re-runs the whole check and uses more AI credits.
+                Please keep this page open so the analysis can finish in one go. If you leave or refresh, it pauses, but your progress is saved and you can resume from where it stopped with no extra credits for finished items.
               </p>
             </div>
           </div>
@@ -562,6 +655,8 @@ export default function GapsPage() {
         <p><strong className="text-neutral-dark">The cycle for each step.</strong> Run the analysis, adopt the suggested changes, then review and publish them in <a href="/policies" className="font-semibold text-teal hover:underline">Policies</a> under Adopted changes to review. Analyses always read the published version of each policy, so a step&apos;s results only reflect your changes once they are published. Adopted changes that are still waiting for review are invisible to a new run.</p>
         <p><strong className="text-neutral-dark">What the status pills mean.</strong> <strong className="text-neutral-mid">Not run yet</strong> means that step has never been run. <strong className="text-green-600">Up to date</strong> means it has run and no policy has been published since. <strong className="text-amber-700">Policies changed since this ran</strong> means at least one policy was published after the step last ran, so its results may be out of date and a re-run is recommended.</p>
         <p><strong className="text-neutral-dark">Nothing is locked.</strong> You can run any step at any time, in any order. If adopted changes are still waiting for review when you start a run, the page warns you first so you do not analyse stale text by mistake. You can always choose to run anyway.</p>
+        <p><strong className="text-neutral-dark">Interrupted runs resume where they stopped.</strong> The longer analyses save progress on our servers as they work. It is fastest to keep the page open, but if your connection drops or you leave mid-run, nothing is lost: an amber Resume banner appears on that section when you return, showing how much was already done. Pressing Resume continues from where it stopped, and finished items are not re-processed and cost no extra credits.</p>
+        <p><strong className="text-neutral-dark">If something fails to load.</strong> A section that cannot reach the server shows a clear message with a Retry button instead of an empty panel. Retrying simply reloads your saved results and costs nothing.</p>
       </HelpAccordion>
 
       {/* ── Guided pipeline overview strip ─────────────────────────────────── */}
@@ -634,6 +729,10 @@ export default function GapsPage() {
           <StepMeta info={stepInfo('coverage')} pendingPolicies={pipeline?.pending_policies ?? 0} />
           <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${showCoverage ? 'rotate-180' : ''}`} />
         </button>
+
+        {/* Interrupted-run banner: visible even when the section is collapsed, so the
+            tenant can pick the run back up without hunting for it. */}
+        <ResumeBanner state={runStateFor('coverage')} resuming={analysing} onResume={resumeCoverage} />
 
         {showCoverage && (!data.analysed ? (
           <div className="flex items-center gap-3 border-t border-gray-100 px-6 py-8">
@@ -735,13 +834,13 @@ export default function GapsPage() {
       </div>
 
       {/* ── Out-of-date content (policy lint) — under Regulation coverage ─── */}
-      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} stepInfo={stepInfo('out_of_date')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
+      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} stepInfo={stepInfo('out_of_date')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} />}
 
       {/* ── Cross-policy consistency ──────────────────────────────────────── */}
-      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} stepInfo={stepInfo('consistency')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
+      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} stepInfo={stepInfo('consistency')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} runState={runStateFor('consistency')} />}
 
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
-      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
+      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} runState={runStateFor('wording')} />}
 
       {session?.accessToken && <RecentlyUpdatedSection token={session.accessToken} />}
 
@@ -879,10 +978,12 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
   type Row = { policy_id: string; policy_name: string; section: 'out_of_date' | 'wording'; resolved_by: string | null; resolved_at: string }
   const [open, setOpen] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
+  const [loadErr, setLoadErr] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    try { const r = await createApiClient(token).analytics.reviewResolutions(); setRows(r.resolutions) } catch { /* quiet */ }
+    setLoadErr(false)
+    try { const r = await createApiClient(token).analytics.reviewResolutions(); setRows(r.resolutions) } catch { setLoadErr(true) }
   }, [token])
   useEffect(() => { load() }, [load])
 
@@ -915,7 +1016,9 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
             Policies your team has marked as updated. They stay off the lists — even after a re-scan — until the
             policy&apos;s content changes or its review interval passes. Use Undo to put one back for review.
           </p>
-          {rows.length === 0 ? (
+          {loadErr && rows.length === 0 ? (
+            <LoadError onRetry={load} />
+          ) : rows.length === 0 ? (
             <p className="text-sm text-neutral-mid">Nothing marked as updated yet.</p>
           ) : (
             <ul className="divide-y divide-gray-50">
@@ -944,6 +1047,7 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
 function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
   const [data, setData] = useState<LintData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [selected, setSelected] = useState<LintData['policies'][number] | null>(null)
   const [open, setOpen] = useState(false)
@@ -954,9 +1058,10 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
   }, [userId])
 
   const load = useCallback(() => {
+    setLoadErr(false)
     createApiClient(token).analytics.policyLint()
       .then(d => { setData(d); persistentCache.set(`admin-policy-lint-${userId}`, d) })
-      .catch(() => {})
+      .catch(() => setLoadErr(true))
       .finally(() => setLoading(false))
   }, [token, userId])
 
@@ -1001,7 +1106,9 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
           {scanning ? <><Loader2 size={13} className="animate-spin" /> Scanning…</> : <><RefreshCw size={13} /> {data?.scanned ? 'Re-scan policies' : 'Scan policies'}</>}
         </button>
       </div>
-      {loading && !data ? (
+      {loadErr && !data ? (
+        <div className="px-6 py-4"><LoadError onRetry={load} /></div>
+      ) : loading && !data ? (
         <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
       ) : !data?.scanned ? (
         <div className="flex items-center gap-3 px-6 py-6">
@@ -1148,17 +1255,23 @@ function ReviewDateCell({ token, row, onSaved }: { token: string; row: MatrixRow
 function PolicyMatrixSection({ token, userId }: { token: string; userId: string }) {
   const [data, setData] = useState<MatrixData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState(false)
   const [open, setOpen] = useState(false)
   const [openUpdated, setOpenUpdated] = useState(false)
+
+  const load = useCallback(() => {
+    setLoadErr(false)
+    createApiClient(token).analytics.policyMatrix()
+      .then(d => { setData(d); persistentCache.set(`admin-matrix-${userId}`, d) })
+      .catch(() => setLoadErr(true))
+      .finally(() => setLoading(false))
+  }, [token, userId])
 
   useEffect(() => {
     const cached = persistentCache.get<MatrixData>(`admin-matrix-${userId}`)
     if (cached) { setData(cached); setLoading(false) }
-    createApiClient(token).analytics.policyMatrix()
-      .then(d => { setData(d); persistentCache.set(`admin-matrix-${userId}`, d) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [token, userId])
+    load()
+  }, [userId, load])
 
   const rows = data?.policies ?? []
   const updatedRows = rows.filter(r => !!r.updated_at)   // policies that have had a change adopted/published
@@ -1176,7 +1289,9 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
       </button>
 
       {open && (<div className="border-t border-gray-100">
-        {loading && !data ? (
+        {loadErr && !data ? (
+          <div className="px-6 py-4"><LoadError onRetry={load} /></div>
+        ) : loading && !data ? (
           <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
         ) : rows.length === 0 ? (
           <div className="flex items-center gap-3 px-6 py-5">
@@ -1233,7 +1348,9 @@ function PolicyMatrixSection({ token, userId }: { token: string; userId: string 
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${openUpdated ? 'rotate-180' : ''}`} />
       </button>
       {openUpdated && (<div className="border-t border-gray-100">
-        {updatedRows.length === 0 ? (
+        {loadErr && !data ? (
+          <div className="px-6 py-4"><LoadError onRetry={load} /></div>
+        ) : updatedRows.length === 0 ? (
           <div className="flex items-center gap-3 px-6 py-5">
             <Info size={18} className="shrink-0 text-neutral-mid" />
             <p className="text-sm text-neutral-mid">No policies have been updated yet. When you adopt and publish a change from any section above, it appears here with what drove the update and its status.</p>
@@ -1292,9 +1409,10 @@ type Conflict = ConsistencyData['conflicts'][number]
 
 const CSEV: Record<string, string> = { high: 'bg-rose-50 text-rose-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-100 text-slate-600' }
 
-function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
+function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies, runState }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number; runState?: SectionRunState }) {
   const [data, setData] = useState<ConsistencyData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [runErr, setRunErr] = useState('')
@@ -1307,29 +1425,50 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
   }, [userId])
 
   const load = useCallback(() => {
+    setLoadErr(false)
     createApiClient(token).analytics.consistency()
       .then(d => { setData(d); persistentCache.set(`admin-consistency-${userId}`, d) })
-      .catch(() => {})
+      .catch(() => setLoadErr(true))
       .finally(() => setLoading(false))
   }, [token, userId])
 
   useEffect(() => { load() }, [load])
+
+  // The batch phase of a consistency run: claim extraction batches, then detection.
+  // Shared by a fresh run (after start rebuilds the comparison sets) and by Resume,
+  // which skips start so already-extracted claims are kept (no extra credits).
+  async function driveBatches(api: ReturnType<typeof createApiClient>, toExtract: number) {
+    let last = toExtract
+    for (let i = 0; i < 300; i++) {
+      const p = await api.analytics.consistencyBatch()
+      setProgress(`Reading policies… ${Math.max(0, toExtract - p.remaining)}/${toExtract}`)
+      if (p.remaining <= 0) break
+      if (p.remaining >= last) { /* no progress — stop rather than spin */ break }
+      last = p.remaining
+    }
+    setProgress('Comparing for contradictions…')
+    await api.analytics.consistencyDetect()
+  }
 
   async function run() {
     setRunning(true); setProgress('Grouping related policies…'); setRunErr('')
     const api = createApiClient(token)
     try {
       const { to_extract } = await api.analytics.consistencyStart()
-      let last = to_extract
-      for (let i = 0; i < 300; i++) {
-        const p = await api.analytics.consistencyBatch()
-        setProgress(`Reading policies… ${Math.max(0, to_extract - p.remaining)}/${to_extract}`)
-        if (p.remaining <= 0) break
-        if (p.remaining >= last) { /* no progress — stop rather than spin */ break }
-        last = p.remaining
-      }
-      setProgress('Comparing for contradictions…')
-      await api.analytics.consistencyDetect()
+      await driveBatches(api, to_extract)
+      load()
+    } catch (e: any) {
+      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+    } finally { setRunning(false); setProgress(null); onRunComplete() }
+  }
+
+  // Resume an interrupted run: batch loop + detection only — never the start endpoint,
+  // and no pre-run confirm, because this continues a run the tenant already began.
+  async function resume() {
+    setRunning(true); setProgress('Resuming…'); setRunErr('')
+    const api = createApiClient(token)
+    try {
+      await driveBatches(api, runState?.remaining ?? 0)
       load()
     } catch (e: any) {
       setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
@@ -1359,6 +1498,9 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
+      {/* Interrupted-run banner: visible even when the section is collapsed. */}
+      <ResumeBanner state={runState} resuming={running} onResume={resume} />
+
       {open && (<div className="border-t border-gray-100">
         <StaleBanner info={stepInfo} />
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
@@ -1370,7 +1512,9 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
 
-        {loading && !data ? (
+        {loadErr && !data ? (
+          <div className="px-6 py-4"><LoadError onRetry={load} /></div>
+        ) : loading && !data ? (
           <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
         ) : !data?.analysed ? (
           <div className="flex items-center gap-3 px-6 py-6">
@@ -1433,9 +1577,10 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
 // ── CQC wording alignment: its own analysis, checked per policy over the whole library ──
 type WordingData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['wordingAlignment']>>
 
-function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
+function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies, runState }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number; runState?: SectionRunState }) {
   const [data, setData]       = useState<WordingData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [runErr, setRunErr]   = useState('')
@@ -1448,23 +1593,46 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
   }, [userId])
 
   const load = useCallback(() => {
+    setLoadErr(false)
     createApiClient(token).analytics.wordingAlignment()
       .then(d => { setData(d); persistentCache.set(`admin-wording-${userId}`, d) })
-      .catch(() => {})
+      .catch(() => setLoadErr(true))
       .finally(() => setLoading(false))
   }, [token, userId])
   useEffect(() => { load() }, [load])
+
+  // The batch phase of a wording run: loop the (idempotent, resumable) batch endpoint
+  // until nothing remains. Shared by a fresh run (after the destructive start) and by
+  // Resume, which skips start so already-checked policies are kept (no extra credits).
+  async function driveBatches(api: ReturnType<typeof createApiClient>, fallbackTotal: number) {
+    for (let i = 0; i < 800; i++) {
+      const p = await api.analytics.wordingAlignmentBatch()
+      setProgress(`Checking policies… ${p.analysed}/${p.total || fallbackTotal}`)
+      if (p.remaining <= 0) break
+    }
+  }
 
   async function run() {
     setRunning(true); setProgress('Preparing…'); setRunErr('')
     const api = createApiClient(token)
     try {
       const { total } = await api.analytics.wordingAlignmentStart()
-      for (let i = 0; i < 800; i++) {
-        const p = await api.analytics.wordingAlignmentBatch()
-        setProgress(`Checking policies… ${p.analysed}/${p.total || total}`)
-        if (p.remaining <= 0) break
-      }
+      await driveBatches(api, total)
+      load()
+    } catch (e: any) {
+      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+      load()
+    } finally { setRunning(false); setProgress(null); onRunComplete() }
+  }
+
+  // Resume an interrupted run: the batch loop only — never the start endpoint (which
+  // wipes finished results), and no pre-run confirm, because this continues a run the
+  // tenant already began.
+  async function resume() {
+    setRunning(true); setProgress('Resuming…'); setRunErr('')
+    const api = createApiClient(token)
+    try {
+      await driveBatches(api, runState?.total ?? 0)
       load()
     } catch (e: any) {
       setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
@@ -1497,6 +1665,9 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
+      {/* Interrupted-run banner: visible even when the section is collapsed. */}
+      <ResumeBanner state={runState} resuming={running} onResume={resume} />
+
       {open && (<div className="border-t border-gray-100">
         <StaleBanner info={stepInfo} />
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
@@ -1508,7 +1679,9 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
 
-        {loading && !data ? (
+        {loadErr && !data ? (
+          <div className="px-6 py-4"><LoadError onRetry={load} /></div>
+        ) : loading && !data ? (
           <div className="px-6 py-6"><div className="h-16 animate-pulse rounded bg-gray-50" /></div>
         ) : analysed === 0 ? (
           <div className="flex items-center gap-3 px-6 py-6">

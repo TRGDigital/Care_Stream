@@ -334,6 +334,22 @@ export async function startCoverageAnalysis(tenantId: string): Promise<{ total: 
 
 export type CoverageProgress = { done: number; analysed: number; total: number; remaining: number }
 
+// Read-only progress snapshot for resumable runs: how many in-scope regulations already
+// have a coverage row. Counts only — never triggers any AI work. Used by
+// GET /analytics/gaps/run-state so an interrupted client-driven run can offer "Resume"
+// instead of a destructive fresh start.
+export async function coverageRunState(tenantId: string): Promise<{ total: number; analysed: number; remaining: number }> {
+  const regs = await getScopedRegulations(tenantId)
+  const total = regs.length
+  if (!total) return { total: 0, analysed: 0, remaining: 0 }
+  const rows = await (prisma as any).regulationCoverage.findMany({
+    where: { tenant_id: tenantId }, select: { reference_key: true },
+  })
+  const done = new Set((rows as any[]).map(r => r.reference_key))
+  const analysed = regs.filter(r => done.has(r.reference_key)).length
+  return { total, analysed, remaining: total - analysed }
+}
+
 // Analyse the next batch of not-yet-done in-scope regulations and upsert their coverage
 // rows. Idempotent and resumable: it processes whichever in-scope regulations don't yet
 // have a coverage row, so the frontend just loops until remaining === 0.

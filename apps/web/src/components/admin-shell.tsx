@@ -15,6 +15,7 @@ import {
   PanelLeftClose, PanelLeftOpen, Languages, Compass,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
+import { SuggestionsButton } from '@/components/admin/suggestions-drawer'
 import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache } from '@/lib/page-cache'
@@ -282,6 +283,11 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             </div>
           ) : (
             <p className="truncate text-sm font-semibold text-neutral-dark">{tenantName}</p>
+          )}
+
+          {/* Live rules-based guidance, right beside the tenant name */}
+          {session?.accessToken && (session.user as any)?.tenantId && (
+            <SuggestionsButton token={session.accessToken} tenantId={(session.user as any).tenantId} />
           )}
           </div>
 

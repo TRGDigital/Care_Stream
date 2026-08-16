@@ -12,6 +12,7 @@ import { whatsappRouter } from './routes/whatsapp'
 import { billingRouter, stripeWebhookHandler } from './routes/billing'
 import { regulationsRouter } from './routes/regulations'
 import { analyticsRouter } from './routes/analytics'
+import { suggestionsRouter } from './routes/suggestions'
 import { adminRouter } from './routes/admin'
 import { onboardingTemplatesRouter } from './routes/onboarding-templates'
 import { policySeedsRouter } from './routes/policy-seeds'
@@ -171,6 +172,7 @@ app.use('/users', usersRouter)
 app.use('/me', meRouter)
 app.use('/billing', billingRouter)
 app.use('/analytics', analyticsRouter)
+app.use('/suggestions', suggestionsRouter)
 app.use('/regulations', regulationsRouter)
 app.use('/settings', settingsRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)

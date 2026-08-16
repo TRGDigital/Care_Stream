@@ -312,6 +312,16 @@ export function createApiClient(token: string) {
         }),
     },
 
+    // CareStream Suggestions: live, rules-based guidance computed from the
+    // tenant's current account state. Dismiss snoozes a rule for 30 days.
+    suggestions: {
+      list: () => apiFetch<{
+        suggestions: Array<{ key: string; category: 'setup' | 'compliance' | 'training' | 'engagement' | 'onboarding' | 'features'; priority: number; title: string; body: string; cta_label: string; href: string }>
+        total: number
+      }>('/suggestions', token),
+      dismiss: (key: string) => apiFetch<{ dismissed: boolean }>(`/suggestions/${encodeURIComponent(key)}/dismiss`, token, { method: 'POST' }),
+    },
+
     billing: {
       portal: () => apiFetch<{ url: string }>('/billing/portal', token),
       summary: () => apiFetch<{

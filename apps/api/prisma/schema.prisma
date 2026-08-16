@@ -912,6 +912,17 @@ model GapsSectionRun {
   @@map("gaps_section_runs")
 }
 
+// CareStream Suggestions: a tenant dismissing a suggestion hides that rule for
+// 30 days (tenant-wide, not per-user). Re-dismissing refreshes the timestamp.
+model SuggestionDismissal {
+  tenant_id    String
+  rule_key     String
+  dismissed_at DateTime @default(now())
+
+  @@id([tenant_id, rule_key])
+  @@map("suggestion_dismissals")
+}
+
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.

@@ -372,7 +372,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'staff',
     icon:    Users,
     title:   'Managing staff',
-    summary: 'Adding team members, roles, and access controls',
+    summary: 'Adding team members, CSV bulk import, roles, and access controls',
     content: (
       <div className="space-y-5">
         <SectionBlock title="Adding staff members">
@@ -384,6 +384,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={5}>Optionally set their first/second language, then share the login details shown on screen.</Step>
           </div>
           <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step, tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
+        </SectionBlock>
+        <SectionBlock title="Import your whole team from a spreadsheet (CSV)">
+          <p className="text-sm text-neutral-mid">
+            Setting up a new home? Instead of adding people one at a time, click <strong>Import from CSV</strong> next to the Add staff member button and upload a staff list exported from your rota, HR or payroll system (Excel and Google Sheets both save as CSV). There is a blank template to download if you would rather start from scratch.
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}><strong>Upload</strong> your CSV. Each person needs a name and an email address; job role, phone number, shift and first language are picked up too when your file has them.</Step>
+            <Step n={2}><strong>Match your columns.</strong> CareStream matches your spreadsheet headings to its fields automatically, check the matches and correct any, and set anything your file does not have to &ldquo;Not in my file&rdquo;.</Step>
+            <Step n={3}><strong>Check the details.</strong> Rows missing something are highlighted, type the missing details straight into the row, or untick it to leave that person out and add them individually later. UK mobile numbers are tidied up automatically, and duplicates are unticked for you.</Step>
+            <Step n={4}><strong>Import.</strong> Accounts are created one by one. When it finishes you see every temporary password once, can download them all as a CSV, and can optionally have each new starter emailed their own login automatically.</Step>
+          </div>
+          <div className="mt-3"><Tip>The import creates accounts exactly as the Add staff member form does, so plan staff limits apply and each person appears on the Staff page immediately, ready for training or onboarding to be assigned.</Tip></div>
         </SectionBlock>
         <SectionBlock title="Viewing & managing a staff member">
           <p className="text-sm text-neutral-mid">

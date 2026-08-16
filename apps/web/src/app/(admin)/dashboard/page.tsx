@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
+import { GuidedTourPreview } from '@/components/admin/guided-tour-preview'
 import { PlanCard } from '@/components/admin/plan-card'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw, Check } from 'lucide-react'
@@ -333,7 +334,11 @@ export default function DashboardPage() {
       )}
 
       {session?.accessToken && (session.user as any)?.tenantId && (
-        <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />
+        <>
+          <SetupChecklist token={session.accessToken} tenantId={(session.user as any).tenantId} tier={(session.user as any)?.tier} />
+          {/* Guided-tour design preview — renders only with ?tour=a|b|c in the URL */}
+          <GuidedTourPreview />
+        </>
       )}
 
       {session?.accessToken && (session.user as any)?.tier !== 'training_only' && <PlanCard token={session.accessToken} />}

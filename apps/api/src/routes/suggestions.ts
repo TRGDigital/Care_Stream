@@ -332,7 +332,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           }
           push('supervisions_overdue', 'compliance', 'Supervisions overdue',
             `${body} CQC expects regular, documented supervisions.`,
-            'Open Supervisions', '/supervisions')
+            'Open Supervisions', '/workforce?tab=supervisions')
         }
 
         // Rule 20 — appraisals overdue / never recorded
@@ -346,7 +346,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           } else {
             body = `${noAppraisal} staff ${noAppraisal === 1 ? 'member has' : 'have'} never had an appraisal recorded.`
           }
-          push('appraisals_overdue', 'compliance', 'Appraisals overdue', body, 'Open Supervisions', '/supervisions')
+          push('appraisals_overdue', 'compliance', 'Appraisals overdue', body, 'Open Supervisions', '/workforce?tab=supervisions')
         }
 
         // Rule 21 — workforce register: expired / expiring / missing documents
@@ -494,7 +494,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       if (hasF2F && (f2fSessionCount as number) === 0) {
         push('f2f_unused', 'features', 'Face-to-face training unused',
           'Plan face-to-face sessions and CareStream chases non-attenders with the digital catch-up module automatically.',
-          'Open Face-to-face', '/face-to-face')
+          'Open Face-to-face', '/training?tab=face_to_face')
       }
 
       // Rule 18 — AI credits running low (limited plans only)

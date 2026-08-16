@@ -84,7 +84,12 @@ export default function WorkforcePage() {
   const [data, setData] = useState<Register | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<StaffRow | null>(null)
-  const [tab, setTab] = useState<'credentials' | 'supervisions'>('credentials')
+  // Deep-linkable: /workforce?tab=supervisions opens straight on that tab
+  // (used by CareStream Suggestions and anywhere else that links to a tab).
+  const [tab, setTab] = useState<'credentials' | 'supervisions'>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'supervisions'
+      ? 'supervisions' : 'credentials'
+  )
   const [alertState, setAlertState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [alertMsg, setAlertMsg] = useState('')
 

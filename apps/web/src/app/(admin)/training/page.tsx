@@ -1623,7 +1623,13 @@ export default function TrainingPage() {
   const f2fLocked = features != null && !features.has_face_to_face
   const trainingOnly = session?.user?.tier === 'training_only'
   const userId = session?.user?.email ?? 'guest'
-  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face'>('compliance')
+  // Deep-linkable: /training?tab=modules|history|delivery|face_to_face opens
+  // straight on that tab (used by CareStream Suggestions and other links).
+  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face'>(() => {
+    if (typeof window === 'undefined') return 'compliance'
+    const t = new URLSearchParams(window.location.search).get('tab')
+    return (['compliance', 'modules', 'history', 'delivery', 'face_to_face'] as const).find(k => k === t) ?? 'compliance'
+  })
   const [staff,       setStaff]       = useState<Staff[]>([])
   const [modules,     setModules]     = useState<Module[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
